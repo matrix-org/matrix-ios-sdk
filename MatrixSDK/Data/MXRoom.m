@@ -2339,11 +2339,14 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     }
 
     // If required, update the last message
-    MXEvent *lastMessageEvent = self.summary.lastMessageEvent;
-    if (lastMessageEvent.sentState != MXEventSentStateSent)
-    {
-        [self.summary resetLastMessage:nil failure:nil commit:YES];
-    }
+    [mxSession eventWithEventId:self.summary.lastMessage.eventId
+                         inRoom:_roomId
+                        success:^(MXEvent *event) {
+        if (event.sentState != MXEventSentStateSent)
+        {
+            [self.summary resetLastMessage:nil failure:nil commit:YES];
+        }
+    } failure:nil];
 }
 
 - (void)removeOutgoingMessage:(NSString*)outgoingMessageEventId
@@ -2356,7 +2359,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     }
 
     // If required, update the last message
-    if ([self.summary.lastMessageEventId isEqualToString:outgoingMessageEventId])
+    if ([self.summary.lastMessage.eventId isEqualToString:outgoingMessageEventId])
     {
         [self.summary resetLastMessage:nil failure:nil commit:YES];
     }
@@ -3221,7 +3224,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
 - (NSComparisonResult)compareLastMessageEventOriginServerTs:(MXRoom *)otherRoom
 {
-    return [self.summary.lastMessageEvent compareOriginServerTs:otherRoom.summary.lastMessageEvent];
+    return [self.summary.lastMessage compareOriginServerTs:otherRoom.summary.lastMessage];
 }
 
 @end

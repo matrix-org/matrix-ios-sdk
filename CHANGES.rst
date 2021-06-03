@@ -11,7 +11,9 @@ Changes to be released in next version
  * 
 
 ⚠️ API Changes
- * 
+ * MXRoomSummary: `lastMessageEvent` property removed for performance reasons (vector-im/element-ios/issues/4360).
+ * MXRoomSummary: All properties about lastMessage are moved into `lastMessage` property.
+ * MXSession: Does not compute anymore last events for every room summaries by default. Use -[MXSession eventWithEventId:inRoom:success:failure:] method to load the last event for a room summary.
 
 🗣 Translations
  * 

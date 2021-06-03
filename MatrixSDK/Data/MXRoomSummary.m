@@ -28,6 +28,7 @@
 #import "MXEventReplace.h"
 
 #import "MXRoomSync.h"
+#import "MatrixSDKSwiftHeader.h"
 
 #import <Security/Security.h>
 #import <CommonCrypto/CommonCryptor.h>
@@ -53,9 +54,6 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
 
 @interface MXRoomSummary ()
 {
-    // Cache for the last event to avoid to read it from the store everytime
-    MXEvent *lastMessageEvent;
-
     // Flag to avoid to notify several updates
     BOOL updatedWithStateEvents;
 
@@ -95,7 +93,6 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     if (self)
     {
         _roomId = roomId;
-        _lastMessageOthers = [NSMutableDictionary dictionary];
         _others = [NSMutableDictionary dictionary];
         store = theStore;
 
@@ -209,52 +206,9 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
 
 #pragma mark - Data related to the last message
 
--(void)loadLastEvent:(void (^)(void))onComplete
+- (void)updateLastMessage:(MXRoomLastMessage *)message
 {
-    // The storage of the event depends if it is a true matrix event or a local echo
-    if (![_lastMessageEventId hasPrefix:kMXEventLocalEventIdPrefix])
-    {
-        lastMessageEvent = [store eventWithEventId:_lastMessageEventId inRoom:_roomId];
-    }
-    else
-    {
-        for (MXEvent *event in [store outgoingMessagesInRoom:_roomId])
-        {
-            if ([event.eventId isEqualToString:_lastMessageEventId])
-            {
-                lastMessageEvent = event;
-                break;
-            }
-        }
-    }
-    
-    if (!lastMessageEvent)
-    {
-        MXLogDebug(@"[MXRoomSummary] loadLastEvent: Cannot find event %@ in store", _lastMessageEventId);
-        onComplete();
-        return;
-    }
-    
-    [_mxSession decryptEvents:@[lastMessageEvent] inTimeline:nil onComplete:^(NSArray<MXEvent *> *failedEvents) {
-        if (failedEvents.count)
-        {
-            MXLogDebug(@"[MXRoomSummary] loadLastEvent: Warning: Unable to decrypt event. Error: %@", self.lastMessageEvent.decryptionError);
-        }
-        onComplete();
-    }];
-}
-
-- (MXEvent *)lastMessageEvent
-{
-    return lastMessageEvent;
-}
-
-- (void)setLastMessageEvent:(MXEvent *)event
-{
-    lastMessageEvent = event;
-    _lastMessageEventId = lastMessageEvent.eventId;
-    _lastMessageOriginServerTs = lastMessageEvent.originServerTs;
-    _isLastMessageEncrypted = event.isEncrypted;
+    _lastMessage = message;
 }
 
 - (MXHTTPOperation *)resetLastMessage:(void (^)(void))onComplete failure:(void (^)(NSError *))failure commit:(BOOL)commit
@@ -264,12 +218,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
 
 - (MXHTTPOperation *)resetLastMessageWithMaxServerPaginationCount:(NSUInteger)maxServerPaginationCount onComplete:(void (^)(void))onComplete failure:(void (^)(NSError *))failure commit:(BOOL)commit
 {
-    lastMessageEvent = nil;
-    _lastMessageEventId = nil;
-    _lastMessageOriginServerTs = -1;
-    _lastMessageString = nil;
-    _lastMessageAttributedString = nil;
-    [_lastMessageOthers removeAllObjects];
+    [self updateLastMessage:nil];
 
     return [self fetchLastMessageWithMaxServerPaginationCount:maxServerPaginationCount onComplete:^{
         if (onComplete)
@@ -413,7 +362,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     // If the last message is a local echo, update it.
     // Do nothing when its sentState becomes sent. In this case, the last message will be
     // updated by the true event coming back from the homeserver.
-    if (event.sentState != MXEventSentStateSent && [event.eventId isEqualToString:_lastMessageEventId])
+    if (event.sentState != MXEventSentStateSent && [event.eventId isEqualToString:_lastMessage.eventId])
     {
         [self handleEvent:event];
     }
@@ -424,7 +373,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     MXEvent *event = notif.object;
     NSString *previousId = notif.userInfo[kMXEventIdentifierKey];
 
-    if ([_lastMessageEventId isEqualToString:previousId])
+    if ([_lastMessage.eventId isEqualToString:previousId])
     {
         [self handleEvent:event];
     }
@@ -450,10 +399,14 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
         MXStrongifyAndReturnIfNil(self);
 
         // Update the last event if it has been edited
-        if ([replaceEvent.relatesTo.eventId isEqualToString:self.lastMessageEventId])
+        if ([replaceEvent.relatesTo.eventId isEqualToString:self.lastMessage.eventId])
         {
-            MXEvent *editedEvent = [self.lastMessageEvent editedEventFromReplacementEvent:replaceEvent];
-            [self handleEvent:editedEvent];
+            [self.mxSession eventWithEventId:self.lastMessage.eventId
+                                      inRoom:self.roomId
+                                     success:^(MXEvent *event) {
+                MXEvent *editedEvent = [event editedEventFromReplacementEvent:replaceEvent];
+                [self handleEvent:editedEvent];
+            } failure:nil];
         }
     }];
 }
@@ -853,29 +806,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
         _highlightCount = (NSUInteger)[aDecoder decodeIntegerForKey:@"highlightCount"];
         _directUserId = [aDecoder decodeObjectForKey:@"directUserId"];
 
-        _lastMessageEventId = [aDecoder decodeObjectForKey:@"lastMessageEventId"];
-        _lastMessageOriginServerTs = [aDecoder decodeInt64ForKey:@"lastMessageOriginServerTs"];
-        _isLastMessageEncrypted = [aDecoder decodeBoolForKey:@"isLastMessageEncrypted"];
-
-        NSDictionary *lastMessageData;
-        if (_isLastMessageEncrypted)
-        {
-            NSData *lastMessageEncryptedData = [aDecoder decodeObjectForKey:@"lastMessageEncryptedData"];
-            NSData *lastMessageDataData = [self decrypt:lastMessageEncryptedData];
-            
-            //  Sanity check. If `decrypt` fails, returns nil and causes NSKeyedUnarchiver raise an exception.
-            if (lastMessageDataData)
-            {
-                lastMessageData = [NSKeyedUnarchiver unarchiveObjectWithData:lastMessageDataData];
-            }
-        }
-        else
-        {
-            lastMessageData = [aDecoder decodeObjectForKey:@"lastMessageData"];
-        }
-        _lastMessageString = lastMessageData[@"lastMessageString"];
-        _lastMessageAttributedString = lastMessageData[@"lastMessageAttributedString"];
-        _lastMessageOthers = lastMessageData[@"lastMessageOthers"];
+        _lastMessage = [aDecoder decodeObjectForKey:@"lastMessage"];
         
         _hiddenFromUser = [aDecoder decodeBoolForKey:@"hiddenFromUser"];
         
@@ -919,204 +850,17 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     [aCoder encodeObject:_directUserId forKey:@"directUserId"];
 
     // Store last message metadata
-    [aCoder encodeObject:_lastMessageEventId forKey:@"lastMessageEventId"];
-    [aCoder encodeInt64:_lastMessageOriginServerTs forKey:@"lastMessageOriginServerTs"];
-    [aCoder encodeBool:_isLastMessageEncrypted forKey:@"isLastMessageEncrypted"];
-
-    // Build last message sensitive data
-    NSMutableDictionary *lastMessageData = [NSMutableDictionary dictionary];
-    if (_lastMessageString)
+    if (_lastMessage)
     {
-        lastMessageData[@"lastMessageString"] = _lastMessageString;
-    }
-    if (_lastMessageAttributedString)
-    {
-        lastMessageData[@"lastMessageAttributedString"] = _lastMessageAttributedString;
-    }
-    if (_lastMessageOthers)
-    {
-        lastMessageData[@"lastMessageOthers"] = _lastMessageOthers;
-    }
-
-    // And encrypt it if necessary
-    if (_isLastMessageEncrypted)
-    {
-        NSData *lastMessageDataData = [NSKeyedArchiver archivedDataWithRootObject:lastMessageData];
-        NSData *lastMessageEncryptedData = [self encrypt:lastMessageDataData];
-
-        if (lastMessageEncryptedData)
-        {
-            [aCoder encodeObject:lastMessageEncryptedData forKey:@"lastMessageEncryptedData"];
-        }
-    }
-    else
-    {
-        [aCoder encodeObject:lastMessageData forKey:@"lastMessageData"];
+        [aCoder encodeObject:_lastMessage forKey:@"lastMessage"];
     }
     
     [aCoder encodeBool:_hiddenFromUser forKey:@"hiddenFromUser"];
 }
 
-
-#pragma mark - Last message data encryption
-/**
- The AES-256 key used for encrypting MXRoomSummary sensitive data.
- */
-+ (NSData*)encryptionKey
-{
-    NSData *encryptionKey;
-
-    // Create a dictionary to look up the key in the keychain
-    NSDictionary *searchDict = @{
-                                 (__bridge id)kSecClass: (__bridge id)kSecClassGenericPassword,
-                                 (__bridge id)kSecAttrService: @"org.matrix.sdk.keychain",
-                                 (__bridge id)kSecAttrAccount: @"MXRoomSummary",
-                                 (__bridge id)kSecReturnData: (__bridge id)kCFBooleanTrue,
-                                 };
-
-    // Make the search
-    CFDataRef foundKey = nil;
-    OSStatus status = SecItemCopyMatching((__bridge CFDictionaryRef)searchDict, (CFTypeRef*)&foundKey);
-
-    if (status == errSecSuccess)
-    {
-        // Use the found key
-        encryptionKey = (__bridge NSData*)(foundKey);
-    }
-    else if (status == errSecItemNotFound)
-    {
-        MXLogDebug(@"[MXRoomSummary] encryptionKey: Generate the key and store it to the keychain");
-
-        // There is not yet a key in the keychain
-        // Generate an AES key
-        NSMutableData *newEncryptionKey = [[NSMutableData alloc] initWithLength:kCCKeySizeAES256];
-        int retval = SecRandomCopyBytes(kSecRandomDefault, kCCKeySizeAES256, newEncryptionKey.mutableBytes);
-        if (retval == 0)
-        {
-            encryptionKey = [NSData dataWithData:newEncryptionKey];
-
-            // Store it to the keychain
-            NSMutableDictionary *dict = [NSMutableDictionary dictionaryWithDictionary:searchDict];
-            dict[(__bridge id)kSecValueData] = encryptionKey;
-
-            status = SecItemAdd((__bridge CFDictionaryRef)dict, NULL);
-            if (status != errSecSuccess)
-            {
-                // TODO: The iOS 10 simulator returns the -34018 (errSecMissingEntitlement) error.
-                // We need to fix it but there is no issue with the app on real device nor with iOS 9 simulator.
-                MXLogDebug(@"[MXRoomSummary] encryptionKey: SecItemAdd failed. status: %i", (int)status);
-            }
-        }
-        else
-        {
-            MXLogDebug(@"[MXRoomSummary] encryptionKey: Cannot generate key. retval: %i", retval);
-        }
-    }
-    else
-    {
-        MXLogDebug(@"[MXRoomSummary] encryptionKey: Keychain failed. OSStatus: %i", (int)status);
-    }
-    
-    if (foundKey)
-    {
-        CFRelease(foundKey);
-    }
-
-    return encryptionKey;
-}
-
-- (NSData*)encrypt:(NSData*)data
-{
-    NSData *encryptedData;
-
-    CCCryptorRef cryptor;
-    CCCryptorStatus status;
-
-    NSData *key = [MXRoomSummary encryptionKey];
-
-    status = CCCryptorCreateWithMode(kCCDecrypt, kCCModeCTR, kCCAlgorithmAES,
-                                     ccNoPadding, NULL, key.bytes, key.length,
-                                     NULL, 0, 0, kCCModeOptionCTR_BE, &cryptor);
-    if (status == kCCSuccess)
-    {
-        size_t bufferLength = CCCryptorGetOutputLength(cryptor, data.length, false);
-        NSMutableData *buffer = [NSMutableData dataWithLength:bufferLength];
-
-        size_t outLength;
-        status |= CCCryptorUpdate(cryptor,
-                                  data.bytes,
-                                  data.length,
-                                  [buffer mutableBytes],
-                                  [buffer length],
-                                  &outLength);
-
-        status |= CCCryptorRelease(cryptor);
-
-        if (status == kCCSuccess)
-        {
-            encryptedData = buffer;
-        }
-        else
-        {
-            MXLogDebug(@"[MXRoomSummary] encrypt: CCCryptorUpdate failed. status: %i", status);
-        }
-    }
-    else
-    {
-        MXLogDebug(@"[MXRoomSummary] encrypt: CCCryptorCreateWithMode failed. status: %i", status);
-    }
-
-    return encryptedData;
-}
-
-- (NSData*)decrypt:(NSData*)encryptedData
-{
-    NSData *data;
-
-    CCCryptorRef cryptor;
-    CCCryptorStatus status;
-
-    NSData *key = [MXRoomSummary encryptionKey];
-
-    status = CCCryptorCreateWithMode(kCCDecrypt, kCCModeCTR, kCCAlgorithmAES,
-                                     ccNoPadding, NULL, key.bytes, key.length,
-                                     NULL, 0, 0, kCCModeOptionCTR_BE, &cryptor);
-    if (status == kCCSuccess)
-    {
-        size_t bufferLength = CCCryptorGetOutputLength(cryptor, encryptedData.length, false);
-        NSMutableData *buffer = [NSMutableData dataWithLength:bufferLength];
-
-        size_t outLength;
-        status |= CCCryptorUpdate(cryptor,
-                                  encryptedData.bytes,
-                                  encryptedData.length,
-                                  [buffer mutableBytes],
-                                  [buffer length],
-                                  &outLength);
-
-        status |= CCCryptorRelease(cryptor);
-
-        if (status == kCCSuccess)
-        {
-            data = buffer;
-        }
-        else
-        {
-            MXLogDebug(@"[MXRoomSummary] decrypt: CCCryptorUpdate failed. status: %i", status);
-        }
-    }
-    else
-    {
-        MXLogDebug(@"[MXRoomSummary] decrypt: CCCryptorCreateWithMode failed. status: %i", status);
-    }
-    
-    return data;
-}
-
-
 - (NSString *)description
 {
-    return [NSString stringWithFormat:@"%@ %@: %@ - %@", super.description, _roomId, _displayname, _lastMessageString];
+    return [NSString stringWithFormat:@"%@ %@: %@ - %@", super.description, _roomId, _displayname, _lastMessage.eventId];
 }
 
 @end

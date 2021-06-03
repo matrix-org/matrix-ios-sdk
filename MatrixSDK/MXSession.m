@@ -395,20 +395,15 @@ typedef void (^MXOnResumeDone)(void);
 
                 MXLogDebug(@"[MXSession] Built %lu MXRooms in %.0fms", (unsigned long)self->rooms.count, [[NSDate date] timeIntervalSinceDate:startDate3] * 1000);
                 
-                NSDate *startDate4 = [NSDate date];
-                [self loadRoomSummaryLastEvents:^{
-                    MXLogDebug(@"[MXSession] Loaded %lu MXRoomSummaries last events in  in %.0fms", (unsigned long)self->roomsSummaries.count, [[NSDate date] timeIntervalSinceDate:startDate4] * 1000);
-                    
-                    taskProfile.units = self->rooms.count;
-                    [MXSDKOptions.sharedInstance.profiler stopMeasuringTaskWithProfile:taskProfile];
-                    
-                    MXLogDebug(@"[MXSession] Total time to mount SDK data from MXStore: %.0fms", taskProfile.duration * 1000);
-                    
-                    [self setState:MXSessionStateStoreDataReady];
-                    
-                    // The SDK client can use this data
-                    onStoreDataReady();
-                }];
+                taskProfile.units = self->rooms.count;
+                [MXSDKOptions.sharedInstance.profiler stopMeasuringTaskWithProfile:taskProfile];
+                
+                MXLogDebug(@"[MXSession] Total time to mount SDK data from MXStore: %.0fms", taskProfile.duration * 1000);
+                
+                [self setState:MXSessionStateStoreDataReady];
+                
+                // The SDK client can use this data
+                onStoreDataReady();
             }
             else
             {
@@ -433,23 +428,6 @@ typedef void (^MXOnResumeDone)(void);
             failure(error);
         }
     }];
-}
-
-// Load the last event for all room summaries.
--(void)loadRoomSummaryLastEvents:(void (^)(void))onComplete
-{
-    dispatch_group_t dispatchGroup = dispatch_group_create();
-    for (MXRoomSummary *roomSummary in self.roomsSummaries)
-    {
-        dispatch_group_enter(dispatchGroup);
-        [roomSummary loadLastEvent:^{
-            dispatch_group_leave(dispatchGroup);
-        }];
-    }
-    
-    dispatch_group_notify(dispatchGroup, dispatch_get_main_queue(), ^{
-        onComplete();
-    });
 }
 
 /// Handle a sync response and decide serverTimeout for the next sync request.
@@ -495,14 +473,26 @@ typedef void (^MXOnResumeDone)(void);
                             // Make sure the last message has been decrypted
                             // In case of an initial sync, we save decryptions to save time. Only unread messages are decrypted.
                             // We need to decrypt already read last message.
-                            if (isInitialSync
-                                && room.summary.lastMessageEvent.eventType == MXEventTypeRoomEncrypted)
+                            if (isInitialSync)
                             {
-                                [room.summary resetLastMessage:^{
-                                    dispatch_group_leave(dispatchGroup);
+                                [self eventWithEventId:room.summary.lastMessage.eventId
+                                                inRoom:room.roomId
+                                               success:^(MXEvent *event) {
+                                    if (event.eventType == MXEventTypeRoomEncrypted)
+                                    {
+                                        [room.summary resetLastMessage:^{
+                                            dispatch_group_leave(dispatchGroup);
+                                        } failure:^(NSError *error) {
+                                            dispatch_group_leave(dispatchGroup);
+                                        } commit:NO];
+                                    }
+                                    else
+                                    {
+                                        dispatch_group_leave(dispatchGroup);
+                                    }
                                 } failure:^(NSError *error) {
                                     dispatch_group_leave(dispatchGroup);
-                                } commit:NO];
+                                }];
                             }
                             else
                             {
@@ -2762,6 +2752,20 @@ typedef void (^MXOnResumeDone)(void);
         // Try to find it from the store first
         // (this operation requires a roomId for the moment)
         MXEvent *event = [_store eventWithEventId:eventId inRoom:roomId];
+        
+        //  also search in local event
+        if (!event)
+        {
+            NSArray<MXEvent *> *outgoingMessages = [_store outgoingMessagesInRoom:roomId];
+            for (MXEvent *localEvent in outgoingMessages)
+            {
+                if ([localEvent.eventId isEqualToString:eventId])
+                {
+                    event = localEvent;
+                    break;
+                }
+            }
+        }
 
         if (event)
         {
@@ -2824,26 +2828,33 @@ typedef void (^MXOnResumeDone)(void);
 
 - (void)fixRoomsSummariesLastMessageWithMaxServerPaginationCount:(NSUInteger)maxServerPaginationCount
 {
+    dispatch_group_t dispatchGroup = dispatch_group_create();
+    
     for (MXRoomSummary *summary in self.roomsSummaries)
     {
-        if (!summary.lastMessageEventId)
+        if (!summary.lastMessage)
         {
+            dispatch_group_enter(dispatchGroup);
             MXLogDebug(@"[MXSession] fixRoomsSummariesLastMessage: Fixing last message for room %@", summary.roomId);
             
             [summary resetLastMessageWithMaxServerPaginationCount:maxServerPaginationCount onComplete:^{
-                MXLogDebug(@"[MXSession] fixRoomsSummariesLastMessage:Fixing last message operation for room %@ has complete. lastMessageEventId: %@", summary.roomId, summary.lastMessageEventId);
+                MXLogDebug(@"[MXSession] fixRoomsSummariesLastMessage:Fixing last message operation for room %@ has complete. lastMessageEventId: %@", summary.roomId, summary.lastMessage.eventId);
+                dispatch_group_leave(dispatchGroup);
             } failure:^(NSError *error) {
                 MXLogDebug(@"[MXSession] fixRoomsSummariesLastMessage: Cannot fix last message for room %@ with maxServerPaginationCount: %@", summary.roomId, @(maxServerPaginationCount));
+                dispatch_group_leave(dispatchGroup);
             }
                                                            commit:NO];
         }
     }
     
-    // Commit store changes done
-    if ([_store respondsToSelector:@selector(commit)])
-    {
-        [_store commit];
-    }
+    dispatch_group_notify(dispatchGroup, dispatch_get_main_queue(), ^{
+        // Commit store changes done
+        if ([self.store respondsToSelector:@selector(commit)])
+        {
+            [self.store commit];
+        }
+    });
 }
 
 - (void)updateRoomSummaryWithRoomId:(NSString*)roomId withMembershipState:(MXMembershipTransitionState)membershipTransitionState
@@ -3769,7 +3780,7 @@ typedef void (^MXOnResumeDone)(void);
     // In case of same order, order rooms by their last event
     if (NSOrderedSame == result)
     {
-        result = [room1.summary.lastMessageEvent compareOriginServerTs:room2.summary.lastMessageEvent];
+        result = [room1.summary.lastMessage compareOriginServerTs:room2.summary.lastMessage];
     }
 
     return result;
@@ -4210,10 +4221,16 @@ typedef void (^MXOnResumeDone)(void);
 
     // Check if this event can interest the room summary
     MXRoomSummary *summary = [self roomSummaryWithRoomId:event.roomId];
-    if (summary &&
-        summary.lastMessageEvent.ageLocalTs <= event.ageLocalTs)
+    if (summary)
     {
-        [summary resetLastMessage:nil failure:nil commit:YES];
+        [self eventWithEventId:summary.lastMessage.eventId
+                        inRoom:summary.roomId
+                       success:^(MXEvent *lastEvent) {
+            if (lastEvent.ageLocalTs <= event.ageLocalTs)
+            {
+                [summary resetLastMessage:nil failure:nil commit:YES];
+            }
+        } failure:nil];
     }
 }
 
