@@ -2,6 +2,30 @@ Changes to be released in next version
 =================================================
 
 ✨ Features
+ * 
+
+🙌 Improvements
+ * 
+
+🐛 Bugfix
+ * 
+
+⚠️ API Changes
+ * 
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+Changes in 0.19.0 (2021-06-02)
+=================================================
+
+✨ Features
  * Spaces: Support Space room type (vector-im/element-ios/issues/4069).
 
 🙌 Improvements
@@ -18,6 +42,7 @@ Changes to be released in next version
  * MXKeyBackup: Do not reset the backup if forceRefresh() is called too early.
  * Pod: Update Realm to 10.7.6.
  * Pod: Update Jitsi to 3.5.0.
+ * Pod: Update OLMKit to 3.2.4.
  * MXRealmCryptoStore: Use Realm instances as read-only in background store (vector-im/element-ios/issues/4352).
  * MXLog: centralised logging facility, use everywhere instead of NSLog (vector-im/element-ios/issues/4351).
 
@@ -43,6 +68,9 @@ Changes to be released in next version
 
 Others
  * 
+
+Improvements:
+
 
 Changes in 0.18.12 (2021-05-12)
 =================================================

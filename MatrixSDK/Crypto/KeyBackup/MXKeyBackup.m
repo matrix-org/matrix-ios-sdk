@@ -636,7 +636,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
 {
     if (_state == MXKeyBackupStateUnknown || _state == MXKeyBackupStateCheckingBackUpOnHomeserver)
     {
-        NSLog(@"[MXKeyBackup] forceRefresh: Invalid state (%@) to force the refresh", @(_state));
+        MXLogDebug(@"[MXKeyBackup] forceRefresh: Invalid state (%@) to force the refresh", @(_state));
         if (failure)
         {
             NSError *error = [NSError errorWithDomain:MXKeyBackupErrorDomain
