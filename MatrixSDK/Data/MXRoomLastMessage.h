@@ -59,7 +59,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Placeholder to store more information about the last message.
  */
-@property (nonatomic, copy, nullable) NSMutableDictionary<NSString*, id<NSCoding>> *others;
+@property (nonatomic, strong, nullable) NSMutableDictionary<NSString*, id<NSCoding>> *others;
 
 - (instancetype)initWithEvent:(MXEvent *)event;
 

@@ -100,7 +100,7 @@ NSString *const kCodingKeyOthers = @"others";
         }
         _text = lastMessageDictionary[kCodingKeyText];
         _attributedText = lastMessageDictionary[kCodingKeyAttributedText];
-        _others = lastMessageDictionary[kCodingKeyOthers];
+        _others = [lastMessageDictionary[kCodingKeyOthers] mutableCopy];
     }
     return self;
 }
