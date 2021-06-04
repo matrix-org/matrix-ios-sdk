@@ -349,6 +349,11 @@ FOUNDATION_EXPORT NSString *const kMXSessionNotificationErrorKey;
  */
 FOUNDATION_EXPORT NSString *const kMXSessionNotificationUserIdsArrayKey;
 
+/**
+ MXKeyProvider identifier for a 32 bytes long key to unpickle the account of dehydrated device.
+ */
+FOUNDATION_EXPORT NSString *const MXSessionDehydrationKeyDataType;
+
 
 #pragma mark - Other constants
 /**
@@ -481,6 +486,8 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
  The module that manages spaces.
  */
 @property (nonatomic, readonly) MXSpaceService *spaceService;
+
+@property (nonatomic, readonly) MXExportedOlmDevice *exportedOlmDeviceToImport;
 
 #pragma mark - Class methods
 
@@ -1559,5 +1566,10 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  @return the virtual room identifier for the given native room. May be nil.
  */
 - (NSString *)virtualRoomOf:(NSString *)nativeRoomId;
+
+#pragma  mark - Dehydration
+
+- (void)rehydrateDeviceWithSuccess:(void (^)(void))success
+                           failure:(void (^)(NSError *error))failure;
 
 @end

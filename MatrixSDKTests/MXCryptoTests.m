@@ -32,6 +32,12 @@
 #import "MXOutboundSessionInfo.h"
 #import <OLMKit/OLMKit.h>
 
+#import "MXKeyProvider.h"
+#import "MXAesKeyData.h"
+#import "MXRawDataKey.h"
+
+#import <OLMKit/OLMKit.h>
+
 #if 1 // MX_CRYPTO autamatic definiton does not work well for tests so force it
 //#ifdef MX_CRYPTO
 
@@ -39,16 +45,20 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Warc-retain-cycles"
 
-@interface MXCryptoTests : XCTestCase
+@interface MXCryptoTests : XCTestCase <MXKeyProviderDelegate>
 {
     MatrixSDKTestsData *matrixSDKTestsData;
     MatrixSDKTestsE2EData *matrixSDKTestsE2EData;
 
     MXSession *aliceSessionToClose;
     MXSession *bobSessionToClose;
+    NSMutableArray <id> *retainedObjects;
 
     id observer;
 }
+
+@property (nonatomic, strong, nullable) MXKeyData *dehydrationKey;
+
 @end
 
 @implementation MXCryptoTests
@@ -59,6 +69,11 @@
     
     matrixSDKTestsData = [[MatrixSDKTestsData alloc] init];
     matrixSDKTestsE2EData = [[MatrixSDKTestsE2EData alloc] initWithMatrixSDKTestsData:matrixSDKTestsData];
+    
+    NSData *key = [@"6fXK17pQFUrFqOnxt3wrqz8RHkQUT9vQ" dataUsingEncoding:NSUTF8StringEncoding];
+    self.dehydrationKey = [MXRawDataKey dataWithKey:key];
+    [MXKeyProvider sharedInstance].delegate = self;
+    retainedObjects = [NSMutableArray new];
 }
 
 - (void)tearDown
@@ -77,6 +92,8 @@
 
     matrixSDKTestsData = nil;
     matrixSDKTestsE2EData = nil;
+    
+    [retainedObjects removeAllObjects];
 
     [super tearDown];
 }
@@ -3091,6 +3108,400 @@
         }];
     }];
 }
+
+-(void)testDehydrateDevice
+{
+    [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
+
+    [matrixSDKTestsData doMXSessionTestWithBob:self readyToTest:^(MXSession *mxSession, XCTestExpectation *expectation) {
+        [mxSession.crypto.dehydrationManager dehydrateDeviceWithSuccess:^{
+            [expectation fulfill];
+        } failure:^(NSError * _Nonnull error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+-(void)testClaimDehydratedDevice
+{
+    [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
+
+    [matrixSDKTestsData doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
+        MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [self retain:mxSession];
+
+        [mxSession rehydrateDeviceWithSuccess:^{
+            [mxSession start:^{
+
+                [expectation fulfill];
+
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+-(void)testDehydrateDeviceAndClaimDehydratedDevice
+{
+    [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
+    [matrixSDKTestsE2EData doE2ETestWithAliceInARoom:self readyToTest:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
+        [aliceSession.crypto.dehydrationManager dehydrateDeviceWithSuccess:^{
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [matrixSDKTestsData relogUserSession:self session:aliceSession withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *aliceSession2) {
+                    [aliceSession2 rehydrateDeviceWithSuccess:^{
+                        [expectation fulfill];
+                    } failure:^(NSError *error) {
+                        XCTFail(@"The request should not fail - NSError: %@", error);
+                        [expectation fulfill];
+                    }];
+                }];
+            });
+        } failure:^(NSError * _Nonnull error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+-(void)testDehydrateDeviceAndClaimDehydratedDevice2
+{
+    [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+        
+        bobSessionToClose = bobSession;
+        XCTAssertNotNil(aliceSession.crypto.dehydrationManager, @"dehydrationManager should be up and running");
+
+        [aliceSession.crypto.dehydrationManager dehydrateDeviceWithSuccess:^{
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [matrixSDKTestsData relogUserSession:self session:aliceSession withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *aliceSession2) {
+                    
+                    MXRestClient *aliceRestClient = aliceSession2.matrixRestClient;
+
+                    MXSession *aliceSession3 = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+
+                    [aliceSession2 close];
+                    aliceSessionToClose = aliceSession3;
+
+                    [aliceSession3 rehydrateDeviceWithSuccess:^{
+                        
+                        [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
+                        
+                        [aliceSession3 setStore:[MXMemoryStore new] success:^{
+
+                            [aliceSession3 start:^{
+
+                                aliceSession3.crypto.warnOnUnknowDevices = NO;
+
+                                MXRoom *roomFromBobPOV = [bobSession roomWithRoomId:roomId];
+                                MXRoom *roomFromAlice3POV = [aliceSession3 roomWithRoomId:roomId];
+                                
+                                XCTAssertNotNil(roomFromBobPOV, @"roomFromBobPOV shouldn't be nil");
+
+                                if (!roomFromAlice3POV)
+                                {
+                                    XCTFail(@"Not able to get room with Alice's session");
+                                    [expectation fulfill];
+                                    return;
+                                }
+
+                                NSString *messageFromBob = @"Hello I'm Bob!";
+
+                                [roomFromAlice3POV liveTimeline:^(MXEventTimeline *liveTimeline) {
+                                    [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage, kMXEventTypeStringRoomEncrypted] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+                                        
+                                        XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messageFromBob senderSession:bobSession]);
+
+                                        [expectation fulfill];
+
+                                    }];
+                                }];
+
+                                
+                                [roomFromBobPOV sendTextMessage:messageFromBob success:nil failure:^(NSError *error) {
+                                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                                    [expectation fulfill];
+                                }];
+                            } failure:^(NSError *error) {
+                                XCTFail(@"The request should not fail - NSError: %@", error);
+                                [expectation fulfill];
+                            }];
+                        } failure:^(NSError *error) {
+                            XCTFail(@"The request should not fail - NSError: %@", error);
+                            [expectation fulfill];
+                        }];
+                    } failure:^(NSError *error) {
+                        XCTFail(@"The request should not fail - NSError: %@", error);
+                        [expectation fulfill];
+                    }];
+                }];
+            });
+        } failure:^(NSError * _Nonnull error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+    return;
+}
+
+-(void)testDehydrateDeviceAndClaimDehydratedDevice3
+{
+    [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+        
+        bobSessionToClose = bobSession;
+        aliceSessionToClose = aliceSession;
+        MXRoom *roomFromBobPOV = [bobSession roomWithRoomId:roomId];
+        
+        XCTAssertNotNil(aliceSession.crypto.dehydrationManager, @"dehydrationManager should be up and running");
+        [aliceSession.crypto.dehydrationManager dehydrateDeviceWithSuccess:^{
+            dispatch_async(dispatch_get_main_queue(), ^{
+                NSString *userId = aliceSession.matrixRestClient.credentials.userId;
+
+                [aliceSession logout:^{
+
+                    [aliceSession close];
+
+                    NSString *messageFromAlice = @"Hello I'm still Alice!";
+                    [roomFromBobPOV sendTextMessage:messageFromAlice success:^(NSString *eventId) {
+                        
+                        MXRestClient *mxRestClient = [[MXRestClient alloc] initWithHomeServer:kMXTestsHomeServerURL
+                                                            andOnUnrecognizedCertificateBlock:nil];
+                        
+                        [self retain:mxRestClient];
+                        
+                        [mxRestClient loginWithLoginType:kMXLoginFlowTypePassword username:userId password:MXTESTS_ALICE_PWD success:^(MXCredentials *credentials) {
+
+                            MXRestClient *mxRestClient2 = [[MXRestClient alloc] initWithCredentials:credentials andOnUnrecognizedCertificateBlock:nil];
+
+                            [self retain:mxRestClient2];
+                            
+                            MXSession *aliceSession2 = [[MXSession alloc] initWithMatrixRestClient:mxRestClient2];
+                            aliceSessionToClose = aliceSession2;
+                            
+                            [aliceSession2 rehydrateDeviceWithSuccess:^{
+                                
+                                [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
+                                
+                                [aliceSession2 setStore:[MXMemoryStore new] success:^{
+                                    
+                                    [aliceSession2 start:^{
+                                        
+                                        MXRoom *roomFromAlice2POV = [aliceSession2 roomWithRoomId:roomId];
+                                        MXEvent *event = roomFromAlice2POV.summary.lastMessageEvent;
+                                        MXEvent *event2 = roomFromBobPOV.summary.lastMessageEvent;
+
+                                        XCTAssertEqual(0, [self checkEncryptedEvent:event2 roomId:roomId clearMessage:messageFromAlice senderSession:bobSession]);
+                                        
+                                        XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messageFromAlice senderSession:bobSession]);
+
+                                        NSString *messageFromBob = @"Hello I'm Bob!";
+
+                                        [roomFromAlice2POV liveTimeline:^(MXEventTimeline *liveTimeline) {
+                                            [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage, kMXEventTypeStringRoomEncrypted] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+                                                
+                                                XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messageFromBob senderSession:bobSession]);
+
+                                                [expectation fulfill];
+
+                                            }];
+                                        }];
+
+                                        
+                                        [roomFromBobPOV sendTextMessage:messageFromBob success:nil failure:^(NSError *error) {
+                                            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                                            [expectation fulfill];
+                                        }];
+
+                                    } failure:^(NSError *error) {
+                                        XCTFail(@"The request should not fail - NSError: %@", error);
+                                        [expectation fulfill];
+                                    }];
+
+                                } failure:^(NSError *error) {
+                                    XCTFail(@"The request should not fail - NSError: %@", error);
+                                    [expectation fulfill];
+                                }];
+                            } failure:^(NSError *error) {
+                                XCTFail(@"The request should not fail - NSError: %@", error);
+                                [expectation fulfill];
+                            }];
+                        } failure:^(NSError *error) {
+                            XCTFail(@"The request should not fail - NSError: %@", error);
+                            [expectation fulfill];
+                        }];
+                    } failure:^(NSError *error) {
+                        XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                        [expectation fulfill];
+                    }];
+                } failure:^(NSError *error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+            });
+        } failure:^(NSError * _Nonnull error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+-(void)testDehydrateDeviceAndClaimDehydratedDevice4
+{
+    [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+        
+        bobSessionToClose = bobSession;
+        aliceSessionToClose = aliceSession;
+        MXRoom *roomFromBobPOV = [bobSession roomWithRoomId:roomId];
+        
+        NSString *userId = aliceSession.matrixRestClient.credentials.userId;
+
+        [aliceSession logout:^{
+
+            [aliceSession close];
+
+            NSString *messageFromAlice = @"Hello I'm still Alice!";
+            [roomFromBobPOV sendTextMessage:messageFromAlice success:^(NSString *eventId) {
+                
+                MXRestClient *mxRestClient = [[MXRestClient alloc] initWithHomeServer:kMXTestsHomeServerURL
+                                                    andOnUnrecognizedCertificateBlock:nil];
+                
+                [self retain:mxRestClient];
+                
+                [mxRestClient loginWithLoginType:kMXLoginFlowTypePassword username:userId password:MXTESTS_ALICE_PWD success:^(MXCredentials *credentials) {
+
+//                    MXRestClient *mxRestClient2 = [[MXRestClient alloc] initWithCredentials:credentials andOnUnrecognizedCertificateBlock:nil];
+//
+//                    [self retain:mxRestClient2];
+//                    
+//                    MXSession *aliceSession2 = [[MXSession alloc] initWithMatrixRestClient:mxRestClient2];
+//                    aliceSessionToClose = aliceSession2;
+//                    
+//                    [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
+                    
+//                    [aliceSession2 setStore:[MXMemoryStore new] success:^{
+//
+//                        [aliceSession2 start:^{
+//
+//                            MXRoom *roomFromAlice2POV = [aliceSession2 roomWithRoomId:roomId];
+//                            MXEvent *event = roomFromAlice2POV.summary.lastMessageEvent;
+//                            MXEvent *event2 = roomFromBobPOV.summary.lastMessageEvent;
+//
+//                            XCTAssertEqual(0, [self checkEncryptedEvent:event2 roomId:roomId clearMessage:messageFromAlice senderSession:bobSession]);
+//
+//                            XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messageFromAlice senderSession:bobSession]);
+//
+//                            NSString *messageFromBob = @"Hello I'm Bob!";
+//
+//                            [roomFromAlice2POV liveTimeline:^(MXEventTimeline *liveTimeline) {
+//                                [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage, kMXEventTypeStringRoomEncrypted] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+//
+//                                    XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messageFromBob senderSession:bobSession]);
+//
+//                                    [expectation fulfill];
+//
+//                                }];
+//                            }];
+//
+//
+//                            [roomFromBobPOV sendTextMessage:messageFromBob success:nil failure:^(NSError *error) {
+//                                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+//                                [expectation fulfill];
+//                            }];
+//
+//                        } failure:^(NSError *error) {
+//                            XCTFail(@"The request should not fail - NSError: %@", error);
+//                            [expectation fulfill];
+//                        }];
+//
+//                        [expectation fulfill];
+//
+//                    } failure:^(NSError *error) {
+//                        XCTFail(@"The request should not fail - NSError: %@", error);
+//                        [expectation fulfill];
+//                    }];
+                    
+                    [expectation fulfill];
+
+                } failure:^(NSError *error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+            } failure:^(NSError *error) {
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
+            }];
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+-(void)testDataPickling
+{
+    OLMAccount *account = [[OLMAccount alloc] initNewAccount];
+    NSDictionary *e2eKeys = [account identityKeys];
+    
+    NSData *key = [@"6fXK17pQFUrFqOnxt3wrqz8RHkQUT9vQ" dataUsingEncoding:NSUTF8StringEncoding];
+    NSString *base64Encoded = [key base64EncodedStringWithOptions:0];
+    NSError *error = nil;
+    NSString *serializedAccount = [account serializeDataWithKey:key error:&error];
+
+    XCTAssertNil(error, "serializeDataWithKey failed due to error %@", error);
+    
+    OLMAccount *deserializedAccount = [[OLMAccount alloc] initWithSerializedData:serializedAccount key:key error:&error];
+    NSDictionary *deserializedE2eKeys = [deserializedAccount identityKeys];
+
+    XCTAssertNil(error, "initWithSerializedData failed due to error %@", error);
+    XCTAssert([e2eKeys[@"ed25519"] isEqual:deserializedE2eKeys[@"ed25519"]], @"wrong deserialized ed25519 key %@ != %@", e2eKeys[@"ed25519"], deserializedE2eKeys[@"ed25519"]);
+    XCTAssert([e2eKeys[@"curve25519"] isEqual:deserializedE2eKeys[@"curve25519"]], @"wrong deserialized curve25519 key %@ != %@", e2eKeys[@"curve25519"], deserializedE2eKeys[@"curve25519"]);
+    
+    XCTestExpectation *expectation;
+    expectation = [self expectationWithDescription:@"asyncTest"];
+    
+    MXRestClient *mxRestClient = [[MXRestClient alloc] initWithHomeServer:kMXTestsHomeServerURL
+                                        andOnUnrecognizedCertificateBlock:nil];
+    
+    [self retain:mxRestClient];
+    
+    NSString *aliceUniqueUser = [NSString stringWithFormat:@"%@-%@", MXTESTS_ALICE, [[NSUUID UUID] UUIDString]];
+
+    [mxRestClient registerWithLoginType:kMXLoginFlowTypeDummy username:aliceUniqueUser password:MXTESTS_ALICE_PWD success:^(MXCredentials *credentials) {
+        [expectation fulfill];
+    } failure:^(NSError *error) {
+        XCTFail(@"The request should not fail - NSError: %@", error);
+        [expectation fulfill];
+    }];
+    
+    [self waitForExpectationsWithTimeout:60 handler:nil];
+}
+
+#pragma mark - MXKeyProviderDelegate
+
+- (BOOL)isEncryptionAvailableForDataOfType:(nonnull NSString *)dataType {
+    return [dataType isEqual:MXSessionDehydrationKeyDataType];
+}
+
+- (BOOL)hasKeyForDataOfType:(nonnull NSString *)dataType {
+    return [dataType isEqual:MXSessionDehydrationKeyDataType];
+}
+
+- (nullable MXKeyData *)keyDataForDataOfType:(nonnull NSString *)dataType {
+    return self.dehydrationKey;
+}
+
+- (void)retain:(NSObject*)object
+{
+    [retainedObjects addObject:object];
+}
+
 
 @end
 

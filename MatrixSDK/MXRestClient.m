@@ -4014,6 +4014,46 @@ MXAuthAction;
                                  }];
 }
 
+- (MXHTTPOperation*)uploadKeys:(NSDictionary*)deviceKeys oneTimeKeys:(NSDictionary*)oneTimeKeys
+               forDeviceWithId:(NSString*)deviceId
+                       success:(void (^)(MXKeysUploadResponse *keysUploadResponse))success
+                       failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"%@/keys/upload", kMXAPIPrefixPathR0];
+
+    NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
+    if (deviceKeys)
+    {
+        parameters[@"device_keys"] = deviceKeys;
+    }
+    if (oneTimeKeys)
+    {
+        parameters[@"one_time_keys"] = oneTimeKeys;
+    }
+
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"POST"
+                                    path: path
+                              parameters:parameters
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
+                                     if (success)
+                                     {
+                                         __block MXKeysUploadResponse *keysUploadResponse;
+                                         [self dispatchProcessing:^{
+                                             MXJSONModelSetMXJSONModel(keysUploadResponse, MXKeysUploadResponse, JSONResponse);
+                                         } andCompletion:^{
+                                             success(keysUploadResponse);
+                                         }];
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
 - (MXHTTPOperation*)uploadKeySignatures:(NSDictionary*)signatures
                                 success:(void (^)(void))success
                                 failure:(void (^)(NSError *error))failure
@@ -4148,7 +4188,7 @@ MXAuthAction;
 #pragma mark - Crypto: Dehydration
 
 - (MXHTTPOperation*)dehydratedDeviceWithSuccess:(void (^)(MXDehydratedDevice *device))success
-                                          failure:(void (^)(NSError *error))failure
+                                        failure:(void (^)(NSError *error))failure
 {
     MXWeakify(self);
     return [httpClient requestWithMethod:@"GET"
@@ -4160,6 +4200,31 @@ MXAuthAction;
                                         MXJSONModelSetMXJSONModel(device, MXDehydratedDevice, JSONResponse);
                                     } andCompletion:^{
                                         success(device);
+                                    }];
+                                 }
+                                 failure:^(NSError *error) {
+                                    MXStrongifyAndReturnIfNil(self);
+                                    [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
+- (MXHTTPOperation*)setDehydratedDevice:(MXDehydratedDevice *)device
+                        withDisplayName:(NSString *)deviceDisplayName
+                                success:(void (^)(NSString *deviceId))success
+                                failure:(void (^)(NSError *error))failure
+{
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"PUT"
+                                    path:[NSString stringWithFormat:@"%@/%@/org.matrix.msc2697.v2/dehydrated_device", credentials.homeServer, kMXAPIPrefixPathUnstable]
+                              parameters:@{
+                                    @"initial_device_display_name": deviceDisplayName,
+                                    @"device_data": device.JSONDictionary}
+                                 success:^(NSDictionary *JSONResponse) {
+                                    __block NSString *deviceId;
+                                    [self dispatchProcessing:^{
+                                        deviceId = JSONResponse[@"device_id"];
+                                    } andCompletion:^{
+                                        success(deviceId);
                                     }];
                                  }
                                  failure:^(NSError *error) {

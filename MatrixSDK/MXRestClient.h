@@ -2122,6 +2122,23 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
                        failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
+ Upload device and/or one-time keys.
+
+ @param deviceKeys the device keys to send.
+ @param oneTimeKeys the one-time keys to send.
+ @param deviceId ID of the device the keys belong to
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)uploadKeys:(NSDictionary*)deviceKeys oneTimeKeys:(NSDictionary*)oneTimeKeys
+               forDeviceWithId:(NSString*)deviceId
+                       success:(void (^)(MXKeysUploadResponse *keysUploadResponse))success
+                       failure:(void (^)(NSError *error))failure;
+
+/**
  Upload signatures of device keys.
 
  @param signatures the signatures content.
@@ -2196,6 +2213,21 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
  */
 - (MXHTTPOperation*)dehydratedDeviceWithSuccess:(void (^)(MXDehydratedDevice *device))success
                                         failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
+/**
+ Set a given device as the dehydrated device of the current account.
+
+ @param device data of the dehydrated device
+ @param deviceDisplayName display name of the dehydrated device
+ @param success A block object called when the operation succeeds. It provides a `MXDehydratedDevice` instance of the current account.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)setDehydratedDevice:(MXDehydratedDevice *)device
+                        withDisplayName:(NSString *)deviceDisplayName
+                                success:(void (^)(NSString *deviceId))success
+                                failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Claim the dehydrated device of the current account.

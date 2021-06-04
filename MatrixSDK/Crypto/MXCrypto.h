@@ -36,6 +36,8 @@
 #import "MXKeyVerificationManager.h"
 #import "MXCrossSigning.h"
 #import "MXUsersTrustLevelSummary.h"
+#import "MXDehydrationManager.h"
+#import "MXExportedOlmDevice.h"
 
 @class MXSession;
 
@@ -121,6 +123,11 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
 @property (nonatomic, readonly) MXCrossSigning *crossSigning;
 
 /**
+ Dehydration Manager
+ */
+@property (nonatomic, readonly) MXDehydrationManager *dehydrationManager;
+
+/**
  Create a new crypto instance and data for the given user.
  
  @param mxSession the session on which to enable crypto.
@@ -134,7 +141,7 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
 
  @param complete a block called in any case when the operation completes.
  */
-+ (void)checkCryptoWithMatrixSession:(MXSession*)mxSession complete:(void (^)(MXCrypto *crypto))complete;
++ (void)checkCryptoWithMatrixSession:(MXSession*)mxSession exportedOlmSession:(MXExportedOlmDevice*)exportedOlmSession complete:(void (^)(MXCrypto *crypto))complete;
 
 /**
  Start the crypto module.

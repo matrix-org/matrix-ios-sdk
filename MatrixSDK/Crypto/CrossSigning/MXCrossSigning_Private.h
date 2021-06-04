@@ -41,6 +41,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (BOOL)isSecretValid:(NSString*)secret forPublicKeys:(NSString*)keys;
 
+- (nullable NSString*)secretIdFromKeyType:(NSString*)keyType;
+
+- (void)signDevice:(MXDeviceInfo*)device
+           success:(void (^)(void))success
+           failure:(void (^)(NSError *error))failure;
+
 @end
 
 

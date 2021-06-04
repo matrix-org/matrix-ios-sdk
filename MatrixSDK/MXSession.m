@@ -47,6 +47,9 @@
 #import "MXAggregations_Private.h"
 #import "MatrixSDKSwiftHeader.h"
 
+#import <OLMKit/OLMKit.h>
+#import "MXExportedOlmDevice.h"
+
 #pragma mark - Constants definitions
 NSString *const kMXSessionStateDidChangeNotification = @"kMXSessionStateDidChangeNotification";
 NSString *const kMXSessionNewRoomNotification = @"kMXSessionNewRoomNotification";
@@ -79,6 +82,8 @@ NSString *const kMXSessionNotificationErrorKey = @"error";
 NSString *const kMXSessionNotificationUserIdsArrayKey = @"userIds";
 
 NSString *const kMXSessionNoRoomTag = @"m.recent";  // Use the same value as matrix-react-sdk
+
+NSString *const MXSessionDehydrationKeyDataType = @"org.matrix.sdk.session.dehydration.key";
 
 /**
  Default timeouts used by the events streams.
@@ -181,6 +186,8 @@ typedef void (^MXOnResumeDone)(void);
      Async queue to run a single task at a time.
      */
     MXAsyncTaskQueue *asyncTaskQueue;
+    
+//    MXExportedOlmDevice *exportedOlmDeviceToImport;
 }
 
 /**
@@ -345,7 +352,7 @@ typedef void (^MXOnResumeDone)(void);
 
         // Check if the user has enabled crypto
         MXWeakify(self);
-        [MXCrypto checkCryptoWithMatrixSession:self complete:^(MXCrypto *crypto) {
+        [MXCrypto checkCryptoWithMatrixSession:self exportedOlmSession:self.exportedOlmDeviceToImport complete:^(MXCrypto *crypto) {
             MXStrongifyAndReturnIfNil(self);
             
             self->_crypto = crypto;
@@ -4383,6 +4390,89 @@ typedef void (^MXOnResumeDone)(void);
 - (NSString *)virtualRoomOf:(NSString *)nativeRoomId
 {
     return nativeToVirtualRoomIds[nativeRoomId];
+}
+
+#pragma  mark - Dehydration
+
+- (void)rehydrateDeviceWithSuccess:(void (^)(void))success
+                           failure:(void (^)(NSError *error))failure
+{
+    if (_crypto)
+    {
+        NSLog(@"[MXSession] rehydrateDevice: Cannot rehydrate device after crypto is initialized.");
+        failure([NSError errorWithDomain:kMXNSErrorDomain code:0 userInfo:@{NSLocalizedDescriptionKey: @"Cannot rehydrate device after crypto is initialized"}]);
+        return;
+    }
+    
+    MXKeyData * keyData =  [[MXKeyProvider sharedInstance] keyDataForDataOfType:MXSessionDehydrationKeyDataType isMandatory:NO expectedKeyType:kRawData];
+    if (!keyData)
+    {
+        NSLog(@"[MXSession] rehydrateDevice: No dehydrated key.");
+        success();
+        return;
+    }
+    NSData *key = ((MXRawDataKey*) keyData).key;
+    
+    NSLog(@"[MXSession] rehydrateDevice: getting dehydrated device.");
+    [self.matrixRestClient dehydratedDeviceWithSuccess:^(MXDehydratedDevice *device) {
+        if (!device || !device.deviceId)
+        {
+            NSLog(@"[MXSession] rehydrateDevice: No dehydrated device found.");
+            success();
+            return;
+        }
+        
+        if (![device.algorithm isEqual:MXDehydrationAlgorithm])
+        {
+            NSLog(@"[MXSession] rehydrateDevice: Wrong algorithm for dehydrated device.");
+            failure([NSError errorWithDomain:kMXNSErrorDomain code:0 userInfo:@{NSLocalizedDescriptionKey: @"Wrong algorithm for dehydrated device"}]);
+            return;
+        }
+        
+        NSError *error = nil;
+        NSLog(@"[MXSession] rehydrateDevice: unpickling dehydrated device.");
+        OLMAccount *account = [[OLMAccount alloc] initWithSerializedData:device.account key:key error:&error];
+        
+        NSLog(@"[MXSession] rehydrateDevice: account deserialized %@", account.identityKeys);
+
+        if (error)
+        {
+            NSLog(@"[MXSession] rehydrateDevice: Failed to unpickle device account with error: %@.", error);
+            failure([NSError errorWithDomain:kMXNSErrorDomain code:0 userInfo:@{NSLocalizedDescriptionKey: @"Failed to unpickle device account"}]);
+            return;
+        }
+        
+        NSLog(@"[MXSession] rehydrateDevice: device unpickled %@", account);
+        
+        [self.matrixRestClient claimDehydratedDeviceWithId:device.deviceId Success:^(BOOL isClaimed) {
+            if (!isClaimed)
+            {
+                NSLog(@"[MXSession] rehydrateDevice: device already claimed.");
+                success();
+                return;
+            }
+
+            NSLog(@"[MXSession] rehydrateDevice: using dehydrated device");
+            self.matrixRestClient.credentials.deviceId = device.deviceId;
+            self->_exportedOlmDeviceToImport = [[MXExportedOlmDevice alloc] initWithAccount:device.account pickleKey:key forSessions:@[]];
+            success();
+        } failure:^(NSError *error) {
+            NSLog(@"[MXSession] rehydrateDevice: claimDehydratedDeviceWithId failed with error: %@", error);
+            failure(error);
+        }];
+    } failure:^(NSError *error) {
+        MXError *mxError = [[MXError alloc] initWithNSError:error];
+        if (mxError && [mxError.errcode isEqualToString:kMXErrCodeStringNotFound])
+        {
+            NSLog(@"[MXSession] rehydrateDevice: No dehydrated device found.");
+            success();
+        }
+        else
+        {
+            NSLog(@"[MXSession] rehydrateDevice: dehydratedDeviceId failed with error: %@", error);
+            failure(error);
+        }
+    }];
 }
 
 @end

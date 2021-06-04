@@ -22,6 +22,7 @@
 
 #import "MXCryptoStore.h"
 #import "MXDecrypting.h"
+#import "MXExportedOlmDevice.h"
 
 /**
  An instance of MXOlmDevice manages the olm cryptography functions.
@@ -37,7 +38,7 @@
  @param store the crypto data storage.
  @return the newly created MXOlmDevice instance.
  */
-- (instancetype)initWithStore:(id<MXCryptoStore>)store;
+- (instancetype)initWithStore:(id<MXCryptoStore>)store exportedOlmDevice:(MXExportedOlmDevice*)exportedOlmDevice;
 
 /**
  Curve25519 key for the account.
