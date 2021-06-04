@@ -473,7 +473,7 @@ typedef void (^MXOnResumeDone)(void);
                             // Make sure the last message has been decrypted
                             // In case of an initial sync, we save decryptions to save time. Only unread messages are decrypted.
                             // We need to decrypt already read last message.
-                            if (isInitialSync)
+                            if (isInitialSync && room.summary.lastMessage.isEncrypted)
                             {
                                 [self eventWithEventId:room.summary.lastMessage.eventId
                                                 inRoom:room.roomId
@@ -2832,7 +2832,7 @@ typedef void (^MXOnResumeDone)(void);
     
     for (MXRoomSummary *summary in self.roomsSummaries)
     {
-        if (!summary.lastMessage)
+        if (!summary.lastMessage || !summary.lastMessage.text)
         {
             dispatch_group_enter(dispatchGroup);
             MXLogDebug(@"[MXSession] fixRoomsSummariesLastMessage: Fixing last message for room %@", summary.roomId);
