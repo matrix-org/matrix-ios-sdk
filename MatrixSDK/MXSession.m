@@ -2832,7 +2832,36 @@ typedef void (^MXOnResumeDone)(void);
     
     for (MXRoomSummary *summary in self.roomsSummaries)
     {
-        if (!summary.lastMessage || !summary.lastMessage.text)
+        if (summary.lastMessage.isEncrypted)
+        {
+            dispatch_group_enter(dispatchGroup);
+            [self eventWithEventId:summary.lastMessage.eventId
+                            inRoom:summary.roomId
+                           success:^(MXEvent *event) {
+                
+                if (event.eventType == MXEventTypeRoomEncrypted)
+                {
+                    MXLogDebug(@"[MXSession] fixRoomsSummariesLastMessage: Fixing last message for room %@", summary.roomId);
+                    
+                    [summary resetLastMessageWithMaxServerPaginationCount:maxServerPaginationCount onComplete:^{
+                        MXLogDebug(@"[MXSession] fixRoomsSummariesLastMessage:Fixing last message operation for room %@ has complete. lastMessageEventId: %@", summary.roomId, summary.lastMessage.eventId);
+                        dispatch_group_leave(dispatchGroup);
+                    } failure:^(NSError *error) {
+                        MXLogDebug(@"[MXSession] fixRoomsSummariesLastMessage: Cannot fix last message for room %@ with maxServerPaginationCount: %@", summary.roomId, @(maxServerPaginationCount));
+                        dispatch_group_leave(dispatchGroup);
+                    }
+                                                                   commit:NO];
+                }
+                else
+                {
+                    dispatch_group_leave(dispatchGroup);
+                }
+                
+            } failure:^(NSError *error) {
+                dispatch_group_leave(dispatchGroup);
+            }];
+        }
+        else if (!summary.lastMessage)
         {
             dispatch_group_enter(dispatchGroup);
             MXLogDebug(@"[MXSession] fixRoomsSummariesLastMessage: Fixing last message for room %@", summary.roomId);
