@@ -5,7 +5,7 @@ Changes to be released in next version
  * 
 
 🙌 Improvements
- * 
+ * VoIP: Change hold direction to send-only.
 
 🐛 Bugfix
  * 
