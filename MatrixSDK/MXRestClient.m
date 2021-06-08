@@ -19,11 +19,17 @@
 
 #import "MXRestClient.h"
 
+#import "MXSDKOptions.h"
 #import "MXJSONModel.h"
 #import "MXTools.h"
 #import "MXError.h"
 
 #import "MXAllowedCertificates.h"
+
+#import "MXThirdpartyProtocolsResponse.h"
+#import "MXThirdPartyUsersResponse.h"
+
+#import "MatrixSDKSwiftHeader.h"
 
 #pragma mark - Constants definitions
 /**
@@ -207,7 +213,7 @@ MXAuthAction;
     }
     else
     {
-        NSLog(@"[MXRestClient] Warning: the userId is not correctly formatted: %@", credentials.userId);
+        MXLogDebug(@"[MXRestClient] Warning: the userId is not correctly formatted: %@", credentials.userId);
     }
 
     return homeserverSuffix;
@@ -1073,7 +1079,7 @@ MXAuthAction;
                     }
                     else
                     {
-                        NSLog(@"[MXRestClient] addIdentityAccessTokenToParameters: Error: identityServerAccessTokenHandler returned no token");
+                        MXLogDebug(@"[MXRestClient] addIdentityAccessTokenToParameters: Error: identityServerAccessTokenHandler returned no token");
                         NSError *error = [NSError errorWithDomain:kMXRestClientErrorDomain code:MXRestClientErrorMissingIdentityServerAccessToken userInfo:nil];
                         [self dispatchFailure:error inBlock:failure];
                     }
@@ -1084,7 +1090,7 @@ MXAuthAction;
             }
             else
             {
-                NSLog(@"[MXRestClient] addIdentityAccessTokenToParameters: Error: No identityServerAccessTokenHandler");
+                MXLogDebug(@"[MXRestClient] addIdentityAccessTokenToParameters: Error: No identityServerAccessTokenHandler");
                 NSError *error = [NSError errorWithDomain:kMXRestClientErrorDomain code:MXRestClientErrorMissingIdentityServerAccessToken userInfo:nil];
                 [self dispatchFailure:error inBlock:failure];
             }
@@ -1120,7 +1126,7 @@ MXAuthAction;
     {
         NSError *error = [NSError errorWithDomain:kMXRestClientErrorDomain code:MXRestClientErrorInvalidParameters userInfo:nil];
 
-        NSLog(@"[MXRestClient] setPusherWithPushkey: Error: Invalid params: ");
+        MXLogDebug(@"[MXRestClient] setPusherWithPushkey: Error: Invalid params: ");
 
         [self dispatchFailure:error inBlock:failure];
         return nil;
@@ -2548,7 +2554,7 @@ MXAuthAction;
                                           MXError *mxError = [[MXError alloc] initWithNSError:error];
                                           if (mxError && [mxError.errcode isEqualToString:kMXErrCodeStringUnrecognized])
                                           {
-                                              NSLog(@"[MXRestClient] eventWithEventId: The homeserver does not support `/rooms/{roomId}/event/{eventId}` API. Try with `/context`");
+                                              MXLogDebug(@"[MXRestClient] eventWithEventId: The homeserver does not support `/rooms/{roomId}/event/{eventId}` API. Try with `/context`");
 
                                               MXHTTPOperation *operation2 = [self contextOfEvent:eventId inRoom:roomId limit:1 filter:nil success:^(MXEventContext *eventContext) {
 
@@ -2724,6 +2730,86 @@ MXAuthAction;
                                  }];
 }
 
+#pragma mark - Room account data operations
+- (MXHTTPOperation*) updateTaggedEvents:(NSString*)roomId
+                            withContent:(MXTaggedEvents *)content
+                                success:(void (^)(void))success
+                                failure:(void (^)(NSError *error))failure
+{
+    return [self setRoomAccountData:roomId
+                          eventType:kMXEventTypeStringTaggedEvents
+                     withParameters:content.JSONDictionary
+                            success:success
+                            failure:failure];
+}
+
+- (MXHTTPOperation*) getTaggedEvents:(NSString*)roomId
+                             success:(void (^)(MXTaggedEvents *taggedEvents))success
+                             failure:(void (^)(NSError *error))failure
+{
+    return [self getRoomAccountData:roomId
+                          eventType:kMXEventTypeStringTaggedEvents
+                            success:^(NSDictionary *JSONResponse) {
+                                if (success)
+                                {
+                                    __block MXTaggedEvents *taggedEvents;
+                                    [self dispatchProcessing:^{
+                                        MXJSONModelSetMXJSONModel(taggedEvents, MXTaggedEvents, JSONResponse)
+                                    } andCompletion:^{
+                                        success(taggedEvents);
+                                    }];
+                                }
+                            } failure:failure];
+}
+
+- (MXHTTPOperation*) setRoomAccountData:(NSString*)roomId
+                              eventType:(MXEventTypeString)eventTypeString
+                         withParameters:(NSDictionary*)content
+                                success:(void (^)(void))success
+                                failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"%@/user/%@/rooms/%@/account_data/%@", apiPathPrefix, credentials.userId, roomId, eventTypeString];
+
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"PUT"
+                                    path:path
+                              parameters:content
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchSuccess:success];
+                                 }
+                                 failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
+- (MXHTTPOperation*) getRoomAccountData:(NSString*)roomId
+                              eventType:(MXEventTypeString)eventTypeString
+                                success:(void (^)(NSDictionary *JSONResponse))success
+                                failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"%@/user/%@/rooms/%@/account_data/%@", apiPathPrefix, credentials.userId, roomId, eventTypeString];
+
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"GET"
+                                    path:path
+                              parameters:nil
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
+                                     if (success)
+                                     {
+                                         [self dispatchProcessing:nil andCompletion:^{
+                                             success(JSONResponse);
+                                         }];
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
 
 #pragma mark - Profile operations
 - (MXHTTPOperation*)setDisplayName:(NSString*)displayname
@@ -2891,7 +2977,7 @@ MXAuthAction;
 {
     if (!self.identityServer)
     {
-        NSLog(@"[MXRestClient] add3PID: Error: Missing identityServer");
+        MXLogDebug(@"[MXRestClient] add3PID: Error: Missing identityServer");
         NSError *error = [NSError errorWithDomain:kMXRestClientErrorDomain code:MXRestClientErrorMissingIdentityServer userInfo:nil];
         [self dispatchFailure:error inBlock:failure];
         return nil;
@@ -3016,7 +3102,7 @@ MXAuthAction;
 
     if (!self.identityServer)
     {
-        NSLog(@"[MXRestClient] bind3PidWithSessionId: Error: Missing identityServer");
+        MXLogDebug(@"[MXRestClient] bind3PidWithSessionId: Error: Missing identityServer");
         NSError *error = [NSError errorWithDomain:kMXRestClientErrorDomain code:MXRestClientErrorMissingIdentityServer userInfo:nil];
         [self dispatchFailure:error inBlock:failure];
         return nil;
@@ -3070,7 +3156,7 @@ MXAuthAction;
 
     if (!self.identityServer)
     {
-        NSLog(@"[MXRestClient] add3PID: Error: Missing identityServer");
+        MXLogDebug(@"[MXRestClient] add3PID: Error: Missing identityServer");
         NSError *error = [NSError errorWithDomain:kMXRestClientErrorDomain code:MXRestClientErrorMissingIdentityServer userInfo:nil];
         [self dispatchFailure:error inBlock:failure];
         return nil;
@@ -3254,28 +3340,71 @@ MXAuthAction;
         // cancel the current request and notify the client so that it can retry with a new request.
         clientTimeoutInSeconds = clientTimeoutInSeconds / 1000;
     }
-
+    
+    id<MXProfiler> profiler = MXSDKOptions.sharedInstance.profiler;
+    MXTaskProfile *initialSyncRequestTaskProfile;
+    if (!token)
+    {
+        initialSyncRequestTaskProfile = [profiler startMeasuringTaskWithName:kMXAnalyticsInitialSyncRequest
+                                                                    category:kMXAnalyticsInitialSyncCategory];
+    }
+    
     MXWeakify(self);
     MXHTTPOperation *operation = [httpClient requestWithMethod:@"GET"
                                                           path:[NSString stringWithFormat:@"%@/sync", apiPathPrefix]
                                                     parameters:parameters timeout:clientTimeoutInSeconds
                                                        success:^(NSDictionary *JSONResponse) {
-                                                           MXStrongifyAndReturnIfNil(self);
-
-                                                           if (success)
-                                                           {
-                                                               __block MXSyncResponse *syncResponse;
-                                                               [self dispatchProcessing:^{
-                                                                   MXJSONModelSetMXJSONModel(syncResponse, MXSyncResponse, JSONResponse);
-                                                               } andCompletion:^{
-                                                                   success(syncResponse);
-                                                               }];
-                                                           }
-                                                       }
-                                                       failure:^(NSError *error) {
-                                                           MXStrongifyAndReturnIfNil(self);
-                                                           [self dispatchFailure:error inBlock:failure];
-                                                       }];
+        MXStrongifyAndReturnIfNil(self);
+        
+        if (initialSyncRequestTaskProfile)
+        {
+            // Guess the amout of data
+            NSDictionary *rooms, *join, *invite, *leave;
+            MXJSONModelSetDictionary(rooms, JSONResponse[@"rooms"]);
+            MXJSONModelSetDictionary(join, rooms[@"join"]);
+            MXJSONModelSetDictionary(invite, rooms[@"invite"]);
+            MXJSONModelSetDictionary(leave, rooms[@"leave"]);
+            initialSyncRequestTaskProfile.units = join.count + invite.count + leave.count;
+            
+            [profiler stopMeasuringTaskWithProfile:initialSyncRequestTaskProfile];
+        }
+        
+        if (success)
+        {
+            __block MXSyncResponse *syncResponse;
+            [self dispatchProcessing:^{
+                
+                MXTaskProfile *initialSyncParsingTaskProfile;
+                if (!token)
+                {
+                    initialSyncParsingTaskProfile = [profiler startMeasuringTaskWithName:kMXAnalyticsInitialSyncParsing
+                                                                                category:kMXAnalyticsInitialSyncCategory];
+                }
+                
+                MXJSONModelSetMXJSONModel(syncResponse, MXSyncResponse, JSONResponse);
+                
+                if (initialSyncParsingTaskProfile)
+                {
+                    // Contextualise the profiling with the amount of received information
+                    initialSyncParsingTaskProfile.units = syncResponse.rooms.join.count + syncResponse.rooms.invite.count + syncResponse.rooms.leave.count;
+                    
+                    [profiler stopMeasuringTaskWithProfile:initialSyncParsingTaskProfile];
+                }
+                
+            } andCompletion:^{
+                success(syncResponse);
+            }];
+        }
+    } failure:^(NSError *error) {
+        MXStrongifyAndReturnIfNil(self);
+        
+        if (initialSyncRequestTaskProfile)
+        {
+            [profiler cancelTaskProfile:initialSyncRequestTaskProfile];
+        }
+        
+        [self dispatchFailure:error inBlock:failure];
+    }];
     
     // Disable retry because it interferes with clientTimeout
     // Let the client manage retries on events streams
@@ -3464,6 +3593,31 @@ MXAuthAction;
                                              MXJSONModelSetMXJSONModel(thirdpartyProtocolsResponse, MXThirdpartyProtocolsResponse, JSONResponse);
                                          } andCompletion:^{
                                              success(thirdpartyProtocolsResponse);
+                                         }];
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
+- (MXHTTPOperation *)thirdpartyUsers:(NSString *)protocol fields:(NSDictionary<NSString *,NSString *> *)fields success:(void (^)(MXThirdPartyUsersResponse *))success failure:(void (^)(NSError *))failure
+{
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"GET"
+                                    path:[NSString stringWithFormat:@"%@/thirdparty/user/%@", kMXAPIPrefixPathUnstable, protocol]
+                              parameters:fields
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
+                                     if (success)
+                                     {
+                                         __block MXThirdPartyUsersResponse *thirdpartyUsersResponse;
+                                         [self dispatchProcessing:^{
+                                             thirdpartyUsersResponse = [MXThirdPartyUsersResponse modelFromJSON:JSONResponse];
+                                         } andCompletion:^{
+                                             success(thirdpartyUsersResponse);
                                          }];
                                      }
                                  }
@@ -3822,17 +3976,10 @@ MXAuthAction;
 
 #pragma mark - Crypto
 - (MXHTTPOperation*)uploadKeys:(NSDictionary*)deviceKeys oneTimeKeys:(NSDictionary*)oneTimeKeys
-                     forDevice:(NSString*)deviceId
                        success:(void (^)(MXKeysUploadResponse *keysUploadResponse))success
                        failure:(void (^)(NSError *error))failure
 {
     NSString *path = [NSString stringWithFormat:@"%@/keys/upload", kMXAPIPrefixPathR0];
-    if (deviceId)
-    {
-        path = [NSString stringWithFormat:@"%@/%@",
-                path,
-                [MXTools encodeURIComponent:deviceId]];
-    }
 
     NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
     if (deviceKeys)
@@ -3901,7 +4048,7 @@ MXAuthAction;
     NSMutableDictionary *downloadQuery = [NSMutableDictionary dictionary];
     for (NSString *userID in userIds)
     {
-        downloadQuery[userID] = @{};
+        downloadQuery[userID] = @[];
     }
 
     NSMutableDictionary *parameters = [NSMutableDictionary dictionaryWithDictionary:@{
@@ -3994,6 +4141,30 @@ MXAuthAction;
                                  } failure:^(NSError *error) {
                                      MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
+
+#pragma mark - Crypto: Dehydration
+
+- (MXHTTPOperation*)dehydratedDeviceWithSuccess:(void (^)(MXDehydratedDevice *device))success
+                                          failure:(void (^)(NSError *error))failure
+{
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"GET"
+                                    path:[NSString stringWithFormat:@"%@/%@/org.matrix.msc2697.v2/dehydrated_device", credentials.homeServer, kMXAPIPrefixPathUnstable]
+                              parameters:@{}
+                                 success:^(NSDictionary *JSONResponse) {
+                                    __block MXDehydratedDevice *device;
+                                    [self dispatchProcessing:^{
+                                        MXJSONModelSetMXJSONModel(device, MXDehydratedDevice, JSONResponse);
+                                    } andCompletion:^{
+                                        success(device);
+                                    }];
+                                 }
+                                 failure:^(NSError *error) {
+                                    MXStrongifyAndReturnIfNil(self);
+                                    [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -4121,7 +4292,7 @@ MXAuthAction;
     NSString *path = [self keyBackupPath:roomId session:sessionId version:version];
     if (!path || !keyBackupData || !roomId || !sessionId)
     {
-        NSLog(@"[MXRestClient] sendKeyBackup: ERROR: Bad parameters");
+        MXLogDebug(@"[MXRestClient] sendKeyBackup: ERROR: Bad parameters");
         [self dispatchFailure:nil inBlock:failure];
         return nil;
     }
@@ -4138,7 +4309,7 @@ MXAuthAction;
     NSString *path = [self keyBackupPath:roomId session:nil version:version];
     if (!path || !roomKeysBackupData || !roomId)
     {
-        NSLog(@"[MXRestClient] sendRoomKeysBackup: ERROR: Bad parameters");
+        MXLogDebug(@"[MXRestClient] sendRoomKeysBackup: ERROR: Bad parameters");
         [self dispatchFailure:nil inBlock:failure];
         return nil;
     }
@@ -4154,7 +4325,7 @@ MXAuthAction;
     NSString *path = [self keyBackupPath:nil session:nil version:version];
     if (!path || !keysBackupData)
     {
-        NSLog(@"[MXRestClient] sendKeysBackup: ERROR: Bad parameters");
+        MXLogDebug(@"[MXRestClient] sendKeysBackup: ERROR: Bad parameters");
         [self dispatchFailure:nil inBlock:failure];
         return nil;
     }
@@ -4196,7 +4367,7 @@ MXAuthAction;
     NSString *path = [self keyBackupPath:roomId session:sessionId version:version];
     if (!path || !roomId || !sessionId)
     {
-        NSLog(@"[MXRestClient] keyBackup: ERROR: Bad parameters");
+        MXLogDebug(@"[MXRestClient] keyBackup: ERROR: Bad parameters");
         [self dispatchFailure:nil inBlock:failure];
         return nil;
     }
@@ -4231,7 +4402,7 @@ MXAuthAction;
     NSString *path = [self keyBackupPath:roomId session:nil version:version];
     if (!path || !roomId)
     {
-        NSLog(@"[MXRestClient] roomKeysBackup: ERROR: Bad parameters");
+        MXLogDebug(@"[MXRestClient] roomKeysBackup: ERROR: Bad parameters");
         [self dispatchFailure:nil inBlock:failure];
         return nil;
     }
@@ -4265,7 +4436,7 @@ MXAuthAction;
     NSString *path = [self keyBackupPath:nil session:nil version:version];
     if (!path)
     {
-        NSLog(@"[MXRestClient] keysBackup: ERROR: Bad parameters");
+        MXLogDebug(@"[MXRestClient] keysBackup: ERROR: Bad parameters");
         [self dispatchFailure:nil inBlock:failure];
         return nil;
     }
@@ -4301,7 +4472,7 @@ MXAuthAction;
     NSString *path = [self keyBackupPath:roomId session:sessionId version:version];
     if (!path || !roomId || !sessionId)
     {
-        NSLog(@"[MXRestClient] deleteKeyFromBackup: ERROR: Bad parameters");
+        MXLogDebug(@"[MXRestClient] deleteKeyFromBackup: ERROR: Bad parameters");
         [self dispatchFailure:nil inBlock:failure];
         return nil;
     }
@@ -4334,7 +4505,7 @@ MXAuthAction;
     NSString *path = [self keyBackupPath:roomId session:nil version:version];
     if (!path || !roomId)
     {
-        NSLog(@"[MXRestClient] deleteKeysInRoomFromBackup: ERROR: Bad parameters");
+        MXLogDebug(@"[MXRestClient] deleteKeysInRoomFromBackup: ERROR: Bad parameters");
         [self dispatchFailure:nil inBlock:failure];
         return nil;
     }
@@ -4366,7 +4537,7 @@ MXAuthAction;
     NSString *path = [self keyBackupPath:nil session:nil version:version];
     if (!path)
     {
-        NSLog(@"[MXRestClient] keysBackup: ERROR: Bad parameters");
+        MXLogDebug(@"[MXRestClient] keysBackup: ERROR: Bad parameters");
         [self dispatchFailure:nil inBlock:failure];
         return nil;
     }
@@ -4404,7 +4575,7 @@ MXAuthAction;
     {
         if (!roomId)
         {
-            NSLog(@"[MXRestClient] keyBackupPath: ERROR: Null version");
+            MXLogDebug(@"[MXRestClient] keyBackupPath: ERROR: Null version");
             return nil;
         }
         [path appendString:@"/"];
@@ -4546,7 +4717,7 @@ MXAuthAction;
                                  success:^(NSDictionary *JSONResponse) {
                                      MXStrongifyAndReturnIfNil(self);
                                      
-                                     NSLog(@"[MXRestClient] Warning: get an authentication session to delete a device failed");
+                                     MXLogDebug(@"[MXRestClient] Warning: get an authentication session to delete a device failed");
                                      if (success)
                                      {
                                          [self dispatchProcessing:nil
@@ -5009,7 +5180,7 @@ MXAuthAction;
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
 
-                                     NSLog(@"[MXRestClient] authSessionForRequestWithMethod: Warning: get an authentication session failed");
+                                     MXLogDebug(@"[MXRestClient] authSessionForRequestWithMethod: No authentication is needed");
                                      if (success)
                                      {
                                          [self dispatchProcessing:nil
@@ -5020,8 +5191,18 @@ MXAuthAction;
                                  }
                                  failure:^(NSError *error) {
                                      __block MXAuthenticationSession *authSession;
+                                     __block BOOL isAuthenticationNeeded = YES;
                                      [self dispatchProcessing:^{
-                                         if (error.userInfo[MXHTTPClientErrorResponseDataKey])
+                                         
+                                         MXError *matrixError = [[MXError alloc] initWithNSError: error];
+                                         
+                                         // If a grace period is active or the endpoint do not requires authentication and waiting for parameters do not fail and give a nil auth session.
+                                         if (matrixError && matrixError.httpResponse.statusCode == 400)
+                                         {
+                                             MXLogDebug(@"[MXRestClient] authSessionForRequestWithMethod: No authentication is needed. Ignore invalid parameters error");
+                                             isAuthenticationNeeded = NO;
+                                         }
+                                         else if (error.userInfo[MXHTTPClientErrorResponseDataKey])
                                          {
                                              // The auth session should be available in response data in case of unauthorized request.
                                              NSDictionary *JSONResponse = error.userInfo[MXHTTPClientErrorResponseDataKey];
@@ -5031,7 +5212,7 @@ MXAuthAction;
                                              }
                                          }
                                      } andCompletion:^{
-                                         if (authSession)
+                                         if (!isAuthenticationNeeded || authSession)
                                          {
                                              if (success)
                                              {
@@ -5168,6 +5349,39 @@ MXAuthAction;
                                              MXJSONModelSetMXJSONModel(paginatedResponse, MXAggregationPaginatedResponse, JSONResponse);
                                          } andCompletion:^{
                                              success(paginatedResponse);
+                                         }];
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
+#pragma mark - Spaces
+
+- (MXHTTPOperation*)getSpaceChildrenForSpaceWithId:(NSString*)spaceId
+                                        parameters:(MXSpaceChildrenRequestParameters*)parameters
+                                          success:(void (^)(MXSpaceChildrenResponse *spaceChildrenResponse))success
+                                          failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"%@/org.matrix.msc2946/rooms/%@/spaces",
+                             kMXAPIPrefixPathUnstable, spaceId];
+    
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"POST"
+                                    path:path                              
+                              parameters:[parameters jsonDictionary] ?: @{}
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
+                                     if (success)
+                                     {
+                                         __block MXSpaceChildrenResponse *spaceChildrenResponse;
+                                         [self dispatchProcessing:^{
+                                             MXJSONModelSetMXJSONModel(spaceChildrenResponse, MXSpaceChildrenResponse, JSONResponse);
+                                         } andCompletion:^{
+                                             success(spaceChildrenResponse);
                                          }];
                                      }
                                  }

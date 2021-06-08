@@ -33,6 +33,8 @@
 
 #import "MXError.h"
 
+#import "MXRoomSync.h"
+
 NSString *const kMXRoomDidFlushDataNotification = @"kMXRoomDidFlushDataNotification";
 NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotification";
 
@@ -183,7 +185,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                 {
                     onRequesterComplete(self->liveTimeline);
                 }
-                NSLog(@"[MXRoom] liveTimeline loaded. Pending requesters: %@", @(liveTimelineRequesters.count));
+                MXLogDebug(@"[MXRoom] liveTimeline loaded. Pending requesters: %@", @(liveTimelineRequesters.count));
             }];
         }
 
@@ -214,6 +216,8 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
           lazyLoadedMembers:(void (^)(MXRoomMembers *lazyLoadedMembers))lazyLoadedMembers
                     failure:(void (^)(NSError *error))failure
 {
+    MXLogDebug(@"[MXRoom] members: roomId: %@", _roomId);
+          
     // Create an empty operation that will be mutated later
     MXHTTPOperation *operation = [[MXHTTPOperation alloc] init];
 
@@ -224,13 +228,19 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         // Return directly liveTimeline.state.members if we have already all of them
         if ([self.mxSession.store hasLoadedAllRoomMembersForRoom:self.roomId])
         {
+            MXLogDebug(@"[MXRoom] members: All members are known. Return %@ joined, %@ invited",
+                  @(liveTimeline.state.membersCount.joined), @(liveTimeline.state.membersCount.invited));
             success(liveTimeline.state.members);
         }
         else
         {
+            MXLogDebug(@"[MXRoom] members: Currently known members: %@ joined, %@ invited",
+                  @(liveTimeline.state.membersCount.joined), @(liveTimeline.state.membersCount.invited));
+            
             // Return already lazy-loaded room members if requested
             if (lazyLoadedMembers)
             {
+                MXLogDebug(@"[MXRoom] members: Call lazyLoadedMembers");
                 lazyLoadedMembers(liveTimeline.state.members);
             }
 
@@ -249,6 +259,8 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                                    kMXMembersOfRoomParametersNotMembership: kMXMembershipStringLeave
                                    };
                 }
+                
+                MXLogDebug(@"[MXRoom] members: Call /members with parameters: %@", parameters);
 
                 MXWeakify(self);
                 MXHTTPOperation *operation2 = [self.mxSession.matrixRestClient membersOfRoom:self.roomId
@@ -256,6 +268,8 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                                                                                      success:^(NSArray *roomMemberEvents)
                 {
                     MXStrongifyAndReturnIfNil(self);
+                    
+                    MXLogDebug(@"[MXRoom] members: roomId: %@. /members returned %@ members", self.roomId, @(roomMemberEvents.count));
 
                     // Manage the possible race condition where we could have received
                     // update of members from the events stream (/sync) while the /members
@@ -289,6 +303,10 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                         }
                     }
 
+                    MXLogDebug(@"[MXRoom] members: roomId: %@. /members succeeded. Pending requesters: %@. Members: %@ joined, %@ invited ",
+                          self.roomId, @(self->pendingMembersRequesters.count),
+                          @(liveTimeline.state.membersCount.joined), @(liveTimeline.state.membersCount.invited));
+                    
                     // Provide the members to pending requesters
                     NSArray<void (^)(MXRoomMembers *)> *pendingMembersRequesters = [self->pendingMembersRequesters copy];
                     self->pendingMembersRequesters = nil;
@@ -298,9 +316,12 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                     {
                         onRequesterComplete(liveTimeline.state.members);
                     }
-                    NSLog(@"[MXRoom] members loaded. Pending requesters: %@", @(pendingMembersRequesters.count));
 
                 } failure:^(NSError *error) {
+                    MXStrongifyAndReturnIfNil(self);
+                    
+                    MXLogDebug(@"[MXRoom] members: roomId: %@. /members failed. Pending requesters: %@", self.roomId, @(self->pendingMembersFailureBlocks.count));
+                    
                     // Notify the failure to the pending requesters
                     NSArray<void (^)(NSError *)> *pendingRequesters = [self->pendingMembersFailureBlocks copy];
                     self->pendingMembersRequesters = nil;
@@ -310,10 +331,13 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                     {
                         onFailure(error);
                     }
-                    NSLog(@"[MXRoom] get members failed. Pending requesters: %@", @(pendingRequesters.count));
                 }];
 
                 [operation mutateTo:operation2];
+            }
+            else
+            {
+                MXLogDebug(@"[MXRoom] members: Request already pending for %@ requesters", @(self->pendingMembersRequesters.count));
             }
 
             if (success)
@@ -348,51 +372,62 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
 
 #pragma mark - Sync
-- (void)handleJoinedRoomSync:(MXRoomSync *)roomSync
+- (void)handleJoinedRoomSync:(MXRoomSync *)roomSync onComplete:(void (^)(void))onComplete
 {
     MXWeakify(self);
-    [self liveTimeline:^(MXEventTimeline *theLiveTimeline) {
+    [self liveTimeline:^(MXEventTimeline *liveTimeline) {
         MXStrongifyAndReturnIfNil(self);
 
+        // Start with ephemeral events
+        // Knowing RRs are useful to process timeline events in roomSync
+        [self handleEphemeralEvents:roomSync.ephemeral.events inLiveTimeline:liveTimeline];
+
         // Let the live timeline handle live events
-        [theLiveTimeline handleJoinedRoomSync:roomSync];
+        [liveTimeline handleJoinedRoomSync:roomSync onComplete:^{
 
-        // Handle here ephemeral events (if any)
-        for (MXEvent *event in roomSync.ephemeral.events)
-        {
-            // Report the room id in the event as it is skipped in /sync response
-            event.roomId = self.roomId;
-
-            // Handle first typing notifications
-            if (event.eventType == MXEventTypeTypingNotification)
-            {
-                // Typing notifications events are not room messages nor room state events
-                // They are just volatile information
-                MXJSONModelSetArray(self->_typingUsers, event.content[@"user_ids"]);
-
-                // Notify listeners
-                [theLiveTimeline notifyListeners:event direction:MXTimelineDirectionForwards];
-            }
-            else if (event.eventType == MXEventTypeReceipt)
-            {
-                [self handleReceiptEvent:event direction:MXTimelineDirectionForwards];
-            }
-        }
-
-        // Handle account data events (if any)
-        [self handleAccounDataEvents:roomSync.accountData.events liveTimeline:theLiveTimeline direction:MXTimelineDirectionForwards];
+            // Handle account data events
+            [self handleAccountDataEvents:roomSync.accountData.events liveTimeline:liveTimeline direction:MXTimelineDirectionForwards];
+            
+            onComplete();
+        }];
     }];
 }
 
-- (void)handleInvitedRoomSync:(MXInvitedRoomSync *)invitedRoomSync
+- (void)handleEphemeralEvents:(NSArray<MXEvent*>*)events inLiveTimeline:(MXEventTimeline *)liveTimeline
+{
+    for (MXEvent *event in events)
+    {
+        // Report the room id in the event as it is skipped in /sync response
+        event.roomId = self.roomId;
+        
+        // Handle first typing notifications
+        if (event.eventType == MXEventTypeTypingNotification)
+        {
+            // Typing notifications events are not room messages nor room state events
+            // They are just volatile information
+            MXJSONModelSetArray(self->_typingUsers, event.content[@"user_ids"]);
+            
+            // Notify listeners
+            [liveTimeline notifyListeners:event direction:MXTimelineDirectionForwards];
+        }
+        else if (event.eventType == MXEventTypeReceipt)
+        {
+            [self handleReceiptEvent:event inLiveTimeline:liveTimeline direction:MXTimelineDirectionForwards];
+        }
+    }
+}
+
+- (void)handleInvitedRoomSync:(MXInvitedRoomSync *)invitedRoomSync onComplete:(void (^)(void))onComplete
 {
     [self liveTimeline:^(MXEventTimeline *theLiveTimeline) {
 
         // Let the live timeline handle live events
-        [theLiveTimeline handleInvitedRoomSync:invitedRoomSync];
-
-        // Handle direct flag to decide if it is direct or not
-        [self handleInviteDirectFlag];
+        [theLiveTimeline handleInvitedRoomSync:invitedRoomSync onComplete:^{
+            // Handle direct flag to decide if it is direct or not
+            [self handleInviteDirectFlag];
+            
+            onComplete();
+        }];
     }];
 }
 
@@ -418,7 +453,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         {
             // Mark as direct this room with the invite sender.
             [self setIsDirect:YES withUserId:myUser.originalEvent.sender success:nil failure:^(NSError *error) {
-                NSLog(@"[MXRoom] Failed to tag an invite as a direct chat");
+                MXLogDebug(@"[MXRoom] Failed to tag an invite as a direct chat");
             }];
         }
     }];
@@ -428,12 +463,12 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 /**
  Handle private user data events.
 
- @param accounDataEvents the events to handle.
+ @param accountDataEvents the events to handle.
  @param direction the process direction: MXTimelineDirectionSync or MXTimelineDirectionForwards. MXTimelineDirectionBackwards is not applicable here.
  */
-- (void)handleAccounDataEvents:(NSArray<MXEvent*>*)accounDataEvents liveTimeline:(MXEventTimeline*)theLiveTimeline direction:(MXTimelineDirection)direction
+- (void)handleAccountDataEvents:(NSArray<MXEvent*>*)accountDataEvents liveTimeline:(MXEventTimeline*)theLiveTimeline direction:(MXTimelineDirection)direction
 {
-    for (MXEvent *event in accounDataEvents)
+    for (MXEvent *event in accountDataEvents)
     {
         [_accountData handleEvent:event];
 
@@ -613,13 +648,13 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
             roomOperation = [self preserveOperationOrder:event block:^{
                 MXStrongifyAndReturnIfNil(self);
 
-                NSLog(@"[MXRoom] sendEventOfType(MXCrypto): Encrypting event %@", event.eventId);
+                MXLogDebug(@"[MXRoom] sendEventOfType(MXCrypto): Encrypting event %@", event.eventId);
 
                 MXWeakify(self);
                 MXHTTPOperation *operation = [self->mxSession.crypto encryptEventContent:contentCopyToEncrypt withType:eventTypeString inRoom:self success:^(NSDictionary *encryptedContent, NSString *encryptedEventType) {
                     MXStrongifyAndReturnIfNil(self);
 
-                    NSLog(@"[MXRoom] sendEventOfType(MXCrypto): Encrypt event %@ -> DONE using sessionId: %@", event.eventId, encryptedContent[@"session_id"]);
+                    MXLogDebug(@"[MXRoom] sendEventOfType(MXCrypto): Encrypt event %@ -> DONE using sessionId: %@", event.eventId, encryptedContent[@"session_id"]);
 
                     NSDictionary *finalEncryptedContent;
                     
@@ -660,7 +695,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                     // Send the encrypted content
                     MXHTTPOperation *operation2 = [self _sendEventOfType:encryptedEventType content:finalEncryptedContent txnId:event.eventId success:^(NSString *eventId) {
 
-                        NSLog(@"[MXRoom] sendEventOfType(MXCrypto): Send event %@ -> DONE. Final event id: %@", event.eventId, eventId);
+                        MXLogDebug(@"[MXRoom] sendEventOfType(MXCrypto): Send event %@ -> DONE. Final event id: %@", event.eventId, eventId);
                         onSuccess(eventId);
 
                     } failure:onFailure];
@@ -673,7 +708,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
                 } failure:^(NSError *error) {
 
-                    NSLog(@"[MXRoom] sendEventOfType(MXCrypto): Cannot encrypt event %@. Error: %@", event.eventId, error);
+                    MXLogDebug(@"[MXRoom] sendEventOfType(MXCrypto): Cannot encrypt event %@. Error: %@", event.eventId, error);
 
                     onFailure(error);
                 }];
@@ -1163,7 +1198,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
             msgContent[@"info"][@"mimetype"] = mimetype;
             msgContent[@"info"][@"w"] = @(size.width);
             msgContent[@"info"][@"h"] = @(size.height);
-            msgContent[@"info"][@"duration"] = @(durationInMs);
+            msgContent[@"info"][@"duration"] = @((int)floor(durationInMs));
 
             if (self.mxSession.crypto && self.summary.isEncrypted)
             {
@@ -1755,7 +1790,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 {
     if (![self canReplyToEvent:eventToReply])
     {
-        NSLog(@"[MXRoom] Send reply to this event is not supported");
+        MXLogDebug(@"[MXRoom] Send reply to this event is not supported");
         return nil;
     }
     
@@ -1807,7 +1842,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     }
     else
     {
-        NSLog(@"[MXRoom] Fail to generate reply body and formatted body");
+        MXLogDebug(@"[MXRoom] Fail to generate reply body and formatted body");
     }
     
     return operation;
@@ -1850,7 +1885,13 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         || [msgtype isEqualToString:kMXMessageTypeEmote])
     {
         NSString *eventToReplyMessageBody = eventToReply.content[@"body"];
-        NSString *eventToReplyMessageFormattedBody = eventToReply.content[@"formatted_body"];
+        
+        // Use formatted body only if the format is known
+        NSString *eventToReplyMessageFormattedBody;
+        if ([eventToReply.content[@"format"] isEqualToString:kMXRoomMessageFormatHTML])
+        {
+            eventToReplyMessageFormattedBody = eventToReply.content[@"formatted_body"];
+        }
         
         senderMessageBody = eventToReplyMessageBody;
         senderMessageFormattedBody = eventToReplyMessageFormattedBody ?: eventToReplyMessageBody;
@@ -1878,7 +1919,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     else
     {
         // Other message types are not supported
-        NSLog(@"[MXRoom] Reply to message type %@ is not supported", msgtype);
+        MXLogDebug(@"[MXRoom] Reply to message type %@ is not supported", msgtype);
     }
     
     if (senderMessageBody && senderMessageFormattedBody)
@@ -1895,7 +1936,6 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         *replyContentFormattedBody = [self replyMessageFormattedBodyFromEventToReply:eventToReply
                                                           senderMessageFormattedBody:senderMessageFormattedBody
                                                               isSenderMessageAnEmote:isSenderMessageAnEmote
-                                                             isSenderMessageAReplyTo:eventToReplyIsAlreadyAReply
                                                                replyFormattedMessage:finalFormattedTextMessage
                                                                  stringLocalizations:stringLocalizations];
     }
@@ -1986,7 +2026,6 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
  @param eventToReply The sender event to reply.
  @param senderMessageFormattedBody The message body of the sender.
  @param isSenderMessageAnEmote Indicate if the sender message is an emote (/me).
- @param isSenderMessageAReplyTo Indicate if the sender message is already a reply to message.
  @param replyFormattedMessage The response for the sender message. HTML formatted string if any otherwise non formatted string as reply formatted body is mandatory.
  @param stringLocalizations string localizations used when building formatted body.
  
@@ -1995,7 +2034,6 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 - (NSString*)replyMessageFormattedBodyFromEventToReply:(MXEvent*)eventToReply
                             senderMessageFormattedBody:(NSString*)senderMessageFormattedBody
                                 isSenderMessageAnEmote:(BOOL)isSenderMessageAnEmote
-                               isSenderMessageAReplyTo:(BOOL)isSenderMessageAReplyTo
                                  replyFormattedMessage:(NSString*)replyFormattedMessage
                                    stringLocalizations:(id<MXSendReplyEventStringsLocalizable>)stringLocalizations
 {
@@ -2005,30 +2043,27 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     
     if (!eventId || !roomId || !sender)
     {
-        NSLog(@"[MXRoom] roomId, eventId and sender cound not be nil");
+        MXLogDebug(@"[MXRoom] roomId, eventId and sender cound not be nil");
         return nil;
     }
     
     NSString *replySenderMessageFormattedBody;
     
-    // Strip previous reply to, if the event was already a reply
-    if (isSenderMessageAReplyTo)
+    // Strip any previous "reply to"
+    NSError *error = nil;
+    NSRegularExpression *replyRegex = [NSRegularExpression regularExpressionWithPattern:@"<mx-reply>.*</mx-reply>"
+                                                                                options:NSRegularExpressionCaseInsensitive | NSRegularExpressionDotMatchesLineSeparators
+                                                                                  error:&error];
+    NSString *senderMessageFormattedBodyWithoutReply = [replyRegex stringByReplacingMatchesInString:senderMessageFormattedBody options:0 range:NSMakeRange(0, senderMessageFormattedBody.length) withTemplate:@""];
+    
+    if (error)
     {
-        NSError *error = nil;
-        NSRegularExpression *replyRegex = [NSRegularExpression regularExpressionWithPattern:@"^<mx-reply>.*</mx-reply>"
-                                                                                    options:NSRegularExpressionCaseInsensitive | NSRegularExpressionDotMatchesLineSeparators
-                                                                                      error:&error];
-        NSString *senderMessageFormattedBodyWithoutReply = [replyRegex stringByReplacingMatchesInString:senderMessageFormattedBody options:0 range:NSMakeRange(0, senderMessageFormattedBody.length) withTemplate:@""];
-        
-        if (error)
-        {
-            NSLog(@"[MXRoom] Fail to strip previous reply to message");
-        }
-        
-        if (senderMessageFormattedBodyWithoutReply)
-        {
-            replySenderMessageFormattedBody = senderMessageFormattedBodyWithoutReply;
-        }
+        MXLogDebug(@"[MXRoom] Fail to strip previous reply to message");
+    }
+    
+    if (senderMessageFormattedBodyWithoutReply)
+    {
+        replySenderMessageFormattedBody = senderMessageFormattedBodyWithoutReply;
     }
     else
     {
@@ -2304,11 +2339,14 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     }
 
     // If required, update the last message
-    MXEvent *lastMessageEvent = self.summary.lastMessageEvent;
-    if (lastMessageEvent.sentState != MXEventSentStateSent)
-    {
-        [self.summary resetLastMessage:nil failure:nil commit:YES];
-    }
+    [mxSession eventWithEventId:self.summary.lastMessage.eventId
+                         inRoom:_roomId
+                        success:^(MXEvent *event) {
+        if (event.sentState != MXEventSentStateSent)
+        {
+            [self.summary resetLastMessage:nil failure:nil commit:YES];
+        }
+    } failure:nil];
 }
 
 - (void)removeOutgoingMessage:(NSString*)outgoingMessageEventId
@@ -2321,7 +2359,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     }
 
     // If required, update the last message
-    if ([self.summary.lastMessageEventId isEqualToString:outgoingMessageEventId])
+    if ([self.summary.lastMessage.eventId isEqualToString:outgoingMessageEventId])
     {
         [self.summary resetLastMessage:nil failure:nil commit:YES];
     }
@@ -2351,19 +2389,6 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     if ([mxSession.store respondsToSelector:@selector(outgoingMessagesInRoom:)])
     {
         NSArray<MXEvent*> *outgoingMessages = [mxSession.store outgoingMessagesInRoom:self.roomId];
-        
-        for (MXEvent *event in outgoingMessages)
-        {
-            // Decrypt event if necessary
-            if (event.eventType == MXEventTypeRoomEncrypted)
-            {
-                if (![self.mxSession decryptEvent:event inTimeline:nil])
-                {
-                    NSLog(@"[MXRoom] outgoingMessages: Warning: Unable to decrypt outgoing event: %@", event.decryptionError);
-                }
-            }
-        }
-        
         return outgoingMessages;
     }
     else
@@ -2559,6 +2584,52 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     return operation;
 }
 
+#pragma mark - Room account data operations
+
+- (MXHTTPOperation*)tagEvent:(MXEvent*)event
+                     withTag:(NSString*)tag
+                 andKeywords:(NSArray*)keywords
+                     success:(void (^)(void))success
+                     failure:(void (^)(NSError *error))failure
+{
+    MXTaggedEvents *taggedEvents = _accountData.taggedEvents;
+    
+    if(!taggedEvents)
+    {
+        taggedEvents = [[MXTaggedEvents alloc] init];
+    }
+    
+    MXTaggedEventInfo *taggedEventInfo = [[MXTaggedEventInfo alloc] init];
+    taggedEventInfo.keywords = keywords;
+    taggedEventInfo.originServerTs = event.originServerTs;
+    taggedEventInfo.taggedAt = [NSDate date].timeIntervalSince1970 * 1000;
+    
+    [taggedEvents tagEvent:event.eventId taggedEventInfo:taggedEventInfo tag:tag];
+
+    return [mxSession.matrixRestClient updateTaggedEvents:_roomId withContent:taggedEvents success:success failure:failure];
+}
+
+- (MXHTTPOperation*)untagEvent:(MXEvent*)event
+                       withTag:(NSString*)tag
+                       success:(void (^)(void))success
+                       failure:(void (^)(NSError *error))failure
+{
+    [_accountData.taggedEvents untagEvent:event.eventId tag:tag];
+    
+    return [mxSession.matrixRestClient updateTaggedEvents:_roomId withContent:_accountData.taggedEvents success:success failure:failure];
+}
+
+- (MXHTTPOperation *)setAccountData:(NSDictionary *)content
+                            forType:(NSString *)type
+                            success:(void (^)(void))success
+                            failure:(void (^)(NSError *))failure
+{
+    return [mxSession.matrixRestClient setRoomAccountData:_roomId
+                                                eventType:type
+                                           withParameters:content
+                                                  success:success
+                                                  failure:failure];
+}
 
 #pragma mark - Voice over IP
 - (void)placeCallWithVideo:(BOOL)video
@@ -2577,7 +2648,14 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
 #pragma mark - Read receipts management
 
-- (BOOL)handleReceiptEvent:(MXEvent *)event direction:(MXTimelineDirection)direction
+/**
+ Handle a receipt event.
+ 
+ @param event the event to handle.
+ @param liveTimeline the live timeline of this room.
+ @param direction the timeline direction.
+ */
+- (BOOL)handleReceiptEvent:(MXEvent *)event inLiveTimeline:(MXEventTimeline *)liveTimeline direction:(MXTimelineDirection)direction
 {
     BOOL managedEvents = false;
     
@@ -2613,9 +2691,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     if (managedEvents)
     {
         // Notify listeners
-        [self liveTimeline:^(MXEventTimeline *theLiveTimeline) {
-            [theLiveTimeline notifyListeners:event direction:direction];
-        }];
+        [liveTimeline notifyListeners:event direction:direction];
     }
     
     return managedEvents;
@@ -2851,7 +2927,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     // Sanity check
     if (!userId)
     {
-        NSLog(@"[MXRoom] storeLocalReceipt: Error: nil user id");
+        MXLogDebug(@"[MXRoom] storeLocalReceipt: Error: nil user id");
         return NO;
     }
 
@@ -3148,7 +3224,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
 - (NSComparisonResult)compareLastMessageEventOriginServerTs:(MXRoom *)otherRoom
 {
-    return [self.summary.lastMessageEvent compareOriginServerTs:otherRoom.summary.lastMessageEvent];
+    return [self.summary.lastMessage compareOriginServerTs:otherRoom.summary.lastMessage];
 }
 
 @end

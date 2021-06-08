@@ -23,8 +23,14 @@
 #import "MXRoomMembersCount.h"
 #import "MXEnumConstants.h"
 #import "MXUsersTrustLevelSummary.h"
+#import "MXMembershipTransitionState.h"
+#import "MXRoomType.h"
+#import "MXRoomLastMessage.h"
 
 @class MXSession, MXRoom, MXRoomState, MXEvent;
+@class MXRoomSync;
+@class MXInvitedRoomSync;
+@class MXRoomSyncSummary;
 @protocol MXStore;
 
 
@@ -41,6 +47,8 @@
  */
 FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
 
+/// Number of events retrieved when doing pagination from the homeserver.
+FOUNDATION_EXPORT NSUInteger const MXRoomSummaryPaginationChunkSize;
 
 /**
  `MXRoomSummary` exposes and caches data for a room.
@@ -64,8 +72,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
        Ex: the displayname of the room.
 
      * Last message data:
-       This is lastMessageEventId plus the string or/and attributed string computed for
-       this last message event.
+       This is lastMessage property.
 
      * Business logic data:
        This is data that is used internally by the sdk.
@@ -137,6 +144,16 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
 #pragma mark - Data related to room state
 
 /**
+ The room type string value as provided by the server. Can be nil.
+ */
+@property (nonatomic) NSString *roomTypeString;
+
+/**
+ The locally computed room type derivated from `roomTypeString`.
+ */
+@property (nonatomic) MXRoomType roomType;
+
+/**
  The Matrix content URI of the room avatar.
  */
 @property (nonatomic) NSString *avatar;
@@ -152,6 +169,11 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
 @property (nonatomic) NSString *topic;
 
 /**
+ The room creator user id.
+ */
+@property (nonatomic) NSString *creatorUserId;
+
+/**
  The aliases of this room.
  */
 @property (nonatomic) NSArray<NSString *> *aliases;
@@ -160,6 +182,11 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
  The membership state of the logged in user for this room.
  */
 @property (nonatomic) MXMembership membership NS_REFINED_FOR_SWIFT;
+
+/**
+ The membership transition state of the logged in user for this room.
+ */
+@property (nonatomic, readonly) MXMembershipTransitionState membershipTransitionState;
 
 /**
  Room members counts.
@@ -189,54 +216,42 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
 #pragma mark - Data related to the last message
 
 /**
- The last message event id.
+ The last message of the room summary.
  */
-@property (nonatomic, readonly) NSString *lastMessageEventId;
+@property (nonatomic, readonly) MXRoomLastMessage *lastMessage;
 
 /**
- The last message server timestamp.
+ Intenal SDK method to update the last message.
  */
-@property (nonatomic, readonly) uint64_t lastMessageOriginServerTs;
+-(void)updateLastMessage:(MXRoomLastMessage *)message;
 
 /**
- Indicates if the last message is encrypted.
+ Reset the last message from data in the store.
  
- @discussion
- An unencrypted message can be sent to an encrypted room.
- When the last message is encrypted, its summary data (lastMessageString, lastMessageAttributedString,
- lastMessageOthers) is stored encrypted in the room summary cache.
- */
-@property (nonatomic, readonly) BOOL isLastMessageEncrypted;
-
-/**
- String representation of this last message.
- */
-@property (nonatomic) NSString *lastMessageString;
-@property (nonatomic) NSAttributedString *lastMessageAttributedString;
-
-/**
- Placeholder to store more information about the last message.
- */
-@property (nonatomic) NSMutableDictionary<NSString*, id<NSCoding>> *lastMessageOthers;
-
-/**
- The shortcut to the last message event.
- */
-@property (nonatomic) MXEvent *lastMessageEvent;
-
-/**
- Reset the last message.
- 
- The operation is asynchronous as it may require pagination from the homeserver.
- 
- @param complete A block object called when the operation completes.
+ @param onComplete A block object called when the operation completes.
  @param failure A block object called when the operation fails.
  @param commit  Tell whether the updated room summary must be committed to the store. Use NO when a more
  global [MXStore commit] will happen. This optimises IO.
 
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)resetLastMessage:(void (^)(void))complete failure:(void (^)(NSError *))failure commit:(BOOL)commit;
+- (MXHTTPOperation*)resetLastMessage:(void (^)(void))onComplete failure:(void (^)(NSError *))failure commit:(BOOL)commit;
+
+/**
+ Reset the last message by paginating messages from the homeserver if needed.
+ 
+ @param maxServerPaginationCount The max number of messages to retrieve from the server.
+ @param onComplete A block object called when the operation completes.
+ @param failure A block object called when the operation fails.
+ @param commit  Tell whether the updated room summary must be committed to the store. Use NO when a more
+ global [MXStore commit] will happen. This optimises IO.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation *)resetLastMessageWithMaxServerPaginationCount:(NSUInteger)maxServerPaginationCount
+                                                       onComplete:(void (^)(void))onComplete
+                                                          failure:(void (^)(NSError *))failure
+                                                           commit:(BOOL)commit;
 
 
 #pragma mark - Data related to business logic
@@ -297,6 +312,22 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
  */
 - (void)markAllAsRead;
 
+/// Update membership transition state and notify update if needed
+/// @param membershipTransitionState The new membership transition state value
+- (void)updateMembershipTransitionState:(MXMembershipTransitionState)membershipTransitionState;
+
+
+/**
+ Start computing and maintaining the trust value of this room.
+ 
+ `MXSDKOptions.computeE2ERoomSummaryTrust` allows to compute trusts for all rooms automatically but it comsumes
+ resources.
+ 
+ @param enable YES to enable trust computation.
+ */
+- (void)enableTrustTracking:(BOOL)enable;
+
+
 #pragma mark - Server sync
 
 /**
@@ -312,8 +343,9 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
  Note: state events have been previously sent to `handleStateEvents`.
 
  @param roomSync information to sync the room with the home server data.
+ @param onComplete the block called when the operation completes.
  */
-- (void)handleJoinedRoomSync:(MXRoomSync*)roomSync;
+- (void)handleJoinedRoomSync:(MXRoomSync*)roomSync onComplete:(void (^)(void))onComplete;
 
 /**
  Update the invited room state according to the provided data.

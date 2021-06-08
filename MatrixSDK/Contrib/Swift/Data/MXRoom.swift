@@ -683,6 +683,22 @@ public extension MXRoom {
     }
     
     
+    /**
+     Sets a custom account data content for a given type.
+     
+     - parameters:
+         - content: Content of the account data.
+         - type: Type of the account data.
+         - completion: A block object called when the operation completes.
+         - response: Indicates whether the operation was successful.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func setAccountData(_ content: [String: Any], forType type: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
+        return __setAccountData(content, forType: type, success: currySuccess(completion), failure: curryFailure(completion))
+    }
+    
+    
     // MARK: - Room Tags Operations
     
     /**

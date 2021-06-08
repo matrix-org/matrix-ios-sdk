@@ -1,5 +1,6 @@
 /*
  Copyright 2019 New Vector Ltd
+ Copyright 2021 The Matrix.org Foundation C.I.C
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -17,6 +18,8 @@
 #import "MXCredentials.h"
 
 #import "MXJSONModels.h"
+
+#import "MXTools.h"
 
 @implementation MXCredentials
 
@@ -41,15 +44,47 @@
         _userId = loginResponse.userId;
         _accessToken = loginResponse.accessToken;
         _deviceId = loginResponse.deviceId;
+        _loginOthers = loginResponse.others;
 
         // Use wellknown data first
         _homeServer = loginResponse.wellknown.homeServer.baseUrl;
+        _identityServer = loginResponse.wellknown.identityServer.baseUrl;
 
         if (!_homeServer)
         {
-            // Workaround: HS does not return the right URL in loginResponse.homeserver.
+            // Workaround: HS does not return the right URL in wellknown.
             // Use the passed one instead
             _homeServer = [defaultCredentials.homeServer copy];
+        }
+        
+        if (!_homeServer)
+        {
+            // Attempt to derive homeServer from userId.
+            NSString *serverName = [MXTools serverNameInMatrixIdentifier:_userId];
+            if (serverName)
+            {
+                _homeServer = [NSString stringWithFormat:@"https://%@", serverName];
+            }
+        }
+        
+        if (!_homeServer)
+        {
+            // Attempt to get homeServer from loginResponse.homeServer
+            // Using loginResponse.homeserver as the last option, because it's deprecated
+            NSString *serverName = loginResponse.homeserver;
+            if (serverName)
+            {
+                //  check serverName is a full url
+                NSURL *url = [NSURL URLWithString:serverName];
+                if (url.scheme && url.host)
+                {
+                    _homeServer = serverName;
+                }
+                else
+                {
+                    _homeServer = [NSString stringWithFormat:@"https://%@", serverName];
+                }
+            }
         }
 
         if (!_identityServer)
@@ -60,9 +95,35 @@
     return self;
 }
 
++ (instancetype)initialSyncCacheCredentialsFrom:(MXCredentials *)credentials
+{
+    MXCredentials *result = [credentials copy];
+    result.userId = [result.userId stringByAppendingString:@"-initial"];
+    return result;
+}
+
 - (NSString *)homeServerName
 {
     return [NSURL URLWithString:_homeServer].host;
+}
+
+
+#pragma mark - NSCopying
+
+- (id)copyWithZone:(NSZone *)zone
+{
+    MXCredentials *credentials = [[[self class] allocWithZone:zone] init];
+    
+    credentials.userId = [_userId copyWithZone:zone];
+    credentials.homeServer = [_homeServer copyWithZone:zone];
+    credentials.accessToken = [_accessToken copyWithZone:zone];
+    credentials.identityServer = [_identityServer copyWithZone:zone];
+    credentials.identityServerAccessToken = [_identityServerAccessToken copyWithZone:zone];
+    credentials.deviceId = [_deviceId copyWithZone:zone];
+    credentials.allowedCertificate = [_allowedCertificate copyWithZone:zone];
+    credentials.ignoredCertificate = [_ignoredCertificate copyWithZone:zone];
+
+    return credentials;
 }
 
 @end

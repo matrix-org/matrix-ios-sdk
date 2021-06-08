@@ -98,7 +98,7 @@ Common initial conditions:
                     [roomFromBobPOV inviteUser:@"@dave:localhost:8480" success:^{
 
                         //  - Alice sends 50 messages
-                        [matrixSDKTestsData for:aliceRestClient andRoom:roomId sendMessages:50 success:^{
+                        [matrixSDKTestsData for:aliceRestClient andRoom:roomId sendMessages:50 testCase:self success:^{
 
                             // - Bob sends a message
                             [roomFromBobPOV sendTextMessage:bobMessage success:^(NSString *eventId) {
@@ -106,7 +106,7 @@ Common initial conditions:
                                 bobMessageEventId = eventId;
 
                                 // - Alice sends 50 messages
-                                [matrixSDKTestsData for:aliceRestClient andRoom:roomId sendMessages:50 success:^{
+                                [matrixSDKTestsData for:aliceRestClient andRoom:roomId sendMessages:50 testCase:self success:^{
 
                                     // - Alice makes an initial /sync
                                     MXSession *aliceSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
@@ -599,7 +599,7 @@ Common initial conditions:
 
 
                                                 // - Eve0 sends 20 messages
-                                                [matrixSDKTestsData for:eve0Session.matrixRestClient andRoom:roomId sendMessages:20 success:^{
+                                                [matrixSDKTestsData for:eve0Session.matrixRestClient andRoom:roomId sendMessages:20 testCase:self success:^{
 
                                                     // - Resume Alice MXSession
                                                     [aliceSession resume:^{
@@ -826,7 +826,7 @@ Common initial conditions:
         [aliceSession.matrixRestClient leaveRoom:roomId success:^{
 
             // - Bob sends 50 messages
-            [matrixSDKTestsData for:bobSession.matrixRestClient andRoom:roomId sendMessages:50 success:^{
+            [matrixSDKTestsData for:bobSession.matrixRestClient andRoom:roomId sendMessages:50 testCase:self success:^{
 
                 // - Resume Alice MXSession
                 [aliceSession resume:^{
@@ -935,7 +935,7 @@ Common initial conditions:
                         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 2000 * USEC_PER_SEC), dispatch_get_main_queue(), ^{
 
                             // Keep a ref to room2 so that requests on it can complete
-                            NSLog(@"%@", room2);
+                            MXLogDebug(@"%@", room2);
 
                             MXRoom *room2b = [aliceSession2 roomWithRoomId:roomId];
                             MXRoomSummary *summary2b = [aliceSession2 roomSummaryWithRoomId:roomId];
@@ -1150,7 +1150,7 @@ Common initial conditions:
         [aliceSession pause];
 
         //  - Bob sends 50 messages
-        [matrixSDKTestsData for:bobSession.matrixRestClient andRoom:roomId sendMessages:50 success:^{
+        [matrixSDKTestsData for:bobSession.matrixRestClient andRoom:roomId sendMessages:50 testCase:self success:^{
 
             // - Alice resumes (there will a limited /sync)
             [aliceSession resume:^{
@@ -1240,7 +1240,7 @@ Common initial conditions:
         MXRoomSummary *summary = [aliceSession roomSummaryWithRoomId:roomId];
         MXRoom *room = [aliceSession roomWithRoomId:roomId];
 
-        MXEventTimeline *eventTimeline = [room timelineOnEvent:summary.lastMessageEventId];
+        MXEventTimeline *eventTimeline = [room timelineOnEvent:summary.lastMessage.eventId];
 
         [eventTimeline resetPaginationAroundInitialEventWithLimit:10 success:^{
 
@@ -1298,7 +1298,7 @@ Common initial conditions:
         MXRoomSummary *summary = [aliceSession roomSummaryWithRoomId:roomId];
         MXRoom *room = [aliceSession roomWithRoomId:roomId];
 
-        MXEventTimeline *eventTimeline = [room timelineOnEvent:summary.lastMessageEventId];
+        MXEventTimeline *eventTimeline = [room timelineOnEvent:summary.lastMessage.eventId];
 
         __block NSUInteger messageCount = 0;
         [eventTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {

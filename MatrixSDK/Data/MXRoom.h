@@ -131,6 +131,21 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
 @property (nonatomic, readonly) MXRoomAccountData *accountData;
 
 /**
+ Sets a custom account data content for a given type.
+ 
+ @param content Content of the account data. Required
+ @param type Type of the account data. Required
+ @param success A block object called when the operation succeeds. Optional
+ @param failure A block object called when the operation fails. Optional
+ 
+ @return an MXHTTPOperation instance
+ */
+- (MXHTTPOperation *)setAccountData:(NSDictionary *)content
+                            forType:(NSString *)type
+                            success:(void (^)(void))success
+                            failure:(void (^)(NSError *))failure NS_REFINED_FOR_SWIFT;
+
+/**
  The text message partially typed by the user but not yet sent.
  The value is stored by the session store. Thus, it can be retrieved
  when the application restarts.
@@ -208,16 +223,18 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
 /**
  Update room data according to the provided sync response.
  
- @param roomSync information to sync the room with the home server data
+ @param roomSync information to sync the room with the home server data.
+ @param onComplete the block called when the operation completes.
  */
-- (void)handleJoinedRoomSync:(MXRoomSync*)roomSync;
+- (void)handleJoinedRoomSync:(MXRoomSync*)roomSync onComplete:(void (^)(void))onComplete;
 
 /**
  Update the invited room state according to the provided data.
  
  @param invitedRoomSync information to update the room state.
+ @param onComplete the block called when the operation completes.
  */
-- (void)handleInvitedRoomSync:(MXInvitedRoomSync *)invitedRoomSync;
+- (void)handleInvitedRoomSync:(MXInvitedRoomSync *)invitedRoomSync onComplete:(void (^)(void))onComplete;
 
 
 #pragma mark - Stored messages enumerator
@@ -983,6 +1000,41 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
                        success:(void (^)(void))success
                        failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
+#pragma mark - Room account data operations
+
+/**
+ Tag an event of the room
+ 
+ @param event the event to tag
+ @param tag the wanted tag
+ @param keywords the potential keywords
+ 
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)tagEvent:(MXEvent*)event
+                     withTag:(NSString*)tag
+                 andKeywords:(NSArray*)keywords
+                     success:(void (^)(void))success
+                     failure:(void (^)(NSError *error))failure;
+
+/**
+Remove a tag applied on an event of the room
+
+@param event the event to untag
+@param tag the wanted tag
+
+@param success A block object called when the operation succeeds.
+@param failure A block object called when the operation fails.
+
+@return a MXHTTPOperation instance.
+*/
+- (MXHTTPOperation*)untagEvent:(MXEvent*)event
+                       withTag:(NSString*)tag
+                       success:(void (^)(void))success
+                       failure:(void (^)(NSError *error))failure;
 
 #pragma mark - Voice over IP
 
@@ -997,15 +1049,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
                    success:(void (^)(MXCall *call))success
                    failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
-#pragma mark - Read receipts management
-
-/**
- Handle a receipt event.
- 
- @param event the event to handle.
- @param direction the timeline direction.
- */
-- (BOOL)handleReceiptEvent:(MXEvent *)event direction:(MXTimelineDirection)direction;
+#pragma mark - Read receipts
 
 /**
  If the event was not acknowledged yet, this method acknowlegdes it by sending a receipt event.

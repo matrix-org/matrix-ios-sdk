@@ -22,6 +22,9 @@
 #import "MXSession.h"
 
 #import "MXMemoryStore.h"
+#import "MXFileStore.h"
+#import "MatrixSDKSwiftHeader.h"
+#import "MXSyncResponse.h"
 
 // Do not bother with retain cycles warnings in tests
 #pragma clang diagnostic push
@@ -65,6 +68,108 @@
     [super tearDown];
 }
 
+// Check MXSession clears initial sync cache after handling sync response.
+//
+// - Have Bob start a new session
+// - Run initial sync on Bob's session
+// -> The initial sync cache must be used
+- (void)testInitialSyncSuccess
+{
+    id<MXStore> store = [[MXFileStore alloc] init];
+    [matrixSDKTestsData doMXSessionTestWithBob:self andStore:store readyToTest:^(MXSession *mxSession, XCTestExpectation *expectation) {
+        MXCredentials *credentials = [MXCredentials initialSyncCacheCredentialsFrom:matrixSDKTestsData.bobCredentials];
+        id<MXSyncResponseStore> cache = [[MXSyncResponseFileStore alloc] initWithCredentials:credentials];
+        
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+            
+            [NSThread sleepForTimeInterval:1.0];
+            
+            XCTAssertEqual(cache.syncResponseIds.count,
+                           0,
+                           @"Initial sync cache must be reset after successful initialization");
+
+            [expectation fulfill];
+        });
+    }];
+}
+
+// Check MXSession updates initial sync cache when an error occurs handling the sync response.
+//
+// - Have Bob start a new session
+// - Run initial sync on Bob's session
+// - In the middle of the process, close the session to simulate a crash
+// -> The initial sync cache must be updated
+// - Restart the session
+// -> The initial sync cache must be used
+- (void)testInitialSyncFailure
+{
+    id<MXStore> store = [[MXFileStore alloc] init];
+    
+    [matrixSDKTestsData doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
+
+        MXCredentials *credentials = [MXCredentials initialSyncCacheCredentialsFrom:matrixSDKTestsData.bobCredentials];
+        id<MXSyncResponseStore> cache = [[MXSyncResponseFileStore alloc] initWithCredentials:credentials];
+        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        
+        //  listen for session state change notification
+        __block id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionStateDidChangeNotification object:nil queue:nil usingBlock:^(NSNotification * _Nonnull note) {
+            
+            if (mxSession.state == MXSessionStateRunning)
+            {
+                //  stop observing
+                [[NSNotificationCenter defaultCenter] removeObserver:observer];
+                
+                //  2. simulate an unexpected session close (like a crash)
+                [mxSession close];
+                mxSession = nil;
+                
+                XCTAssertGreaterThan(cache.syncResponseIds.count,
+                                     0,
+                                     @"Session must cache initial sync responses in case of a failure");
+                
+                //  3. recreate the session
+                mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+
+                [mxSession setStore:store success:^{
+                    [mxSession start:^{
+                        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+
+                            [NSThread sleepForTimeInterval:1.0];
+
+                            XCTAssertEqual(cache.syncResponseIds.count,
+                                           0,
+                                           @"Initial sync cache must be used after successful restart");
+
+                            [expectation fulfill];
+                        });
+                    } failure:^(NSError *error) {
+                        XCTFail(@"The request should not fail - NSError: %@", error);
+                        [expectation fulfill];
+                    }];
+                } failure:^(NSError *error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+            }
+        }];
+        
+        [mxSession setStore:store success:^{
+            //  start with a fresh store
+            [store deleteAllData];
+            
+            //  1. start the session
+            [mxSession start:^{
+
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
 
 - (void)testRoomWithAlias
 {
@@ -78,13 +183,22 @@
             mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
             [mxSession start:^{
 
-                MXRoom *room = [mxSession roomWithAlias:response.roomAlias];
-
+                MXRoom *room = [mxSession roomWithRoomId:response.roomId];
+                
                 XCTAssertNotNil(room);
+                
+                //  fetch room alias from the room
+                NSString *roomAlias = room.summary.aliases.firstObject;
+                XCTAssertNotNil(roomAlias);
+                
+                //  fetch the room by the alias
+                MXRoom *room2 = [mxSession roomWithAlias:roomAlias];
 
-                [room state:^(MXRoomState *roomState) {
+                XCTAssertNotNil(room2);
+                
+                [room2 state:^(MXRoomState *roomState) {
                     XCTAssertEqual(roomState.aliases.count, 1);
-                    XCTAssertEqualObjects(roomState.aliases[0], response.roomAlias);
+                    XCTAssertEqualObjects(roomState.aliases[0], roomAlias);
 
                     [expectation fulfill];
                 }];
@@ -619,6 +733,44 @@
             [expectation fulfill];
         }];
 
+    }];
+}
+
+// Check sync response does not contain empty objects.
+//
+// - Have Bob start a new session
+// - Run initial sync on Bob's session
+// - Run another sync on Bob's session
+// -> Check latter sync response does not contain anything but the event stream token
+- (void)testEmptySyncResponse
+{
+    [matrixSDKTestsData doMXSessionTestWithBob:self readyToTest:^(MXSession *mxSession2, XCTestExpectation *expectation) {
+        mxSession = mxSession2;
+        
+        __block BOOL isFirst = YES;
+
+        observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionDidSyncNotification object:mxSession queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
+
+            if (isFirst)
+            {
+                isFirst = NO;
+                //  wait for another sync response, which should be completely empty
+                return;
+            }
+            MXSyncResponse *syncResponse = (MXSyncResponse*)notif.userInfo[kMXSessionNotificationSyncResponseKey];
+
+            XCTAssert([syncResponse isKindOfClass:MXSyncResponse.class]);
+            XCTAssertNil(syncResponse.accountData, @"Account data should be nil");
+            XCTAssertNotNil(syncResponse.nextBatch, @"Event stream token must be provided");
+            XCTAssertNil(syncResponse.presence, @"Presence should be nil");
+            XCTAssertNil(syncResponse.toDevice, @"To device events should be nil");
+            XCTAssertNil(syncResponse.deviceLists, @"Device lists should be nil");
+            XCTAssertNil(syncResponse.deviceOneTimeKeysCount, @"Device one time keys count should be nil");
+            XCTAssertNil(syncResponse.rooms, @"Rooms should be nil");
+            XCTAssertNil(syncResponse.groups, @"Groups should be nil");
+
+            [expectation fulfill];
+        }];
     }];
 }
 

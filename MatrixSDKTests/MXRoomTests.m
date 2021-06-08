@@ -449,6 +449,158 @@
     }];
 }
 
+- (void)testTagEvent
+{
+    [matrixSDKTestsData doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for tagged events" onReadyToTest:^(MXRestClient *bobRestClient, NSString *roomId, NSString *new_text_message_eventId, XCTestExpectation *expectation) {
+        
+        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [mxSession start:^{
+            
+            MXRoom *room = [mxSession roomWithRoomId:roomId];
+            
+            // Wait for the m.tagged_events event
+            [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+                [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringTaggedEvents] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+                    
+                    XCTAssertEqual(event.eventType, MXEventTypeTaggedEvents);
+                    
+                    MXTaggedEventInfo* taggedEventInfo = [room.accountData getTaggedEventInfo:new_text_message_eventId withTag:kMXTaggedEventFavourite];
+                    XCTAssertNotNil(taggedEventInfo);
+                    
+                    [expectation fulfill];
+                }];
+            }];
+            
+            [bobRestClient eventWithEventId:new_text_message_eventId success:^(MXEvent *event) {
+                
+                [room tagEvent:event withTag:kMXTaggedEventFavourite andKeywords:nil success:nil failure:^(NSError *error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+                
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+- (void)testUntagEvent
+{
+    [matrixSDKTestsData doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for tagged events" onReadyToTest:^(MXRestClient *bobRestClient, NSString *roomId, NSString *new_text_message_eventId, XCTestExpectation *expectation) {
+        
+        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [mxSession start:^{
+            
+            MXRoom *room = [mxSession roomWithRoomId:roomId];
+            __block MXEvent *taggedEvent;
+            
+            // Wait for the m.tagged_events event
+            [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+                [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringTaggedEvents] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+                    
+                    XCTAssertEqual(event.eventType, MXEventTypeTaggedEvents);
+                    
+                    MXTaggedEventInfo* taggedEventInfo = [room.accountData getTaggedEventInfo:new_text_message_eventId withTag:kMXTaggedEventFavourite];
+                    
+                    if (taggedEventInfo)
+                    {
+                        [room untagEvent:taggedEvent withTag:kMXTaggedEventFavourite success:nil failure:^(NSError *error) {
+                            XCTFail(@"The request should not fail - NSError: %@", error);
+                            [expectation fulfill];
+                        }];
+                    }
+                    else
+                    {
+                        XCTAssertNil(taggedEventInfo);
+                        
+                        [expectation fulfill];
+                    }
+                }];
+            }];
+            
+            [bobRestClient eventWithEventId:new_text_message_eventId success:^(MXEvent *event) {
+                
+                [room tagEvent:event withTag:kMXTaggedEventFavourite andKeywords:nil success:^{
+                    taggedEvent = event;
+                } failure:^(NSError *error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+                
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+- (void)testGetTaggedEvent
+{
+    [matrixSDKTestsData doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for tagged events" onReadyToTest:^(MXRestClient *bobRestClient, NSString *roomId, NSString *new_text_message_eventId, XCTestExpectation *expectation) {
+        
+        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [mxSession start:^{
+            
+            MXRoom *room = [mxSession roomWithRoomId:roomId];
+            __block MXEvent *taggedEvent;
+            
+            // Wait for the m.tagged_events event
+            [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+                [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringTaggedEvents] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+                    
+                    XCTAssertEqual(event.eventType, MXEventTypeTaggedEvents);
+                    
+                    [bobRestClient getTaggedEvents:roomId success:^(MXTaggedEvents *taggedEvents) {
+                        XCTAssertNotNil(taggedEvents);
+                        
+                        NSDictionary *dictEventInfo = taggedEvents.tags[kMXTaggedEventFavourite][taggedEvent.eventId];
+                        XCTAssertNotNil(dictEventInfo);
+                        
+                        MXTaggedEventInfo *taggedEventInfo;
+                        MXJSONModelSetMXJSONModel(taggedEventInfo, MXTaggedEventInfo, dictEventInfo);
+                        XCTAssertNotNil(taggedEventInfo);
+                        
+                        XCTAssertEqual(taggedEvent.originServerTs, taggedEventInfo.originServerTs);
+                        [expectation fulfill];
+                    } failure:^(NSError *error) {
+                        XCTFail(@"The request should not fail - NSError: %@", error);
+                        [expectation fulfill];
+                    }];
+                }];
+            }];
+            
+            [bobRestClient eventWithEventId:new_text_message_eventId success:^(MXEvent *event) {
+                
+                [room tagEvent:event withTag:kMXTaggedEventFavourite andKeywords:nil success:^{
+                    taggedEvent = event;
+                } failure:^(NSError *error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+                
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
 - (void)testRoomDirectoryVisibilityProvidedByInitialSync
 {
     [matrixSDKTestsData doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for recents" onReadyToTest:^(MXRestClient *bobRestClient, NSString *roomId, NSString *new_text_message_eventId, XCTestExpectation *expectation) {
@@ -570,7 +722,7 @@
                 
                 // Reply to first message
                 [room sendReplyToEvent:event withTextMessage:secondMessageReplyToFirst formattedTextMessage:secondMessageFormattedReplyToFirst stringLocalizations:defaultStringLocalizations localEcho:&localEchoEvent success:^(NSString *eventId) {
-                    NSLog(@"Send reply to first message with success");
+                    MXLogDebug(@"Send reply to first message with success");
                 } failure:^(NSError *error) {
                     XCTFail(@"The request should not fail - NSError: %@", error);
                     [expectation fulfill];
@@ -602,7 +754,7 @@
                 
                 // Reply to second message, which was also a reply
                 [room sendReplyToEvent:event withTextMessage:thirdMessageReplyToSecond formattedTextMessage:thirdMessageFormattedReplyToSecond stringLocalizations:defaultStringLocalizations localEcho:&localEchoEvent success:^(NSString *eventId) {
-                    NSLog(@"Send reply to second message with success");
+                    MXLogDebug(@"Send reply to second message with success");
                 } failure:^(NSError *error) {
                     XCTFail(@"The request should not fail - NSError: %@", error);
                     [expectation fulfill];
@@ -636,7 +788,7 @@
         
         // Send first message
         [room sendTextMessage:firstMessage formattedText:firstFormattedMessage localEcho:nil success:^(NSString *eventId) {
-            NSLog(@"Send first message with success");
+            MXLogDebug(@"Send first message with success");
         } failure:^(NSError *error) {
             XCTFail(@"The request should not fail - NSError: %@", error);
             [expectation fulfill];

@@ -22,7 +22,7 @@
 
 @interface MXDeviceListOperation ()
 {
-    MXDeviceListOperationsPool *pool;
+    __weak MXDeviceListOperationsPool *pool;
 }
 
 @end
@@ -47,7 +47,7 @@
 {
     NSParameterAssert(!pool);
 
-    NSLog(@"[MXDeviceListOperation] addToPool: add operation: %p to pool %p", self, thePool);
+    MXLogDebug(@"[MXDeviceListOperation] addToPool: add operation: %p to pool %p", self, thePool);
 
     pool = thePool;
     [pool addOperation:self];

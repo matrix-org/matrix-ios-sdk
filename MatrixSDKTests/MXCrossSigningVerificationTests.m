@@ -141,7 +141,7 @@
                               password:(NSString*)password
                               completion:(void (^)(void))completionBlock
 {
-    [session.crypto.crossSigning bootstrapWithPassword:password success:^{
+    [session.crypto.crossSigning setupWithPassword:password success:^{
         completionBlock();
     } failure:^(NSError *error) {
         XCTAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
@@ -184,7 +184,7 @@
         [self bootstrapCrossSigningOnSession:aliceSession1 password:MXTESTS_ALICE_PWD completion:^{
           
             // - Alice has a second sign-in
-            [matrixSDKTestsE2EData loginUserOnANewDevice:aliceSession1.matrixRestClient.credentials withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *aliceSession2) {
+            [matrixSDKTestsE2EData loginUserOnANewDevice:self credentials:aliceSession1.matrixRestClient.credentials withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *aliceSession2) {
                 __block NSString *requestId;
                 
                 MXCredentials *alice = aliceSession1.matrixRestClient.credentials;

@@ -40,6 +40,7 @@ FOUNDATION_EXPORT NSString *MatrixSDKVersion;
 #import "MXEventsByTypesEnumeratorOnArray.h"
 
 #import "MXLogger.h"
+#import "MXLog.h"
 
 #import "MXTools.h"
 #import "MXThrottler.h"
@@ -66,6 +67,8 @@ FOUNDATION_EXPORT NSString *MatrixSDKVersion;
 #import "MXKeyVerificationRequestByDMJSONModel.h"
 #import "MXSASKeyVerificationStart.h"
 #import "MXQRCodeKeyVerificationStart.h"
+
+#import "MXAes.h"
 
 #import "MXQRCodeDataCodable.h"
 #import "MXQRCodeDataBuilder.h"
@@ -98,3 +101,67 @@ FOUNDATION_EXPORT NSString *MatrixSDKVersion;
 
 #import "MXEventScan.h"
 #import "MXMediaScan.h"
+
+#import "MXBase64Tools.h"
+#import "MXBaseProfiler.h"
+
+#import "MXCallInviteEventContent.h"
+#import "MXCallAnswerEventContent.h"
+#import "MXCallSelectAnswerEventContent.h"
+#import "MXCallCandidatesEventContent.h"
+#import "MXCallRejectEventContent.h"
+#import "MXCallNegotiateEventContent.h"
+#import "MXCallReplacesEventContent.h"
+#import "MXCallAssertedIdentityEventContent.h"
+#import "MXUserModel.h"
+#import "MXCallCapabilitiesModel.h"
+#import "MXAssertedIdentityModel.h"
+
+#import "MXThirdPartyProtocolInstance.h"
+#import "MXThirdPartyProtocol.h"
+#import "MXThirdpartyProtocolsResponse.h"
+#import "MXThirdPartyUserInstance.h"
+#import "MXThirdPartyUsersResponse.h"
+
+#import "MXLoginSSOFlow.h"
+
+#import "MXKeyProvider.h"
+#import "MXAesKeyData.h"
+#import "MXRawDataKey.h"
+
+#import "MXSpaceChildContent.h"
+#import "MXRoomLastMessage.h"
+
+//  Bridging to Swift
+#import "MXCryptoStore.h"
+#import "MXRealmCryptoStore.h"
+#import "MXCryptoAlgorithms.h"
+#import "MXOlmDevice.h"
+#import "MXEventDecryptionResult.h"
+#import "MXPushRuleEventMatchConditionChecker.h"
+#import "MXPushRuleDisplayNameCondtionChecker.h"
+#import "MXPushRuleRoomMemberCountConditionChecker.h"
+#import "MXPushRuleSenderNotificationPermissionConditionChecker.h"
+#import "MXMegolmDecryption.h"
+#import "MXOlmDecryption.h"
+#import "MXCachedSyncResponse.h"
+#import "MXBackgroundCryptoStore.h"
+
+//  Sync response models
+#import "MXSyncResponse.h"
+#import "MXPresenceSyncResponse.h"
+#import "MXToDeviceSyncResponse.h"
+#import "MXDeviceListResponse.h"
+#import "MXRoomsSyncResponse.h"
+#import "MXRoomSync.h"
+#import "MXRoomSyncState.h"
+#import "MXRoomSyncTimeline.h"
+#import "MXRoomSyncEphemeral.h"
+#import "MXRoomSyncAccountData.h"
+#import "MXRoomSyncUnreadNotifications.h"
+#import "MXRoomSyncSummary.h"
+#import "MXInvitedRoomSync.h"
+#import "MXRoomInviteState.h"
+#import "MXGroupsSyncResponse.h"
+#import "MXInvitedGroupSync.h"
+#import "MXGroupSyncProfile.h"

@@ -32,13 +32,12 @@
 /**
  Create a `MXRoomMembers` instance.
 
- @paran state the room state it depends on.
+ @param state the room state it depends on. The object will not be retained.
  @param matrixSession the session to the home server.
 
  @return The newly-initialized MXRoomMembers.
  */
 - (instancetype)initWithRoomState:(MXRoomState*)state andMatrixSession:(MXSession*)matrixSession;
-
 /**
  A copy of the list of room members.
  */

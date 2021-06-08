@@ -170,7 +170,7 @@ NSString *const MXEncryptedAttachmentsErrorDomain = @"MXEncryptedAttachmentsErro
         encryptedContentFile.url = url;
         encryptedContentFile.mimetype = mimeType;
         encryptedContentFile.key = encryptedContentKey;
-        encryptedContentFile.iv = [iv base64EncodedStringWithOptions:0];
+        encryptedContentFile.iv = [MXBase64Tools base64ToUnpaddedBase64:[iv base64EncodedStringWithOptions:0]];
         encryptedContentFile.hashes = @{
                                         @"sha256": [MXBase64Tools base64ToUnpaddedBase64:[computedSha256 base64EncodedStringWithOptions:0]],
                                         };
@@ -278,7 +278,7 @@ NSString *const MXEncryptedAttachmentsErrorDomain = @"MXEncryptedAttachmentsErro
     
     if (![computedSha256 isEqualToData:expectedSha256])
     {
-        NSLog(@"[MXEncryptedAttachments] decryptAttachment: Hash mismatch when decrypting attachment! Expected: %@, got %@", fileInfo.hashes[@"sha256"], [computedSha256 base64EncodedStringWithOptions:0]);
+        MXLogDebug(@"[MXEncryptedAttachments] decryptAttachment: Hash mismatch when decrypting attachment! Expected: %@, got %@", fileInfo.hashes[@"sha256"], [computedSha256 base64EncodedStringWithOptions:0]);
         return [NSError errorWithDomain:MXEncryptedAttachmentsErrorDomain code:0 userInfo:@{@"err": @"hash_mismatch"}];
     }
     return nil;

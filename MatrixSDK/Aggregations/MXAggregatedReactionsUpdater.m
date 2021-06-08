@@ -136,14 +136,14 @@
             }
             else
             {
-                NSLog(@"[MXAggregations] removeReaction: ERROR: Unknown room %@", roomId);
+                MXLogDebug(@"[MXAggregations] removeReaction: ERROR: Unknown room %@", roomId);
                 [self didOperationCompleteForReaction:reaction forEvent:eventId isAdd:NO];
                 success();
             }
         }
         else
         {
-            NSLog(@"[MXAggregations] removeReaction: ERROR: Do not know reaction(%@) event on event %@", reaction, eventId);
+            MXLogDebug(@"[MXAggregations] removeReaction: ERROR: Do not know reaction(%@) event on event %@", reaction, eventId);
             [self didOperationCompleteForReaction:reaction forEvent:eventId isAdd:NO];
             success();
         }
@@ -261,7 +261,7 @@
     }
     else
     {
-        NSLog(@"[MXAggregations] handleReaction: ERROR: invalid reaction event: %@", event.JSONDictionary);
+        MXLogDebug(@"[MXAggregations] handleReaction: ERROR: invalid reaction event: %@", event.JSONDictionary);
     }
 }
 
@@ -483,8 +483,8 @@
         if (self.reactionOperations[eventId][reaction].lastObject.isAddOperation == isAdd)
         {
             // The same operation is already pending
-            NSLog(@"[MXAggregations] addOperationForReaction: Debounce same reaction operation: %@",
-                  isAdd ? @"ADD" : @"REMOVE");
+            MXLogDebug(@"[MXAggregations] addOperationForReaction: Debounce same reaction operation: %@",
+                       isAdd ? @"ADD" : @"REMOVE");
             [self notifyReactionCountChangeListenersOfRoom:roomId forLocalEchoForOperation:reactionOperation];
             block(YES);
             return;
@@ -492,8 +492,8 @@
         else if (self.reactionOperations[eventId][reaction].count > 1)
         {
             // The app requires 3 binary switch operations, keep only the pending first one
-            NSLog(@"[MXAggregations] addOperationForReaction: Debounce: do only the reaction operation: %@",
-                  isAdd ? @"ADD" : @"REMOVE");
+            MXLogDebug(@"[MXAggregations] addOperationForReaction: Debounce: do only the reaction operation: %@",
+                       isAdd ? @"ADD" : @"REMOVE");
             [self.reactionOperations[eventId][reaction] removeObjectAtIndex:1];
             [self notifyReactionCountChangeListenersOfRoom:roomId forLocalEchoForOperation:reactionOperation];
             block(YES);
@@ -641,12 +641,12 @@
                                   success:(void (^)(void))success
                                   failure:(void (^)(NSError *error))failure
 {
-    NSLog(@"[MXAggregations] sendReactionUsingHack");
+    MXLogDebug(@"[MXAggregations] sendReactionUsingHack");
 
     MXRoom *room = [self.mxSession roomWithRoomId:roomId];
     if (!room)
     {
-        NSLog(@"[MXAggregations] sendReactionUsingHack Error: Unknown room: %@", roomId);
+        MXLogDebug(@"[MXAggregations] sendReactionUsingHack Error: Unknown room: %@", roomId);
         return nil;
     }
 

@@ -241,6 +241,11 @@ FOUNDATION_EXPORT NSString *const kMXAnalyticsStartupMountData;
 // Duration of the the display of the app launch screen
 FOUNDATION_EXPORT NSString *const kMXAnalyticsStartupLaunchScreen;
 
+// Metrics related to the initial sync request
+FOUNDATION_EXPORT NSString *const kMXAnalyticsInitialSyncCategory;
+FOUNDATION_EXPORT NSString *const kMXAnalyticsInitialSyncRequest;
+FOUNDATION_EXPORT NSString *const kMXAnalyticsInitialSyncParsing;
+
 /**
  Overall stats category.
  */
@@ -249,3 +254,17 @@ FOUNDATION_EXPORT NSString *const kMXAnalyticsStatsCategory;
 // The number of room the user is in
 FOUNDATION_EXPORT NSString *const kMXAnalyticsStatsRooms;
 
+//  VoIP
+
+/**
+ Overall VoIP category.
+ */
+FOUNDATION_EXPORT NSString *const kMXAnalyticsVoipCategory;
+
+//  VoIP event names
+FOUNDATION_EXPORT NSString *const kMXAnalyticsVoipNameCallError;
+FOUNDATION_EXPORT NSString *const kMXAnalyticsVoipNameCallHangup;
+FOUNDATION_EXPORT NSString *const kMXAnalyticsVoipNameCallEnded;
+FOUNDATION_EXPORT NSString *const kMXAnalyticsVoipNamePlaceCall;
+FOUNDATION_EXPORT NSString *const kMXAnalyticsVoipNamePlaceConferenceCall;
+FOUNDATION_EXPORT NSString *const kMXAnalyticsVoipNameReceiveCall;

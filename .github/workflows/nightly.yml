@@ -1,0 +1,120 @@
+name: Nightly checks
+
+on:
+  schedule:
+    - cron:  '0 3 * * 1-5'
+
+  workflow_dispatch:
+
+jobs:
+
+  unit-tests:
+    name: Unit Tests with sanitizer checks
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      # Cache for Xcode env
+      - uses: actions/cache@v2
+        with:
+          path: Pods
+          key: ${{ runner.os }}-pods-${{ hashFiles('**/Podfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pods-
+      - uses: actions/cache@v2
+        with:
+          path: vendor/bundle
+          key: ${{ runner.os }}-gems-${{ hashFiles('**/Gemfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-gems-
+
+      - name: Bundle install
+        run: |
+          bundle config path vendor/bundle
+          bundle install --jobs 4 --retry 3
+
+      # Main step
+      - name: Unit tests
+        run: bundle exec fastlane test testplan:UnitTestsWithSanitizers
+
+      # Store artifacts
+      - uses: actions/upload-artifact@v2
+        with:
+          name: report.html
+          path: build/test/report.html
+      - uses: actions/upload-artifact@v2
+        with:
+          name: report.junit
+          path: build/test/report.junit
+      - uses: actions/upload-artifact@v2
+        with:
+          name: MatrixSDK-macOS.xcresult
+          path: build/test/MatrixSDK-macOS.xcresult/
+
+
+  integration-tests:
+    name: Integration Tests (Synapse) with sanitizer checks
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      # Cache for python env for Synapse
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - name: Cache pip
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip
+          restore-keys: |
+            ${{ runner.os }}-pip-
+            ${{ runner.os }}-
+
+      # Cache for Xcode env
+      - uses: actions/cache@v2
+        with:
+          path: Pods
+          key: ${{ runner.os }}-pods-${{ hashFiles('**/Podfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pods-
+      - uses: actions/cache@v2
+        with:
+          path: vendor/bundle
+          key: ${{ runner.os }}-gems-${{ hashFiles('**/Gemfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-gems-
+
+      - name: Start synapse server
+        run: |
+          python3 -m venv .synapse
+          source .synapse/bin/activate
+          pip install synapse matrix-synapse
+          curl -sL https://raw.githubusercontent.com/matrix-org/synapse/develop/demo/start.sh \
+            | sed s/127.0.0.1/0.0.0.0/g | bash
+
+      - name: Bundle install
+        run: |
+          bundle config path vendor/bundle
+          bundle install --jobs 4 --retry 3
+
+      # Main step
+      - name: Integration tests
+        run: bundle exec fastlane test testplan:AllTestsWithSanitizers
+
+      # Store artifacts
+      - uses: actions/upload-artifact@v2
+        with:
+          name: report.html
+          path: build/test/report.html
+      - uses: actions/upload-artifact@v2
+        with:
+          name: report.junit
+          path: build/test/report.junit
+      - uses: actions/upload-artifact@v2
+        with:
+          name: MatrixSDK-macOS.xcresult
+          path: build/test/MatrixSDK-macOS.xcresult/

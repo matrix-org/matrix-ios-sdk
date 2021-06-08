@@ -203,7 +203,7 @@ static MXLRUCache* imagesCacheLruCache = nil;
             
         } completionHandler:^(BOOL successFlag, NSError *error) {
             
-            NSLog(@"Finished adding asset. %@", (successFlag ? @"Success" : error));
+            MXLogDebug(@"Finished adding asset. %@", (successFlag ? @"Success" : error));
             
             if (successFlag)
             {
@@ -275,7 +275,7 @@ static MXLRUCache* imagesCacheLruCache = nil;
             localId = [[assetRequest placeholderForCreatedAsset] localIdentifier];
             
         } completionHandler:^(BOOL successFlag, NSError *error) {
-            NSLog(@"Finished adding asset. %@", (successFlag ? @"Success" : error));
+            MXLogDebug(@"Finished adding asset. %@", (successFlag ? @"Success" : error));
             
             if (successFlag)
             {
@@ -313,7 +313,7 @@ static MXLRUCache* imagesCacheLruCache = nil;
                                                            }
                                                            else
                                                            {
-                                                               NSLog(@"[MXMediaManager] Failed to retrieve the asset URL of the saved video!");
+                                                               MXLogDebug(@"[MXMediaManager] Failed to retrieve the asset URL of the saved video!");
                                                                dispatch_async(dispatch_get_main_queue(), ^{
                                                                    success (nil);
                                                                });
@@ -321,7 +321,7 @@ static MXLRUCache* imagesCacheLruCache = nil;
                                                        }
                                                        else
                                                        {
-                                                           NSLog(@"[MXMediaManager] Failed to retrieve editing input from asset");
+                                                           MXLogDebug(@"[MXMediaManager] Failed to retrieve editing input from asset");
                                                            
                                                            // Return on main thread
                                                            dispatch_async(dispatch_get_main_queue(), ^{
@@ -474,7 +474,7 @@ static MXLRUCache* imagesCacheLruCache = nil;
     NSString *mediaURL = [self urlOfContent:mxContentURI];
     if (!mediaURL)
     {
-        NSLog(@"[MXMediaManager] downloadMediaFromMatrixContentURI: invalid media content URI");
+        MXLogDebug(@"[MXMediaManager] downloadMediaFromMatrixContentURI: invalid media content URI");
         if (failure) failure(nil);
         return nil;
     }
@@ -514,7 +514,7 @@ static MXLRUCache* imagesCacheLruCache = nil;
     NSString *mediaURL = [self urlOfContentThumbnail:mxContentURI toFitViewSize:viewSize withMethod:thumbnailingMethod];
     if (!mediaURL)
     {
-        NSLog(@"[MXMediaManager] downloadThumbnailFromMatrixContentURI: invalid media content URI");
+        MXLogDebug(@"[MXMediaManager] downloadThumbnailFromMatrixContentURI: invalid media content URI");
         if (failure) failure(nil);
         return nil;
     }
@@ -623,7 +623,7 @@ static MXLRUCache* imagesCacheLruCache = nil;
                 }
                 else
                 {
-                    NSLog(@"[MXMediaManager] download encrypted content failed");
+                    MXLogDebug(@"[MXMediaManager] download encrypted content failed");
                     if (failure) failure(nil);
                     [mediaLoader cancel];
                     [downloadTable removeObjectForKey:downloadId];
@@ -680,7 +680,7 @@ static MXLRUCache* imagesCacheLruCache = nil;
     
     if (!downloadMediaURL)
     {
-        NSLog(@"[MXMediaManager] downloadEncryptedMediaFromMatrixContentFile: invalid media content URI");
+        MXLogDebug(@"[MXMediaManager] downloadEncryptedMediaFromMatrixContentFile: invalid media content URI");
         if (failure) failure(nil);
         return nil;
     }
@@ -905,7 +905,7 @@ static NSMutableDictionary* fileBaseFromMimeType = nil;
     // That is why we allow here to retrieve a cache file path from an upload identifier.
     if (![mxContentURI hasPrefix:kMXContentUriScheme] && ![mxContentURI hasPrefix:kMXMediaUploadIdPrefix])
     {
-        NSLog(@"[MXMediaManager] cachePathForMatrixContentURI: invalid media content URI");
+        MXLogDebug(@"[MXMediaManager] cachePathForMatrixContentURI: invalid media content URI");
         return nil;
     }
     
@@ -943,7 +943,7 @@ static NSMutableDictionary* fileBaseFromMimeType = nil;
     // Check whether the provided uri is valid.
     if (![mxContentURI hasPrefix:kMXContentUriScheme])
     {
-        NSLog(@"[MXMediaManager] thumbnailCachePathForMatrixContentURI: invalid media content URI");
+        MXLogDebug(@"[MXMediaManager] thumbnailCachePathForMatrixContentURI: invalid media content URI");
         return nil;
     }
     
@@ -1133,16 +1133,16 @@ static NSMutableDictionary* fileBaseFromMimeType = nil;
     
     if (mediaCachePath)
     {
-        NSLog(@"[MXMediaManager] Delete media cache directory");
+        MXLogDebug(@"[MXMediaManager] Delete media cache directory");
         
         if (![[NSFileManager defaultManager] removeItemAtPath:mediaCachePath error:&error])
         {
-            NSLog(@"[MXMediaManager] Failed to delete media cache dir: %@", error);
+            MXLogDebug(@"[MXMediaManager] Failed to delete media cache dir: %@", error);
         }
     }
     else
     {
-        NSLog(@"[MXMediaManager] Media cache does not exist");
+        MXLogDebug(@"[MXMediaManager] Media cache does not exist");
     }
     
     mediaCachePath = nil;
@@ -1177,7 +1177,7 @@ static NSMutableDictionary* fileBaseFromMimeType = nil;
             NSString *cacheVersionFile = [mediaCachePath stringByAppendingPathComponent:mediaCacheVersionString];
             if (![[NSFileManager defaultManager] fileExistsAtPath:cacheVersionFile])
             {
-                NSLog(@"[MXMediaManager] New media cache version detected");
+                MXLogDebug(@"[MXMediaManager] New media cache version detected");
                 [MXMediaManager clearCache];
             }
         }

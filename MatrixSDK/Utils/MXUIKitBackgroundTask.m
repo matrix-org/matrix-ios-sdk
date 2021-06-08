@@ -21,6 +21,7 @@
 #import <UIKit/UIKit.h>
 #import "MXTools.h"
 
+
 @interface MXUIKitBackgroundTask ()
 
 @property (nonatomic) UIBackgroundTaskIdentifier identifier;
@@ -34,7 +35,8 @@
 
 #pragma Setup
 
-- (instancetype)initWithName:(NSString*)name expirationHandler:(MXBackgroundTaskExpirationHandler)expirationHandler
+- (instancetype)initWithName:(NSString*)name
+           expirationHandler:(MXBackgroundTaskExpirationHandler)expirationHandler
 {
     self = [super init];
     if (self)
@@ -46,17 +48,16 @@
     return self;
 }
 
-
-- (instancetype)initAndStartWithName:(NSString*)name expirationHandler:(MXBackgroundTaskExpirationHandler)expirationHandler
+- (nullable instancetype)initAndStartWithName:(NSString*)name
+                            expirationHandler:(MXBackgroundTaskExpirationHandler)expirationHandler
 {
-    self = [super init];
+    self = [self initWithName:name expirationHandler:expirationHandler];
     if (self)
     {
-        self.name = name;
-        
         UIApplication *sharedApplication = [self sharedApplication];
         if (sharedApplication)
         {
+            //  we assume this task can start now
             self.startDate = [NSDate date];
             
             MXWeakify(self);
@@ -65,29 +66,45 @@
                 
                 MXStrongifyAndReturnIfNil(self);
                 
-                NSLog(@"[MXBackgroundTask] Background task expired #%lu - %@ after %.0fms", (unsigned long)self.identifier, self.name, self.elapsedTime);
+                MXLogDebug(@"[MXBackgroundTask] Background task expired #%lu - %@ after %.0fms", (unsigned long)self.identifier, self.name, self.elapsedTime);
                 
+                //  call expiration handler immediately
                 if (self.expirationHandler)
                 {
                     self.expirationHandler();
                 }
                 
+                //  be sure to call endBackgroundTask
                 [self stop];
             }];
             
-            NSLog(@"[MXBackgroundTask] Start background task #%lu - %@", (unsigned long)self.identifier, self.name);
-            
-            // Note: -[UIApplication applicationState] and -[UIApplication backgroundTimeRemaining] must be must be used from main thread only
-            dispatch_async(dispatch_get_main_queue(), ^{
-                NSString *readableAppState = [[self class] readableApplicationState:sharedApplication.applicationState];
-                NSString *readableBackgroundTimeRemaining = [[self class] readableEstimatedBackgroundTimeRemaining:sharedApplication.backgroundTimeRemaining];
+            //  our assumption is wrong, OS declined it
+            if (self.identifier == UIBackgroundTaskInvalid)
+            {
+                MXLogDebug(@"[MXBackgroundTask] Do not start background task - %@, as OS declined", self.name);
                 
-                NSLog(@"[MXBackgroundTask] Background task #%lu - %@ started with app state: %@ and estimated background time remaining: %@", (unsigned long)self.identifier, self.name, readableAppState, readableBackgroundTimeRemaining);
-            });
+                //  call expiration handler immediately
+                if (self.expirationHandler)
+                {
+                    self.expirationHandler();
+                }
+                return nil;
+            }
+            
+            MXLogDebug(@"[MXBackgroundTask] Start background task #%lu - %@", (unsigned long)self.identifier, self.name);
         }
         else
         {
-            self.identifier = UIBackgroundTaskInvalid;
+            MXLogDebug(@"[MXBackgroundTask] Background task creation failed. UIApplication.shared is nil");
+            
+            //  we're probably in an app extension here.
+            //  Do not call expiration handler as it'll cause some network requests to be cancelled,
+            //  either before starting or in the middle of the process.
+            //  We could also use -[NSProcessInfo performExpiringActivityWithReason:usingBlock:] method here
+            //  to achieve the same behaviour, but it requires changes in total API, as it'll accept the
+            //  execution block instead of expiration block.
+            
+            return nil;
         }
     }
     return self;
@@ -117,7 +134,7 @@
         UIApplication *sharedApplication = [self sharedApplication];
         if (sharedApplication)
         {
-            NSLog(@"[MXBackgroundTask] Stop background task #%lu - %@ after %.0fms", (unsigned long)self.identifier, self.name, self.elapsedTime);
+            MXLogDebug(@"[MXBackgroundTask] Stop background task #%lu - %@ after %.0fms", (unsigned long)self.identifier, self.name, self.elapsedTime);
             
             [sharedApplication endBackgroundTask:self.identifier];
             self.identifier = UIBackgroundTaskInvalid;
@@ -142,44 +159,6 @@
 - (UIApplication*)sharedApplication
 {
     return [UIApplication performSelector:@selector(sharedApplication)];
-}
-
-+ (NSString*)readableEstimatedBackgroundTimeRemaining:(NSTimeInterval)backgroundTimeRemaining
-{
-    NSString *backgroundTimeRemainingValueString;
-    
-    if (backgroundTimeRemaining == DBL_MAX)
-    {
-        backgroundTimeRemainingValueString = @"undetermined";
-    }
-    else
-    {
-        backgroundTimeRemainingValueString = [NSString stringWithFormat:@"%.0f seconds", backgroundTimeRemaining];
-    }
-    
-    return backgroundTimeRemainingValueString;
-}
-
-+ (NSString*)readableApplicationState:(UIApplicationState)applicationState
-{
-    NSString *applicationStateDescription;
-    
-    switch (applicationState) {
-        case UIApplicationStateActive:
-            applicationStateDescription = @"active";
-            break;
-        case UIApplicationStateInactive:
-            applicationStateDescription = @"inactive";
-            break;
-        case UIApplicationStateBackground:
-            applicationStateDescription = @"background";
-            break;
-        default:
-            applicationStateDescription = @"unknown";
-            break;
-    }
-    
-    return applicationStateDescription;
 }
 
 @end

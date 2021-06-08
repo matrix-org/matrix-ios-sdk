@@ -1,6 +1,7 @@
 /*
  Copyright 2015 OpenMarket Ltd
  Copyright 2017 Vector Creations Ltd
+ Copyright 2020 The Matrix.org Foundation C.I.C
  
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -16,7 +17,9 @@
  */
 
 #import <Foundation/Foundation.h>
+
 #import "MXAnalyticsDelegate.h"
+#import "MXProfiler.h"
 
 
 #pragma mark - Build time options
@@ -57,6 +60,12 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic) BOOL enableCryptoWhenStartingMXSession;
 
 /**
+ Automatically enable key backup when initializing a new MXCrypto.
+ YES by default.
+ */
+@property (nonatomic) BOOL enableKeyBackupWhenStartingMXCrypto;
+
+/**
  Compute and maintain MXRommSummary.trust value.
  NO by default.
  This requires to load all room members to compute it.
@@ -64,11 +73,24 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic) BOOL computeE2ERoomSummaryTrust;
 
 /**
+ Handle `m.call.asserted_identity` events for the calls.
+ NO by default.
+ */
+@property (nonatomic) BOOL handleCallAssertedIdentityEvents;
+
+/**
  The delegate object to receive analytics events
  
  By default, nil.
  */
 @property (nonatomic, nullable) id<MXAnalyticsDelegate> analyticsDelegate;
+
+/**
+ The profiler.
+ 
+ By default, MXBaseProfiler.
+ */
+@property (nonatomic, nullable) id<MXProfiler> profiler;
 
 /**
  The version of the media cache at the application level.
@@ -90,6 +112,21 @@ NS_ASSUME_NONNULL_BEGIN
  nil by default.
 */
 @property (nonatomic, nullable) NSString *applicationGroupIdentifier;
+
+/**
+ @brief Specifies additional headers which will be set on outgoing requests.
+ Note that these headers are added to the request only if not already present.
+ Following headers should not be modified:
+ - Authorization
+ - Connection
+ - Host
+ - Proxy-Authenticate
+ - Proxy-Authorization
+ - WWW-Authenticate
+ 
+ @remark Empty dictionary by default.
+*/
+@property (nonatomic, nullable) NSDictionary<NSString *, NSString*> *HTTPAdditionalHeaders;
 
 @end
 

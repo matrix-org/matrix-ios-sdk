@@ -25,4 +25,13 @@
 
     return set.array;
 }
+
+- (NSArray*)mx_unionArray:(NSArray *)array
+{
+    NSMutableOrderedSet<NSString*> *set = [NSMutableOrderedSet orderedSetWithArray:self];
+    [set unionSet:[NSSet setWithArray:array]];
+
+    return set.array;
+}
+
 @end

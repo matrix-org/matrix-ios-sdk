@@ -24,23 +24,19 @@ project is to add the MatrixSDK dependency to your Podfile::
     # Obj-C
     pod 'MatrixSDK'
 
-    # Swift
-    pod 'SwiftMatrixSDK'
-
 If you want to use the develop version of the SDK, use instead:
 
     # Obj-C
     pod 'MatrixSDK', :git => 'https://github.com/matrix-org/matrix-ios-sdk.git',
     :branch => 'develop'
 
-    # Swift
-    pod 'SwiftMatrixSDK', :git => 'https://github.com/matrix-org/matrix-ios-sdk.git',
-    :branch => 'develop'
-
-
 Options
 =======
-If you want to enable VoIP using the http://webrtc.org VoIP stack, add the following pod to you app Podfile::
+If you want also Swift support, add the following pod to your app Podfile::
+
+    pod 'MatrixSDK/SwiftSupport'
+
+If you want to enable VoIP using the http://webrtc.org VoIP stack, add the following pod to your app Podfile::
 
     pod 'MatrixSDK/JingleCallStack'
 
@@ -81,7 +77,7 @@ They contain logic to maintain consistent chat room data.
 :``MXUser``:
      This is a user known by the current user, outside of the context of a
      room. MXSession exposes and maintains the list of MXUsers. It provides
-     the user id, displayname and the current presence state
+     the user id, displayname and the current presence state.
 
 Usage
 =====
@@ -99,7 +95,7 @@ One file to import:
 
 **Swift**::
 
-    import SwiftMatrixSDK
+    import MatrixSDK
 
 Use case #1: Get public rooms of an homeserver
 -----------------------------------------------
@@ -112,7 +108,7 @@ instantiated with initWithHomeServer does the job:
     [mxRestClient publicRooms:^(NSArray *rooms) {
 
         // rooms is an array of MXPublicRoom objects containing information like room id
-        NSLog(@"The public rooms are: %@", rooms);
+        MXLogDebug(@"The public rooms are: %@", rooms);
 
     } failure:^(MXError *error) {
     }];
@@ -471,11 +467,13 @@ Then, open ``MatrixSDK.xcworkspace``.
 
 Tests
 =====
-The tests in the SDK Xcode project are both unit and integration tests.
+The tests in the SDK Xcode project are both unit and integration tests. 
+
+Unit tests classes use the suffix "UnitTests" to differentiate them. A unit test is a test that does not make any HTTP requests or uses mocked HTTP requests.
 
 Out of the box, the tests use one of the homeservers (located at
 http://localhost:8080) of the "Demo Federation of Homeservers"
-(https://github.com/matrix-org/synapse#running-a-demo-federation-of-synapses). 
+(https://github.com/matrix-org/synapse#running-a-demo-federation-of-synapses).
 
 You first need to follow instructions to set up Synapse in development mode at https://github.com/matrix-org/synapse#synapse-development.
 If you have already installed all dependencies, the steps are::
@@ -495,44 +493,29 @@ Every time you want to launch these test homeservers, type::
 You can now run tests from the Xcode Test navigator tab or select the
 MatrixSDKTests scheme and click on the "Test" action.
 
+Test Plans
+----------
+We have test plans for the macOS target to run tests separately or with different configurations.
+
+AllTests
+  Default test plan to run all tests.
+
+AllTestsWithSanitizers
+  Run all tests with 2 configurations: "ASan + UBSan" and "TSan + UBSan". "UBSan" for Unexpected Behavior Sanitizer. "ASan" for Address Sanitizier. "Tsan" for Thread Sanitizer. This setup was advised at WWDC2019 (https://developer.apple.com/videos/play/wwdc2019/413?time=2270). This test plan requires 2 builds and 2 test runs.
+
+UnitTests
+  Test plan for all unit tests.
+
+UnitTestsWithSanitizers
+  All unit tests with the 2 configurations described above: "ASan + UBSan" and "TSan + UBSan".
+
 Known issues
 ============
 
 CocoaPods may fail to install on OSX 10.8.x with "i18n requires Ruby version
 >= 1.9.3.".  This is a known problem similar to
 https://github.com/CocoaPods/CocoaPods/issues/2458 that needs to be raised with
-the cocoapods team.
-
-### Dynamic Framework: Undefined symbols for architecture
-
-If you are using "MatrixSDK" instead of "SwiftMatrixSDK", you may get a compile-
-time error that looks like this::
-
-    Undefined symbols for architecture x86_64:
-      "_OBJC_CLASS_$_GAIDictionaryBuilder", referenced from:
-          objc-class-ref in MXGoogleAnalytics.o
-      "_OBJC_CLASS_$_GAI", referenced from:
-          objc-class-ref in MXGoogleAnalytics.o
-    ld: symbol(s) not found for architecture x86_64
-    clang: error: linker command failed with exit code 1 (use -v to see invocation)
-
-This happens when both of the following are true:
-
-1. The MatrixSDK was compiled as a framework (i.e. the `use_frameworks!` setting
-is enabled in your podfile)
-2. Your project also uses the Google Analytics pod.
-
-The root cause is that the `MXGoogleAnalytics` class recognizes that the Google
-Analytics pod was included in your project, and attempts to include its headers.
-This type of behavior is allowed in a Static Library, but it is not allowed in a
-Dynamic Framework.
-
-The easiest workaround is to switch to the "SwiftMatrixSDK" pod, even if you
-don't use Swift (for an Obj-C project, the pods are virtually the same). The
-"SwiftMatrixSDK" excludes the `MXGoogleAnalytics` class. If you want to collect
-analytics data about initialization times (and so forth), you can implement your
-own `MXAnalyticsDelegate` and set an instance to `MXSDKOptions.sharedInstance`.
-See `MXAnalyticsDelegate.h` and `MXGoogleAnalytics.h/m` for more information.
+the CocoaPods team.
 
 Registration
 ------------

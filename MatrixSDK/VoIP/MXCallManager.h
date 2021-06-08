@@ -25,6 +25,10 @@ NS_ASSUME_NONNULL_BEGIN
 @class MXRoomMember;
 @class MXSession;
 @class MXTurnServerResponse;
+@class MXEvent;
+@class MXUserModel;
+@class MXThirdPartyUserInstance;
+@class MXUser;
 
 @protocol MXCallStack;
 
@@ -46,6 +50,24 @@ extern NSString *const kMXCallManagerConferenceStarted;
  The notification object is the id of the room where call conference occurs.
  */
 extern NSString *const kMXCallManagerConferenceFinished;
+
+/**
+ Posted when PSTN support has been updated.
+ The notification object will be the call manager instance.
+ */
+extern NSString *const kMXCallManagerPSTNSupportUpdated;
+
+/**
+ Posted when virtual rooms support has been updated.
+ The notification object will be the call manager instance.
+ */
+extern NSString *const kMXCallManagerVirtualRoomsSupportUpdated;
+
+/**
+ Posted when a new turn servers response is received from the homeserver.
+ The notification object will be the call manager instance.
+ */
+extern NSString *const kMXCallManagerTurnServersReceived;
 
 /**
  The `MXCallManager` object manages calls for a given Matrix session.
@@ -107,6 +129,13 @@ extern NSString *const kMXCallManagerConferenceFinished;
 - (void)removeCall:(MXCall *)call;
 
 /**
+ Handle a call event. Ignores other types of events.
+ 
+ @param event The call event.
+ */
+- (void)handleCallEvent:(MXEvent *)event;
+
+/**
  The related matrix session.
  */
 @property (nonatomic, readonly) MXSession *mxSession;
@@ -131,16 +160,48 @@ extern NSString *const kMXCallManagerConferenceFinished;
 @property (nonatomic) NSUInteger inviteLifetime;
 
 /**
+ The time in milliseconds that an incoming or outgoing call negotiate is valid for.
+ Default is 30s.
+ */
+@property (nonatomic) NSUInteger negotiateLifetime;
+
+/**
+ The time in milliseconds that an transfer call request is valid for.
+ Default is 30s.
+ */
+@property (nonatomic) NSUInteger transferLifetime;
+
+/**
  The list of TURN/STUN servers advertised by the user's homeserver.
  Can be nil. In this case, use `fallbackSTUNServer`.
  */
 @property (nonatomic, nullable, readonly) MXTurnServerResponse *turnServers;
 
 /**
+ Flag to indicate whether a turn servers response is received from the home server yet.
+ */
+@property (nonatomic, readonly) BOOL turnServersReceived;
+
+/**
  STUN server used if the homeserver does not provide TURN/STUN servers.
  */
 @property (nonatomic) NSString *fallbackSTUNServer;
 
+#pragma mark - Transfer
+
+/// Attempts to transfer the given call to a new call between the transferee and the target
+/// @param callWithTransferee Call to be transferred
+/// @param target Target user for the transfer
+/// @param transferee Transferee user of the transfer
+/// @param consultFirst Flag to indicate if we want to consult the transfer to the target user first. If set, creates a DM call to the target (if we don't have already one). Even would create a new DM if we don't have one already to call the target.
+/// @param success Success block. Returns the new call id immediately if consulting option is disabled.
+/// @param failure Failure block
+- (void)transferCall:(MXCall *)callWithTransferee
+                  to:(MXUserModel *)target
+      withTransferee:(MXUserModel *)transferee
+        consultFirst:(BOOL)consultFirst
+             success:(nullable void (^)(NSString * _Nullable newCallId))success
+             failure:(nullable void (^)(NSError * _Nullable error))failure;
 
 #pragma mark - Conference call
 
@@ -179,6 +240,54 @@ extern NSString *const kMXCallManagerConferenceFinished;
  @return YES if the user can.
  */
 + (BOOL)canPlaceConferenceCallInRoom:(MXRoom *)room  roomState:(MXRoomState *)roomState;
+
+#pragma mark - PSTN
+
+/**
+ Flag to indicate whether PSTN protocol is supported or not.
+ */
+@property (nonatomic, assign, readonly) BOOL supportsPSTN;
+
+/**
+ Get thirdparty user from a phone number.
+ 
+ @param phoneNumber the phone number against to place the call.
+ @param success A block object called when the operation succeeds. It provides the user.
+ @param failure A block object called when the operation fails.
+ */
+- (void)getThirdPartyUserFrom:(NSString *)phoneNumber
+                      success:(void (^)(MXThirdPartyUserInstance * _Nonnull))success
+                      failure:(void (^)(NSError * _Nullable))failure;
+
+/**
+ Place a voice or a video call into a room.
+ 
+ @param phoneNumber the phone number against to place the call.
+ @param video YES to make a video call.
+ @param success A block object called when the operation succeeds. It provides the created MXCall instance.
+ @param failure A block object called when the operation fails.
+ */
+- (void)placeCallAgainst:(NSString *)phoneNumber
+               withVideo:(BOOL)video
+                success:(void (^)(MXCall *call))success
+                failure:(void (^)(NSError * _Nullable error))failure;
+
+#pragma mark - Virtual Rooms
+
+@property (nonatomic, readonly, getter=isVirtualRoomsSupported) BOOL virtualRoomsSupported;
+
+#pragma mark - Recent
+
+/**
+ Get recent contacts with whom a call was present, either incoming or outgoing.
+ Result will be descending order according to the call time.
+ So most recent call's contact will be at the beginning of the result.
+ 
+ @param maxNumberOfUsers Maximum number of desired users. Please note that return value could be less than this.
+ @param ignoredUserIds Ignored user ids for desired users.
+ */
+- (NSArray<MXUser *> * _Nonnull)getRecentCalledUsers:(NSUInteger)maxNumberOfUsers
+                                      ignoredUserIds:(NSArray<NSString*> * _Nullable)ignoredUserIds;
 
 @end
 

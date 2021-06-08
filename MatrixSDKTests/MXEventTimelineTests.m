@@ -59,13 +59,13 @@ NSString *theInitialEventMessage = @"The initial timelime event";
         mxSession = mxSession2;
 
         // Add 20 messages to the room
-        [matrixSDKTestsData for:mxSession.matrixRestClient andRoom:room.roomId sendMessages:20 success:^{
+        [matrixSDKTestsData for:mxSession.matrixRestClient andRoom:room.roomId sendMessages:20 testCase:testCase success:^{
 
             // Add a text message that will be used as initial event
             [room sendTextMessage:theInitialEventMessage success:^(NSString *eventId) {
 
                 // Add 20 more messages
-                [matrixSDKTestsData for:mxSession.matrixRestClient andRoom:room.roomId sendMessages:20 success:^{
+                [matrixSDKTestsData for:mxSession.matrixRestClient andRoom:room.roomId sendMessages:20 testCase:testCase success:^{
 
                     readyToTest(room, expectation, eventId);
 

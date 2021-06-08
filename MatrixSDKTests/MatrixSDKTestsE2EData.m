@@ -97,11 +97,11 @@
                 readyToTest(aliceSession, room.roomId, expectation);
 
             } failure:^(NSError *error) {
-                NSAssert(NO, @"Cannot enable encryption in room - error: %@", error);
+                [matrixSDKTestsData breakTestCase:testCase reason:@"Cannot enable encryption in room - error: %@", error];
             }];
 
         } failure:^(NSError *error) {
-            NSAssert(NO, @"Cannot create a room - error: %@", error);
+            [matrixSDKTestsData breakTestCase:testCase reason:@"Cannot create a room - error: %@", error];
         }];
         
     }];
@@ -145,13 +145,13 @@
                     readyToTest(aliceSession, bobSession, room.roomId, expectation);
 
                 } failure:^(NSError *error) {
-                    NSAssert(NO, @"Cannot join a room - error: %@", error);
+                    [matrixSDKTestsData breakTestCase:testCase reason:@"Cannot join a room - error: %@", error];
                 }];
             }];
 
             [room inviteUser:bobSession.myUser.userId success:nil failure:^(NSError *error) {
                 [[NSNotificationCenter defaultCenter] removeObserver:observer];
-                NSAssert(NO, @"Cannot invite Bob (%@) - error: %@", bobSession.myUser.userId, error);
+                [matrixSDKTestsData breakTestCase:testCase reason:@"Cannot invite Bob (%@) - error: %@", bobSession.myUser.userId, error];
             }];
 
         }];
@@ -190,7 +190,7 @@
             [room inviteUser:bobSession.myUser.userId success:^{
                 readyToTest(aliceSession, bobSession, room.roomId, expectation);
             } failure:^(NSError *error) {
-                NSAssert(NO, @"Cannot invite Bob (%@) - error: %@", bobSession.myUser.userId, error);
+                [matrixSDKTestsData breakTestCase:testCase reason:@"Cannot invite Bob (%@) - error: %@", bobSession.myUser.userId, error];
             }];
             
         }];
@@ -237,7 +237,7 @@
             } failure:nil];
 
         } failure:^(NSError *error) {
-            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            [matrixSDKTestsData breakTestCase:testCase reason:@"Cannot set up intial test conditions - error: %@", error];
         }];
 
     }];
@@ -276,20 +276,23 @@
                     readyToTest(aliceSession, bobSession, samSession, room.roomId, expectation);
 
                 } failure:^(NSError *error) {
-                    NSAssert(NO, @"Cannot join a room - error: %@", error);
+                    [matrixSDKTestsData breakTestCase:testCase reason:@"Cannot join a room - error: %@", error];
                 }];
             }];
 
             [room inviteUser:samSession.myUser.userId success:nil failure:^(NSError *error) {
                 [[NSNotificationCenter defaultCenter] removeObserver:observer];
-                NSAssert(NO, @"Cannot invite Alice - error: %@", error);
+                [matrixSDKTestsData breakTestCase:testCase reason:@"Cannot invite Alice - error: %@", error];
             }];
 
         }];
     }];
 }
 
-- (void)loginUserOnANewDevice:(MXCredentials*)credentials withPassword:(NSString*)password onComplete:(void (^)(MXSession *newSession))onComplete
+- (void)loginUserOnANewDevice:(XCTestCase*)testCase
+                  credentials:(MXCredentials*)credentials
+                 withPassword:(NSString*)password
+                   onComplete:(void (^)(MXSession *newSession))onComplete
 {
     [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
     
@@ -311,11 +314,11 @@
             onComplete(newSession);
             
         } failure:^(NSError *error) {
-            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            [matrixSDKTestsData breakTestCase:testCase reason:@"Cannot set up intial test conditions - error: %@", error];
         }];
         
     } failure:^(NSError *error) {
-        NSAssert(NO, @"Cannot log %@ in again. Error: %@", credentials.userId , error);
+        [matrixSDKTestsData breakTestCase:testCase reason:@"Cannot log %@ in again. Error: %@", credentials.userId , error];
     }];
 }
 
@@ -340,10 +343,10 @@
                                                readyToTest:^(MXSession *aliceSession1, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation)
      {
          // - Bootstrap cross-signing x2
-         [aliceSession1.crypto.crossSigning bootstrapWithPassword:MXTESTS_ALICE_PWD success:^{
-             [bobSession.crypto.crossSigning bootstrapWithPassword:MXTESTS_BOB_PWD success:^{
+         [aliceSession1.crypto.crossSigning setupWithPassword:MXTESTS_ALICE_PWD success:^{
+             [bobSession.crypto.crossSigning setupWithPassword:MXTESTS_BOB_PWD success:^{
                  
-                 [self loginUserOnANewDevice:aliceSession1.matrixRestClient.credentials withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *aliceSession2) {
+                 [self loginUserOnANewDevice:self credentials:aliceSession1.matrixRestClient.credentials withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *aliceSession2) {
                      
                      NSString *aliceUserId = aliceSession1.matrixRestClient.credentials.userId;
                      NSString *bobUserId = bobSession.matrixRestClient.credentials.userId;
@@ -369,37 +372,37 @@
                                          });
                                          
                                      } failure:^(NSError *error) {
-                                         NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                                         [matrixSDKTestsData breakTestCase:testCase reason:@"Cannot set up intial test conditions - error: %@", error];
                                          [expectation fulfill];
                                      }];
                                      
                                  } failure:^(NSError *error) {
-                                     NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                                     [matrixSDKTestsData breakTestCase:testCase reason:@"Cannot set up intial test conditions - error: %@", error];
                                      [expectation fulfill];
                                  }];
                                  
                              } failure:^(NSError *error) {
-                                 NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                                 [matrixSDKTestsData breakTestCase:testCase reason:@"Cannot set up intial test conditions - error: %@", error];
                                  [expectation fulfill];
                              }];
                          } failure:^(NSError *error) {
-                             NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                             [matrixSDKTestsData breakTestCase:testCase reason:@"Cannot set up intial test conditions - error: %@", error];
                              [expectation fulfill];
                          }];
                          
                      } failure:^(NSError *error) {
-                         NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                         [matrixSDKTestsData breakTestCase:testCase reason:@"Cannot set up intial test conditions - error: %@", error];
                          [expectation fulfill];
                      }];
                  }];
                  
              } failure:^(NSError *error) {
-                 NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                 [matrixSDKTestsData breakTestCase:testCase reason:@"Cannot set up intial test conditions - error: %@", error];
                  [expectation fulfill];
              }];
              
          } failure:^(NSError *error) {
-             NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+             [matrixSDKTestsData breakTestCase:testCase reason:@"Cannot set up intial test conditions - error: %@", error];
              [expectation fulfill];
          }];
      }];

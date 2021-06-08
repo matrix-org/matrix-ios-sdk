@@ -21,14 +21,67 @@
 
 #import <UIKit/UIKit.h>
 #import "MXUIKitBackgroundTask.h"
+#import "MatrixSDKSwiftHeader.h"
+
+
+/**
+ Time threshold to be able to start a background task. So, if application's `backgroundTimeRemaining` returns less than this value, the task won't be started at all and expirationHandler will be called immediately.
+ @note This value only considered if the application is in background state.
+ @see -[UIApplication backgroundTimeRemaining]
+ */
+static const NSTimeInterval BackgroundTimeRemainingThresholdToStartTasks = 5.0;
+
+
+@interface MXUIKitBackgroundModeHandler ()
+{
+    MXUIKitApplicationStateService *applicationStateService;
+}
+@end
+
 
 @implementation MXUIKitBackgroundModeHandler
 
+- (instancetype)init
+{
+    self = [super init];
+    if (self)
+    {
+        applicationStateService = [MXUIKitApplicationStateService new];
+    }
+    return self;
+}
+
+
 #pragma mark - MXBackgroundModeHandler
 
-- (id<MXBackgroundTask>)startBackgroundTaskWithName:(NSString *)name expirationHandler:(nullable MXBackgroundTaskExpirationHandler)expirationHandler
+- (nullable id<MXBackgroundTask>)startBackgroundTaskWithName:(NSString *)name
+                                           expirationHandler:(nullable MXBackgroundTaskExpirationHandler)expirationHandler
 {
-    return [[MXUIKitBackgroundTask alloc] initAndStartWithName:name expirationHandler:expirationHandler];;
+    //  application is in background and not enough time to start this task
+    if (applicationStateService.applicationState == UIApplicationStateBackground &&
+        applicationStateService.backgroundTimeRemaining < BackgroundTimeRemainingThresholdToStartTasks)
+    {
+        MXLogDebug(@"[MXBackgroundTask] Do not start background task - %@, as not enough time exists", name);
+        
+        //  call expiration handler immediately
+        if (expirationHandler)
+        {
+            expirationHandler();
+        }
+        return nil;
+    }
+    
+    id<MXBackgroundTask> backgroundTask = [[MXUIKitBackgroundTask alloc] initAndStartWithName:name expirationHandler:expirationHandler];
+    
+    if (backgroundTask)
+    {
+        NSString *readableAppState = [MXUIKitApplicationStateService readableApplicationStateWithApplicationState:applicationStateService.applicationState];
+        NSString *readableBackgroundTimeRemaining = [MXUIKitApplicationStateService readableEstimatedBackgroundTimeRemainingWithBackgroundTimeRemaining:applicationStateService.backgroundTimeRemaining];
+        
+        MXLogDebug(@"[MXBackgroundTask] Background task %@ started with app state: %@ and estimated background time remaining: %@", backgroundTask.name, readableAppState, readableBackgroundTimeRemaining);
+    }
+
+    return backgroundTask;
 }
 
 @end

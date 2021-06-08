@@ -1,6 +1,7 @@
 /*
  Copyright 2015 OpenMarket Ltd
  Copyright 2017 Vector Creations Ltd
+ Copyright 2020 The Matrix.org Foundation C.I.C
  
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -16,6 +17,8 @@
  */
 
 #import "MXSDKOptions.h"
+
+#import "MXBaseProfiler.h"
 
 static MXSDKOptions *sharedOnceInstance = nil;
 
@@ -35,10 +38,13 @@ static MXSDKOptions *sharedOnceInstance = nil;
     self = [super init];
     if (self)
     {
+        _profiler = [MXBaseProfiler new];
         _disableIdenticonUseForUserAvatar = NO;
         _enableCryptoWhenStartingMXSession = NO;
+        _enableKeyBackupWhenStartingMXCrypto = YES;
         _mediaCacheAppVersion = 0;
         _applicationGroupIdentifier = nil;
+        _HTTPAdditionalHeaders = @{};
     }
     
     return self;

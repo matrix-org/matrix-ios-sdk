@@ -23,14 +23,17 @@
 
 #import "MXJSONModels.h"
 #import "MXCredentials.h"
-
-#import <OLMKit/OLMKit.h>
+#import "MXCryptoVersion.h"
 #import "MXOlmSession.h"
 #import "MXOlmInboundGroupSession.h"
+#import "MXOlmOutboundGroupSession.h"
 #import "MXDeviceInfo.h"
 #import "MXCrossSigningInfo.h"
 #import "MXOutgoingRoomKeyRequest.h"
 #import "MXIncomingRoomKeyRequest.h"
+
+@class OLMAccount;
+@class OLMOutboundGroupSession;
 
 /**
  The `MXCryptoStore` protocol defines an interface that must be implemented in order to store
@@ -53,11 +56,18 @@
 + (instancetype)createStoreWithCredentials:(MXCredentials*)credentials;
 
 /**
- Delete the crypto store for the passed credentials.
+ Delete the crypto store for the passed credentials. Implementation should also attempt to delete read-only store.
 
  @param credentials the credentials of the account.
  */
 + (void)deleteStoreWithCredentials:(MXCredentials*)credentials;
+
+/**
+ Delete the read-only crypto store for the passed credentials.
+
+ @param credentials the credentials of the account.
+ */
++ (void)deleteReadonlyStoreWithCredentials:(MXCredentials*)credentials;
 
 /**
  Create a crypto store for the passed credentials.
@@ -89,14 +99,30 @@
 - (NSString*)deviceId;
 
 /**
- Store the end to end account for the logged-in user.
+ Store the user olm account for this device.
+ 
+ This method MUST be used only on setup to store a new olm account.
  */
-- (void)storeAccount:(OLMAccount*)account;
+- (void)setAccount:(OLMAccount*)account;
 
 /**
- * Load the end to end account for the logged-in user.
+ The user olm account for this device.
+ 
+ This is safe to use the returned for read-only olm operation.
  */
 - (OLMAccount*)account;
+
+/**
+ Perform an action that will advance the olm account state.
+ 
+ Some cryptographic operations update the internal state of the olm account. They must be executed
+ into this method to make those operations atomic. This method stores the new olm account state
+ when the block retuns,
+ The implementation must call the block before returning. It must be multi-thread and multi-process safe.
+ 
+ @param block the block where olm operations can be safely made.
+ */
+- (void)performAccountOperationWithBlock:(void (^)(OLMAccount *olmAccount))block;
 
 /**
  Store the sync token corresponding to the device list.
@@ -214,7 +240,7 @@
 - (NSString*)algorithmForRoom:(NSString*)roomId;
 
 /**
- Store a session between the logged-in user and another device.
+ Store a session between this device and another device.
 
  @param deviceKey the public key of the other device.
  @param session the end-to-end session.
@@ -222,16 +248,28 @@
 - (void)storeSession:(MXOlmSession*)session forDevice:(NSString*)deviceKey;
 
 /**
- Retrieve an end-to-end session between the logged-in user and another
- device.
+ Retrieve an end-to-end session between this device and another device.
 
  @param deviceKey the public key of the other device.
- @return a array of end-to-end sessions sorted by the last updated first.
+ @param sessionId the session id.
+ 
+ @return the end-to-end session.
  */
 - (MXOlmSession*)sessionWithDevice:(NSString*)deviceKey andSessionId:(NSString*)sessionId;
 
 /**
- Retrieve all end-to-end sessions between the logged-in user and another
+ Perform an action that will advance the passed end-to-end session.
+ 
+ See performAccountOperationWithBlock for more details.
+ 
+ @param deviceKey the public key of the other device.
+ @param sessionId the session id.
+ @param block the block where olm session operations can be safely made.
+ */
+- (void)performSessionOperationWithDevice:(NSString*)deviceKey andSessionId:(NSString*)sessionId block:(void (^)(MXOlmSession *mxOlmSession))block;
+
+/**
+ Retrieve all end-to-end sessions between this device and another
  device sorted by `lastReceivedMessageTs`, the most recent(higest value) first.
 
  @param deviceKey the public key of the other device.
@@ -257,12 +295,87 @@
 - (MXOlmInboundGroupSession*)inboundGroupSessionWithId:(NSString*)sessionId andSenderKey:(NSString*)senderKey;
 
 /**
+ Perform an action that will advance the passed end-to-end group session.
+ 
+ See performAccountOperationWithBlock for more details.
+ 
+ @param sessionId the session identifier.
+ @param senderKey the base64-encoded curve25519 key of the sender.
+ @param block the block where olm session operations can be safely made.
+ */
+- (void)performSessionOperationWithGroupSessionWithId:(NSString*)sessionId senderKey:(NSString*)senderKey block:(void (^)(MXOlmInboundGroupSession *inboundGroupSession))block;
+
+/**
  Retrieve all inbound group sessions.
  
  @return the list of all inbound group sessions.
  */
 - (NSArray<MXOlmInboundGroupSession*> *)inboundGroupSessions;
 
+
+/**
+ Store outbound group session.
+
+ @param session outbound group session.
+ @param roomId related room ID.
+ 
+ @return the related stored outbound group session.
+ */
+- (MXOlmOutboundGroupSession *)storeOutboundGroupSession:(OLMOutboundGroupSession *)session withRoomId:(NSString *)roomId;
+
+/**
+ Retrieve an outbound group session for a specific room.
+
+ @param roomId the room identifier.
+ @return an outbound group session if found. Nil otherwise
+ */
+- (MXOlmOutboundGroupSession *)outboundGroupSessionWithRoomId:(NSString*)roomId;
+
+/**
+ Retrieve all outbound group sessions.
+ 
+ @return the list of all stored outbound group sessions.
+ */
+- (NSArray<MXOlmOutboundGroupSession *> *)outboundGroupSessions;
+
+/**
+ Remove stored outbound group session for a specific room.
+
+ @param roomId the room identifier.
+ */
+- (void)removeOutboundGroupSessionWithRoomId:(NSString*)roomId;
+
+/**
+ Store the message index shared with a list of devices in dedicated room
+
+ @param devices list of devices the message index has been shared with
+ @param messageIndex the current message index of the outbound group session
+ @param roomId ID of the room of the outbound group session
+ @param sessionId ID of the session of the outbound group session
+ */
+- (void)storeSharedDevices:(MXUsersDevicesMap<NSNumber *> *)devices messageIndex:(NSUInteger) messageIndex forOutboundGroupSessionInRoomWithId:(NSString *)roomId sessionId:(NSString *)sessionId;
+
+/**
+ Retrieves all the devices the outbound group session has been shared with
+
+ @param roomId ID of the room of the outbound group session
+ @param sessionId ID of the session of the outbound group session
+ 
+ @return MXUsersDevicesMap of the message indexes
+ */
+- (MXUsersDevicesMap<NSNumber *> *)sharedDevicesForOutboundGroupSessionInRoomWithId:(NSString *)roomId sessionId:(NSString *)sessionId;
+
+/**
+ Retrieves the message index of the outbound session when it has been shared with a given device.
+
+ @param roomId ID of the room of the outbound group session
+ @param sessionId ID of the session of the outbound group session
+ @param userId user ID of the device
+ @param deviceId ID of the device
+
+ @return the NSNumber of the message index of the outbound session when it has been shared with a given device. Nil if the session has not been shared with the given device.
+ */
+- (NSNumber *)messageIndexForSharedDeviceInRoomWithId:(NSString *)roomId sessionId:(NSString *)sessionId userId:(NSString *)userId deviceId:(NSString *)deviceId;
 
 #pragma mark - Key backup
 
@@ -458,6 +571,17 @@
  @param senderKey the base64-encoded curve25519 key of the sender.
  */
 - (void)removeInboundGroupSessionWithId:(NSString*)sessionId andSenderKey:(NSString*)senderKey;
+
+
+#pragma mark - Versioning
+
+/**
+ The version of the crypto module implementation.
+ 
+ It is used to handle logical migration between crypto module updates.
+ Must return MXCryptoVersionUndefined if not defined yet.
+ */
+@property (nonatomic) MXCryptoVersion cryptoVersion;
 
 @end
 

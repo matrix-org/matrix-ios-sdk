@@ -18,6 +18,12 @@
 
 #pragma mark - Defines & Constants
 
+// Public
+
+NSString* const MXRoomCreateContentRoomTypeJSONKey = @"type";
+
+// Private
+
 static NSString* const kRoomCreateContentUserIdJSONKey = @"creator";
 static NSString* const kRoomCreateContentPredecessorInfoJSONKey = @"predecessor";
 static NSString* const kRoomCreateContentRoomVersionJSONKey = @"room_version";
@@ -31,6 +37,8 @@ static NSString* const kRoomCreateContentFederateJSONKey = @"m.federate";
 @property (nonatomic, strong, readwrite, nullable) MXRoomPredecessorInfo *roomPredecessorInfo;
 @property (nonatomic, copy, readwrite, nullable) NSString *roomVersion;
 @property (nonatomic, readwrite) BOOL isFederated;
+@property (nonatomic, readwrite, nonnull) MXVirtualRoomInfo *virtualRoomInfo;
+@property (nonatomic, readwrite, nullable) NSString *roomType;
 
 @end
 
@@ -47,7 +55,9 @@ static NSString* const kRoomCreateContentFederateJSONKey = @"m.federate";
         MXJSONModelSetString(roomCreateContent.creatorUserId, jsonDictionary[kRoomCreateContentUserIdJSONKey]);
         MXJSONModelSetMXJSONModel(roomCreateContent.roomPredecessorInfo, MXRoomPredecessorInfo, jsonDictionary[kRoomCreateContentPredecessorInfoJSONKey]);
         MXJSONModelSetString(roomCreateContent.roomVersion, jsonDictionary[kRoomCreateContentRoomVersionJSONKey]);
-        MXJSONModelSetBoolean(roomCreateContent.isFederated, jsonDictionary[kRoomCreateContentFederateJSONKey])
+        MXJSONModelSetBoolean(roomCreateContent.isFederated, jsonDictionary[kRoomCreateContentFederateJSONKey]);
+        MXJSONModelSetMXJSONModel(roomCreateContent.virtualRoomInfo, MXVirtualRoomInfo, jsonDictionary[kRoomIsVirtualJSONKey]);
+        MXJSONModelSetString(roomCreateContent.roomType, jsonDictionary[MXRoomCreateContentRoomTypeJSONKey]);
     }
     
     return roomCreateContent;
@@ -73,6 +83,16 @@ static NSString* const kRoomCreateContentFederateJSONKey = @"m.federate";
     }
     
     jsonDictionary[kRoomCreateContentFederateJSONKey] = @(self.isFederated);
+    
+    if (self.virtualRoomInfo)
+    {
+        jsonDictionary[kRoomIsVirtualJSONKey] = self.virtualRoomInfo;
+    }
+    
+    if (self.roomType)
+    {
+        jsonDictionary[MXRoomCreateContentRoomTypeJSONKey] = self.roomType;
+    }
     
     return jsonDictionary;
 }

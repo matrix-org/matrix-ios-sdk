@@ -61,7 +61,7 @@
     [session.crypto importMegolmSessionDatas:@[sessionData] backUp:NO success:^(NSUInteger total, NSUInteger imported) {
         complete();
     } failure:^(NSError *error) {
-        NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+        [matrixSDKTestsData breakTestCase:self reason:@"Cannot set up intial test conditions - error: %@", error];
     }];
 }
 
@@ -92,7 +92,7 @@
                 } failure:nil];
             } failure:nil];
         } failure:^(NSError *error) {
-            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            [matrixSDKTestsData breakTestCase:self reason:@"Cannot set up intial test conditions - error: %@", error];
         }];
 
 
@@ -119,7 +119,7 @@
 
                     // - Log Alice on a new device
                     [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
-                    [matrixSDKTestsData relogUserSessionWithNewDevice:aliceSession withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *aliceSession2) {
+                    [matrixSDKTestsData relogUserSessionWithNewDevice:self session:aliceSession withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *aliceSession2) {
                         [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
 
                         readyToTest(aliceSession2, roomId, sessionData, partialSessionData, expectation);
@@ -146,7 +146,7 @@
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession1, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
         
         //- Alice signs in on a new device
-        [matrixSDKTestsE2EData loginUserOnANewDevice:aliceSession1.matrixRestClient.credentials withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *aliceSession2) {
+        [matrixSDKTestsE2EData loginUserOnANewDevice:self credentials:aliceSession1.matrixRestClient.credentials withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *aliceSession2) {
             
             // - Alice2 paginates in the room
             MXRoom *roomFromAlice2POV = [aliceSession2 roomWithRoomId:roomId];
@@ -197,7 +197,7 @@
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession1, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
         
         //- Alice signs in on a new device
-        [matrixSDKTestsE2EData loginUserOnANewDevice:aliceSession1.matrixRestClient.credentials withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *aliceSession2) {
+        [matrixSDKTestsE2EData loginUserOnANewDevice:self credentials:aliceSession1.matrixRestClient.credentials withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *aliceSession2) {
             
             NSString *aliceUserId = aliceSession1.matrixRestClient.credentials.userId;
             
@@ -268,7 +268,7 @@
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession1, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
         
         //- Alice signs in on a new device
-        [matrixSDKTestsE2EData loginUserOnANewDevice:aliceSession1.matrixRestClient.credentials withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *aliceSession2) {
+        [matrixSDKTestsE2EData loginUserOnANewDevice:self credentials:aliceSession1.matrixRestClient.credentials withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *aliceSession2) {
             
             // - Disable key share requests on Alice2
             [aliceSession2.crypto setOutgoingKeyRequestsEnabled:NO onComplete:nil];
@@ -356,7 +356,7 @@
                     
                     
                     //- Alice signs in on a new device
-                    [matrixSDKTestsE2EData loginUserOnANewDevice:aliceSession1.matrixRestClient.credentials withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *aliceSession2) {
+                    [matrixSDKTestsE2EData loginUserOnANewDevice:self credentials:aliceSession1.matrixRestClient.credentials withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *aliceSession2) {
                         
                         // - Disable key share requests on Alice2
                         [aliceSession2.crypto setOutgoingKeyRequestsEnabled:NO onComplete:nil];

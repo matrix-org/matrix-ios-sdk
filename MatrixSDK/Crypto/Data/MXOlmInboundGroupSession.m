@@ -18,6 +18,7 @@
 
 #ifdef MX_CRYPTO
 
+#import <OLMKit/OLMKit.h>
 #import "MXCryptoConstants.h"
 
 @implementation MXOlmInboundGroupSession
@@ -59,7 +60,7 @@
     }
     else
     {
-        NSLog(@"[MXOlmInboundGroupSession] exportSessionData: Cannot export session with id %@-%@. Error: %@", _session.sessionIdentifier, _senderKey, error);
+        MXLogDebug(@"[MXOlmInboundGroupSession] exportSessionData: Cannot export session with id %@-%@. Error: %@", _session.sessionIdentifier, _senderKey, error);
     }
 
     return sessionData;
@@ -79,7 +80,7 @@
         _session  = [[OLMInboundGroupSession alloc] initInboundGroupSessionWithImportedSession:sessionKey error:&error];
         if (!_session)
         {
-            NSLog(@"[MXOlmInboundGroupSession] initWithImportedSessionKey failed. Error: %@", error);
+            MXLogDebug(@"[MXOlmInboundGroupSession] initWithImportedSessionKey failed. Error: %@", error);
             return nil;
         }
     }

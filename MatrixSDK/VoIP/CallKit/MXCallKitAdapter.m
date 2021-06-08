@@ -89,7 +89,20 @@ NSString * const kMXCallKitAdapterAudioSessionDidActive = @"kMXCallKitAdapterAud
 
     [self contactIdentifierForCall:call onComplete:^(NSString *contactIdentifier) {
 
-        CXHandle *handle = [[CXHandle alloc] initWithType:CXHandleTypeGeneric value:call.room.roomId];
+        NSString *handleValue;
+        if (call.room.roomId)
+        {
+            handleValue = call.room.roomId;
+        }
+        else if (contactIdentifier)
+        {
+            handleValue = contactIdentifier;
+        }
+        else
+        {
+            handleValue = call.callId;
+        }
+        CXHandle *handle = [[CXHandle alloc] initWithType:CXHandleTypeGeneric value:handleValue];
         CXStartCallAction *action = [[CXStartCallAction alloc] initWithCallUUID:callUUID handle:handle];
         action.contactIdentifier = contactIdentifier;
 
@@ -127,12 +140,12 @@ NSString * const kMXCallKitAdapterAudioSessionDidActive = @"kMXCallKitAdapterAud
         switch (endReason)
         {
             case MXCallEndReasonRemoteHangup:
+            case MXCallEndReasonBusy:
                 reason = CXCallEndedReasonRemoteEnded;
                 break;
             case MXCallEndReasonHangupElsewhere:
                 reason = CXCallEndedReasonDeclinedElsewhere;
                 break;
-            case MXCallEndReasonBusy:
             case MXCallEndReasonMissed:
                 reason = CXCallEndedReasonUnanswered;
                 break;
@@ -144,19 +157,40 @@ NSString * const kMXCallKitAdapterAudioSessionDidActive = @"kMXCallKitAdapterAud
         }
         
         [self.provider reportCallWithUUID:call.callUUID endedAtDate:nil reason:reason];
+        [self.audioSessionConfigurator configureAudioSessionAfterCallEnds];
     }
 }
 
 - (void)reportIncomingCall:(MXCall *)call {
-    MXSession *mxSession = call.room.mxSession;
-    MXUser *caller = [mxSession userWithUserId:call.callerId];
     NSUUID *callUUID = call.callUUID;
     
-    CXHandle *handle = [[CXHandle alloc] initWithType:CXHandleTypeGeneric value:call.room.roomId];
+    if (self.calls[callUUID])
+    {
+        //  when using iOS 13 VoIP pushes, we are immediately reporting call to the CallKit. When call goes into MXCallStateRinging state, it'll try to report the same call to the CallKit again. It will cause an error with the error:  CXErrorCodeIncomingCallErrorCallUUIDAlreadyExists (2). So we want to avoid to re-reporting the same call.
+        return;
+    }
+    
+    //  directly store the call. Will be removed if reporting fails.
+    self.calls[callUUID] = call;
+    
+    NSString *handleValue;
+    if (call.room.roomId)
+    {
+        handleValue = call.room.roomId;
+    }
+    else if (call.callerId)
+    {
+        handleValue = call.callerId;
+    }
+    else
+    {
+        handleValue = call.callId;
+    }
+    CXHandle *handle = [[CXHandle alloc] initWithType:CXHandleTypeGeneric value:handleValue];
     
     CXCallUpdate *update = [[CXCallUpdate alloc] init];
     update.remoteHandle = handle;
-    update.localizedCallerName = caller.displayname;
+    update.localizedCallerName = call.callerName;
     update.hasVideo = call.isVideoCall;
     update.supportsHolding = NO;
     update.supportsGrouping = NO;
@@ -166,16 +200,10 @@ NSString * const kMXCallKitAdapterAudioSessionDidActive = @"kMXCallKitAdapterAud
     [self.provider reportNewIncomingCallWithUUID:callUUID update:update completion:^(NSError * _Nullable error) {
         if (error)
         {
-            [call hangup];
+            [call hangupWithReason:MXCallHangupReasonUnknownError];
+            [self.calls removeObjectForKey:callUUID];
             return;
         }
-        
-        self.calls[callUUID] = call;
-        
-        // Workaround from https://forums.developer.apple.com/message/169511 suggests configuring audio in the
-        // completion block of the `reportNewIncomingCallWithUUID:update:completion:` method instead of in
-        // `provider:performAnswerCallAction:` per the WWDC examples.
-        [self.audioSessionConfigurator configureAudioSessionForVideoCall:call.isVideoCall];
     }];
     
 }
@@ -187,26 +215,78 @@ NSString * const kMXCallKitAdapterAudioSessionDidActive = @"kMXCallKitAdapterAud
 
 - (void)reportCall:(MXCall *)call connectedAtDate:(nullable NSDate *)date
 {
-    [self.provider reportOutgoingCallWithUUID:call.callUUID connectedAtDate:date];
+    if (call.isIncoming)
+    {
+        CXAnswerCallAction *answerCallAction = [[CXAnswerCallAction alloc] initWithCallUUID:call.callUUID];
+        CXTransaction *transaction = [[CXTransaction alloc] initWithAction:answerCallAction];
+        
+        [self.callController requestTransaction:transaction completion:^(NSError * _Nullable error) {
+            
+        }];
+    }
+    else
+    {
+        [self.provider reportOutgoingCallWithUUID:call.callUUID connectedAtDate:date];
+    }
+    [self reportCall:call onHold:NO];
+}
+
+- (void)reportCall:(MXCall *)call onHold:(BOOL)onHold
+{
+    NSUUID *callUUID = call.callUUID;
+    
+    if (!self.calls[callUUID])
+    {
+        //  This call is not managed by the CallKit, ignore.
+        return;
+    }
+    
+    CXSetHeldCallAction *holdCallAction = [[CXSetHeldCallAction alloc] initWithCallUUID:callUUID onHold:onHold];
+    CXTransaction *transaction = [[CXTransaction alloc] initWithAction:holdCallAction];
+
+    [self.callController requestTransaction:transaction completion:^(NSError *error) {
+        
+    }];
+}
+
+- (void)updateSupportsHoldingForCall:(MXCall *)call
+{
+    NSUUID *callUUID = call.callUUID;
+    
+    if (!self.calls[callUUID])
+    {
+        //  This call is not managed by the CallKit, ignore.
+        return;
+    }
+    
+    BOOL supportsHolding = call.supportsHolding;
+    
+    CXCallUpdate *update = [[CXCallUpdate alloc] init];
+    //  Doc says "Any property that is not set will be ignored" for CXCallUpdate.
+    //  So we don't have to set other properties for the update.
+    update.supportsHolding = supportsHolding;
+    
+    [self.provider reportCallWithUUID:callUUID updated:update];
+    MXLogDebug(@"[MXCallKitAdapter] updateSupportsHoldingForCall, call(%@) updated to: %u", call.callId, supportsHolding);
 }
 
 + (BOOL)callKitAvailable
 {
-	if (@available(iOS 10.0, *)) {
-		// CallKit currently illegal in China
-		// https://github.com/vector-im/riot-ios/issues/1941
+#if TARGET_IPHONE_SIMULATOR
+    return NO;
+#endif
+    
+    // CallKit currently illegal in China
+    // https://github.com/vector-im/riot-ios/issues/1941
 
-		return ![NSLocale.currentLocale.countryCode isEqual: @"CN"];
-	}
-
-	return NO;
+    return ![NSLocale.currentLocale.countryCode isEqualToString:@"CN"];
 }
 
 #pragma mark - CXProviderDelegate
 
 - (void)providerDidReset:(CXProvider *)provider
 {
-    NSLog(@"Provider did reset");
+    MXLogDebug(@"Provider did reset");
 }
 
 - (void)provider:(CXProvider *)provider didActivateAudioSession:(AVAudioSession *)audioSession
@@ -238,8 +318,20 @@ NSString * const kMXCallKitAdapterAudioSessionDidActive = @"kMXCallKitAdapterAud
     if (call)
     {
         [call answer];
+        [self.audioSessionConfigurator configureAudioSessionForVideoCall:call.isVideoCall];
     }
     
+    [action fulfill];
+}
+
+- (void)provider:(CXProvider *)provider performSetHeldCallAction:(CXSetHeldCallAction *)action
+{
+    MXCall *call = self.calls[action.callUUID];
+    if (call)
+    {
+        [call hold:action.onHold];
+    }
+
     [action fulfill];
 }
 
@@ -250,6 +342,7 @@ NSString * const kMXCallKitAdapterAudioSessionDidActive = @"kMXCallKitAdapterAud
     {
         [call hangup];
         [self.calls removeObjectForKey:action.UUID];
+        [self.audioSessionConfigurator configureAudioSessionAfterCallEnds];
     }
     
     [action fulfill];

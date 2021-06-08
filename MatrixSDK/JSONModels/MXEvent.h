@@ -68,7 +68,14 @@ typedef NS_ENUM(NSInteger, MXEventType)
     MXEventTypeCallInvite,
     MXEventTypeCallCandidates,
     MXEventTypeCallAnswer,
+    MXEventTypeCallSelectAnswer,
     MXEventTypeCallHangup,
+    MXEventTypeCallReject,
+    MXEventTypeCallNegotiate,
+    MXEventTypeCallReplaces,
+    MXEventTypeCallRejectReplacement,
+    MXEventTypeCallAssertedIdentity,
+    MXEventTypeCallAssertedIdentityUnstable,
     MXEventTypeSticker,
     MXEventTypeRoomTombStone,
     MXEventTypeKeyVerificationRequest,
@@ -81,6 +88,9 @@ typedef NS_ENUM(NSInteger, MXEventType)
     MXEventTypeKeyVerificationDone,
     MXEventTypeSecretRequest,
     MXEventTypeSecretSend,
+    MXEventTypeSecretStorageDefaultKey,
+    MXEventTypeTaggedEvents,
+    MXEventTypeSpaceChild,
 
     // The event is a custom event. Refer to its `MXEventTypeString` version
     MXEventTypeCustom = 1000
@@ -125,9 +135,18 @@ FOUNDATION_EXPORT NSString *const kMXEventTypeStringReadMarker;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringCallInvite;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringCallCandidates;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringCallAnswer;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringCallSelectAnswer;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringCallHangup;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringCallReject;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringCallNegotiate;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringCallReplaces;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringCallRejectReplacement;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringCallAssertedIdentity;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringCallAssertedIdentityUnstable;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringSticker;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomTombStone;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringTaggedEvents;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringSpaceChild;
 
 // Interactive key verification
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringKeyVerificationRequest;
@@ -142,6 +161,9 @@ FOUNDATION_EXPORT NSString *const kMXEventTypeStringKeyVerificationDone;
 // Secret sharing
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringSecretRequest;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringSecretSend;
+
+// Secret Storage
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringSecretStorageDefaultKey;
 
 
 /**

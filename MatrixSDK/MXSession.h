@@ -37,6 +37,8 @@
 #import "MXAggregations.h"
 #import "MXIdentityService.h"
 #import "MX3PidAddManager.h"
+#import "MXMembershipTransitionState.h"
+#import "MXRoomAccountDataUpdating.h"
 
 /**
  `MXSessionState` represents the states in the life cycle of a MXSession instance.
@@ -214,6 +216,13 @@ FOUNDATION_EXPORT NSString *const kMXSessionIgnoredUsersDidChangeNotification;
 FOUNDATION_EXPORT NSString *const kMXSessionDirectRoomsDidChangeNotification;
 
 /**
+ Posted when the virtual rooms are updated, either from the store or from the homeserver.
+ 
+ The notification object is the concerned session (MXSession instance).
+ */
+FOUNDATION_EXPORT NSString *const kMXSessionVirtualRoomsDidChangeNotification;
+
+/**
  Posted when the matrix account data are updated from homeserver.
  
  The notification object is the concerned session (MXSession instance).
@@ -347,6 +356,7 @@ FOUNDATION_EXPORT NSString *const kMXSessionNotificationUserIdsArrayKey;
  */
 FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
 
+@class MXSpaceService;
 
 #pragma mark - MXSession
 /**
@@ -467,6 +477,11 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
  */
 @property (nonatomic, readonly) MXAggregations *aggregations;
 
+/**
+ The module that manages spaces.
+ */
+@property (nonatomic, readonly) MXSpaceService *spaceService;
+
 #pragma mark - Class methods
 
 /**
@@ -547,7 +562,8 @@ typedef void (^MXOnBackgroundSyncDone)(void);
 typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 
 /**
- Perform an events stream catchup in background (by keeping user offline).
+ Perform an events stream catchup in background (by keeping user offline). Considers session state.
+ @see -[MXSession backgroundSync:ignoreSessionState:success:failure]
  
  @param timeout the max time in milliseconds to perform the catchup
  @param backgroundSyncDone A block called when the SDK has been successfully performed a catchup
@@ -556,6 +572,26 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 - (void)backgroundSync:(unsigned int)timeout
                success:(MXOnBackgroundSyncDone)backgroundSyncDone
                failure:(MXOnBackgroundSyncFail)backgroundSyncfails NS_REFINED_FOR_SWIFT;
+
+/**
+ Perform an events stream catchup in background (by keeping user offline).
+ 
+ @param timeout the max time in milliseconds to perform the catchup in client side
+ @param ignoreSessionState ignore session state to be equal to paused
+ @param backgroundSyncDone A block called when the SDK has been successfully performed a catchup
+ @param backgroundSyncfails A block called when the catchup fails.
+ */
+- (void)backgroundSync:(unsigned int)timeout
+    ignoreSessionState:(BOOL)ignoreSessionState
+               success:(MXOnBackgroundSyncDone)backgroundSyncDone
+               failure:(MXOnBackgroundSyncFail)backgroundSyncfails NS_REFINED_FOR_SWIFT;
+
+/**
+ Handles sync response retrieved by the background sync service, if the cache is valid. Clears the cache after processing.
+ 
+ @param completion Completion block called when the session has been processed the cache, or when no valid cache exists.
+ */
+- (void)handleBackgroundSyncCacheIfRequiredWithCompletion:(void (^)(void))completion;
 
 /**
  Restart the session events stream.
@@ -829,7 +865,6 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
                                                     success:(void (^)(BOOL canEnableE2E))success
                                                     failure:(void (^)(NSError *error))failure;
 
-
 #pragma mark - The user's rooms
 /**
  Check if the user is in a room
@@ -945,6 +980,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 #pragma mark - Matrix Events
 /**
  Retrieve an event from its event id.
+ It will be decrypted if needed.
 
  @param eventId the id of the event to retrieve.
  @param roomId (optional) the id of the room.
@@ -990,14 +1026,23 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  
  This may lead to pagination requests to the homeserver. Updated room summaries will be 
  notified by `kMXRoomSummaryDidChangeNotification`.
+ 
+ @param maxServerPaginationCount the maximal number of messages to paginate from the homeserver. Default is 50.
  */
 - (void)fixRoomsSummariesLastMessage;
+- (void)fixRoomsSummariesLastMessageWithMaxServerPaginationCount:(NSUInteger)maxServerPaginationCount;
 
 /**
  Delegate for updating room summaries.
  By default, it is the one returned by [MXRoomSummaryUpdater roomSummaryUpdaterForSession:].
  */
 @property id<MXRoomSummaryUpdating> roomSummaryUpdateDelegate;
+
+/**
+ Delegate for updating room account data.
+ By default, it is the one returned by [MXRoomAccountDataUpdater roomAccountDataUpdaterForSession:].
+ */
+@property id<MXRoomAccountDataUpdating> roomAccountDataUpdateDelegate;
 
 #pragma mark - The user's groups
 /**
@@ -1415,12 +1460,26 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 /**
  Decrypt an event and update its data.
 
+ @warning This method is deprecated, use -[MXSession decryptEvents:inTimeline:onComplete:] instead.
+ 
  @param event the event to decrypt.
  @param timeline the id of the timeline where the event is decrypted. It is used
         to prevent replay attack.
  @return YES if decryption is successful.
  */
-- (BOOL)decryptEvent:(MXEvent*)event inTimeline:(NSString*)timeline;
+- (BOOL)decryptEvent:(MXEvent*)event inTimeline:(NSString*)timeline __attribute__((deprecated("use -[MXSession decryptEvents:inTimeline:onComplete:] instead")));
+
+/**
+ Decrypt events asynchronously and update their data.
+ 
+ @param events the events to decrypt.
+ @param timeline the id of the timeline where the events are decrypted. It is used
+        to prevent replay attack.
+ @param onComplete the block called when the operations completes. It returns events that failed to decrypt.
+ */
+- (void)decryptEvents:(NSArray<MXEvent*> *)events
+           inTimeline:(NSString*)timeline
+           onComplete:(void (^)(NSArray<MXEvent*> *failedEvents))onComplete;
 
 /**
  Reset replay attack data for the given timeline.
@@ -1481,5 +1540,24 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  @return the current publicised groups for the provided user.
  */
 - (NSArray<NSString *> *)publicisedGroupsForUser:(NSString*)userId;
+
+#pragma mark - Virtual Rooms
+
+/**
+ Cache the virtual room of a native room.
+ 
+ @param virtualRoomId nirtual room identifier
+ @param nativeRoomId native room identifier.
+ */
+- (void)setVirtualRoom:(NSString *)virtualRoomId
+         forNativeRoom:(NSString *)nativeRoomId;
+
+/**
+ Get virtual room identifier for a given native room identifier.
+ 
+ @param nativeRoomId native room identifier to look for the virtual room.
+ @return the virtual room identifier for the given native room. May be nil.
+ */
+- (NSString *)virtualRoomOf:(NSString *)nativeRoomId;
 
 @end

@@ -1,5 +1,6 @@
 /*
  Copyright 2017 Avery Pierce
+ Copyright 2021 The Matrix.org Foundation C.I.C
  
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -129,6 +130,25 @@ private extension MXResponse {
 
 
 
+public extension MXResponse where T: MXSummable {
+    static func +(lhs: MXResponse<T>, rhs: MXResponse<T>) -> MXResponse<T> {
+        
+        // Once there is an error, the result will be an error
+        switch (lhs, rhs) {
+            case (.failure(_), _):
+                return lhs
+            case (_, .failure(_)):
+                return rhs
+            case (.success(let lhsT), .success(let rhsT)):
+                return .success(lhsT + rhsT)
+        }
+    }
+}
+
+
+
+
+
 
 /**
  Return a closure that accepts any object, converts it to a MXResponse value, and then
@@ -176,10 +196,15 @@ internal func curryFailure<T>(_ completion: @escaping (MXResponse<T>) -> Void) -
     return { completion(.fromOptional(error: $0)) }
 }
 
-
-
-
-
+/// Call success and failure closures from a MXResponse, useful to expose Swift function to Objective-C
+internal func uncurryResponse<T>(_ response: MXResponse<T>, success: @escaping (T) -> Void, failure: @escaping (Error) -> Void) {
+    switch response {
+    case .success(let object):
+        success(object)
+    case .failure(let error):
+        failure(error)
+    }
+}
 
 
 /**

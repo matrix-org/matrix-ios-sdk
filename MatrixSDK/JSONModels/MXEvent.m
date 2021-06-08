@@ -59,7 +59,14 @@ NSString *const kMXEventTypeStringReadMarker            = @"m.fully_read";
 NSString *const kMXEventTypeStringCallInvite            = @"m.call.invite";
 NSString *const kMXEventTypeStringCallCandidates        = @"m.call.candidates";
 NSString *const kMXEventTypeStringCallAnswer            = @"m.call.answer";
+NSString *const kMXEventTypeStringCallSelectAnswer      = @"m.call.select_answer";
 NSString *const kMXEventTypeStringCallHangup            = @"m.call.hangup";
+NSString *const kMXEventTypeStringCallReject            = @"m.call.reject";
+NSString *const kMXEventTypeStringCallNegotiate         = @"m.call.negotiate";
+NSString *const kMXEventTypeStringCallReplaces          = @"m.call.replaces";
+NSString *const kMXEventTypeStringCallRejectReplacement = @"m.call.reject_replacement";
+NSString *const kMXEventTypeStringCallAssertedIdentity  = @"m.call.asserted_identity";
+NSString *const kMXEventTypeStringCallAssertedIdentityUnstable  = @"org.matrix.call.asserted_identity";
 NSString *const kMXEventTypeStringSticker               = @"m.sticker";
 NSString *const kMXEventTypeStringRoomTombStone         = @"m.room.tombstone";
 NSString *const kMXEventTypeStringKeyVerificationRequest= @"m.key.verification.request";
@@ -72,6 +79,11 @@ NSString *const kMXEventTypeStringKeyVerificationCancel = @"m.key.verification.c
 NSString *const kMXEventTypeStringKeyVerificationDone   = @"m.key.verification.done";
 NSString *const kMXEventTypeStringSecretRequest         = @"m.secret.request";
 NSString *const kMXEventTypeStringSecretSend            = @"m.secret.send";
+NSString *const kMXEventTypeStringSecretStorageDefaultKey   = @"m.secret_storage.default_key";
+NSString *const kMXEventTypeStringTaggedEvents          = @"m.tagged_events";
+//NSString *const kMXEventTypeStringSpaceChild            = @"m.space.child";
+// Use temporary event type until the MSC approval
+NSString *const kMXEventTypeStringSpaceChild            = @"org.matrix.msc1772.space.child";
 
 NSString *const kMXMessageTypeText          = @"m.text";
 NSString *const kMXMessageTypeEmote         = @"m.emote";
@@ -192,6 +204,10 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
     // Clean JSON data by removing all null values
     _wireContent = [MXJSONModel removeNullValuesInJSON:_wireContent];
     _prevContent = [MXJSONModel removeNullValuesInJSON:_prevContent];
+    
+    // Clean JSON data by removing non-string msgtype values
+    _wireContent = [MXEvent wireContentFixingNonStringMsgtypesIn:_wireContent];
+    _prevContent = [MXEvent wireContentFixingNonStringMsgtypesIn:_prevContent];
 }
 
 - (void)setSentState:(MXEventSentState)sentState
@@ -569,6 +585,8 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
     MXEvent *event = self;
     NSDictionary *newContentDict;
     MXJSONModelSetDictionary(newContentDict, replaceEvent.content[@"m.new_content"])
+    
+    MXEventDecryptionResult *replaceEventDecryptionResult;
 
     NSMutableDictionary *editedEventDict;
     if (replaceEvent.isEncrypted)
@@ -578,6 +596,9 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
         NSMutableDictionary *editedEventContentDict = [replaceEvent.wireContent mutableCopy];
         [editedEventContentDict removeObjectForKey:@"m.relates_to"];
         editedEventDict[@"content"] = editedEventContentDict;
+        
+        // Reuse its decryption data
+        replaceEventDecryptionResult = [replaceEvent decryptionResult];
     }
     else if (event.content[@"body"] && newContentDict && [newContentDict[@"msgtype"] isEqualToString:event.content[@"msgtype"]])
     {
@@ -617,6 +638,11 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
         }
         
         editedEvent = [MXEvent modelFromJSON:editedEventDict];
+        
+        if (replaceEventDecryptionResult)
+        {
+            [editedEvent setClearData:replaceEventDecryptionResult];
+        }
     }
     
     return editedEvent;
@@ -659,6 +685,11 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
     }
 
     newEvent = [MXEvent modelFromJSON:newEventDict];
+    
+    if (self.isEncrypted)
+    {
+        [newEvent setClearData:[self decryptionResult]];
+    }
     
     return newEvent;
 }
@@ -824,21 +855,38 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
 - (void)setClearData:(MXEventDecryptionResult *)decryptionResult
 {
     _clearEvent = nil;
+    
+    if (decryptionResult.error)
+    {
+        _decryptionError = decryptionResult.error;
+        return;
+    }
+    
     if (decryptionResult.clearEvent)
     {
-        NSDictionary *clearEventJSON = decryptionResult.clearEvent;
-        if (clearEventJSON[@"content"][@"m.new_content"] && !_wireContent[@"m.relates_to"])
+        NSDictionary *clearEventJSON, *clearEventJSONContent;
+        MXJSONModelSetDictionary(clearEventJSON, decryptionResult.clearEvent);
+        MXJSONModelSetDictionary(clearEventJSONContent, clearEventJSON[@"content"]);
+
+        if (clearEventJSONContent[@"m.new_content"] && !_wireContent[@"m.relates_to"])
         {
             // If the event has been edited, use the new content
             // This can be done only on client side
             // TODO: Remove this with the coming update of MSC1849.
-            NSMutableDictionary *clearEventUpdatedJSON = [clearEventJSON mutableCopy];
-            clearEventUpdatedJSON[@"content"] = clearEventJSON[@"content"][@"m.new_content"];
-            clearEventJSON = clearEventUpdatedJSON;
+            NSDictionary *clearEventJSONNewContent;
+            MXJSONModelSetDictionary(clearEventJSONNewContent, clearEventJSONContent[@"m.new_content"]);
+            
+            if (clearEventJSONNewContent)
+            {
+                NSMutableDictionary *clearEventUpdatedJSON = [clearEventJSON mutableCopy];
+                clearEventUpdatedJSON[@"content"] = clearEventJSONNewContent;
+                clearEventJSON = clearEventUpdatedJSON;
+            }
         }
 
         NSDictionary *decryptionClearEventJSON;
-        NSDictionary *encryptedContentRelatesToJSON = _wireContent[@"m.relates_to"];
+        NSDictionary *encryptedContentRelatesToJSON;
+        MXJSONModelSetDictionary(encryptedContentRelatesToJSON, _wireContent[@"m.relates_to"]);
         
         // Add "m.relates_to" data from e2e event to the unencrypted content event
         if (encryptedContentRelatesToJSON)
@@ -971,6 +1019,24 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
     return encryptedContentFiles;
 }
 
+// Extract the decryption result that allowed to decrypt the event.
+- (MXEventDecryptionResult*)decryptionResult
+{
+    MXEventDecryptionResult *decryptionResult = [MXEventDecryptionResult new];
+    
+    if (_clearEvent)
+    {
+        decryptionResult.clearEvent = _clearEvent.JSONDictionary;
+        decryptionResult.senderCurve25519Key = _clearEvent->senderCurve25519Key;
+        decryptionResult.claimedEd25519Key = _clearEvent->claimedEd25519Key;
+        decryptionResult.forwardingCurve25519KeyChain = _clearEvent->forwardingCurve25519KeyChain;
+    }
+    
+    decryptionResult.error = _decryptionError;
+    
+    return decryptionResult;
+}
+
 #pragma mark - private
 - (NSMutableDictionary*)filterInEventWithKeys:(NSArray*)keys
 {
@@ -1018,6 +1084,18 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
     return filteredPrevContent;
 }
 
+#pragma mark - Validation
+
++ (NSDictionary *)wireContentFixingNonStringMsgtypesIn:(NSDictionary *)content
+{
+    if (content[@"msgtype"] && ![content[@"msgtype"] isKindOfClass:[NSString class]])
+    {
+        NSMutableDictionary *mutableContent = [NSMutableDictionary dictionaryWithDictionary:content];
+        [mutableContent removeObjectForKey:@"msgtype"];
+        return [NSDictionary dictionaryWithDictionary:mutableContent];
+    }
+    return content;
+}
 
 #pragma mark - NSCoding
 // Overriding MTLModel NSCoding operation makes serialisation going 20% faster
@@ -1031,7 +1109,9 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
         _sender = [aDecoder decodeObjectForKey:@"userId"];
         _sentState = (MXEventSentState)[aDecoder decodeIntegerForKey:@"sentState"];
         _wireContent = [aDecoder decodeObjectForKey:@"content"];
+        _wireContent = [MXEvent wireContentFixingNonStringMsgtypesIn:_wireContent];
         _prevContent = [aDecoder decodeObjectForKey:@"prevContent"];
+        _prevContent = [MXEvent wireContentFixingNonStringMsgtypesIn:_prevContent];
         _stateKey = [aDecoder decodeObjectForKey:@"stateKey"];
         _originServerTs = (uint64_t)[aDecoder decodeInt64ForKey:@"originServerTs"];
         _ageLocalTs = (uint64_t)[aDecoder decodeInt64ForKey:@"ageLocalTs"];

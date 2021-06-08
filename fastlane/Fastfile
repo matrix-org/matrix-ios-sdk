@@ -17,73 +17,107 @@ platform :ios do
   #### Pod ####
 
   desc "Lint all podspecs"
-  lane :lint_pods do  	
-  	lint_pod_MatrixSDK
-  	lint_pod_SwiftMatrixSDK
+  lane :lint_pods do
+    lint_pod_MatrixSDK
   end
 
   desc "Lint MatrixSDK podspec"
-  lane :lint_pod_MatrixSDK do  	
-  	custom_pod_lib_lint(podspec: "../MatrixSDK.podspec", parameters: ['--allow-warnings'])
-  end
-
-  desc "Lint SwiftMatrixSDK podspec"
-  lane :lint_pod_SwiftMatrixSDK do  	
-  	custom_pod_lib_lint(podspec: "../SwiftMatrixSDK.podspec", parameters: ['--allow-warnings'])    
+  lane :lint_pod_MatrixSDK do
+    # Use Debug config to divide build time by 3
+    custom_pod_lib_lint(podspec: "../MatrixSDK.podspec", parameters: ["--allow-warnings", "--fail-fast", "--configuration=Debug"])
   end
 
   desc "Push all pods"
-  lane :push_pods do  	
-  	push_pod_MatrixSDK
-  	push_pod_SwiftMatrixSDK
+  lane :push_pods do
+    push_pod_MatrixSDK
   end
 
   desc "Push MatrixSDK pod"
-    lane :push_pod_MatrixSDK do  	
-  	pod_push(path: "MatrixSDK.podspec", allow_warnings: true)
+  lane :push_pod_MatrixSDK do
+    pod_push(path: "MatrixSDK.podspec", allow_warnings: true)
   end
 
-  desc "Push SwiftMatrixSDK pod"
-    lane :push_pod_SwiftMatrixSDK do  	
-  	pod_push(path: "SwiftMatrixSDK.podspec", allow_warnings: true)
+  #### Build ####
+
+  desc "Ensure the iOS framework builds"
+  lane :build_ios do
+    build_scheme(scheme: "MatrixSDK-iOS", destination: "generic/platform=iOS Simulator")
+  end
+
+  desc "Ensure the macOS framework builds"
+  lane :build_macos do
+    build_scheme(scheme: "MatrixSDK-macOS", destination: "generic/platform=macOS")
+  end
+
+  desc "Send code to SonarCloud for analysis"
+  lane :sonarcloud do |options|
+    sonar(
+      project_key: "matrix.ios.sdk",
+      project_name: "Matrix iOS SDK",
+      branch_name: ENV["BUILDKITE_BRANCH"],
+      sonar_organization: "new_vector_ltd_organization",
+      sonar_url: "https://sonarcloud.io",
+      sonar_login: ENV["SONAR_LOGIN"],
+      sources_path: File.expand_path("../MatrixSDK") + "," + File.expand_path("../MatrixSDKExtensions"),
+      sonar_runner_args: "-Dsonar.cfamily.build-wrapper-output=build_wrapper_output -Dsonar.cfamily.threads=4 -Dsonar.cfamily.cache.enabled=true -Dsonar.cfamily.cache.path=sonar_cfamily_cache"
+    )
   end
 
   #### Tests ####
 
-  desc "Run integration tests (Be sure to set up the homeserver before like described here https://github.com/matrix-org/matrix-ios-sdk#tests)"  
-  lane :test do	
-  	cocoapods
-  	      
-    opts = {
-      :clean => true,
-      :scheme =>  'MatrixSDK',
-      :workspace => 'MatrixSDK.xcworkspace',
-      :configuration => 'Debug',      
-      :code_coverage => true
-    }
-    scan(opts)
+  desc "Run tests. By default, it runs all tests. Most are integration tests. Be sure to set up the homeserver before like described here https://github.com/matrix-org/matrix-ios-sdk#tests"
+  desc "Use 'testplan:UnitTests' to run only unit tests"
+  lane :test do |options|
+    cocoapods
+
+    scan(
+      workspace: "MatrixSDK.xcworkspace",
+      scheme: "MatrixSDK-macOS",
+      testplan: options[:testplan],
+      configuration: "Debug",
+      clean: true,
+      code_coverage: true,
+      # Test result configuration
+      result_bundle: true,
+      output_directory: "./build/test",
+      open_report: !is_ci?
+    )
   end
 
+
   #### Private ####
-  
+
+  desc "Just build the provided :scheme / :destination (without doing any xcarchive)"
+  private_lane :build_scheme do |options|
+    cocoapods
+
+    gym(
+      workspace: "MatrixSDK.xcworkspace",
+      scheme: options[:scheme],
+      skip_package_ipa: true,
+      skip_archive: true,
+      derived_data_path: "./DerivedData",
+      destination: options[:destination],
+    )
+  end
+
   desc "Returns bundle Cocoapods version"
   private_lane :cocoapods_version do
-  	sh('bundle exec pod --version', log: false)  	
+    sh("bundle exec pod --version", log: false)
   end
 
   desc "Pod lib lint with podspec parameter"
   private_lane :custom_pod_lib_lint do |options|
-  	
     puts "Lint pod " << options[:podspec] << " with Cocoapods version " << cocoapods_version
 
-  	command = []
-  	command << "bundle exec pod lib lint"
-  	command << options[:podspec]
+    command = []
+    command << "bundle exec pod lib lint"
+    command << options[:podspec]
 
     if options[:parameters]
-    	command.concat(options[:parameters])
-	end
+      command.concat(options[:parameters])
+    end
 
-	sh(command.join(' '))
+    sh(command.join(" "))
   end
 end

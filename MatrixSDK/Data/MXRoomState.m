@@ -226,6 +226,13 @@
         }
     }
     
+    //  include canonicalAlias into aliases array
+    NSString *canonicalAlias = self.canonicalAlias;
+    if (canonicalAlias)
+    {
+        [aliases addObject:canonicalAlias];
+    }
+    
     return aliases.count ? aliases : nil;
 }
 
@@ -283,6 +290,23 @@
         avatar = [avatar copy];
     }
     return avatar;
+}
+
+- (NSString *)creatorUserId
+{
+    NSString *creatorUserId;
+    
+    // Check it from the state events
+    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomCreate].lastObject;
+    
+    NSDictionary<NSString *, id> *eventContent = [self contentOfEvent:event];
+    
+    if (event && eventContent)
+    {
+        MXJSONModelSetString(creatorUserId, eventContent[@"creator"]);
+        creatorUserId = [creatorUserId copy];
+    }
+    return creatorUserId;
 }
 
 - (MXRoomHistoryVisibility)historyVisibility
@@ -585,7 +609,7 @@
 
     stateCopy->_members = [_members copyWithZone:zone];
 
-    stateCopy->_membersCount = _membersCount;
+    stateCopy->_membersCount = [_membersCount copyWithZone:zone];
     
     stateCopy->roomAliases = [[NSMutableDictionary allocWithZone:zone] initWithDictionary:roomAliases];
 

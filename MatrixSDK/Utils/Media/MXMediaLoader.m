@@ -20,6 +20,7 @@
 #import "MXSession.h"
 #import "MXHTTPOperation.h"
 #import "MXTools.h"
+#import "MXSDKOptions.h"
 
 #import "MXAllowedCertificates.h"
 #import <AFNetworking/AFSecurityPolicy.h>
@@ -63,7 +64,7 @@ NSString *const kMXMediaUploadIdPrefix = @"upload-";
     // Cancel potential connection
     if (downloadConnection)
     {
-        NSLog(@"[MXMediaLoader] Media download has been cancelled (%@)", self.downloadMediaURL);
+        MXLogDebug(@"[MXMediaLoader] Media download has been cancelled (%@)", self.downloadMediaURL);
         if (onError){
             onError(nil);
         }
@@ -80,7 +81,7 @@ NSString *const kMXMediaUploadIdPrefix = @"upload-";
         if (operation && operation.operation
             && operation.operation.state != NSURLSessionTaskStateCanceling && operation.operation.state != NSURLSessionTaskStateCompleted)
         {
-            NSLog(@"[MXMediaLoader] Media upload has been cancelled");
+            MXLogDebug(@"[MXMediaLoader] Media upload has been cancelled");
             [operation cancel];
             operation = nil;
         }
@@ -133,21 +134,20 @@ NSString *const kMXMediaUploadIdPrefix = @"upload-";
     NSURL *nsURL = [NSURL URLWithString:url];
     downloadData = [[NSMutableData alloc] init];
     
+    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:nsURL];
+    [MXSDKOptions.sharedInstance.HTTPAdditionalHeaders enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull key, NSString * _Nonnull value, BOOL * _Nonnull stop) {
+        [request setValue:value forHTTPHeaderField:key];
+    }];
+    
     if (data)
     {
         // Use an HTTP POST method to send this data as JSON object.
-        NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:nsURL];
         request.HTTPMethod = @"POST";
         [request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
         request.HTTPBody = [NSJSONSerialization dataWithJSONObject:data options:0 error:nil];
-        
-        downloadConnection = [[NSURLConnection alloc] initWithRequest:request delegate:self];
     }
-    else
-    {
-        // Use a GET method by default
-        downloadConnection = [[NSURLConnection alloc] initWithRequest:[NSURLRequest requestWithURL:nsURL] delegate:self];
-    }
+    
+    downloadConnection = [[NSURLConnection alloc] initWithRequest:request delegate:self];
 }
 
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response
@@ -157,7 +157,7 @@ NSString *const kMXMediaUploadIdPrefix = @"upload-";
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error
 {
-    NSLog(@"[MXMediaLoader] Failed to download media (%@): %@", self.downloadMediaURL, error);
+    MXLogDebug(@"[MXMediaLoader] Failed to download media (%@): %@", self.downloadMediaURL, error);
     // send the latest known download info
     [self progressCheckTimeout:nil];
     statisticsDict = nil;
@@ -244,7 +244,7 @@ NSString *const kMXMediaUploadIdPrefix = @"upload-";
         }
         else
         {
-            NSLog(@"[MXMediaLoader] Failed to write file: %@", self.downloadMediaURL);
+            MXLogDebug(@"[MXMediaLoader] Failed to write file: %@", self.downloadMediaURL);
             if (onError){
                 onError(nil);
             }
@@ -254,7 +254,7 @@ NSString *const kMXMediaUploadIdPrefix = @"upload-";
     }
     else
     {
-        NSLog(@"[MXMediaLoader] Failed to download media: %@", self.downloadMediaURL);
+        MXLogDebug(@"[MXMediaLoader] Failed to download media: %@", self.downloadMediaURL);
         if (onError){
             onError(nil);
         }
@@ -343,7 +343,7 @@ NSString *const kMXMediaUploadIdPrefix = @"upload-";
                     }
                     else
                     {
-                        NSLog(@"[MXMediaLoader] Certificate check failed for %@", protectionSpace);
+                        MXLogDebug(@"[MXMediaLoader] Certificate check failed for %@", protectionSpace);
                         [connection cancel];
 
                         // Generate same kind of error as AFNetworking

@@ -1,5 +1,6 @@
 /*
  Copyright 2016 OpenMarket Ltd
+ Copyright 2020 The Matrix.org Foundation C.I.C
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -15,6 +16,8 @@
  */
 
 #import "MXAccountData.h"
+
+#import "MXJSONModel.h"
 
 @interface MXAccountData ()
 {
@@ -37,9 +40,30 @@
     return self;
 }
 
+- (instancetype)initWithAccountData:(NSDictionary<NSString *,id> *)accountData
+{
+    self = [self init];
+    if (self)
+    {
+        NSArray<NSDictionary<NSString *, id> *> *events;
+        MXJSONModelSetArray(events, accountData[@"events"]);
+        
+        for (NSDictionary<NSString *, id> *event in events)
+        {
+            [self updateWithEvent:event];
+        }
+    }
+    return self;
+}
+
 - (void)updateWithEvent:(NSDictionary<NSString *, id> *)event
 {
-    accountDataDict[event[@"type"]] = event[@"content"];
+    [self updateDataWithType:event[@"type"] data:event[@"content"]];
+}
+
+- (void)updateDataWithType:(NSString *)type data:(NSDictionary *)data
+{
+    accountDataDict[type] = data;
 }
 
 - (NSDictionary *)accountDataForEventType:(NSString*)eventType

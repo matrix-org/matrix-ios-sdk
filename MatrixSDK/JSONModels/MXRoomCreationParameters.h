@@ -19,6 +19,7 @@
 #import "MXEnumConstants.h"
 #import "MXInvite3PID.h"
 
+#import "MXRoomPowerLevels.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -27,6 +28,9 @@ NS_ASSUME_NONNULL_BEGIN
  Parameters to create a room.
  */
 @interface MXRoomCreationParameters : NSObject
+
+// The room type string value.
+@property (nonatomic, nullable) NSString *roomType;
 
 // The room name.
 @property (nonatomic, nullable) NSString *name;
@@ -57,6 +61,11 @@ NS_ASSUME_NONNULL_BEGIN
 // A list of state events to set in the new room.
 @property (nonatomic, nullable) NSArray<NSDictionary*> *initialStateEvents;
 
+// Extra keys to be added to the content of `m.room.create` event
+@property (nonatomic, nullable) NSDictionary<NSString*, NSString*> *creationContent;
+
+// The power level content to override in the default power level event.
+@property (nonatomic, nullable) MXRoomPowerLevels *powerLevelContentOverride;
 
 /**
  Return the data as a JSON dictionary.
@@ -64,6 +73,10 @@ NS_ASSUME_NONNULL_BEGIN
  @return a JSON dictionary.
  */
 - (NSDictionary*)JSONDictionary;
+
+/// Add or update an initial state event
+/// @param stateEvent The state event to add or update
+- (void)addOrUpdateInitialStateEvent:(NSDictionary*)stateEvent;
 
 @end
 
@@ -75,6 +88,8 @@ NS_ASSUME_NONNULL_BEGIN
 + (instancetype)parametersForDirectRoomWithUser:(NSString*)userId;
 
 + (NSDictionary*)initialStateEventForEncryptionWithAlgorithm:(NSString*)algorithm;
+
++ (NSDictionary *)creationContentForVirtualRoomWithNativeRoomId:(NSString *)roomId;
 
 @end
 

@@ -117,119 +117,6 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
     }];
 }
 
-- (void)testEditingEventManually
-{
-    NSDictionary *messageEventDict = @{
-                                       @"content": @{
-                                               @"body": kOriginalMessageText,
-                                               @"msgtype": @"m.text"
-                                               },
-                                       @"event_id": @"$messageeventid:matrix.org",
-                                       @"origin_server_ts": @(1560253386247),
-                                       @"sender": @"@billsam:matrix.org",
-                                       @"type": @"m.room.message",
-                                       @"unsigned": @{
-                                               @"age": @(6117832)
-                                               },
-                                       @"room_id": @"!roomid:matrix.org"
-                                       };
-    
-    NSDictionary *replaceEventDict = @{
-                                       @"content": @{
-                                               @"body": [NSString stringWithFormat:@"* %@", kEditedMessageText],
-                                               @"m.new_content": @{
-                                                       @"body": kEditedMessageText,
-                                                       @"msgtype": @"m.text"
-                                                       },
-                                               @"m.relates_to": @{
-                                                       @"event_id": @"$messageeventid:matrix.org",
-                                                       @"rel_type": @"m.replace"
-                                                       },
-                                               @"msgtype": @"m.text"
-                                               },
-                                       @"event_id": @"$replaceeventid:matrix.org",
-                                       @"origin_server_ts": @(1560254175300),
-                                       @"sender": @"@billsam:matrix.org",
-                                       @"type": @"m.room.message",
-                                       @"unsigned": @{
-                                               @"age": @(5328779)
-                                               },
-                                       @"room_id": @"!roomid:matrix.org"
-                                       };
-    
-    
-    MXEvent *messageEvent = [MXEvent modelFromJSON:messageEventDict];
-    MXEvent *replaceEvent = [MXEvent modelFromJSON:replaceEventDict];
-    
-    MXEvent *editedEvent = [messageEvent editedEventFromReplacementEvent:replaceEvent];
-    
-    XCTAssertNotNil(editedEvent);
-    XCTAssertTrue(editedEvent.contentHasBeenEdited);
-    XCTAssertEqualObjects(editedEvent.unsignedData.relations.replace.eventId, replaceEvent.eventId);
-    XCTAssertEqualObjects(editedEvent.content[@"body"], kEditedMessageText);
-}
-
-- (void)testEditingFormattedEventManually
-{
-    NSDictionary *messageEventDict = @{
-                                       @"content": @{
-                                               @"body": kOriginalMarkdownMessageText,
-                                               @"formatted_body": kOriginalMarkdownMessageFormattedText,
-                                               @"format": kMXRoomMessageFormatHTML,
-                                               @"msgtype": @"m.text"
-                                               },
-                                       @"event_id": @"$messageeventid:matrix.org",
-                                       @"origin_server_ts": @(1560253386247),
-                                       @"sender": @"@billsam:matrix.org",
-                                       @"type": @"m.room.message",
-                                       @"unsigned": @{
-                                               @"age": @(6117832)
-                                               },
-                                       @"room_id": @"!roomid:matrix.org"
-                                       };
-    
-    NSDictionary *replaceEventDict = @{
-                                       @"content": @{
-                                               @"body": [NSString stringWithFormat:@"* %@", kEditedMarkdownMessageText],
-                                               @"formatted_body": [NSString stringWithFormat:@"* %@", kEditedMarkdownMessageFormattedText],
-                                               @"format": kMXRoomMessageFormatHTML,
-                                               @"m.new_content": @{
-                                                       @"body": kEditedMarkdownMessageText,
-                                                       @"formatted_body": kEditedMarkdownMessageFormattedText,
-                                                       @"format": kMXRoomMessageFormatHTML,
-                                                       @"msgtype": @"m.text"
-                                                       },
-                                               @"m.relates_to": @{
-                                                       @"event_id": @"$messageeventid:matrix.org",
-                                                       @"rel_type": @"m.replace"
-                                                       },
-                                               @"msgtype": @"m.text"
-                                               },
-                                       @"event_id": @"$replaceeventid:matrix.org",
-                                       @"origin_server_ts": @(1560254175300),
-                                       @"sender": @"@billsam:matrix.org",
-                                       @"type": @"m.room.message",
-                                       @"unsigned": @{
-                                               @"age": @(5328779)
-                                               },
-                                       @"room_id": @"!roomid:matrix.org"
-                                       };
-    
-    
-    MXEvent *messageEvent = [MXEvent modelFromJSON:messageEventDict];
-    MXEvent *replaceEvent = [MXEvent modelFromJSON:replaceEventDict];
-    
-    MXEvent *editedEvent = [messageEvent editedEventFromReplacementEvent:replaceEvent];
-    
-    XCTAssertNotNil(editedEvent);
-    XCTAssertTrue(editedEvent.contentHasBeenEdited);
-    XCTAssertEqualObjects(editedEvent.unsignedData.relations.replace.eventId, replaceEvent.eventId);
-    
-    XCTAssertEqualObjects(editedEvent.content[@"body"], kEditedMarkdownMessageText);
-    XCTAssertEqualObjects(editedEvent.content[@"formatted_body"], kEditedMarkdownMessageFormattedText);
-}
-
-
 // - Send a message
 // - Edit it
 // -> an edit m.room.message must appear in the timeline
@@ -565,14 +452,24 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
 
         // -> The room summary must contain aggregated data
         MXRoomSummary *roomSummary = [mxSession roomSummaryWithRoomId:room.roomId];
-        MXEvent *lastEvent = roomSummary.lastMessageEvent;
+        
+        XCTAssertNotNil(roomSummary.lastMessage);
+        
+        [mxSession eventWithEventId:roomSummary.lastMessage.eventId
+                             inRoom:room.roomId
+                            success:^(MXEvent *lastEvent) {
+            
+            XCTAssertNotNil(lastEvent);
+            XCTAssertTrue(lastEvent.contentHasBeenEdited);
+            XCTAssertEqualObjects(lastEvent.unsignedData.relations.replace.eventId, editEventId);
+            XCTAssertEqualObjects(lastEvent.content[@"body"], kEditedMessageText);
 
-        XCTAssertNotNil(lastEvent);
-        XCTAssertTrue(lastEvent.contentHasBeenEdited);
-        XCTAssertEqualObjects(lastEvent.unsignedData.relations.replace.eventId, editEventId);
-        XCTAssertEqualObjects(lastEvent.content[@"body"], kEditedMessageText);
-
-        [expectation fulfill];
+            [expectation fulfill];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"Cannot set up initial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
     }];
 }
 
@@ -774,17 +671,19 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
             XCTAssertNotNil(event);
 
             XCTAssertTrue(event.isEncrypted);
-            XCTAssertTrue([mxSession decryptEvent:event inTimeline:nil], @"Decryption error: %@", event.decryptionError);
-
-            // TODO: Synapse does not support aggregation for e2e rooms yet
-            XCTAssertTrue(event.contentHasBeenEdited);
-            XCTAssertEqualObjects(event.unsignedData.relations.replace.eventId, editEventId);
-            XCTAssertEqualObjects(event.content[@"body"], kEditedMessageText);
-
-            XCTAssertEqualObjects(event.content, localEditedEvent.content);
-            XCTAssertEqualObjects(event.JSONDictionary[@"unsigned"][@"relations"], localEditedEvent.JSONDictionary[@"unsigned"][@"relations"]);
-
-            [expectation fulfill];
+            [mxSession decryptEvents:@[event] inTimeline:nil onComplete:^(NSArray<MXEvent *> *failedEvents) {
+                XCTAssertEqual(failedEvents.count, 0, @"Decryption error: %@", event.decryptionError);
+                
+                // TODO: Synapse does not support aggregation for e2e rooms yet
+                XCTAssertTrue(event.contentHasBeenEdited);
+                XCTAssertEqualObjects(event.unsignedData.relations.replace.eventId, editEventId);
+                XCTAssertEqualObjects(event.content[@"body"], kEditedMessageText);
+                
+                XCTAssertEqualObjects(event.content, localEditedEvent.content);
+                XCTAssertEqualObjects(event.JSONDictionary[@"unsigned"][@"relations"], localEditedEvent.JSONDictionary[@"unsigned"][@"relations"]);
+                
+                [expectation fulfill];
+            }];
 
         } failure:^(NSError *error) {
             XCTFail(@"Cannot set up intial test conditions - error: %@", error);

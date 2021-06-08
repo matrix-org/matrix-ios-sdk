@@ -23,7 +23,11 @@
 @interface MXRoomMembers ()
 {
     MXSession *mxSession;
-    MXRoomState *state;
+
+    // Context for this MXRoomMembers instance
+    BOOL isConferenceUserRoom;
+    NSString *conferenceUserId;
+    BOOL isLive;
 
     /**
      Members ordered by userId.
@@ -47,7 +51,10 @@
     if (self)
     {
         mxSession = matrixSession;
-        state = roomState;
+        
+        isConferenceUserRoom = roomState.isConferenceUserRoom;
+        conferenceUserId = roomState.conferenceUserId;
+        isLive = roomState.isLive;
 
         members = [NSMutableDictionary dictionary];
         membersNamesInUse = [NSMutableDictionary dictionary];
@@ -153,12 +160,12 @@
 {
     NSArray<MXRoomMember *> *membersWithoutConferenceUser;
 
-    if (state.isConferenceUserRoom)
+    if (isConferenceUserRoom)
     {
         // Show everyone in a 1:1 room with a conference user
         membersWithoutConferenceUser = self.members;
     }
-    else if (![self memberWithUserId:state.conferenceUserId])
+    else if (![self memberWithUserId:conferenceUserId])
     {
         // There is no conference user. No need to filter
         membersWithoutConferenceUser = self.members;
@@ -167,7 +174,7 @@
     {
         // Filter the conference user from the list
         NSMutableDictionary<NSString*, MXRoomMember*> *membersWithoutConferenceUserDict = [NSMutableDictionary dictionaryWithDictionary:members];
-        [membersWithoutConferenceUserDict removeObjectForKey:state.conferenceUserId];
+        [membersWithoutConferenceUserDict removeObjectForKey:conferenceUserId];
         membersWithoutConferenceUser = membersWithoutConferenceUserDict.allValues;
     }
 
@@ -178,14 +185,14 @@
 {
     NSArray<MXRoomMember *> *membersWithMembership;
 
-    if (includeConferenceUser || state.isConferenceUserRoom)
+    if (includeConferenceUser || isConferenceUserRoom)
     {
         // Show everyone in a 1:1 room with a conference user
         membersWithMembership = [self membersWithMembership:theMembership];
     }
     else
     {
-        MXRoomMember *conferenceUserMember = [self memberWithUserId:state.conferenceUserId];
+        MXRoomMember *conferenceUserMember = [self memberWithUserId:conferenceUserId];
         if (!conferenceUserMember || conferenceUserMember.membership != theMembership)
         {
             // The conference user is not in list of members with the passed  membership
@@ -202,7 +209,7 @@
                 }
             }
 
-            [membersWithMembershipDict removeObjectForKey:state.conferenceUserId];
+            [membersWithMembershipDict removeObjectForKey:conferenceUserId];
             membersWithMembership = membersWithMembershipDict.allValues;
         }
     }
@@ -250,7 +257,7 @@
                         }
                     }
 
-                    MXRoomMember *roomMember = [[MXRoomMember alloc] initWithMXEvent:event andEventContent:[state contentOfEvent:event]];
+                    MXRoomMember *roomMember = [[MXRoomMember alloc] initWithMXEvent:event andEventContent:[self contentOfEvent:event]];
                     if (roomMember)
                     {
                         /// Update membersNamesInUse
@@ -287,7 +294,7 @@
 
                     // Special handling for presence: update MXUser data in case of membership event.
                     // CAUTION: ignore here redacted state event, the redaction concerns only the context of the event room.
-                    if (state.isLive && !event.isRedactedEvent && roomMember.membership == MXMembershipJoin)
+                    if (isLive && !event.isRedactedEvent && roomMember.membership == MXMembershipJoin)
                     {
                         MXUser *user = [mxSession getOrCreateUser:event.sender];
                         [user updateWithRoomMemberEvent:event roomMember:roomMember inMatrixSession:mxSession];
@@ -308,12 +315,15 @@
 }
 
 #pragma mark - NSCopying
+
 - (id)copyWithZone:(NSZone *)zone
 {
     MXRoomMembers *membersCopy = [[MXRoomMembers allocWithZone:zone] init];
 
     membersCopy->mxSession = mxSession;
-    membersCopy->state = state;
+    membersCopy->isConferenceUserRoom = isConferenceUserRoom;
+    membersCopy->conferenceUserId = conferenceUserId;
+    membersCopy->isLive = isLive;
 
     // MXRoomMember objects in members are immutable. A new instance of it is created each time
     // the sdk receives room member event, even if it is an update of an existing member like a
@@ -324,4 +334,27 @@
 
     return membersCopy;
 }
+
+
+#pragma mark - Private methods
+
+// According to the direction of the instance, we are interested either by
+// the content of the event or its prev_content
+- (NSDictionary<NSString *, id> *)contentOfEvent:(MXEvent*)event
+{
+    NSDictionary<NSString *, id> *content;
+    if (event)
+    {
+        if (isLive)
+        {
+            content = event.content;
+        }
+        else
+        {
+            content = event.prevContent;
+        }
+    }
+    return content;
+}
+
 @end

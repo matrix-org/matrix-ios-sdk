@@ -96,8 +96,10 @@
                                           @"type": @"offer",
                                           @"sdp": @"A SDP"
                                           },
-                                  @"version": @(0),
-                                  @"lifetime": @(30 * 1000)
+                                  @"version": kMXCallVersion,
+                                  @"lifetime": @(30 * 1000),
+                                  @"invitee": bobSession.myUserId,
+                                  @"party_id": bobSession.myDeviceId
                                   };
 
 

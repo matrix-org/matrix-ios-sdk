@@ -24,6 +24,22 @@
 
 @interface MXRealmCryptoStore : NSObject <MXCryptoStore>
 
+/**
+ Flag to check if Realm DB compaction must be done.
+ Default is YES.
+ 
+ @discussion
+ It may be useful to disable compaction when running on a different process than the main one in order
+ to avoid race conditions.
+ */
+@property (class) BOOL shouldCompactOnLaunch;
+
+/**
+ Flag to control if Realm DB will be opened in read-only mode.
+ Default is NO.
+ */
+@property (nonatomic, assign) BOOL readOnly;
+
 @end
 
 #endif

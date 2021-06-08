@@ -23,6 +23,14 @@
 #import "MXDeviceInfo_Private.h"
 #import "MXCrossSigningInfo_Private.h"
 #import "MXTools.h"
+#import "MatrixSDKSwiftHeader.h"
+
+
+#pragma mark - Constants definitions
+
+// Max number of user to request in /keys/query requests
+static NSUInteger const kMXDeviceListOperationsPoolKeyQueryLimit = 250;
+
 
 @interface MXDeviceListOperationsPool ()
 {
@@ -94,19 +102,21 @@
 
 - (void)doKeyDownloadForUsers:(NSArray<NSString *> *)users token:(NSString *)token complete:(void (^)(NSDictionary<NSString *, NSDictionary *> *failedUserIds))complete
 {
-    NSLog(@"[MXDeviceListOperationsPool] doKeyDownloadForUsers(pool: %p) %@ users: %@", self, @(users.count), users);
+    MXLogDebug(@"[MXDeviceListOperationsPool] doKeyDownloadForUsers(pool: %p) %@ users: %@", self, @(users.count), users);
 
     // Download
     MXWeakify(self);
-    _httpOperation = [crypto.matrixRestClient downloadKeysForUsers:users token:token success:^(MXKeysQueryResponse *keysQueryResponse) {
+    _httpOperation = [crypto.matrixRestClient downloadKeysByChunkForUsers:users token:token chunkSize:kMXDeviceListOperationsPoolKeyQueryLimit success:^(MXKeysQueryResponse *keysQueryResponse) {
         MXStrongifyAndReturnIfNil(self);
 
-        NSLog(@"[MXDeviceListOperationsPool] doKeyDownloadForUsers(pool: %p) -> DONE. Got keys for %@ users and %@ devices. Got cross-signing keys for %@ users", self, @(keysQueryResponse.deviceKeys.map.count), @(keysQueryResponse.deviceKeys.count), @(keysQueryResponse.crossSigningKeys.count));
+        MXLogDebug(@"[MXDeviceListOperationsPool] doKeyDownloadForUsers(pool: %p) -> DONE. Got keys for %@ users and %@ devices. Got cross-signing keys for %@ users", self, @(keysQueryResponse.deviceKeys.map.count), @(keysQueryResponse.deviceKeys.count), @(keysQueryResponse.crossSigningKeys.count));
 
         self->_httpOperation = nil;
         
         NSMutableDictionary<NSString* /* userId */, NSArray<MXDeviceInfo*>*> *usersDevices = [NSMutableDictionary new];
         NSMutableDictionary<NSString* /* userId */, NSArray<MXDeviceInfo*>*> *updatedUsersDevices = [NSMutableDictionary new];
+        
+        BOOL myUserCrossSigningKeysChanged = NO;
 
         for (NSString *userId in users)
         {
@@ -114,12 +124,28 @@
             MXCrossSigningInfo *crossSigningKeys = keysQueryResponse.crossSigningKeys[userId];
             if (crossSigningKeys)
             {
-                NSLog(@"[MXDeviceListOperationsPool] doKeyDownloadForUsers: Got cross-signing keys for %@: %@", userId, crossSigningKeys);
-                
+                MXLogDebug(@"[MXDeviceListOperationsPool] doKeyDownloadForUsers: Got cross-signing keys for %@: %@", userId, crossSigningKeys);
+             
                 MXCrossSigningInfo *storedCrossSigningKeys = [self->crypto.store crossSigningKeysForUser:userId];
+
+                // Detect rotation in my user cross-signing keys
+                if (storedCrossSigningKeys
+                    && [self->crypto.mxSession.myUserId isEqualToString:userId]
+                    && ![storedCrossSigningKeys hasSameKeysAsCrossSigningInfo:crossSigningKeys])
+                {
+                    // Cross-signing keys have been reset from another device
+                    MXLogDebug(@"[MXDeviceListOperationsPool] doKeyDownloadForUsers: Detected cross-signing keys rotation");
+                    myUserCrossSigningKeysChanged = YES;
+                }
                 
                 // Use current trust level
                 MXUserTrustLevel *oldTrustLevel = storedCrossSigningKeys.trustLevel;
+                if (myUserCrossSigningKeysChanged)
+                {
+                    // Except if we cannot trust it anymore
+                    oldTrustLevel = [MXUserTrustLevel new];
+                }
+                
                 [crossSigningKeys setTrustLevel:oldTrustLevel];
 
                 // Compute trust on this user
@@ -138,7 +164,7 @@
             // Handle user devices keys
             NSDictionary<NSString*, MXDeviceInfo*> *devices = keysQueryResponse.deviceKeys.map[userId];
 
-            NSLog(@"[MXDeviceListOperationsPool] doKeyDownloadForUsers: Got keys for %@: %@ devices: %@", userId, @(devices.count), devices);
+            MXLogDebug(@"[MXDeviceListOperationsPool] doKeyDownloadForUsers: Got keys for %@: %@ devices: %@", userId, @(devices.count), devices);
 
             if (devices)
             {
@@ -171,6 +197,13 @@
                         // This is a client side information, valid only for this client.
                         // So, transfer its previous value
                         previousLocalState = previouslyStoredDeviceKeys.trustLevel.localVerificationStatus;
+                    }
+                    
+                    // Be sure to force previous local state to verified for current device. Our own device is always locally verified.
+                    if ([self->crypto.mxSession.myUserId isEqualToString:userId]
+                        && [self->crypto.mxSession.myDeviceId isEqualToString:deviceId])
+                    {
+                        previousLocalState = MXDeviceVerified;
                     }
                     
                     // Use current trust level
@@ -212,8 +245,16 @@
         
         if (updatedUsersDevices.count)
         {
-            // Post notification using MXCrypto instance as MXDeviceListOperationsPool is an internal class.
-            [[NSNotificationCenter defaultCenter] postNotificationName:MXDeviceListDidUpdateUsersDevicesNotification object:self->crypto userInfo:updatedUsersDevices];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                // Post notification using MXCrypto instance as MXDeviceListOperationsPool is an internal class.
+                [[NSNotificationCenter defaultCenter] postNotificationName:MXDeviceListDidUpdateUsersDevicesNotification object:self->crypto userInfo:updatedUsersDevices];
+            });
+        }
+        
+        if (myUserCrossSigningKeysChanged)
+        {
+            MXLogDebug(@"[MXDeviceListOperationsPool] doKeyDownloadForUsers: Reset cross-signing state.");
+            [self->crypto.crossSigning refreshStateWithSuccess:nil failure:nil];
         }
         
         // Delay
@@ -250,7 +291,7 @@
         {
             if (keysQueryResponse.failures.count)
             {
-                NSLog(@"[MXDeviceListOperationsPool] doKeyDownloadForUsers. Failures: %@", keysQueryResponse.failures);
+                MXLogDebug(@"[MXDeviceListOperationsPool] doKeyDownloadForUsers. Failures: %@", keysQueryResponse.failures);
             }
             complete(keysQueryResponse.failures);
         }
@@ -260,7 +301,7 @@
 
         self->_httpOperation = nil;
 
-        NSLog(@"[MXDeviceListOperationsPool] doKeyDownloadForUsers(pool: %p) -> FAILED. Error: %@", self, error);
+        MXLogDebug(@"[MXDeviceListOperationsPool] doKeyDownloadForUsers(pool: %p) -> FAILED. Error: %@", self, error);
 
         dispatch_async(self->crypto.matrixRestClient.completionQueue, ^{
             for (MXDeviceListOperation *operation in self.operations)
@@ -300,12 +341,12 @@
     // Check that the user_id and device_id in the received deviceKeys are correct
     if (![deviceKeys.userId isEqualToString:userId])
     {
-        NSLog(@"[MXDeviceListOperationsPool] validateDeviceKeys: Mismatched user_id %@ in keys from %@:%@", deviceKeys.userId, userId, deviceId);
+        MXLogDebug(@"[MXDeviceListOperationsPool] validateDeviceKeys: Mismatched user_id %@ in keys from %@:%@", deviceKeys.userId, userId, deviceId);
         return NO;
     }
     if (![deviceKeys.deviceId isEqualToString:deviceId])
     {
-        NSLog(@"[MXDeviceListOperationsPool] validateDeviceKeys: Mismatched device_id %@ in keys from %@:%@", deviceKeys.deviceId, userId, deviceId);
+        MXLogDebug(@"[MXDeviceListOperationsPool] validateDeviceKeys: Mismatched device_id %@ in keys from %@:%@", deviceKeys.deviceId, userId, deviceId);
         return NO;
     }
 
@@ -313,21 +354,21 @@
     NSString* signKey = deviceKeys.keys[signKeyId];
     if (!signKey)
     {
-        NSLog(@"[MXDeviceListOperationsPool] validateDeviceKeys: Device %@:%@ has no ed25519 key", userId, deviceKeys.deviceId);
+        MXLogDebug(@"[MXDeviceListOperationsPool] validateDeviceKeys: Device %@:%@ has no ed25519 key", userId, deviceKeys.deviceId);
         return NO;
     }
 
     NSString *signature = deviceKeys.signatures[userId][signKeyId];
     if (!signature)
     {
-        NSLog(@"[MXDeviceListOperationsPool] validateDeviceKeys: Device %@:%@ is not signed", userId, deviceKeys.deviceId);
+        MXLogDebug(@"[MXDeviceListOperationsPool] validateDeviceKeys: Device %@:%@ is not signed", userId, deviceKeys.deviceId);
         return NO;
     }
 
     NSError *error;
     if (![crypto.olmDevice verifySignature:signKey JSON:deviceKeys.signalableJSONDictionary signature:signature error:&error])
     {
-        NSLog(@"[MXDeviceListOperationsPool] validateDeviceKeys: Unable to verify signature on device %@:%@", userId, deviceKeys.deviceId);
+        MXLogDebug(@"[MXDeviceListOperationsPool] validateDeviceKeys: Unable to verify signature on device %@:%@", userId, deviceKeys.deviceId);
         return NO;
     }
 
@@ -339,9 +380,9 @@
             // best off sticking with the original keys.
             //
             // Should we warn the user about it somehow?
-            NSLog(@"[MXDeviceListOperationsPool] validateDeviceKeys: WARNING:Ed25519 key for device %@:%@ has changed: %@ -> %@", userId, deviceKeys.deviceId, previouslyStoredDeviceKeys.fingerprint, signKey);
-            NSLog(@"[MXDeviceListOperationsPool] validateDeviceKeys: %@ -> %@", previouslyStoredDeviceKeys, deviceKeys);
-            NSLog(@"[MXDeviceListOperationsPool] validateDeviceKeys: %@ -> %@", previouslyStoredDeviceKeys.keys, deviceKeys.keys);
+            MXLogDebug(@"[MXDeviceListOperationsPool] validateDeviceKeys: WARNING:Ed25519 key for device %@:%@ has changed: %@ -> %@", userId, deviceKeys.deviceId, previouslyStoredDeviceKeys.fingerprint, signKey);
+            MXLogDebug(@"[MXDeviceListOperationsPool] validateDeviceKeys: %@ -> %@", previouslyStoredDeviceKeys, deviceKeys);
+            MXLogDebug(@"[MXDeviceListOperationsPool] validateDeviceKeys: %@ -> %@", previouslyStoredDeviceKeys.keys, deviceKeys.keys);
             return NO;
         }
     }
