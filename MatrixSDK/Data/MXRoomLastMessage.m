@@ -16,9 +16,14 @@
 
 #import "MXRoomLastMessage.h"
 #import "MXEvent.h"
+#import "MXKeyProvider.h"
+#import "MXAesKeyData.h"
+#import "MXAes.h"
 
 #import <Security/Security.h>
 #import <CommonCrypto/CommonCryptor.h>
+
+NSString *const MXRoomLastMessageDataType = @"org.matrix.sdk.keychain.MXRoomLastMessage";
 
 NSString *const kCodingKeyEventId = @"eventId";
 NSString *const kCodingKeyOriginServerTs = @"originServerTs";
@@ -148,157 +153,49 @@ NSString *const kCodingKeyOthers = @"others";
 
 /**
  The AES-256 key used for encrypting MXRoomSummary sensitive data.
+ 
+ @return the encryption key if encryption is needed. Nil otherwise.
  */
-+ (NSData*)encryptionKey
+- (MXAesKeyData *)encryptionKey
 {
-    NSData *encryptionKey;
-
-    // Create a dictionary to look up the key in the keychain
-    NSDictionary *searchDict = @{
-                                 (__bridge id)kSecClass: (__bridge id)kSecClassGenericPassword,
-                                 (__bridge id)kSecAttrService: @"org.matrix.sdk.keychain",
-                                 (__bridge id)kSecAttrAccount: @"MXRoomSummary",
-                                 (__bridge id)kSecReturnData: (__bridge id)kCFBooleanTrue,
-                                 };
-
-    // Make the search
-    CFDataRef foundKey = nil;
-    OSStatus status = SecItemCopyMatching((__bridge CFDictionaryRef)searchDict, (CFTypeRef*)&foundKey);
-
-    if (status == errSecSuccess)
+    // It is up to the app to provide a key for additional encryption
+    MXKeyData * keyData =  [[MXKeyProvider sharedInstance] keyDataForDataOfType:MXRoomLastMessageDataType
+                                                                    isMandatory:YES
+                                                                expectedKeyType:kAes];
+    if (keyData && [keyData isKindOfClass:[MXAesKeyData class]])
     {
-        // Use the found key
-        encryptionKey = (__bridge NSData*)(foundKey);
-    }
-    else if (status == errSecItemNotFound)
-    {
-        MXLogDebug(@"[MXRoomLastMessage] encryptionKey: Generate the key and store it to the keychain");
-
-        // There is not yet a key in the keychain
-        // Generate an AES key
-        NSMutableData *newEncryptionKey = [[NSMutableData alloc] initWithLength:kCCKeySizeAES256];
-        int retval = SecRandomCopyBytes(kSecRandomDefault, kCCKeySizeAES256, newEncryptionKey.mutableBytes);
-        if (retval == 0)
-        {
-            encryptionKey = [NSData dataWithData:newEncryptionKey];
-
-            // Store it to the keychain
-            NSMutableDictionary *dict = [NSMutableDictionary dictionaryWithDictionary:searchDict];
-            dict[(__bridge id)kSecValueData] = encryptionKey;
-
-            status = SecItemAdd((__bridge CFDictionaryRef)dict, NULL);
-            if (status != errSecSuccess)
-            {
-                // TODO: The iOS 10 simulator returns the -34018 (errSecMissingEntitlement) error.
-                // We need to fix it but there is no issue with the app on real device nor with iOS 9 simulator.
-                MXLogDebug(@"[MXRoomLastMessage] encryptionKey: SecItemAdd failed. status: %i", (int)status);
-            }
-        }
-        else
-        {
-            MXLogDebug(@"[MXRoomLastMessage] encryptionKey: Cannot generate key. retval: %i", retval);
-        }
-    }
-    else
-    {
-        MXLogDebug(@"[MXRoomLastMessage] encryptionKey: Keychain failed. OSStatus: %i", (int)status);
+        return (MXAesKeyData *)keyData;
     }
     
-    if (foundKey)
-    {
-        CFRelease(foundKey);
-    }
-
-    return encryptionKey;
+    return nil;
 }
 
 - (NSData*)encrypt:(NSData*)data
 {
-    NSData *encryptedData;
-
-    CCCryptorRef cryptor;
-    CCCryptorStatus status;
-
-    NSData *key = [MXRoomLastMessage encryptionKey];
-
-    status = CCCryptorCreateWithMode(kCCDecrypt, kCCModeCTR, kCCAlgorithmAES,
-                                     ccNoPadding, NULL, key.bytes, key.length,
-                                     NULL, 0, 0, kCCModeOptionCTR_BE, &cryptor);
-    if (status == kCCSuccess)
+    // Exceptions are not caught as the key is always needed if the KeyProviderDelegate
+    // is provided.
+    MXAesKeyData *aesKey = self.encryptionKey;
+    if (aesKey)
     {
-        size_t bufferLength = CCCryptorGetOutputLength(cryptor, data.length, false);
-        NSMutableData *buffer = [NSMutableData dataWithLength:bufferLength];
-
-        size_t outLength;
-        status |= CCCryptorUpdate(cryptor,
-                                  data.bytes,
-                                  data.length,
-                                  [buffer mutableBytes],
-                                  [buffer length],
-                                  &outLength);
-
-        status |= CCCryptorRelease(cryptor);
-
-        if (status == kCCSuccess)
-        {
-            encryptedData = buffer;
-        }
-        else
-        {
-            MXLogDebug(@"[MXRoomLastMessage] encrypt: CCCryptorUpdate failed. status: %i", status);
-        }
-    }
-    else
-    {
-        MXLogDebug(@"[MXRoomLastMessage] encrypt: CCCryptorCreateWithMode failed. status: %i", status);
+        return [MXAes encrypt:data aesKey:aesKey.key iv:aesKey.iv error:nil];
     }
 
-    return encryptedData;
-}
-
-- (NSData*)decrypt:(NSData*)encryptedData
-{
-    NSData *data;
-
-    CCCryptorRef cryptor;
-    CCCryptorStatus status;
-
-    NSData *key = [MXRoomLastMessage encryptionKey];
-
-    status = CCCryptorCreateWithMode(kCCDecrypt, kCCModeCTR, kCCAlgorithmAES,
-                                     ccNoPadding, NULL, key.bytes, key.length,
-                                     NULL, 0, 0, kCCModeOptionCTR_BE, &cryptor);
-    if (status == kCCSuccess)
-    {
-        size_t bufferLength = CCCryptorGetOutputLength(cryptor, encryptedData.length, false);
-        NSMutableData *buffer = [NSMutableData dataWithLength:bufferLength];
-
-        size_t outLength;
-        status |= CCCryptorUpdate(cryptor,
-                                  encryptedData.bytes,
-                                  encryptedData.length,
-                                  [buffer mutableBytes],
-                                  [buffer length],
-                                  &outLength);
-
-        status |= CCCryptorRelease(cryptor);
-
-        if (status == kCCSuccess)
-        {
-            data = buffer;
-        }
-        else
-        {
-            MXLogDebug(@"[MXRoomLastMessage] decrypt: CCCryptorUpdate failed. status: %i", status);
-        }
-    }
-    else
-    {
-        MXLogDebug(@"[MXRoomLastMessage] decrypt: CCCryptorCreateWithMode failed. status: %i", status);
-    }
-    
+    MXLogDebug(@"[MXRoomLastMessage] encryptData: no key method provided for encryption.");
     return data;
 }
 
+- (NSData*)decrypt:(NSData*)data
+{
+    // Exceptions are not caught as the key is always needed if the KeyProviderDelegate
+    // is provided.
+    MXAesKeyData *aesKey = self.encryptionKey;
+    if (aesKey)
+    {
+        return [MXAes decrypt:data aesKey:aesKey.key iv:aesKey.iv error:nil];
+    }
+
+    MXLogDebug(@"[MXRoomLastMessage] decryptData: no key method provided for decryption.");
+    return data;
+}
 
 @end
