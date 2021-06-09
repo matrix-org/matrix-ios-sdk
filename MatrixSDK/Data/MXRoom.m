@@ -1372,13 +1372,30 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 }
 
 - (MXHTTPOperation*)sendAudioFile:(NSURL*)fileLocalURL
-                    mimeType:(NSString*)mimeType
-                   localEcho:(MXEvent**)localEcho
-                     success:(void (^)(NSString *eventId))success
-                     failure:(void (^)(NSError *error))failure
-          keepActualFilename:(BOOL)keepActualName
+                         mimeType:(NSString*)mimeType
+                        localEcho:(MXEvent**)localEcho
+                          success:(void (^)(NSString *eventId))success
+                          failure:(void (^)(NSError *error))failure
+               keepActualFilename:(BOOL)keepActualName
 {
     return [self sendFile:fileLocalURL msgType:kMXMessageTypeAudio mimeType:mimeType localEcho:localEcho success:success failure:failure keepActualFilename:keepActualName];
+}
+
+- (MXHTTPOperation*)sendVoiceMessage:(NSURL*)fileLocalURL
+                            mimeType:(NSString*)mimeType
+                           localEcho:(MXEvent**)localEcho
+                             success:(void (^)(NSString *eventId))success
+                             failure:(void (^)(NSError *error))failure
+                  keepActualFilename:(BOOL)keepActualName
+{
+    return [self _sendFile:fileLocalURL
+                   msgType:kMXMessageTypeAudio
+           additionalTypes:@{kMXMessageTypeVoiceMessage : @{}}
+                  mimeType:(mimeType ?: @"audio/ogg")
+                 localEcho:localEcho
+                   success:success
+                   failure:failure
+        keepActualFilename:keepActualName];
 }
 
 - (MXHTTPOperation*)sendFile:(NSURL*)fileLocalURL
@@ -1388,6 +1405,25 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                      success:(void (^)(NSString *eventId))success
                      failure:(void (^)(NSError *error))failure
           keepActualFilename:(BOOL)keepActualName
+{
+    return [self _sendFile:fileLocalURL
+                   msgType:msgType
+           additionalTypes:nil
+                  mimeType:mimeType
+                 localEcho:localEcho
+                   success:success
+                   failure:failure
+        keepActualFilename:keepActualName];
+}
+
+- (MXHTTPOperation*)_sendFile:(NSURL*)fileLocalURL
+                      msgType:(NSString*)msgType
+              additionalTypes:(NSDictionary *)additionalTypes
+                     mimeType:(NSString*)mimeType
+                    localEcho:(MXEvent**)localEcho
+                      success:(void (^)(NSString *eventId))success
+                      failure:(void (^)(NSError *error))failure
+           keepActualFilename:(BOOL)keepActualName
 {
     __block MXRoomOperation *roomOperation;
     
@@ -1432,6 +1468,11 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                                                  @"size": @(fileData.length)
                                                  }
                                          } mutableCopy];
+    
+    if(additionalTypes.count) 
+    {
+        [msgContent addEntriesFromDictionary:additionalTypes];
+    }
     
     __block MXEvent *event;
     __block id uploaderObserver;

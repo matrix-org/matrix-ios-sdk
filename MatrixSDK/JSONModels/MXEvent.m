@@ -90,6 +90,7 @@ NSString *const kMXMessageTypeEmote         = @"m.emote";
 NSString *const kMXMessageTypeNotice        = @"m.notice";
 NSString *const kMXMessageTypeImage         = @"m.image";
 NSString *const kMXMessageTypeAudio         = @"m.audio";
+NSString *const kMXMessageTypeVoiceMessage  = @"org.matrix.msc2516.voice";
 NSString *const kMXMessageTypeVideo         = @"m.video";
 NSString *const kMXMessageTypeLocation      = @"m.location";
 NSString *const kMXMessageTypeFile          = @"m.file";
