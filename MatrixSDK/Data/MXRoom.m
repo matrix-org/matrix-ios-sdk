@@ -1390,7 +1390,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 {
     return [self _sendFile:fileLocalURL
                    msgType:kMXMessageTypeAudio
-           additionalTypes:@{@"org.matrix.msc2516.voice" : @{}}
+           additionalTypes:@{kMXMessageTypeVoiceMessage : @{}}
                   mimeType:mimeType
                  localEcho:localEcho
                    success:success
