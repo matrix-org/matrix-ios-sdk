@@ -1469,7 +1469,8 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                                                  }
                                          } mutableCopy];
     
-    if(additionalTypes.count) {
+    if(additionalTypes.count) 
+    {
         [msgContent addEntriesFromDictionary:additionalTypes];
     }
     
