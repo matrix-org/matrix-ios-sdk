@@ -1469,7 +1469,9 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                                                  }
                                          } mutableCopy];
     
-    [msgContent addEntriesFromDictionary:additionalTypes];
+    if(additionalTypes.count) {
+        [msgContent addEntriesFromDictionary:additionalTypes];
+    }
     
     __block MXEvent *event;
     __block id uploaderObserver;
