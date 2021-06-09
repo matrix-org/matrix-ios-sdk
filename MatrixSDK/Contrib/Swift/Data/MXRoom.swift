@@ -300,7 +300,7 @@ public extension MXRoom {
      
      - parameters:
      - localURL: the local filesystem path of the file to send.
-     - mimeType: the mime type of the file.
+     - mimeType: (optional) the mime type of the file. Defaults to `audio/ogg`.
      - localEcho: a pointer to a MXEvent object.
      
      This pointer is set to an actual MXEvent object
@@ -319,7 +319,7 @@ public extension MXRoom {
      - returns: a `MXHTTPOperation` instance.
      */
     
-    @nonobjc @discardableResult func sendVoiceMessage(localURL: URL, mimeType: String, localEcho: inout MXEvent?, completion: @escaping (_ response: MXResponse<String?>) -> Void) -> MXHTTPOperation {
+    @nonobjc @discardableResult func sendVoiceMessage(localURL: URL, mimeType: String?, localEcho: inout MXEvent?, completion: @escaping (_ response: MXResponse<String?>) -> Void) -> MXHTTPOperation {
         return __sendVoiceMessage(localURL, mimeType: mimeType, localEcho: &localEcho, success: currySuccess(completion), failure: curryFailure(completion), keepActualFilename: false)
     }
     

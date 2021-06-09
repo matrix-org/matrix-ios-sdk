@@ -477,7 +477,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
  Send a voice message to the room.
  
  @param fileLocalURL the local filesystem path of the file to send.
- @param mimeType the mime type of the file.
+ @param mimeType (optional) the mime type of the file. Defaults to `audio/ogg`
  @param localEcho a pointer to a MXEvent object (@see sendMessageWithContent: for details).
  @param success A block object called when the operation succeeds. It returns
  the event id of the event generated on the home server
