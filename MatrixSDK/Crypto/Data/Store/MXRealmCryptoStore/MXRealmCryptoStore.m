@@ -1623,6 +1623,17 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
  */
 + (nullable RLMRealm*)realmForUser:(NSString*)userId andDevice:(NSString*)deviceId readOnly:(BOOL)readOnly
 {
+    if (readOnly)
+    {
+        //  just open Realm once in writable mode to trigger migrations
+        static dispatch_once_t onceToken;
+        dispatch_once(&onceToken, ^{
+            @autoreleasepool {
+                [self realmForUser:userId andDevice:deviceId readOnly:NO];
+            }
+        });
+    }
+    
     RLMRealmConfiguration *config = [RLMRealmConfiguration defaultConfiguration];
     
     // Each user has its own db file.
