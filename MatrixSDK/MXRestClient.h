@@ -408,6 +408,10 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
                                success:(void (^)(MXCredentials *credentials))success
                                failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
+- (MXHTTPOperation*)loginWithLoginType:(NSString*)loginType username:(NSString*)username password:(NSString*)password deviceId:(NSString*)deviceId 
+                               success:(void (^)(MXCredentials *credentials))success
+                               failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
 /**
  Get the login fallback page to make login via a web browser or a web view.
 

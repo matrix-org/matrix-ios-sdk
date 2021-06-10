@@ -49,7 +49,7 @@ NSInteger const MXDehydrationManagerCryptoInitialisedError = -1;
     return self;
 }
 
-- (void)dehydrateDeviceWithSuccess:(void (^)(void))success
+- (void)dehydrateDeviceWithSuccess:(void (^)(NSString *deviceId))success
                           failure:(void (^)(NSError *error))failure
 {
     if (inProgress)
@@ -61,8 +61,8 @@ NSInteger const MXDehydrationManagerCryptoInitialisedError = -1;
     MXKeyData * keyData =  [[MXKeyProvider sharedInstance] keyDataForDataOfType:MXSessionDehydrationKeyDataType isMandatory:NO expectedKeyType:kRawData];
     if (!keyData)
     {
-        NSLog(@"[MXDehydrationManager] dehydrateDevice: No dehydrated key.");
-        success();
+        MXLogDebug(@"[MXDehydrationManager] dehydrateDevice: No dehydrated key.");
+        success(nil);
         return;
     }
     NSData *key = ((MXRawDataKey*) keyData).key;
@@ -78,7 +78,7 @@ NSInteger const MXDehydrationManagerCryptoInitialisedError = -1;
     // [account account.generateFallbackKey];
     [account markOneTimeKeysAsPublished];
     
-    NSLog(@"[MXDehydrationManager] dehydrateDevice: account created %@", account.identityKeys);
+    MXLogDebug(@"[MXDehydrationManager] dehydrateDevice: account created %@", account.identityKeys);
     
     // dehydrate the account and store it on the server
     NSError *error = nil;
@@ -89,14 +89,13 @@ NSInteger const MXDehydrationManagerCryptoInitialisedError = -1;
     if (error)
     {
         inProgress = NO;
-        NSLog(@"[MXDehydrationManager] dehydrateDevice: account serialization failed: %@", error);
+        MXLogError(@"[MXDehydrationManager] dehydrateDevice: account serialization failed: %@", error);
         failure(error);
         return;
     }
     
     [crypto.matrixRestClient setDehydratedDevice:dehydratedDevice withDisplayName:@"Backup device" success:^(NSString *deviceId) {
-        NSLog(@"[MXDehydrationManager] dehydrateDevice: preparing device keys for %@", deviceId);
-        
+        MXLogDebug(@"[MXDehydrationManager] dehydrateDevice: preparing device keys for device %@ (current device ID %@)", deviceId, crypto.myDevice.deviceId);
         MXDeviceInfo *deviceInfo = [[MXDeviceInfo alloc] initWithDeviceId:deviceId];
         deviceInfo.userId = self->crypto.matrixRestClient.credentials.userId;
         deviceInfo.keys = @{
@@ -131,7 +130,7 @@ NSInteger const MXDehydrationManagerCryptoInitialisedError = -1;
             [self->crypto.crossSigning signDevice:deviceInfo success:^{
                 [self uploadDeviceInfo:deviceInfo forAccount:account success:success failure:failure];
             } failure:^(NSError * _Nonnull error) {
-                NSLog(@"[MXDehydrationManager] failed to cross-sign dehydrated device data: %@", error);
+                MXLogWarning(@"[MXDehydrationManager] failed to cross-sign dehydrated device data: %@", error);
                 [self uploadDeviceInfo:deviceInfo forAccount:account success:success failure:failure];
             }];
         } else {
@@ -139,17 +138,17 @@ NSInteger const MXDehydrationManagerCryptoInitialisedError = -1;
         }
     } failure:^(NSError *error) {
         self->inProgress = NO;
-        NSLog(@"[MXDehydrationManager] failed to push dehydrated device data: %@", error);
+        MXLogError(@"[MXDehydrationManager] failed to push dehydrated device data: %@", error);
         failure(error);
     }];
 }
 
 - (void)uploadDeviceInfo:(MXDeviceInfo*)deviceInfo
               forAccount:(OLMAccount*)account
-                 success:(void (^)(void))success
+                 success:(void (^)(NSString *deviceId))success
                  failure:(void (^)(NSError *error))failure
 {
-    NSLog(@"[MXDehydrationManager] dehydrateDevice: preparing one time keys");
+    MXLogDebug(@"[MXDehydrationManager] dehydrateDevice: preparing one time keys");
     
     NSDictionary *oneTimeKeys = account.oneTimeKeys;
     NSMutableDictionary *oneTimeJson = [NSMutableDictionary dictionary];
@@ -166,12 +165,12 @@ NSInteger const MXDehydrationManagerCryptoInitialisedError = -1;
     }
 
     [crypto.matrixRestClient uploadKeys:deviceInfo.JSONDictionary oneTimeKeys:oneTimeJson forDeviceWithId:deviceInfo.deviceId success:^(MXKeysUploadResponse *keysUploadResponse) {
-        NSLog(@"[MXDehydrationManager] dehydration done succesfully");
+        MXLogDebug(@"[MXDehydrationManager] dehydration done succesfully:\n device ID = %@\n ed25519 = %@\n curve25519 = %@", deviceInfo.deviceId, account.identityKeys[@"ed25519"], account.identityKeys[@"curve25519"]);
         self->inProgress = NO;
-        success();
+        success(deviceInfo.deviceId);
     } failure:^(NSError *error) {
         self->inProgress = NO;
-        NSLog(@"[MXDehydrationManager] failed to upload device keys: %@", error);
+        MXLogError(@"[MXDehydrationManager] failed to upload device keys: %@", error);
         failure(error);
     }];
 }

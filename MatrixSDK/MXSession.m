@@ -153,6 +153,8 @@ typedef void (^MXOnResumeDone)(void);
      For debug, indicate if the first sync after the MXSession startup is done.
      */
     BOOL firstSyncDone;
+    
+    BOOL isSincing;
 
     /**
      The tool to refresh the homeserver wellknown data.
@@ -236,6 +238,7 @@ typedef void (^MXOnResumeDone)(void);
         [self setIdentityServer:mxRestClient.identityServer andAccessToken:mxRestClient.credentials.identityServerAccessToken];
         
         firstSyncDone = NO;
+        isSincing = NO;
 
         _acknowledgableEventTypes = @[kMXEventTypeStringRoomName,
                                       kMXEventTypeStringRoomTopic,
@@ -467,7 +470,7 @@ typedef void (^MXOnResumeDone)(void);
                 completion:(void (^)(void))completion
            storeCompletion:(void (^)(void))storeCompletion
 {
-    MXLogDebug(@"[MXSession] handleSyncResponse: Received %tu joined rooms, %tu invited rooms, %tu left rooms, %tu toDevice events.", syncResponse.rooms.join.count, syncResponse.rooms.invite.count, syncResponse.rooms.leave.count, syncResponse.toDevice.events.count);
+    MXLogDebug(@"[MXSession %@] handleSyncResponse: Received %tu joined rooms, %tu invited rooms, %tu left rooms, %tu toDevice events.", self.myUser, syncResponse.rooms.join.count, syncResponse.rooms.invite.count, syncResponse.rooms.leave.count, syncResponse.toDevice.events.count);
     
     // Check whether this is the initial sync
     BOOL isInitialSync = !self.isEventStreamInitialised;
@@ -1273,6 +1276,8 @@ typedef void (^MXOnResumeDone)(void);
                       clientTimeout:(NSUInteger)clientTimeout
                         setPresence:(NSString*)setPresence
 {
+    isSincing = YES;
+
     dispatch_group_t initialSyncDispatchGroup = dispatch_group_create();
     
     __block MXTaskProfile *syncTaskProfile;
@@ -1373,6 +1378,7 @@ typedef void (^MXOnResumeDone)(void);
         
         [self handleSyncResponse:syncResponse completion:^{
             
+            isSincing = NO;
             if (wasfirstSync)
             {
                 [[MXSDKOptions sharedInstance].analyticsDelegate trackValue:@(self->rooms.count)
@@ -4399,77 +4405,84 @@ typedef void (^MXOnResumeDone)(void);
 {
     if (_crypto)
     {
-        NSLog(@"[MXSession] rehydrateDevice: Cannot rehydrate device after crypto is initialized.");
+        MXLogError(@"[MXSession] rehydrateDevice: Cannot rehydrate device after crypto is initialized.");
         failure([NSError errorWithDomain:kMXNSErrorDomain code:0 userInfo:@{NSLocalizedDescriptionKey: @"Cannot rehydrate device after crypto is initialized"}]);
+        return;
+    }
+    
+    if (firstSyncDone || isSincing)
+    {
+        MXLogError(@"[MXSession] rehydrateDevice: Cannot rehydrate device after sync.");
+        failure([NSError errorWithDomain:kMXNSErrorDomain code:0 userInfo:@{NSLocalizedDescriptionKey: @"Cannot rehydrate device after sync."}]);
         return;
     }
     
     MXKeyData * keyData =  [[MXKeyProvider sharedInstance] keyDataForDataOfType:MXSessionDehydrationKeyDataType isMandatory:NO expectedKeyType:kRawData];
     if (!keyData)
     {
-        NSLog(@"[MXSession] rehydrateDevice: No dehydrated key.");
+        MXLogDebug(@"[MXSession] rehydrateDevice: No dehydrated key.");
         success();
         return;
     }
     NSData *key = ((MXRawDataKey*) keyData).key;
     
-    NSLog(@"[MXSession] rehydrateDevice: getting dehydrated device.");
+    MXLogDebug(@"[MXSession] rehydrateDevice: getting dehydrated device.");
     [self.matrixRestClient dehydratedDeviceWithSuccess:^(MXDehydratedDevice *device) {
         if (!device || !device.deviceId)
         {
-            NSLog(@"[MXSession] rehydrateDevice: No dehydrated device found.");
+            MXLogDebug(@"[MXSession] rehydrateDevice: No dehydrated device found.");
             success();
             return;
         }
         
         if (![device.algorithm isEqual:MXDehydrationAlgorithm])
         {
-            NSLog(@"[MXSession] rehydrateDevice: Wrong algorithm for dehydrated device.");
+            MXLogError(@"[MXSession] rehydrateDevice: Wrong algorithm for dehydrated device.");
             failure([NSError errorWithDomain:kMXNSErrorDomain code:0 userInfo:@{NSLocalizedDescriptionKey: @"Wrong algorithm for dehydrated device"}]);
             return;
         }
         
         NSError *error = nil;
-        NSLog(@"[MXSession] rehydrateDevice: unpickling dehydrated device.");
+        MXLogDebug(@"[MXSession] rehydrateDevice: unpickling dehydrated device.");
         OLMAccount *account = [[OLMAccount alloc] initWithSerializedData:device.account key:key error:&error];
         
-        NSLog(@"[MXSession] rehydrateDevice: account deserialized %@", account.identityKeys);
+        MXLogDebug(@"[MXSession] rehydrateDevice: account deserialized %@", account.identityKeys);
 
         if (error)
         {
-            NSLog(@"[MXSession] rehydrateDevice: Failed to unpickle device account with error: %@.", error);
+            MXLogError(@"[MXSession] rehydrateDevice: Failed to unpickle device account with error: %@.", error);
             failure([NSError errorWithDomain:kMXNSErrorDomain code:0 userInfo:@{NSLocalizedDescriptionKey: @"Failed to unpickle device account"}]);
             return;
         }
         
-        NSLog(@"[MXSession] rehydrateDevice: device unpickled %@", account);
+        MXLogDebug(@"[MXSession] rehydrateDevice: device unpickled %@", account);
         
         [self.matrixRestClient claimDehydratedDeviceWithId:device.deviceId Success:^(BOOL isClaimed) {
             if (!isClaimed)
             {
-                NSLog(@"[MXSession] rehydrateDevice: device already claimed.");
+                MXLogDebug(@"[MXSession] rehydrateDevice: device already claimed.");
                 success();
                 return;
             }
 
-            NSLog(@"[MXSession] rehydrateDevice: using dehydrated device");
+            MXLogDebug(@"[MXSession] rehydrateDevice: using dehydrated device");
             self.matrixRestClient.credentials.deviceId = device.deviceId;
             self->_exportedOlmDeviceToImport = [[MXExportedOlmDevice alloc] initWithAccount:device.account pickleKey:key forSessions:@[]];
             success();
         } failure:^(NSError *error) {
-            NSLog(@"[MXSession] rehydrateDevice: claimDehydratedDeviceWithId failed with error: %@", error);
+            MXLogError(@"[MXSession] rehydrateDevice: claimDehydratedDeviceWithId failed with error: %@", error);
             failure(error);
         }];
     } failure:^(NSError *error) {
         MXError *mxError = [[MXError alloc] initWithNSError:error];
         if (mxError && [mxError.errcode isEqualToString:kMXErrCodeStringNotFound])
         {
-            NSLog(@"[MXSession] rehydrateDevice: No dehydrated device found.");
+            MXLogDebug(@"[MXSession] rehydrateDevice: No dehydrated device found.");
             success();
         }
         else
         {
-            NSLog(@"[MXSession] rehydrateDevice: dehydratedDeviceId failed with error: %@", error);
+            MXLogError(@"[MXSession] rehydrateDevice: dehydratedDeviceId failed with error: %@", error);
             failure(error);
         }
     }];

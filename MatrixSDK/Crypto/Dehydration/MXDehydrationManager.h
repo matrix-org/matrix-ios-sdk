@@ -36,7 +36,7 @@ FOUNDATION_EXPORT NSInteger const MXDehydrationManagerCryptoInitialisedError;
 - (instancetype)initWithCrypto:(MXCrypto*)crypto;
 
 
-- (void)dehydrateDeviceWithSuccess:(void (^)(void))success
+- (void)dehydrateDeviceWithSuccess:(void (^)( NSString * _Nullable deviceId))success
                           failure:(void (^)(NSError *error))failure;
 
 @end
