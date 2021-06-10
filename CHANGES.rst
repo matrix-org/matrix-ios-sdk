@@ -21,7 +21,7 @@ Changes to be released in next version
  * 
     
 🧱 Build
- * 
+ * build.sh: Include debug symbols when building XCFramework 
 
 Others
  * 
