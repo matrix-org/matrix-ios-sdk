@@ -9,7 +9,7 @@ Changes to be released in next version
  * VoIP: Change hold direction to send-only.
 
 🐛 Bugfix
- * 
+ * VoIP: Handle offers when peer connection is stable (vector-im/element-ios/issues/4421).
 
 ⚠️ API Changes
  * MXRoomSummary: `lastMessageEvent` property removed for performance reasons (vector-im/element-ios/issues/4360).
