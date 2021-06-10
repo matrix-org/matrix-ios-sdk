@@ -30,6 +30,8 @@
 
 NSString *const kMXJingleCallWebRTCMainStreamID = @"userMedia";
 
+typedef void (^HandleOfferBlock)(dispatch_block_t);
+
 @interface MXJingleCallStackCall () <RTCPeerConnectionDelegate>
 {
     /**
@@ -79,6 +81,7 @@ NSString *const kMXJingleCallWebRTCMainStreamID = @"userMedia";
 
 @property (nonatomic, strong) RTCVideoCapturer *videoCapturer;
 @property (nonatomic, strong) MXJingleCameraCaptureController *captureController;
+@property (nonatomic, strong) NSMutableArray<HandleOfferBlock> *pendingOffers;
 
 @end
 
@@ -93,6 +96,7 @@ NSString *const kMXJingleCallWebRTCMainStreamID = @"userMedia";
         peerConnectionFactory = factory;
         cameraPosition = AVCaptureDevicePositionFront;
         cachedRemoteIceCandidates = [NSMutableArray array];
+        _pendingOffers = [NSMutableArray array];
         
         [[NSNotificationCenter defaultCenter] addObserver:self
                                                  selector:@selector(handleRouteChangeNotification:)
@@ -269,33 +273,54 @@ NSString *const kMXJingleCallWebRTCMainStreamID = @"userMedia";
 #pragma mark - Incoming call
 - (void)handleOffer:(NSString *)sdpOffer success:(void (^)(void))success failure:(void (^)(NSError *error))failure
 {
-    RTCSessionDescription *sessionDescription = [[RTCSessionDescription alloc] initWithType:RTCSdpTypeOffer sdp:sdpOffer];
-    MXWeakify(self);
-    [peerConnection setRemoteDescription:sessionDescription completionHandler:^(NSError * _Nullable error) {
-        MXLogDebug(@"[MXJingleCallStackCall] handleOffer: setRemoteDescription: error: %@", error);
-        
-        // Return on main thread
-        dispatch_async(dispatch_get_main_queue(), ^{
-            MXStrongifyAndReturnIfNil(self);
+    HandleOfferBlock handleOfferBlock = ^(dispatch_block_t completion){
+        RTCSessionDescription *sessionDescription = [[RTCSessionDescription alloc] initWithType:RTCSdpTypeOffer sdp:sdpOffer];
+        MXWeakify(self);
+        [self->peerConnection setRemoteDescription:sessionDescription completionHandler:^(NSError * _Nullable error) {
+            MXLogDebug(@"[MXJingleCallStackCall] handleOffer: setRemoteDescription: error: %@", error);
             
-            if (!error)
-            {
-                // Add cached ice candidates after setting remote description
-                for (RTCIceCandidate *iceCandidate in self->cachedRemoteIceCandidates)
-                {
-                    [self->peerConnection addIceCandidate:iceCandidate];
-                }
-                [self->cachedRemoteIceCandidates removeAllObjects];
+            // Return on main thread
+            dispatch_async(dispatch_get_main_queue(), ^{
+                MXStrongifyAndReturnIfNil(self);
                 
-                success();
-            }
-            else
-            {
-                failure(error);
-            }
-            
-        });
-    }];
+                if (!error)
+                {
+                    // Add cached ice candidates after setting remote description
+                    for (RTCIceCandidate *iceCandidate in self->cachedRemoteIceCandidates)
+                    {
+                        [self->peerConnection addIceCandidate:iceCandidate];
+                    }
+                    [self->cachedRemoteIceCandidates removeAllObjects];
+                    
+                    success();
+                    if (completion)
+                    {
+                        completion();
+                    }
+                }
+                else
+                {
+                    failure(error);
+                    if (completion)
+                    {
+                        completion();
+                    }
+                }
+                
+            });
+        }];
+    };
+    
+    if (peerConnection.signalingState == RTCSignalingStateStable)
+    {
+        MXLogDebug(@"[MXJingleCallStackCall] handleOffer: executing block right away")
+        handleOfferBlock(nil);
+    }
+    else
+    {
+        MXLogDebug(@"[MXJingleCallStackCall] handleOffer: saving block to be run in future")
+        [_pendingOffers addObject:handleOfferBlock];
+    }
 }
 
 - (void)createAnswer:(void (^)(NSString *))success failure:(void (^)(NSError *))failure
@@ -513,6 +538,23 @@ NSString *const kMXJingleCallWebRTCMainStreamID = @"userMedia";
  didChangeSignalingState:(RTCSignalingState)stateChanged
 {
     MXLogDebug(@"[MXJingleCallStackCall] didChangeSignalingState: %tu", stateChanged);
+    
+    if (stateChanged == RTCSignalingStateStable)
+    {
+        //  process pending offers
+        dispatch_group_t group = dispatch_group_create();
+        for (HandleOfferBlock block in _pendingOffers)
+        {
+            MXLogDebug(@"[MXJingleCallStackCall] didChangeSignalingState: executing pre-saved block")
+            dispatch_group_enter(group);
+            block(^{
+                dispatch_group_leave(group);
+            });
+        }
+        dispatch_group_notify(group, dispatch_get_main_queue(), ^{
+            [self.pendingOffers removeAllObjects];
+        });
+    }
 }
 
 // Triggered when media is received on a new stream from remote peer.
