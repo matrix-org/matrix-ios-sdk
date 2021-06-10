@@ -22,6 +22,7 @@
 #import <UIKit/UIKit.h>
 
 #import "MXTools.h"
+#import "MXLog.h"
 
 #import "MXJingleVideoView.h"
 #import "MXJingleCameraCaptureController.h"
@@ -113,7 +114,7 @@ NSString *const kMXJingleCallWebRTCMainStreamID = @"userMedia";
     }
     else
     {
-        NSLog(@"[MXJingleCallStackCall] Wait for the setting of selfVideoView and remoteVideoView before calling createLocalMediaStream");
+        MXLogDebug(@"[MXJingleCallStackCall] Wait for the setting of selfVideoView and remoteVideoView before calling createLocalMediaStream");
     }
 }
 
@@ -151,7 +152,7 @@ NSString *const kMXJingleCallWebRTCMainStreamID = @"userMedia";
         {
             // Report this sdp back to libjingle
             [self->peerConnection setLocalDescription:sdp completionHandler:^(NSError * _Nullable error) {
-                NSLog(@"[MXJingleCallStackCall] hold: setLocalDescription: error: %@", error);
+                MXLogDebug(@"[MXJingleCallStackCall] hold: setLocalDescription: error: %@", error);
                 
                 // Return on main thread
                 dispatch_async(dispatch_get_main_queue(), ^{
@@ -217,7 +218,7 @@ NSString *const kMXJingleCallWebRTCMainStreamID = @"userMedia";
 
         if (!ICEServer)
         {
-            NSLog(@"[MXJingleCallStackCall] addTURNServerUris: Warning: Failed to create RTCICEServer with credentials %@: %@ for:\n%@", username, password, uris);
+            MXLogDebug(@"[MXJingleCallStackCall] addTURNServerUris: Warning: Failed to create RTCICEServer with credentials %@: %@ for:\n%@", username, password, uris);
         }
     }
 
@@ -240,7 +241,7 @@ NSString *const kMXJingleCallWebRTCMainStreamID = @"userMedia";
 #if DEBUG
     statsTimer = [NSTimer scheduledTimerWithTimeInterval:1.0 repeats:YES block:^(NSTimer * _Nonnull timer) {
         [self->peerConnection statisticsWithCompletionHandler:^(RTCStatisticsReport * _Nonnull statistics) {
-            NSLog(@"[MXJingleCallStackCall] peerConnection.statistics: %@", statistics);
+            MXLogDebug(@"[MXJingleCallStackCall] peerConnection.statistics: %@", statistics);
         }];
     }];
 #endif
@@ -271,7 +272,7 @@ NSString *const kMXJingleCallWebRTCMainStreamID = @"userMedia";
     RTCSessionDescription *sessionDescription = [[RTCSessionDescription alloc] initWithType:RTCSdpTypeOffer sdp:sdpOffer];
     MXWeakify(self);
     [peerConnection setRemoteDescription:sessionDescription completionHandler:^(NSError * _Nullable error) {
-        NSLog(@"[MXJingleCallStackCall] handleOffer: setRemoteDescription: error: %@", error);
+        MXLogDebug(@"[MXJingleCallStackCall] handleOffer: setRemoteDescription: error: %@", error);
         
         // Return on main thread
         dispatch_async(dispatch_get_main_queue(), ^{
@@ -313,7 +314,7 @@ NSString *const kMXJingleCallWebRTCMainStreamID = @"userMedia";
                 [self->peerConnection setLocalDescription:sdp completionHandler:^(NSError * _Nullable error) {
                     MXStrongifyAndReturnIfNil(self);
                     
-                    NSLog(@"[MXJingleCallStackCall] createAnswer: setLocalDescription: error: %@", error);
+                    MXLogDebug(@"[MXJingleCallStackCall] createAnswer: setLocalDescription: error: %@", error);
                     
                     // Return on main thread
                     dispatch_async(dispatch_get_main_queue(), ^{
@@ -358,7 +359,7 @@ NSString *const kMXJingleCallWebRTCMainStreamID = @"userMedia";
             {
                 // Report this sdp back to libjingle
                 [self->peerConnection setLocalDescription:sdp completionHandler:^(NSError * _Nullable error) {
-                    NSLog(@"[MXJingleCallStackCall] createOffer: setLocalDescription: error: %@", error);
+                    MXLogDebug(@"[MXJingleCallStackCall] createOffer: setLocalDescription: error: %@", error);
                     
                     // Return on main thread
                     dispatch_async(dispatch_get_main_queue(), ^{
@@ -393,7 +394,7 @@ NSString *const kMXJingleCallWebRTCMainStreamID = @"userMedia";
     [peerConnection setRemoteDescription:sessionDescription completionHandler:^(NSError * _Nullable error) {
         MXStrongifyAndReturnIfNil(self);
         
-        NSLog(@"[MXJingleCallStackCall] handleAnswer: setRemoteDescription: error: %@", error);
+        MXLogDebug(@"[MXJingleCallStackCall] handleAnswer: setRemoteDescription: error: %@", error);
         
         // Return on main thread
         dispatch_async(dispatch_get_main_queue(), ^{
@@ -480,7 +481,7 @@ NSString *const kMXJingleCallWebRTCMainStreamID = @"userMedia";
 
 - (void)peerConnection:(RTCPeerConnection *)peerConnection didChangeConnectionState:(RTCPeerConnectionState)newState
 {
-    NSLog(@"[MXJingleCallStackCall] didChangeConnectionState: %tu", newState);
+    MXLogDebug(@"[MXJingleCallStackCall] didChangeConnectionState: %tu", newState);
     
     switch (newState)
     {
@@ -511,26 +512,26 @@ NSString *const kMXJingleCallWebRTCMainStreamID = @"userMedia";
 - (void)peerConnection:(RTCPeerConnection *)peerConnection
  didChangeSignalingState:(RTCSignalingState)stateChanged
 {
-    NSLog(@"[MXJingleCallStackCall] didChangeSignalingState: %tu", stateChanged);
+    MXLogDebug(@"[MXJingleCallStackCall] didChangeSignalingState: %tu", stateChanged);
 }
 
 // Triggered when media is received on a new stream from remote peer.
 - (void)peerConnection:(RTCPeerConnection *)peerConnection
           didAddStream:(RTCMediaStream *)stream
 {
-    NSLog(@"[MXJingleCallStackCall] didAddStream");
+    MXLogDebug(@"[MXJingleCallStackCall] didAddStream");
 }
 
 // Triggered when a remote peer close a stream.
 - (void)peerConnection:(RTCPeerConnection *)peerConnection
        didRemoveStream:(RTCMediaStream *)stream
 {
-    NSLog(@"[MXJingleCallStackCall] didRemoveStream");
+    MXLogDebug(@"[MXJingleCallStackCall] didRemoveStream");
 }
 
 - (void)peerConnection:(RTCPeerConnection *)peerConnection didAddReceiver:(RTCRtpReceiver *)rtpReceiver streams:(NSArray<RTCMediaStream *> *)mediaStreams
 {
-    NSLog(@"[MXJingleCallStackCall] didAddReceiver");
+    MXLogDebug(@"[MXJingleCallStackCall] didAddReceiver");
     
     if ([rtpReceiver.track.kind isEqualToString:kRTCMediaStreamTrackKindVideo])
     {
@@ -551,34 +552,34 @@ NSString *const kMXJingleCallWebRTCMainStreamID = @"userMedia";
 
 - (void)peerConnection:(RTCPeerConnection *)peerConnection didRemoveReceiver:(RTCRtpReceiver *)rtpReceiver
 {
-    NSLog(@"[MXJingleCallStackCall] didRemoveReceiver");
+    MXLogDebug(@"[MXJingleCallStackCall] didRemoveReceiver");
 }
 
 // Triggered when renegotiation is needed, for example the ICE has restarted.
 - (void)peerConnectionShouldNegotiate:(RTCPeerConnection *)peerConnection
 {
-    NSLog(@"[MXJingleCallStackCall] peerConnectionShouldNegotiate");
+    MXLogDebug(@"[MXJingleCallStackCall] peerConnectionShouldNegotiate");
 }
 
 // Called any time the ICEConnectionState changes.
 - (void)peerConnection:(RTCPeerConnection *)peerConnection
 didChangeIceConnectionState:(RTCIceConnectionState)newState
 {
-    NSLog(@"[MXJingleCallStackCall] didChangeIceConnectionState: %@", @(newState));
+    MXLogDebug(@"[MXJingleCallStackCall] didChangeIceConnectionState: %@", @(newState));
 }
 
 // Called any time the ICEGatheringState changes.
 - (void)peerConnection:(RTCPeerConnection *)peerConnection
 didChangeIceGatheringState:(RTCIceGatheringState)newState
 {
-    NSLog(@"[MXJingleCallStackCall] didChangeIceGatheringState: %@", @(newState));
+    MXLogDebug(@"[MXJingleCallStackCall] didChangeIceGatheringState: %@", @(newState));
 }
 
 // New Ice candidate have been found.
 - (void)peerConnection:(RTCPeerConnection *)peerConnection
 didGenerateIceCandidate:(RTCIceCandidate *)candidate
 {
-    NSLog(@"[MXJingleCallStackCall] didGenerateIceCandidate: %@", candidate);
+    MXLogDebug(@"[MXJingleCallStackCall] didGenerateIceCandidate: %@", candidate);
 
     // Forward found ICE candidates
     dispatch_async(dispatch_get_main_queue(), ^{
@@ -592,14 +593,14 @@ didGenerateIceCandidate:(RTCIceCandidate *)candidate
 - (void)peerConnection:(RTCPeerConnection *)peerConnection
 didRemoveIceCandidates:(NSArray<RTCIceCandidate *> *)candidates;
 {
-    NSLog(@"[MXJingleCallStackCall] didRemoveIceCandidates");
+    MXLogDebug(@"[MXJingleCallStackCall] didRemoveIceCandidates");
 }
 
 // New data channel has been opened.
 - (void)peerConnection:(RTCPeerConnection*)peerConnection
     didOpenDataChannel:(RTCDataChannel*)dataChannel
 {
-    NSLog(@"[MXJingleCallStackCall] didOpenDataChannel");
+    MXLogDebug(@"[MXJingleCallStackCall] didOpenDataChannel");
 }
 
 
@@ -844,7 +845,7 @@ didRemoveIceCandidates:(NSArray<RTCIceCandidate *> *)candidates;
 {
     if (onStartCapturingMediaWithVideoSuccess && selfVideoView && remoteVideoView)
     {
-        NSLog(@"[MXJingleCallStackCall] selfVideoView and remoteVideoView are set. Call createLocalMediaStream");
+        MXLogDebug(@"[MXJingleCallStackCall] selfVideoView and remoteVideoView are set. Call createLocalMediaStream");
 
         [self createLocalMediaStream];
     }
