@@ -10,6 +10,7 @@ Changes to be released in next version
 
 🐛 Bugfix
  * MXSession: Fix app that can fail to resume (vector-im/element-ios/issues/4417).
+ * MXRealmCryptoStore: Run migration once before opening read-only Realms (vector-im/element-ios/issues/4418).
 
 ⚠️ API Changes
  * MXRoomSummary: `lastMessageEvent` property removed for performance reasons (vector-im/element-ios/issues/4360).
