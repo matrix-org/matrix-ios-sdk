@@ -1519,9 +1519,9 @@ typedef void (^MXOnResumeDone)(void);
                 // This happens when the SDK cannot make any more requests because the app is in background
                 // and the background task is expired or going to expire.
                 // The app should have paused the SDK before but it did not. So, pause the SDK ourselves.
-                // Note that we need to come back to MXSessionStateRunning in order to be able to pause.
+                // Note that we need to come back to MXSessionStatePauseRequested in order to be able to pause.
                 MXLogDebug(@"[MXSession] -> Go to pause");
-                [self setState:MXSessionStateRunning];
+                [self setState:MXSessionStatePauseRequested];
                 [self pause];
             }
         }
