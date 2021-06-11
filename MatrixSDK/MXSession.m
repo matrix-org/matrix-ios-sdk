@@ -1512,7 +1512,18 @@ typedef void (^MXOnResumeDone)(void);
         if ([error.domain isEqualToString:NSURLErrorDomain]
             && code == kCFURLErrorCancelled)
         {
-            MXLogDebug(@"[MXSession] The connection has been cancelled.");
+            MXLogDebug(@"[MXSession] The connection has been cancelled in state %@", @(_state));
+
+            if (_state == MXSessionStateSyncInProgress)
+            {
+                // This happens when the SDK cannot make any more requests because the app is in background
+                // and the background task is expired or going to expire.
+                // The app should have paused the SDK before but it did not. So, pause the SDK ourselves.
+                // Note that we need to come back to MXSessionStateRunning in order to be able to pause.
+                MXLogDebug(@"[MXSession] -> Go to pause");
+                [self setState:MXSessionStateRunning];
+                [self pause];
+            }
         }
         else if ([error.domain isEqualToString:NSURLErrorDomain]
                  && code == kCFURLErrorTimedOut && serverTimeout == 0)
