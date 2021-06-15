@@ -864,6 +864,29 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                       success:(void (^)(NSString *eventId))success
                       failure:(void (^)(NSError *error))failure
 {
+    return [self sendImage:imageData
+             withImageSize:imageSize
+                  mimeType:mimetype
+              andThumbnail:thumbnail
+                  blurHash:nil
+                 localEcho:localEcho
+                   success:success
+                   failure:failure];
+}
+
+- (MXHTTPOperation*)sendImage:(NSData*)imageData
+                withImageSize:(CGSize)imageSize
+                     mimeType:(NSString*)mimetype
+#if TARGET_OS_IPHONE
+                 andThumbnail:(UIImage*)thumbnail
+#elif TARGET_OS_OSX
+                 andThumbnail:(NSImage*)thumbnail
+#endif
+                     blurHash:(NSString*)blurhash
+                    localEcho:(MXEvent**)localEcho
+                      success:(void (^)(NSString *eventId))success
+                      failure:(void (^)(NSError *error))failure
+{
     __block MXRoomOperation *roomOperation;
 
     double endRange = 1.0;
@@ -903,6 +926,10 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                                                      @"size": @(imageData.length)
                                                      } mutableCopy]
                                          } mutableCopy];
+    if (blurhash)
+    {
+        msgContent[@"info"][@"blurhash"] = blurhash;
+    }
     
     __block MXEvent *event;
     __block id uploaderObserver;
