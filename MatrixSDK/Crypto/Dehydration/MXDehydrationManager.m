@@ -76,7 +76,6 @@ NSInteger const MXDehydrationManagerCryptoInitialisedError = -1;
     [account generateOneTimeKeys:maxKeys / 2];
 
     // [account account.generateFallbackKey];
-    [account markOneTimeKeysAsPublished];
     
     MXLogDebug(@"[MXDehydrationManager] dehydrateDevice: account created %@", account.identityKeys);
     
@@ -95,7 +94,7 @@ NSInteger const MXDehydrationManagerCryptoInitialisedError = -1;
     }
     
     [crypto.matrixRestClient setDehydratedDevice:dehydratedDevice withDisplayName:@"Backup device" success:^(NSString *deviceId) {
-        MXLogDebug(@"[MXDehydrationManager] dehydrateDevice: preparing device keys for device %@ (current device ID %@)", deviceId, crypto.myDevice.deviceId);
+        MXLogDebug(@"[MXDehydrationManager] dehydrateDevice: preparing device keys for device %@ (current device ID %@)", deviceId, self->crypto.myDevice.deviceId);
         MXDeviceInfo *deviceInfo = [[MXDeviceInfo alloc] initWithDeviceId:deviceId];
         deviceInfo.userId = self->crypto.matrixRestClient.credentials.userId;
         deviceInfo.keys = @{
@@ -165,6 +164,7 @@ NSInteger const MXDehydrationManagerCryptoInitialisedError = -1;
     }
 
     [crypto.matrixRestClient uploadKeys:deviceInfo.JSONDictionary oneTimeKeys:oneTimeJson forDeviceWithId:deviceInfo.deviceId success:^(MXKeysUploadResponse *keysUploadResponse) {
+        [account markOneTimeKeysAsPublished];
         MXLogDebug(@"[MXDehydrationManager] dehydration done succesfully:\n device ID = %@\n ed25519 = %@\n curve25519 = %@", deviceInfo.deviceId, account.identityKeys[@"ed25519"], account.identityKeys[@"curve25519"]);
         self->inProgress = NO;
         success(deviceInfo.deviceId);

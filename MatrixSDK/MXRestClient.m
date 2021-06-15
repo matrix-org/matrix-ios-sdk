@@ -4032,39 +4032,7 @@ MXAuthAction;
                        success:(void (^)(MXKeysUploadResponse *keysUploadResponse))success
                        failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"%@/keys/upload", kMXAPIPrefixPathR0];
-
-    NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
-    if (deviceKeys)
-    {
-        parameters[@"device_keys"] = deviceKeys;
-    }
-    if (oneTimeKeys)
-    {
-        parameters[@"one_time_keys"] = oneTimeKeys;
-    }
-
-    MXWeakify(self);
-    return [httpClient requestWithMethod:@"POST"
-                                    path: path
-                              parameters:parameters
-                                 success:^(NSDictionary *JSONResponse) {
-                                     MXStrongifyAndReturnIfNil(self);
-
-                                     if (success)
-                                     {
-                                         __block MXKeysUploadResponse *keysUploadResponse;
-                                         [self dispatchProcessing:^{
-                                             MXJSONModelSetMXJSONModel(keysUploadResponse, MXKeysUploadResponse, JSONResponse);
-                                         } andCompletion:^{
-                                             success(keysUploadResponse);
-                                         }];
-                                     }
-                                 }
-                                 failure:^(NSError *error) {
-                                     MXStrongifyAndReturnIfNil(self);
-                                     [self dispatchFailure:error inBlock:failure];
-                                 }];
+    return [self uploadKeys:deviceKeys oneTimeKeys:oneTimeKeys forDeviceWithId:nil success:success failure:failure];
 }
 
 - (MXHTTPOperation*)uploadKeys:(NSDictionary*)deviceKeys oneTimeKeys:(NSDictionary*)oneTimeKeys
@@ -4072,7 +4040,7 @@ MXAuthAction;
                        success:(void (^)(MXKeysUploadResponse *keysUploadResponse))success
                        failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"%@/keys/upload/%@", kMXAPIPrefixPathR0, [deviceId stringByAddingPercentEncodingWithAllowedCharacters:[NSCharacterSet URLHostAllowedCharacterSet]]];
+    NSString *path = deviceId ? [NSString stringWithFormat:@"%@/keys/upload/%@", kMXAPIPrefixPathR0, [deviceId stringByAddingPercentEncodingWithAllowedCharacters:[NSCharacterSet URLHostAllowedCharacterSet]]] : [NSString stringWithFormat:@"%@/keys/upload", kMXAPIPrefixPathR0];
 
     NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
     if (deviceKeys)
