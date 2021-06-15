@@ -974,6 +974,8 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
 
 - (void)handleCallInvite:(MXEvent *)event
 {
+    MXLogDebug(@"[MXCall] handleCallInvite")
+    
     callInviteEventContent = [MXCallInviteEventContent modelFromJSON:event.content];
     
     if ([self isMyEvent:event])
@@ -1064,6 +1066,8 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
 
 - (void)handleCallAnswer:(MXEvent *)event
 {
+    MXLogDebug(@"[MXCall] handleCallAnswer")
+    
     if ([self isMyEvent:event])
     {
         return;
@@ -1141,6 +1145,8 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
 
 - (void)handleCallSelectAnswer:(MXEvent *)event
 {
+    MXLogDebug(@"[MXCall] handleCallSelectAnswer")
+    
     if ([self isMyEvent:event])
     {
         return;
@@ -1162,6 +1168,8 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
 
 - (void)handleCallHangup:(MXEvent *)event
 {
+    MXLogDebug(@"[MXCall] handleCallHangup")
+    
     if (_state != MXCallStateEnded)
     {
         [self terminateWithReason:event];
@@ -1170,6 +1178,8 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
 
 - (void)handleCallCandidates:(MXEvent *)event
 {
+    MXLogDebug(@"[MXCall] handleCallCandidates")
+    
     if ([self isMyEvent:event])
     {
         return;
@@ -1191,6 +1201,8 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
 
 - (void)handleCallReject:(MXEvent *)event
 {
+    MXLogDebug(@"[MXCall] handleCallReject")
+    
     if ([self isMyEvent:event])
     {
         return;
@@ -1246,6 +1258,8 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
 
 - (void)handleCallNegotiate:(MXEvent *)event
 {
+    MXLogDebug(@"[MXCall] handleCallNegotiate")
+    
     if ([self isMyEvent:event])
     {
         return;
@@ -1319,12 +1333,12 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
 
 - (void)handleCallReplaces:(MXEvent *)event
 {
-    
+    MXLogDebug(@"[MXCall] handleCallReplaces")
 }
 
 - (void)handleCallRejectReplacement:(MXEvent *)event
 {
-    
+    MXLogDebug(@"[MXCall] handleCallRejectReplacement")
 }
 
 #pragma mark - Private methods
@@ -1384,12 +1398,14 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
 
 - (BOOL)isMyEvent:(MXEvent *)event
 {
+    BOOL result = NO;
     if ([event.sender isEqualToString:_callSignalingRoom.mxSession.myUserId])
     {
         MXCallEventContent *content = [MXCallEventContent modelFromJSON:event.content];
-        return [content.partyId isEqualToString:_callSignalingRoom.mxSession.myDeviceId];
+        result = [content.partyId isEqualToString:_callSignalingRoom.mxSession.myDeviceId];
     }
-    return NO;
+    MXLogDebug(@"[MXCall] isMyEvent: %@", result ? @"YES" : @"NO")
+    return result;
 }
 
 - (NSString *)description
