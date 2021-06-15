@@ -24,7 +24,6 @@
  See below an example of these data:
     {
         "url": "mxc://…",
-        "mimetype": "video/mp4",
         "key": {
             "alg": "A256CTR",
             "ext": true,
@@ -52,11 +51,6 @@
  The URL to the encrypted file.
  */
 @property (nonatomic) NSString *url;
-
-/**
- The mimetype of the content.
- */
-@property (nonatomic) NSString *mimetype;
 
 /**
  The Key object.
