@@ -264,12 +264,14 @@ extern NSString *const kMXMediaManagerDefaultCacheFolder;
  Download encrypted data from the Matrix Content repository.
  
  @param encryptedContentFile the encrypted Matrix Content details.
+ @param mimeType the media mime type.
  @param folder the cache folder to use (may be nil). kMXMediaManagerDefaultCacheFolder is used by default.
  @param success a block called when the download succeeds. This block gets the path of the resulting file.
  @param failure a block called when the download fails
  @return a media loader in order to let the user cancel this action.
  */
 - (MXMediaLoader*)downloadEncryptedMediaFromMatrixContentFile:(MXEncryptedContentFile *)encryptedContentFile
+                                                     mimeType:(NSString *)mimeType
                                                      inFolder:(NSString *)folder
                                                       success:(void (^)(NSString *outputFilePath))success
                                                       failure:(void (^)(NSError *error))failure;
@@ -278,10 +280,12 @@ extern NSString *const kMXMediaManagerDefaultCacheFolder;
  Download encrypted data from the Matrix Content repository.
  
  @param encryptedContentFile the encrypted Matrix Content details.
+ @param mimeType the media mime type.
  @param folder the cache folder to use (may be nil). kMXMediaManagerDefaultCacheFolder is used by default.
  @return a media loader in order to let the user cancel this action.
  */
 - (MXMediaLoader*)downloadEncryptedMediaFromMatrixContentFile:(MXEncryptedContentFile *)encryptedContentFile
+                                                     mimeType:(NSString *)mimeType
                                                      inFolder:(NSString *)folder;
 
 /**

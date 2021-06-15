@@ -656,6 +656,7 @@ static MXLRUCache* imagesCacheLruCache = nil;
 }
 
 - (MXMediaLoader*)downloadEncryptedMediaFromMatrixContentFile:(MXEncryptedContentFile *)encryptedContentFile
+                                                     mimeType:(NSString *)mimeType
                                                      inFolder:(NSString *)folder
                                                       success:(void (^)(NSString *outputFilePath))success
                                                       failure:(void (^)(NSError *error))failure
@@ -687,7 +688,7 @@ static MXLRUCache* imagesCacheLruCache = nil;
     
     // Build the outpout file path from mxContentURI, and other inputs.
     NSString *filePath = [MXMediaManager cachePathForMatrixContentURI:mxContentURI
-                                                              andType:encryptedContentFile.mimetype
+                                                              andType:mimeType
                                                              inFolder:folder];
     
     // Build the download id from mxContentURI.
@@ -705,9 +706,14 @@ static MXLRUCache* imagesCacheLruCache = nil;
 }
 
 - (MXMediaLoader*)downloadEncryptedMediaFromMatrixContentFile:(MXEncryptedContentFile *)encryptedContentFile
+                                                     mimeType:(NSString *)mimeType
                                                      inFolder:(NSString *)folder
 {
-    return [self downloadEncryptedMediaFromMatrixContentFile:encryptedContentFile inFolder:folder success:nil failure:nil];
+    return [self downloadEncryptedMediaFromMatrixContentFile:encryptedContentFile
+                                                    mimeType:mimeType
+                                                    inFolder:folder
+                                                     success:nil
+                                                     failure:nil];
 }
 
 + (MXMediaLoader*)existingDownloaderWithIdentifier:(NSString *)downloadId
