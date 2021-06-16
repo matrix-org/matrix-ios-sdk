@@ -21,6 +21,18 @@
 #import "MXAnalyticsDelegate.h"
 #import "MXProfiler.h"
 
+/**
+ Call transfer types. `MXCallTransferTypeLocal` is created for future, not used right now.
+ */
+typedef NS_ENUM(NSUInteger, MXCallTransferType)
+{
+    //  Bridged call transfer type
+    MXCallTransferTypeBridged,
+
+    //  Local call transfer type
+    MXCallTransferTypeLocal
+};
+
 
 #pragma mark - Build time options
 
@@ -127,6 +139,13 @@ NS_ASSUME_NONNULL_BEGIN
  @remark Empty dictionary by default.
 */
 @property (nonatomic, nullable) NSDictionary<NSString *, NSString*> *HTTPAdditionalHeaders;
+
+/**
+ Call transfer type to be used when transferring calls.
+ 
+ @remark `MXCallTransferTypeBridged` by default.
+ */
+@property (nonatomic, assign) MXCallTransferType callTransferType;
 
 @end
 
