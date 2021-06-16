@@ -653,7 +653,7 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
                                     content:content.JSONDictionary
                                   localEcho:nil
                                     success:^(NSString *eventId) {
-        [self terminateWithReason:nil];
+        [self hangupWithReason:MXCallHangupReasonUserHangup signal:NO];
         if (success)
         {
             success(eventId);
