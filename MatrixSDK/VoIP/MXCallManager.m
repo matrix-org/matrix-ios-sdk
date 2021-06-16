@@ -833,18 +833,8 @@ NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
             
             MXStrongifyAndReturnIfNil(self);
             
-            [self callTransferRoomWithUsers:@[target.userId, transferee.userId] completion:^(MXRoom * _Nullable transferRoom, BOOL isNewRoom) {
-                
-                if (!transferRoom)
-                {
-                    //  A room cannot be found/created
-                    if (failure)
-                    {
-                        failure(nil);
-                    }
-                    return;
-                }
-                
+            if (MXSDKOptions.sharedInstance.callTransferType == MXCallTransferTypeBridged)
+            {
                 if (consultFirst)
                 {
                     //  consult with the target
@@ -867,11 +857,9 @@ NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
                     
                     if (callWithTarget)
                     {
-                        [callWithTarget hangup];
-                        
                         //  send replaces event to target
                         dispatch_group_enter(dispatchGroupReplaces);
-                        [callWithTarget transferToRoom:transferRoom.roomId
+                        [callWithTarget transferToRoom:nil
                                                   user:transferee
                                             createCall:nil
                                              awaitCall:newCallId
@@ -886,7 +874,7 @@ NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
                         [callWithTransferee hold:NO];
                     }
                     //  send replaces event to transferee
-                    [callWithTransferee transferToRoom:transferRoom.roomId
+                    [callWithTransferee transferToRoom:nil
                                                   user:target
                                             createCall:newCallId
                                              awaitCall:nil
@@ -895,21 +883,93 @@ NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
                     } failure:failure];
                     
                     dispatch_group_notify(dispatchGroupReplaces, dispatch_get_main_queue(), ^{
-                        if (isNewRoom)
-                        {
-                            //  if was a newly created room, send invites after replaces events
-                            [transferRoom inviteUser:target.userId success:nil failure:failure];
-                            [transferRoom inviteUser:transferee.userId success:nil failure:failure];
-                        }
-                        
                         if (success)
                         {
                             success(newCallId);
                         }
                     });
                 }
-                
-            }];
+            }
+            else if (MXSDKOptions.sharedInstance.callTransferType == MXCallTransferTypeLocal)
+            {
+                [self callTransferRoomWithUsers:@[target.userId, transferee.userId] completion:^(MXRoom * _Nullable transferRoom, BOOL isNewRoom) {
+                    
+                    if (!transferRoom)
+                    {
+                        //  A room cannot be found/created
+                        if (failure)
+                        {
+                            failure(nil);
+                        }
+                        return;
+                    }
+                    
+                    if (consultFirst)
+                    {
+                        //  consult with the target
+                        if (callWithTarget.isOnHold)
+                        {
+                            [callWithTarget hold:NO];
+                        }
+                        
+                        if (success)
+                        {
+                            success(nil);
+                        }
+                    }
+                    else
+                    {
+                        //  generate a new call id
+                        NSString *newCallId = [[NSUUID UUID] UUIDString];
+                        
+                        dispatch_group_t dispatchGroupReplaces = dispatch_group_create();
+                        
+                        if (callWithTarget)
+                        {
+                            [callWithTarget hangup];
+                            
+                            //  send replaces event to target
+                            dispatch_group_enter(dispatchGroupReplaces);
+                            [callWithTarget transferToRoom:transferRoom.roomId
+                                                      user:transferee
+                                                createCall:nil
+                                                 awaitCall:newCallId
+                                                   success:^(NSString * _Nonnull eventId) {
+                                dispatch_group_leave(dispatchGroupReplaces);
+                            } failure:failure];
+                        }
+                        
+                        dispatch_group_enter(dispatchGroupReplaces);
+                        if (callWithTransferee.isOnHold)
+                        {
+                            [callWithTransferee hold:NO];
+                        }
+                        //  send replaces event to transferee
+                        [callWithTransferee transferToRoom:transferRoom.roomId
+                                                      user:target
+                                                createCall:newCallId
+                                                 awaitCall:nil
+                                                   success:^(NSString * _Nonnull eventId) {
+                            dispatch_group_leave(dispatchGroupReplaces);
+                        } failure:failure];
+                        
+                        dispatch_group_notify(dispatchGroupReplaces, dispatch_get_main_queue(), ^{
+                            if (isNewRoom)
+                            {
+                                //  if was a newly created room, send invites after replaces events
+                                [transferRoom inviteUser:target.userId success:nil failure:failure];
+                                [transferRoom inviteUser:transferee.userId success:nil failure:failure];
+                            }
+                            
+                            if (success)
+                            {
+                                success(newCallId);
+                            }
+                        });
+                    }
+                    
+                }];
+            }
         };
         
         if (call)
