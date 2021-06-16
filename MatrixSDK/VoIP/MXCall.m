@@ -1378,8 +1378,10 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
 
 - (BOOL)canHandleNegotiationEvent:(MXEvent *)event
 {
+    BOOL result = NO;
     if (_isIncoming)
     {
+        MXLogDebug(@"[MXCall] canHandleNegotiationEvent: YES")
         return YES;
     }
     
@@ -1390,10 +1392,11 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
         MXCallNegotiateEventContent *content = [MXCallNegotiateEventContent modelFromJSON:event.content];
         
         //  return if user-id and party-id matches
-        return [selectedAnswerContent.partyId isEqualToString:content.partyId];
+        result = [selectedAnswerContent.partyId isEqualToString:content.partyId];
     }
     
-    return NO;
+    MXLogDebug(@"[MXCall] canHandleNegotiationEvent: %@", result ? @"YES" : @"NO")
+    return result;
 }
 
 - (BOOL)isMyEvent:(MXEvent *)event
