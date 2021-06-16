@@ -327,7 +327,7 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
 
 - (void)answer
 {
-    MXLogDebug(@"[MXCall] answer");
+    MXLogDebug(@"[MXCall] answer: state: %tu", self.state);
     
     MXWeakify(self);
     [callStackCallOperationQueue addOperationWithBlock:^{
