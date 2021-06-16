@@ -943,7 +943,7 @@ didRemoveIceCandidates:(NSArray<RTCIceCandidate *> *)candidates;
         
         [[AVAudioSession sharedInstance] overrideOutputAudioPort:AVAudioSessionPortOverrideSpeaker error:nil];
     }
-    else if (isExternalOutputDeviceConnected)
+    else
     {
         MXLogDebug(@"[MXJingleCallStackCall] configureAudioOutputPort: route output to default")
         
