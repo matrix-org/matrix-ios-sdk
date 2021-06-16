@@ -641,6 +641,10 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
                                   localEcho:nil
                                     success:^(NSString *eventId) {
         [self terminateWithReason:nil];
+        if (success)
+        {
+            success(eventId);
+        }
     }
                                     failure:^(NSError *error) {
         MXLogDebug(@"[MXCall] transferToRoom: ERROR: Cannot send m.call.replaces event.");
