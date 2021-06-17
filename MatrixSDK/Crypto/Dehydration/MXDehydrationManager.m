@@ -18,6 +18,7 @@
 #import <OLMKit/OLMKit.h>
 #import "MXCrypto.h"
 #import "MXCrypto_private.h"
+#import "MXCryptoTools.h"
 #import "MXKeyProvider.h"
 #import "MXCrossSigning_Private.h"
 #import "MXRawDataKey.h"
@@ -116,8 +117,7 @@ NSInteger const MXDehydrationManagerCryptoInitialisedError = -1;
 //        NSString *deviceSignature = [account signMessage:[NSJSONSerialization dataWithJSONObject:deviceKeys options:0 error:&error]];
 
 
-        NSError *error = nil;
-        NSString *signature = [account signMessage:[NSJSONSerialization dataWithJSONObject:deviceInfo.signalableJSONDictionary options:0 error:&error]];
+        NSString *signature = [account signMessage:[MXCryptoTools canonicalJSONDataForJSON:deviceInfo.signalableJSONDictionary]];
         deviceInfo.signatures = @{
                                 self->crypto.matrixRestClient.credentials.userId: @{
                                         [NSString stringWithFormat:@"ed25519:%@", deviceInfo.deviceId]: signature
@@ -155,10 +155,15 @@ NSInteger const MXDehydrationManagerCryptoInitialisedError = -1;
     for (NSString *keyId in oneTimeKeys[@"curve25519"])
     {
         // Sign each one-time key
-        NSError *error = nil;
         NSMutableDictionary *k = [NSMutableDictionary dictionary];
         k[@"key"] = oneTimeKeys[@"curve25519"][keyId];
-        k[@"signatures"] = [account signMessage:[NSJSONSerialization dataWithJSONObject:k options:0 error:&error]];
+        
+        NSString *signature = [account signMessage:[MXCryptoTools canonicalJSONDataForJSON:k]];
+        k[@"signatures"] = @{
+            self->crypto.matrixRestClient.credentials.userId: @{
+                    [NSString stringWithFormat:@"ed25519:%@", deviceInfo.deviceId]: signature
+            }
+        };
 
         oneTimeJson[[NSString stringWithFormat:@"signed_curve25519:%@", keyId]] = k;
     }
