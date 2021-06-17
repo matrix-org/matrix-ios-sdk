@@ -869,10 +869,6 @@ NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
                     }
                     
                     dispatch_group_enter(dispatchGroupReplaces);
-                    if (callWithTransferee.isOnHold)
-                    {
-                        [callWithTransferee hold:NO];
-                    }
                     //  send replaces event to transferee
                     [callWithTransferee transferToRoom:nil
                                                   user:target
