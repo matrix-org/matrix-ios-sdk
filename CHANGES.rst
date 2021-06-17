@@ -5,6 +5,7 @@ Changes to be released in next version
  * 
 
 🙌 Improvements
+ * MXRoom: Added support for posting `m.image`s with BlurHash (MSC 2448)
  * MXRoomLastMessage: Use MXKeyProvider methods to encrypt/decrypt last message dictionary.
  * VoIP: Change hold direction to send-only.
  * Encrypted Media: Remove redundant and undocumented mimetype fields from encrypted attachments (vector-im/element-ios/issues/4303).
