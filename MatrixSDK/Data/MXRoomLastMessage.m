@@ -160,7 +160,7 @@ NSString *const kCodingKeyOthers = @"others";
 {
     // It is up to the app to provide a key for additional encryption
     MXKeyData * keyData =  [[MXKeyProvider sharedInstance] keyDataForDataOfType:MXRoomLastMessageDataType
-                                                                    isMandatory:YES
+                                                                    isMandatory:NO
                                                                 expectedKeyType:kAes];
     if (keyData && [keyData isKindOfClass:[MXAesKeyData class]])
     {
@@ -172,29 +172,25 @@ NSString *const kCodingKeyOthers = @"others";
 
 - (NSData*)encrypt:(NSData*)data
 {
-    // Exceptions are not caught as the key is always needed if the KeyProviderDelegate
-    // is provided.
     MXAesKeyData *aesKey = self.encryptionKey;
     if (aesKey)
     {
         return [MXAes encrypt:data aesKey:aesKey.key iv:aesKey.iv error:nil];
     }
 
-    MXLogDebug(@"[MXRoomLastMessage] encryptData: no key method provided for encryption.");
+    MXLogWarning(@"[MXRoomLastMessage] encryptData: no key method provided for encryption.");
     return data;
 }
 
 - (NSData*)decrypt:(NSData*)data
 {
-    // Exceptions are not caught as the key is always needed if the KeyProviderDelegate
-    // is provided.
     MXAesKeyData *aesKey = self.encryptionKey;
     if (aesKey)
     {
         return [MXAes decrypt:data aesKey:aesKey.key iv:aesKey.iv error:nil];
     }
 
-    MXLogDebug(@"[MXRoomLastMessage] decryptData: no key method provided for decryption.");
+    MXLogWarning(@"[MXRoomLastMessage] decryptData: no key method provided for decryption.");
     return data;
 }
 
