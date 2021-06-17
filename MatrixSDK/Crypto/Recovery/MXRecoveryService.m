@@ -322,7 +322,6 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
         // Set this recovery as the default SSSS key id
         [self.secretStorage setAsDefaultKeyWithKeyId:keyCreationInfo.keyId success:^{
             
-            // ####
             [self updateRecoveryForSecrets:secrets withPrivateKey:keyCreationInfo.privateKey success:^{
                 success(keyCreationInfo);
             } failure:failure];
