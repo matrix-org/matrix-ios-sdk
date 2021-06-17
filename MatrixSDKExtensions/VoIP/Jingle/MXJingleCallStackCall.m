@@ -697,15 +697,8 @@ didRemoveIceCandidates:(NSArray<RTCIceCandidate *> *)candidates;
 - (void)setAudioToSpeaker:(BOOL)theAudioToSpeaker
 {
     audioToSpeaker = theAudioToSpeaker;
-
-    if (audioToSpeaker)
-    {
-        [[AVAudioSession sharedInstance] overrideOutputAudioPort:AVAudioSessionPortOverrideSpeaker error:nil];
-    }
-    else
-    {
-        [[AVAudioSession sharedInstance] overrideOutputAudioPort:AVAudioSessionPortOverrideNone error:nil];
-    }
+    
+    [self configureAudioOutputPort];
 }
 
 - (void)setCameraPosition:(AVCaptureDevicePosition)theCameraPosition
@@ -910,22 +903,70 @@ didRemoveIceCandidates:(NSArray<RTCIceCandidate *> *)candidates;
 - (void)handleRouteChangeNotification:(NSNotification *)notification
 {
     AVAudioSessionRouteChangeReason changeReason = [notification.userInfo[AVAudioSessionRouteChangeReasonKey] unsignedIntegerValue];
-    if (changeReason == AVAudioSessionRouteChangeReasonCategoryChange)
+    
+    MXLogDebug(@"[MXJingleCallStackCall] handleRouteChangeNotification: reason: %tu", changeReason)
+    
+    switch (changeReason)
     {
-        // WebRTC sets AVAudioSession's category right before call starts, this can lead to changing output route
-        // which user selected when the call was in connecting state.
-        // So we need to perform additional checks and override ouput port if needed
-        AVAudioSessionRouteDescription *currentRoute = [[AVAudioSession sharedInstance] currentRoute];
-        BOOL isOutputSpeaker = [currentRoute.outputs.firstObject.portType isEqualToString:AVAudioSessionPortBuiltInSpeaker];
-        if (audioToSpeaker && !isOutputSpeaker)
+        case AVAudioSessionRouteChangeReasonCategoryChange:
+        case AVAudioSessionRouteChangeReasonNewDeviceAvailable:
+        case AVAudioSessionRouteChangeReasonOldDeviceUnavailable:
+            // WebRTC sets AVAudioSession's category right before call starts, this can lead to changing output route
+            // which user selected when the call was in connecting state.
+            // So we need to perform additional checks and override ouput port if needed
+            [self configureAudioOutputPort];
+            break;
+        default:
+            break;
+    }
+}
+
+- (void)configureAudioOutputPort
+{
+    MXLogDebug(@"[MXJingleCallStackCall] configureAudioOutputPort")
+    
+    AVAudioSessionRouteDescription *currentRoute = [[AVAudioSession sharedInstance] currentRoute];
+    BOOL isExternalOutputDeviceConnected = NO;
+    for (AVAudioSessionPortDescription *output in currentRoute.outputs)
+    {
+        if ([self isExternalAudioDevice:output])
         {
-            [[AVAudioSession sharedInstance] overrideOutputAudioPort:AVAudioSessionPortOverrideSpeaker error:nil];
-        }
-        else if (!audioToSpeaker && isOutputSpeaker)
-        {
-            [[AVAudioSession sharedInstance] overrideOutputAudioPort:AVAudioSessionPortOverrideNone error:nil];
+            isExternalOutputDeviceConnected = YES;
+            break;
         }
     }
+    
+    //  set output device
+    if (audioToSpeaker && !isExternalOutputDeviceConnected)
+    {
+        MXLogDebug(@"[MXJingleCallStackCall] configureAudioOutputPort: route output to speaker")
+        
+        [[AVAudioSession sharedInstance] overrideOutputAudioPort:AVAudioSessionPortOverrideSpeaker error:nil];
+    }
+    else
+    {
+        MXLogDebug(@"[MXJingleCallStackCall] configureAudioOutputPort: route output to default")
+        
+        [[AVAudioSession sharedInstance] overrideOutputAudioPort:AVAudioSessionPortOverrideNone error:nil];
+    }
+}
+
+- (BOOL)isExternalAudioDevice:(AVAudioSessionPortDescription *)port
+{
+    BOOL result = NO;
+    if ([port.portType isEqualToString:AVAudioSessionPortHeadphones]
+        || [port.portType isEqualToString:AVAudioSessionPortHeadsetMic]
+        || [port.portType isEqualToString:AVAudioSessionPortBluetoothA2DP]
+        || [port.portType isEqualToString:AVAudioSessionPortBluetoothLE]
+        || [port.portType isEqualToString:AVAudioSessionPortBluetoothHFP]
+        || [port.portType isEqualToString:AVAudioSessionPortCarAudio])
+    {
+        result = YES;
+    }
+    
+    MXLogDebug(@"[MXJingleCallStackCall] isExternalAudioDevice: returning %@ for port type: %@", result ? @"YES" : @"NO", port.portType)
+    
+    return result;
 }
 
 @end

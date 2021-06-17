@@ -185,6 +185,18 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
     } failure:failure];
 }
 
+- (void)checkPrivateKey:(NSData*)privateKey complete:(void (^)(BOOL match))complete
+{
+    MXSecretStorageKeyContent *keyContent = [_secretStorage keyWithKeyId:self.recoveryId];
+    if (!keyContent)
+    {
+        complete(NO);
+        return;
+    }
+    
+    [_secretStorage checkPrivateKey:privateKey withKey:keyContent complete:complete];
+}
+
 
 #pragma mark - Secrets in the recovery
 

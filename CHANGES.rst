@@ -8,6 +8,8 @@ Changes to be released in next version
  * MXRoomLastMessage: Use MXKeyProvider methods to encrypt/decrypt last message dictionary.
  * VoIP: Change hold direction to send-only.
  * Encrypted Media: Remove redundant and undocumented mimetype fields from encrypted attachments (vector-im/element-ios/issues/4303).
+ * MXRecoveryService: Expose checkPrivateKey to validate a private key (vector-im/element-ios/issues/4430).
+ * VoIP: Use headphones and Bluetooth devices when available for calls.
  * VoIP: Implement bridged version for call transfers.
 
 🐛 Bugfix
