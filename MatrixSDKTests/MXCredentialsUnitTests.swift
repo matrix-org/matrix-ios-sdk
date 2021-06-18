@@ -14,4 +14,54 @@
 // limitations under the License.
 //
 
-import Foundation
+import XCTest
+
+import MatrixSDK
+
+class MXCredentialsUnitTests: XCTestCase {
+
+    func testEquality() throws {
+        let credentials1 = MXCredentials(homeServer: "https://localhost",
+                                         userId: "some_user_id",
+                                         accessToken: "some_access_token")
+        let credentials2 = MXCredentials(homeServer: "https://localhost",
+                                         userId: "some_user_id",
+                                         accessToken: "some_access_token")
+        
+        XCTAssertEqual(credentials1, credentials2)
+    }
+    
+    func testNotEquality() throws {
+        let credentials1 = MXCredentials(homeServer: "https://localhost",
+                                         userId: "some_user_id",
+                                         accessToken: "some_access_token")
+        let credentials2 = MXCredentials(homeServer: "https://localhost",
+                                         userId: "some_user_id",
+                                         accessToken: "some_access_token_2")
+        
+        XCTAssertNotEqual(credentials1, credentials2)
+    }
+    
+    func testEqualHashes() throws {
+        let credentials1 = MXCredentials(homeServer: "https://localhost",
+                                         userId: "some_user_id",
+                                         accessToken: "some_access_token")
+        let credentials2 = MXCredentials(homeServer: "https://localhost",
+                                         userId: "some_user_id",
+                                         accessToken: "some_access_token")
+        
+        XCTAssertEqual(credentials1.hash, credentials2.hash)
+    }
+    
+    func testNotEqualHashes() throws {
+        let credentials1 = MXCredentials(homeServer: "https://localhost",
+                                         userId: "some_user_id",
+                                         accessToken: "some_access_token")
+        let credentials2 = MXCredentials(homeServer: "https://localhost",
+                                         userId: "some_user_id",
+                                         accessToken: "some_access_token_2")
+        
+        XCTAssertNotEqual(credentials1.hash, credentials2.hash)
+    }
+    
+}
