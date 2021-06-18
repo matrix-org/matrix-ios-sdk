@@ -16,6 +16,8 @@ Changes to be released in next version
  * MXRealmCryptoStore: Run migration once before opening read-only Realms (vector-im/element-ios/issues/4418).
  * VoIP: Handle offers when peer connection is stable (vector-im/element-ios/issues/4421).
  * MXEventTimeline: Fix regression on clear cache where the last message of an encrypted room is not encrypted.
+ * MXBackgroundSyncService: Make credentials public (vector-im/element-ios/issues/3695).
+ * MXCredentials: Implement equatable & hashable methods (vector-im/element-ios/issues/3695).
 
 ⚠️ API Changes
  * MXRoomSummary: `lastMessageEvent` property removed for performance reasons (vector-im/element-ios/issues/4360).
