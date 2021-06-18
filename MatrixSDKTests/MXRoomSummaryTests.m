@@ -29,6 +29,8 @@
 #import "MXCrypto_Private.h"
 
 #import "MXTools.h"
+#import "MXKeyProvider.h"
+#import "MXAesKeyData.h"
 
 
 // Do not bother with retain cycles warnings in tests
@@ -36,7 +38,7 @@
 #pragma clang diagnostic ignored "-Warc-retain-cycles"
 
 
-@interface MXRoomSummaryTests : XCTestCase <MXRoomSummaryUpdating>
+@interface MXRoomSummaryTests : XCTestCase <MXRoomSummaryUpdating, MXKeyProviderDelegate>
 {
     MatrixSDKTestsData *matrixSDKTestsData;
     MatrixSDKTestsE2EData *matrixSDKTestsE2EData;
@@ -71,12 +73,17 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
         [[NSNotificationCenter defaultCenter] removeObserver:observer];
         observer = nil;
     }
-
+    
+    // Reset any key provider
+    [MXKeyProvider sharedInstance].delegate = nil;
+    
     matrixSDKTestsData = nil;
-
+    
     [super tearDown];
 }
 
+
+#pragma mark - MXRoomSummaryUpdating
 - (BOOL)session:(MXSession *)session updateRoomSummary:(MXRoomSummary *)summary withLastEvent:(MXEvent *)event eventState:(MXRoomState *)eventState roomState:(MXRoomState *)roomState
 {
     BOOL updated = NO;
@@ -176,6 +183,27 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
     return [updater session:session updateRoomSummary:summary withServerRoomSummary:serverRoomSummary roomState:roomState];
 }
 
+
+#pragma mark - MXKeyProviderDelegate
+- (BOOL)hasKeyForDataOfType:(nonnull NSString *)dataType
+{
+    return [dataType isEqualToString:MXRoomLastMessageDataType];
+}
+
+- (BOOL)isEncryptionAvailableForDataOfType:(nonnull NSString *)dataType
+{
+    return [dataType isEqualToString:MXRoomLastMessageDataType];
+}
+
+- (nullable MXKeyData *)keyDataForDataOfType:(nonnull NSString *)dataType
+{
+    NSData *iv = [@"baB6pgMP9erqSaKF" dataUsingEncoding:NSUTF8StringEncoding];
+    NSData *aesKey = [@"6fXK17pQFUrFqOnxt3wrqz8RHkQUT9vQ" dataUsingEncoding:NSUTF8StringEncoding];
+    return [MXAesKeyData dataWithIv:iv key:aesKey];
+}
+
+
+#pragma mark - Tests
 - (void)test
 {
     [matrixSDKTestsData doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
@@ -1033,6 +1061,9 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
 
 - (void)testDoNotStoreDecryptedData
 {
+    // We need a to provide a key to encrypt last message
+    [MXKeyProvider sharedInstance].delegate = self;
+    
     // Test it on a permanent store
     [matrixSDKTestsE2EData doE2ETestWithAliceInARoom:self
                                             andStore:[[MXFileStore alloc] init]

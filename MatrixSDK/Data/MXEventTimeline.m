@@ -466,11 +466,21 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         {
             timestamp = lastUserReadReceipt.ts;
             
-            MXEvent *lastEvent = roomSync.timeline.events.lastObject;
-            if (timestamp > lastEvent.originServerTs)
+            //  find the last encrypted event in the events
+            __block MXEvent *lastEncryptedEvent = nil;
+            [roomSync.timeline.events enumerateObjectsWithOptions:NSEnumerationReverse
+                                                       usingBlock:^(MXEvent * _Nonnull event, NSUInteger idx, BOOL * _Nonnull stop) {
+                if ([event.type isEqualToString:kMXEventTypeStringRoomEncrypted])
+                {
+                    *stop = YES;
+                    lastEncryptedEvent = event;
+                }
+            }];
+            
+            if (timestamp > lastEncryptedEvent.originServerTs)
             {
-                //  we should at least decrypt the last event for fully-read rooms
-                timestamp = lastEvent.originServerTs;
+                //  we should at least decrypt the last encrypted event for the rooms whose read markers passed the last encrypted event
+                timestamp = lastEncryptedEvent.originServerTs;
             }
         }
     }
