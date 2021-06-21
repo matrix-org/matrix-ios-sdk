@@ -4181,9 +4181,6 @@ MXAuthAction;
                                 success:(void (^)(NSString *deviceId))success
                                 failure:(void (^)(NSError *error))failure
 {
-    NSLog(@"[MXRestClient] PUT dehydrated_device with params %@", @{
-        @"initial_device_display_name": deviceDisplayName,
-        @"device_data": device.JSONDictionary});
     MXWeakify(self);
     return [httpClient requestWithMethod:@"PUT"
                                     path:[NSString stringWithFormat:@"%@/%@/org.matrix.msc2697.v2/dehydrated_device", credentials.homeServer, kMXAPIPrefixPathUnstable]
