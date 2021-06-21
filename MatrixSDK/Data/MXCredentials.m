@@ -107,6 +107,32 @@
     return [NSURL URLWithString:_homeServer].host;
 }
 
+- (BOOL)isEqual:(id)other
+{
+    if (other == self)
+        return YES;
+
+    if (![other isKindOfClass:MXCredentials.class])
+        return NO;
+
+    MXCredentials *otherCredentials = (MXCredentials *)other;
+
+    return [_homeServer isEqualToString:otherCredentials.homeServer]
+        && [_userId isEqualToString:otherCredentials.userId]
+        && [_accessToken isEqualToString:otherCredentials.accessToken];
+}
+
+- (NSUInteger)hash
+{
+    NSUInteger prime = 31;
+    NSUInteger result = 1;
+
+    result = prime * result + [_homeServer hash];
+    result = prime * result + [_userId hash];
+    result = prime * result + [_accessToken hash];
+
+    return result;
+}
 
 #pragma mark - NSCopying
 
