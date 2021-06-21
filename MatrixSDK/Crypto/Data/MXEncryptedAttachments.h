@@ -25,13 +25,11 @@ extern NSString *const MXEncryptedAttachmentsErrorDomain;
 @interface MXEncryptedAttachments : NSObject
 
 + (void)encryptAttachment:(MXMediaLoader *)uploader
-                 mimeType:(NSString *)mimeType
                  localUrl:(NSURL *)url
                   success:(void(^)(MXEncryptedContentFile *result))success
                   failure:(void(^)(NSError *error))failure;
 
 + (void)encryptAttachment:(MXMediaLoader *)uploader
-                 mimeType:(NSString *)mimeType
                      data:(NSData *)data
                   success:(void(^)(MXEncryptedContentFile *result))success
                   failure:(void(^)(NSError *error))failure;
@@ -43,7 +41,6 @@ extern NSString *const MXEncryptedAttachmentsErrorDomain;
  callback
 
  @param uploader A valid, ready to use media loader
- @param mimeType The mime type of the file
  @param dataCallback a block called when more data is required.
                      This will be called repeatedly until it returns nil.
                      It is more efficient if this block returns the same
@@ -52,7 +49,6 @@ extern NSString *const MXEncryptedAttachmentsErrorDomain;
  @param failure a block called when the operation fails.
  */
 + (void)encryptAttachment:(MXMediaLoader *)uploader
-                 mimeType:(NSString *)mimeType
              dataCallback:(NSData *(^)(void))dataCallback
                   success:(void(^)(MXEncryptedContentFile *result))success
                   failure:(void(^)(NSError *error))failure;

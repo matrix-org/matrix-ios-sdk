@@ -38,7 +38,7 @@ public enum MXBackgroundSyncServiceError: Error {
     }
     
     private let processingQueue: DispatchQueue
-    private let credentials: MXCredentials
+    public let credentials: MXCredentials
     private let syncResponseStoreManager: MXSyncResponseStoreManager
     private var store: MXStore
     private let cryptoStore: MXBackgroundCryptoStore
