@@ -798,7 +798,7 @@
         // Create a timeline from the last event
         // Internally, events of this timeline will be fetched on the homeserver
         // which is the use case of this test
-        NSString *lastEventId = roomFromBobPOV.summary.lastMessageEvent.eventId;
+        NSString *lastEventId = roomFromBobPOV.summary.lastMessage.eventId;
         MXEventTimeline *timeline = [roomFromBobPOV timelineOnEvent:lastEventId];
 
         [timeline resetPagination];
@@ -937,16 +937,22 @@
 
                 XCTAssert(roomFromAlicePOV2.summary.isEncrypted, @"The room must still appear as encrypted");
 
-                MXEvent *event = roomFromAlicePOV2.summary.lastMessageEvent;
+                [aliceSession2 eventWithEventId:roomFromAlicePOV2.summary.lastMessage.eventId
+                                         inRoom:roomFromAlicePOV2.roomId
+                                        success:^(MXEvent *event) {
+                    
+                    XCTAssert(event.isEncrypted);
 
-                XCTAssert(event.isEncrypted);
+                    XCTAssertNil(event.clearEvent);
+                    XCTAssert(event.decryptionError);
+                    XCTAssertEqual(event.decryptionError.code, MXDecryptingErrorUnknownInboundSessionIdCode);
 
-                XCTAssertNil(event.clearEvent);
-                XCTAssert(event.decryptionError);
-                XCTAssertEqual(event.decryptionError.code, MXDecryptingErrorUnknownInboundSessionIdCode);
-
-                [expectation fulfill];
-                
+                    [expectation fulfill];
+                    
+                } failure:^(NSError *error) {
+                    XCTFail(@"Cannot set up initial test conditions - error: %@", error);
+                    [expectation fulfill];
+                }];
             }];
             
         } failure:^(NSError *error) {
@@ -1076,29 +1082,36 @@
 
                 XCTAssert(roomFromBob2POV.summary.isEncrypted, @"The room must still appear as encrypted");
 
-                MXEvent *event = roomFromBob2POV.summary.lastMessageEvent;
+                [bobSession2 eventWithEventId:roomFromBob2POV.summary.lastMessage.eventId
+                                       inRoom:roomFromBob2POV.roomId
+                                      success:^(MXEvent *event) {
+                    
+                    XCTAssert(event.isEncrypted);
 
-                XCTAssert(event.isEncrypted);
-
-                XCTAssertNil(event.clearEvent);
-                XCTAssert(event.decryptionError);
-                XCTAssertEqual(event.decryptionError.code, MXDecryptingErrorUnknownInboundSessionIdCode);
+                    XCTAssertNil(event.clearEvent);
+                    XCTAssert(event.decryptionError);
+                    XCTAssertEqual(event.decryptionError.code, MXDecryptingErrorUnknownInboundSessionIdCode);
 
 
-                NSString *messageFromAlice = @"Hello I'm still Alice!";
+                    NSString *messageFromAlice = @"Hello I'm still Alice!";
 
-                [roomFromBob2POV liveTimeline:^(MXEventTimeline *liveTimeline) {
-                    [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage, kMXEventTypeStringRoomEncrypted] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+                    [roomFromBob2POV liveTimeline:^(MXEventTimeline *liveTimeline) {
+                        [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage, kMXEventTypeStringRoomEncrypted] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-                        XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messageFromAlice senderSession:aliceSession2]);
+                            XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messageFromAlice senderSession:aliceSession2]);
 
-                        [expectation fulfill];
+                            [expectation fulfill];
 
+                        }];
                     }];
-                }];
 
-                [roomFromAlice2POV sendTextMessage:messageFromAlice success:nil failure:^(NSError *error) {
-                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                    [roomFromAlice2POV sendTextMessage:messageFromAlice success:nil failure:^(NSError *error) {
+                        XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                        [expectation fulfill];
+                    }];
+                    
+                } failure:^(NSError *error) {
+                    XCTFail(@"Cannot set up initial test conditions - error: %@", error);
                     [expectation fulfill];
                 }];
                 

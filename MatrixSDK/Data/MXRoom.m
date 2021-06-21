@@ -995,7 +995,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
             }];
 
             NSURL *localURL = [NSURL URLWithString:cacheFilePath];
-            [MXEncryptedAttachments encryptAttachment:uploader mimeType:mimetype localUrl:localURL success:^(MXEncryptedContentFile *result) {
+            [MXEncryptedAttachments encryptAttachment:uploader localUrl:localURL success:^(MXEncryptedContentFile *result) {
 
                 [msgContent removeObjectForKey:@"url"];
                 msgContent[@"file"] = result.JSONDictionary;
@@ -1038,7 +1038,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                     NSData *pngImageData = [newRep representationUsingType:NSPNGFileType properties:@{}];
 #endif
 
-                    [MXEncryptedAttachments encryptAttachment:thumbUploader mimeType:@"image/png" data:pngImageData success:^(MXEncryptedContentFile *result) {
+                    [MXEncryptedAttachments encryptAttachment:thumbUploader data:pngImageData success:^(MXEncryptedContentFile *result) {
 
                         msgContent[@"info"][@"thumbnail_file"] = result.JSONDictionary;
 
@@ -1202,7 +1202,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
             if (self.mxSession.crypto && self.summary.isEncrypted)
             {
-                [MXEncryptedAttachments encryptAttachment:thumbUploader mimeType:@"image/jpeg" data:videoThumbnailData success:^(MXEncryptedContentFile *result) {
+                [MXEncryptedAttachments encryptAttachment:thumbUploader data:videoThumbnailData success:^(MXEncryptedContentFile *result) {
 
                     // Update thumbnail URL with the actual mxc: URL
                     msgContent[@"info"][@"thumbnail_file"] = result.JSONDictionary;
@@ -1248,7 +1248,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                         }
                     }];
 
-                    [MXEncryptedAttachments encryptAttachment:videoUploader mimeType:mimetype localUrl:convertedLocalURL success:^(MXEncryptedContentFile *result) {
+                    [MXEncryptedAttachments encryptAttachment:videoUploader localUrl:convertedLocalURL success:^(MXEncryptedContentFile *result) {
 
                         // Do not go further if the orignal request has been cancelled
                         if (roomOperation.isCancelled)
@@ -1372,13 +1372,30 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 }
 
 - (MXHTTPOperation*)sendAudioFile:(NSURL*)fileLocalURL
-                    mimeType:(NSString*)mimeType
-                   localEcho:(MXEvent**)localEcho
-                     success:(void (^)(NSString *eventId))success
-                     failure:(void (^)(NSError *error))failure
-          keepActualFilename:(BOOL)keepActualName
+                         mimeType:(NSString*)mimeType
+                        localEcho:(MXEvent**)localEcho
+                          success:(void (^)(NSString *eventId))success
+                          failure:(void (^)(NSError *error))failure
+               keepActualFilename:(BOOL)keepActualName
 {
     return [self sendFile:fileLocalURL msgType:kMXMessageTypeAudio mimeType:mimeType localEcho:localEcho success:success failure:failure keepActualFilename:keepActualName];
+}
+
+- (MXHTTPOperation*)sendVoiceMessage:(NSURL*)fileLocalURL
+                            mimeType:(NSString*)mimeType
+                           localEcho:(MXEvent**)localEcho
+                             success:(void (^)(NSString *eventId))success
+                             failure:(void (^)(NSError *error))failure
+                  keepActualFilename:(BOOL)keepActualName
+{
+    return [self _sendFile:fileLocalURL
+                   msgType:kMXMessageTypeAudio
+           additionalTypes:@{kMXMessageTypeVoiceMessage : @{}}
+                  mimeType:(mimeType ?: @"audio/ogg")
+                 localEcho:localEcho
+                   success:success
+                   failure:failure
+        keepActualFilename:keepActualName];
 }
 
 - (MXHTTPOperation*)sendFile:(NSURL*)fileLocalURL
@@ -1388,6 +1405,25 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                      success:(void (^)(NSString *eventId))success
                      failure:(void (^)(NSError *error))failure
           keepActualFilename:(BOOL)keepActualName
+{
+    return [self _sendFile:fileLocalURL
+                   msgType:msgType
+           additionalTypes:nil
+                  mimeType:mimeType
+                 localEcho:localEcho
+                   success:success
+                   failure:failure
+        keepActualFilename:keepActualName];
+}
+
+- (MXHTTPOperation*)_sendFile:(NSURL*)fileLocalURL
+                      msgType:(NSString*)msgType
+              additionalTypes:(NSDictionary *)additionalTypes
+                     mimeType:(NSString*)mimeType
+                    localEcho:(MXEvent**)localEcho
+                      success:(void (^)(NSString *eventId))success
+                      failure:(void (^)(NSError *error))failure
+           keepActualFilename:(BOOL)keepActualName
 {
     __block MXRoomOperation *roomOperation;
     
@@ -1432,6 +1468,11 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                                                  @"size": @(fileData.length)
                                                  }
                                          } mutableCopy];
+    
+    if(additionalTypes.count) 
+    {
+        [msgContent addEntriesFromDictionary:additionalTypes];
+    }
     
     __block MXEvent *event;
     __block id uploaderObserver;
@@ -1521,7 +1562,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
             }];
 
-            [MXEncryptedAttachments encryptAttachment:uploader mimeType:mimeType localUrl:fileLocalURL success:^(MXEncryptedContentFile *result) {
+            [MXEncryptedAttachments encryptAttachment:uploader localUrl:fileLocalURL success:^(MXEncryptedContentFile *result) {
 
                 // Do not go further if the orignal request has been cancelled
                 if (roomOperation.isCancelled)
@@ -2339,11 +2380,14 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     }
 
     // If required, update the last message
-    MXEvent *lastMessageEvent = self.summary.lastMessageEvent;
-    if (lastMessageEvent.sentState != MXEventSentStateSent)
-    {
-        [self.summary resetLastMessage:nil failure:nil commit:YES];
-    }
+    [mxSession eventWithEventId:self.summary.lastMessage.eventId
+                         inRoom:_roomId
+                        success:^(MXEvent *event) {
+        if (event.sentState != MXEventSentStateSent)
+        {
+            [self.summary resetLastMessage:nil failure:nil commit:YES];
+        }
+    } failure:nil];
 }
 
 - (void)removeOutgoingMessage:(NSString*)outgoingMessageEventId
@@ -2356,7 +2400,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     }
 
     // If required, update the last message
-    if ([self.summary.lastMessageEventId isEqualToString:outgoingMessageEventId])
+    if ([self.summary.lastMessage.eventId isEqualToString:outgoingMessageEventId])
     {
         [self.summary resetLastMessage:nil failure:nil commit:YES];
     }
@@ -3221,7 +3265,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
 - (NSComparisonResult)compareLastMessageEventOriginServerTs:(MXRoom *)otherRoom
 {
-    return [self.summary.lastMessageEvent compareOriginServerTs:otherRoom.summary.lastMessageEvent];
+    return [self.summary.lastMessage compareOriginServerTs:otherRoom.summary.lastMessage];
 }
 
 @end

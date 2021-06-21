@@ -175,6 +175,7 @@ FOUNDATION_EXPORT NSString *const kMXMessageTypeEmote;
 FOUNDATION_EXPORT NSString *const kMXMessageTypeNotice;
 FOUNDATION_EXPORT NSString *const kMXMessageTypeImage;
 FOUNDATION_EXPORT NSString *const kMXMessageTypeAudio;
+FOUNDATION_EXPORT NSString *const kMXMessageTypeVoiceMessage;
 FOUNDATION_EXPORT NSString *const kMXMessageTypeVideo;
 FOUNDATION_EXPORT NSString *const kMXMessageTypeLocation;
 FOUNDATION_EXPORT NSString *const kMXMessageTypeFile;

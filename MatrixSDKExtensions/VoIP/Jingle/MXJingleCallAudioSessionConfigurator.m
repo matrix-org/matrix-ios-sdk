@@ -33,8 +33,10 @@
 {
     AVAudioSession *audioSession = [AVAudioSession sharedInstance];
     
+    AVAudioSessionCategoryOptions desiredOptions = AVAudioSessionCategoryOptionAllowBluetooth | AVAudioSessionCategoryOptionAllowBluetoothA2DP;
+    
     [audioSession setCategory:AVAudioSessionCategoryPlayAndRecord
-                  withOptions:AVAudioSessionCategoryOptionAllowBluetooth
+                  withOptions:desiredOptions
                         error:nil];
     
     // AVAudioSessionModeVideoChat is optimized for video calls on modern devices. Instead of using the speaker from the bottom
@@ -44,10 +46,10 @@
     [audioSession setMode:mode error:nil];
     
     // Sometimes category options don't stick after setting mode.
-    if (audioSession.categoryOptions != AVAudioSessionCategoryOptionAllowBluetooth)
+    if (audioSession.categoryOptions != desiredOptions)
     {
         [audioSession setCategory:AVAudioSessionCategoryPlayAndRecord
-                      withOptions:AVAudioSessionCategoryOptionAllowBluetooth
+                      withOptions:desiredOptions
                             error:nil];
     }
     

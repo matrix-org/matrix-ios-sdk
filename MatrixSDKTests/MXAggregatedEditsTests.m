@@ -452,14 +452,24 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
 
         // -> The room summary must contain aggregated data
         MXRoomSummary *roomSummary = [mxSession roomSummaryWithRoomId:room.roomId];
-        MXEvent *lastEvent = roomSummary.lastMessageEvent;
+        
+        XCTAssertNotNil(roomSummary.lastMessage);
+        
+        [mxSession eventWithEventId:roomSummary.lastMessage.eventId
+                             inRoom:room.roomId
+                            success:^(MXEvent *lastEvent) {
+            
+            XCTAssertNotNil(lastEvent);
+            XCTAssertTrue(lastEvent.contentHasBeenEdited);
+            XCTAssertEqualObjects(lastEvent.unsignedData.relations.replace.eventId, editEventId);
+            XCTAssertEqualObjects(lastEvent.content[@"body"], kEditedMessageText);
 
-        XCTAssertNotNil(lastEvent);
-        XCTAssertTrue(lastEvent.contentHasBeenEdited);
-        XCTAssertEqualObjects(lastEvent.unsignedData.relations.replace.eventId, editEventId);
-        XCTAssertEqualObjects(lastEvent.content[@"body"], kEditedMessageText);
-
-        [expectation fulfill];
+            [expectation fulfill];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"Cannot set up initial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
     }];
 }
 

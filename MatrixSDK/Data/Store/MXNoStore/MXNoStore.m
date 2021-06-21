@@ -287,6 +287,24 @@
     }
 }
 
+#pragma mark - Outgoing events
+- (void)storeOutgoingMessageForRoom:(NSString*)roomId outgoingMessage:(MXEvent*)outgoingMessage
+{
+}
+
+- (void)removeAllOutgoingMessagesFromRoom:(NSString*)roomId
+{
+}
+
+- (void)removeOutgoingMessageFromRoom:(NSString*)roomId outgoingMessage:(NSString*)outgoingMessageEventId
+{
+}
+
+- (NSArray<MXEvent*>*)outgoingMessagesInRoom:(NSString*)roomId
+{
+    return @[];
+}
+
 #pragma mark - Matrix filters
 - (void)storeFilter:(nonnull MXFilterJSONModel*)filter withFilterId:(nonnull NSString*)filterId
 {
