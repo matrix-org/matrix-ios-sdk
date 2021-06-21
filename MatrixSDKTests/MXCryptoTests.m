@@ -798,7 +798,7 @@
         // Create a timeline from the last event
         // Internally, events of this timeline will be fetched on the homeserver
         // which is the use case of this test
-        NSString *lastEventId = roomFromBobPOV.summary.lastMessageEvent.eventId;
+        NSString *lastEventId = roomFromBobPOV.summary.lastMessage.eventId;
         MXEventTimeline *timeline = [roomFromBobPOV timelineOnEvent:lastEventId];
 
         [timeline resetPagination];
@@ -937,7 +937,7 @@
 
                 XCTAssert(roomFromAlicePOV2.summary.isEncrypted, @"The room must still appear as encrypted");
 
-                [aliceSession2 eventWithEventId:roomFromAlicePOV2.summary.lastMessageEvent.eventId
+                [aliceSession2 eventWithEventId:roomFromAlicePOV2.summary.lastMessage.eventId
                                          inRoom:roomFromAlicePOV2.roomId
                                         success:^(MXEvent *event) {
                     
@@ -1082,7 +1082,7 @@
 
                 XCTAssert(roomFromBob2POV.summary.isEncrypted, @"The room must still appear as encrypted");
 
-                [bobSession2 eventWithEventId:roomFromBob2POV.summary.lastMessageEvent.eventId
+                [bobSession2 eventWithEventId:roomFromBob2POV.summary.lastMessage.eventId
                                        inRoom:roomFromBob2POV.roomId
                                       success:^(MXEvent *event) {
                     
