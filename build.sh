@@ -20,7 +20,15 @@ then
 	if [ -f 'MatrixSDK.xcframework.zip' ]; then rm -rf MatrixSDK.xcframework.zip; fi
 
 	# build and zip the xcframework
-	xcodebuild -create-xcframework -framework MatrixSDK-iOS.xcarchive/Products/Library/Frameworks/MatrixSDK.framework -framework MatrixSDK-iOSSimulator.xcarchive/Products/Library/Frameworks/MatrixSDK.framework -framework MatrixSDK-macOS.xcarchive/Products/Library/Frameworks/MatrixSDK.framework -framework MatrixSDK-MacCatalyst.xcarchive/Products/Library/Frameworks/MatrixSDK.framework -output MatrixSDK.xcframework
+	xcodebuild -create-xcframework \
+		-framework MatrixSDK-iOS.xcarchive/Products/Library/Frameworks/MatrixSDK.framework \
+		-debug-symbols ${PWD}/MatrixSDK-iOS.xcarchive/dSYMs/MatrixSDK.framework.dSYM \
+		-debug-symbols ${PWD}/MatrixSDK-iOS.xcarchive/BCSymbolMaps/*.bcsymbolmap \
+		-framework MatrixSDK-iOSSimulator.xcarchive/Products/Library/Frameworks/MatrixSDK.framework \
+		-debug-symbols ${PWD}/MatrixSDK-iOSSimulator.xcarchive/dSYMs/MatrixSDK.framework.dSYM \
+		-framework MatrixSDK-macOS.xcarchive/Products/Library/Frameworks/MatrixSDK.framework \
+		-framework MatrixSDK-MacCatalyst.xcarchive/Products/Library/Frameworks/MatrixSDK.framework \
+		-output MatrixSDK.xcframework
 	zip -ry MatrixSDK.xcframework.zip MatrixSDK.xcframework
 else
 	xcodebuild -workspace MatrixSDK.xcworkspace/ -scheme MatrixSDK -sdk iphonesimulator  -destination 'name=iPhone 5s'
