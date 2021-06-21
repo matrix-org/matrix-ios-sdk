@@ -28,9 +28,6 @@ NSString *const MXDehydrationAlgorithm = @"org.matrix.msc2697.v1.olm.libolm_pick
 
 NSString *const MXDehydrationServiceKeyDataType = @"org.matrix.sdk.dehydration.service.key";
 
-NSString *const MXDehydrationManagerErrorDomain = @"org.matrix.MXDehydrationManager";
-NSInteger const MXDehydrationManagerCryptoInitialisedError = -1;
-
 @interface MXDehydrationService() {
     MXSession *session;
     BOOL inProgress;
