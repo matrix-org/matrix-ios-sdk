@@ -574,57 +574,6 @@ MXAuthAction;
                }];
 }
 
-- (MXHTTPOperation *)loginWithLoginType:(NSString *)loginType username:(NSString *)username password:(NSString *)password deviceId:(NSString*)deviceId
-                                   success:(void (^)(MXCredentials *))success
-                                   failure:(void (^)(NSError *))failure
-{
-    if (![loginType isEqualToString:kMXLoginFlowTypePassword])
-    {
-        [self dispatchFailure:nil inBlock:failure];
-        return nil;
-    }
-
-    NSDictionary *parameters = @{
-                                 @"type": loginType,
-                                 @"identifier": @{
-                                         @"type": kMXLoginIdentifierTypeUser,
-                                         @"user": username
-                                         },
-                                 @"device_id": deviceId,
-                                 @"password": password,
-
-                                 // Patch: add the old login api parameters to make dummy login
-                                 // still working
-                                 @"user": username
-                                 };
-
-    MXWeakify(self);
-    return [self login:parameters
-               success:^(NSDictionary *JSONResponse) {
-                   [self dispatchProcessing:nil andCompletion:^{
-                       MXStrongifyAndReturnIfNil(self);
-
-                       MXLoginResponse *loginResponse;
-                       MXJSONModelSetMXJSONModel(loginResponse, MXLoginResponse, JSONResponse);
-
-                       // Update our credentials
-                       self->credentials = [[MXCredentials alloc] initWithLoginResponse:loginResponse
-                                                                  andDefaultCredentials:self.credentials];
-
-                       // Report the certificate trusted by user (if any)
-                       self->credentials.allowedCertificate = self->httpClient.allowedCertificate;
-
-                       // sanity check
-                       if (success)
-                       {
-                           success(self->credentials);
-                       }
-                   }];
-               } failure:^(NSError *error) {
-                   [self dispatchFailure:error inBlock:failure];
-               }];
-}
-
 - (NSString*)loginFallback;
 {
     NSString *loginFallback;
@@ -3399,8 +3348,6 @@ MXAuthAction;
         initialSyncRequestTaskProfile = [profiler startMeasuringTaskWithName:kMXAnalyticsInitialSyncRequest
                                                                     category:kMXAnalyticsInitialSyncCategory];
     }
-    
-    NSLog(@"[MXRestCleint] sync request with params %@", parameters);
     
     MXWeakify(self);
     MXHTTPOperation *operation = [httpClient requestWithMethod:@"GET"

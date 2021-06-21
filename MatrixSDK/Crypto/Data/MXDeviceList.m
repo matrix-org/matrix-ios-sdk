@@ -188,7 +188,6 @@
             if (success)
             {
                 MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap = [self devicesForUsers:userIds];
-                MXLogDebug(@"[MXDeviceList] downloadKeys: usersDevicesInfoMap %@", usersDevicesInfoMap);
                 NSDictionary<NSString* , MXCrossSigningInfo*> *crossSigningKeysMap = [self crossSigningKeysForUsers:userIds];
                 success(usersDevicesInfoMap, crossSigningKeysMap);
             }

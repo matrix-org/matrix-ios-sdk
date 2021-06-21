@@ -82,14 +82,14 @@
             MXLogDebug(@"[MXOlmDevice] initWithStore: Create new OLMAccount");
 
             NSError *error = nil;
-            // Import the exported OLM device if existing
+            // Import the exported OLM device if it is passed
             if (exportedOlmDevice)
             {
                 olmAccount = [[OLMAccount alloc] initWithSerializedData:exportedOlmDevice.pickledAccount key:exportedOlmDevice.pickleKey error:&error];
                 
                 if (error)
                 {
-                    NSLog(@"[MXOlmDevice] initWithStore: Failed to import exported OLM device: %@", error);
+                    MXLogError(@"[MXOlmDevice] initWithStore: Failed to import exported OLM device: %@", error);
                 }
             }
             

@@ -36,7 +36,6 @@
 #import "MXKeyVerificationManager.h"
 #import "MXCrossSigning.h"
 #import "MXUsersTrustLevelSummary.h"
-#import "MXDehydrationManager.h"
 #import "MXExportedOlmDevice.h"
 
 @class MXSession;
@@ -121,11 +120,6 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
  The cross-signing manager.
  */
 @property (nonatomic, readonly) MXCrossSigning *crossSigning;
-
-/**
- Dehydration Manager
- */
-@property (nonatomic, readonly) MXDehydrationManager *dehydrationManager;
 
 /**
  Create a new crypto instance and data for the given user.

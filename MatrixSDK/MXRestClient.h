@@ -408,10 +408,6 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
                                success:(void (^)(MXCredentials *credentials))success
                                failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
-- (MXHTTPOperation*)loginWithLoginType:(NSString*)loginType username:(NSString*)username password:(NSString*)password deviceId:(NSString*)deviceId 
-                               success:(void (^)(MXCredentials *credentials))success
-                               failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
-
 /**
  Get the login fallback page to make login via a web browser or a web view.
 
@@ -2130,7 +2126,7 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
 
  @param deviceKeys the device keys to send.
  @param oneTimeKeys the one-time keys to send.
- @param deviceId ID of the device the keys belong to
+ @param deviceId ID of the device the keys belong to. Nil to upload keys to the device of the current session.
 
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
@@ -2216,7 +2212,7 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)dehydratedDeviceWithSuccess:(void (^)(MXDehydratedDevice *device))success
-                                        failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+                                        failure:(void (^)(NSError *error))failure;
 
 /**
  Set a given device as the dehydrated device of the current account.
@@ -2231,7 +2227,7 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
 - (MXHTTPOperation*)setDehydratedDevice:(MXDehydratedDevice *)device
                         withDisplayName:(NSString *)deviceDisplayName
                                 success:(void (^)(NSString *deviceId))success
-                                failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+                                failure:(void (^)(NSError *error))failure;
 
 /**
  Claim the dehydrated device of the current account.
@@ -2244,7 +2240,7 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
  */
 - (MXHTTPOperation*)claimDehydratedDeviceWithId:(NSString*)deviceId
                                         Success:(void (^)(BOOL success))success
-                                        failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+                                        failure:(void (^)(NSError *error))failure;
 
 #pragma mark - Crypto: e2e keys backup
 

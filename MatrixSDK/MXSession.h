@@ -39,6 +39,7 @@
 #import "MX3PidAddManager.h"
 #import "MXMembershipTransitionState.h"
 #import "MXRoomAccountDataUpdating.h"
+#import "MXDehydrationService.h"
 
 /**
  `MXSessionState` represents the states in the life cycle of a MXSession instance.
@@ -349,11 +350,6 @@ FOUNDATION_EXPORT NSString *const kMXSessionNotificationErrorKey;
  */
 FOUNDATION_EXPORT NSString *const kMXSessionNotificationUserIdsArrayKey;
 
-/**
- MXKeyProvider identifier for a 32 bytes long key to unpickle the account of dehydrated device.
- */
-FOUNDATION_EXPORT NSString *const MXSessionDehydrationKeyDataType;
-
 
 #pragma mark - Other constants
 /**
@@ -487,7 +483,10 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
  */
 @property (nonatomic, readonly) MXSpaceService *spaceService;
 
-@property (nonatomic, readonly) MXExportedOlmDevice *exportedOlmDeviceToImport;
+/**
+ Dehydration Service
+ */
+@property (nonatomic, readonly) MXDehydrationService *dehydrationService;
 
 #pragma mark - Class methods
 
@@ -1566,10 +1565,5 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  @return the virtual room identifier for the given native room. May be nil.
  */
 - (NSString *)virtualRoomOf:(NSString *)nativeRoomId;
-
-#pragma  mark - Dehydration
-
-- (void)rehydrateDeviceWithSuccess:(void (^)(void))success
-                           failure:(void (^)(NSError *error))failure;
 
 @end

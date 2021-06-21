@@ -47,9 +47,6 @@
 #import "MXAggregations_Private.h"
 #import "MatrixSDKSwiftHeader.h"
 
-#import <OLMKit/OLMKit.h>
-#import "MXExportedOlmDevice.h"
-
 #pragma mark - Constants definitions
 NSString *const kMXSessionStateDidChangeNotification = @"kMXSessionStateDidChangeNotification";
 NSString *const kMXSessionNewRoomNotification = @"kMXSessionNewRoomNotification";
@@ -82,8 +79,6 @@ NSString *const kMXSessionNotificationErrorKey = @"error";
 NSString *const kMXSessionNotificationUserIdsArrayKey = @"userIds";
 
 NSString *const kMXSessionNoRoomTag = @"m.recent";  // Use the same value as matrix-react-sdk
-
-NSString *const MXSessionDehydrationKeyDataType = @"org.matrix.sdk.session.dehydration.key";
 
 /**
  Default timeouts used by the events streams.
@@ -153,8 +148,6 @@ typedef void (^MXOnResumeDone)(void);
      For debug, indicate if the first sync after the MXSession startup is done.
      */
     BOOL firstSyncDone;
-    
-    BOOL isSincing;
 
     /**
      The tool to refresh the homeserver wellknown data.
@@ -188,8 +181,6 @@ typedef void (^MXOnResumeDone)(void);
      Async queue to run a single task at a time.
      */
     MXAsyncTaskQueue *asyncTaskQueue;
-    
-//    MXExportedOlmDevice *exportedOlmDeviceToImport;
 }
 
 /**
@@ -234,11 +225,11 @@ typedef void (^MXOnResumeDone)(void);
         nativeToVirtualRoomIds = [NSMutableDictionary dictionary];
         asyncTaskQueue = [[MXAsyncTaskQueue alloc] initWithDispatchQueue:dispatch_get_main_queue() label:@"MXAsyncTaskQueue-MXSession"];
         _spaceService = [[MXSpaceService alloc] initWithSession:self];
-
+        _dehydrationService = [[MXDehydrationService alloc] initWithSession:self];
+        
         [self setIdentityServer:mxRestClient.identityServer andAccessToken:mxRestClient.credentials.identityServerAccessToken];
         
         firstSyncDone = NO;
-        isSincing = NO;
 
         _acknowledgableEventTypes = @[kMXEventTypeStringRoomName,
                                       kMXEventTypeStringRoomTopic,
@@ -355,7 +346,7 @@ typedef void (^MXOnResumeDone)(void);
 
         // Check if the user has enabled crypto
         MXWeakify(self);
-        [MXCrypto checkCryptoWithMatrixSession:self exportedOlmSession:self.exportedOlmDeviceToImport complete:^(MXCrypto *crypto) {
+        [MXCrypto checkCryptoWithMatrixSession:self exportedOlmSession:self.dehydrationService.exportedOlmDeviceToImport complete:^(MXCrypto *crypto) {
             MXStrongifyAndReturnIfNil(self);
             
             self->_crypto = crypto;
@@ -470,7 +461,7 @@ typedef void (^MXOnResumeDone)(void);
                 completion:(void (^)(void))completion
            storeCompletion:(void (^)(void))storeCompletion
 {
-    MXLogDebug(@"[MXSession %@] handleSyncResponse: Received %tu joined rooms, %tu invited rooms, %tu left rooms, %tu toDevice events.", self.myUser, syncResponse.rooms.join.count, syncResponse.rooms.invite.count, syncResponse.rooms.leave.count, syncResponse.toDevice.events.count);
+    MXLogDebug(@"[MXSession] handleSyncResponse: Received %tu joined rooms, %tu invited rooms, %tu left rooms, %tu toDevice events.", syncResponse.rooms.join.count, syncResponse.rooms.invite.count, syncResponse.rooms.leave.count, syncResponse.toDevice.events.count);
     
     // Check whether this is the initial sync
     BOOL isInitialSync = !self.isEventStreamInitialised;
@@ -1276,8 +1267,6 @@ typedef void (^MXOnResumeDone)(void);
                       clientTimeout:(NSUInteger)clientTimeout
                         setPresence:(NSString*)setPresence
 {
-    isSincing = YES;
-
     dispatch_group_t initialSyncDispatchGroup = dispatch_group_create();
     
     __block MXTaskProfile *syncTaskProfile;
@@ -1378,7 +1367,6 @@ typedef void (^MXOnResumeDone)(void);
         
         [self handleSyncResponse:syncResponse completion:^{
             
-            isSincing = NO;
             if (wasfirstSync)
             {
                 [[MXSDKOptions sharedInstance].analyticsDelegate trackValue:@(self->rooms.count)
@@ -4396,96 +4384,6 @@ typedef void (^MXOnResumeDone)(void);
 - (NSString *)virtualRoomOf:(NSString *)nativeRoomId
 {
     return nativeToVirtualRoomIds[nativeRoomId];
-}
-
-#pragma  mark - Dehydration
-
-- (void)rehydrateDeviceWithSuccess:(void (^)(void))success
-                           failure:(void (^)(NSError *error))failure
-{
-    if (_crypto)
-    {
-        MXLogError(@"[MXSession] rehydrateDevice: Cannot rehydrate device after crypto is initialized.");
-        failure([NSError errorWithDomain:kMXNSErrorDomain code:0 userInfo:@{NSLocalizedDescriptionKey: @"Cannot rehydrate device after crypto is initialized"}]);
-        return;
-    }
-    
-    if (firstSyncDone || isSincing)
-    {
-        MXLogError(@"[MXSession] rehydrateDevice: Cannot rehydrate device after sync.");
-        failure([NSError errorWithDomain:kMXNSErrorDomain code:0 userInfo:@{NSLocalizedDescriptionKey: @"Cannot rehydrate device after sync."}]);
-        return;
-    }
-    
-    MXKeyData * keyData =  [[MXKeyProvider sharedInstance] keyDataForDataOfType:MXSessionDehydrationKeyDataType isMandatory:NO expectedKeyType:kRawData];
-    if (!keyData)
-    {
-        MXLogDebug(@"[MXSession] rehydrateDevice: No dehydrated key.");
-        success();
-        return;
-    }
-    NSData *key = ((MXRawDataKey*) keyData).key;
-    
-    MXLogDebug(@"[MXSession] rehydrateDevice: getting dehydrated device.");
-    [self.matrixRestClient dehydratedDeviceWithSuccess:^(MXDehydratedDevice *device) {
-        if (!device || !device.deviceId)
-        {
-            MXLogDebug(@"[MXSession] rehydrateDevice: No dehydrated device found.");
-            success();
-            return;
-        }
-        
-        if (![device.algorithm isEqual:MXDehydrationAlgorithm])
-        {
-            MXLogError(@"[MXSession] rehydrateDevice: Wrong algorithm for dehydrated device.");
-            failure([NSError errorWithDomain:kMXNSErrorDomain code:0 userInfo:@{NSLocalizedDescriptionKey: @"Wrong algorithm for dehydrated device"}]);
-            return;
-        }
-        
-        NSError *error = nil;
-        MXLogDebug(@"[MXSession] rehydrateDevice: unpickling dehydrated device.");
-        OLMAccount *account = [[OLMAccount alloc] initWithSerializedData:device.account key:key error:&error];
-        
-        MXLogDebug(@"[MXSession] rehydrateDevice: account deserialized %@", account.identityKeys);
-
-        if (error)
-        {
-            MXLogError(@"[MXSession] rehydrateDevice: Failed to unpickle device account with error: %@.", error);
-            failure([NSError errorWithDomain:kMXNSErrorDomain code:0 userInfo:@{NSLocalizedDescriptionKey: @"Failed to unpickle device account"}]);
-            return;
-        }
-        
-        MXLogDebug(@"[MXSession] rehydrateDevice: device unpickled %@", account);
-        
-        [self.matrixRestClient claimDehydratedDeviceWithId:device.deviceId Success:^(BOOL isClaimed) {
-            if (!isClaimed)
-            {
-                MXLogDebug(@"[MXSession] rehydrateDevice: device already claimed.");
-                success();
-                return;
-            }
-
-            MXLogDebug(@"[MXSession] rehydrateDevice: using dehydrated device");
-            self.matrixRestClient.credentials.deviceId = device.deviceId;
-            self->_exportedOlmDeviceToImport = [[MXExportedOlmDevice alloc] initWithAccount:device.account pickleKey:key forSessions:@[]];
-            success();
-        } failure:^(NSError *error) {
-            MXLogError(@"[MXSession] rehydrateDevice: claimDehydratedDeviceWithId failed with error: %@", error);
-            failure(error);
-        }];
-    } failure:^(NSError *error) {
-        MXError *mxError = [[MXError alloc] initWithNSError:error];
-        if (mxError && [mxError.errcode isEqualToString:kMXErrCodeStringNotFound])
-        {
-            MXLogDebug(@"[MXSession] rehydrateDevice: No dehydrated device found.");
-            success();
-        }
-        else
-        {
-            MXLogError(@"[MXSession] rehydrateDevice: dehydratedDeviceId failed with error: %@", error);
-            failure(error);
-        }
-    }];
 }
 
 @end

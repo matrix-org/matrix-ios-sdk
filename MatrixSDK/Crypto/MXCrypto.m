@@ -1912,8 +1912,6 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
         
         cryptoMigration = [[MXCryptoMigration alloc] initWithCrypto:self];
         
-        _dehydrationManager = [[MXDehydrationManager alloc] initWithCrypto:self];
-        
         lastNewSessionForcedDates = [MXUsersDevicesMap new];
         
         [self registerEventHandlers];
