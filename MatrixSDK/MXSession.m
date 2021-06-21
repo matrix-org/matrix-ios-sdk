@@ -534,6 +534,17 @@ typedef void (^MXOnResumeDone)(void);
                 [room liveTimeline:^(MXEventTimeline *liveTimeline) {
                     [room handleInvitedRoomSync:invitedRoomSync onComplete:^{
                         [room.summary handleInvitedRoomSync:invitedRoomSync];
+                        
+                        if (MXSDKOptions.sharedInstance.autoAcceptRoomInvites)
+                        {
+                            MXLogDebug(@"[MXSession] handleSyncResponse: Auto-accepting room invite for %@", room.roomId)
+                            [room join:^{
+                                MXLogDebug(@"[MXSession] handleSyncResponse: Joined room: %@", room.roomId)
+                            } failure:^(NSError *error) {
+                                MXLogDebug(@"[MXSession] handleSyncResponse: Failed to join room: %@, error: %@", room.roomId, error)
+                            }];
+                        }
+                        
                         dispatch_group_leave(dispatchGroup);
                     }];
                 }];
