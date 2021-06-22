@@ -2409,7 +2409,13 @@ typedef void (^MXOnResumeDone)(void);
     {
         room = [self roomWithAlias:roomIdOrAlias];
     }
-    return room && room.summary.membership == MXMembershipJoin;
+    
+    if (!room)
+    {
+        return NO;
+    }
+    return room.summary.membershipTransitionState == MXMembershipTransitionStateJoined
+        || room.summary.membershipTransitionState == MXMembershipTransitionStateJoining;
 }
 
 #pragma mark - The user's rooms
@@ -3761,7 +3767,8 @@ typedef void (^MXOnResumeDone)(void);
                 MXRoomState *roomPrevState = (MXRoomState *)customObject;
                 MXRoom *room = [self roomWithRoomId:event.roomId];
 
-                if (room.summary.membership == MXMembershipInvite)
+                if (room.summary.membershipTransitionState == MXMembershipTransitionStateInvited
+                    || room.summary.membershipTransitionState == MXMembershipTransitionStateFailedJoining)
                 {
                     // check if the room is not yet in the list
                     // must be done in forward and sync direction
