@@ -5,6 +5,30 @@ Changes to be released in next version
  * 
 
 🙌 Improvements
+ * 
+
+🐛 Bugfix
+ * 
+
+⚠️ API Changes
+ * 
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+Changes in 0.19.1 (2021-06-21)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
  * MXRoomLastMessage: Use MXKeyProvider methods to encrypt/decrypt last message dictionary.
  * VoIP: Change hold direction to send-only.
  * Encrypted Media: Remove redundant and undocumented mimetype fields from encrypted attachments (vector-im/element-ios/issues/4303).
@@ -37,6 +61,9 @@ Changes to be released in next version
 
 Others
  * 
+
+Improvements:
+
 
 Changes in 0.19.0 (2021-06-02)
 =================================================
