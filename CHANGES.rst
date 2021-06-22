@@ -5,7 +5,7 @@ Changes to be released in next version
  * 
 
 🙌 Improvements
- * 
+ * VoIP: Implement bridged version for call transfers.
 
 🐛 Bugfix
  * 
@@ -34,7 +34,6 @@ Changes in 0.19.1 (2021-06-21)
  * Encrypted Media: Remove redundant and undocumented mimetype fields from encrypted attachments (vector-im/element-ios/issues/4303).
  * MXRecoveryService: Expose checkPrivateKey to validate a private key (vector-im/element-ios/issues/4430).
  * VoIP: Use headphones and Bluetooth devices when available for calls.
- * VoIP: Implement bridged version for call transfers.
 
 🐛 Bugfix
  * MXSession: Fix app that can fail to resume (vector-im/element-ios/issues/4417).
