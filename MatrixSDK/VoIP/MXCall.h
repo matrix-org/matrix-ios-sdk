@@ -291,7 +291,7 @@ extern NSString *const kMXCallSupportsTransferringStatusDidChange;
 /**
  The display name of the caller. Nil for outgoing calls. Direct user's display name if the room is direct, otherwise display name of the room.
  */
-@property (readonly, nullable) NSString *callerName;
+@property (nonatomic, nullable) NSString *callerName;
 
 /**
  The party id for this call. Will be generated on first access.
