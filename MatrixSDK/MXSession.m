@@ -2228,6 +2228,21 @@ typedef void (^MXOnResumeDone)(void);
                      success:(void (^)(MXRoom *room))success
                      failure:(void (^)(NSError *error))failure {
     
+    if ([self isJoinedOnRoom:roomIdOrAlias])
+    {
+        if (failure)
+        {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                failure([NSError errorWithDomain:kMXNSErrorDomain
+                                            code:0
+                                        userInfo:@{
+                                            NSLocalizedDescriptionKey: @"Room already joined"
+                                        }]);
+            });
+        }
+        return [MXHTTPOperation new];
+    }
+    
     [self updateRoomSummaryWithRoomId:roomIdOrAlias withMembershipState:MXMembershipTransitionStateJoining];
     
     return [matrixRestClient joinRoom:roomIdOrAlias viaServers:viaServers withThirdPartySigned:nil success:^(NSString *theRoomId) {
@@ -2367,6 +2382,20 @@ typedef void (^MXOnResumeDone)(void);
         success(allUsersHaveDeviceKeys);
         
     } failure:failure];
+}
+
+- (BOOL)isJoinedOnRoom:(NSString *)roomIdOrAlias
+{
+    MXRoom *room = nil;
+    if ([MXTools isMatrixRoomIdentifier:roomIdOrAlias])
+    {
+        room = [self roomWithRoomId:roomIdOrAlias];
+    }
+    else if ([MXTools isMatrixRoomAlias:roomIdOrAlias])
+    {
+        room = [self roomWithAlias:roomIdOrAlias];
+    }
+    return room && room.summary.membership == MXMembershipJoin;
 }
 
 #pragma mark - The user's rooms
