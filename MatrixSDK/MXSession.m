@@ -535,16 +535,6 @@ typedef void (^MXOnResumeDone)(void);
                     [room handleInvitedRoomSync:invitedRoomSync onComplete:^{
                         [room.summary handleInvitedRoomSync:invitedRoomSync];
                         
-                        if (MXSDKOptions.sharedInstance.autoAcceptRoomInvites)
-                        {
-                            MXLogDebug(@"[MXSession] handleSyncResponse: Auto-accepting room invite for %@", room.roomId)
-                            [room join:^{
-                                MXLogDebug(@"[MXSession] handleSyncResponse: Joined room: %@", room.roomId)
-                            } failure:^(NSError *error) {
-                                MXLogDebug(@"[MXSession] handleSyncResponse: Failed to join room: %@, error: %@", room.roomId, error)
-                            }];
-                        }
-                        
                         dispatch_group_leave(dispatchGroup);
                     }];
                 }];
@@ -1449,6 +1439,12 @@ typedef void (^MXOnResumeDone)(void);
             // Pursue live events listening
             [self serverSyncWithServerTimeout:nextServerTimeout success:nil failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
             
+            //  attempt to join invited rooms if sync succeeds
+            if (MXSDKOptions.sharedInstance.autoAcceptRoomInvites)
+            {
+                [self joinPendingRoomInvites];
+            }
+            
             if (success)
             {
                 success();
@@ -2234,7 +2230,7 @@ typedef void (^MXOnResumeDone)(void);
         {
             dispatch_async(dispatch_get_main_queue(), ^{
                 failure([NSError errorWithDomain:kMXNSErrorDomain
-                                            code:0
+                                            code:kMXRoomAlreadyJoinedErrorCode
                                         userInfo:@{
                                             NSLocalizedDescriptionKey: @"Room already joined"
                                         }]);
@@ -2382,6 +2378,24 @@ typedef void (^MXOnResumeDone)(void);
         success(allUsersHaveDeviceKeys);
         
     } failure:failure];
+}
+
+- (void)joinPendingRoomInvites
+{
+    NSArray<NSString *> *roomIds = [[self.invitedRooms valueForKey:@"roomId"] copy];
+    [roomIds enumerateObjectsUsingBlock:^(NSString * _Nonnull roomId, NSUInteger idx, BOOL * _Nonnull stop) {
+        MXLogDebug(@"[MXSession] joinPendingRoomInvites: Auto-accepting room invite for %@", roomId)
+        [self joinRoom:roomId viaServers:nil success:^(MXRoom *room) {
+            MXLogDebug(@"[MXSession] joinPendingRoomInvites: Joined room: %@", roomId)
+        } failure:^(NSError *error) {
+            MXLogError(@"[MXSession] joinPendingRoomInvites: Failed to join room: %@, error: %@", roomId, error)
+            
+            if (error.code == kMXRoomAlreadyJoinedErrorCode)
+            {
+                [self removeInvitedRoomById:roomId];
+            }
+        }];
+    }];
 }
 
 - (BOOL)isJoinedOnRoom:(NSString *)roomIdOrAlias
@@ -3678,6 +3692,31 @@ typedef void (^MXOnResumeDone)(void);
     }
     
     return hasBeenFound;
+}
+
+- (BOOL)removeInvitedRoomById:(NSString*)roomId
+{
+    MXRoom *roomToRemove = nil;
+    
+    // sanity check
+    if (invitedRooms.count > 0)
+    {
+        for(MXRoom* room in invitedRooms)
+        {
+            if ([room.roomId isEqualToString:roomId])
+            {
+                roomToRemove = room;
+                break;
+            }
+        }
+        
+        if (roomToRemove)
+        {
+            [invitedRooms removeObject:roomToRemove];
+        }
+    }
+    
+    return roomToRemove != nil;
 }
 
 - (NSArray<MXRoom *> *)invitedRooms
