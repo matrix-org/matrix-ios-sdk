@@ -5,6 +5,7 @@ Changes to be released in next version
  * 
 
 🙌 Improvements
+ * MXSDKOptions: Introduce an option to auto-accept room invites.
  * VoIP: Implement bridged version for call transfers.
 
 🐛 Bugfix

@@ -141,6 +141,13 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, nullable) NSDictionary<NSString *, NSString*> *HTTPAdditionalHeaders;
 
 /**
+ Flag to automatically accept room invites.
+ 
+ @remark NO by default.
+ */
+@property (nonatomic, assign) BOOL autoAcceptRoomInvites;
+
+/**
  Call transfer type to be used when transferring calls.
  
  @remark `MXCallTransferTypeBridged` by default.
