@@ -5,7 +5,7 @@ Changes to be released in next version
  * 
 
 🙌 Improvements
- * 
+ * MXSDKOptions: Introduce an option to auto-accept room invites.
 
 🐛 Bugfix
  * 
