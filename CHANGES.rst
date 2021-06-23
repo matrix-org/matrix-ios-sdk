@@ -8,7 +8,7 @@ Changes to be released in next version
  * MXSDKOptions: Introduce an option to auto-accept room invites.
 
 🐛 Bugfix
- * 
+ * MXSession.homeserverWellknown was no more computed since 0.19.0.
 
 ⚠️ API Changes
  * 
