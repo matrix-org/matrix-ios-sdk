@@ -31,6 +31,7 @@ NSString *const MXDehydrationServiceKeyDataType = @"org.matrix.sdk.dehydration.s
 NSString *const MXDehydrationServiceErrorDomain = @"org.matrix.sdk.dehydration.service";
 
 @implementation MXDehydrationService
+@synthesize inProgress;
 
 - (void)dehydrateDeviceWithMatrixRestClient:(MXRestClient*)restClient
                                      crypto:(MXCrypto*)crypto
@@ -39,7 +40,7 @@ NSString *const MXDehydrationServiceErrorDomain = @"org.matrix.sdk.dehydration.s
                                     failure:(void (^)(NSError *error))failure;
 {
     @synchronized (self) {
-        if (_inProgress)
+        if (inProgress)
         {
             MXLogDebug(@"[MXDehydrationManager] dehydrateDevice: Dehydration already in progress -- not starting new dehydration");
             dispatch_async(dispatch_get_main_queue(), ^{
@@ -48,7 +49,7 @@ NSString *const MXDehydrationServiceErrorDomain = @"org.matrix.sdk.dehydration.s
             return;
         }
         
-        _inProgress = YES;
+        inProgress = YES;
     }
     
     OLMAccount *account = [[OLMAccount alloc] initNewAccount];
@@ -271,7 +272,7 @@ NSString *const MXDehydrationServiceErrorDomain = @"org.matrix.sdk.dehydration.s
 {
     @synchronized (self)
     {
-        _inProgress = NO;
+        inProgress = NO;
     }
 }
 
