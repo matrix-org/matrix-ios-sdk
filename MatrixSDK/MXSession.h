@@ -39,7 +39,6 @@
 #import "MX3PidAddManager.h"
 #import "MXMembershipTransitionState.h"
 #import "MXRoomAccountDataUpdating.h"
-#import "MXDehydrationService.h"
 
 /**
  `MXSessionState` represents the states in the life cycle of a MXSession instance.

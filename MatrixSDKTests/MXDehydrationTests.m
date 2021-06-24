@@ -29,6 +29,7 @@
 #import "MXRawDataKey.h"
 
 #import <OLMKit/OLMKit.h>
+#import "MXDehydrationService.h"
 
 // Do not bother with retain cycles warnings in tests
 #pragma clang diagnostic push
@@ -42,6 +43,7 @@
     MXSession *aliceSessionToClose;
     MXSession *bobSessionToClose;
     NSMutableArray <id> *retainedObjects;
+    MXDehydrationService *dehydrationService;
 }
 
 @property (nonatomic, strong, nullable) NSData *dehydrationKey;
@@ -59,6 +61,7 @@
     
     self.dehydrationKey = [@"6fXK17pQFUrFqOnxt3wrqz8RHkQUT9vQ" dataUsingEncoding:NSUTF8StringEncoding];
     retainedObjects = [NSMutableArray new];
+    dehydrationService = [MXDehydrationService new];
 }
 
 - (void)tearDown
@@ -71,6 +74,8 @@
 
     matrixSDKTestsData = nil;
     matrixSDKTestsE2EData = nil;
+    
+    dehydrationService = nil;
     
     [retainedObjects removeAllObjects];
 
@@ -88,7 +93,7 @@
     [matrixSDKTestsE2EData doE2ETestWithAliceInARoom:self readyToTest:^(MXSession *mxSession, NSString *roomId, XCTestExpectation *expectation) {
         
         // - Alice creates a dehydrated device
-        [[MXDehydrationService sharedInstance] dehydrateDeviceWithMatrixRestClient:mxSession.matrixRestClient crypto:mxSession.crypto dehydrationKey:self.dehydrationKey success:^(NSString * _Nullable dehydratedDeviceId) {
+        [dehydrationService dehydrateDeviceWithMatrixRestClient:mxSession.matrixRestClient crypto:mxSession.crypto dehydrationKey:self.dehydrationKey success:^(NSString * _Nullable dehydratedDeviceId) {
             // - Alice downloads their own devices keys
             [mxSession.crypto downloadKeys:@[mxSession.myUserId] forceDownload:YES success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
                 
@@ -125,7 +130,7 @@
         NSString *bobUserId = bobSession.myUserId;
         
         // - Bob creates a dehydrated device and logs out
-        [[MXDehydrationService sharedInstance] dehydrateDeviceWithMatrixRestClient:bobSession.matrixRestClient crypto:bobSession.crypto dehydrationKey:self.dehydrationKey success:^(NSString * _Nullable bobDehydratedDeviceId) {
+        [dehydrationService dehydrateDeviceWithMatrixRestClient:bobSession.matrixRestClient crypto:bobSession.crypto dehydrationKey:self.dehydrationKey success:^(NSString * _Nullable bobDehydratedDeviceId) {
             dispatch_async(dispatch_get_main_queue(), ^{
                 [bobSession logout:^{
                     
@@ -173,7 +178,7 @@
         [self retain:mxSession];
 
         // - Bob tries to rehydrate a device
-        [[MXDehydrationService sharedInstance] rehydrateDeviceWithMatrixRestClient:mxSession.matrixRestClient dehydrationKey:self.dehydrationKey success:^(NSString * _Nullable deviceId) {
+        [dehydrationService rehydrateDeviceWithMatrixRestClient:mxSession.matrixRestClient dehydrationKey:self.dehydrationKey success:^(NSString * _Nullable deviceId) {
             if (deviceId)
             {
                 XCTFail(@"No rehydrated device shold be found.");
@@ -209,14 +214,14 @@
     [matrixSDKTestsE2EData doE2ETestWithAliceInARoom:self readyToTest:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
         NSString *aliceSessionDevice = aliceSession.myDeviceId;
         // - Alice setup a dehydrated device
-        [[MXDehydrationService sharedInstance] dehydrateDeviceWithMatrixRestClient:aliceSession.matrixRestClient crypto:aliceSession.crypto dehydrationKey:self.dehydrationKey success:^(NSString * _Nullable dehydratedDeviceId) {
+        [dehydrationService dehydrateDeviceWithMatrixRestClient:aliceSession.matrixRestClient crypto:aliceSession.crypto dehydrationKey:self.dehydrationKey success:^(NSString * _Nullable dehydratedDeviceId) {
             dispatch_async(dispatch_get_main_queue(), ^{
                 // - Alice logs off and logs in back
                 [matrixSDKTestsData loginUserOnANewDevice:self credentials:nil withPassword:MXTESTS_ALICE_PWD sessionToLogout:aliceSession newSessionStore:nil startNewSession:NO e2e:YES onComplete:^(MXSession *aliceSession2) {
 
                     NSString *aliceSession2Device = aliceSession2.myDeviceId;
                     // - Alice rehydrate her device
-                    [[MXDehydrationService sharedInstance] rehydrateDeviceWithMatrixRestClient:aliceSession2.matrixRestClient dehydrationKey:self.dehydrationKey success:^(NSString * _Nullable deviceId) {
+                    [dehydrationService rehydrateDeviceWithMatrixRestClient:aliceSession2.matrixRestClient dehydrationKey:self.dehydrationKey success:^(NSString * _Nullable deviceId) {
                         // -> The rehydrated device must have the same properties
                         if (!deviceId)
                         {
@@ -272,7 +277,7 @@
         bobSessionToClose = bobSession;
 
         // - Alice creates a dehydrated device
-        [[MXDehydrationService sharedInstance] dehydrateDeviceWithMatrixRestClient:aliceSession.matrixRestClient crypto:aliceSession.crypto dehydrationKey:self.dehydrationKey success:^(NSString * _Nullable deviceId) {
+        [dehydrationService dehydrateDeviceWithMatrixRestClient:aliceSession.matrixRestClient crypto:aliceSession.crypto dehydrationKey:self.dehydrationKey success:^(NSString * _Nullable deviceId) {
             dispatch_async(dispatch_get_main_queue(), ^{
                 // - Alice logs out and logs on
                 [matrixSDKTestsData loginUserOnANewDevice:self credentials:nil withPassword:MXTESTS_ALICE_PWD sessionToLogout:aliceSession newSessionStore:nil startNewSession:NO e2e:YES onComplete:^(MXSession *aliceSession2) {
@@ -285,7 +290,7 @@
                     aliceSessionToClose = aliceSession3;
                     
                     // - Alice rehydrates the new session with the dehydrated device
-                    [[MXDehydrationService sharedInstance] rehydrateDeviceWithMatrixRestClient:aliceSession3.matrixRestClient dehydrationKey:self.dehydrationKey success:^(NSString * _Nullable rehydratedDeviceId) {
+                    [dehydrationService rehydrateDeviceWithMatrixRestClient:aliceSession3.matrixRestClient dehydrationKey:self.dehydrationKey success:^(NSString * _Nullable rehydratedDeviceId) {
                         if (!rehydratedDeviceId)
                         {
                             XCTFail(@"device rehydration shouldn't be canceled");
@@ -371,7 +376,7 @@
         MXCredentials *bobCredentials = bobSession.credentials;
         
         // - Bob creates a dehydrated device and logs out
-        [[MXDehydrationService sharedInstance] dehydrateDeviceWithMatrixRestClient:bobSession.matrixRestClient crypto:bobSession.crypto dehydrationKey:self.dehydrationKey success:^(NSString * _Nullable bobDehydratedDeviceId) {
+        [dehydrationService dehydrateDeviceWithMatrixRestClient:bobSession.matrixRestClient crypto:bobSession.crypto dehydrationKey:self.dehydrationKey success:^(NSString * _Nullable bobDehydratedDeviceId) {
             dispatch_async(dispatch_get_main_queue(), ^{
                 [bobSession logout:^{
                     [bobSession close];
@@ -385,7 +390,7 @@
                         [matrixSDKTestsData loginUserOnANewDevice:self credentials:bobCredentials withPassword:MXTESTS_BOB_PWD sessionToLogout:nil newSessionStore:nil startNewSession:NO e2e:YES onComplete:^(MXSession *bobSession2) {
                             
                             // - Bob rehydrates the new session with the dehydrated device
-                            [[MXDehydrationService sharedInstance] rehydrateDeviceWithMatrixRestClient:bobSession2.matrixRestClient dehydrationKey:self.dehydrationKey success:^(NSString * _Nullable deviceId) {
+                            [dehydrationService rehydrateDeviceWithMatrixRestClient:bobSession2.matrixRestClient dehydrationKey:self.dehydrationKey success:^(NSString * _Nullable deviceId) {
                                 if (!deviceId)
                                 {
                                     XCTFail(@"device rehydration shouldn't be canceled");

@@ -28,26 +28,9 @@ NSString *const MXDehydrationAlgorithm = @"org.matrix.msc2697.v1.olm.libolm_pick
 
 NSString *const MXDehydrationServiceKeyDataType = @"org.matrix.sdk.dehydration.service.key";
 
-@interface MXDehydrationService()
-{
-    BOOL inProgress;
-}
-
-@end
+NSString *const MXDehydrationServiceErrorDomain = @"org.matrix.sdk.dehydration.service";
 
 @implementation MXDehydrationService
-
-+ (instancetype)sharedInstance
-{
-    static MXDehydrationService *sharedInstance = nil;
-    static dispatch_once_t onceToken;
-
-    dispatch_once(&onceToken, ^{
-        sharedInstance = [MXDehydrationService new];
-    });
-
-    return sharedInstance;
-}
 
 - (void)dehydrateDeviceWithMatrixRestClient:(MXRestClient*)restClient
                                      crypto:(MXCrypto*)crypto
@@ -56,7 +39,7 @@ NSString *const MXDehydrationServiceKeyDataType = @"org.matrix.sdk.dehydration.s
                                     failure:(void (^)(NSError *error))failure;
 {
     @synchronized (self) {
-        if (inProgress)
+        if (_inProgress)
         {
             MXLogDebug(@"[MXDehydrationManager] dehydrateDevice: Dehydration already in progress -- not starting new dehydration");
             dispatch_async(dispatch_get_main_queue(), ^{
@@ -65,7 +48,7 @@ NSString *const MXDehydrationServiceKeyDataType = @"org.matrix.sdk.dehydration.s
             return;
         }
         
-        inProgress = YES;
+        _inProgress = YES;
     }
     
     OLMAccount *account = [[OLMAccount alloc] initNewAccount];
@@ -158,7 +141,7 @@ NSString *const MXDehydrationServiceKeyDataType = @"org.matrix.sdk.dehydration.s
         {
             MXLogError(@"[MXDehydrationManager] rehydrateDevice: Wrong algorithm for dehydrated device.");
             dispatch_async(dispatch_get_main_queue(), ^{
-                failure([NSError errorWithDomain:kMXNSErrorDomain code:0 userInfo:@{NSLocalizedDescriptionKey: @"Wrong algorithm for dehydrated device"}]);
+                failure([NSError errorWithDomain:MXDehydrationServiceErrorDomain code:0 userInfo:@{NSLocalizedDescriptionKey: @"Wrong algorithm for dehydrated device"}]);
             });
             return;
         }
@@ -173,7 +156,7 @@ NSString *const MXDehydrationServiceKeyDataType = @"org.matrix.sdk.dehydration.s
         {
             MXLogError(@"[MXDehydrationManager] rehydrateDevice: Failed to unpickle device account with error: %@.", error);
             dispatch_async(dispatch_get_main_queue(), ^{
-                failure([NSError errorWithDomain:kMXNSErrorDomain code:0 userInfo:@{NSLocalizedDescriptionKey: @"Failed to unpickle device account"}]);
+                failure([NSError errorWithDomain:MXDehydrationServiceErrorDomain code:0 userInfo:@{NSLocalizedDescriptionKey: @"Failed to unpickle device account"}]);
             });
             return;
         }
@@ -205,7 +188,7 @@ NSString *const MXDehydrationServiceKeyDataType = @"org.matrix.sdk.dehydration.s
                 {
                     MXLogError(@"[MXDehydrationManager] failed to sotre the exported Olm device");
                     dispatch_async(dispatch_get_main_queue(), ^{
-                        failure([NSError errorWithDomain:kMXNSErrorDomain code:0 userInfo:@{NSLocalizedDescriptionKey: @"Failed to sotre the exported Olm device"}]);
+                        failure([NSError errorWithDomain:MXDehydrationServiceErrorDomain code:0 userInfo:@{NSLocalizedDescriptionKey: @"Failed to sotre the exported Olm device"}]);
                     });
                 }
             }];
@@ -288,7 +271,7 @@ NSString *const MXDehydrationServiceKeyDataType = @"org.matrix.sdk.dehydration.s
 {
     @synchronized (self)
     {
-        inProgress = NO;
+        _inProgress = NO;
     }
 }
 

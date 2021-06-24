@@ -81,10 +81,8 @@
         {
             MXLogDebug(@"[MXOlmDevice] initWithStore: Create new OLMAccount");
 
-            NSError *error = nil;
-            
             // Else, create it
-            // create a OLM account if no exportedOlmDevice or creation failed
+            // create a OLM account
             olmAccount = [[OLMAccount alloc] initNewAccount];
 
             [store setAccount:olmAccount];

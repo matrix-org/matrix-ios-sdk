@@ -28,6 +28,9 @@ FOUNDATION_EXPORT NSString *const MXDehydrationAlgorithm;
 /// MXKeyProvider identifier for a 32 bytes long key used to pickle / unpickle the account of the dehydrated device.
 FOUNDATION_EXPORT NSString *const MXDehydrationServiceKeyDataType;
 
+/// Error domain for this class.
+FOUNDATION_EXPORT NSString *const MXDehydrationServiceErrorDomain;
+
 /**
  Service in charge of dehydrating and rehydrating a device.
  
@@ -35,10 +38,7 @@ FOUNDATION_EXPORT NSString *const MXDehydrationServiceKeyDataType;
  */
 @interface MXDehydrationService : NSObject
 
-/**
- Singleton method
- */
-+ (instancetype)sharedInstance;
+@property (nonatomic, readonly) BOOL inProgress;
 
 /**
  Dehydrate a new device for the current account

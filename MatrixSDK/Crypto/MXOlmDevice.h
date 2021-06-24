@@ -22,7 +22,6 @@
 
 #import "MXCryptoStore.h"
 #import "MXDecrypting.h"
-#import "MXExportedOlmDevice.h"
 
 /**
  An instance of MXOlmDevice manages the olm cryptography functions.

@@ -438,7 +438,7 @@ typedef void (^MXOnResumeDone)(void);
                 completion:(void (^)(void))completion
            storeCompletion:(void (^)(void))storeCompletion
 {
-    MXLogDebug(@"[TOTO] handleSyncResponse: Received %tu joined rooms, %tu invited rooms, %tu left rooms, %tu toDevice events.", syncResponse.rooms.join.count, syncResponse.rooms.invite.count, syncResponse.rooms.leave.count, syncResponse.toDevice.events.count);
+    MXLogDebug(@"[MXSession] handleSyncResponse: Received %tu joined rooms, %tu invited rooms, %tu left rooms, %tu toDevice events.", syncResponse.rooms.join.count, syncResponse.rooms.invite.count, syncResponse.rooms.leave.count, syncResponse.toDevice.events.count);
     
     // Check whether this is the initial sync
     BOOL isInitialSync = !self.isEventStreamInitialised;
