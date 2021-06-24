@@ -882,7 +882,7 @@ typedef void (^MXOnResumeDone)(void);
     // Get wellknown data only at the login time
     if (!self.homeserverWellknown)
     {
-//        [self refreshHomeserverWellknown:nil failure:nil];
+        [self refreshHomeserverWellknown:nil failure:nil];
     }
 }
 
