@@ -193,11 +193,22 @@ NSString *const MXDehydrationServiceKeyDataType = @"org.matrix.sdk.dehydration.s
             MXLogDebug(@"[MXDehydrationManager] rehydrateDevice: exporting dehydrated device with ID %@", device.deviceId);
             MXCredentials *tmpCredentials = [restClient.credentials copy];
             tmpCredentials.deviceId = device.deviceId;
-            [MXCrypto rehydrate:tmpCredentials withExportedOlmDevice:[[MXExportedOlmDevice alloc] initWithAccount:device.account pickleKey:dehydrationKey forSessions:@[]]];
-            NSLog(@"[TOTO] rehydrated device ID %@ with identity keys %@", device.deviceId, account.identityKeys);
-            dispatch_async(dispatch_get_main_queue(), ^{
-                success(device.deviceId);
-            });
+            [MXCrypto rehydrateExportedOlmDevice:[[MXExportedOlmDevice alloc] initWithAccount:device.account pickleKey:dehydrationKey forSessions:@[]] withCredentials:tmpCredentials complete:^(BOOL stored) {
+                if (stored)
+                {
+                    MXLogDebug(@"[MXDehydrationManager] rehydrated device ID %@ with identity keys %@", device.deviceId, account.identityKeys);
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        success(device.deviceId);
+                    });
+                }
+                else
+                {
+                    MXLogError(@"[MXDehydrationManager] failed to sotre the exported Olm device");
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        failure([NSError errorWithDomain:kMXNSErrorDomain code:0 userInfo:@{NSLocalizedDescriptionKey: @"Failed to sotre the exported Olm device"}]);
+                    });
+                }
+            }];
         } failure:^(NSError *error) {
             MXLogError(@"[MXDehydrationManager] rehydrateDevice: claimDehydratedDeviceWithId failed with error: %@", error);
             dispatch_async(dispatch_get_main_queue(), ^{

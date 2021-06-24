@@ -137,7 +137,16 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
  */
 + (void)checkCryptoWithMatrixSession:(MXSession*)mxSession complete:(void (^)(MXCrypto *crypto))complete;
 
-+ (void)rehydrate:(MXCredentials *)credentials withExportedOlmDevice:(MXExportedOlmDevice*)exportedOlmDevice;
+/**
+ Stores the exportedOlmDevice related to the credentials into the store.
+
+ @param exportedOlmDevice OlmDevice data to be stored
+ @param credentials credentials related to the exportedOlmDevice
+ @param complete a block called in any case when the operation completes.
+ */
++ (void)rehydrateExportedOlmDevice:(MXExportedOlmDevice*)exportedOlmDevice
+                   withCredentials:(MXCredentials *)credentials
+                          complete:(void (^)(BOOL success))complete;
 
 /**
  Start the crypto module.

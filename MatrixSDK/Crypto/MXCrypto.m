@@ -220,14 +220,34 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 #endif
 }
 
-+ (void)rehydrate:(MXCredentials *)credentials withExportedOlmDevice:(MXExportedOlmDevice*)exportedOlmDevice
++ (void)rehydrateExportedOlmDevice:(MXExportedOlmDevice*)exportedOlmDevice
+                   withCredentials:(MXCredentials *)credentials
+                          complete:(void (^)(BOOL success))complete;
 {
-    MXCryptoStoreClass *cryptoStore = [MXCryptoStoreClass createStoreWithCredentials:credentials];
-    cryptoStore.cryptoVersion = MXCryptoVersionLast;
-    
-    NSError *error = nil;
-    OLMAccount *olmAccount = [[OLMAccount alloc] initWithSerializedData:exportedOlmDevice.pickledAccount key:exportedOlmDevice.pickleKey error:&error];
-    [cryptoStore setAccount:olmAccount];
+#ifdef MX_CRYPTO
+    dispatch_queue_t cryptoQueue = [MXCrypto dispatchQueueForUser:credentials.userId];
+    dispatch_async(cryptoQueue, ^{
+        if ([MXCryptoStoreClass hasDataForCredentials:credentials])
+        {
+            MXLogError(@"the exported Olm device with ID %@ shouldn't exist locally", credentials.deviceId);
+            complete(false);
+            return;
+        }
+        
+        // Create a new store for the given credentials
+        MXCryptoStoreClass *cryptoStore = [MXCryptoStoreClass createStoreWithCredentials:credentials];
+        cryptoStore.cryptoVersion = MXCryptoVersionLast;
+        
+        // store the exported olm account
+        NSError *error = nil;
+        OLMAccount *olmAccount = [[OLMAccount alloc] initWithSerializedData:exportedOlmDevice.pickledAccount key:exportedOlmDevice.pickleKey error:&error];
+        [cryptoStore setAccount:olmAccount];
+        
+        complete(error == nil);
+    });
+#else
+    complete(false);
+#endif
 }
 
 - (void)deleteStore:(void (^)(void))onComplete;
