@@ -59,7 +59,7 @@
 @implementation MXOlmDevice
 @synthesize store;
 
-- (instancetype)initWithStore:(id<MXCryptoStore>)theStore exportedOlmDevice:(MXExportedOlmDevice*)exportedOlmDevice;
+- (instancetype)initWithStore:(id<MXCryptoStore>)theStore
 {
     self = [super init];
     if (self)
@@ -82,23 +82,10 @@
             MXLogDebug(@"[MXOlmDevice] initWithStore: Create new OLMAccount");
 
             NSError *error = nil;
-            // Import the exported OLM device if it is passed
-            if (exportedOlmDevice)
-            {
-                olmAccount = [[OLMAccount alloc] initWithSerializedData:exportedOlmDevice.pickledAccount key:exportedOlmDevice.pickleKey error:&error];
-                
-                if (error)
-                {
-                    MXLogError(@"[MXOlmDevice] initWithStore: Failed to import exported OLM device: %@", error);
-                }
-            }
             
             // Else, create it
-            if (!olmAccount)
-            {
-                // create a OLM account if no exportedOlmDevice or creation failed
-                olmAccount = [[OLMAccount alloc] initNewAccount];
-            }
+            // create a OLM account if no exportedOlmDevice or creation failed
+            olmAccount = [[OLMAccount alloc] initNewAccount];
 
             [store setAccount:olmAccount];
         }

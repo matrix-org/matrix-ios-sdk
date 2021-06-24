@@ -225,7 +225,6 @@ typedef void (^MXOnResumeDone)(void);
         nativeToVirtualRoomIds = [NSMutableDictionary dictionary];
         asyncTaskQueue = [[MXAsyncTaskQueue alloc] initWithDispatchQueue:dispatch_get_main_queue() label:@"MXAsyncTaskQueue-MXSession"];
         _spaceService = [[MXSpaceService alloc] initWithSession:self];
-        _dehydrationService = [[MXDehydrationService alloc] initWithSession:self];
         
         [self setIdentityServer:mxRestClient.identityServer andAccessToken:mxRestClient.credentials.identityServerAccessToken];
         
@@ -346,7 +345,7 @@ typedef void (^MXOnResumeDone)(void);
 
         // Check if the user has enabled crypto
         MXWeakify(self);
-        [MXCrypto checkCryptoWithMatrixSession:self exportedOlmSession:self.dehydrationService.exportedOlmDeviceToImport complete:^(MXCrypto *crypto) {
+        [MXCrypto checkCryptoWithMatrixSession:self complete:^(MXCrypto *crypto) {
             MXStrongifyAndReturnIfNil(self);
             
             self->_crypto = crypto;
@@ -439,7 +438,7 @@ typedef void (^MXOnResumeDone)(void);
                 completion:(void (^)(void))completion
            storeCompletion:(void (^)(void))storeCompletion
 {
-    MXLogDebug(@"[MXSession] handleSyncResponse: Received %tu joined rooms, %tu invited rooms, %tu left rooms, %tu toDevice events.", syncResponse.rooms.join.count, syncResponse.rooms.invite.count, syncResponse.rooms.leave.count, syncResponse.toDevice.events.count);
+    MXLogDebug(@"[TOTO] handleSyncResponse: Received %tu joined rooms, %tu invited rooms, %tu left rooms, %tu toDevice events.", syncResponse.rooms.join.count, syncResponse.rooms.invite.count, syncResponse.rooms.leave.count, syncResponse.toDevice.events.count);
     
     // Check whether this is the initial sync
     BOOL isInitialSync = !self.isEventStreamInitialised;

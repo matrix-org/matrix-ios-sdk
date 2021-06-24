@@ -135,7 +135,9 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
 
  @param complete a block called in any case when the operation completes.
  */
-+ (void)checkCryptoWithMatrixSession:(MXSession*)mxSession exportedOlmSession:(MXExportedOlmDevice*)exportedOlmSession complete:(void (^)(MXCrypto *crypto))complete;
++ (void)checkCryptoWithMatrixSession:(MXSession*)mxSession complete:(void (^)(MXCrypto *crypto))complete;
+
++ (void)rehydrate:(MXCredentials *)credentials withExportedOlmDevice:(MXExportedOlmDevice*)exportedOlmDevice;
 
 /**
  Start the crypto module.

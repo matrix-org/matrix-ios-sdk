@@ -34,9 +34,7 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Warc-retain-cycles"
 
-const NSString *sectionFormat = @"\n\n\n\n\n\n\n\n========================================================================\n%@\n========================================================================\n\n\n\n\n\n\n\n";
-
-@interface MXDehydrationTests : XCTestCase <MXKeyProviderDelegate>
+@interface MXDehydrationTests : XCTestCase
 {
     MatrixSDKTestsData *matrixSDKTestsData;
     MatrixSDKTestsE2EData *matrixSDKTestsE2EData;
@@ -46,7 +44,7 @@ const NSString *sectionFormat = @"\n\n\n\n\n\n\n\n==============================
     NSMutableArray <id> *retainedObjects;
 }
 
-@property (nonatomic, strong, nullable) MXKeyData *dehydrationKey;
+@property (nonatomic, strong, nullable) NSData *dehydrationKey;
 
 @end
 
@@ -59,9 +57,7 @@ const NSString *sectionFormat = @"\n\n\n\n\n\n\n\n==============================
     matrixSDKTestsData = [[MatrixSDKTestsData alloc] init];
     matrixSDKTestsE2EData = [[MatrixSDKTestsE2EData alloc] initWithMatrixSDKTestsData:matrixSDKTestsData];
     
-    NSData *key = [@"6fXK17pQFUrFqOnxt3wrqz8RHkQUT9vQ" dataUsingEncoding:NSUTF8StringEncoding];
-    self.dehydrationKey = [MXRawDataKey dataWithKey:key];
-    [MXKeyProvider sharedInstance].delegate = self;
+    self.dehydrationKey = [@"6fXK17pQFUrFqOnxt3wrqz8RHkQUT9vQ" dataUsingEncoding:NSUTF8StringEncoding];
     retainedObjects = [NSMutableArray new];
 }
 
@@ -92,8 +88,7 @@ const NSString *sectionFormat = @"\n\n\n\n\n\n\n\n==============================
     [matrixSDKTestsE2EData doE2ETestWithAliceInARoom:self readyToTest:^(MXSession *mxSession, NSString *roomId, XCTestExpectation *expectation) {
         
         // - Alice creates a dehydrated device
-        [mxSession.dehydrationService dehydrateDeviceWithSuccess:^(NSString * _Nullable dehydratedDeviceId) {
-            
+        [[MXDehydrationService sharedInstance] dehydrateDeviceWithMatrixRestClient:mxSession.matrixRestClient crypto:mxSession.crypto dehydrationKey:self.dehydrationKey success:^(NSString * _Nullable dehydratedDeviceId) {
             // - Alice downloads their own devices keys
             [mxSession.crypto downloadKeys:@[mxSession.myUserId] forceDownload:YES success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
                 
@@ -130,7 +125,7 @@ const NSString *sectionFormat = @"\n\n\n\n\n\n\n\n==============================
         NSString *bobUserId = bobSession.myUserId;
         
         // - Bob creates a dehydrated device and logs out
-        [bobSession.dehydrationService dehydrateDeviceWithSuccess:^(NSString * _Nullable bobDehydratedDeviceId) {
+        [[MXDehydrationService sharedInstance] dehydrateDeviceWithMatrixRestClient:bobSession.matrixRestClient crypto:bobSession.crypto dehydrationKey:self.dehydrationKey success:^(NSString * _Nullable bobDehydratedDeviceId) {
             dispatch_async(dispatch_get_main_queue(), ^{
                 [bobSession logout:^{
                     
@@ -178,7 +173,14 @@ const NSString *sectionFormat = @"\n\n\n\n\n\n\n\n==============================
         [self retain:mxSession];
 
         // - Bob tries to rehydrate a device
-        [mxSession.dehydrationService rehydrateDeviceWithSuccess:^{
+        [[MXDehydrationService sharedInstance] rehydrateDeviceWithMatrixRestClient:mxSession.matrixRestClient dehydrationKey:self.dehydrationKey success:^(NSString * _Nullable deviceId) {
+            if (deviceId)
+            {
+                XCTFail(@"No rehydrated device shold be found.");
+                [expectation fulfill];
+                return;
+            }
+            
             [mxSession start:^{
                 // -> Bob should start his session normally
                 [expectation fulfill];
@@ -187,7 +189,7 @@ const NSString *sectionFormat = @"\n\n\n\n\n\n\n\n==============================
                 XCTFail(@"The request should not fail - NSError: %@", error);
                 [expectation fulfill];
             }];
-        } failure:^(NSError *error) {
+        } failure:^(NSError * _Nonnull error) {
             XCTFail(@"The request should not fail - NSError: %@", error);
             [expectation fulfill];
         }];
@@ -207,15 +209,22 @@ const NSString *sectionFormat = @"\n\n\n\n\n\n\n\n==============================
     [matrixSDKTestsE2EData doE2ETestWithAliceInARoom:self readyToTest:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
         NSString *aliceSessionDevice = aliceSession.myDeviceId;
         // - Alice setup a dehydrated device
-        [aliceSession.dehydrationService dehydrateDeviceWithSuccess:^(NSString * _Nullable dehydratedDeviceId) {
+        [[MXDehydrationService sharedInstance] dehydrateDeviceWithMatrixRestClient:aliceSession.matrixRestClient crypto:aliceSession.crypto dehydrationKey:self.dehydrationKey success:^(NSString * _Nullable dehydratedDeviceId) {
             dispatch_async(dispatch_get_main_queue(), ^{
                 // - Alice logs off and logs in back
                 [matrixSDKTestsData loginUserOnANewDevice:self credentials:nil withPassword:MXTESTS_ALICE_PWD sessionToLogout:aliceSession newSessionStore:nil startNewSession:NO e2e:YES onComplete:^(MXSession *aliceSession2) {
 
                     NSString *aliceSession2Device = aliceSession2.myDeviceId;
                     // - Alice rehydrate her device
-                    [aliceSession2.dehydrationService rehydrateDeviceWithSuccess:^{
+                    [[MXDehydrationService sharedInstance] rehydrateDeviceWithMatrixRestClient:aliceSession2.matrixRestClient dehydrationKey:self.dehydrationKey success:^(NSString * _Nullable deviceId) {
                         // -> The rehydrated device must have the same properties
+                        if (!deviceId)
+                        {
+                            XCTFail(@"device rehydration shouldn't be canceled");
+                            [expectation fulfill];
+                            return;
+                        }
+                        aliceSession2.credentials.deviceId = deviceId;
                         
                         XCTAssertNotEqualObjects(aliceSessionDevice, aliceSession2Device);
                         XCTAssertNotEqualObjects(aliceSession2Device, dehydratedDeviceId);
@@ -233,7 +242,7 @@ const NSString *sectionFormat = @"\n\n\n\n\n\n\n\n==============================
                         }];
 
                         [expectation fulfill];
-                    } failure:^(NSError *error) {
+                    } failure:^(NSError * _Nonnull error) {
                         XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                         [expectation fulfill];
                     }];
@@ -263,7 +272,7 @@ const NSString *sectionFormat = @"\n\n\n\n\n\n\n\n==============================
         bobSessionToClose = bobSession;
 
         // - Alice creates a dehydrated device
-        [aliceSession.dehydrationService dehydrateDeviceWithSuccess:^(NSString * _Nullable deviceId) {
+        [[MXDehydrationService sharedInstance] dehydrateDeviceWithMatrixRestClient:aliceSession.matrixRestClient crypto:aliceSession.crypto dehydrationKey:self.dehydrationKey success:^(NSString * _Nullable deviceId) {
             dispatch_async(dispatch_get_main_queue(), ^{
                 // - Alice logs out and logs on
                 [matrixSDKTestsData loginUserOnANewDevice:self credentials:nil withPassword:MXTESTS_ALICE_PWD sessionToLogout:aliceSession newSessionStore:nil startNewSession:NO e2e:YES onComplete:^(MXSession *aliceSession2) {
@@ -276,7 +285,14 @@ const NSString *sectionFormat = @"\n\n\n\n\n\n\n\n==============================
                     aliceSessionToClose = aliceSession3;
                     
                     // - Alice rehydrates the new session with the dehydrated device
-                    [aliceSession3.dehydrationService rehydrateDeviceWithSuccess:^{
+                    [[MXDehydrationService sharedInstance] rehydrateDeviceWithMatrixRestClient:aliceSession3.matrixRestClient dehydrationKey:self.dehydrationKey success:^(NSString * _Nullable rehydratedDeviceId) {
+                        if (!rehydratedDeviceId)
+                        {
+                            XCTFail(@"device rehydration shouldn't be canceled");
+                            [expectation fulfill];
+                            return;
+                        }
+                        aliceSession3.credentials.deviceId = rehydratedDeviceId;
                         
                         [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
 
@@ -325,7 +341,7 @@ const NSString *sectionFormat = @"\n\n\n\n\n\n\n\n==============================
                             XCTFail(@"The request should not fail - NSError: %@", error);
                             [expectation fulfill];
                         }];
-                    } failure:^(NSError *error) {
+                    } failure:^(NSError * _Nonnull error) {
                         XCTFail(@"The request should not fail - NSError: %@", error);
                         [expectation fulfill];
                     }];
@@ -355,7 +371,7 @@ const NSString *sectionFormat = @"\n\n\n\n\n\n\n\n==============================
         MXCredentials *bobCredentials = bobSession.credentials;
         
         // - Bob creates a dehydrated device and logs out
-        [bobSession.dehydrationService dehydrateDeviceWithSuccess:^(NSString * _Nullable bobDehydratedDeviceId) {
+        [[MXDehydrationService sharedInstance] dehydrateDeviceWithMatrixRestClient:bobSession.matrixRestClient crypto:bobSession.crypto dehydrationKey:self.dehydrationKey success:^(NSString * _Nullable bobDehydratedDeviceId) {
             dispatch_async(dispatch_get_main_queue(), ^{
                 [bobSession logout:^{
                     [bobSession close];
@@ -369,8 +385,15 @@ const NSString *sectionFormat = @"\n\n\n\n\n\n\n\n==============================
                         [matrixSDKTestsData loginUserOnANewDevice:self credentials:bobCredentials withPassword:MXTESTS_BOB_PWD sessionToLogout:nil newSessionStore:nil startNewSession:NO e2e:YES onComplete:^(MXSession *bobSession2) {
                             
                             // - Bob rehydrates the new session with the dehydrated device
-                            [bobSession2.dehydrationService rehydrateDeviceWithSuccess:^{
-                                
+                            [[MXDehydrationService sharedInstance] rehydrateDeviceWithMatrixRestClient:bobSession2.matrixRestClient dehydrationKey:self.dehydrationKey success:^(NSString * _Nullable deviceId) {
+                                if (!deviceId)
+                                {
+                                    XCTFail(@"device rehydration shouldn't be canceled");
+                                    [expectation fulfill];
+                                    return;
+                                }
+                                bobSession2.credentials.deviceId = deviceId;
+
                                 // - And starts their new session with e2e enabled
                                 [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
                                 [bobSession2 start:^{
@@ -396,7 +419,7 @@ const NSString *sectionFormat = @"\n\n\n\n\n\n\n\n==============================
                                     [expectation fulfill];
                                 }];
                                 
-                            } failure:^(NSError *error) {
+                            } failure:^(NSError * _Nonnull error) {
                                 XCTFail(@"The request should not fail - NSError: %@", error);
                                 [expectation fulfill];
                             }];
@@ -444,20 +467,6 @@ const NSString *sectionFormat = @"\n\n\n\n\n\n\n\n==============================
     XCTAssertNil(error, "initWithSerializedData failed due to error %@", error);
     XCTAssert([e2eKeys[@"ed25519"] isEqual:deserializedE2eKeys[@"ed25519"]], @"wrong deserialized ed25519 key %@ != %@", e2eKeys[@"ed25519"], deserializedE2eKeys[@"ed25519"]);
     XCTAssert([e2eKeys[@"curve25519"] isEqual:deserializedE2eKeys[@"curve25519"]], @"wrong deserialized curve25519 key %@ != %@", e2eKeys[@"curve25519"], deserializedE2eKeys[@"curve25519"]);
-}
-
-#pragma mark - MXKeyProviderDelegate
-
-- (BOOL)isEncryptionAvailableForDataOfType:(nonnull NSString *)dataType {
-    return [dataType isEqual:MXDehydrationServiceKeyDataType];
-}
-
-- (BOOL)hasKeyForDataOfType:(nonnull NSString *)dataType {
-    return [dataType isEqual:MXDehydrationServiceKeyDataType];
-}
-
-- (nullable MXKeyData *)keyDataForDataOfType:(nonnull NSString *)dataType {
-    return self.dehydrationKey;
 }
 
 #pragma mark - Private methods

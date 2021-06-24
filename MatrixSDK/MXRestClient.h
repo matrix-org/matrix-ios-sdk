@@ -2219,7 +2219,7 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
 
  @param device data of the dehydrated device
  @param deviceDisplayName display name of the dehydrated device
- @param success A block object called when the operation succeeds. It provides a `MXDehydratedDevice` instance of the current account.
+ @param success A block object called when the operation succeeds. It provides the ID of the newly dehydrated device.
  @param failure A block object called when the operation fails.
 
  @return a MXHTTPOperation instance.

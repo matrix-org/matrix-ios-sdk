@@ -144,7 +144,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 
         MXCryptoStoreClass *cryptoStore = [MXCryptoStoreClass createStoreWithCredentials:mxSession.matrixRestClient.credentials];
         cryptoStore.cryptoVersion = MXCryptoVersionLast;
-        crypto = [[MXCrypto alloc] initWithMatrixSession:mxSession cryptoQueue:cryptoQueue andStore:cryptoStore exportedOlmDevice:nil];
+        crypto = [[MXCrypto alloc] initWithMatrixSession:mxSession cryptoQueue:cryptoQueue andStore:cryptoStore];
 
     });
 #endif
@@ -152,7 +152,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
     return crypto;
 }
 
-+ (void)checkCryptoWithMatrixSession:(MXSession*)mxSession exportedOlmSession:(MXExportedOlmDevice*)exportedOlmSession complete:(void (^)(MXCrypto *crypto))complete
++ (void)checkCryptoWithMatrixSession:(MXSession*)mxSession complete:(void (^)(MXCrypto *crypto))complete
 {
 #ifdef MX_CRYPTO
 
@@ -175,7 +175,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 
                 MXLogDebug(@"[MXCrypto] checkCryptoWithMatrixSession: Crypto store opened");
 
-                MXCrypto *crypto = [[MXCrypto alloc] initWithMatrixSession:mxSession cryptoQueue:cryptoQueue andStore:cryptoStore exportedOlmDevice:exportedOlmSession];
+                MXCrypto *crypto = [[MXCrypto alloc] initWithMatrixSession:mxSession cryptoQueue:cryptoQueue andStore:cryptoStore];
 
                 dispatch_async(dispatch_get_main_queue(), ^{
                     complete(crypto);
@@ -199,7 +199,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
             // Create it
             MXCryptoStoreClass *cryptoStore = [MXCryptoStoreClass createStoreWithCredentials:mxSession.matrixRestClient.credentials];
             cryptoStore.cryptoVersion = MXCryptoVersionLast;
-            MXCrypto *crypto = [[MXCrypto alloc] initWithMatrixSession:mxSession cryptoQueue:cryptoQueue andStore:cryptoStore exportedOlmDevice:exportedOlmSession];
+            MXCrypto *crypto = [[MXCrypto alloc] initWithMatrixSession:mxSession cryptoQueue:cryptoQueue andStore:cryptoStore];
 
             dispatch_async(dispatch_get_main_queue(), ^{
                 complete(crypto);
@@ -218,6 +218,16 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 #else
     complete(nil);
 #endif
+}
+
++ (void)rehydrate:(MXCredentials *)credentials withExportedOlmDevice:(MXExportedOlmDevice*)exportedOlmDevice
+{
+    MXCryptoStoreClass *cryptoStore = [MXCryptoStoreClass createStoreWithCredentials:credentials];
+    cryptoStore.cryptoVersion = MXCryptoVersionLast;
+    
+    NSError *error = nil;
+    OLMAccount *olmAccount = [[OLMAccount alloc] initWithSerializedData:exportedOlmDevice.pickledAccount key:exportedOlmDevice.pickleKey error:&error];
+    [cryptoStore setAccount:olmAccount];
 }
 
 - (void)deleteStore:(void (^)(void))onComplete;
@@ -1824,7 +1834,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 
 #ifdef MX_CRYPTO
 
-- (instancetype)initWithMatrixSession:(MXSession*)matrixSession cryptoQueue:(dispatch_queue_t)theCryptoQueue andStore:(id<MXCryptoStore>)store exportedOlmDevice:(MXExportedOlmDevice*)exportedOlmDevice
+- (instancetype)initWithMatrixSession:(MXSession*)matrixSession cryptoQueue:(dispatch_queue_t)theCryptoQueue andStore:(id<MXCryptoStore>)store
 {
     // This method must be called on the crypto thread
     self = [super init];
@@ -1844,7 +1854,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
         
         ensureOlmSessionsInProgress = [NSMutableArray array];
 
-        _olmDevice = [[MXOlmDevice alloc] initWithStore:_store exportedOlmDevice:exportedOlmDevice];
+        _olmDevice = [[MXOlmDevice alloc] initWithStore:_store];
 
         _deviceList = [[MXDeviceList alloc] initWithCrypto:self];
 

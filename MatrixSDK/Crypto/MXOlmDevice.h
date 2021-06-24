@@ -38,7 +38,7 @@
  @param store the crypto data storage.
  @return the newly created MXOlmDevice instance.
  */
-- (instancetype)initWithStore:(id<MXCryptoStore>)store exportedOlmDevice:(MXExportedOlmDevice*)exportedOlmDevice;
+- (instancetype)initWithStore:(id<MXCryptoStore>)store;
 
 /**
  Curve25519 key for the account.

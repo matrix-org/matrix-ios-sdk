@@ -83,7 +83,7 @@ public enum MXBackgroundSyncServiceError: Error {
         let resetBackgroundCryptoStore = syncResponseStoreManager.syncToken() == nil
         cryptoStore = MXBackgroundCryptoStore(credentials: credentials, resetBackgroundCryptoStore: resetBackgroundCryptoStore)
         
-        olmDevice = MXOlmDevice(store: cryptoStore, exportedOlmDevice: nil)
+        olmDevice = MXOlmDevice(store: cryptoStore)
         pushRulesManager = MXBackgroundPushRulesManager(withCredentials: credentials)
         if let accountData = syncResponseStoreManager.syncResponseStore.accountData {
             pushRulesManager.handleAccountData(accountData)

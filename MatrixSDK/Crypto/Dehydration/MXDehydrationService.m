@@ -28,55 +28,45 @@ NSString *const MXDehydrationAlgorithm = @"org.matrix.msc2697.v1.olm.libolm_pick
 
 NSString *const MXDehydrationServiceKeyDataType = @"org.matrix.sdk.dehydration.service.key";
 
-@interface MXDehydrationService() {
-    MXSession *session;
+@interface MXDehydrationService()
+{
     BOOL inProgress;
-    
 }
 
 @end
 
 @implementation MXDehydrationService
 
-- (instancetype)initWithSession:(MXSession*)session;
++ (instancetype)sharedInstance
 {
-    self = [super init];
-    
-    if (self)
-    {
-        self->session = session;
-    }
-    
-    return self;
+    static MXDehydrationService *sharedInstance = nil;
+    static dispatch_once_t onceToken;
+
+    dispatch_once(&onceToken, ^{
+        sharedInstance = [MXDehydrationService new];
+    });
+
+    return sharedInstance;
 }
 
-- (void)dehydrateDeviceWithSuccess:(void (^)(NSString *deviceId))success
-                          failure:(void (^)(NSError *error))failure
+- (void)dehydrateDeviceWithMatrixRestClient:(MXRestClient*)restClient
+                                     crypto:(MXCrypto*)crypto
+                             dehydrationKey:(NSData*)dehydrationKey
+                                    success:(void (^)( NSString * _Nullable deviceId))success
+                                    failure:(void (^)(NSError *error))failure;
 {
-    if (inProgress)
-    {
-        MXLogDebug(@"[MXDehydrationManager] dehydrateDevice: Dehydration already in progress -- not starting new dehydration");
-        success(nil);
-        return;
+    @synchronized (self) {
+        if (inProgress)
+        {
+            MXLogDebug(@"[MXDehydrationManager] dehydrateDevice: Dehydration already in progress -- not starting new dehydration");
+            dispatch_async(dispatch_get_main_queue(), ^{
+                success(nil);
+            });
+            return;
+        }
+        
+        inProgress = YES;
     }
-    
-    if (!session.crypto)
-    {
-        MXLogError(@"[MXSession] rehydrateDevice: Cannot dehydrate device without crypto has been initialized.");
-        failure([NSError errorWithDomain:kMXNSErrorDomain code:0 userInfo:@{NSLocalizedDescriptionKey: @"Cannot dehydrate device without crypto has been initialized."}]);
-        return;
-    }
-    
-    MXKeyData * keyData = [[MXKeyProvider sharedInstance] requestKeyForDataOfType:MXDehydrationServiceKeyDataType isMandatory:NO expectedKeyType:kRawData];
-    if (!keyData)
-    {
-        MXLogDebug(@"[MXDehydrationManager] dehydrateDevice: No dehydrated key.");
-        success(nil);
-        return;
-    }
-    NSData *key = ((MXRawDataKey*) keyData).key;
-
-    inProgress = YES;
     
     OLMAccount *account = [[OLMAccount alloc] initNewAccount];
     NSDictionary *e2eKeys = [account identityKeys];
@@ -91,21 +81,27 @@ NSString *const MXDehydrationServiceKeyDataType = @"org.matrix.sdk.dehydration.s
     // dehydrate the account and store it into the server
     NSError *error = nil;
     MXDehydratedDevice *dehydratedDevice = [MXDehydratedDevice new];
-    dehydratedDevice.account = [account serializeDataWithKey:key error:&error];
+    dehydratedDevice.account = [account serializeDataWithKey:dehydrationKey error:&error];
     dehydratedDevice.algorithm = MXDehydrationAlgorithm;
     
     if (error)
     {
-        inProgress = NO;
+        dispatch_async(dispatch_get_main_queue(), ^{
+            failure(error);
+        });
         MXLogError(@"[MXDehydrationManager] dehydrateDevice: account serialization failed: %@", error);
-        failure(error);
+        [self stopProgress];
         return;
     }
     
-    [session.crypto.matrixRestClient setDehydratedDevice:dehydratedDevice withDisplayName:@"Backup device" success:^(NSString *deviceId) {
-        MXLogDebug(@"[MXDehydrationManager] dehydrateDevice: preparing device keys for device %@ (current device ID %@)", deviceId, self->session.crypto.myDevice.deviceId);
+    MXWeakify(restClient);
+    MXWeakify(self);
+    [restClient setDehydratedDevice:dehydratedDevice withDisplayName:@"Backup device" success:^(NSString *deviceId) {
+        MXStrongifyAndReturnIfNil(self);
+        MXStrongifyAndReturnIfNil(restClient);
+        MXLogDebug(@"[MXDehydrationManager] dehydrateDevice: preparing device keys for device %@ (current device ID %@)", deviceId, restClient.credentials.deviceId);
         MXDeviceInfo *deviceInfo = [[MXDeviceInfo alloc] initWithDeviceId:deviceId];
-        deviceInfo.userId = self->session.crypto.matrixRestClient.credentials.userId;
+        deviceInfo.userId = restClient.credentials.userId;
         deviceInfo.keys = @{
             [NSString stringWithFormat:@"ed25519:%@", deviceId]: e2eKeys[@"ed25519"],
             [NSString stringWithFormat:@"curve25519:%@", deviceId]: e2eKeys[@"curve25519"]
@@ -114,113 +110,124 @@ NSString *const MXDehydrationServiceKeyDataType = @"org.matrix.sdk.dehydration.s
         
         NSString *signature = [account signMessage:[MXCryptoTools canonicalJSONDataForJSON:deviceInfo.signalableJSONDictionary]];
         deviceInfo.signatures = @{
-                                self->session.crypto.matrixRestClient.credentials.userId: @{
+                                restClient.credentials.userId: @{
                                         [NSString stringWithFormat:@"ed25519:%@", deviceInfo.deviceId]: signature
                                     }
                                 };
 
-        if ([self->session.crypto.crossSigning secretIdFromKeyType:MXCrossSigningKeyType.selfSigning])
+        if ([crypto.crossSigning secretIdFromKeyType:MXCrossSigningKeyType.selfSigning])
         {
-            [self->session.crypto.crossSigning signDevice:deviceInfo success:^{
-                [self uploadDeviceInfo:deviceInfo forAccount:account success:success failure:failure];
+            MXWeakify(self);
+            [crypto.crossSigning signDevice:deviceInfo success:^{
+                MXStrongifyAndReturnIfNil(self);
+                [self uploadDeviceInfo:deviceInfo forAccount:account withMatrixRestClient:restClient success:success failure:failure];
             } failure:^(NSError * _Nonnull error) {
                 MXLogWarning(@"[MXDehydrationManager] failed to cross-sign dehydrated device data: %@", error);
-                [self uploadDeviceInfo:deviceInfo forAccount:account success:success failure:failure];
+                MXStrongifyAndReturnIfNil(self);
+                [self uploadDeviceInfo:deviceInfo forAccount:account withMatrixRestClient:restClient success:success failure:failure];
             }];
         } else {
-            [self uploadDeviceInfo:deviceInfo forAccount:account success:success failure:failure];
+            [self uploadDeviceInfo:deviceInfo forAccount:account withMatrixRestClient:restClient success:success failure:failure];
         }
     } failure:^(NSError *error) {
-        self->inProgress = NO;
+        [self stopProgress];
         MXLogError(@"[MXDehydrationManager] failed to push dehydrated device data: %@", error);
-        failure(error);
+        dispatch_async(dispatch_get_main_queue(), ^{
+            failure(error);
+        });
     }];
 }
 
-- (void)rehydrateDeviceWithSuccess:(void (^)(void))success
-                           failure:(void (^)(NSError *error))failure
+- (void)rehydrateDeviceWithMatrixRestClient:(MXRestClient*)restClient
+                             dehydrationKey:(NSData*)dehydrationKey
+                                    success:(void (^)(NSString * _Nullable deviceId))success
+                                    failure:(void (^)(NSError *error))failure;
 {
-    if (session.crypto)
-    {
-        MXLogError(@"[MXDehydrationManager] rehydrateDevice: Cannot rehydrate device after crypto is initialized.");
-        failure([NSError errorWithDomain:kMXNSErrorDomain code:0 userInfo:@{NSLocalizedDescriptionKey: @"Cannot rehydrate device after crypto is initialized"}]);
-        return;
-    }
-    
-    
-    MXKeyData * keyData = [[MXKeyProvider sharedInstance] requestKeyForDataOfType:MXDehydrationServiceKeyDataType isMandatory:NO expectedKeyType:kRawData];
-    if (!keyData)
-    {
-        MXLogDebug(@"[MXDehydrationManager] rehydrateDevice: No dehydrated key.");
-        success();
-        return;
-    }
-    NSData *key = ((MXRawDataKey*) keyData).key;
-    
     MXLogDebug(@"[MXDehydrationManager] rehydrateDevice: getting dehydrated device.");
-    [self->session.matrixRestClient dehydratedDeviceWithSuccess:^(MXDehydratedDevice *device) {
+    [restClient dehydratedDeviceWithSuccess:^(MXDehydratedDevice *device) {
         if (!device || !device.deviceId)
         {
             MXLogDebug(@"[MXSession] rehydrateDevice: No dehydrated device found.");
-            success();
+            dispatch_async(dispatch_get_main_queue(), ^{
+                success(nil);
+            });
             return;
         }
         
         if (![device.algorithm isEqual:MXDehydrationAlgorithm])
         {
             MXLogError(@"[MXDehydrationManager] rehydrateDevice: Wrong algorithm for dehydrated device.");
-            failure([NSError errorWithDomain:kMXNSErrorDomain code:0 userInfo:@{NSLocalizedDescriptionKey: @"Wrong algorithm for dehydrated device"}]);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                failure([NSError errorWithDomain:kMXNSErrorDomain code:0 userInfo:@{NSLocalizedDescriptionKey: @"Wrong algorithm for dehydrated device"}]);
+            });
             return;
         }
         
         NSError *error = nil;
         MXLogDebug(@"[MXDehydrationManager] rehydrateDevice: unpickling dehydrated device.");
-        OLMAccount *account = [[OLMAccount alloc] initWithSerializedData:device.account key:key error:&error];
+        OLMAccount *account = [[OLMAccount alloc] initWithSerializedData:device.account key:dehydrationKey error:&error];
         
-        MXLogDebug(@"[MXDehydrationManager] rehydrateDevice: account deserialized %@", account.identityKeys);
+        MXLogDebug(@"[MXDehydrationManager] rehydrateDevice: account with ID %@ deserialized with keys %@", device.deviceId, account.identityKeys);
 
         if (error)
         {
             MXLogError(@"[MXDehydrationManager] rehydrateDevice: Failed to unpickle device account with error: %@.", error);
-            failure([NSError errorWithDomain:kMXNSErrorDomain code:0 userInfo:@{NSLocalizedDescriptionKey: @"Failed to unpickle device account"}]);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                failure([NSError errorWithDomain:kMXNSErrorDomain code:0 userInfo:@{NSLocalizedDescriptionKey: @"Failed to unpickle device account"}]);
+            });
             return;
         }
         
         MXLogDebug(@"[MXDehydrationManager] rehydrateDevice: device unpickled %@", account);
         
-        [self->session.matrixRestClient claimDehydratedDeviceWithId:device.deviceId Success:^(BOOL isClaimed) {
+        [restClient claimDehydratedDeviceWithId:device.deviceId Success:^(BOOL isClaimed) {
             if (!isClaimed)
             {
                 MXLogDebug(@"[MXDehydrationManager] rehydrateDevice: device already claimed.");
-                success();
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    success(nil);
+                });
                 return;
             }
 
-            MXLogDebug(@"[MXDehydrationManager] rehydrateDevice: using dehydrated device");
-            self->session.matrixRestClient.credentials.deviceId = device.deviceId;
-            self->_exportedOlmDeviceToImport = [[MXExportedOlmDevice alloc] initWithAccount:device.account pickleKey:key forSessions:@[]];
-            success();
+            MXLogDebug(@"[MXDehydrationManager] rehydrateDevice: exporting dehydrated device with ID %@", device.deviceId);
+            MXCredentials *tmpCredentials = [restClient.credentials copy];
+            tmpCredentials.deviceId = device.deviceId;
+            [MXCrypto rehydrate:tmpCredentials withExportedOlmDevice:[[MXExportedOlmDevice alloc] initWithAccount:device.account pickleKey:dehydrationKey forSessions:@[]]];
+            NSLog(@"[TOTO] rehydrated device ID %@ with identity keys %@", device.deviceId, account.identityKeys);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                success(device.deviceId);
+            });
         } failure:^(NSError *error) {
             MXLogError(@"[MXDehydrationManager] rehydrateDevice: claimDehydratedDeviceWithId failed with error: %@", error);
-            failure(error);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                failure(error);
+            });
         }];
     } failure:^(NSError *error) {
         MXError *mxError = [[MXError alloc] initWithNSError:error];
         if (mxError && [mxError.errcode isEqualToString:kMXErrCodeStringNotFound])
         {
             MXLogDebug(@"[MXDehydrationManager] rehydrateDevice: No dehydrated device found.");
-            success();
+            dispatch_async(dispatch_get_main_queue(), ^{
+                success(nil);
+            });
         }
         else
         {
             MXLogError(@"[MXDehydrationManager] rehydrateDevice: dehydratedDeviceId failed with error: %@", error);
-            failure(error);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                failure(error);
+            });
         }
     }];
 }
 
+#pragma mark - Private methods
+
 - (void)uploadDeviceInfo:(MXDeviceInfo*)deviceInfo
               forAccount:(OLMAccount*)account
+    withMatrixRestClient:(MXRestClient*)restClient
                  success:(void (^)(NSString *deviceId))success
                  failure:(void (^)(NSError *error))failure
 {
@@ -237,7 +244,7 @@ NSString *const MXDehydrationServiceKeyDataType = @"org.matrix.sdk.dehydration.s
         
         NSString *signature = [account signMessage:[MXCryptoTools canonicalJSONDataForJSON:k]];
         k[@"signatures"] = @{
-            self->session.crypto.matrixRestClient.credentials.userId: @{
+            restClient.credentials.userId: @{
                     [NSString stringWithFormat:@"ed25519:%@", deviceInfo.deviceId]: signature
             }
         };
@@ -245,16 +252,33 @@ NSString *const MXDehydrationServiceKeyDataType = @"org.matrix.sdk.dehydration.s
         oneTimeJson[[NSString stringWithFormat:@"signed_curve25519:%@", keyId]] = k;
     }
 
-    [session.crypto.matrixRestClient uploadKeys:deviceInfo.JSONDictionary oneTimeKeys:oneTimeJson forDeviceWithId:deviceInfo.deviceId success:^(MXKeysUploadResponse *keysUploadResponse) {
+    MXWeakify(self);
+    [restClient uploadKeys:deviceInfo.JSONDictionary oneTimeKeys:oneTimeJson forDeviceWithId:deviceInfo.deviceId success:^(MXKeysUploadResponse *keysUploadResponse) {
         [account markOneTimeKeysAsPublished];
         MXLogDebug(@"[MXDehydrationManager] dehydration done succesfully:\n device ID = %@\n ed25519 = %@\n curve25519 = %@", deviceInfo.deviceId, account.identityKeys[@"ed25519"], account.identityKeys[@"curve25519"]);
-        self->inProgress = NO;
-        success(deviceInfo.deviceId);
+        MXStrongifyAndReturnIfNil(self);
+        [self stopProgress];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            success(deviceInfo.deviceId);
+        });
     } failure:^(NSError *error) {
-        self->inProgress = NO;
         MXLogError(@"[MXDehydrationManager] failed to upload device keys: %@", error);
-        failure(error);
+        MXStrongifyAndReturnIfNil(self);
+        [self stopProgress];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            failure(error);
+        });
     }];
+}
+
+#pragma mark - Private methods
+
+- (void)stopProgress
+{
+    @synchronized (self)
+    {
+        inProgress = NO;
+    }
 }
 
 @end

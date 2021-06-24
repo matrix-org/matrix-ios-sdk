@@ -483,11 +483,6 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
  */
 @property (nonatomic, readonly) MXSpaceService *spaceService;
 
-/**
- Dehydration Service
- */
-@property (nonatomic, readonly) MXDehydrationService *dehydrationService;
-
 #pragma mark - Class methods
 
 /**

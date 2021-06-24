@@ -472,6 +472,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
 
 - (void)storeDeviceId:(NSString*)deviceId
 {
+    NSLog(@"[TOTO] MXStore storeDeviceId %@", deviceId);
     MXRealmOlmAccount *account = self.accountInCurrentThread;
     
     [account.realm transactionWithBlock:^{

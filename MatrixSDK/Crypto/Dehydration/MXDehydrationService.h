@@ -16,7 +16,8 @@
 
 @import Foundation;
 
-@class MXSession;
+@class MXCrypto;
+@class MXRestClient;
 @class MXExportedOlmDevice;
 
 NS_ASSUME_NONNULL_BEGIN
@@ -34,33 +35,38 @@ FOUNDATION_EXPORT NSString *const MXDehydrationServiceKeyDataType;
  */
 @interface MXDehydrationService : NSObject
 
-@property (nonatomic, readonly) MXExportedOlmDevice *exportedOlmDeviceToImport;
-
 /**
- Create the `MXDehydrationService` instance.
-
- @param session the MXSession instance.
- @return the newly created MXDehydrationService instance.
+ Singleton method
  */
-- (instancetype)initWithSession:(MXSession*)session;
++ (instancetype)sharedInstance;
 
 /**
  Dehydrate a new device for the current account
  
+ @param restClient client used to call the dehydration API
+ @param crypto crypto used to self sign the dehydrated device
+ @param dehydrationKey key used to pickle the Olm account
  @param success callback called in case of success (deviceId not null) or if the process is canceled (deviceId is null)
  @param failure callback called in case of unexpected failure
  */
-- (void)dehydrateDeviceWithSuccess:(void (^)( NSString * _Nullable deviceId))success
-                          failure:(void (^)(NSError *error))failure;
+- (void)dehydrateDeviceWithMatrixRestClient:(MXRestClient*)restClient
+                                     crypto:(MXCrypto*)crypto
+                             dehydrationKey:(NSData*)dehydrationKey
+                                    success:(void (^)(NSString * _Nullable deviceId))success
+                                    failure:(void (^)(NSError *error))failure;
 
 /**
  Rehydrate the dehydrated device of the current acount
  
- @param success callback called in case of success or if the process is canceled
+ @param restClient client used to call the dehydration API
+ @param dehydrationKey key used to unpickle the Olm account
+ @param success callback called in case of success (device ID not null) or if the process is canceled (device ID null)
  @param failure callback called in case of unexpected failure
  */
-- (void)rehydrateDeviceWithSuccess:(void (^)(void))success
-                           failure:(void (^)(NSError *error))failure;
+- (void)rehydrateDeviceWithMatrixRestClient:(MXRestClient*)restClient
+                             dehydrationKey:(NSData*)dehydrationKey
+                                    success:(void (^)(NSString * _Nullable deviceId))success
+                                    failure:(void (^)(NSError *error))failure;
 
 @end
 

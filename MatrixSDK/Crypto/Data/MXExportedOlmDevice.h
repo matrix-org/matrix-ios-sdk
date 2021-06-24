@@ -18,11 +18,17 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+/**
+ Data class that contains the pickled Olm account and the pickle key retrieved from the rehydration process.
+ */
 @interface MXExportedOlmDevice : NSObject
 
+/// Olm account pickled with the pickle key
 @property (nonatomic, nonnull) NSString *pickledAccount;
-@property (nonatomic, nonnull) NSArray *sessions;
+/// Key to be used to unpickle the account
 @property (nonatomic, nonnull) NSData *pickleKey;
+/// Sessions the Olm account belongs to
+@property (nonatomic, nonnull) NSArray *sessions;
 
 - (instancetype)initWithAccount:(NSString*)pickledAccount
                       pickleKey:(NSData*)pickleKey
