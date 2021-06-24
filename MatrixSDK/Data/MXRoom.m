@@ -37,6 +37,7 @@
 
 NSString *const kMXRoomDidFlushDataNotification = @"kMXRoomDidFlushDataNotification";
 NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotification";
+NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
 
 @interface MXRoom ()
 {
