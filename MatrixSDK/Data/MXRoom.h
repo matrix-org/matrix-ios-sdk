@@ -63,6 +63,11 @@ FOUNDATION_EXPORT NSString *const kMXRoomInitialSyncNotification;
 FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
 
 /**
+ Error code when tried to join an already joined room.
+ */
+FOUNDATION_EXPORT NSInteger const kMXRoomAlreadyJoinedErrorCode;
+
+/**
  `MXRoom` is the class
  */
 @interface MXRoom : NSObject

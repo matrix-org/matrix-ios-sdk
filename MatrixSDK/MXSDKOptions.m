@@ -45,6 +45,7 @@ static MXSDKOptions *sharedOnceInstance = nil;
         _mediaCacheAppVersion = 0;
         _applicationGroupIdentifier = nil;
         _HTTPAdditionalHeaders = @{};
+        _autoAcceptRoomInvites = NO;
     }
     
     return self;
