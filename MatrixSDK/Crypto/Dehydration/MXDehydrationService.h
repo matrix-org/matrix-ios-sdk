@@ -30,6 +30,12 @@ FOUNDATION_EXPORT NSString *const MXDehydrationServiceKeyDataType;
 
 /// Error domain for this class.
 FOUNDATION_EXPORT NSString *const MXDehydrationServiceErrorDomain;
+typedef NS_ENUM(NSInteger, MXDehydrationServiceErrorCode)
+{
+    MXDehydrationServiceAlreadyRuninngErrorCode,
+    MXDehydrationServiceNothingToRehydrateErrorCode,
+    MXDehydrationServiceAlreadyClaimedErrorCode,
+};
 
 /**
  Service in charge of dehydrating and rehydrating a device.
@@ -46,13 +52,13 @@ FOUNDATION_EXPORT NSString *const MXDehydrationServiceErrorDomain;
  @param restClient client used to call the dehydration API
  @param crypto crypto used to self sign the dehydrated device
  @param dehydrationKey key used to pickle the Olm account
- @param success callback called in case of success (deviceId not null) or if the process is canceled (deviceId is null)
+ @param success callback called in case of success
  @param failure callback called in case of unexpected failure
  */
 - (void)dehydrateDeviceWithMatrixRestClient:(MXRestClient*)restClient
                                      crypto:(MXCrypto*)crypto
                              dehydrationKey:(NSData*)dehydrationKey
-                                    success:(void (^)(NSString * _Nullable deviceId))success
+                                    success:(void (^)(NSString * deviceId))success
                                     failure:(void (^)(NSError *error))failure;
 
 /**
@@ -60,12 +66,12 @@ FOUNDATION_EXPORT NSString *const MXDehydrationServiceErrorDomain;
  
  @param restClient client used to call the dehydration API
  @param dehydrationKey key used to unpickle the Olm account
- @param success callback called in case of success (device ID not null) or if the process is canceled (device ID null)
+ @param success callback called in case of success
  @param failure callback called in case of unexpected failure
  */
 - (void)rehydrateDeviceWithMatrixRestClient:(MXRestClient*)restClient
                              dehydrationKey:(NSData*)dehydrationKey
-                                    success:(void (^)(NSString * _Nullable deviceId))success
+                                    success:(void (^)(NSString * deviceId))success
                                     failure:(void (^)(NSError *error))failure;
 
 @end

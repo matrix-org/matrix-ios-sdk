@@ -179,24 +179,26 @@
 
         // - Bob tries to rehydrate a device
         [dehydrationService rehydrateDeviceWithMatrixRestClient:mxSession.matrixRestClient dehydrationKey:self.dehydrationKey success:^(NSString * _Nullable deviceId) {
-            if (deviceId)
-            {
-                XCTFail(@"No rehydrated device shold be found.");
-                [expectation fulfill];
-                return;
-            }
+            XCTFail(@"No rehydrated device should be found.");
+            [expectation fulfill];
             
-            [mxSession start:^{
-                // -> Bob should start his session normally
-                [expectation fulfill];
+        } failure:^(NSError * _Nonnull error) {
+            if ([error.domain isEqual:MXDehydrationServiceErrorDomain] && error.code == MXDehydrationServiceNothingToRehydrateErrorCode)
+            {
+                [mxSession start:^{
+                    // -> Bob should start his session normally
+                    [expectation fulfill];
 
-            } failure:^(NSError *error) {
+                } failure:^(NSError *error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+            }
+            else
+            {
                 XCTFail(@"The request should not fail - NSError: %@", error);
                 [expectation fulfill];
-            }];
-        } failure:^(NSError * _Nonnull error) {
-            XCTFail(@"The request should not fail - NSError: %@", error);
-            [expectation fulfill];
+            }
         }];
     }];
 }

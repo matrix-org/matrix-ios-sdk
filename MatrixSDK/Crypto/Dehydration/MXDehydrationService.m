@@ -36,7 +36,7 @@ NSString *const MXDehydrationServiceErrorDomain = @"org.matrix.sdk.dehydration.s
 - (void)dehydrateDeviceWithMatrixRestClient:(MXRestClient*)restClient
                                      crypto:(MXCrypto*)crypto
                              dehydrationKey:(NSData*)dehydrationKey
-                                    success:(void (^)( NSString * _Nullable deviceId))success
+                                    success:(void (^)( NSString * deviceId))success
                                     failure:(void (^)(NSError *error))failure;
 {
     @synchronized (self) {
@@ -44,7 +44,12 @@ NSString *const MXDehydrationServiceErrorDomain = @"org.matrix.sdk.dehydration.s
         {
             MXLogDebug(@"[MXDehydrationManager] dehydrateDevice: Dehydration already in progress -- not starting new dehydration");
             dispatch_async(dispatch_get_main_queue(), ^{
-                success(nil);
+                NSError *error = [NSError errorWithDomain:MXDehydrationServiceErrorDomain
+                                                     code:MXDehydrationServiceAlreadyRuninngErrorCode
+                                                 userInfo:@{
+                                                            NSLocalizedDescriptionKey: @"Dehydration already in progress -- not starting new dehydration",
+                                                            }];
+                failure(error);
             });
             return;
         }
@@ -124,7 +129,7 @@ NSString *const MXDehydrationServiceErrorDomain = @"org.matrix.sdk.dehydration.s
 
 - (void)rehydrateDeviceWithMatrixRestClient:(MXRestClient*)restClient
                              dehydrationKey:(NSData*)dehydrationKey
-                                    success:(void (^)(NSString * _Nullable deviceId))success
+                                    success:(void (^)(NSString * deviceId))success
                                     failure:(void (^)(NSError *error))failure;
 {
     MXLogDebug(@"[MXDehydrationManager] rehydrateDevice: getting dehydrated device.");
@@ -133,7 +138,12 @@ NSString *const MXDehydrationServiceErrorDomain = @"org.matrix.sdk.dehydration.s
         {
             MXLogDebug(@"[MXSession] rehydrateDevice: No dehydrated device found.");
             dispatch_async(dispatch_get_main_queue(), ^{
-                success(nil);
+                NSError *error = [NSError errorWithDomain:MXDehydrationServiceErrorDomain
+                                                     code:MXDehydrationServiceNothingToRehydrateErrorCode
+                                                 userInfo:@{
+                                                            NSLocalizedDescriptionKey: @"No dehydrated device found.",
+                                                            }];
+                failure(error);
             });
             return;
         }
@@ -169,7 +179,12 @@ NSString *const MXDehydrationServiceErrorDomain = @"org.matrix.sdk.dehydration.s
             {
                 MXLogDebug(@"[MXDehydrationManager] rehydrateDevice: device already claimed.");
                 dispatch_async(dispatch_get_main_queue(), ^{
-                    success(nil);
+                    NSError *error = [NSError errorWithDomain:MXDehydrationServiceErrorDomain
+                                                         code:MXDehydrationServiceAlreadyClaimedErrorCode
+                                                     userInfo:@{
+                                                                NSLocalizedDescriptionKey: @"device already claimed.",
+                                                                }];
+                    failure(error);
                 });
                 return;
             }
@@ -205,7 +220,12 @@ NSString *const MXDehydrationServiceErrorDomain = @"org.matrix.sdk.dehydration.s
         {
             MXLogDebug(@"[MXDehydrationManager] rehydrateDevice: No dehydrated device found.");
             dispatch_async(dispatch_get_main_queue(), ^{
-                success(nil);
+                NSError *error = [NSError errorWithDomain:MXDehydrationServiceErrorDomain
+                                                     code:MXDehydrationServiceNothingToRehydrateErrorCode
+                                                 userInfo:@{
+                                                            NSLocalizedDescriptionKey: @"No dehydrated device found.",
+                                                            }];
+                failure(error);
             });
         }
         else
