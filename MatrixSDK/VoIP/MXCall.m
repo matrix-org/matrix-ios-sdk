@@ -446,7 +446,10 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
             MXWeakify(self);
             dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0.5 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
                 MXStrongifyAndReturnIfNil(self);
-                [self answer];
+                if (self.state != MXCallStateEnded)
+                {
+                    [self answer];
+                }
             });
         }
     }];
