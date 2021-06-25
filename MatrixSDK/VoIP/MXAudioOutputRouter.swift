@@ -17,62 +17,44 @@
 import Foundation
 import AVFoundation
 
-@objc
-/// Audio output route type
-public enum MXAudioOutputRouteType: Int {
-    /// the speakers at the top of the screen.
-    case builtIn
-    /// the speakers at the bottom of the phone
-    case loudSpeakers
-    /// an external device, like headphones or Bluetooth devices
-    case external
-}
-
-/// Audio output router delegate
-@objc
-public protocol MXAudioOutputRouterDelegate: AnyObject {
-    /// Delegate method to be called when output route changes, for both user actions and system changes
-    /// Check again `routeType` to see the change.
-    /// - Parameter router: Router instance
-    @objc optional func audioOutputRouter(didUpdateRoute router: MXAudioOutputRouter)
-    
-    /// Delegate method to be called when available output routes change
-    /// Check again `availableOutputRouteTypes` to see the changes.
-    /// - Parameter router: Router instance
-    @objc optional func audioOutputRouter(didUpdateAvailableRouteTypes router: MXAudioOutputRouter)
-}
-
 /// Audio output router class
 @objcMembers
 public class MXAudioOutputRouter: NSObject {
+    
+    private enum Constants {
+        static let loudSpeakersIdentifier: String = "LOUD_SPEAKERS"
+        static let loudSpeakersName: String = "Device Speaker"
+        static let builtInIdentifier: String = "BUILT_IN"
+    }
     
     //  MARK: - Properties
     
     /// Delegate object
     public weak var delegate: MXAudioOutputRouterDelegate?
     
-    /// Default route type. Will should be `builtIn` for voice calls, `loudSpeakers` for video calls.
+    /// Default route type. Will be `builtIn` for voice calls, `loudSpeakers` for video calls.
     private let defaultRouteType: MXAudioOutputRouteType
     
-    /// Current route type. Listen `audioOutputRouterDidUpdateRoute` delegate methods for changes.
-    public private(set) var routeType: MXAudioOutputRouteType {
+    /// External device info. First value: flag to indicate an external device exists, second value: name of the external device
+    private var allRoutes: [MXAudioOutputRoute] = [] {
         didSet {
-            delegate?.audioOutputRouter?(didUpdateRoute: self)
-        }
-    }
-    
-    /// Flag to learn if some external device is connected. Listen `audioOutputRouterDidUpdateAvailableRouteTypes` delegate method for changes.
-    public private(set) var isExternalDeviceConnected: Bool = false {
-        didSet {
-            if isExternalDeviceConnected != oldValue {
+            if allRoutes != oldValue {
                 delegate?.audioOutputRouter?(didUpdateAvailableRouteTypes: self)
             }
         }
     }
     
-    /// Name of the external device. Would be nil if not `isExternalDeviceConnected`.
-    public var externalDeviceName: String? {
-        return AVAudioSession.sharedInstance().externalDeviceName
+    /// Current route type. Listen `audioOutputRouterDidUpdateRoute` delegate methods for changes.
+    public private(set) var currentRoute: MXAudioOutputRoute? {
+        didSet {
+            delegate?.audioOutputRouter?(didUpdateRoute: self)
+        }
+    }
+    
+    /// Flag to learn if some external device is connected.
+    /// Listen `audioOutputRouterDidUpdateAvailableRouteTypes` delegate method for changes.
+    public var isAnyExternalDeviceConnected: Bool {
+        return allRoutes.filter({ $0.isExternal }).count > 0
     }
     
     //  MARK: - Public
@@ -85,96 +67,106 @@ public class MXAudioOutputRouter: NSObject {
         } else {
             defaultRouteType = .builtIn
         }
-        routeType = defaultRouteType
         super.init()
         configureOutputPort()
+        if currentRoute == nil {
+            currentRoute = allRoutes.first(where: { $0.routeType == defaultRouteType })
+        }
         startObservingRouteChanges()
     }
     
-    /// Available route types. Listen `audioOutputRouterDidUpdateAvailableRouteTypes` delegate method for changes.
-    public var availableOutputRouteTypes: [MXAudioOutputRouteType] {
-        if isExternalDeviceConnected {
-            return [.builtIn, .loudSpeakers, .external]
-        } else {
-            return [.builtIn, .loudSpeakers]
-        }
+    /// Available route types
+    /// Listen `audioOutputRouterDidUpdateAvailableRouteTypes` delegate method for changes.
+    public var availableOutputRoutes: [MXAudioOutputRoute] {
+        return allRoutes
+    }
+    
+    /// The route for `builtIn` route type. May be nil for some cases, like when a wired headphones are connected.
+    public var builtInRoute: MXAudioOutputRoute? {
+        return allRoutes.first(where: { $0.routeType == .builtIn })
+    }
+    
+    /// The route for `loudSpeakers` route type.
+    public var loudSpeakersRoute: MXAudioOutputRoute? {
+        return allRoutes.first(where: { $0.routeType == .loudSpeakers })
     }
     
     /// Attempt to override route type to given type.
     /// - Parameter routeType: Desired route type. `external` is useless if no external device connected, then it would fallback to the default route type.
-    public func changeRouteType(to routeType: MXAudioOutputRouteType) {
-        switch routeType {
-        case .builtIn:
-            configureOutputPort(forRouteType: .builtIn)
-        case .loudSpeakers:
-            configureOutputPort(forRouteType: .loudSpeakers)
-        case .external:
-            if isExternalDeviceConnected {
-                configureOutputPort(forRouteType: .external)
-            } else {
-                configureOutputPort(forRouteType: defaultRouteType)
-            }
-        default:
-            break
+    public func changeCurrentRoute(to route: MXAudioOutputRoute?) {
+        if let route = route {
+            updateRoute(to: route)
+        } else if let defaultRoute = allRoutes.first(where: { $0.routeType == defaultRouteType }) {
+            updateRoute(to: defaultRoute)
         }
     }
     
     /// Reroute the audio for the current route type.
     public func reroute() {
-        changeRouteType(to: routeType)
+        changeCurrentRoute(to: currentRoute)
     }
     
     //  MARK: - Private
     
-    private func recomputeIsExternalDeviceConnected() {
-        isExternalDeviceConnected = AVAudioSession.sharedInstance().isExternalDeviceConnected
+    private func shouldAddLoudSpeakers(to routes: [MXAudioOutputRoute]) -> Bool {
+        return routes.first(where: { $0.routeType == .loudSpeakers }) == nil
+    }
+    
+    private func shouldAddBuiltIn(to routes: [MXAudioOutputRoute]) -> Bool {
+        return routes.first(where: { $0.routeType == .builtIn }) == nil
+            && routes.first(where: { $0.routeType == .externalWired }) == nil
+    }
+    
+    private func recomputeAllRoutes() {
+        var routes = AVAudioSession.sharedInstance().outputRoutes
+        if shouldAddLoudSpeakers(to: routes) {
+            //  add loudSpeakers route manually
+            routes.append(MXAudioOutputRoute(identifier: Constants.loudSpeakersIdentifier,
+                                             routeType: .loudSpeakers,
+                                             name: Constants.loudSpeakersName))
+        }
+        if shouldAddBuiltIn(to: routes) {
+            //  add builtIn route manually
+            routes.append(MXAudioOutputRoute(identifier: Constants.builtInIdentifier,
+                                             routeType: .builtIn,
+                                             name: UIDevice.current.localizedModel))
+        }
+        allRoutes = routes
     }
     
     private func configureOutputPort() {
-        recomputeIsExternalDeviceConnected()
-        if isExternalDeviceConnected {
-            configureOutputPort(forRouteType: .external)
-        } else {
-            configureOutputPort(forRouteType: defaultRouteType)
+        recomputeAllRoutes()
+        if isAnyExternalDeviceConnected {
+            if let wired = allRoutes.first(where: { $0.routeType == .externalWired }) {
+                updateRoute(to: wired)
+            } else if let bluetooth = allRoutes.first(where: { $0.routeType == .externalBluetooth }) {
+                updateRoute(to: bluetooth)
+            } else if let car = allRoutes.first(where: { $0.routeType == .externalCar }) {
+                updateRoute(to: car)
+            }
+        } else if let defaultRoute = allRoutes.first(where: { $0.routeType == defaultRouteType }) {
+            updateRoute(to: defaultRoute)
         }
     }
     
-    private func configureOutputPort(forRouteType type: MXAudioOutputRouteType) {
-        MXLog.debug("[MXAudioOutputRouter] configureOutputPort: for type: \(type.rawValue)")
+    private func updateRoute(to route: MXAudioOutputRoute) {
+        MXLog.debug("[MXAudioOutputRouter] updateRoute: for type: \(route.routeType.rawValue)")
         
-        switch type {
-        case .builtIn:
-            MXLog.debug("[MXAudioOutputRouter] configureOutputPort: route output to built-in")
-            
-            do {
-                try AVAudioSession.sharedInstance().overrideOutputAudioPort(.none)
-                if isExternalDeviceConnected {
-                    //  overriding to none is not enough if an external device connected, also set output data source
-                    try AVAudioSession.sharedInstance().setMode(.voiceChat)
-                    try AVAudioSession.sharedInstance().setOutputDataSource(AVAudioSession.sharedInstance().builtInSpeaker)
-                }
-                routeType = type
-            } catch {
-                MXLog.error("[MXAudioOutputRouter] configureOutputPort: routing output to built-in failed: \(error)")
-            }
-        case .loudSpeakers:
-            MXLog.debug("[MXAudioOutputRouter] configureOutputPort: route output to loud speakers")
-            
-            do {
+        do {
+            switch route.routeType {
+            case .loudSpeakers:
                 try AVAudioSession.sharedInstance().overrideOutputAudioPort(.speaker)
-                routeType = type
-            } catch {
-                MXLog.error("[MXAudioOutputRouter] configureOutputPort: routing output to loud speakers failed: \(error)")
-            }
-        case .external:
-            MXLog.debug("[MXAudioOutputRouter] configureOutputPort: route output to external")
-            
-            do {
+                try AVAudioSession.sharedInstance().setPreferredInput(nil)
+            case .builtIn:
                 try AVAudioSession.sharedInstance().overrideOutputAudioPort(.none)
-                routeType = type
-            } catch {
-                MXLog.error("[MXAudioOutputRouter] configureOutputPort: routing output to external failed: \(error)")
+                try AVAudioSession.sharedInstance().setPreferredInput(nil)
+            default:
+                try AVAudioSession.sharedInstance().overrideOutputAudioPort(.none)
+                try AVAudioSession.sharedInstance().setPreferredInput(route.port)
             }
+            currentRoute = route
+        } catch {
+            MXLog.error("[MXAudioOutputRouter] updateRoute: routing failed: \(error)")
         }
     }
 
@@ -216,54 +208,13 @@ public class MXAudioOutputRouter: NSObject {
 
 fileprivate extension AVAudioSession {
     
-    var isExternalDeviceConnected: Bool {
-        let route = currentRoute
-        for port in route.outputs {
-            if port.isExternal {
-                return true
-            }
-        }
-        return false
-    }
-    
-    var externalDeviceName: String? {
-        let route = currentRoute
-        for port in route.outputs {
-            if port.isExternal {
-                return port.portName
-            }
-        }
-        return nil
-    }
-    
-    var builtInSpeaker: AVAudioSessionDataSourceDescription? {
-        guard let sources = outputDataSources else {
-            return nil
-        }
-        for source in sources {
-            if source.location == .upper {
-                return source
-            }
-        }
-        return nil
-    }
-    
-}
-
-//  MARK: - AVAudioSessionPortDescription Extension
-
-fileprivate extension AVAudioSessionPortDescription {
-    
-    var isExternal: Bool {
-        var result = false
-        switch portType {
-        case .headphones, .headsetMic, .bluetoothA2DP, .bluetoothLE, .bluetoothHFP, .carAudio:
-            result = true
-        default:
-            result = false
-        }
+    var outputRoutes: [MXAudioOutputRoute] {
+        let oldCategory = category
+        try? setCategory(.multiRoute)
         
-        MXLog.debug("[AVAudioSessionPortDescription] isExternal: returning \(result) for port type: \(portType)")
+        let result = currentRoute.outputs.map({ MXAudioOutputRoute(withPort: $0) })
+        
+        try? setCategory(oldCategory)
         
         return result
     }
