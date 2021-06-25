@@ -43,7 +43,10 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
 NSString *const kMXCallSupportsHoldingStatusDidChange = @"kMXCallSupportsHoldingStatusDidChange";
 NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTransferringStatusDidChange";
 
-@interface MXCall () <MXAudioOutputRouterDelegate>
+@interface MXCall ()
+#if TARGET_OS_IPHONE
+<MXAudioOutputRouterDelegate>
+#endif
 {
     /**
      The manager of this object.
@@ -280,8 +283,10 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
         [self->callStackCall startCapturingMediaWithVideo:video success:^() {
             MXStrongifyAndReturnIfNil(self);
             
+#if TARGET_OS_IPHONE
             [self.audioOutputRouter reroute];
-
+#endif
+            
             MXWeakify(self);
             [self->callStackCall createOffer:^(NSString *sdp) {
                 MXStrongifyAndReturnIfNil(self);
@@ -1104,7 +1109,9 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
         [self->callStackCall startCapturingMediaWithVideo:self.isVideoCall success:^{
             MXStrongifyAndReturnIfNil(self);
             
+#if TARGET_OS_IPHONE
             [self.audioOutputRouter reroute];
+#endif
             
             [self->callStackCall handleOffer:self->callInviteEventContent.offer.sdp
                                      success:^{
@@ -1440,6 +1447,7 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
     MXLogDebug(@"[MXCall][%@] handleCallRejectReplacement", _callId)
 }
 
+#if TARGET_OS_IPHONE
 #pragma mark - MXAudioOutputRouterDelegate
 
 - (void)audioOutputRouterWithDidUpdateRoute:(MXAudioOutputRouter *)router
@@ -1457,13 +1465,16 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
         [_delegate callAvailableAudioOutputsDidChange:self];
     }
 }
+#endif
 
 #pragma mark - Private methods
 
 - (void)configureAudioOutputRouter
 {
+#if TARGET_OS_IPHONE
     _audioOutputRouter = [[MXAudioOutputRouter alloc] initForCall:self];
     _audioOutputRouter.delegate = self;
+#endif
 }
 
 - (void)turnServersReceived:(NSNotification *)notification
