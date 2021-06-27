@@ -131,6 +131,11 @@ public class MXAudioOutputRouter: NSObject {
                                              routeType: .builtIn,
                                              name: UIDevice.current.localizedModel))
         }
+        
+        routes.sort { route1, route2 in
+            return route1.routeType.rawValue < route2.routeType.rawValue
+        }
+        
         allRoutes = routes
     }
     
