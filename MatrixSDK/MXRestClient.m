@@ -4376,6 +4376,30 @@ MXAuthAction;
                                  }];
 }
 
+- (MXHTTPOperation*)unstableUpdateKeyBackupVersion:(MXKeyBackupVersion*)keyBackupVersion
+                                           success:(void (^)(void))success
+                                           failure:(void (^)(NSError *error))failure
+{
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"PUT"
+                                    path:[NSString stringWithFormat:@"%@/room_keys/version/%@", kMXAPIPrefixPathUnstable, keyBackupVersion.version]
+                              parameters:keyBackupVersion.JSONDictionary
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
+                                     if (success)
+                                     {
+                                         [self dispatchProcessing:nil
+                                                    andCompletion:^{
+                                                        success();
+                                                    }];
+                                     }
+                                 } failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
 - (MXHTTPOperation*)deleteKeyBackupVersion:(NSString*)version
                                    success:(void (^)(void))success
                                    failure:(void (^)(NSError *error))failure
