@@ -3811,6 +3811,8 @@ typedef void (^MXOnResumeDone)(void);
     {
         NSString *homeServer;
         
+        //Special case bwi: only retreive homeserver from restclient, never from user name
+        /*
         // Retrieve the domain from the user id as it can be different from the `MXRestClient.homeserver` that uses the client-server API endpoint domain.
         NSString *userDomain = [MXTools serverNameInMatrixIdentifier:self.myUserId];
         
@@ -3822,6 +3824,8 @@ typedef void (^MXOnResumeDone)(void);
         {
             homeServer = matrixRestClient.homeserver;
         }
+         */
+        homeServer = matrixRestClient.homeserver;
         
         autoDiscovery = [[MXAutoDiscovery alloc] initWithUrl:homeServer];
     }
