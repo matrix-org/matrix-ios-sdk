@@ -718,6 +718,14 @@ NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
                                                                                               completion:nil];
                     } failure:^(NSError *error) {
                         MXLogDebug(@"[MXCallManager] handleRoomMember: auto-join on virtual room failed with error: %@", error);
+                        
+                        if (error.code == kMXRoomAlreadyJoinedErrorCode)
+                        {
+                            //  set account data on the room, if required
+                            [self.mxSession.roomAccountDataUpdateDelegate updateAccountDataIfRequiredForRoom:room
+                                                                                            withNativeRoomId:nativeRoom.roomId
+                                                                                                  completion:nil];
+                        }
                     }];
                 }
             } failure:nil];
