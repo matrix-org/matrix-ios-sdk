@@ -114,6 +114,7 @@ Changes in 0.19.0 (2021-06-02)
  * Pod: Update OLMKit to 3.2.4.
  * MXRealmCryptoStore: Use Realm instances as read-only in background store (vector-im/element-ios/issues/4352).
  * MXLog: centralised logging facility, use everywhere instead of NSLog (vector-im/element-ios/issues/4351).
+ * MXDehydrationService: Support full rehydration feature (vector-im/element-ios/issues/1117).
 
 🐛 Bugfix
  * MXRoomSummary: Fix decryption of the last message when it is edited (vector-im/element-ios/issues/4322).

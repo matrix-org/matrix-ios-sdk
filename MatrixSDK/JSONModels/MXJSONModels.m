@@ -2079,5 +2079,19 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     }
 }
 
+- (NSDictionary *)JSONDictionary
+{
+    NSMutableDictionary *dictionary = [[NSMutableDictionary alloc] initWithDictionary:@{
+        @"algorithm": self.algorithm,
+        @"account": self.account
+    }];
+    
+    if (self.passphrase)
+    {
+        dictionary[@"passphrase"] = self.passphrase;
+    }
+    return dictionary;
+}
+
 @end
 
