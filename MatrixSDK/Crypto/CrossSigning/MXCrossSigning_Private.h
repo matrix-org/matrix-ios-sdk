@@ -47,6 +47,10 @@ NS_ASSUME_NONNULL_BEGIN
            success:(void (^)(void))success
            failure:(void (^)(NSError *error))failure;
 
+- (void)signObject:(NSDictionary*)object withKeyType:(NSString*)keyType
+           success:(void (^)(NSDictionary *signedObject))success
+           failure:(void (^)(NSError *error))failure;
+
 @end
 
 
