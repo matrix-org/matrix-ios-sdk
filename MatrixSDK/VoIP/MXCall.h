@@ -340,10 +340,12 @@ extern NSString *const kMXCallSupportsTransferringStatusDidChange;
  */
 @property (nonatomic) BOOL videoMuted;
 
+#if TARGET_OS_IPHONE
 /**
  Audio output router.
  */
 @property (nonatomic, readonly) MXAudioOutputRouter *audioOutputRouter;
+#endif
 
 /**
  The camera to use.
