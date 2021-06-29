@@ -19,7 +19,7 @@ import AVFoundation
 
 /// Audio output router class
 @objcMembers
-public class MXAudioOutputRouter: NSObject {
+public class MXiOSAudioOutputRouter: NSObject {
     
     private enum Constants {
         static let loudSpeakersIdentifier: String = "LOUD_SPEAKERS"
@@ -30,13 +30,13 @@ public class MXAudioOutputRouter: NSObject {
     //  MARK: - Properties
     
     /// Delegate object
-    public weak var delegate: MXAudioOutputRouterDelegate?
+    public weak var delegate: MXiOSAudioOutputRouterDelegate?
     
     /// Default route type. Will be `builtIn` for voice calls, `loudSpeakers` for video calls.
-    private let defaultRouteType: MXAudioOutputRouteType
+    private let defaultRouteType: MXiOSAudioOutputRouteType
     
     /// External device info. First value: flag to indicate an external device exists, second value: name of the external device
-    private var allRoutes: [MXAudioOutputRoute] = [] {
+    private var allRoutes: [MXiOSAudioOutputRoute] = [] {
         didSet {
             if allRoutes != oldValue {
                 delegate?.audioOutputRouter?(didUpdateAvailableRouteTypes: self)
@@ -45,7 +45,7 @@ public class MXAudioOutputRouter: NSObject {
     }
     
     /// Current route type. Listen `audioOutputRouterDidUpdateRoute` delegate methods for changes.
-    public private(set) var currentRoute: MXAudioOutputRoute? {
+    public private(set) var currentRoute: MXiOSAudioOutputRoute? {
         didSet {
             delegate?.audioOutputRouter?(didUpdateRoute: self)
         }
@@ -77,23 +77,23 @@ public class MXAudioOutputRouter: NSObject {
     
     /// Available route types
     /// Listen `audioOutputRouterDidUpdateAvailableRouteTypes` delegate method for changes.
-    public var availableOutputRoutes: [MXAudioOutputRoute] {
+    public var availableOutputRoutes: [MXiOSAudioOutputRoute] {
         return allRoutes
     }
     
     /// The route for `builtIn` route type. May be nil for some cases, like when a wired headphones are connected.
-    public var builtInRoute: MXAudioOutputRoute? {
+    public var builtInRoute: MXiOSAudioOutputRoute? {
         return allRoutes.first(where: { $0.routeType == .builtIn })
     }
     
     /// The route for `loudSpeakers` route type.
-    public var loudSpeakersRoute: MXAudioOutputRoute? {
+    public var loudSpeakersRoute: MXiOSAudioOutputRoute? {
         return allRoutes.first(where: { $0.routeType == .loudSpeakers })
     }
     
     /// Attempt to override route type to given type.
     /// - Parameter routeType: Desired route type. `external` is useless if no external device connected, then it would fallback to the default route type.
-    public func changeCurrentRoute(to route: MXAudioOutputRoute?) {
+    public func changeCurrentRoute(to route: MXiOSAudioOutputRoute?) {
         if let route = route {
             updateRoute(to: route)
         } else if let defaultRoute = allRoutes.first(where: { $0.routeType == defaultRouteType }) {
@@ -108,11 +108,11 @@ public class MXAudioOutputRouter: NSObject {
     
     //  MARK: - Private
     
-    private func shouldAddLoudSpeakers(to routes: [MXAudioOutputRoute]) -> Bool {
+    private func shouldAddLoudSpeakers(to routes: [MXiOSAudioOutputRoute]) -> Bool {
         return routes.first(where: { $0.routeType == .loudSpeakers }) == nil
     }
     
-    private func shouldAddBuiltIn(to routes: [MXAudioOutputRoute]) -> Bool {
+    private func shouldAddBuiltIn(to routes: [MXiOSAudioOutputRoute]) -> Bool {
         return routes.first(where: { $0.routeType == .builtIn }) == nil
             && routes.first(where: { $0.routeType == .externalWired }) == nil
     }
@@ -121,13 +121,13 @@ public class MXAudioOutputRouter: NSObject {
         var routes = AVAudioSession.sharedInstance().outputRoutes
         if shouldAddLoudSpeakers(to: routes) {
             //  add loudSpeakers route manually
-            routes.append(MXAudioOutputRoute(identifier: Constants.loudSpeakersIdentifier,
+            routes.append(MXiOSAudioOutputRoute(identifier: Constants.loudSpeakersIdentifier,
                                              routeType: .loudSpeakers,
                                              name: Constants.loudSpeakersName))
         }
         if shouldAddBuiltIn(to: routes) {
             //  add builtIn route manually
-            routes.append(MXAudioOutputRoute(identifier: Constants.builtInIdentifier,
+            routes.append(MXiOSAudioOutputRoute(identifier: Constants.builtInIdentifier,
                                              routeType: .builtIn,
                                              name: UIDevice.current.localizedModel))
         }
@@ -154,8 +154,8 @@ public class MXAudioOutputRouter: NSObject {
         }
     }
     
-    private func updateRoute(to route: MXAudioOutputRoute) {
-        MXLog.debug("[MXAudioOutputRouter] updateRoute: for type: \(route.routeType.rawValue)")
+    private func updateRoute(to route: MXiOSAudioOutputRoute) {
+        MXLog.debug("[MXiOSAudioOutputRouter] updateRoute: for type: \(route.routeType.rawValue)")
         
         do {
             switch route.routeType {
@@ -171,7 +171,7 @@ public class MXAudioOutputRouter: NSObject {
             }
             currentRoute = route
         } catch {
-            MXLog.error("[MXAudioOutputRouter] updateRoute: routing failed: \(error)")
+            MXLog.error("[MXiOSAudioOutputRouter] updateRoute: routing failed: \(error)")
         }
     }
 
@@ -213,11 +213,11 @@ public class MXAudioOutputRouter: NSObject {
 
 fileprivate extension AVAudioSession {
     
-    var outputRoutes: [MXAudioOutputRoute] {
+    var outputRoutes: [MXiOSAudioOutputRoute] {
         let oldCategory = category
         try? setCategory(.multiRoute)
         
-        let result = currentRoute.outputs.map({ MXAudioOutputRoute(withPort: $0) })
+        let result = currentRoute.outputs.map({ MXiOSAudioOutputRoute(withPort: $0) })
         
         try? setCategory(oldCategory)
         

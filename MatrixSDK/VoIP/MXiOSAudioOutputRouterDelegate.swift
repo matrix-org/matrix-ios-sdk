@@ -18,14 +18,14 @@ import Foundation
 
 /// Audio output router delegate
 @objc
-public protocol MXAudioOutputRouterDelegate: AnyObject {
+public protocol MXiOSAudioOutputRouterDelegate: AnyObject {
     /// Delegate method to be called when output route changes, for both user actions and system changes
     /// Check again `routeType` to see the change.
     /// - Parameter router: Router instance
-    @objc optional func audioOutputRouter(didUpdateRoute router: MXAudioOutputRouter)
+    @objc optional func audioOutputRouter(didUpdateRoute router: MXiOSAudioOutputRouter)
     
     /// Delegate method to be called when available output routes change
     /// Check again `availableOutputRouteTypes` to see the changes.
     /// - Parameter router: Router instance
-    @objc optional func audioOutputRouter(didUpdateAvailableRouteTypes router: MXAudioOutputRouter)
+    @objc optional func audioOutputRouter(didUpdateAvailableRouteTypes router: MXiOSAudioOutputRouter)
 }

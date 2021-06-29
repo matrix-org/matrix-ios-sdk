@@ -32,7 +32,7 @@ NS_ASSUME_NONNULL_BEGIN
 @class MXRoom;
 @class MXUserModel;
 @class MXAssertedIdentityModel;
-@class MXAudioOutputRouter;
+@class MXiOSAudioOutputRouter;
 
 /**
  Call states.
@@ -344,7 +344,7 @@ extern NSString *const kMXCallSupportsTransferringStatusDidChange;
 /**
  Audio output router.
  */
-@property (nonatomic, readonly) MXAudioOutputRouter *audioOutputRouter;
+@property (nonatomic, readonly) MXiOSAudioOutputRouter *audioOutputRouter;
 #endif
 
 /**

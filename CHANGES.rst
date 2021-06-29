@@ -6,7 +6,7 @@ Changes to be released in next version
 
 🙌 Improvements
  * VoIP: Implement bridged version for call transfers.
- * VoIP: Implement MXAudioOutputRouter.
+ * VoIP: Implement MXiOSAudioOutputRouter.
 
 🐛 Bugfix
  * 

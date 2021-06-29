@@ -18,7 +18,7 @@ import Foundation
 
 /// Audio output route type
 @objc
-public enum MXAudioOutputRouteType: Int {
+public enum MXiOSAudioOutputRouteType: Int {
     /// the speakers at the top of the screen.
     case builtIn
     /// the speakers at the bottom of the phone

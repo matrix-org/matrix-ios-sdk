@@ -45,7 +45,7 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
 
 @interface MXCall ()
 #if TARGET_OS_IPHONE
-<MXAudioOutputRouterDelegate>
+<MXiOSAudioOutputRouterDelegate>
 #endif
 {
     /**
@@ -105,7 +105,7 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
 @property (nonatomic, strong) MXEvent *selectedAnswer;
 
 @property (readwrite, nonatomic) BOOL isVideoCall;
-@property (nonatomic, readwrite) MXAudioOutputRouter *audioOutputRouter;
+@property (nonatomic, readwrite) MXiOSAudioOutputRouter *audioOutputRouter;
 
 @end
 
@@ -901,7 +901,7 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
     [self configureAudioOutputRouter];
 }
 
-- (MXAudioOutputRouter *)audioOutputRouter
+- (MXiOSAudioOutputRouter *)audioOutputRouter
 {
     if (_audioOutputRouter == nil)
     {
@@ -1448,9 +1448,9 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
 }
 
 #if TARGET_OS_IPHONE
-#pragma mark - MXAudioOutputRouterDelegate
+#pragma mark - MXiOSAudioOutputRouterDelegate
 
-- (void)audioOutputRouterWithDidUpdateRoute:(MXAudioOutputRouter *)router
+- (void)audioOutputRouterWithDidUpdateRoute:(MXiOSAudioOutputRouter *)router
 {
     if ([_delegate respondsToSelector:@selector(callAudioOutputRouteTypeDidChange:)])
     {
@@ -1458,7 +1458,7 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
     }
 }
 
-- (void)audioOutputRouterWithDidUpdateAvailableRouteTypes:(MXAudioOutputRouter *)router
+- (void)audioOutputRouterWithDidUpdateAvailableRouteTypes:(MXiOSAudioOutputRouter *)router
 {
     if ([_delegate respondsToSelector:@selector(callAvailableAudioOutputsDidChange:)])
     {
@@ -1472,7 +1472,7 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
 - (void)configureAudioOutputRouter
 {
 #if TARGET_OS_IPHONE
-    _audioOutputRouter = [[MXAudioOutputRouter alloc] initForCall:self];
+    _audioOutputRouter = [[MXiOSAudioOutputRouter alloc] initForCall:self];
     _audioOutputRouter.delegate = self;
 #endif
 }

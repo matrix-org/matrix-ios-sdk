@@ -19,7 +19,7 @@ import AVFoundation
 
 /// Audio output route class
 @objcMembers
-public class MXAudioOutputRoute: NSObject {
+public class MXiOSAudioOutputRoute: NSObject {
     
     /// Underlying port for the route. May be nil for `loudSpeakers` typed routes.
     var port: AVAudioSessionPortDescription?
@@ -28,14 +28,14 @@ public class MXAudioOutputRoute: NSObject {
     public var identifier: String
     
     /// Route type of the route
-    public var routeType: MXAudioOutputRouteType
+    public var routeType: MXiOSAudioOutputRouteType
     
     /// Name of the route. May not be localized for some route types, especially for `loudSpeakers`
     public var name: String
     
     init(withPort port: AVAudioSessionPortDescription? = nil,
          identifier: String,
-         routeType: MXAudioOutputRouteType,
+         routeType: MXiOSAudioOutputRouteType,
          name: String) {
         self.port = port
         self.identifier = identifier
@@ -48,7 +48,7 @@ public class MXAudioOutputRoute: NSObject {
         self.init(withPort: port, identifier: port.uid, routeType: port.routeType, name: port.portName)
     }
     
-    public static func == (lhs: MXAudioOutputRoute, rhs: MXAudioOutputRoute) -> Bool {
+    public static func == (lhs: MXiOSAudioOutputRoute, rhs: MXiOSAudioOutputRoute) -> Bool {
         return lhs.identifier == rhs.identifier
     }
     
@@ -68,8 +68,8 @@ public class MXAudioOutputRoute: NSObject {
 
 fileprivate extension AVAudioSessionPortDescription {
     
-    var routeType: MXAudioOutputRouteType {
-        var result: MXAudioOutputRouteType
+    var routeType: MXiOSAudioOutputRouteType {
+        var result: MXiOSAudioOutputRouteType
         switch portType {
         case .builtInReceiver, .builtInMic:
             result = .builtIn
