@@ -1868,36 +1868,26 @@ typedef void (^MXOnResumeDone)(void);
         return;
     }
     
-    for (NSString *syncResponseId in outdatedSyncResponseIds)
+    MXCachedSyncResponse *outdatedCachedSyncResponse = [syncResponseStoreManager mergedSyncResponseFromSyncResponseIds:outdatedSyncResponseIds];
+    if (outdatedCachedSyncResponse)
     {
-        @autoreleasepool {
-            MXCachedSyncResponse *cachedSyncResponse = [syncResponseStore syncResponseWithId:syncResponseId error:nil];
-            if (cachedSyncResponse)
-            {
-                [asyncTaskQueue asyncWithExecute:^(void (^ taskCompleted)(void)) {
-                    [self handleOutdatedSyncResponse:cachedSyncResponse.syncResponse
-                                  completion:^{
-                        taskCompleted();
-                    }];
-                }];
-            }
-        }
+        [asyncTaskQueue asyncWithExecute:^(void (^ taskCompleted)(void)) {
+            [self handleOutdatedSyncResponse:outdatedCachedSyncResponse.syncResponse
+                          completion:^{
+                taskCompleted();
+            }];
+        }];
     }
     
-    for (NSString *syncResponseId in syncResponseIds)
+    MXCachedSyncResponse *cachedSyncResponse = [syncResponseStoreManager mergedSyncResponseFromSyncResponseIds:syncResponseIds];
+    if (cachedSyncResponse)
     {
-        @autoreleasepool {
-            MXCachedSyncResponse *cachedSyncResponse = [syncResponseStore syncResponseWithId:syncResponseId error:nil];
-            if (cachedSyncResponse)
-            {
-                [asyncTaskQueue asyncWithExecute:^(void (^ taskCompleted)(void)) {
-                    [self handleSyncResponse:cachedSyncResponse.syncResponse
-                                  completion:^{
-                        taskCompleted();
-                    } storeCompletion:nil];
-                }];
-            }
-        }
+        [asyncTaskQueue asyncWithExecute:^(void (^ taskCompleted)(void)) {
+            [self handleSyncResponse:cachedSyncResponse.syncResponse
+                          completion:^{
+                taskCompleted();
+            } storeCompletion:nil];
+        }];
     }
     
     [asyncTaskQueue asyncWithExecute:^(void (^ taskCompleted)(void)) {
