@@ -7,6 +7,7 @@ Changes to be released in next version
 🙌 Improvements
  * MXDehydrationService: Support full rehydration feature (vector-im/element-ios/issues/1117).
  * MXSDKOptions: Add wellknownDomainUrl to customise the domain for wellknown (vector-im/element-ios/issues/#4489).
+ * MXSession: Refresh homeserverWellknown on every start.
 
 🐛 Bugfix
  * 
