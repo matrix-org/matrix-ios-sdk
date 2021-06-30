@@ -43,7 +43,7 @@
 /**
  `MXSessionState` represents the states in the life cycle of a MXSession instance.
  */
-typedef enum : NSUInteger
+typedef NS_ENUM(NSUInteger, MXSessionState)
 {
     /**
      The session is closed (or not initialized yet).
@@ -143,7 +143,7 @@ typedef enum : NSUInteger
      */
     MXSessionStateSoftLogout
 
-} MXSessionState;
+};
 
 
 #pragma mark - Notifications
