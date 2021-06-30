@@ -59,6 +59,11 @@ typedef enum : NSUInteger
      Data from the MXStore has been loaded.
      */
     MXSessionStateStoreDataReady,
+    
+    /**
+     Data from local cache is being processed.
+     */
+    MXSessionStateProcessingLocalCache,
 
     /**
      The session is syncing with the server.
