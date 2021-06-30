@@ -82,6 +82,7 @@
             MXLogDebug(@"[MXOlmDevice] initWithStore: Create new OLMAccount");
 
             // Else, create it
+            // create a OLM account
             olmAccount = [[OLMAccount alloc] initNewAccount];
 
             [store setAccount:olmAccount];

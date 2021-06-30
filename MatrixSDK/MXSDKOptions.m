@@ -46,6 +46,7 @@ static MXSDKOptions *sharedOnceInstance = nil;
         _applicationGroupIdentifier = nil;
         _HTTPAdditionalHeaders = @{};
         _autoAcceptRoomInvites = NO;
+        _callTransferType = MXCallTransferTypeBridged;
     }
     
     return self;

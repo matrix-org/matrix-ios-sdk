@@ -159,6 +159,16 @@ onUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecogn
                          withPassword:(NSString*)password
                            onComplete:(void (^)(MXSession *newSession))onComplete;
 
+// Log the user on a new device
+- (void)loginUserOnANewDevice:(XCTestCase*)testCase
+                  credentials:(MXCredentials*)credentials
+                 withPassword:(NSString*)password
+              sessionToLogout:(MXSession*)sessionToLogout
+              newSessionStore:(id<MXStore>)newSessionStore
+              startNewSession:(BOOL)startNewSession
+                          e2e:(BOOL)e2e
+                   onComplete:(void (^)(MXSession *newSession))onComplete;
+
 - (void)for:(MXRestClient *)mxRestClient2 andRoom:(NSString*)roomId sendMessages:(NSUInteger)messagesCount testCase:(XCTestCase*)testCase success:(void (^)(void))success;
 
 

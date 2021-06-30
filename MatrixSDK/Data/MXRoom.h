@@ -405,6 +405,34 @@ FOUNDATION_EXPORT NSInteger const kMXRoomAlreadyJoinedErrorCode;
 #endif
                     localEcho:(MXEvent**)localEcho
                       success:(void (^)(NSString *eventId))success
+                      failure:(void (^)(NSError *error))failure;
+
+/**
+ Send an image to the room.
+
+ @param imageData the data of the image to send.
+ @param imageSize the original size of the image.
+ @param mimetype  the image mimetype.
+ @param thumbnail optional thumbnail image (may be nil).
+ @param blurhash optional BlurHash (may be nil).
+ @param localEcho a pointer to a MXEvent object (@see sendMessageWithContent: for details).
+ @param success A block object called when the operation succeeds. It returns
+                the event id of the event generated on the home server
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)sendImage:(NSData*)imageData
+                withImageSize:(CGSize)imageSize
+                     mimeType:(NSString*)mimetype
+#if TARGET_OS_IPHONE
+                 andThumbnail:(UIImage*)thumbnail
+#elif TARGET_OS_OSX
+                 andThumbnail:(NSImage*)thumbnail
+#endif
+                     blurHash:(NSString*)blurhash
+                    localEcho:(MXEvent**)localEcho
+                      success:(void (^)(NSString *eventId))success
                       failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
