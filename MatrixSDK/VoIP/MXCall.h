@@ -32,6 +32,7 @@ NS_ASSUME_NONNULL_BEGIN
 @class MXRoom;
 @class MXUserModel;
 @class MXAssertedIdentityModel;
+@class MXiOSAudioOutputRouter;
 
 /**
  Call states.
@@ -339,11 +340,12 @@ extern NSString *const kMXCallSupportsTransferringStatusDidChange;
  */
 @property (nonatomic) BOOL videoMuted;
 
+#if TARGET_OS_IPHONE
 /**
- NO by default, the inbound audio is then routed to the default audio outputs.
- If YES, the inbound audio is sent to the main speaker.
+ Audio output router.
  */
-@property (nonatomic) BOOL audioToSpeaker;
+@property (nonatomic, readonly) MXiOSAudioOutputRouter *audioOutputRouter;
+#endif
 
 /**
  The camera to use.
@@ -410,6 +412,18 @@ extern NSString *const kMXCallSupportsTransferringStatusDidChange;
  @param call the instance that changes
  */
 - (void)callAssertedIdentityDidChange:(MXCall *)call;
+
+/**
+ Tells the delegate that `audioOutputRouter.routeType` property of the call has changed.
+ @param call the instance that changes
+ */
+- (void)callAudioOutputRouteTypeDidChange:(MXCall *)call;
+
+/**
+ Tells the delegate that `audioOutputRouter.availableOutputRouteTypes` property of the call has changed.
+ @param call the instance that changes
+ */
+- (void)callAvailableAudioOutputsDidChange:(MXCall *)call;
 
 /**
  Tells the delegate an error occured.

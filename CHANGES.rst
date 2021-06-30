@@ -6,12 +6,14 @@ Changes to be released in next version
 
 🙌 Improvements
  * VoIP: Implement bridged version for call transfers.
+ * VoIP: Implement MXiOSAudioOutputRouter.
 
 🐛 Bugfix
  * 
 
 ⚠️ API Changes
- * 
+ * MXCall: `audioToSpeaker` property removed. Use `audioOutputRouter` instead.
+ * MXCallStackCall: `audioToSpeaker` property removed. Audio routing should be handled high-level.
 
 🗣 Translations
  * 

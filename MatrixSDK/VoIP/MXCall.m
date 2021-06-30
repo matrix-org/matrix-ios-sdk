@@ -36,6 +36,7 @@
 #import "MXCallRejectReplacementEventContent.h"
 #import "MXUserModel.h"
 #import "MXCallCapabilitiesModel.h"
+#import "MatrixSDKSwiftHeader.h"
 
 #pragma mark - Constants definitions
 NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
@@ -43,6 +44,9 @@ NSString *const kMXCallSupportsHoldingStatusDidChange = @"kMXCallSupportsHolding
 NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTransferringStatusDidChange";
 
 @interface MXCall ()
+#if TARGET_OS_IPHONE
+<MXiOSAudioOutputRouterDelegate>
+#endif
 {
     /**
      The manager of this object.
@@ -99,6 +103,9 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
  Selected answer for this call. Can be nil.
  */
 @property (nonatomic, strong) MXEvent *selectedAnswer;
+
+@property (readwrite, nonatomic) BOOL isVideoCall;
+@property (nonatomic, readwrite) MXiOSAudioOutputRouter *audioOutputRouter;
 
 @end
 
@@ -258,11 +265,8 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
     
     _isIncoming = NO;
 
-    _isVideoCall = video;
+    self.isVideoCall = video;
 
-    // Set up the default audio route
-    callStackCall.audioToSpeaker = _isVideoCall;
-    
     [self setState:MXCallStateWaitLocalMedia reason:nil];
     
     NSString *eventName = _isConferenceCall ? kMXAnalyticsVoipNamePlaceConferenceCall : kMXAnalyticsVoipNamePlaceCall;
@@ -278,7 +282,11 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
         MXWeakify(self);
         [self->callStackCall startCapturingMediaWithVideo:video success:^() {
             MXStrongifyAndReturnIfNil(self);
-
+            
+#if TARGET_OS_IPHONE
+            [self.audioOutputRouter reroute];
+#endif
+            
             MXWeakify(self);
             [self->callStackCall createOffer:^(NSString *sdp) {
                 MXStrongifyAndReturnIfNil(self);
@@ -887,14 +895,19 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
     callStackCall.videoMuted = videoMuted;
 }
 
-- (BOOL)audioToSpeaker
+- (void)setIsVideoCall:(BOOL)isVideoCall
 {
-    return callStackCall.audioToSpeaker;
+    _isVideoCall = isVideoCall;
+    [self configureAudioOutputRouter];
 }
 
-- (void)setAudioToSpeaker:(BOOL)audioToSpeaker
+- (MXiOSAudioOutputRouter *)audioOutputRouter
 {
-    callStackCall.audioToSpeaker = audioToSpeaker;
+    if (_audioOutputRouter == nil)
+    {
+        [self configureAudioOutputRouter];
+    }
+    return _audioOutputRouter;
 }
 
 - (AVCaptureDevicePosition)cameraPosition
@@ -1080,15 +1093,12 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
     _isIncoming = YES;
 
     // Store if it is voice or video call
-    _isVideoCall = callInviteEventContent.isVideoCall;
+    self.isVideoCall = callInviteEventContent.isVideoCall;
     
     [[MXSDKOptions sharedInstance].analyticsDelegate trackValue:@(_isVideoCall)
                                                        category:kMXAnalyticsVoipCategory
                                                            name:kMXAnalyticsVoipNameReceiveCall];
 
-    // Set up the default audio route
-    callStackCall.audioToSpeaker = _isVideoCall;
-    
     [self setState:MXCallStateWaitLocalMedia reason:nil];
     
     MXWeakify(self);
@@ -1098,6 +1108,10 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
         MXWeakify(self);
         [self->callStackCall startCapturingMediaWithVideo:self.isVideoCall success:^{
             MXStrongifyAndReturnIfNil(self);
+            
+#if TARGET_OS_IPHONE
+            [self.audioOutputRouter reroute];
+#endif
             
             [self->callStackCall handleOffer:self->callInviteEventContent.offer.sdp
                                      success:^{
@@ -1362,11 +1376,8 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
         if (content.sessionDescription.type == MXCallSessionDescriptionTypeOffer)
         {
             // Store if it is voice or video call
-            self->_isVideoCall = content.isVideoCall;
+            self.isVideoCall = content.isVideoCall;
 
-            // Set up the default audio route
-            self->callStackCall.audioToSpeaker = self->_isVideoCall;
-            
             MXWeakify(self);
             [self->callStackCall handleOffer:content.sessionDescription.sdp
                                      success:^{
@@ -1436,7 +1447,35 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
     MXLogDebug(@"[MXCall][%@] handleCallRejectReplacement", _callId)
 }
 
+#if TARGET_OS_IPHONE
+#pragma mark - MXiOSAudioOutputRouterDelegate
+
+- (void)audioOutputRouterWithDidUpdateRoute:(MXiOSAudioOutputRouter *)router
+{
+    if ([_delegate respondsToSelector:@selector(callAudioOutputRouteTypeDidChange:)])
+    {
+        [_delegate callAudioOutputRouteTypeDidChange:self];
+    }
+}
+
+- (void)audioOutputRouterWithDidUpdateAvailableRouteTypes:(MXiOSAudioOutputRouter *)router
+{
+    if ([_delegate respondsToSelector:@selector(callAvailableAudioOutputsDidChange:)])
+    {
+        [_delegate callAvailableAudioOutputsDidChange:self];
+    }
+}
+#endif
+
 #pragma mark - Private methods
+
+- (void)configureAudioOutputRouter
+{
+#if TARGET_OS_IPHONE
+    _audioOutputRouter = [[MXiOSAudioOutputRouter alloc] initForCall:self];
+    _audioOutputRouter.delegate = self;
+#endif
+}
 
 - (void)turnServersReceived:(NSNotification *)notification
 {
