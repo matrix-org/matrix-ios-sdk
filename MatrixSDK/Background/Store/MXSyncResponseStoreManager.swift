@@ -92,46 +92,13 @@ public class MXSyncResponseStoreManager: NSObject {
                 
                 MXLog.debug("[MXSyncResponseStoreManager] updateStore: Merge new sync response to the previous one")
                 
-                //  handle new limited timelines
-                newSyncResponse.rooms?.join?.filter({ $1.timeline.limited == true }).forEach { (roomId, _) in
-                    if let joinedRoomSync = cachedSyncResponse.syncResponse.rooms?.join?[roomId] {
-                        //  remove old events
-                        joinedRoomSync.timeline.events = []
-                        //  mark old timeline as limited too
-                        joinedRoomSync.timeline.limited = true
-                    }
-                }
-                newSyncResponse.rooms?.leave?.filter({ $1.timeline.limited == true }).forEach { (roomId, _) in
-                    if let leftRoomSync = cachedSyncResponse.syncResponse.rooms?.leave?[roomId] {
-                        //  remove old events
-                        leftRoomSync.timeline.events = []
-                        //  mark old timeline as limited too
-                        leftRoomSync.timeline.limited = true
-                    }
-                }
-                
-                //  handle old limited timelines
-                cachedSyncResponse.syncResponse.rooms?.join?.filter({ $1.timeline.limited == true }).forEach { (roomId, _) in
-                    if let joinedRoomSync = newSyncResponse.rooms?.join?[roomId] {
-                        //  mark new timeline as limited too, to avoid losing value of limited
-                        joinedRoomSync.timeline.limited = true
-                    }
-                }
-                cachedSyncResponse.syncResponse.rooms?.leave?.filter({ $1.timeline.limited == true }).forEach { (roomId, _) in
-                    if let leftRoomSync = newSyncResponse.rooms?.leave?[roomId] {
-                        //  mark new timeline as limited too, to avoid losing value of limited
-                        leftRoomSync.timeline.limited = true
-                    }
-                }
-                
-                // Merge the new sync response to the old one
-                var dictionary = NSDictionary(dictionary: cachedSyncResponse.syncResponse.jsonDictionary())
-                dictionary = dictionary + NSDictionary(dictionary: newSyncResponse.jsonDictionary())
+                let updatedSyncResponse = merged(newSyncResponse, onto: cachedSyncResponse.syncResponse)
                 
                 // And update it to the store.
                 // Note we we care only about the cached sync token. syncToken is now useless
                 let updatedCachedSyncResponse = MXCachedSyncResponse(syncToken: cachedSyncResponse.syncToken,
-                                                                     syncResponse: MXSyncResponse(fromJSON: dictionary as? [AnyHashable : Any]))
+                                                                     syncResponse: updatedSyncResponse)
+                
                 syncResponseStore.updateSyncResponse(withId: id, syncResponse: updatedCachedSyncResponse)
                 
                 
@@ -240,6 +207,34 @@ public class MXSyncResponseStoreManager: NSObject {
         return nil
     }
     
+    //  MARK: - Private
+    
+    private func merged(_ newSyncResponse: MXSyncResponse, onto oldSyncResponse: MXSyncResponse) -> MXSyncResponse {
+        //  handle new limited timelines
+        newSyncResponse.rooms?.joinedOrLeftRoomSyncs?.filter({ $1.timeline.limited == true }).forEach { (roomId, _) in
+            if let joinedRoomSync = oldSyncResponse.rooms?.join?[roomId] {
+                //  remove old events
+                joinedRoomSync.timeline.events = []
+                //  mark old timeline as limited too
+                joinedRoomSync.timeline.limited = true
+            }
+        }
+        
+        //  handle old limited timelines
+        oldSyncResponse.rooms?.joinedOrLeftRoomSyncs?.filter({ $1.timeline.limited == true }).forEach { (roomId, _) in
+            if let joinedRoomSync = newSyncResponse.rooms?.join?[roomId] {
+                //  mark new timeline as limited too, to avoid losing value of limited
+                joinedRoomSync.timeline.limited = true
+            }
+        }
+        
+        // Merge the new sync response to the old one
+        var dictionary = NSDictionary(dictionary: oldSyncResponse.jsonDictionary())
+        dictionary = dictionary + NSDictionary(dictionary: newSyncResponse.jsonDictionary())
+        
+        return MXSyncResponse(fromJSON: dictionary as? [AnyHashable : Any])
+    }
+    
     private func roomSummary(forRoomId roomId: String, using summary: MXRoomSummary, inSyncResponse response: MXCachedSyncResponse) -> MXRoomSummary? {
         var eventsToProcess: [MXEvent] = []
         
@@ -288,6 +283,22 @@ private extension Array {
     mutating func appendIfNotNil(contentsOf array: Array?) {
         if let array = array {
             append(contentsOf: array)
+        }
+    }
+    
+}
+
+private extension MXRoomsSyncResponse {
+    
+    var joinedOrLeftRoomSyncs: [String: MXRoomSync]? {
+        guard let joined = join else {
+            return leave
+        }
+        guard let left = leave else {
+            return joined
+        }
+        return joined.merging(left) { current, _ in
+            current
         }
     }
     
