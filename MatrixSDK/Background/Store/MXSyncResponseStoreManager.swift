@@ -76,6 +76,31 @@ public class MXSyncResponseStoreManager: NSObject {
         syncResponseStore.markOutdated(syncResponseIds: syncResponseIds)
     }
     
+    public func mergedSyncResponse(fromSyncResponseIds responseIds: [String]) -> MXCachedSyncResponse? {
+        if responseIds.isEmpty {
+            //  empty array
+            return nil
+        }
+        
+        var result: MXSyncResponse?
+        var syncToken: String?
+        for responseId in responseIds {
+            if let response = try? syncResponseStore.syncResponse(withId: responseId) {
+                if var result = result {
+                    result = merged(response.syncResponse, onto: result)
+                } else {
+                    result = response.syncResponse
+                    syncToken = response.syncToken
+                }
+            }
+        }
+        
+        guard let result = result else {
+            return nil
+        }
+        return MXCachedSyncResponse(syncToken: syncToken,
+                                    syncResponse: result)
+    }
 
     /// Cache a sync response.
     /// - Parameters:
