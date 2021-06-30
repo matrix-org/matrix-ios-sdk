@@ -8,6 +8,7 @@ Changes to be released in next version
  * MXDehydrationService: Support full rehydration feature (vector-im/element-ios/issues/1117).
  * MXSDKOptions: Add wellknownDomainUrl to customise the domain for wellknown (vector-im/element-ios/issues/#4489).
  * MXSession: Refresh homeserverWellknown on every start.
+ * MXRoom: Added support for posting `m.image`s with BlurHash (MSC 2448).
  * VoIP: Implement bridged version for call transfers.
  * VoIP: Implement MXiOSAudioOutputRouter.
 
