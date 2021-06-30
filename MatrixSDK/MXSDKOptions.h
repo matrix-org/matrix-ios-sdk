@@ -148,6 +148,13 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, assign) BOOL autoAcceptRoomInvites;
 
 /**
+ Custom domain to use to fetch the matrix client wellknown.
+ 
+ It is nil by default. By default, MXSession uses the domain of the user id.
+ */
+@property (nonatomic, nullable) NSString *wellknownDomainUrl;
+
+/**
  Call transfer type to be used when transferring calls.
  
  @remark `MXCallTransferTypeBridged` by default.

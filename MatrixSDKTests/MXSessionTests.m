@@ -26,6 +26,8 @@
 #import "MatrixSDKSwiftHeader.h"
 #import "MXSyncResponse.h"
 
+#import <OHHTTPStubs/HTTPStubs.h>
+
 // Do not bother with retain cycles warnings in tests
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Warc-retain-cycles"
@@ -64,6 +66,9 @@
     }
     
     matrixSDKTestsData = nil;
+    
+    [HTTPStubs removeAllStubs];
+    [MXSDKOptions sharedInstance].wellknownDomainUrl = nil;
 
     [super tearDown];
 }
@@ -1459,6 +1464,49 @@
             [expectation fulfill];
         }];
 
+    }];
+}
+
+// Check MXSDKOptions.wellknownDomainUrl
+//
+// - Customise the wellknown domain
+// - Set up a MXSession
+// - Catch the wellknown request
+// -> The wellknown request must be done on the custom domain
+- (void)testMXSDKOptionsWellknownDomainUrl
+{
+    __block BOOL testDone = NO;
+    __block XCTestExpectation *expectation;
+    
+    // - Customise the wellknown domain
+    NSString *wellknownDomainUrl = @"https://anotherWellknownDomain";
+    [MXSDKOptions sharedInstance].wellknownDomainUrl = wellknownDomainUrl;
+
+    // - Catch the wellknown request
+    [HTTPStubs stubRequestsPassingTest:^BOOL(NSURLRequest *request) {
+        if ([request.URL.absoluteString containsString:@".well-known/matrix/client"])
+        {
+            // -> The wellknown request must be done on the custom domain
+            XCTAssertTrue([request.URL.absoluteString hasPrefix:wellknownDomainUrl],
+                          @"The wellknown request (%@) must contain the customised wellknown domain (%@)",
+                          request.URL.absoluteString, wellknownDomainUrl);
+            
+            testDone = YES;
+            [expectation fulfill];
+        }
+        return NO;
+    } withStubResponse:^HTTPStubsResponse*(NSURLRequest *request) {
+        return nil;
+    }];
+    
+    // - Set up a MXSession
+    [matrixSDKTestsData doMXSessionTestWithAlice:self readyToTest:^(MXSession *aliceSession, XCTestExpectation *theExpectation) {
+        expectation = theExpectation;
+        
+        if (testDone)
+        {
+            [expectation fulfill];
+        }
     }];
 }
 
