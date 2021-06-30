@@ -8,12 +8,15 @@ Changes to be released in next version
  * MXDehydrationService: Support full rehydration feature (vector-im/element-ios/issues/1117).
  * MXSDKOptions: Add wellknownDomainUrl to customise the domain for wellknown (vector-im/element-ios/issues/#4489).
  * MXSession: Refresh homeserverWellknown on every start.
+ * VoIP: Implement bridged version for call transfers.
+ * VoIP: Implement MXiOSAudioOutputRouter.
 
 🐛 Bugfix
  * 
 
 ⚠️ API Changes
- * 
+ * MXCall: `audioToSpeaker` property removed. Use `audioOutputRouter` instead.
+ * MXCallStackCall: `audioToSpeaker` property removed. Audio routing should be handled high-level.
 
 🗣 Translations
  * 

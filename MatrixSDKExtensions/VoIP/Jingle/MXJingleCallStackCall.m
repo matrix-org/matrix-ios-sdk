@@ -86,7 +86,7 @@ typedef void (^HandleOfferBlock)(dispatch_block_t);
 @end
 
 @implementation MXJingleCallStackCall
-@synthesize selfVideoView, remoteVideoView, audioToSpeaker, cameraPosition, delegate;
+@synthesize selfVideoView, remoteVideoView, cameraPosition, delegate;
 
 - (instancetype)initWithFactory:(RTCPeerConnectionFactory *)factory
 {
@@ -97,11 +97,6 @@ typedef void (^HandleOfferBlock)(dispatch_block_t);
         cameraPosition = AVCaptureDevicePositionFront;
         cachedRemoteIceCandidates = [NSMutableArray array];
         _pendingOffers = [NSMutableArray array];
-        
-        [[NSNotificationCenter defaultCenter] addObserver:self
-                                                 selector:@selector(handleRouteChangeNotification:)
-                                                     name:AVAudioSessionRouteChangeNotification
-                                                   object:nil];
     }
     return self;
 }
@@ -694,13 +689,6 @@ didRemoveIceCandidates:(NSArray<RTCIceCandidate *> *)candidates;
     localVideoTrack.isEnabled = !videoMuted;
 }
 
-- (void)setAudioToSpeaker:(BOOL)theAudioToSpeaker
-{
-    audioToSpeaker = theAudioToSpeaker;
-    
-    [self configureAudioOutputPort];
-}
-
 - (void)setCameraPosition:(AVCaptureDevicePosition)theCameraPosition
 {
     cameraPosition = theCameraPosition;
@@ -821,9 +809,6 @@ didRemoveIceCandidates:(NSArray<RTCIceCandidate *> *)candidates;
         }
     }
     
-    // Set the audio route
-    self.audioToSpeaker = audioToSpeaker;
-    
     if (onStartCapturingMediaWithVideoSuccess)
     {
         onStartCapturingMediaWithVideoSuccess();
@@ -898,75 +883,6 @@ didRemoveIceCandidates:(NSArray<RTCIceCandidate *> *)candidates;
     {
         selfVideoView.transform = CGAffineTransformIdentity;
     }
-}
-
-- (void)handleRouteChangeNotification:(NSNotification *)notification
-{
-    AVAudioSessionRouteChangeReason changeReason = [notification.userInfo[AVAudioSessionRouteChangeReasonKey] unsignedIntegerValue];
-    
-    MXLogDebug(@"[MXJingleCallStackCall] handleRouteChangeNotification: reason: %tu", changeReason)
-    
-    switch (changeReason)
-    {
-        case AVAudioSessionRouteChangeReasonCategoryChange:
-        case AVAudioSessionRouteChangeReasonNewDeviceAvailable:
-        case AVAudioSessionRouteChangeReasonOldDeviceUnavailable:
-            // WebRTC sets AVAudioSession's category right before call starts, this can lead to changing output route
-            // which user selected when the call was in connecting state.
-            // So we need to perform additional checks and override ouput port if needed
-            [self configureAudioOutputPort];
-            break;
-        default:
-            break;
-    }
-}
-
-- (void)configureAudioOutputPort
-{
-    MXLogDebug(@"[MXJingleCallStackCall] configureAudioOutputPort")
-    
-    AVAudioSessionRouteDescription *currentRoute = [[AVAudioSession sharedInstance] currentRoute];
-    BOOL isExternalOutputDeviceConnected = NO;
-    for (AVAudioSessionPortDescription *output in currentRoute.outputs)
-    {
-        if ([self isExternalAudioDevice:output])
-        {
-            isExternalOutputDeviceConnected = YES;
-            break;
-        }
-    }
-    
-    //  set output device
-    if (audioToSpeaker && !isExternalOutputDeviceConnected)
-    {
-        MXLogDebug(@"[MXJingleCallStackCall] configureAudioOutputPort: route output to speaker")
-        
-        [[AVAudioSession sharedInstance] overrideOutputAudioPort:AVAudioSessionPortOverrideSpeaker error:nil];
-    }
-    else
-    {
-        MXLogDebug(@"[MXJingleCallStackCall] configureAudioOutputPort: route output to default")
-        
-        [[AVAudioSession sharedInstance] overrideOutputAudioPort:AVAudioSessionPortOverrideNone error:nil];
-    }
-}
-
-- (BOOL)isExternalAudioDevice:(AVAudioSessionPortDescription *)port
-{
-    BOOL result = NO;
-    if ([port.portType isEqualToString:AVAudioSessionPortHeadphones]
-        || [port.portType isEqualToString:AVAudioSessionPortHeadsetMic]
-        || [port.portType isEqualToString:AVAudioSessionPortBluetoothA2DP]
-        || [port.portType isEqualToString:AVAudioSessionPortBluetoothLE]
-        || [port.portType isEqualToString:AVAudioSessionPortBluetoothHFP]
-        || [port.portType isEqualToString:AVAudioSessionPortCarAudio])
-    {
-        result = YES;
-    }
-    
-    MXLogDebug(@"[MXJingleCallStackCall] isExternalAudioDevice: returning %@ for port type: %@", result ? @"YES" : @"NO", port.portType)
-    
-    return result;
 }
 
 @end

@@ -70,6 +70,16 @@ extern NSString *const kMXCallManagerVirtualRoomsSupportUpdated;
 extern NSString *const kMXCallManagerTurnServersReceived;
 
 /**
+ Third-party protocol for native lookups.
+ */
+extern NSString *const kMXProtocolVectorSipNative;
+
+/**
+ Third-party protocol for virtual lookups.
+ */
+extern NSString *const kMXProtocolVectorSipVirtual;
+
+/**
  The `MXCallManager` object manages calls for a given Matrix session.
  It manages call signaling over Matrix (@see http://matrix.org/docs/spec/#id9) and then opens
  a stream between peers devices using a third party VoIP library.
