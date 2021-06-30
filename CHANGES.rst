@@ -5,13 +5,14 @@ Changes to be released in next version
  * 
 
 🙌 Improvements
- * 
+ * MXSession: Introduce `MXSessionStateProcessingLocalCache` state.
+ * MXSession: Merge local cached sync responses when resuming the session.
 
 🐛 Bugfix
  * 
 
 ⚠️ API Changes
- * 
+ * MXSessionState: Made Swift compatible.
 
 🗣 Translations
  * 
