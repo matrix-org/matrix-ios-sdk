@@ -879,11 +879,8 @@ typedef void (^MXOnResumeDone)(void);
         }];
     }
 
-    // Get wellknown data only at the login time
-    if (!self.homeserverWellknown)
-    {
-        [self refreshHomeserverWellknown:nil failure:nil];
-    }
+    // Refresh wellknown data
+    [self refreshHomeserverWellknown:nil failure:nil];
 }
 
 - (NSString *)syncFilterId
@@ -4094,18 +4091,20 @@ typedef void (^MXOnResumeDone)(void);
     MXLogDebug(@"[MXSession] refreshHomeserverWellknown");
     if (!autoDiscovery)
     {
-        NSString *homeServer;
-        
-        // Retrieve the domain from the user id as it can be different from the `MXRestClient.homeserver` that uses the client-server API endpoint domain.
-        NSString *userDomain = [MXTools serverNameInMatrixIdentifier:self.myUserId];
-        
-        if (userDomain)
+        NSString *homeServer = [MXSDKOptions sharedInstance].wellknownDomainUrl;
+        if (!homeServer)
         {
-            homeServer =  [NSString stringWithFormat:@"https://%@", userDomain];
-        }
-        else
-        {
-            homeServer = matrixRestClient.homeserver;
+            // Retrieve the domain from the user id as it can be different from the `MXRestClient.homeserver` that uses the client-server API endpoint domain.
+            NSString *userDomain = [MXTools serverNameInMatrixIdentifier:self.myUserId];
+            
+            if (userDomain)
+            {
+                homeServer =  [NSString stringWithFormat:@"https://%@", userDomain];
+            }
+            else
+            {
+                homeServer = matrixRestClient.homeserver;
+            }
         }
         
         autoDiscovery = [[MXAutoDiscovery alloc] initWithUrl:homeServer];
