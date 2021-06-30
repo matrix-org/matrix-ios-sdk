@@ -228,6 +228,28 @@ public class MXSyncResponseStoreManager: NSObject {
             }
         }
         
+        //  handle newly joined/left rooms for when invited
+        newSyncResponse.rooms?.joinedOrLeftRoomSyncs?.forEach { (roomId, newRoomSync) in
+            if let invitedRoomSync = oldSyncResponse.rooms?.invite?[roomId] {
+                //  add inviteState events into the beginning of the state events
+                newRoomSync.state.events.insert(contentsOf: invitedRoomSync.inviteState.events, at: 0)
+                //  remove invited room from old sync response
+                oldSyncResponse.rooms?.invite?.removeValue(forKey: roomId)
+            }
+        }
+        
+        //  handle newly left rooms for when joined
+        newSyncResponse.rooms?.leave?.forEach { (roomId, leftRoomSync) in
+            if let joinedRoomSync = oldSyncResponse.rooms?.join?[roomId] {
+                //  add inviteState events into the beginning of the state events
+                leftRoomSync.state.events.insert(contentsOf: joinedRoomSync.state.events, at: 0)
+                //  add joined timeline events into the beginning of the left timeline events
+                leftRoomSync.timeline.events.insert(contentsOf: joinedRoomSync.timeline.events, at: 0)
+                //  remove joined room from old sync response
+                oldSyncResponse.rooms?.join?.removeValue(forKey: roomId)
+            }
+        }
+        
         // Merge the new sync response to the old one
         var dictionary = NSDictionary(dictionary: oldSyncResponse.jsonDictionary())
         dictionary = dictionary + NSDictionary(dictionary: newSyncResponse.jsonDictionary())
