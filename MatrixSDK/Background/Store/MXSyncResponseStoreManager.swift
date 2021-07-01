@@ -95,11 +95,11 @@ public class MXSyncResponseStoreManager: NSObject {
             }
         }
         
-        guard let result = result else {
-            return nil
+        if let result = result {
+            return MXCachedSyncResponse(syncToken: syncToken,
+                                        syncResponse: result)
         }
-        return MXCachedSyncResponse(syncToken: syncToken,
-                                    syncResponse: result)
+        return nil
     }
 
     /// Cache a sync response.
