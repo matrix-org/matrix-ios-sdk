@@ -1868,27 +1868,29 @@ typedef void (^MXOnResumeDone)(void);
         return;
     }
     
-    MXCachedSyncResponse *outdatedCachedSyncResponse = [syncResponseStoreManager mergedSyncResponseFromSyncResponseIds:outdatedSyncResponseIds];
-    if (outdatedCachedSyncResponse)
-    {
-        [asyncTaskQueue asyncWithExecute:^(void (^ taskCompleted)(void)) {
-            [self handleOutdatedSyncResponse:outdatedCachedSyncResponse.syncResponse
-                          completion:^{
-                taskCompleted();
+    [syncResponseStoreManager mergedSyncResponseFromSyncResponseIds:outdatedSyncResponseIds completion:^(MXCachedSyncResponse * _Nullable outdatedCachedSyncResponse) {
+        if (outdatedCachedSyncResponse)
+        {
+            [self->asyncTaskQueue asyncWithExecute:^(void (^ taskCompleted)(void)) {
+                [self handleOutdatedSyncResponse:outdatedCachedSyncResponse.syncResponse
+                              completion:^{
+                    taskCompleted();
+                }];
             }];
-        }];
-    }
+        }
+    }];
     
-    MXCachedSyncResponse *cachedSyncResponse = [syncResponseStoreManager mergedSyncResponseFromSyncResponseIds:syncResponseIds];
-    if (cachedSyncResponse)
-    {
-        [asyncTaskQueue asyncWithExecute:^(void (^ taskCompleted)(void)) {
-            [self handleSyncResponse:cachedSyncResponse.syncResponse
-                          completion:^{
-                taskCompleted();
-            } storeCompletion:nil];
-        }];
-    }
+    [syncResponseStoreManager mergedSyncResponseFromSyncResponseIds:syncResponseIds completion:^(MXCachedSyncResponse * _Nullable cachedSyncResponse) {
+        if (cachedSyncResponse)
+        {
+            [self->asyncTaskQueue asyncWithExecute:^(void (^ taskCompleted)(void)) {
+                [self handleSyncResponse:cachedSyncResponse.syncResponse
+                              completion:^{
+                    taskCompleted();
+                } storeCompletion:nil];
+            }];
+        }
+    }];
     
     [asyncTaskQueue asyncWithExecute:^(void (^ taskCompleted)(void)) {
         [syncResponseStore deleteData];
