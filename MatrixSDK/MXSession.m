@@ -1868,28 +1868,36 @@ typedef void (^MXOnResumeDone)(void);
         return;
     }
     
-    [syncResponseStoreManager mergedSyncResponseFromSyncResponseIds:outdatedSyncResponseIds completion:^(MXCachedSyncResponse * _Nullable outdatedCachedSyncResponse) {
-        if (outdatedCachedSyncResponse)
-        {
-            [self->asyncTaskQueue asyncWithExecute:^(void (^ taskCompleted)(void)) {
+    [self->asyncTaskQueue asyncWithExecute:^(void (^ taskCompleted)(void)) {
+        [syncResponseStoreManager mergedSyncResponseFromSyncResponseIds:outdatedSyncResponseIds completion:^(MXCachedSyncResponse * _Nullable outdatedCachedSyncResponse) {
+            if (outdatedCachedSyncResponse)
+            {
                 [self handleOutdatedSyncResponse:outdatedCachedSyncResponse.syncResponse
-                              completion:^{
+                                      completion:^{
                     taskCompleted();
                 }];
-            }];
-        }
+            }
+            else
+            {
+                taskCompleted();
+            }
+        }];
     }];
     
-    [syncResponseStoreManager mergedSyncResponseFromSyncResponseIds:syncResponseIds completion:^(MXCachedSyncResponse * _Nullable cachedSyncResponse) {
-        if (cachedSyncResponse)
-        {
-            [self->asyncTaskQueue asyncWithExecute:^(void (^ taskCompleted)(void)) {
+    [self->asyncTaskQueue asyncWithExecute:^(void (^ taskCompleted)(void)) {
+        [syncResponseStoreManager mergedSyncResponseFromSyncResponseIds:syncResponseIds completion:^(MXCachedSyncResponse * _Nullable cachedSyncResponse) {
+            if (cachedSyncResponse)
+            {
                 [self handleSyncResponse:cachedSyncResponse.syncResponse
                               completion:^{
                     taskCompleted();
                 } storeCompletion:nil];
-            }];
-        }
+            }
+            else
+            {
+                taskCompleted();
+            }
+        }];
     }];
     
     [asyncTaskQueue asyncWithExecute:^(void (^ taskCompleted)(void)) {
