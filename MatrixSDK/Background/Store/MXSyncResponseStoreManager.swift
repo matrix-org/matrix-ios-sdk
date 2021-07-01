@@ -28,6 +28,11 @@ public class MXSyncResponseStoreManager: NSObject {
     /// The actual store
     let syncResponseStore: MXSyncResponseStore
     
+    /// Serial queue to merge sync responses
+    private lazy var mergeQueue: DispatchQueue = {
+        return DispatchQueue(label: String(describing: self) + "-MergeQueue")
+    }()
+    
     public init(syncResponseStore: MXSyncResponseStore) {
         self.syncResponseStore = syncResponseStore
     }
@@ -86,28 +91,30 @@ public class MXSyncResponseStoreManager: NSObject {
             return
         }
         
-        var result: MXSyncResponse?
-        var syncToken: String?
-        for responseId in responseIds {
-            if let response = try? syncResponseStore.syncResponse(withId: responseId) {
-                if var result = result {
-                    result = merged(response.syncResponse, onto: result)
-                } else {
-                    result = response.syncResponse
-                    syncToken = response.syncToken
+        mergeQueue.async {
+            var result: MXSyncResponse?
+            var syncToken: String?
+            for responseId in responseIds {
+                if let response = try? self.syncResponseStore.syncResponse(withId: responseId) {
+                    if var result = result {
+                        result = self.merged(response.syncResponse, onto: result)
+                    } else {
+                        result = response.syncResponse
+                        syncToken = response.syncToken
+                    }
                 }
             }
-        }
-        
-        if let result = result {
-            DispatchQueue.main.async {
-                completion(MXCachedSyncResponse(syncToken: syncToken,
-                                                syncResponse: result))
+            
+            if let result = result {
+                DispatchQueue.main.async {
+                    completion(MXCachedSyncResponse(syncToken: syncToken,
+                                                    syncResponse: result))
+                }
+            } else {
+                DispatchQueue.main.async {
+                    completion(nil)
+                }
             }
-            return
-        }
-        DispatchQueue.main.async {
-            completion(nil)
         }
     }
 
