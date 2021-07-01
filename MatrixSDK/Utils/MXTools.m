@@ -809,7 +809,7 @@ static NSMutableDictionary *fileExtensionByContentType = nil;
 #pragma mark - Video processing
 
 + (void)convertVideoToMP4:(NSURL*)videoLocalURL
-            withMaxUploadSize:(NSInteger)maxUploadSize
+       withTargetFileSize:(NSInteger)targetFileSize
                   success:(void(^)(NSURL *videoLocalURL, NSString *mimetype, CGSize size, double durationInMs))success
                   failure:(void(^)(void))failure
 {
@@ -830,7 +830,7 @@ static NSMutableDictionary *fileExtensionByContentType = nil;
     AVURLAsset* videoAsset = [AVURLAsset URLAssetWithURL:videoLocalURL options:nil];
     AVAssetExportSession *exportSession = [AVAssetExportSession exportSessionWithAsset:videoAsset presetName:AVAssetExportPreset3840x2160];
     exportSession.outputURL = outputVideoLocalURL;
-    exportSession.fileLengthLimit = maxUploadSize;
+    exportSession.fileLengthLimit = targetFileSize;
     
     // Check output file types supported by the device
     NSArray *supportedFileTypes = exportSession.supportedFileTypes;

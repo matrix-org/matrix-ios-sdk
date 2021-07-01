@@ -1215,7 +1215,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
 
         // Before sending data to the server, convert the video to MP4
         [MXTools convertVideoToMP4:videoLocalURL
-                 withMaxUploadSize:[self mxSession].maxUploadSize
+                withTargetFileSize:[self mxSession].maxUploadSize
                            success:^(NSURL *convertedLocalURL, NSString *mimetype, CGSize size, double durationInMs) {
 
             if (![[NSFileManager defaultManager] fileExistsAtPath:convertedLocalURL.path])

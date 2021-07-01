@@ -235,13 +235,13 @@ FOUNDATION_EXPORT NSString *const kMXToolsRegexStringForMatrixGroupIdentifier;
  If the device does not support MP4 file format, the function will use the QuickTime format.
  
  @param videoLocalURL the local path of the video to convert.
- @param maxUploadSize a file size limit to aim for.
+ @param targetFileSize a file size limit to aim for.
  @param success A block object called when the operation succeeded. It returns
  the path of the output video with some metadata.
  @param failure A block object called when the operation failed.
  */
 + (void)convertVideoToMP4:(NSURL*)videoLocalURL
-        withMaxUploadSize:(NSInteger)maxUploadSize
+       withTargetFileSize:(NSInteger)targetFileSize
                   success:(void(^)(NSURL *videoLocalURL, NSString *mimetype, CGSize size, double durationInMs))success
                   failure:(void(^)(void))failure;
 
