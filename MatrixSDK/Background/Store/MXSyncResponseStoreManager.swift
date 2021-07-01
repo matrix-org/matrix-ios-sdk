@@ -91,6 +91,8 @@ public class MXSyncResponseStoreManager: NSObject {
             return
         }
         
+        let stopwatch = MXStopwatch()
+        
         mergeQueue.async {
             var result: MXSyncResponse?
             var syncToken: String?
@@ -104,6 +106,8 @@ public class MXSyncResponseStoreManager: NSObject {
                     }
                 }
             }
+            
+            MXLog.debug("[MXSyncResponseStoreManager] mergedSyncResponse: merging \(responseIds.count) sync responses lasted \(stopwatch.readable())")
             
             if let result = result {
                 DispatchQueue.main.async {
@@ -251,6 +255,8 @@ public class MXSyncResponseStoreManager: NSObject {
     //  MARK: - Private
     
     private func merged(_ newSyncResponse: MXSyncResponse, onto oldSyncResponse: MXSyncResponse) -> MXSyncResponse {
+        let stopwatch = MXStopwatch()
+        
         //  handle new limited timelines
         newSyncResponse.rooms?.joinedOrLeftRoomSyncs?.filter({ $1.timeline.limited == true }).forEach { (roomId, _) in
             if let joinedRoomSync = oldSyncResponse.rooms?.join?[roomId] {
@@ -294,6 +300,8 @@ public class MXSyncResponseStoreManager: NSObject {
         // Merge the new sync response to the old one
         var dictionary = NSDictionary(dictionary: oldSyncResponse.jsonDictionary())
         dictionary = dictionary + NSDictionary(dictionary: newSyncResponse.jsonDictionary())
+        
+        MXLog.debug("[MXSyncResponseStoreManager] merged: merging two sync responses lasted \(stopwatch.readable())")
         
         return MXSyncResponse(fromJSON: dictionary as? [AnyHashable : Any])
     }
