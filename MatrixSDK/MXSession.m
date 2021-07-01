@@ -946,6 +946,12 @@ typedef void (^MXOnResumeDone)(void);
     [self handleBackgroundSyncCacheIfRequiredWithCompletion:^{
         [self _resume:resumeDone];
     }];
+    
+    [self.matrixRestClient maxUploadSize:^(NSInteger maxUploadSize) {
+        self->_maxUploadSize = maxUploadSize;
+    } failure:^(NSError *error) {
+        MXLogDebug(@"Failed to get maximum upload size.");
+    }];
 }
 
 - (void)_resume:(void (^)(void))resumeDone
