@@ -61,9 +61,9 @@ typedef NS_ENUM(NSUInteger, MXSessionState)
     MXSessionStateStoreDataReady,
     
     /**
-     Data from local cache is being processed.
+     Background sync cache is being processed. More local data will come.
      */
-    MXSessionStateProcessingLocalCache,
+    MXSessionStateProcessingBackgroundSyncCache,
 
     /**
      The session is syncing with the server.
