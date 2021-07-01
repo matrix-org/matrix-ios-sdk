@@ -1854,7 +1854,7 @@ typedef void (^MXOnResumeDone)(void);
     
     if (![syncResponseStoreSyncToken isEqualToString:eventStreamToken])
     {
-        MXLogDebug(@"[MXSession] handleBackgroundSyncCacheIfRequired: ");
+        MXLogDebug(@"[MXSession] handleBackgroundSyncCacheIfRequired: Mark all outdated");
         [outdatedSyncResponseIds addObjectsFromArray:syncResponseIds];
         syncResponseIds = @[];
     }
