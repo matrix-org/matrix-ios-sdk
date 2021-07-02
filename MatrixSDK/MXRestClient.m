@@ -3687,7 +3687,7 @@ MXAuthAction;
                                      {
                                          __block NSInteger maxUploadSize;
                                          [self dispatchProcessing:^{
-                                             MXJSONModelSetInteger(maxUploadSize, JSONResponse[@"m.upload.size"]);
+                                             MXJSONModelSetInteger(maxUploadSize, JSONResponse[@"m.upload.size"] ?: [NSNumber numberWithInteger:-1]);
                                          } andCompletion:^{
                                              success(maxUploadSize);
                                          }];
