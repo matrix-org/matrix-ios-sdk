@@ -751,7 +751,7 @@ typedef void (^MXOnResumeDone)(void);
             MXStrongifyAndReturnIfNil(self);
 
             // Then, start again
-            [self startWithSyncFilterId:syncFilterId onServerSyncDone:onServerSyncDone failure:failure];
+            [self _startWithSyncFilterId:syncFilterId onServerSyncDone:onServerSyncDone failure:failure];
 
         } failure:^(NSError *error) {
             MXStrongifyAndReturnIfNil(self);
