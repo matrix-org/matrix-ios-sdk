@@ -132,7 +132,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
             newKeybackup.authData = signedObject;
             
             // And send it to the homeserver
-            [self->crypto.matrixRestClient unstableUpdateKeyBackupVersion:newKeybackup success:^{
+            [self-> crypto.matrixRestClient updateKeyBackupVersion:newKeybackup withPath:kMXAPIPrefixPathUnstable success:^{
                 MXStrongifyAndReturnIfNil(self);
                 [self checkKeyBackupVersionAndEnableBackup:newKeybackup];
             } failure:^(NSError *error) {
