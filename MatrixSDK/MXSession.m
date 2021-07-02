@@ -733,13 +733,6 @@ typedef void (^MXOnResumeDone)(void);
 
 - (void)startWithSyncFilterId:(NSString *)syncFilterId onServerSyncDone:(void (^)(void))onServerSyncDone failure:(void (^)(NSError *))failure
 {
-    [self handleBackgroundSyncCacheIfRequiredWithCompletion:^{
-        [self _startWithSyncFilterId:syncFilterId onServerSyncDone:onServerSyncDone failure:failure];
-    }];
-}
-
-- (void)_startWithSyncFilterId:(NSString *)syncFilterId onServerSyncDone:(void (^)(void))onServerSyncDone failure:(void (^)(NSError *))failure
-{
     if (nil == _store)
     {
         // The user did not set a MXStore, use MXNoStore as default
@@ -751,7 +744,7 @@ typedef void (^MXOnResumeDone)(void);
             MXStrongifyAndReturnIfNil(self);
 
             // Then, start again
-            [self _startWithSyncFilterId:syncFilterId onServerSyncDone:onServerSyncDone failure:failure];
+            [self startWithSyncFilterId:syncFilterId onServerSyncDone:onServerSyncDone failure:failure];
 
         } failure:^(NSError *error) {
             MXStrongifyAndReturnIfNil(self);
@@ -762,9 +755,7 @@ typedef void (^MXOnResumeDone)(void);
         }];
         return;
     }
-
-    [self setState:MXSessionStateSyncInProgress];
-
+    
     // Check update of the filter used for /sync requests
     if (![_store.syncFilterId isEqualToString:syncFilterId])
     {
@@ -791,6 +782,15 @@ typedef void (^MXOnResumeDone)(void);
             }
         } failure:nil];
     }
+    
+    [self handleBackgroundSyncCacheIfRequiredWithCompletion:^{
+        [self _startWithSyncFilterId:syncFilterId onServerSyncDone:onServerSyncDone failure:failure];
+    }];
+}
+
+- (void)_startWithSyncFilterId:(NSString *)syncFilterId onServerSyncDone:(void (^)(void))onServerSyncDone failure:(void (^)(NSError *))failure
+{
+    [self setState:MXSessionStateSyncInProgress];
 
     // Can we resume from data available in the cache
     if (_store.isPermanent && self.isEventStreamInitialised && 0 < _store.rooms.count)
