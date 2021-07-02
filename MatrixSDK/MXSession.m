@@ -804,7 +804,7 @@ typedef void (^MXOnResumeDone)(void);
         // Resume the stream (presence will be retrieved during server sync)
         MXLogDebug(@"[MXSession] Resuming the events stream from %@...", self.store.eventStreamToken);
         NSDate *startDate2 = [NSDate date];
-        [self resume:^{
+        [self _resume:^{
             MXLogDebug(@"[MXSession] Events stream resumed in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate2] * 1000);
 
             onServerSyncDone();
