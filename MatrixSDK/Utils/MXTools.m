@@ -825,12 +825,13 @@ static NSMutableDictionary *fileExtensionByContentType = nil;
     NSString *cacheRoot = [paths objectAtIndex:0];
     outputVideoLocalURL = [NSURL fileURLWithPath:[cacheRoot stringByAppendingPathComponent:outputFileName]];
     
-    // Convert video container to mp4
-    // Use medium quality to save bandwidth
+    // Convert video container to mp4 using preset from MXSDKOptions.
+    // Reduce the target file size by 10% as fileLengthLimit isn't a hard limit
     AVURLAsset* videoAsset = [AVURLAsset URLAssetWithURL:videoLocalURL options:nil];
-    AVAssetExportSession *exportSession = [AVAssetExportSession exportSessionWithAsset:videoAsset presetName:AVAssetExportPreset3840x2160];
+    NSString *presetName = [MXSDKOptions sharedInstance].videoConversionPresetName;
+    AVAssetExportSession *exportSession = [AVAssetExportSession exportSessionWithAsset:videoAsset presetName:presetName];
+    exportSession.fileLengthLimit = targetFileSize * 0.9;
     exportSession.outputURL = outputVideoLocalURL;
-    exportSession.fileLengthLimit = targetFileSize;
     
     // Check output file types supported by the device
     NSArray *supportedFileTypes = exportSession.supportedFileTypes;

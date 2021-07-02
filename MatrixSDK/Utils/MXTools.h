@@ -25,6 +25,7 @@
 
 #import "MXEvent.h"
 #import "MXJSONModels.h"
+#import "MXSDKOptions.h"
 #import "MXEnumConstants.h"
 #import "MXCallHangupEventContent.h"
 #import "MXCallSessionDescription.h"
