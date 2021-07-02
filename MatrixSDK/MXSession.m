@@ -1868,7 +1868,7 @@ typedef void (^MXOnResumeDone)(void);
         return;
     }
     
-    [self->asyncTaskQueue asyncWithExecute:^(void (^ taskCompleted)(void)) {
+    [asyncTaskQueue asyncWithExecute:^(void (^ taskCompleted)(void)) {
         [syncResponseStoreManager mergedSyncResponseFromSyncResponseIds:outdatedSyncResponseIds completion:^(MXCachedSyncResponse * _Nullable outdatedCachedSyncResponse) {
             if (outdatedCachedSyncResponse)
             {
@@ -1884,7 +1884,7 @@ typedef void (^MXOnResumeDone)(void);
         }];
     }];
     
-    [self->asyncTaskQueue asyncWithExecute:^(void (^ taskCompleted)(void)) {
+    [asyncTaskQueue asyncWithExecute:^(void (^ taskCompleted)(void)) {
         [syncResponseStoreManager mergedSyncResponseFromSyncResponseIds:syncResponseIds completion:^(MXCachedSyncResponse * _Nullable cachedSyncResponse) {
             if (cachedSyncResponse)
             {
