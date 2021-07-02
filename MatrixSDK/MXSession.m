@@ -654,9 +654,9 @@ typedef void (^MXOnResumeDone)(void);
                 [self.crypto onSyncCompleted:self.store.eventStreamToken
                                nextSyncToken:syncResponse.nextBatch
                                   catchingUp:self.catchingUp];
-        }
+            }
 
-        // Update live event stream token
+            // Update live event stream token
             MXLogDebug(@"[MXSession] Next sync token: %@", syncResponse.nextBatch);
             self.store.eventStreamToken = syncResponse.nextBatch;
             
