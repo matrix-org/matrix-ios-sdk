@@ -1935,7 +1935,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
         if (currentUserTrustLevel.isCrossSigningVerified)
         {
             // This is a self verification and I am the old device (Osborne2)
-            qrCodeData = [self createSelfVerifyingMasterKeyTrustedQRCodeDataWithTransactionId:transactionId otherDeviceId:otherUserId];
+            qrCodeData = [self createSelfVerifyingMasterKeyTrustedQRCodeDataWithTransactionId:transactionId otherDeviceId:otherDeviceId];
         }
         else
         {
