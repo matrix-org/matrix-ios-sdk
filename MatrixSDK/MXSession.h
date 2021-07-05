@@ -399,6 +399,11 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
 @property (nonatomic, readonly) MXMediaManager *mediaManager;
 
 /**
+ The maximum size an upload can be in bytes.
+ */
+@property (nonatomic, readonly) NSInteger maxUploadSize;
+
+/**
  The current state of the session.
  */
 @property (nonatomic, readonly) MXSessionState state;

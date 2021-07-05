@@ -5,13 +5,13 @@ Changes to be released in next version
  * 
 
 🙌 Improvements
- * 
+ * MXTools: Default to 1080p when converting a video (vector-im/element-ios/issues/4478).
 
 🐛 Bugfix
  * Fix QR self verification with QR code (#1147)
 
 ⚠️ API Changes
- * 
+ * MXSDKOptions: Add videoConversionPresetName to customise video conversion quality.
 
 🗣 Translations
  * 

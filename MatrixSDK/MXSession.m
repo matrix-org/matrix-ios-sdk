@@ -881,6 +881,13 @@ typedef void (^MXOnResumeDone)(void);
 
     // Refresh wellknown data
     [self refreshHomeserverWellknown:nil failure:nil];
+    
+    // Get the maxmium file size allowed for uploading media
+    [self.matrixRestClient maxUploadSize:^(NSInteger maxUploadSize) {
+        [self.store storeMaxUploadSize:maxUploadSize];
+    } failure:^(NSError *error) {
+        MXLogError(@"[MXSession] Failed to get maximum upload size.");
+    }];
 }
 
 - (NSString *)syncFilterId
@@ -4123,6 +4130,12 @@ typedef void (^MXOnResumeDone)(void);
     } failure:failure];
 }
 
+#pragma mark - Media repository
+
+- (NSInteger)maxUploadSize
+{
+    return self.store.maxUploadSize;
+}
 
 #pragma mark - Matrix filters
 - (MXHTTPOperation*)setFilter:(MXFilterJSONModel*)filter
