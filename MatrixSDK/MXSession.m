@@ -886,7 +886,7 @@ typedef void (^MXOnResumeDone)(void);
     [self.matrixRestClient maxUploadSize:^(NSInteger maxUploadSize) {
         [self.store storeMaxUploadSize:maxUploadSize];
     } failure:^(NSError *error) {
-        MXLogDebug(@"[MXSession] Failed to get maximum upload size.");
+        MXLogError(@"[MXSession] Failed to get maximum upload size.");
     }];
 }
 
