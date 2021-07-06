@@ -175,12 +175,15 @@ FOUNDATION_EXPORT NSString *const kMXMessageTypeEmote;
 FOUNDATION_EXPORT NSString *const kMXMessageTypeNotice;
 FOUNDATION_EXPORT NSString *const kMXMessageTypeImage;
 FOUNDATION_EXPORT NSString *const kMXMessageTypeAudio;
-FOUNDATION_EXPORT NSString *const kMXMessageTypeVoiceMessage;
 FOUNDATION_EXPORT NSString *const kMXMessageTypeVideo;
 FOUNDATION_EXPORT NSString *const kMXMessageTypeLocation;
 FOUNDATION_EXPORT NSString *const kMXMessageTypeFile;
 FOUNDATION_EXPORT NSString *const kMXMessageTypeServerNotice;
 FOUNDATION_EXPORT NSString *const kMXMessageTypeKeyVerificationRequest;
+
+FOUNDATION_EXPORT NSString *const kMXMessageTypeVoiceMessage;
+FOUNDATION_EXPORT NSString *const kMXMessageTypeVoiceMessageMSC2516;
+FOUNDATION_EXPORT NSString *const kMXMessageTypeVoiceMessageMSC3245;
 
 /**
  Event relations

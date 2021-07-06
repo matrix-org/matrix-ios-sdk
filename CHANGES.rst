@@ -6,6 +6,7 @@ Changes to be released in next version
 
 🙌 Improvements
  * MXTools: Default to 1080p when converting a video (vector-im/element-ios/issues/4478).
+ * MXEvent: add support for voice messages
 
 🐛 Bugfix
  * Fix QR self verification with QR code (#1147)
@@ -21,6 +22,7 @@ Changes to be released in next version
 
 Others
  * 
+
 
 Changes in 0.19.3 (2021-06-30)
 =================================================
