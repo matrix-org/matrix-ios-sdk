@@ -5,7 +5,7 @@ Changes to be released in next version
  * 
 
 🙌 Improvements
- * 
+ * MXEvent: add support for voice messages
 
 🐛 Bugfix
  * 
