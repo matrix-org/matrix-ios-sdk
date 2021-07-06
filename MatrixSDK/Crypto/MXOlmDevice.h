@@ -229,7 +229,7 @@ Determine if an incoming messages is a prekey message matching an existing sessi
 /**
  Add previously-exported inbound group sessions to the session store.
 
- @param data the group sessions data.
+ @param inboundGroupSessionsData the group sessions data.
  @return the imported keys.
  */
 - (NSArray<MXOlmInboundGroupSession *>*)importInboundGroupSessions:(NSArray<MXMegolmSessionData *>*)inboundGroupSessionsData;

@@ -81,7 +81,7 @@ NS_ASSUME_NONNULL_BEGIN
  
  @param dataType user defined type of the data to be encrypted
  @param isMandatory set it to YES if you want excpetion to be raised if the key is not available with delegate set and encryption available.
- @param expectedKeyType expected type of the key. Exception if types don't match.
+ @param keyType expected type of the key. Exception if types don't match.
  
  @see isEncryptionAvailableForDataOfType:
  
@@ -120,7 +120,7 @@ NS_ASSUME_NONNULL_BEGIN
  
  @param dataType type of the data to be encrypted
  @param isMandatory set it to YES if you want excpetion to be raised if the key is not available with delegate set and encryption available.
- @param expectedKeyType expected type of the key. Exception if types don't match.
+ @param keyType expected type of the key. Exception if types don't match.
 
  @return the encryption data if ready. Nil otherwise
  

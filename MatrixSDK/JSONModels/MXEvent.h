@@ -485,7 +485,7 @@ extern NSString *const kMXEventIdentifierKey;
 /**
  Returns the event with a new reference relation as it should come from the sync.
 
- @param event The reference event.
+ @param referenceEvent The reference event.
  @return Return an updated event with the new relation.
  */
 - (MXEvent*)eventWithNewReferenceRelation:(MXEvent*)referenceEvent;

@@ -3673,6 +3673,32 @@ MXAuthAction;
                                  }];
 }
 
+- (MXHTTPOperation*) maxUploadSize:(void (^)(NSInteger maxUploadSize))success
+                           failure:(void (^)(NSError *error))failure
+{
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"GET"
+                                    path:[NSString stringWithFormat:@"%@/config", contentPathPrefix]
+                              parameters:nil
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
+                                     if (success)
+                                     {
+                                         __block NSInteger maxUploadSize = 0;
+                                         [self dispatchProcessing:^{
+                                             MXJSONModelSetInteger(maxUploadSize, JSONResponse[@"m.upload.size"] ?: [NSNumber numberWithInteger:-1]);
+                                         } andCompletion:^{
+                                             success(maxUploadSize);
+                                         }];
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
 #pragma mark - Antivirus server API
 - (void)setAntivirusServer:(NSString *)antivirusServer
 {

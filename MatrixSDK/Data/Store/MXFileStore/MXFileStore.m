@@ -447,6 +447,20 @@ static NSUInteger preloadOptions;
     }
 }
 
+- (NSInteger)maxUploadSize
+{
+    return metaData.maxUploadSize;
+}
+
+- (void)storeMaxUploadSize:(NSInteger)maxUploadSize
+{
+    if (metaData)
+    {
+        metaData.maxUploadSize = maxUploadSize;
+        metaDataHasChanged = YES;
+    }
+}
+
 - (BOOL)isPermanent
 {
     return YES;

@@ -1925,6 +1925,17 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
                           failure:(void (^)(NSError *error))failure
                    uploadProgress:(void (^)(NSProgress *uploadProgress))uploadProgress NS_REFINED_FOR_SWIFT;
 
+/**
+Get the maximum size a media upload can be in bytes.
+ 
+@param success A block object called when the operation succeeds. It provides the maximum size an upload can be in bytes.
+@param failure A block object called when the operation fails.
+
+@return a MXHTTPOperation instance.
+*/
+- (MXHTTPOperation*) maxUploadSize:(void (^)(NSInteger maxUploadSize))success
+                           failure:(void (^)(NSError *error))failure;
+
 
 #pragma mark - Antivirus server API
 
