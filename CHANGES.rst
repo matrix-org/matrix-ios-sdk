@@ -10,6 +10,7 @@ Changes to be released in next version
 
 🐛 Bugfix
  * Fix QR self verification with QR code (#1147)
+ * VoIP: Check for virtual users on attended call transfers.
 
 ⚠️ API Changes
  * MXSDKOptions: Add videoConversionPresetName to customise video conversion quality.
