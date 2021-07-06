@@ -186,6 +186,7 @@ public extension MXRoom {
         - size: the original size of the image.
         - mimeType:  the image mimetype.
         - thumbnail: optional thumbnail image (may be nil).
+        - blurhash: optional BlurHash (may be nil).
         - localEcho: a pointer to a MXEvent object.
      
              This pointer is set to an actual MXEvent object
@@ -204,8 +205,8 @@ public extension MXRoom {
      - returns: a `MXHTTPOperation` instance.
      */
 
-    @nonobjc @discardableResult func sendImage(data imageData: Data, size: CGSize, mimeType: String, thumbnail: MXImage?, localEcho: inout MXEvent?, completion: @escaping (_ response: MXResponse<String?>) -> Void) -> MXHTTPOperation {
-        return __sendImage(imageData, withImageSize: size, mimeType: mimeType, andThumbnail: thumbnail, localEcho: &localEcho, success: currySuccess(completion), failure: curryFailure(completion))
+    @nonobjc @discardableResult func sendImage(data imageData: Data, size: CGSize, mimeType: String, thumbnail: MXImage?, blurhash: String?, localEcho: inout MXEvent?, completion: @escaping (_ response: MXResponse<String?>) -> Void) -> MXHTTPOperation {
+        return __sendImage(imageData, withImageSize: size, mimeType: mimeType, andThumbnail: thumbnail, blurHash: blurhash, localEcho: &localEcho, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
     

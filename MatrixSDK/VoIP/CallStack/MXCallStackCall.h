@@ -209,12 +209,6 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic) BOOL videoMuted;
 
 /**
- NO by default, the inbound audio is then routed to the default audio outputs.
- If YES, the inbound audio is sent to the main speaker.
- */
-@property (nonatomic) BOOL audioToSpeaker;
-
-/**
  The camera to use.
  Default is AVCaptureDevicePositionFront.
  */

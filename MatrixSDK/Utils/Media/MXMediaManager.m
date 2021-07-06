@@ -303,9 +303,9 @@ static MXLRUCache* imagesCacheLruCache = nil;
                                                        }
                                                        else if (contentEditingInput.mediaType == PHAssetMediaTypeVideo)
                                                        {
-                                                           if ([contentEditingInput.avAsset isKindOfClass:[AVURLAsset class]])
+                                                           if ([contentEditingInput.audiovisualAsset isKindOfClass:[AVURLAsset class]])
                                                            {
-                                                               AVURLAsset *avURLAsset = (AVURLAsset*)contentEditingInput.avAsset;
+                                                               AVURLAsset *avURLAsset = (AVURLAsset*)contentEditingInput.audiovisualAsset;
                                                                
                                                                dispatch_async(dispatch_get_main_queue(), ^{
                                                                    success ([avURLAsset URL]);

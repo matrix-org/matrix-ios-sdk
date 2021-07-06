@@ -5,13 +5,14 @@ Changes to be released in next version
  * 
 
 🙌 Improvements
+ * MXTools: Default to 1080p when converting a video (vector-im/element-ios/issues/4478).
  * MXEvent: add support for voice messages
 
 🐛 Bugfix
- * 
+ * Fix QR self verification with QR code (#1147)
 
 ⚠️ API Changes
- * 
+ * MXSDKOptions: Add videoConversionPresetName to customise video conversion quality.
 
 🗣 Translations
  * 
@@ -21,6 +22,40 @@ Changes to be released in next version
 
 Others
  * 
+>>>>>>> develop
+
+Changes in 0.19.3 (2021-06-30)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
+ * MXDehydrationService: Support full rehydration feature (vector-im/element-ios/issues/1117).
+ * MXSDKOptions: Add wellknownDomainUrl to customise the domain for wellknown (vector-im/element-ios/issues/#4489).
+ * MXSession: Refresh homeserverWellknown on every start.
+ * MXRoom: Added support for posting `m.image`s with BlurHash (MSC 2448).
+ * VoIP: Implement bridged version for call transfers.
+ * VoIP: Implement MXiOSAudioOutputRouter.
+
+🐛 Bugfix
+ * 
+
+⚠️ API Changes
+ * MXCall: `audioToSpeaker` property removed. Use `audioOutputRouter` instead.
+ * MXCallStackCall: `audioToSpeaker` property removed. Audio routing should be handled high-level.
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+Improvements:
+
 
 Changes in 0.19.2 (2021-06-24)
 =================================================
