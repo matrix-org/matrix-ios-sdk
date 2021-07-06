@@ -22,7 +22,7 @@ Changes to be released in next version
 
 Others
  * 
->>>>>>> develop
+
 
 Changes in 0.19.3 (2021-06-30)
 =================================================
