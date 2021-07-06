@@ -1036,12 +1036,6 @@ NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
                             call.transferTarget = target;
                             call.consulting = YES;
                             
-//                            MXLogDebug(@"[MXCallManager] transferCall: call.callSignalingRoom.roomId: %@, room.roomId: %@, call.callSignalingRoom.directUserId: %@", call.callSignalingRoom.roomId, room.roomId, call.callSignalingRoom.directUserId);
-//                            if (![call.callSignalingRoom.roomId isEqualToString:room.roomId])
-//                            {
-//                                target.userId = call.callSignalingRoom.directUserId;
-//                            }
-                            
                             continueBlock(call);
                         } failure:^(NSError * _Nullable error) {
                             MXLogDebug(@"[MXCallManager] transferCall: couldn't call the target: %@", error);
