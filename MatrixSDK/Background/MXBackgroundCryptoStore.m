@@ -58,10 +58,22 @@ NSString *const MXBackgroundCryptoStoreUserIdSuffix = @":bgCryptoStore";
         }
         else
         {
-            // Should never happen
-            MXLogDebug(@"[MXBackgroundCryptoStore] initWithCredentials: Warning: createStoreWithCredentials: %@:%@", credentials.userId, credentials.deviceId);
-            cryptoStore = [MXRealmCryptoStore createStoreWithCredentials:credentials];
-            cryptoStore.readOnly = NO;
+            //  this is not very likely, Read-only Realm may be out-of-date. Remove it and try again. It'll be recopied from the original Realm on the next call of `hasDataForCredentials` method.
+            MXLogDebug(@"[MXBackgroundCryptoStore] initWithCredentials: Remove read-only store with credentials: %@:%@", credentials.userId, credentials.deviceId);
+            [MXRealmCryptoStore deleteReadonlyStoreWithCredentials:credentials];
+            
+            if ([MXRealmCryptoStore hasDataForCredentials:credentials])
+            {
+                cryptoStore = [[MXRealmCryptoStore alloc] initWithCredentials:credentials];
+                cryptoStore.readOnly = YES;
+            }
+            else
+            {
+                // Should never happen
+                MXLogDebug(@"[MXBackgroundCryptoStore] initWithCredentials: Warning: createStoreWithCredentials: %@:%@", credentials.userId, credentials.deviceId);
+                cryptoStore = [MXRealmCryptoStore createStoreWithCredentials:credentials];
+                cryptoStore.readOnly = NO;
+            }
         }
         
         MXCredentials *bgCredentials = [MXBackgroundCryptoStore credentialForBgCryptoStoreWithCredentials:credentials];
