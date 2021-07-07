@@ -175,12 +175,15 @@ FOUNDATION_EXPORT NSString *const kMXMessageTypeEmote;
 FOUNDATION_EXPORT NSString *const kMXMessageTypeNotice;
 FOUNDATION_EXPORT NSString *const kMXMessageTypeImage;
 FOUNDATION_EXPORT NSString *const kMXMessageTypeAudio;
-FOUNDATION_EXPORT NSString *const kMXMessageTypeVoiceMessage;
 FOUNDATION_EXPORT NSString *const kMXMessageTypeVideo;
 FOUNDATION_EXPORT NSString *const kMXMessageTypeLocation;
 FOUNDATION_EXPORT NSString *const kMXMessageTypeFile;
 FOUNDATION_EXPORT NSString *const kMXMessageTypeServerNotice;
 FOUNDATION_EXPORT NSString *const kMXMessageTypeKeyVerificationRequest;
+
+FOUNDATION_EXPORT NSString *const kMXMessageTypeVoiceMessage;
+FOUNDATION_EXPORT NSString *const kMXMessageTypeVoiceMessageMSC2516;
+FOUNDATION_EXPORT NSString *const kMXMessageTypeVoiceMessageMSC3245;
 
 /**
  Event relations
@@ -485,7 +488,7 @@ extern NSString *const kMXEventIdentifierKey;
 /**
  Returns the event with a new reference relation as it should come from the sync.
 
- @param event The reference event.
+ @param referenceEvent The reference event.
  @return Return an updated event with the new relation.
  */
 - (MXEvent*)eventWithNewReferenceRelation:(MXEvent*)referenceEvent;

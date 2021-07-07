@@ -90,12 +90,15 @@ NSString *const kMXMessageTypeEmote         = @"m.emote";
 NSString *const kMXMessageTypeNotice        = @"m.notice";
 NSString *const kMXMessageTypeImage         = @"m.image";
 NSString *const kMXMessageTypeAudio         = @"m.audio";
-NSString *const kMXMessageTypeVoiceMessage  = @"org.matrix.msc2516.voice";
 NSString *const kMXMessageTypeVideo         = @"m.video";
 NSString *const kMXMessageTypeLocation      = @"m.location";
 NSString *const kMXMessageTypeFile          = @"m.file";
 NSString *const kMXMessageTypeServerNotice  = @"m.server_notice";
 NSString *const kMXMessageTypeKeyVerificationRequest = @"m.key.verification.request";
+
+NSString *const kMXMessageTypeVoiceMessageMSC2516  = @"org.matrix.msc2516.voice";
+NSString *const kMXMessageTypeVoiceMessageMSC3245  = @"org.matrix.msc3245.voice";
+NSString *const kMXMessageTypeVoiceMessage         = @"m.voice";
 
 NSString *const MXEventRelationTypeAnnotation = @"m.annotation";
 NSString *const MXEventRelationTypeReference = @"m.reference";

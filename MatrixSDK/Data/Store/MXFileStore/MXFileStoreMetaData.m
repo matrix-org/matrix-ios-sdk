@@ -34,6 +34,9 @@
         _version = [version unsignedIntegerValue];
 
         _homeserverWellknown = dict[@"wellknown"];
+        
+        NSNumber *maxUploadSize = dict[@"maxUploadSize"];
+        _maxUploadSize = [maxUploadSize integerValue] ?: -1;
     }
     return self;
 }
@@ -46,6 +49,7 @@
                                   @"homeServer": _homeServer,
                                   @"userId": _userId,
                                   @"version": @(_version),
+                                  @"maxUploadSize": @(_maxUploadSize),
                                   }];
 
     // Nullable properties
@@ -78,6 +82,7 @@
     metaData->_version = _version;
     metaData->_eventStreamToken = [_eventStreamToken copyWithZone:zone];
     metaData->_userAccountData = [_userAccountData copyWithZone:zone];
+    metaData->_maxUploadSize = _maxUploadSize;
  
     return metaData;
 }
