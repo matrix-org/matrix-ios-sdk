@@ -18,6 +18,7 @@
  */
 
 #import <Foundation/Foundation.h>
+#import <AVFoundation/AVFoundation.h>
 
 #if TARGET_OS_IPHONE
 #import <UIKit/UIKit.h>
@@ -438,7 +439,7 @@ FOUNDATION_EXPORT NSInteger const kMXRoomAlreadyJoinedErrorCode;
 /**
  Send an video to the room.
  
- @param videoLocalURL the local filesystem path of the video to send.
+ @param videoAsset the video to send as an AVAsset object.
  @param videoThumbnail the UIImage hosting a video thumbnail.
  @param localEcho a pointer to a MXEvent object (@see sendMessageWithContent: for details).
  @param success A block object called when the operation succeeds. It returns
@@ -447,7 +448,7 @@ FOUNDATION_EXPORT NSInteger const kMXRoomAlreadyJoinedErrorCode;
  
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)sendVideo:(NSURL*)videoLocalURL
+- (MXHTTPOperation*)sendVideo:(AVAsset*)videoAsset
 #if TARGET_OS_IPHONE
                 withThumbnail:(UIImage*)videoThumbnail
 #elif TARGET_OS_OSX

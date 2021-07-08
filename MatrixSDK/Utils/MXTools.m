@@ -808,7 +808,7 @@ static NSMutableDictionary *fileExtensionByContentType = nil;
 
 #pragma mark - Video processing
 
-+ (void)convertVideoToMP4:(NSURL*)videoLocalURL
++ (void)convertVideoToMP4:(AVAsset*)videoAsset
        withTargetFileSize:(NSInteger)targetFileSize
                   success:(void(^)(NSURL *videoLocalURL, NSString *mimetype, CGSize size, double durationInMs))success
                   failure:(void(^)(void))failure
@@ -826,7 +826,6 @@ static NSMutableDictionary *fileExtensionByContentType = nil;
     outputVideoLocalURL = [NSURL fileURLWithPath:[cacheRoot stringByAppendingPathComponent:outputFileName]];
     
     // Convert video container to mp4 using preset from MXSDKOptions.
-    AVURLAsset* videoAsset = [AVURLAsset URLAssetWithURL:videoLocalURL options:nil];
     NSString *presetName = [MXSDKOptions sharedInstance].videoConversionPresetName;
     AVAssetExportSession *exportSession = [AVAssetExportSession exportSessionWithAsset:videoAsset presetName:presetName];
     exportSession.outputURL = outputVideoLocalURL;

@@ -1111,7 +1111,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     return roomOperation.operation;
 }
 
-- (MXHTTPOperation*)sendVideo:(NSURL*)videoLocalURL
+- (MXHTTPOperation*)sendVideo:(AVAsset*)videoAsset
 #if TARGET_OS_IPHONE
                 withThumbnail:(UIImage*)videoThumbnail
 #elif TARGET_OS_OSX
@@ -1214,7 +1214,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     roomOperation = [self preserveOperationOrder:event block:^{
 
         // Before sending data to the server, convert the video to MP4
-        [MXTools convertVideoToMP4:videoLocalURL
+        [MXTools convertVideoToMP4:videoAsset
                 withTargetFileSize:[self mxSession].maxUploadSize
                            success:^(NSURL *convertedLocalURL, NSString *mimetype, CGSize size, double durationInMs) {
 
