@@ -71,8 +71,8 @@
 
 - (nullable MXReactionCount *)reactionCountForReaction:(nonnull NSString *)reaction onEvent:(nonnull NSString *)eventId
 {
-    MXRealmReactionCount *realmReactionCount = [MXRealmReactionCount objectsInRealm:self.realm
-                                                                              where:@"primaryKey = %@", [MXRealmReactionCount primaryKeyFromEventId:eventId andReaction:reaction]].firstObject;
+    NSString *primaryKey = [MXRealmReactionCount primaryKeyFromEventId:eventId andReaction:reaction];
+    MXRealmReactionCount *realmReactionCount = [MXRealmReactionCount objectInRealm:self.realm forPrimaryKey:primaryKey];
 
     MXReactionCount *reactionCount;
     if (realmReactionCount)
@@ -88,9 +88,10 @@
     RLMRealm *realm = self.realm;
 
     [realm transactionWithBlock:^{
-        RLMResults<MXRealmReactionCount *> *realmReactionCounts = [MXRealmReactionCount objectsInRealm:self.realm
-                                                                                                 where:@"primaryKey = %@", [MXRealmReactionCount primaryKeyFromEventId:eventId andReaction:reaction]];
-        [realm deleteObjects:realmReactionCounts];
+        NSString *primaryKey = [MXRealmReactionCount primaryKeyFromEventId:eventId andReaction:reaction];
+        
+        MXRealmReactionCount *realmReactionCount = [MXRealmReactionCount objectInRealm:realm forPrimaryKey:primaryKey];
+        [realm deleteObject:realmReactionCount];
     }];
 }
 
@@ -103,7 +104,7 @@
 
     [realm transactionWithBlock:^{
         // Flush previous data
-        RLMResults<MXRealmReactionCount *> *realmReactionCounts = [MXRealmReactionCount objectsInRealm:self.realm
+        RLMResults<MXRealmReactionCount *> *realmReactionCounts = [MXRealmReactionCount objectsInRealm:realm
                                                                                                  where:@"eventId = %@", eventId];
         [realm deleteObjects:realmReactionCounts];
 
@@ -142,7 +143,7 @@
     RLMRealm *realm = self.realm;
 
     [realm transactionWithBlock:^{
-        RLMResults<MXRealmReactionCount *> *results = [MXRealmReactionCount objectsInRealm:self.realm
+        RLMResults<MXRealmReactionCount *> *results = [MXRealmReactionCount objectsInRealm:realm
                                                                                      where:@"roomId = %@", roomId];
         [realm deleteObjects:results];
     }];
@@ -183,9 +184,8 @@
     [realm transactionWithBlock:^{
         NSString *primaryKey = [MXRealmReactionRelation primaryKeyFromEventId:relation.eventId andReactionEventId:relation.reactionEventId];
 
-        RLMResults<MXRealmReactionRelation *> *results = [MXRealmReactionRelation objectsInRealm:self.realm
-                                                                                     where:@"primaryKey = %@", primaryKey];
-        [realm deleteObjects:results];
+        MXRealmReactionRelation *result = [MXRealmReactionRelation objectInRealm:realm forPrimaryKey:primaryKey];
+        [realm deleteObject:result];
     }];
 }
 
@@ -215,7 +215,7 @@
     RLMRealm *realm = self.realm;
 
     [realm transactionWithBlock:^{
-        RLMResults<MXRealmReactionRelation *> *results = [MXRealmReactionRelation objectsInRealm:self.realm
+        RLMResults<MXRealmReactionRelation *> *results = [MXRealmReactionRelation objectsInRealm:realm
                                                                                            where:@"roomId = %@", roomId];
         [realm deleteObjects:results];
     }];

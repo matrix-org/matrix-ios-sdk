@@ -7,6 +7,8 @@ Changes to be released in next version
 🙌 Improvements
  * MXTools: Default to 1080p when converting a video (vector-im/element-ios/issues/4478).
  * MXEvent: add support for voice messages
+ * MXSession: Introduce `MXSessionStateProcessingLocalCache` state.
+ * MXSession: Merge local cached sync responses when resuming the session.
 
 🐛 Bugfix
  * Fix QR self verification with QR code (#1147)
@@ -15,6 +17,7 @@ Changes to be released in next version
 
 ⚠️ API Changes
  * MXSDKOptions: Add videoConversionPresetName to customise video conversion quality.
+ * MXSessionState: Made Swift compatible.
 
 🗣 Translations
  * 
