@@ -1111,15 +1111,29 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     return roomOperation.operation;
 }
 
-- (MXHTTPOperation*)sendVideo:(AVAsset*)videoAsset
+- (MXHTTPOperation *)sendVideo:(NSURL *)videoLocalURL
 #if TARGET_OS_IPHONE
-                withThumbnail:(UIImage*)videoThumbnail
+                 withThumbnail:(UIImage*)videoThumbnail
 #elif TARGET_OS_OSX
-                withThumbnail:(NSImage*)videoThumbnail
+                 withThumbnail:(NSImage*)videoThumbnail
 #endif
-                    localEcho:(MXEvent**)localEcho
-                      success:(void (^)(NSString *eventId))success
-                      failure:(void (^)(NSError *error))failure
+                     localEcho:(MXEvent**)localEcho
+                       success:(void (^)(NSString *eventId))success
+                       failure:(void (^)(NSError *error))failure
+{
+    AVURLAsset *videoAsset = [AVURLAsset assetWithURL:videoLocalURL];
+    return [self sendVideoAsset:videoAsset withThumbnail:videoThumbnail localEcho:localEcho success:success failure:failure];
+}
+
+- (MXHTTPOperation*)sendVideoAsset:(AVAsset*)videoAsset
+#if TARGET_OS_IPHONE
+                     withThumbnail:(UIImage*)videoThumbnail
+#elif TARGET_OS_OSX
+                     withThumbnail:(NSImage*)videoThumbnail
+#endif
+                         localEcho:(MXEvent**)localEcho
+                           success:(void (^)(NSString *eventId))success
+                           failure:(void (^)(NSError *error))failure
 {
     __block MXRoomOperation *roomOperation;
 

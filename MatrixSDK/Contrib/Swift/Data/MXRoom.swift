@@ -235,8 +235,36 @@ public extension MXRoom {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func sendVideo(videoAsset: AVAsset, thumbnail: MXImage?, localEcho: inout MXEvent?, completion: @escaping (_ response: MXResponse<String?>) -> Void) -> MXHTTPOperation {
-        return __sendVideo(videoAsset, withThumbnail: thumbnail, localEcho: &localEcho, success: currySuccess(completion), failure: curryFailure(completion))
+    @nonobjc @discardableResult func sendVideo(localURL: URL, thumbnail: MXImage?, localEcho: inout MXEvent?, completion: @escaping (_ response: MXResponse<String?>) -> Void) -> MXHTTPOperation {
+        return __sendVideo(localURL, withThumbnail: thumbnail, localEcho: &localEcho, success: currySuccess(completion), failure: curryFailure(completion))
+    }
+    
+    
+    /**
+     Send a video to the room.
+     
+     - parameters:
+        - videoAsset: an AVAsset that represents the video to send.
+        - thumbnail: the UIImage hosting a video thumbnail.
+        - localEcho: a pointer to a MXEvent object.
+     
+             This pointer is set to an actual MXEvent object
+             containing the local created event which should be used to echo the message in
+             the messages list until the resulting event come through the server sync.
+             For information, the identifier of the created local event has the prefix
+             `kMXEventLocalEventIdPrefix`.
+             
+             You may specify nil for this parameter if you do not want this information.
+             
+             You may provide your own MXEvent object, in this case only its send state is updated.
+     
+        - completion: A block object called when the operation completes.
+        - response: Provides the event id of the event generated on the home server on success.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func sendVideo(asset: AVAsset, thumbnail: MXImage?, localEcho: inout MXEvent?, completion: @escaping (_ response: MXResponse<String?>) -> Void) -> MXHTTPOperation {
+        return __sendVideoAsset(asset, withThumbnail: thumbnail, localEcho: &localEcho, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
     
