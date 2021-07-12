@@ -7,6 +7,7 @@ Changes to be released in next version
 🙌 Improvements
  * MXTools: Default to 1080p when converting a video (vector-im/element-ios/issues/4478).
  * MXEvent: add support for voice messages
+ * MXRoom: Add support for sending slow motion videos using AVAsset (vector-im/element-ios/issues/4483).
 
 🐛 Bugfix
  * Fix QR self verification with QR code (#1147)
