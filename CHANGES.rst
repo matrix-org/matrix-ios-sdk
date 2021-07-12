@@ -16,7 +16,6 @@ Changes to be released in next version
 
 ⚠️ API Changes
  * MXSDKOptions: Add videoConversionPresetName to customise video conversion quality.
- * MXTools: `convertToMP4` now takes an `AVAsset` instead of an `NSURL`.
 
 🗣 Translations
  * 

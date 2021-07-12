@@ -808,10 +808,19 @@ static NSMutableDictionary *fileExtensionByContentType = nil;
 
 #pragma mark - Video processing
 
-+ (void)convertVideoToMP4:(AVAsset*)videoAsset
++ (void)convertVideoToMP4:(NSURL*)videoLocalURL
        withTargetFileSize:(NSInteger)targetFileSize
                   success:(void(^)(NSURL *videoLocalURL, NSString *mimetype, CGSize size, double durationInMs))success
                   failure:(void(^)(void))failure
+{
+    AVURLAsset *videoAsset = [AVURLAsset assetWithURL:videoLocalURL];
+    [self convertVideoAssetToMP4:videoAsset withTargetFileSize:targetFileSize success:success failure:failure];
+}
+
++ (void)convertVideoAssetToMP4:(AVAsset*)videoAsset
+            withTargetFileSize:(NSInteger)targetFileSize
+                       success:(void(^)(NSURL *videoLocalURL, NSString *mimetype, CGSize size, double durationInMs))success
+                       failure:(void(^)(void))failure
 {
     NSParameterAssert(success);
     NSParameterAssert(failure);
@@ -845,7 +854,7 @@ static NSMutableDictionary *fileExtensionByContentType = nil;
     }
     else
     {
-        MXLogDebug(@"[MXTools] convertVideoToMP4: Warning: MPEG-4 file format is not supported. Use QuickTime format.");
+        MXLogDebug(@"[MXTools] convertVideoAssetToMP4: Warning: MPEG-4 file format is not supported. Use QuickTime format.");
         
         // Fallback to QuickTime format
         exportSession.outputFileType = AVFileTypeQuickTimeMovie;
@@ -888,7 +897,7 @@ static NSMutableDictionary *fileExtensionByContentType = nil;
                 else
                 {
                     
-                    MXLogDebug(@"[MXTools] convertVideoToMP4: Video export failed. Cannot extract video size.");
+                    MXLogDebug(@"[MXTools] convertVideoAssetToMP4: Video export failed. Cannot extract video size.");
                     
                     // Remove output file (if any)
                     [[NSFileManager defaultManager] removeItemAtPath:[outputVideoLocalURL path] error:nil];
@@ -898,7 +907,7 @@ static NSMutableDictionary *fileExtensionByContentType = nil;
             else
             {
                 
-                MXLogDebug(@"[MXTools] convertVideoToMP4: Video export failed. exportSession.status: %tu", status);
+                MXLogDebug(@"[MXTools] convertVideoAssetToMP4: Video export failed. exportSession.status: %tu", status);
                 
                 // Remove output file (if any)
                 [[NSFileManager defaultManager] removeItemAtPath:[outputVideoLocalURL path] error:nil];
