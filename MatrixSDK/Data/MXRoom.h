@@ -534,7 +534,7 @@ FOUNDATION_EXPORT NSInteger const kMXRoomAlreadyJoinedErrorCode;
  
  @param fileLocalURL the local filesystem path of the file to send.
  @param mimeType (optional) the mime type of the file. Defaults to `audio/ogg`
- @param duration the lenght of the voice message in milliseconds
+ @param duration the length of the voice message in milliseconds
  @param samples an array of floating point values normalized to [0, 1], boxed within NSNumbers
  @param localEcho a pointer to a MXEvent object (@see sendMessageWithContent: for details).
  @param success A block object called when the operation succeeds. It returns
