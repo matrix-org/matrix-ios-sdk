@@ -25,6 +25,7 @@
 @property (copy, readonly, nonnull) NSString *senderSentAnImage;
 @property (copy, readonly, nonnull) NSString *senderSentAVideo;
 @property (copy, readonly, nonnull) NSString *senderSentAnAudioFile;
+@property (copy, readonly, nonnull) NSString *senderSentAVoiceMessage;
 @property (copy, readonly, nonnull) NSString *senderSentAFile;
 @property (copy, readonly, nonnull) NSString *messageToReplyToPrefix;
 

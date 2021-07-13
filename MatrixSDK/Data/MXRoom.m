@@ -1427,14 +1427,34 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
 
 - (MXHTTPOperation*)sendVoiceMessage:(NSURL*)fileLocalURL
                             mimeType:(NSString*)mimeType
+                            duration:(NSTimeInterval)duration
+                             samples:(NSArray<NSNumber *> *)samples
                            localEcho:(MXEvent**)localEcho
                              success:(void (^)(NSString *eventId))success
                              failure:(void (^)(NSError *error))failure
                   keepActualFilename:(BOOL)keepActualName
 {
+    NSMutableDictionary *extensibleAudioContent = @{kMXMessageContentKeyExtensibleAudioDuration : @(duration)}.mutableCopy;
+ 
+    static NSUInteger scaledWaveformSampleCeiling = 1024;
+    
+    NSMutableArray *scaledSamples = [NSMutableArray array];
+    for (NSNumber *sample in samples) {
+        if (sample.floatValue < 0.0 || sample.floatValue > 1.0) { // Samples should be linearly normalized to [0, 1]
+            continue;
+        }
+        
+        [scaledSamples addObject:@((NSInteger)(scaledWaveformSampleCeiling * sample.floatValue))];
+    }
+    
+    if (scaledSamples.count) {
+        [extensibleAudioContent setObject:scaledSamples forKey:kMXMessageContentKeyExtensibleAudioWaveform];
+    }
+    
     return [self _sendFile:fileLocalURL
                    msgType:kMXMessageTypeAudio
-           additionalTypes:@{kMXMessageTypeVoiceMessage : @{}}
+           additionalTypes:@{kMXMessageContentKeyVoiceMessageMSC3245 : @{},
+                             kMXMessageContentKeyExtensibleAudio: extensibleAudioContent}
                   mimeType:(mimeType ?: @"audio/ogg")
                  localEcho:localEcho
                    success:success
@@ -1989,6 +2009,11 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     else if ([msgtype isEqualToString:kMXMessageTypeVideo])
     {
         senderMessageBody = stringLocalizations.senderSentAVideo;
+        senderMessageFormattedBody = senderMessageBody;
+    }
+    else if (eventToReply.isVoiceMessage)
+    {
+        senderMessageBody = stringLocalizations.senderSentAVoiceMessage;
         senderMessageFormattedBody = senderMessageBody;
     }
     else if ([msgtype isEqualToString:kMXMessageTypeAudio])

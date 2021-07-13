@@ -85,34 +85,37 @@ NSString *const kMXEventTypeStringTaggedEvents          = @"m.tagged_events";
 // Use temporary event type until the MSC approval
 NSString *const kMXEventTypeStringSpaceChild            = @"org.matrix.msc1772.space.child";
 
-NSString *const kMXMessageTypeText          = @"m.text";
-NSString *const kMXMessageTypeEmote         = @"m.emote";
-NSString *const kMXMessageTypeNotice        = @"m.notice";
-NSString *const kMXMessageTypeImage         = @"m.image";
-NSString *const kMXMessageTypeAudio         = @"m.audio";
-NSString *const kMXMessageTypeVideo         = @"m.video";
-NSString *const kMXMessageTypeLocation      = @"m.location";
-NSString *const kMXMessageTypeFile          = @"m.file";
-NSString *const kMXMessageTypeServerNotice  = @"m.server_notice";
+NSString *const kMXMessageTypeText                   = @"m.text";
+NSString *const kMXMessageTypeEmote                  = @"m.emote";
+NSString *const kMXMessageTypeNotice                 = @"m.notice";
+NSString *const kMXMessageTypeImage                  = @"m.image";
+NSString *const kMXMessageTypeAudio                  = @"m.audio";
+NSString *const kMXMessageTypeVideo                  = @"m.video";
+NSString *const kMXMessageTypeLocation               = @"m.location";
+NSString *const kMXMessageTypeFile                   = @"m.file";
+NSString *const kMXMessageTypeServerNotice           = @"m.server_notice";
 NSString *const kMXMessageTypeKeyVerificationRequest = @"m.key.verification.request";
 
-NSString *const kMXMessageTypeVoiceMessageMSC2516  = @"org.matrix.msc2516.voice";
-NSString *const kMXMessageTypeVoiceMessageMSC3245  = @"org.matrix.msc3245.voice";
-NSString *const kMXMessageTypeVoiceMessage         = @"m.voice";
+NSString *const MXEventRelationTypeAnnotation        = @"m.annotation";
+NSString *const MXEventRelationTypeReference         = @"m.reference";
+NSString *const MXEventRelationTypeReplace           = @"m.replace";
 
-NSString *const MXEventRelationTypeAnnotation = @"m.annotation";
-NSString *const MXEventRelationTypeReference = @"m.reference";
-NSString *const MXEventRelationTypeReplace = @"m.replace";
-
-NSString *const kMXEventLocalEventIdPrefix = @"kMXEventLocalId_";
+NSString *const kMXEventLocalEventIdPrefix           = @"kMXEventLocalId_";
 
 uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
 
-NSString *const kMXEventDidChangeSentStateNotification = @"kMXEventDidChangeSentStateNotification";
+NSString *const kMXEventDidChangeSentStateNotification  = @"kMXEventDidChangeSentStateNotification";
 NSString *const kMXEventDidChangeIdentifierNotification = @"kMXEventDidChangeIdentifierNotification";
-NSString *const kMXEventDidDecryptNotification = @"kMXEventDidDecryptNotification";
+NSString *const kMXEventDidDecryptNotification          = @"kMXEventDidDecryptNotification";
 
-NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
+NSString *const kMXEventIdentifierKey                   = @"kMXEventIdentifierKey";
+
+NSString *const kMXMessageContentKeyVoiceMessageMSC2516     = @"org.matrix.msc2516.voice";
+NSString *const kMXMessageContentKeyVoiceMessageMSC3245     = @"org.matrix.msc3245.voice";
+NSString *const kMXMessageContentKeyVoiceMessage            = @"m.voice";
+NSString *const kMXMessageContentKeyExtensibleAudio         = @"org.matrix.msc1767.audio";
+NSString *const kMXMessageContentKeyExtensibleAudioDuration = @"duration";
+NSString *const kMXMessageContentKeyExtensibleAudioWaveform = @"waveform";
 
 #pragma mark - MXEvent
 @interface MXEvent ()
@@ -431,6 +434,14 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
 - (BOOL)isReplyEvent
 {
     return self.eventType == MXEventTypeRoomMessage && self.content[@"m.relates_to"][@"m.in_reply_to"][@"event_id"] != nil;
+}
+
+- (BOOL)isVoiceMessage
+{
+    NSString *msgtype = self.content[@"msgtype"];
+    return [msgtype isEqualToString:kMXMessageTypeAudio] && (self.content[kMXMessageContentKeyVoiceMessage] ||
+                                                             self.content[kMXMessageContentKeyVoiceMessageMSC2516] ||
+                                                             self.content[kMXMessageContentKeyVoiceMessageMSC3245]);
 }
 
 - (BOOL)contentHasBeenEdited

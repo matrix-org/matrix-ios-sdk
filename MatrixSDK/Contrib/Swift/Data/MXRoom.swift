@@ -330,6 +330,8 @@ public extension MXRoom {
      - parameters:
      - localURL: the local filesystem path of the file to send.
      - mimeType: (optional) the mime type of the file. Defaults to `audio/ogg`.
+     - duration: the length of the voice message in milliseconds
+     - samples: an array of floating point values normalized to [0, 1]
      - localEcho: a pointer to a MXEvent object.
      
      This pointer is set to an actual MXEvent object
@@ -348,8 +350,9 @@ public extension MXRoom {
      - returns: a `MXHTTPOperation` instance.
      */
     
-    @nonobjc @discardableResult func sendVoiceMessage(localURL: URL, mimeType: String?, localEcho: inout MXEvent?, completion: @escaping (_ response: MXResponse<String?>) -> Void) -> MXHTTPOperation {
-        return __sendVoiceMessage(localURL, mimeType: mimeType, localEcho: &localEcho, success: currySuccess(completion), failure: curryFailure(completion), keepActualFilename: false)
+    @nonobjc @discardableResult func sendVoiceMessage(localURL: URL, mimeType: String?, duration: TimeInterval, samples: [Float]?, localEcho: inout MXEvent?, completion: @escaping (_ response: MXResponse<String?>) -> Void) -> MXHTTPOperation {
+        let boxedSamples = samples?.compactMap { NSNumber(value: $0) }
+        return __sendVoiceMessage(localURL, mimeType: mimeType, duration: duration, samples: boxedSamples, localEcho: &localEcho, success: currySuccess(completion), failure: curryFailure(completion), keepActualFilename: false)
     }
     
     /**
