@@ -20,7 +20,15 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+/**
+ JSON model for the response from /_matrix/media/r0/preview_url
+ */
 @interface MXURLPreview : MXJSONModel
+
+/**
+ The OpenGraph site name for the URL.
+ */
+@property (nonatomic, readonly, nullable) NSString *siteName;
 
 /**
  The OpenGraph title for the URL.

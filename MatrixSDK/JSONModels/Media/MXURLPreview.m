@@ -22,18 +22,19 @@
 {
     MXURLPreview *urlPreview = [MXURLPreview new];
     
-    NSString *title, *description, *imageURL, *imageType;
+    NSString *siteName, *title, *description, *imageURL, *imageType;
     NSNumber *imageWidth, *imageHeight, *imageFileSize;
     
+    MXJSONModelSetString(siteName, JSONDictionary[@"og:site_name"]);
     MXJSONModelSetString(title, JSONDictionary[@"og:title"]);
     MXJSONModelSetString(description, JSONDictionary[@"og:description"]);
     MXJSONModelSetString(imageURL, JSONDictionary[@"og:image"]);
     MXJSONModelSetString(imageType, JSONDictionary[@"og:image:type"]);
-    
     MXJSONModelSetNumber(imageWidth, JSONDictionary[@"og:image:width"]);
     MXJSONModelSetNumber(imageHeight, JSONDictionary[@"og:image:height"]);
     MXJSONModelSetNumber(imageFileSize, JSONDictionary[@"matrix:image:size"]);
     
+    urlPreview->_siteName = siteName;
     urlPreview->_title = title;
     urlPreview->_text = description;
     urlPreview->_imageURL = imageURL;
@@ -50,6 +51,10 @@
     NSMutableDictionary *JSONDictionary = [NSMutableDictionary dictionary];
     if (JSONDictionary)
     {
+        if (self.siteName)
+        {
+            JSONDictionary[@"og:site_name"] = self.siteName;
+        }
         if (self.title)
         {
             JSONDictionary[@"og:title"] = self.title;
@@ -89,6 +94,7 @@
 {
     self = [super init];
     if (self) {
+        _siteName = [coder decodeObjectForKey:@"og:site_name"];
         _title = [coder decodeObjectForKey:@"og:title"];
         _text = [coder decodeObjectForKey:@"og:description"];
         _imageURL = [coder decodeObjectForKey:@"og:image"];
@@ -102,6 +108,7 @@
 
 - (void)encodeWithCoder:(NSCoder *)coder
 {
+    [coder encodeObject:_siteName forKey:@"og:site_name"];
     [coder encodeObject:_title forKey:@"og:title"];
     [coder encodeObject:_text forKey:@"og:description"];
     [coder encodeObject:_imageURL forKey:@"og:image"];
