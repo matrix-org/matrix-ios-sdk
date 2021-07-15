@@ -26,7 +26,7 @@ Changes to be released in next version
  * 
 
 Others
- * 
+ * Fixed a nullability warning and some header warnings.
 
 
 Changes in 0.19.3 (2021-06-30)
