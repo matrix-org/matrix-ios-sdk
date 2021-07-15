@@ -96,7 +96,7 @@ NSString *const MXAesErrorDomain = @"org.matrix.sdk.MXAes";
     return cipher;
 }
 
-+ (nullable NSData*)decrypt:(NSData*)cipher
++ (nullable NSData*)decrypt:(NSData*)data
                      aesKey:(NSData*)aesKey iv:(NSData*)iv
                       error:(NSError**)error
 {
@@ -117,13 +117,13 @@ NSString *const MXAesErrorDomain = @"org.matrix.sdk.MXAes";
         return nil;
     }
     
-    size_t bufferLength = CCCryptorGetOutputLength(cryptor, cipher.length, false);
+    size_t bufferLength = CCCryptorGetOutputLength(cryptor, data.length, false);
     NSMutableData *buffer = [NSMutableData dataWithLength:bufferLength];
     
     size_t outLength;
     status |= CCCryptorUpdate(cryptor,
-                              cipher.bytes,
-                              cipher.length,
+                              data.bytes,
+                              data.length,
                               [buffer mutableBytes],
                               [buffer length],
                               &outLength);
