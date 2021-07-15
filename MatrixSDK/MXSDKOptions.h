@@ -17,6 +17,7 @@
  */
 
 #import <Foundation/Foundation.h>
+#import <AVFoundation/AVFoundation.h>
 
 #import "MXAnalyticsDelegate.h"
 #import "MXProfiler.h"
@@ -111,6 +112,13 @@ NS_ASSUME_NONNULL_BEGIN
  The default version value is 0.
  */
 @property (nonatomic) NSUInteger mediaCacheAppVersion;
+
+/**
+ The preset name given to AVAssetExportSession when converting a video.
+ 
+ The default value is AVAssetExportPreset1920x1080.
+ */
+@property (nonatomic) NSString *videoConversionPresetName;
 
 /**
  Object that handle enabling background mode

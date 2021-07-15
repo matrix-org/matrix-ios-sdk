@@ -272,7 +272,7 @@ NSTimeInterval kFixMissingUserInRoomRateLimit = 3600;
  Reset the flag that indicates that all room members in a room have been loaded.
  
  @param userId the if of the user that failed to get the key.
- @param roomid the room id.
+ @param roomId the room id.
  */
 - (void)fixMissingUser:(NSString *)userId inRoom:(NSString *)roomId
 {

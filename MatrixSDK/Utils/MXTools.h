@@ -25,6 +25,7 @@
 
 #import "MXEvent.h"
 #import "MXJSONModels.h"
+#import "MXSDKOptions.h"
 #import "MXEnumConstants.h"
 #import "MXCallHangupEventContent.h"
 #import "MXCallSessionDescription.h"
@@ -235,13 +236,32 @@ FOUNDATION_EXPORT NSString *const kMXToolsRegexStringForMatrixGroupIdentifier;
  If the device does not support MP4 file format, the function will use the QuickTime format.
  
  @param videoLocalURL the local path of the video to convert.
+ @param targetFileSize a file size limit to aim for.
  @param success A block object called when the operation succeeded. It returns
  the path of the output video with some metadata.
  @param failure A block object called when the operation failed.
  */
 + (void)convertVideoToMP4:(NSURL*)videoLocalURL
+       withTargetFileSize:(NSInteger)targetFileSize
                   success:(void(^)(NSURL *videoLocalURL, NSString *mimetype, CGSize size, double durationInMs))success
                   failure:(void(^)(void))failure;
+
+/**
+ Convert from a video to a MP4 video container.
+ 
+ @discussion
+ If the device does not support MP4 file format, the function will use the QuickTime format.
+ 
+ @param videoAsset an AVAsset for the video to convert.
+ @param targetFileSize a file size limit to aim for.
+ @param success A block object called when the operation succeeded. It returns
+ the path of the output video with some metadata.
+ @param failure A block object called when the operation failed.
+ */
++ (void)convertVideoAssetToMP4:(AVAsset*)videoAsset
+            withTargetFileSize:(NSInteger)targetFileSize
+                       success:(void(^)(NSURL *videoLocalURL, NSString *mimetype, CGSize size, double durationInMs))success
+                       failure:(void(^)(void))failure;
 
 #pragma mark - JSON Serialisation
 

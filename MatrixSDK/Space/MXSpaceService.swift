@@ -277,7 +277,8 @@ extension MXSpaceService {
     /// - Parameters:
     ///   - spaceId: The room id of the queried space.
     ///   - parameters: Space children request parameters.
-    ///   - completion: A closure called when the operation completes.
+    ///   - success: A closure called when the operation is complete.
+    ///   - failure: A closure called  when the operation fails.
     /// - Returns: a `MXHTTPOperation` instance.
     @discardableResult
     public func getSpaceChildrenForSpace(withId spaceId: String,

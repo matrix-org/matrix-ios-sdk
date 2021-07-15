@@ -324,6 +324,21 @@
 - (void)close;
 
 
+#pragma mark - Media repository
+
+/**
+ The maximum size an upload can be in bytes.
+ */
+@property (nonatomic, readonly) NSInteger maxUploadSize;
+
+/**
+ Store the maximum upload size.
+
+ @param maxUploadSize The maximum upload size to store.
+ */
+- (void)storeMaxUploadSize:(NSInteger)maxUploadSize;
+
+
 #pragma mark - Permanent storage -
 
 /**

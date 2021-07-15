@@ -1,3 +1,37 @@
+Changes in 0.19.4 (2021-07-15)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
+ * MXTools: Default to 1080p when converting a video (vector-im/element-ios/issues/4478).
+ * MXEvent: add support for voice messages
+ * MXRoom: Add support for sending slow motion videos using AVAsset (vector-im/element-ios/issues/4483).
+ * MXSendReplyEventStringsLocalizable: Added senderSentAVoiceMessage property
+
+🐛 Bugfix
+ * Fix QR self verification with QR code (#1147)
+ * VoIP: Check for virtual users on attended call transfers.
+ * MXBackgroundCryptoStore: Remove read-only Realm and try again if Olm account not found in crypto store (vector-im/element-ios/issues/4534).
+
+⚠️ API Changes
+ * MXSDKOptions: Add videoConversionPresetName to customise video conversion quality.
+ * MXRoom: Added duration and sample parameters on the sendVoiceMessage method (vector-im/element-ios/issues/4090)
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * Fixed a nullability warning and some header warnings.
+
+
+Improvements:
+
+
 Changes in 0.19.3 (2021-06-30)
 =================================================
 
