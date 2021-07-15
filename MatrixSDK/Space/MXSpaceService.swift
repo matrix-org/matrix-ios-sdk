@@ -22,6 +22,7 @@ public enum MXSpaceServiceError: Int, Error {
     case unknown
 }
 
+// MARK: - MXSpaceService errors
 extension MXSpaceServiceError: CustomNSError {
     public static let errorDomain = "org.matrix.sdk.spaceService"
 
@@ -32,6 +33,12 @@ extension MXSpaceServiceError: CustomNSError {
     public var errorUserInfo: [String: Any] {
         return [:]
     }
+}
+
+// MARK: - MXSpaceService notification constants
+extension MXSpaceService {
+    /// Posted once the graph of rooms is up and running
+    public static let didBuildSpaceGraph = Notification.Name("MXSpaceServiceDidBuildSpaceGraph")
 }
 
 /// MXSpaceService enables to handle spaces.
@@ -51,6 +58,9 @@ public class MXSpaceService: NSObject {
     private let processingQueue: DispatchQueue
     private let completionQueue: DispatchQueue
     
+    public private(set) var spaces: [MXSpace] = []
+    private var spacesPerId: [String : MXSpace] = [:]
+    
     // MARK: - Setup
     
     public init(session: MXSession) {
@@ -61,6 +71,24 @@ public class MXSpaceService: NSObject {
     }
     
     // MARK: - Public
+    
+    /// Build the graph of rooms
+    /// - Parameters:
+    ///   - rooms: the complete list of rooms and spaces
+    @objc public func buildGraph(with rooms:[MXRoom]) {
+        prepareData(with: rooms, index: 0, spaces: [], spacesPerId: [:], roomsPerId: [:], directRooms: [:]) { spaces, spacesPerId, roomsPerId, directRooms in
+            MXLog.debug("\(spaces), \(spacesPerId), \(roomsPerId), \(directRooms)")
+            spaces.forEach { space in
+                space.updateChildSpaces(with: spacesPerId)
+                space.updateChildDirectRooms(with: directRooms)
+            }
+            self.spaces = spaces
+            self.spacesPerId = spacesPerId
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(name: MXSpaceService.didBuildSpaceGraph, object: self)
+            }
+        }
+    }
     
     /// Create a space.
     /// - Parameters:
@@ -110,8 +138,7 @@ public class MXSpaceService: NSObject {
     /// - Parameter spaceId: The id of the space.
     /// - Returns: A MXSpace with the associated roomId or null if room type is not space.
     public func getSpace(withId spaceId: String) -> MXSpace? {
-        let room = self.session.room(withRoomId: spaceId)
-        return room?.toSpace()
+        return self.spacesPerId[spaceId]
     }
         
     /// Get the space children informations of a given space from the server.
@@ -240,6 +267,49 @@ public class MXSpaceService: NSObject {
                          autoJoin: spaceChildContent?.autoJoin ?? false,
                          viaServers: spaceChildContent?.via ?? [],
                          parentRoomId: spaceChildStateEvent?.roomId)
+    }
+    
+    private func prepareData(with rooms:[MXRoom], index: Int, spaces: [MXSpace], spacesPerId: [String : MXSpace], roomsPerId: [String : MXRoom], directRooms: [String: [MXRoom]], completion: @escaping (_ spaces: [MXSpace], _ spacesPerId: [String : MXSpace], _ roomsPerId: [String : MXRoom], _ directRooms: [String: [MXRoom]]) -> Void) {
+        
+        guard index < rooms.count else {
+            completion(spaces, spacesPerId, roomsPerId, directRooms)
+            return
+        }
+        
+        let room = rooms[index]
+        if let space = room.toSpace() {
+            space.readChildRoomsAndMembers {
+                var spaces = spaces
+                spaces.append(space)
+                var spacesPerId = spacesPerId
+                spacesPerId[space.spaceId] = space
+                
+                self.prepareData(with: rooms, index: index+1, spaces: spaces, spacesPerId: spacesPerId, roomsPerId: roomsPerId, directRooms: directRooms, completion: completion)
+            }
+        } else if room.isDirect {
+            room.members { response in
+                guard let members = response.value as? MXRoomMembers else {
+                    self.prepareData(with: rooms, index: index+1, spaces: spaces, spacesPerId: spacesPerId, roomsPerId: roomsPerId, directRooms: directRooms, completion: completion)
+                    return
+                }
+                
+                let membersId = members.members.compactMap({ roomMember in
+                    return roomMember.userId != self.session.myUserId ? roomMember.userId : nil
+                })
+                
+                var directRooms = directRooms
+                membersId.forEach { memberId in
+                    var rooms = directRooms[memberId] ?? []
+                    rooms.append(room)
+                    directRooms[memberId] = rooms
+                }
+                self.prepareData(with: rooms, index: index+1, spaces: spaces, spacesPerId: spacesPerId, roomsPerId: roomsPerId, directRooms: directRooms, completion: completion)
+            }
+        } else {
+            var roomsPerId = roomsPerId
+            roomsPerId[room.roomId] = room
+            prepareData(with: rooms, index: index+1, spaces: spaces, spacesPerId: spacesPerId, roomsPerId: roomsPerId, directRooms: directRooms, completion: completion)
+        }
     }
 }
 
