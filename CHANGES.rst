@@ -1,4 +1,4 @@
-Changes to be released in next version
+Changes in 0.19.4 (2021-07-15)
 =================================================
 
 ✨ Features
@@ -27,6 +27,9 @@ Changes to be released in next version
 
 Others
  * Fixed a nullability warning and some header warnings.
+
+
+Improvements:
 
 
 Changes in 0.19.3 (2021-06-30)
