@@ -3699,6 +3699,36 @@ MXAuthAction;
                                  }];
 }
 
+- (MXHTTPOperation *)previewForURL:(NSURL *)url
+                           success:(void (^)(MXURLPreview *))success
+                           failure:(void (^)(NSError *))failure
+{
+    NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
+    parameters[@"url"] = [url absoluteString];
+    
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"GET"
+                                    path:[NSString stringWithFormat:@"%@/preview_url", contentPathPrefix]
+                              parameters:parameters
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
+                                     if (success)
+                                     {
+                                         __block MXURLPreview *urlPreview;
+                                         [self dispatchProcessing:^{
+                                             MXJSONModelSetMXJSONModel(urlPreview, MXURLPreview, JSONResponse);
+                                         } andCompletion:^{
+                                             success(urlPreview);
+                                         }];
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
 #pragma mark - Antivirus server API
 - (void)setAntivirusServer:(NSString *)antivirusServer
 {
