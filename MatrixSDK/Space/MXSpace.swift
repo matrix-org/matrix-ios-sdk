@@ -40,17 +40,21 @@ public class MXSpace: NSObject {
     // MARK: - Properties
     
     /// The underlying room
-    public let room: MXRoom
+    @objc public let room: MXRoom
     
     /// Shortcut to the room roomId
-    public var spaceId: String {
+    @objc public var spaceId: String {
         return self.room.roomId
     }
     
     /// Shortcut to the room summary
-    public var summary: MXRoomSummary? {
+    @objc public var summary: MXRoomSummary? {
         return self.room.summary
     }
+    
+    public private(set) var childSpaces: [MXSpace] = []
+    public private(set) var childRoomIds: [String] = []
+    public private(set) var membersId: [String] = []
     
     // MARK: - Setup
     
@@ -60,6 +64,33 @@ public class MXSpace: NSObject {
     }
     
     // MARK: - Public
+    
+    /// Update children and members from room states and members
+    /// - Parameters:
+    ///   - completion: A closure called when the operation completes.
+    public func readChildRoomsAndMembers(completion: @escaping () -> Void) {
+        let myUserId = room.mxSession.myUserId
+
+        room.state { [weak self] roomState in
+            roomState?.stateEvents.forEach({ event in
+                if event.eventType == .spaceChild {
+                    self?.childRoomIds.append(event.stateKey)
+                }
+            })
+            
+            self?.room.members { [weak self] response in
+                guard let members = response.value as? MXRoomMembers else {
+                    return
+                }
+                
+                self?.membersId = members.members.compactMap({ roomMember in
+                    return roomMember.userId != myUserId ? roomMember.userId : nil
+                })
+                
+                completion()
+            }
+        }
+    }
         
     /// Add child space or child room to the current space.
     /// - Parameters:
@@ -107,6 +138,46 @@ public class MXSpace: NSObject {
                                  stateKey: roomId,
                                  completion: completion)
     }
+    
+    /// Update child spaces using the list of spaces
+    /// - Parameters:
+    ///   - spacesPerId: complete list of spaces by space ID
+    public func updateChildSpaces(with spacesPerId: [String: MXSpace]) {
+        self.childRoomIds.forEach { roomId in
+            if let space = spacesPerId[roomId] {
+                self.childSpaces.append(space)
+            }
+        }
+    }
+    
+    /// Update child rooms using the list of direct rooms
+    /// - Parameters:
+    ///   - directRoomsPerMember: complete list of direct rooms by room ID
+    public func updateChildDirectRooms(with directRoomsPerMember: [String : [MXRoom]]) {
+        self.updateChildRooms(from: self, with: directRoomsPerMember)
+        self.childSpaces.forEach { space in
+            self.updateChildRooms(from: space, with: directRoomsPerMember)
+        }
+    }
+    
+    /// Check if the room identified with an ID is a child of the space
+    /// - Parameters:
+    ///   - roomId: The room id of the potential child room.
+    /// - Returns: `true` if the room identified is a child, `false` atherwise
+    @objc public func isRoomAChild(roomId: String) -> Bool {
+        return childRoomIds.contains(roomId)
+    }
+    
+    // MARK: - Private
+    
+    private func updateChildRooms(from space: MXSpace, with directRoomsPerMember: [String : [MXRoom]]) {
+        space.membersId.forEach { memberId in
+            let rooms = directRoomsPerMember[memberId] ?? []
+            self.childRoomIds.append(contentsOf: rooms.compactMap({ room in
+                return room.roomId
+            }))
+        }
+    }
 }
 
 // MARK: - Objective-C
@@ -124,7 +195,7 @@ extension MXSpace {
     ///   - failure: A closure called  when the operation fails.
     /// - Returns: a `MXHTTPOperation` instance.
     @discardableResult
-    public func addChild(roomId: String,
+    @objc public func addChild(roomId: String,
                          viaServers: [String]?,
                          order: String?,
                          autoJoin: Bool,
