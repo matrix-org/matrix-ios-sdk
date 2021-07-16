@@ -26,7 +26,9 @@
 #import "MXTools.h"
 #import "MXBase64Tools.h"
 #import "MXError.h"
-
+#import "MXKeyProvider.h"
+#import "MXRawDataKey.h"
+#import "MXCrossSigning_Private.h"
 
 #pragma mark - Constants definitions
 
@@ -119,29 +121,28 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     if (trustInfo.usable)
     {
         MXLogDebug(@"[MXKeyBackup] checkAndStartWithKeyBackupVersion: Found usable key backup. version: %@", keyBackupVersion.version);
+        
+        MXWeakify(self);
+        [crypto.crossSigning signObject:keyBackupVersion.authData withKeyType:MXCrossSigningKeyType.master success:^(NSDictionary * _Nonnull signedObject) {
 
-        // Check the version we used at the previous app run
-        NSString *versionInStore = crypto.store.backupVersion;
-        if (versionInStore && ![versionInStore isEqualToString:keyBackupVersion.version])
-        {
-            MXLogDebug(@"[MXKeyBackup] -> clean the previously used version(%@)", versionInStore);
-            [self resetKeyBackupData];
-        }
-        
-        // Check private keys
-        if (self.hasPrivateKeyInCryptoStore)
-        {
-            NSString *pKDecryptionPublicKey = [self pkDecrytionPublicKeyFromCryptoStore];
+            MXStrongifyAndReturnIfNil(self);
+            MXWeakify(self);
             
-            if (![self checkPkDecryptionPublicKey:pKDecryptionPublicKey forKeyBackupVersion:keyBackupVersion])
-            {
-                MXLogDebug(@"[MXKeyBackup] -> clean local private key (%@)", pKDecryptionPublicKey);
-                [crypto.store deleteSecretWithSecretId:MXSecretId.keyBackup];
-            }
-        }
-        
-        MXLogDebug(@"[MXKeyBackup]    -> enabling key backups");
-        [self enableKeyBackup:keyBackupVersion];
+            MXKeyBackupVersion *newKeybackup = [keyBackupVersion copy];
+            newKeybackup.authData = signedObject;
+            
+            // And send it to the homeserver
+            [self-> crypto.matrixRestClient updateKeyBackupVersion:newKeybackup withPath:kMXAPIPrefixPathUnstable success:^{
+                MXStrongifyAndReturnIfNil(self);
+                [self checkKeyBackupVersionAndEnableBackup:newKeybackup];
+            } failure:^(NSError *error) {
+                MXStrongifyAndReturnIfNil(self);
+                [self checkKeyBackupVersionAndEnableBackup:keyBackupVersion];
+            }];
+        } failure:^(NSError * _Nonnull error) {
+            MXStrongifyAndReturnIfNil(self);
+            [self checkKeyBackupVersionAndEnableBackup:keyBackupVersion];
+        }];
     }
     else
     {
@@ -155,6 +156,37 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
 
         self.state = MXKeyBackupStateNotTrusted;
     }
+}
+
+/**
+ Enable backing up of keys after checking the key backup version.
+
+ @param keyBackupVersion backup information object as returned by `[MXKeyBackup version]`.
+ */
+- (void)checkKeyBackupVersionAndEnableBackup:(MXKeyBackupVersion*)keyBackupVersion
+{
+    // Check the version we used at the previous app run
+    NSString *versionInStore = crypto.store.backupVersion;
+    if (versionInStore && ![versionInStore isEqualToString:keyBackupVersion.version])
+    {
+        MXLogDebug(@"[MXKeyBackup] -> clean the previously used version(%@)", versionInStore);
+        [self resetKeyBackupData];
+    }
+    
+    // Check private keys
+    if (self.hasPrivateKeyInCryptoStore)
+    {
+        NSString *pKDecryptionPublicKey = [self pkDecrytionPublicKeyFromCryptoStore];
+        
+        if (![self checkPkDecryptionPublicKey:pKDecryptionPublicKey forKeyBackupVersion:keyBackupVersion])
+        {
+            MXLogDebug(@"[MXKeyBackup] -> clean local private key (%@)", pKDecryptionPublicKey);
+            [crypto.store deleteSecretWithSecretId:MXSecretId.keyBackup];
+        }
+    }
+    
+    MXLogDebug(@"[MXKeyBackup]    -> enabling key backups");
+    [self enableKeyBackup:keyBackupVersion];
 }
 
 /**
@@ -201,6 +233,8 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     if (_state == MXKeyBackupStateReadyToBackUp)
     {
         self.state = MXKeyBackupStateWillBackUp;
+
+        MXLogDebug(@"[MXKeyBackup] maybeSendKeyBackup: ready to send keybackup");
 
         // Wait between 0 and 10 seconds, to avoid backup requests from
         // different clients hitting the server all at the same time when a
@@ -285,7 +319,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
         }
     }
 
-    MXLogDebug(@"[MXKeyBackup] sendKeyBackup: 3 - Finalising data to send");
+    MXLogDebug(@"[MXKeyBackup] sendKeyBackup: 3 - Finalising data to send roomsKeyBackup = %@", roomsKeyBackup);
 
     // Finalise data to send
     NSMutableDictionary<NSString*, MXRoomKeysBackupData*> *rooms = [NSMutableDictionary dictionary];
@@ -305,7 +339,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     MXKeysBackupData *keysBackupData = [MXKeysBackupData new];
     keysBackupData.rooms = rooms;
 
-    MXLogDebug(@"[MXKeyBackup] sendKeyBackup: 4 - Sending request");
+    MXLogDebug(@"[MXKeyBackup] sendKeyBackup: 4 - Sending request keysBackupData.rooms = %@", keysBackupData.rooms);
 
     // Make the request
     MXWeakify(self);
@@ -1542,14 +1576,6 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
 
 - (MXKeyBackupData*)encryptGroupSession:(MXOlmInboundGroupSession*)session
 {
-    // Gather information for each key
-    MXDeviceInfo *device = [crypto.deviceList deviceWithIdentityKey:session.senderKey andAlgorithm:kMXCryptoMegolmAlgorithm];
-    if (!device)
-    {
-        MXLogDebug(@"[MXKeyBackup] encryptGroupSession: Error: Cannot find device for %@", session.senderKey);
-        return nil;
-    }
-
     // Build the m.megolm_backup.v1.curve25519-aes-sha2 data as defined at
     // https://github.com/uhoreg/matrix-doc/blob/e2e_backup/proposals/1219-storing-megolm-keys-serverside.md#mmegolm_backupv1curve25519-aes-sha2-key-format
     MXMegolmSessionData *sessionData = session.exportSessionData;
@@ -1573,11 +1599,14 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
         return nil;
     }
 
+    // Gather information for each key
+    MXDeviceInfo *device = [crypto.deviceList deviceWithIdentityKey:session.senderKey andAlgorithm:kMXCryptoMegolmAlgorithm];
+
     // Build backup data for that key
     MXKeyBackupData *keyBackupData = [MXKeyBackupData new];
     keyBackupData.firstMessageIndex = session.session.firstKnownIndex;
     keyBackupData.forwardedCount = session.forwardingCurve25519KeyChain.count;
-    keyBackupData.verified = device.trustLevel.isVerified;
+    keyBackupData.verified = device ? device.trustLevel.isVerified : NO;
     keyBackupData.sessionData = @{
                                   @"ciphertext": encryptedSessionBackupData.ciphertext,
                                   @"mac": encryptedSessionBackupData.mac,
