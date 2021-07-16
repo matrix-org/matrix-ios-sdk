@@ -11,7 +11,7 @@ Changes to be released in next version
  * 
 
 ⚠️ API Changes
- * 
+ * MXResponse has been frozen for binary compatibility.
 
 🗣 Translations
  * 
