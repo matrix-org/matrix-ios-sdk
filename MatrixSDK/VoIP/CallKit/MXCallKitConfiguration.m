@@ -14,6 +14,8 @@
  limitations under the License.
  */
 
+#ifndef DISABLE_CALLKIT
+
 #import "MXCallKitConfiguration.h"
 
 @implementation MXCallKitConfiguration
@@ -44,3 +46,5 @@
 }
 
 @end
+
+#endif

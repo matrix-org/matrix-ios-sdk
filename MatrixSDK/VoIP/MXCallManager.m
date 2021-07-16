@@ -735,6 +735,7 @@ NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
 
 - (void)handleCallStateDidChangeNotification:(NSNotification *)notification
 {
+#ifndef DISABLE_CALLKIT
 #if TARGET_OS_IPHONE
     MXCall *call = notification.object;
     
@@ -761,14 +762,17 @@ NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
             break;
     }
 #endif
+#endif
 }
 
 - (void)handleCallSupportHoldingStatusDidChange:(NSNotification *)notification
 {
+#ifndef DISABLE_CALLKIT
 #if TARGET_OS_IPHONE
     MXCall *call = notification.object;
     
     [self.callKitAdapter updateSupportsHoldingForCall:call];
+#endif
 #endif
 }
 

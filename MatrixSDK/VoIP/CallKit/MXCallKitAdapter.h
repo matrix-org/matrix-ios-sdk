@@ -14,6 +14,7 @@
  limitations under the License.
  */
 
+#ifndef DISABLE_CALLKIT
 #if TARGET_OS_IPHONE
 
 @import Foundation;
@@ -63,4 +64,5 @@ API_AVAILABLE(ios(10.0))
 
 NS_ASSUME_NONNULL_END
 
+#endif
 #endif
