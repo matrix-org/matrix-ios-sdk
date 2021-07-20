@@ -5,6 +5,30 @@ Changes to be released in next version
  * 
 
 🙌 Improvements
+ * 
+
+🐛 Bugfix
+ * 
+
+⚠️ API Changes
+ * 
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+Changes in 0.19.4 (2021-07-15)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
  * MXTools: Default to 1080p when converting a video (vector-im/element-ios/issues/4478).
  * MXEvent: add support for voice messages
  * MXRoom: Add support for sending slow motion videos using AVAsset (vector-im/element-ios/issues/4483).
@@ -27,6 +51,9 @@ Changes to be released in next version
 
 Others
  * Fixed a nullability warning and some header warnings.
+
+
+Improvements:
 
 
 Changes in 0.19.3 (2021-06-30)
