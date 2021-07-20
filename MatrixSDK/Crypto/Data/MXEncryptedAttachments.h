@@ -66,8 +66,10 @@ extern NSString *const MXEncryptedAttachmentsErrorDomain;
  @param outputStream Stream to write the plaintext to
  @returns NSError nil on success, otherwise an error describing what went wrong
  */
-+ (NSError *)decryptAttachment:(MXEncryptedContentFile *)fileInfo
++ (void)decryptAttachment:(MXEncryptedContentFile *)fileInfo
               inputStream:(NSInputStream *)inputStream
-             outputStream:(NSOutputStream *)outputStream;
+             outputStream:(NSOutputStream *)outputStream
+                  success:(void(^)(void))success
+                  failure:(void(^)(NSError *))failure;
 
 @end
