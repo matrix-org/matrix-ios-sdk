@@ -35,20 +35,21 @@ extension MXSpaceError: CustomNSError {
 }
 
 /// A Matrix space enables to collect rooms together into groups. Such collections of rooms are referred as "spaces" (see https://github.com/matrix-org/matrix-doc/blob/matthew/msc1772/proposals/1772-groups-as-rooms.md).
+@objcMembers
 public class MXSpace: NSObject {
     
     // MARK: - Properties
     
     /// The underlying room
-    @objc public let room: MXRoom
+    public let room: MXRoom
     
     /// Shortcut to the room roomId
-    @objc public var spaceId: String {
+    public var spaceId: String {
         return self.room.roomId
     }
     
     /// Shortcut to the room summary
-    @objc public var summary: MXRoomSummary? {
+    public var summary: MXRoomSummary? {
         return self.room.summary
     }
     
@@ -164,7 +165,7 @@ public class MXSpace: NSObject {
     /// - Parameters:
     ///   - roomId: The room id of the potential child room.
     /// - Returns: `true` if the room identified is a child, `false` atherwise
-    @objc public func isRoomAChild(roomId: String) -> Bool {
+    public func isRoomAChild(roomId: String) -> Bool {
         return childRoomIds.contains(roomId)
     }
     

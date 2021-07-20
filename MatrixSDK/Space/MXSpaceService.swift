@@ -58,8 +58,21 @@ public class MXSpaceService: NSObject {
     private let processingQueue: DispatchQueue
     private let completionQueue: DispatchQueue
     
-    public private(set) var spaces: [MXSpace] = []
+    private var spaces: [MXSpace] = []
     private var spacesPerId: [String : MXSpace] = [:]
+    private var parentIdsPerRoomId: [String : Set<String>] = [:]
+    
+    private var rootSpaces: [MXSpace] = []
+    private var orphanedRooms: [MXRoom] = []
+    private var orphanedDirectRooms: [MXRoom] = []
+    
+    public var rootSpaceSummaries: [MXRoomSummary] {
+        get {
+            return rootSpaces.compactMap { space in
+                return space.summary
+            }
+        }
+    }
     
     // MARK: - Setup
     
@@ -75,15 +88,38 @@ public class MXSpaceService: NSObject {
     /// Build the graph of rooms
     /// - Parameters:
     ///   - rooms: the complete list of rooms and spaces
-    @objc public func buildGraph(with rooms:[MXRoom]) {
+    public func buildGraph(with rooms:[MXRoom]) {
         prepareData(with: rooms, index: 0, spaces: [], spacesPerId: [:], roomsPerId: [:], directRooms: [:]) { spaces, spacesPerId, roomsPerId, directRooms in
             MXLog.debug("\(spaces), \(spacesPerId), \(roomsPerId), \(directRooms)")
+            var parentIdsPerRoomId: [String : Set<String>] = [:]
             spaces.forEach { space in
                 space.updateChildSpaces(with: spacesPerId)
                 space.updateChildDirectRooms(with: directRooms)
+                space.childRoomIds.forEach { roomId in
+                    var parentIds = parentIdsPerRoomId[roomId] ?? Set<String>()
+                    parentIds.insert(space.spaceId)
+                    parentIdsPerRoomId[roomId] = parentIds
+                }
+                space.childSpaces.forEach { childSpace in
+                    var parentIds = parentIdsPerRoomId[childSpace.spaceId] ?? Set<String>()
+                    parentIds.insert(space.spaceId)
+                    parentIdsPerRoomId[childSpace.spaceId] = parentIds
+                }
             }
+            
             self.spaces = spaces
             self.spacesPerId = spacesPerId
+            self.parentIdsPerRoomId = parentIdsPerRoomId
+            self.rootSpaces = spaces.filter { space in
+                return parentIdsPerRoomId[space.spaceId] == nil
+            }
+            self.orphanedRooms = self.session.rooms.filter { room in
+                return !room.isDirect && parentIdsPerRoomId[room.roomId] == nil
+            }
+            self.orphanedDirectRooms = self.session.rooms.filter { room in
+                return room.isDirect && parentIdsPerRoomId[room.roomId] == nil
+            }
+            
             DispatchQueue.main.async {
                 NotificationCenter.default.post(name: MXSpaceService.didBuildSpaceGraph, object: self)
             }
