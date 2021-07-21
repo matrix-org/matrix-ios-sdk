@@ -5,7 +5,7 @@ Changes to be released in next version
  * 
 
 🙌 Improvements
- * 
+ * MXRoomSummary: Cache local unread event count (vector-im/element-ios/issues/4585).
 
 🐛 Bugfix
  * MXCryptoStore: Use UI background task to make sure that write operations complete (vector-im/element-ios/issues/4579).
