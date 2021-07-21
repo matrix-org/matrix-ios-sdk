@@ -64,7 +64,8 @@ extern NSString *const MXEncryptedAttachmentsErrorDomain;
  @param fileInfo The file information block
  @param inputStream A stream of the ciphertext
  @param outputStream Stream to write the plaintext to
- @returns NSError nil on success, otherwise an error describing what went wrong
+ @param success Called when decryption finishes, on the main thread.
+ @param failure Called if encountering errors, on the main thread.
  */
 + (void)decryptAttachment:(MXEncryptedContentFile *)fileInfo
               inputStream:(NSInputStream *)inputStream
