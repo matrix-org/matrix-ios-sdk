@@ -134,7 +134,7 @@
         UIApplication *sharedApplication = [self sharedApplication];
         if (sharedApplication)
         {
-            MXLogDebug(@"[MXBackgroundTask] Stop background task #%lu - %@ after %.0fms", (unsigned long)self.identifier, self.name, self.elapsedTime);
+            MXLogDebug(@"[MXBackgroundTask] Stop background task #%lu - %@ after %.3fms", (unsigned long)self.identifier, self.name, self.elapsedTime);
             
             [sharedApplication endBackgroundTask:self.identifier];
             self.identifier = UIBackgroundTaskInvalid;
