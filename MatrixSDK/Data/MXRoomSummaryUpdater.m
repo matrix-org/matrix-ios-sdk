@@ -272,6 +272,21 @@
     return updated;
 }
 
+- (BOOL)session:(MXSession *)session updateRoomSummaryLocalUnreadEventCount:(MXRoomSummary*)summary withTypeIn:(NSArray*)types
+{
+    BOOL updated = NO;
+
+    NSUInteger localUnreadEventCount = [session.store localUnreadEventCount:summary.room.roomId withTypeIn:types];
+    
+    if (summary.localUnreadEventCount != localUnreadEventCount)
+    {
+        summary.localUnreadEventCount = localUnreadEventCount;
+        updated = YES;
+    }
+    
+    return updated;
+}
+
 #pragma mark - Private
 
 // Hide tombstoned room from user only if the user joined the replacement room

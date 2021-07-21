@@ -277,7 +277,7 @@ FOUNDATION_EXPORT NSUInteger const MXRoomSummaryPaginationChunkSize;
  @discussion: The returned count is relative to the local storage. The actual unread messages
  for a room may be higher than the returned value.
  */
-@property (nonatomic, readonly) NSUInteger localUnreadEventCount;
+@property (nonatomic) NSUInteger localUnreadEventCount;
 
 /**
  The number of unread messages that match the push notification rules.
@@ -408,5 +408,16 @@ FOUNDATION_EXPORT NSUInteger const MXRoomSummaryPaginationChunkSize;
  @return YES if the room summary has changed.
  */
 - (BOOL)session:(MXSession*)session updateRoomSummary:(MXRoomSummary*)summary withServerRoomSummary:(MXRoomSyncSummary*)serverRoomSummary roomState:(MXRoomState*)roomState;
+
+
+/// Called to update the room summary on local unread event count change.
+///
+/// @param session the session the room belongs to.
+/// @param summary the room summary.
+/// @param types an array of event types strings (MXEventTypeString).
+/// @return YES if the room summary has changed.
+- (BOOL)session:(MXSession *)session
+    updateRoomSummaryLocalUnreadEventCount:(MXRoomSummary *)summary
+    withTypeIn:(NSArray*)types;
 
 @end
