@@ -641,6 +641,21 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     return membershipTransitionState;
 }
 
+- (BOOL)updateLocalUnreadEventCount
+{
+    BOOL updated = NO;
+
+    NSUInteger localUnreadEventCount = [self.mxSession.store localUnreadEventCount:self.room.roomId withTypeIn:self.mxSession.unreadEventTypes];
+    
+    if (self.localUnreadEventCount != localUnreadEventCount)
+    {
+        self.localUnreadEventCount = localUnreadEventCount;
+        updated = YES;
+    }
+    
+    return updated;
+}
+
 #pragma mark - Server sync
 - (void)handleStateEvents:(NSArray<MXEvent *> *)stateEvents
 {
@@ -699,7 +714,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
         }
                 
         // Check for unread events in store and update the localUnreadEventCount value if needed
-        updated |= [self.mxSession.roomSummaryUpdateDelegate session:self.mxSession updateRoomSummaryLocalUnreadEventCount:self withTypeIn:self.mxSession.unreadEventTypes];
+        updated |= [self updateLocalUnreadEventCount];
 
         // Store notification counts from unreadNotifications field in /sync response
         if (roomSync.unreadNotifications)
