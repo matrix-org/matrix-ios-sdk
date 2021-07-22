@@ -277,7 +277,7 @@ FOUNDATION_EXPORT NSUInteger const MXRoomSummaryPaginationChunkSize;
  @discussion: The returned count is relative to the local storage. The actual unread messages
  for a room may be higher than the returned value.
  */
-@property (nonatomic, readonly) NSUInteger localUnreadEventCount;
+@property (nonatomic) NSUInteger localUnreadEventCount;
 
 /**
  The number of unread messages that match the push notification rules.

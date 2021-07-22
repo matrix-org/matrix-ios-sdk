@@ -546,7 +546,7 @@ FOUNDATION_EXPORT NSInteger const kMXRoomAlreadyJoinedErrorCode;
  */
 - (MXHTTPOperation*)sendVoiceMessage:(NSURL*)fileLocalURL
                             mimeType:(NSString*)mimeType
-                            duration:(NSTimeInterval)duration
+                            duration:(NSUInteger)duration
                              samples:(NSArray<NSNumber *> *)samples
                            localEcho:(MXEvent**)localEcho
                              success:(void (^)(NSString *eventId))success

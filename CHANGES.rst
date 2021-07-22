@@ -5,6 +5,57 @@ Changes to be released in next version
  * 
 
 🙌 Improvements
+ * 
+
+🐛 Bugfix
+ * 
+
+⚠️ API Changes
+ * 
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+Changes in 0.19.5 (2021-07-22)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
+ * MXRoomSummary: Cache local unread event count (vector-im/element-ios/issues/4585).
+
+🐛 Bugfix
+ * MXCryptoStore: Use UI background task to make sure that write operations complete (vector-im/element-ios/issues/4579).
+
+⚠️ API Changes
+ * 
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+Improvements:
+
+
+Changes in 0.19.4 (2021-07-15)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
  * MXTools: Default to 1080p when converting a video (vector-im/element-ios/issues/4478).
  * MXEvent: add support for voice messages
  * MXRoom: Add support for sending slow motion videos using AVAsset (vector-im/element-ios/issues/4483).
@@ -26,7 +77,10 @@ Changes to be released in next version
  * 
 
 Others
- * 
+ * Fixed a nullability warning and some header warnings.
+
+
+Improvements:
 
 
 Changes in 0.19.3 (2021-06-30)
