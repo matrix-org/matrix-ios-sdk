@@ -55,8 +55,9 @@ public class MXSpace: NSObject {
     
     public private(set) var childSpaces: [MXSpace] = []
     public private(set) var childRoomIds: [String] = []
+    public private(set) var otherMembersId: [String] = []
     public private(set) var membersId: [String] = []
-    
+
     // MARK: - Setup
     
     public init(room: MXRoom) {
@@ -83,10 +84,17 @@ public class MXSpace: NSObject {
                 guard let members = response.value as? MXRoomMembers else {
                     return
                 }
-                
-                self?.membersId = members.members.compactMap({ roomMember in
-                    return roomMember.userId != myUserId ? roomMember.userId : nil
-                })
+
+                var otherMembersId: [String] = []
+                var membersId: [String] = []
+                members.members.forEach { roomMember in
+                    membersId.append(roomMember.userId)
+                    if roomMember.userId != myUserId {
+                        otherMembersId.append(roomMember.userId)
+                    }
+                }
+                self?.otherMembersId = otherMembersId
+                self?.membersId = membersId
                 
                 completion()
             }
@@ -172,7 +180,7 @@ public class MXSpace: NSObject {
     // MARK: - Private
     
     private func updateChildRooms(from space: MXSpace, with directRoomsPerMember: [String : [MXRoom]]) {
-        space.membersId.forEach { memberId in
+        space.otherMembersId.forEach { memberId in
             let rooms = directRoomsPerMember[memberId] ?? []
             self.childRoomIds.append(contentsOf: rooms.compactMap({ room in
                 return room.roomId
