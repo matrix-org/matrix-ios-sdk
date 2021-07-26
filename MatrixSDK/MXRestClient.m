@@ -5446,4 +5446,37 @@ MXAuthAction;
                                  }];
 }
 
+- (MXHTTPOperation*)getSpaceChildrenForSpaceWithId:(NSString*)spaceId
+                                     suggestedOnly:(BOOL)suggestedOnly
+                                             limit:(NSInteger)limit
+                                           success:(void (^)(MXSpaceChildrenResponse *spaceChildrenResponse))success
+                                           failure:(void (^)(NSError *error))failure
+{
+    NSString *maxRoomParameter = limit >= 0 ? [NSString stringWithFormat:@"&max_rooms_per_space=%ld", (long)limit] : @"";
+    NSString *path = [NSString stringWithFormat:@"%@/org.matrix.msc2946/rooms/%@/spaces?suggested_only=%@%@",
+                      kMXAPIPrefixPathUnstable, spaceId, suggestedOnly ? @"true": @"false", maxRoomParameter];
+    
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"GET"
+                                    path:path
+                              parameters:@{}
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
+                                     if (success)
+                                     {
+                                         __block MXSpaceChildrenResponse *spaceChildrenResponse;
+                                         [self dispatchProcessing:^{
+                                             MXJSONModelSetMXJSONModel(spaceChildrenResponse, MXSpaceChildrenResponse, JSONResponse);
+                                         } andCompletion:^{
+                                             success(spaceChildrenResponse);
+                                         }];
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
 @end
