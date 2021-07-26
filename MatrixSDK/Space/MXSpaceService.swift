@@ -388,13 +388,11 @@ extension MXSpaceService {
     ///   - spaceId: The room id of the queried space.
     ///   - suggestedOnly: If `true`, return only child events and rooms where the `m.space.child` event has `suggested: true`.
     ///   - limit: Optional. A limit to the maximum number of children to return per space. `-1` for no limit
-    ///   - completion: A closure called when the operation completes.
+    ///   - success: A closure called when the operation is complete.
+    ///   - failure: A closure called  when the operation fails.
     /// - Returns: a `MXHTTPOperation` instance.
     @discardableResult
-    @objc public func getSpaceChildrenForSpace(withId spaceId: String,
-                                         suggestedOnly: Bool,
-                                         limit: Int,
-                                         success: @escaping (MXSpaceChildrenSummary) -> Void, failure: @escaping (Error) -> Void) -> MXHTTPOperation {
+    @objc public func getSpaceChildrenForSpace(withId spaceId: String, suggestedOnly: Bool, limit: Int, success: @escaping (MXSpaceChildrenSummary) -> Void, failure: @escaping (Error) -> Void) -> MXHTTPOperation {
         return self.getSpaceChildrenForSpace(withId: spaceId, suggestedOnly: suggestedOnly, limit: limit) { (response) in
             uncurryResponse(response, success: success, failure: failure)
         }

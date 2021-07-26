@@ -584,11 +584,6 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
 
 
 #pragma mark - Others
-- (NSUInteger)localUnreadEventCount
-{
-    // Check for unread events in store
-    return [store localUnreadEventCount:_roomId withTypeIn:_mxSession.unreadEventTypes];
-}
 
 - (BOOL)isDirect
 {
@@ -644,6 +639,21 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     }
     
     return membershipTransitionState;
+}
+
+- (BOOL)updateLocalUnreadEventCount
+{
+    BOOL updated = NO;
+
+    NSUInteger localUnreadEventCount = [self.mxSession.store localUnreadEventCount:self.room.roomId withTypeIn:self.mxSession.unreadEventTypes];
+    
+    if (self.localUnreadEventCount != localUnreadEventCount)
+    {
+        self.localUnreadEventCount = localUnreadEventCount;
+        updated = YES;
+    }
+    
+    return updated;
 }
 
 #pragma mark - Server sync
@@ -702,6 +712,9 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
                 break;
             }
         }
+                
+        // Check for unread events in store and update the localUnreadEventCount value if needed
+        updated |= [self updateLocalUnreadEventCount];
 
         // Store notification counts from unreadNotifications field in /sync response
         if (roomSync.unreadNotifications)
@@ -802,6 +815,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
         _others = [aDecoder decodeObjectForKey:@"others"];
         _isEncrypted = [aDecoder decodeBoolForKey:@"isEncrypted"];
         _trust = [aDecoder decodeObjectForKey:@"trust"];
+        _localUnreadEventCount = (NSUInteger)[aDecoder decodeIntegerForKey:@"localUnreadEventCount"];
         _notificationCount = (NSUInteger)[aDecoder decodeIntegerForKey:@"notificationCount"];
         _highlightCount = (NSUInteger)[aDecoder decodeIntegerForKey:@"highlightCount"];
         _directUserId = [aDecoder decodeObjectForKey:@"directUserId"];
@@ -845,6 +859,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     {
         [aCoder encodeObject:_trust forKey:@"trust"];
     }
+    [aCoder encodeInteger:(NSInteger)_localUnreadEventCount forKey:@"localUnreadEventCount"];
     [aCoder encodeInteger:(NSInteger)_notificationCount forKey:@"notificationCount"];
     [aCoder encodeInteger:(NSInteger)_highlightCount forKey:@"highlightCount"];
     [aCoder encodeObject:_directUserId forKey:@"directUserId"];
