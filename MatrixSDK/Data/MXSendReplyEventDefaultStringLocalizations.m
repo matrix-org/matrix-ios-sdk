@@ -25,6 +25,7 @@
         _senderSentAnImage = @"sent an image.";
         _senderSentAVideo = @"sent a video.";
         _senderSentAnAudioFile = @"sent an audio file.";
+        _senderSentAVoiceMessage = @"sent a voice message.";
         _senderSentAFile = @"sent a file.";
         _messageToReplyToPrefix = @"In reply to";
     }

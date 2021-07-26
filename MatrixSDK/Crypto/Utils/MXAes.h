@@ -66,7 +66,7 @@ typedef NS_ENUM(NSUInteger, MXAesErrorCode)
  
  @return decrypted data if no error occured, nil otherwise.
  */
-+ (nullable NSData*)decrypt:(NSData*)cipher
++ (nullable NSData*)decrypt:(NSData*)data
                      aesKey:(NSData*)aesKey iv:(NSData*)iv
                       error:(NSError**)error;
 

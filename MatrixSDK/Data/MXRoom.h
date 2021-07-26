@@ -18,6 +18,7 @@
  */
 
 #import <Foundation/Foundation.h>
+#import <AVFoundation/AVFoundation.h>
 
 #if TARGET_OS_IPHONE
 #import <UIKit/UIKit.h>
@@ -436,7 +437,7 @@ FOUNDATION_EXPORT NSInteger const kMXRoomAlreadyJoinedErrorCode;
                       failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
- Send an video to the room.
+ Send a video to the room.
  
  @param videoLocalURL the local filesystem path of the video to send.
  @param videoThumbnail the UIImage hosting a video thumbnail.
@@ -456,6 +457,28 @@ FOUNDATION_EXPORT NSInteger const kMXRoomAlreadyJoinedErrorCode;
                     localEcho:(MXEvent**)localEcho
                       success:(void (^)(NSString *eventId))success
                       failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
+/**
+ Send a video to the room.
+ 
+ @param videoAsset an AVAsset that represents the video to send.
+ @param videoThumbnail the UIImage hosting a video thumbnail.
+ @param localEcho a pointer to a MXEvent object (@see sendMessageWithContent: for details).
+ @param success A block object called when the operation succeeds. It returns
+                the event id of the event generated on the home server
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)sendVideoAsset:(AVAsset*)videoAsset
+#if TARGET_OS_IPHONE
+                     withThumbnail:(UIImage*)videoThumbnail
+#elif TARGET_OS_OSX
+                     withThumbnail:(NSImage*)videoThumbnail
+#endif
+                         localEcho:(MXEvent**)localEcho
+                           success:(void (^)(NSString *eventId))success
+                           failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Send a file to the room.
@@ -511,6 +534,8 @@ FOUNDATION_EXPORT NSInteger const kMXRoomAlreadyJoinedErrorCode;
  
  @param fileLocalURL the local filesystem path of the file to send.
  @param mimeType (optional) the mime type of the file. Defaults to `audio/ogg`
+ @param duration the length of the voice message in milliseconds
+ @param samples an array of floating point values normalized to [0, 1], boxed within NSNumbers
  @param localEcho a pointer to a MXEvent object (@see sendMessageWithContent: for details).
  @param success A block object called when the operation succeeds. It returns
  the event id of the event generated on the home server
@@ -521,6 +546,8 @@ FOUNDATION_EXPORT NSInteger const kMXRoomAlreadyJoinedErrorCode;
  */
 - (MXHTTPOperation*)sendVoiceMessage:(NSURL*)fileLocalURL
                             mimeType:(NSString*)mimeType
+                            duration:(NSUInteger)duration
+                             samples:(NSArray<NSNumber *> *)samples
                            localEcho:(MXEvent**)localEcho
                              success:(void (^)(NSString *eventId))success
                              failure:(void (^)(NSError *error))failure

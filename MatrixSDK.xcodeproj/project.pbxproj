@@ -1158,7 +1158,7 @@
 		B17285792100C8EA0052C51E /* MXSendReplyEventStringsLocalizable.h in Headers */ = {isa = PBXBuildFile; fileRef = B17285782100C88A0052C51E /* MXSendReplyEventStringsLocalizable.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B172857C2100D4F60052C51E /* MXSendReplyEventDefaultStringLocalizations.h in Headers */ = {isa = PBXBuildFile; fileRef = B172857A2100D4F60052C51E /* MXSendReplyEventDefaultStringLocalizations.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B172857D2100D4F60052C51E /* MXSendReplyEventDefaultStringLocalizations.m in Sources */ = {isa = PBXBuildFile; fileRef = B172857B2100D4F60052C51E /* MXSendReplyEventDefaultStringLocalizations.m */; };
-		B176B25123EB03E4001879C6 /* MXAggregationPaginatedResponse_Private.h in Headers */ = {isa = PBXBuildFile; fileRef = B176B25023EB03E3001879C6 /* MXAggregationPaginatedResponse_Private.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		B176B25123EB03E4001879C6 /* MXAggregationPaginatedResponse_Private.h in Headers */ = {isa = PBXBuildFile; fileRef = B176B25023EB03E3001879C6 /* MXAggregationPaginatedResponse_Private.h */; };
 		B176B25223EB03E4001879C6 /* MXAggregationPaginatedResponse_Private.h in Headers */ = {isa = PBXBuildFile; fileRef = B176B25023EB03E3001879C6 /* MXAggregationPaginatedResponse_Private.h */; };
 		B17982F52119E4A2001FD722 /* MXRoomCreateContent.h in Headers */ = {isa = PBXBuildFile; fileRef = B17982ED2119E49E001FD722 /* MXRoomCreateContent.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B17982F62119E4A2001FD722 /* MXRoomTombStoneContent.m in Sources */ = {isa = PBXBuildFile; fileRef = B17982EE2119E49F001FD722 /* MXRoomTombStoneContent.m */; };
@@ -1186,7 +1186,7 @@
 		B18D18C22152B8E4003677D1 /* MXRoomMember.swift in Sources */ = {isa = PBXBuildFile; fileRef = B18D18C12152B8E4003677D1 /* MXRoomMember.swift */; };
 		B19A309C240424BD00FB6F35 /* MXQRCodeTransaction.h in Headers */ = {isa = PBXBuildFile; fileRef = B19A3099240424BD00FB6F35 /* MXQRCodeTransaction.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B19A309D240424BD00FB6F35 /* MXQRCodeTransaction.h in Headers */ = {isa = PBXBuildFile; fileRef = B19A3099240424BD00FB6F35 /* MXQRCodeTransaction.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		B19A309E240424BD00FB6F35 /* MXQRCodeTransaction_Private.h in Headers */ = {isa = PBXBuildFile; fileRef = B19A309A240424BD00FB6F35 /* MXQRCodeTransaction_Private.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		B19A309E240424BD00FB6F35 /* MXQRCodeTransaction_Private.h in Headers */ = {isa = PBXBuildFile; fileRef = B19A309A240424BD00FB6F35 /* MXQRCodeTransaction_Private.h */; };
 		B19A309F240424BD00FB6F35 /* MXQRCodeTransaction_Private.h in Headers */ = {isa = PBXBuildFile; fileRef = B19A309A240424BD00FB6F35 /* MXQRCodeTransaction_Private.h */; };
 		B19A30A0240424BD00FB6F35 /* MXQRCodeTransaction.m in Sources */ = {isa = PBXBuildFile; fileRef = B19A309B240424BD00FB6F35 /* MXQRCodeTransaction.m */; };
 		B19A30A1240424BD00FB6F35 /* MXQRCodeTransaction.m in Sources */ = {isa = PBXBuildFile; fileRef = B19A309B240424BD00FB6F35 /* MXQRCodeTransaction.m */; };
@@ -1238,7 +1238,7 @@
 		B1A0270326162110001AADFF /* MXSpaceChildrenResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = B1A026FF26162110001AADFF /* MXSpaceChildrenResponse.m */; };
 		B1C854EE25E7B497005867D0 /* MXRoomType.h in Headers */ = {isa = PBXBuildFile; fileRef = B1C854ED25E7B492005867D0 /* MXRoomType.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B1C854EF25E7B498005867D0 /* MXRoomType.h in Headers */ = {isa = PBXBuildFile; fileRef = B1C854ED25E7B492005867D0 /* MXRoomType.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		B1DDC9D62418098200D208E3 /* MXIncomingSASTransaction_Private.h in Headers */ = {isa = PBXBuildFile; fileRef = B1DDC9D52418098200D208E3 /* MXIncomingSASTransaction_Private.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		B1DDC9D62418098200D208E3 /* MXIncomingSASTransaction_Private.h in Headers */ = {isa = PBXBuildFile; fileRef = B1DDC9D52418098200D208E3 /* MXIncomingSASTransaction_Private.h */; };
 		B1DDC9D72418098200D208E3 /* MXIncomingSASTransaction_Private.h in Headers */ = {isa = PBXBuildFile; fileRef = B1DDC9D52418098200D208E3 /* MXIncomingSASTransaction_Private.h */; };
 		B1E09A132397FA950057C069 /* MatrixSDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B14EF36B2397E90400758AF0 /* MatrixSDK.framework */; };
 		B1E09A192397FCE90057C069 /* MXReplyEventParserUnitTests.m in Sources */ = {isa = PBXBuildFile; fileRef = B11BD45B22CB8ABC0064D8B0 /* MXReplyEventParserUnitTests.m */; };
