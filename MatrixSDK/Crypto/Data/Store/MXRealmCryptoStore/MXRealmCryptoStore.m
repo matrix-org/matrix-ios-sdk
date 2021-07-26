@@ -32,7 +32,7 @@
 #import "MXBackgroundModeHandler.h"
 
 
-NSUInteger const kMXRealmCryptoStoreVersion = 16;
+NSUInteger const kMXRealmCryptoStoreVersion = 17;
 
 static NSString *const kMXRealmCryptoStoreFolder = @"MXRealmCryptoStore";
 
@@ -402,7 +402,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
     [RLMRealm deleteFilesForConfiguration:config error:&error];
     if (error)
     {
-        MXLogDebug(@"[MXRealmCryptoStore] deleteStore: Error: %@", error);
+        MXLogError(@"[MXRealmCryptoStore] deleteStore: Error: %@", error);
         
         if (!readOnly)
         {
@@ -416,10 +416,13 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
                 [realm transactionWithBlock:^{
                     [realm deleteAllObjects];
                 }];
+                
+                // We must keep the last version
+                [self setVersion:MXCryptoVersionLast];
             }
             else
             {
-                MXLogDebug(@"[MXRealmCryptoStore] deleteStore: Cannot open realm. Error: %@", error);
+                MXLogError(@"[MXRealmCryptoStore] deleteStore: Cannot open realm. Error: %@", error);
             }
         }
     }
@@ -2165,6 +2168,20 @@ static BOOL shouldCompactOnLaunch = YES;
                 
             case 15:
                 MXLogDebug(@"[MXRealmCryptoStore] Migration from schema #15 -> #16: Nothing to do (added optional MXRealmSecret.encryptedSecret)");
+                
+            case 16:
+                MXLogDebug(@"[MXRealmCryptoStore] Migration from schema #16 -> #17");
+                
+                MXLogDebug(@"[MXRealmCryptoStore]    Make sure MXRealmOlmAccount.cryptoVersion is MXCryptoVersion2");
+                [migration enumerateObjects:MXRealmOlmAccount.className block:^(RLMObject *oldObject, RLMObject *newObject) {
+                    NSNumber *version;
+                    MXJSONModelSetNumber(version, oldObject[@"cryptoVersion"]);
+                    if (version && version.intValue == 0)
+                    {
+                        MXLogDebug(@"[MXRealmCryptoStore]    -> Fix MXRealmOlmAccount.cryptoVersion");
+                        newObject[@"cryptoVersion"] = @(MXCryptoVersion2);
+                    }
+                }];
         }
     }
     
