@@ -5416,37 +5416,6 @@ MXAuthAction;
 #pragma mark - Spaces
 
 - (MXHTTPOperation*)getSpaceChildrenForSpaceWithId:(NSString*)spaceId
-                                        parameters:(MXSpaceChildrenRequestParameters*)parameters
-                                          success:(void (^)(MXSpaceChildrenResponse *spaceChildrenResponse))success
-                                          failure:(void (^)(NSError *error))failure
-{
-    NSString *path = [NSString stringWithFormat:@"%@/org.matrix.msc2946/rooms/%@/spaces",
-                             kMXAPIPrefixPathUnstable, spaceId];
-    
-    MXWeakify(self);
-    return [httpClient requestWithMethod:@"POST"
-                                    path:path                              
-                              parameters:[parameters jsonDictionary] ?: @{}
-                                 success:^(NSDictionary *JSONResponse) {
-                                     MXStrongifyAndReturnIfNil(self);
-
-                                     if (success)
-                                     {
-                                         __block MXSpaceChildrenResponse *spaceChildrenResponse;
-                                         [self dispatchProcessing:^{
-                                             MXJSONModelSetMXJSONModel(spaceChildrenResponse, MXSpaceChildrenResponse, JSONResponse);
-                                         } andCompletion:^{
-                                             success(spaceChildrenResponse);
-                                         }];
-                                     }
-                                 }
-                                 failure:^(NSError *error) {
-                                     MXStrongifyAndReturnIfNil(self);
-                                     [self dispatchFailure:error inBlock:failure];
-                                 }];
-}
-
-- (MXHTTPOperation*)getSpaceChildrenForSpaceWithId:(NSString*)spaceId
                                      suggestedOnly:(BOOL)suggestedOnly
                                              limit:(NSInteger)limit
                                            success:(void (^)(MXSpaceChildrenResponse *spaceChildrenResponse))success
