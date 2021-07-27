@@ -416,9 +416,6 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
                 [realm transactionWithBlock:^{
                     [realm deleteAllObjects];
                 }];
-                
-                // We must keep the last version
-                [self setVersion:MXCryptoVersionLast];
             }
             else
             {
@@ -450,7 +447,8 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
             {
                 MXLogDebug(@"[MXRealmCryptoStore] Credentials do not match");
                 [MXRealmCryptoStore deleteStoreWithCredentials:credentials];
-                return [MXRealmCryptoStore createStoreWithCredentials:credentials];
+                self = [MXRealmCryptoStore createStoreWithCredentials:credentials];
+                self.cryptoVersion = MXCryptoVersionLast;
             }
         }
         
