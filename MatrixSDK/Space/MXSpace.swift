@@ -161,12 +161,9 @@ public class MXSpace: NSObject {
     
     /// Update child rooms using the list of direct rooms
     /// - Parameters:
-    ///   - directRoomsPerMember: complete list of direct rooms by room ID
+    ///   - directRoomsPerMember: complete list of direct rooms by member ID
     public func updateChildDirectRooms(with directRoomsPerMember: [String : [MXRoom]]) {
         self.updateChildRooms(from: self, with: directRoomsPerMember)
-        self.childSpaces.forEach { space in
-            self.updateChildRooms(from: space, with: directRoomsPerMember)
-        }
     }
     
     /// Check if the room identified with an ID is a child of the space

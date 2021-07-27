@@ -61,7 +61,8 @@ public class MXSpaceService: NSObject {
     private var spaces: [MXSpace] = []
     private var spacesPerId: [String : MXSpace] = [:]
     private var parentIdsPerRoomId: [String : Set<String>] = [:]
-    
+    private var flattenedParentIds: [String: Set<String>] = [:]
+
     private var rootSpaces: [MXSpace] = []
     private var orphanedRooms: [MXRoom] = []
     private var orphanedDirectRooms: [MXRoom] = []
@@ -85,10 +86,21 @@ public class MXSpaceService: NSObject {
     
     // MARK: - Public
     
+    /// Allows to know if a given room is a descendant of a given space
+    /// - Parameters:
+    ///   - roomId: ID of the room
+    ///   - spaceId: ID of the space
+    /// - Returns: `true` if the room with the given ID is an ancestor of the space with the given ID .`false` otherwise
+    public func isRoom(withId roomId: String, descendantOf spaceId: String) -> Bool {
+        return flattenedParentIds[roomId]?.contains(spaceId) ?? false
+    }
+    
     /// Build the graph of rooms
     /// - Parameters:
     ///   - rooms: the complete list of rooms and spaces
     public func buildGraph(with rooms:[MXRoom]) {
+        let startDate = Date()
+        MXLog.debug("[Spaces] buildGraph started from \(Thread.callStackSymbols)")
         prepareData(with: rooms, index: 0, spaces: [], spacesPerId: [:], roomsPerId: [:], directRooms: [:]) { spaces, spacesPerId, roomsPerId, directRooms in
             MXLog.debug("\(spaces), \(spacesPerId), \(roomsPerId), \(directRooms)")
             var parentIdsPerRoomId: [String : Set<String>] = [:]
@@ -119,6 +131,14 @@ public class MXSpaceService: NSObject {
             self.orphanedDirectRooms = self.session.rooms.filter { room in
                 return room.isDirect && parentIdsPerRoomId[room.roomId] == nil
             }
+            
+            var flattenedParentIds: [String: Set<String>] = [:]
+            self.rootSpaces.forEach { space in
+                self.buildFlattenedParentIdList(with: space, visitedSpaceIds: [], flattenedParentIds: &flattenedParentIds)
+            }
+            self.flattenedParentIds = flattenedParentIds
+            
+            MXLog.debug("[Spaces] buildGraph ended after \(Date().timeIntervalSince(startDate))s")
             
             DispatchQueue.main.async {
                 NotificationCenter.default.post(name: MXSpaceService.didBuildSpaceGraph, object: self)
@@ -232,6 +252,21 @@ public class MXSpaceService: NSObject {
     }
     
     // MARK: - Private
+    
+    private func buildFlattenedParentIdList(with space: MXSpace, visitedSpaceIds: [String], flattenedParentIds: inout [String: Set<String>]) {
+        var visitedSpaceIds = visitedSpaceIds
+        visitedSpaceIds.append(space.spaceId)
+        space.childRoomIds.forEach { roomId in
+            var parentIds = flattenedParentIds[roomId] ?? Set<String>()
+            visitedSpaceIds.forEach { spaceId in
+                parentIds.insert(spaceId)
+            }
+            flattenedParentIds[roomId] = parentIds
+        }
+        space.childSpaces.forEach { childSpace in
+            buildFlattenedParentIdList(with: childSpace, visitedSpaceIds: visitedSpaceIds, flattenedParentIds: &flattenedParentIds)
+        }
+    }
     
     private func createRoomSummary(with spaceChildSummaryResponse: MXSpaceChildSummaryResponse) -> MXRoomSummary {
         
