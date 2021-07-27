@@ -44,10 +44,10 @@ public class MXRoomSummaryModel: NSManagedObject {
     @NSManaged public var notificationCount: Int16
     @NSManaged public var highlightCount: Int16
     @NSManaged public var directUserId: String?
-    @NSManaged public var lastMessage: Data?
     @NSManaged public var hiddenFromUser: Bool
     @NSManaged public var membersCount: MXRoomMembersCountModel?
     @NSManaged public var trust: MXUsersTrustLevelSummaryModel?
+    @NSManaged public var lastMessage: MXRoomLastMessageModel?
     
     internal static func from(roomSummary summary: MXRoomSummary,
                               in managedObjectContext: NSManagedObjectContext) -> MXRoomSummaryModel {
@@ -83,11 +83,6 @@ public class MXRoomSummaryModel: NSManagedObject {
         notificationCount = Int16(summary.notificationCount)
         highlightCount = Int16(summary.highlightCount)
         directUserId = summary.directUserId
-        if let message = summary.lastMessage {
-            lastMessage = NSKeyedArchiver.archivedData(withRootObject: message)
-        } else {
-            lastMessage = nil
-        }
         hiddenFromUser = summary.hiddenFromUser
         
         if let membersCount = summary.membersCount {
@@ -96,6 +91,7 @@ public class MXRoomSummaryModel: NSManagedObject {
         } else {
             membersCount = nil
         }
+        
         if let trust = summary.trust {
             self.trust = MXUsersTrustLevelSummaryModel.from(roomUsersTrustLevelSummary: trust,
                                                             in: managedObjectContext)
@@ -103,6 +99,12 @@ public class MXRoomSummaryModel: NSManagedObject {
             trust = nil
         }
         
+        if let lastMessage = summary.lastMessage {
+            self.lastMessage = MXRoomLastMessageModel.from(roomLastMessage: lastMessage,
+                                                           in: managedObjectContext)
+        } else {
+            lastMessage = nil
+        }
     }
     
 }

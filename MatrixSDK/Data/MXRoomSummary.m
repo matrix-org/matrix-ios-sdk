@@ -825,7 +825,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
         
         if (model.lastMessage)
         {
-            _lastMessage = [NSKeyedUnarchiver unarchiveObjectWithData:model.lastMessage];
+            _lastMessage = [[MXRoomLastMessage alloc] initWithCoreDataModel:model.lastMessage];
         }
         _hiddenFromUser = model.hiddenFromUser;
         
