@@ -8,7 +8,7 @@ Changes to be released in next version
  * 
 
 🐛 Bugfix
- * 
+ * Prevent session pause until reject/hangup event is sent (vector-im/element-ios/issues/4612).
 
 ⚠️ API Changes
  * 
