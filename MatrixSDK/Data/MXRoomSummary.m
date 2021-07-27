@@ -823,29 +823,10 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
         _highlightCount = model.highlightCount;
         _directUserId = model.directUserId;
         
-        _lastMessageEventId = model.lastMessageEventId;
-        _lastMessageOriginServerTs = [model.lastMessageDate timeIntervalSince1970];
-        _isLastMessageEncrypted = model.isLastMessageEncrypted;
-        
-        NSDictionary *lastMessageData;
-        if (_isLastMessageEncrypted)
+        if (model.lastMessage)
         {
-            NSData *lastMessageEncryptedData = model.lastMessageData;
-            NSData *lastMessageRawData = [self decrypt:lastMessageEncryptedData];
-            
-            if (lastMessageRawData)
-            {
-                lastMessageData = [NSKeyedUnarchiver unarchiveObjectWithData:lastMessageRawData];
-            }
+            _lastMessage = [NSKeyedUnarchiver unarchiveObjectWithData:model.lastMessage];
         }
-        else
-        {
-            lastMessageData = [NSKeyedUnarchiver unarchiveObjectWithData:model.lastMessageData];
-        }
-        _lastMessageString = lastMessageData[@"lastMessageString"];
-        _lastMessageAttributedString = lastMessageData[@"lastMessageAttributedString"];
-        _lastMessageOthers = lastMessageData[@"lastMessageOthers"];
-        
         _hiddenFromUser = model.hiddenFromUser;
         
         // Compute the trust if asked to do it automatically

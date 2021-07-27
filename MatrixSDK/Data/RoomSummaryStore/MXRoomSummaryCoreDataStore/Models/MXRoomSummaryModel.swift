@@ -44,11 +44,8 @@ public class MXRoomSummaryModel: NSManagedObject {
     @NSManaged public var notificationCount: Int16
     @NSManaged public var highlightCount: Int16
     @NSManaged public var directUserId: String?
-    @NSManaged public var lastMessageEventId: String?
-    @NSManaged public var lastMessageDate: Date?
-    @NSManaged public var isLastMessageEncrypted: Bool
+    @NSManaged public var lastMessage: Data?
     @NSManaged public var hiddenFromUser: Bool
-    @NSManaged public var lastMessageData: Data?
     @NSManaged public var membersCount: MXRoomMembersCountModel?
     @NSManaged public var trust: MXUsersTrustLevelSummaryModel?
     
@@ -86,22 +83,12 @@ public class MXRoomSummaryModel: NSManagedObject {
         notificationCount = Int16(summary.notificationCount)
         highlightCount = Int16(summary.highlightCount)
         directUserId = summary.directUserId
-        lastMessageEventId = summary.lastMessageEventId
-        lastMessageDate = Date(timeIntervalSince1970: TimeInterval(summary.lastMessageOriginServerTs))
-        isLastMessageEncrypted = summary.isLastMessageEncrypted
-        hiddenFromUser = summary.hiddenFromUser
-        
-        var lastMessageData: [String: Any] = [:]
-        lastMessageData["lastMessageString"] = summary.lastMessageString
-        lastMessageData["lastMessageAttributedString"] = summary.lastMessageAttributedString
-        lastMessageData["lastMessageOthers"] = summary.lastMessageOthers
-        
-        if isLastMessageEncrypted {
-            let data = NSKeyedArchiver.archivedData(withRootObject: lastMessageData)
-            self.lastMessageData = summary.encrypt(data)
+        if let message = summary.lastMessage {
+            lastMessage = NSKeyedArchiver.archivedData(withRootObject: message)
         } else {
-            self.lastMessageData = NSKeyedArchiver.archivedData(withRootObject: lastMessageData)
+            lastMessage = nil
         }
+        hiddenFromUser = summary.hiddenFromUser
         
         if let membersCount = summary.membersCount {
             self.membersCount = MXRoomMembersCountModel.from(roomMembersCount: membersCount,
