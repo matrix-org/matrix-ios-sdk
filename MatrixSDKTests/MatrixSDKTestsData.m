@@ -17,8 +17,10 @@
 
 #import "MatrixSDKTestsData.h"
 
+#import "MXSDKOptions.h"
 #import "MXRestClient.h"
 #import "MXError.h"
+#import "MXNoStore.h"
 
 // Do not bother with retain cycles warnings in tests
 #pragma clang diagnostic push
@@ -158,7 +160,7 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
         // Create a random room to use
         [bobRestClient createRoom:nil visibility:kMXRoomDirectoryVisibilityPrivate roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
 
-            NSLog(@"Created room %@ for %@", response.roomId, testCase.name);
+            MXLogDebug(@"Created room %@ for %@", response.roomId, testCase.name);
             
             readyToTest(bobRestClient, response.roomId, expectation);
             
@@ -176,7 +178,7 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
                             // Create a random room to use
                             [bobRestClient createRoom:nil visibility:kMXRoomDirectoryVisibilityPublic roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
 
-                                NSLog(@"Created public room %@ for %@", response.roomId, testCase.name);
+                                MXLogDebug(@"Created public room %@ for %@", response.roomId, testCase.name);
 
                                 readyToTest(bobRestClient, response.roomId, expectation);
                                 
@@ -231,7 +233,7 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
         // Create a random room to use
         [bobRestClient createRoom:nil visibility:kMXRoomDirectoryVisibilityPrivate roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
 
-            NSLog(@"Created room %@ for %@", response.roomId, testCase.name);
+            MXLogDebug(@"Created room %@ for %@", response.roomId, testCase.name);
 
             // Send the the message text in it
             [bobRestClient sendTextMessageToRoom:response.roomId text:newTextMessage success:^(NSString *eventId) {
@@ -294,7 +296,7 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
 
 - (void)for:(MXRestClient *)mxRestClient2 andRoom:(NSString*)roomId sendMessages:(NSUInteger)messagesCount testCase:(XCTestCase*)testCase success:(void (^)(void))success
 {
-    NSLog(@"sendMessages :%tu to %@", messagesCount, roomId);
+    MXLogDebug(@"sendMessages :%tu to %@", messagesCount, roomId);
     if (0 == messagesCount)
     {
         success();
@@ -326,7 +328,7 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
         // Create the room
         [mxRestClient2 createRoom:nil visibility:kMXRoomDirectoryVisibilityPrivate roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
 
-            NSLog(@"Created room %@ in createRooms", response.roomId);
+            MXLogDebug(@"Created room %@ in createRooms", response.roomId);
 
             // Fill it with messages
             [self for:mxRestClient2 andRoom:response.roomId sendMessages:messagesCount testCase:testCase success:^{
@@ -917,6 +919,92 @@ onUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecogn
     }];
 }
 
+- (void)loginUserOnANewDevice:(XCTestCase*)testCase
+                  credentials:(MXCredentials*)credentials
+                 withPassword:(NSString*)password
+               sessionToLogout:(MXSession*)sessionToLogout
+              newSessionStore:(id<MXStore>)newSessionStore
+              startNewSession:(BOOL)startNewSession
+                          e2e:(BOOL)e2e
+                   onComplete:(void (^)(MXSession *newSession))onComplete
+{
+    if (!credentials && sessionToLogout)
+    {
+        credentials = sessionToLogout.credentials;
+    }
+    
+    if (sessionToLogout)
+    {
+        [sessionToLogout logout:^{
+            [sessionToLogout close];
+            
+            [self loginUserOnANewDevice:testCase credentials:credentials withPassword:password sessionToLogout:nil newSessionStore:newSessionStore startNewSession:startNewSession e2e:e2e onComplete:onComplete];
+            
+        } failure:^(NSError *error) {
+            [self breakTestCase:testCase reason:@"Cannot logout %@. Error: %@", sessionToLogout.myUserId, error];
+        }];
+        return;
+    }
+    
+    MXRestClient *mxRestClient = [[MXRestClient alloc] initWithHomeServer:credentials.homeServer
+                                        andOnUnrecognizedCertificateBlock:nil];
+    [self retain:mxRestClient];
+    
+    [mxRestClient loginWithLoginType:kMXLoginFlowTypePassword username:credentials.userId password:password success:^(MXCredentials *credentials2) {
+        
+        MXRestClient *mxRestClient2 = [[MXRestClient alloc] initWithCredentials:credentials2 andOnUnrecognizedCertificateBlock:nil];
+        [self retain:mxRestClient2];
+        
+        MXSession *newSession = [[MXSession alloc] initWithMatrixRestClient:mxRestClient2];
+        [self retain:newSession];
+        
+        if (!newSessionStore)
+        {
+            if (startNewSession)
+            {
+                [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = e2e;
+                [newSession start:^{
+                    [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
+                    
+                    onComplete(newSession);
+                    
+                } failure:^(NSError *error) {
+                    [self breakTestCase:testCase reason:@"Cannot start the session - error: %@", error];
+                }];
+            }
+            else
+            {
+                onComplete(newSession);
+            }
+            return;
+        }
+        
+        [newSession setStore:newSessionStore success:^{
+            if (startNewSession)
+            {
+                [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = e2e;
+                [newSession start:^{
+                    [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
+                    
+                    onComplete(newSession);
+                    
+                } failure:^(NSError *error) {
+                    [self breakTestCase:testCase reason:@"Cannot start the session - error: %@", error];
+                }];
+            }
+            else
+            {
+                onComplete(newSession);
+            }
+            
+        } failure:^(NSError *error) {
+            [self breakTestCase:testCase reason:@"Cannot open the store - error: %@", error];
+        }];
+        
+    } failure:^(NSError *error) {
+        [self breakTestCase:testCase reason:@"Cannot log %@ in again. Error: %@", credentials.userId , error];
+    }];
+}
 
 #pragma mark Reference keeping
 - (void)retain:(NSObject*)object

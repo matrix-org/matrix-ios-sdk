@@ -186,6 +186,7 @@ public extension MXRoom {
         - size: the original size of the image.
         - mimeType:  the image mimetype.
         - thumbnail: optional thumbnail image (may be nil).
+        - blurhash: optional BlurHash (may be nil).
         - localEcho: a pointer to a MXEvent object.
      
              This pointer is set to an actual MXEvent object
@@ -204,8 +205,8 @@ public extension MXRoom {
      - returns: a `MXHTTPOperation` instance.
      */
 
-    @nonobjc @discardableResult func sendImage(data imageData: Data, size: CGSize, mimeType: String, thumbnail: MXImage?, localEcho: inout MXEvent?, completion: @escaping (_ response: MXResponse<String?>) -> Void) -> MXHTTPOperation {
-        return __sendImage(imageData, withImageSize: size, mimeType: mimeType, andThumbnail: thumbnail, localEcho: &localEcho, success: currySuccess(completion), failure: curryFailure(completion))
+    @nonobjc @discardableResult func sendImage(data imageData: Data, size: CGSize, mimeType: String, thumbnail: MXImage?, blurhash: String?, localEcho: inout MXEvent?, completion: @escaping (_ response: MXResponse<String?>) -> Void) -> MXHTTPOperation {
+        return __sendImage(imageData, withImageSize: size, mimeType: mimeType, andThumbnail: thumbnail, blurHash: blurhash, localEcho: &localEcho, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
     
@@ -236,6 +237,34 @@ public extension MXRoom {
      */
     @nonobjc @discardableResult func sendVideo(localURL: URL, thumbnail: MXImage?, localEcho: inout MXEvent?, completion: @escaping (_ response: MXResponse<String?>) -> Void) -> MXHTTPOperation {
         return __sendVideo(localURL, withThumbnail: thumbnail, localEcho: &localEcho, success: currySuccess(completion), failure: curryFailure(completion))
+    }
+    
+    
+    /**
+     Send a video to the room.
+     
+     - parameters:
+        - videoAsset: an AVAsset that represents the video to send.
+        - thumbnail: the UIImage hosting a video thumbnail.
+        - localEcho: a pointer to a MXEvent object.
+     
+             This pointer is set to an actual MXEvent object
+             containing the local created event which should be used to echo the message in
+             the messages list until the resulting event come through the server sync.
+             For information, the identifier of the created local event has the prefix
+             `kMXEventLocalEventIdPrefix`.
+             
+             You may specify nil for this parameter if you do not want this information.
+             
+             You may provide your own MXEvent object, in this case only its send state is updated.
+     
+        - completion: A block object called when the operation completes.
+        - response: Provides the event id of the event generated on the home server on success.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func sendVideo(asset: AVAsset, thumbnail: MXImage?, localEcho: inout MXEvent?, completion: @escaping (_ response: MXResponse<String?>) -> Void) -> MXHTTPOperation {
+        return __sendVideoAsset(asset, withThumbnail: thumbnail, localEcho: &localEcho, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
     
@@ -293,6 +322,37 @@ public extension MXRoom {
     
     @nonobjc @discardableResult func sendAudioFile(localURL: URL, mimeType: String, localEcho: inout MXEvent?, completion: @escaping (_ response: MXResponse<String?>) -> Void) -> MXHTTPOperation {
         return __sendAudioFile(localURL, mimeType: mimeType, localEcho: &localEcho, success: currySuccess(completion), failure: curryFailure(completion), keepActualFilename: false)
+    }
+    
+    /**
+     Send a voice message to the room.
+     
+     - parameters:
+     - localURL: the local filesystem path of the file to send.
+     - mimeType: (optional) the mime type of the file. Defaults to `audio/ogg`.
+     - duration: the length of the voice message in milliseconds
+     - samples: an array of floating point values normalized to [0, 1]
+     - localEcho: a pointer to a MXEvent object.
+     
+     This pointer is set to an actual MXEvent object
+     containing the local created event which should be used to echo the message in
+     the messages list until the resulting event come through the server sync.
+     For information, the identifier of the created local event has the prefix
+     `kMXEventLocalEventIdPrefix`.
+     
+     You may specify nil for this parameter if you do not want this information.
+     
+     You may provide your own MXEvent object, in this case only its send state is updated.
+     
+     - completion: A block object called when the operation completes.
+     - response: Provides the event id of the event generated on the home server on success.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    
+    @nonobjc @discardableResult func sendVoiceMessage(localURL: URL, mimeType: String?, duration: UInt, samples: [Float]?, localEcho: inout MXEvent?, completion: @escaping (_ response: MXResponse<String?>) -> Void) -> MXHTTPOperation {
+        let boxedSamples = samples?.compactMap { NSNumber(value: $0) }
+        return __sendVoiceMessage(localURL, mimeType: mimeType, duration: duration, samples: boxedSamples, localEcho: &localEcho, success: currySuccess(completion), failure: curryFailure(completion), keepActualFilename: false)
     }
     
     /**

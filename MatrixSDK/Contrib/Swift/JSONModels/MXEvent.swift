@@ -72,6 +72,7 @@ public enum MXEventType: Equatable, Hashable {
     case keyVerificationCancel
     case keyVerificationDone
     case taggedEvents
+    case spaceChild
 
     case custom(String)
     
@@ -120,6 +121,7 @@ public enum MXEventType: Equatable, Hashable {
         case .keyVerificationCancel: return kMXEventTypeStringKeyVerificationCancel
         case .keyVerificationDone: return kMXEventTypeStringKeyVerificationDone
         case .taggedEvents: return kMXEventTypeStringTaggedEvents
+        case .spaceChild: return kMXEventTypeStringSpaceChild
             
         // Swift converts any constant with the suffix "Notification" as the type `Notification.Name`
         // The original value can be reached using the `rawValue` property.

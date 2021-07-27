@@ -96,7 +96,7 @@ class MXBackgroundStore: NSObject, MXStore {
         
         let event = roomStore.event(withEventId: eventId)
         
-        NSLog("[MXBackgroundStore] eventWithEventId: \(eventId) \(event == nil ? "not " : "" )found")
+        MXLog.debug("[MXBackgroundStore] eventWithEventId: \(eventId) \(event == nil ? "not " : "" )found")
         return event
     }
     
@@ -109,7 +109,7 @@ class MXBackgroundStore: NSObject, MXStore {
         }
         
         guard let roomStore = fileStore.roomStore(forRoom: roomId) else {
-            NSLog("[MXBackgroundStore] roomStore: Unknown room id: \(roomId)")
+            MXLog.debug("[MXBackgroundStore] roomStore: Unknown room id: \(roomId)")
             return nil
         }
         

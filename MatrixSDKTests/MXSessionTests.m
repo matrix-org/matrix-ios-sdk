@@ -24,6 +24,9 @@
 #import "MXMemoryStore.h"
 #import "MXFileStore.h"
 #import "MatrixSDKSwiftHeader.h"
+#import "MXSyncResponse.h"
+
+#import <OHHTTPStubs/HTTPStubs.h>
 
 // Do not bother with retain cycles warnings in tests
 #pragma clang diagnostic push
@@ -63,6 +66,9 @@
     }
     
     matrixSDKTestsData = nil;
+    
+    [HTTPStubs removeAllStubs];
+    [MXSDKOptions sharedInstance].wellknownDomainUrl = nil;
 
     [super tearDown];
 }
@@ -732,6 +738,44 @@
             [expectation fulfill];
         }];
 
+    }];
+}
+
+// Check sync response does not contain empty objects.
+//
+// - Have Bob start a new session
+// - Run initial sync on Bob's session
+// - Run another sync on Bob's session
+// -> Check latter sync response does not contain anything but the event stream token
+- (void)testEmptySyncResponse
+{
+    [matrixSDKTestsData doMXSessionTestWithBob:self readyToTest:^(MXSession *mxSession2, XCTestExpectation *expectation) {
+        mxSession = mxSession2;
+        
+        __block BOOL isFirst = YES;
+
+        observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionDidSyncNotification object:mxSession queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
+
+            if (isFirst)
+            {
+                isFirst = NO;
+                //  wait for another sync response, which should be completely empty
+                return;
+            }
+            MXSyncResponse *syncResponse = (MXSyncResponse*)notif.userInfo[kMXSessionNotificationSyncResponseKey];
+
+            XCTAssert([syncResponse isKindOfClass:MXSyncResponse.class]);
+            XCTAssertNil(syncResponse.accountData, @"Account data should be nil");
+            XCTAssertNotNil(syncResponse.nextBatch, @"Event stream token must be provided");
+            XCTAssertNil(syncResponse.presence, @"Presence should be nil");
+            XCTAssertNil(syncResponse.toDevice, @"To device events should be nil");
+            XCTAssertNil(syncResponse.deviceLists, @"Device lists should be nil");
+            XCTAssertNil(syncResponse.deviceOneTimeKeysCount, @"Device one time keys count should be nil");
+            XCTAssertNil(syncResponse.rooms, @"Rooms should be nil");
+            XCTAssertNil(syncResponse.groups, @"Groups should be nil");
+
+            [expectation fulfill];
+        }];
     }];
 }
 
@@ -1420,6 +1464,49 @@
             [expectation fulfill];
         }];
 
+    }];
+}
+
+// Check MXSDKOptions.wellknownDomainUrl
+//
+// - Customise the wellknown domain
+// - Set up a MXSession
+// - Catch the wellknown request
+// -> The wellknown request must be done on the custom domain
+- (void)testMXSDKOptionsWellknownDomainUrl
+{
+    __block BOOL testDone = NO;
+    __block XCTestExpectation *expectation;
+    
+    // - Customise the wellknown domain
+    NSString *wellknownDomainUrl = @"https://anotherWellknownDomain";
+    [MXSDKOptions sharedInstance].wellknownDomainUrl = wellknownDomainUrl;
+
+    // - Catch the wellknown request
+    [HTTPStubs stubRequestsPassingTest:^BOOL(NSURLRequest *request) {
+        if ([request.URL.absoluteString containsString:@".well-known/matrix/client"])
+        {
+            // -> The wellknown request must be done on the custom domain
+            XCTAssertTrue([request.URL.absoluteString hasPrefix:wellknownDomainUrl],
+                          @"The wellknown request (%@) must contain the customised wellknown domain (%@)",
+                          request.URL.absoluteString, wellknownDomainUrl);
+            
+            testDone = YES;
+            [expectation fulfill];
+        }
+        return NO;
+    } withStubResponse:^HTTPStubsResponse*(NSURLRequest *request) {
+        return nil;
+    }];
+    
+    // - Set up a MXSession
+    [matrixSDKTestsData doMXSessionTestWithAlice:self readyToTest:^(MXSession *aliceSession, XCTestExpectation *theExpectation) {
+        expectation = theExpectation;
+        
+        if (testDone)
+        {
+            [expectation fulfill];
+        }
     }];
 }
 

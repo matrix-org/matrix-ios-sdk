@@ -25,8 +25,12 @@
 #import "MXUsersTrustLevelSummary.h"
 #import "MXMembershipTransitionState.h"
 #import "MXRoomType.h"
+#import "MXRoomLastMessage.h"
 
 @class MXSession, MXRoom, MXRoomState, MXEvent;
+@class MXRoomSync;
+@class MXInvitedRoomSync;
+@class MXRoomSyncSummary;
 @class MXRoomSummaryModel;
 @protocol MXStore;
 
@@ -69,8 +73,7 @@ FOUNDATION_EXPORT NSUInteger const MXRoomSummaryPaginationChunkSize;
        Ex: the displayname of the room.
 
      * Last message data:
-       This is lastMessageEventId plus the string or/and attributed string computed for
-       this last message event.
+       This is lastMessage property.
 
      * Business logic data:
        This is data that is used internally by the sdk.
@@ -218,47 +221,14 @@ FOUNDATION_EXPORT NSUInteger const MXRoomSummaryPaginationChunkSize;
 #pragma mark - Data related to the last message
 
 /**
- The last message event id.
+ The last message of the room summary.
  */
-@property (nonatomic, readonly) NSString *lastMessageEventId;
+@property (nonatomic, readonly) MXRoomLastMessage *lastMessage;
 
 /**
- The last message server timestamp.
+ Intenal SDK method to update the last message.
  */
-@property (nonatomic, readonly) uint64_t lastMessageOriginServerTs;
-
-/**
- Indicates if the last message is encrypted.
- 
- @discussion
- An unencrypted message can be sent to an encrypted room.
- When the last message is encrypted, its summary data (lastMessageString, lastMessageAttributedString,
- lastMessageOthers) is stored encrypted in the room summary cache.
- */
-@property (nonatomic, readonly) BOOL isLastMessageEncrypted;
-
-/**
- String representation of this last message.
- */
-@property (nonatomic) NSString *lastMessageString;
-@property (nonatomic) NSAttributedString *lastMessageAttributedString;
-
-/**
- Placeholder to store more information about the last message.
- */
-@property (nonatomic) NSMutableDictionary<NSString*, id<NSCoding>> *lastMessageOthers;
-
-/**
- The shortcut to the last message event.
- */
-@property (nonatomic) MXEvent *lastMessageEvent;
-
-/**
- Intenal SDK method to load and decrypt the MXEvent of the last message.
- 
- @param onComplete the callback called once operation is done.
- */
--(void)loadLastEvent:(void (^)(void))onComplete;
+-(void)updateLastMessage:(MXRoomLastMessage *)message;
 
 /**
  Reset the last message from data in the store.
@@ -318,7 +288,7 @@ FOUNDATION_EXPORT NSUInteger const MXRoomSummaryPaginationChunkSize;
  @discussion: The returned count is relative to the local storage. The actual unread messages
  for a room may be higher than the returned value.
  */
-@property (nonatomic, readonly) NSUInteger localUnreadEventCount;
+@property (nonatomic) NSUInteger localUnreadEventCount;
 
 /**
  The number of unread messages that match the push notification rules.

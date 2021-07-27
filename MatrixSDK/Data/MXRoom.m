@@ -33,8 +33,11 @@
 
 #import "MXError.h"
 
+#import "MXRoomSync.h"
+
 NSString *const kMXRoomDidFlushDataNotification = @"kMXRoomDidFlushDataNotification";
 NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotification";
+NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
 
 @interface MXRoom ()
 {
@@ -183,7 +186,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                 {
                     onRequesterComplete(self->liveTimeline);
                 }
-                NSLog(@"[MXRoom] liveTimeline loaded. Pending requesters: %@", @(liveTimelineRequesters.count));
+                MXLogDebug(@"[MXRoom] liveTimeline loaded. Pending requesters: %@", @(liveTimelineRequesters.count));
             }];
         }
 
@@ -214,7 +217,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
           lazyLoadedMembers:(void (^)(MXRoomMembers *lazyLoadedMembers))lazyLoadedMembers
                     failure:(void (^)(NSError *error))failure
 {
-    NSLog(@"[MXRoom] members: roomId: %@", _roomId);
+    MXLogDebug(@"[MXRoom] members: roomId: %@", _roomId);
           
     // Create an empty operation that will be mutated later
     MXHTTPOperation *operation = [[MXHTTPOperation alloc] init];
@@ -226,19 +229,19 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         // Return directly liveTimeline.state.members if we have already all of them
         if ([self.mxSession.store hasLoadedAllRoomMembersForRoom:self.roomId])
         {
-            NSLog(@"[MXRoom] members: All members are known. Return %@ joined, %@ invited",
+            MXLogDebug(@"[MXRoom] members: All members are known. Return %@ joined, %@ invited",
                   @(liveTimeline.state.membersCount.joined), @(liveTimeline.state.membersCount.invited));
             success(liveTimeline.state.members);
         }
         else
         {
-            NSLog(@"[MXRoom] members: Currently known members: %@ joined, %@ invited",
+            MXLogDebug(@"[MXRoom] members: Currently known members: %@ joined, %@ invited",
                   @(liveTimeline.state.membersCount.joined), @(liveTimeline.state.membersCount.invited));
             
             // Return already lazy-loaded room members if requested
             if (lazyLoadedMembers)
             {
-                NSLog(@"[MXRoom] members: Call lazyLoadedMembers");
+                MXLogDebug(@"[MXRoom] members: Call lazyLoadedMembers");
                 lazyLoadedMembers(liveTimeline.state.members);
             }
 
@@ -258,7 +261,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                                    };
                 }
                 
-                NSLog(@"[MXRoom] members: Call /members with parameters: %@", parameters);
+                MXLogDebug(@"[MXRoom] members: Call /members with parameters: %@", parameters);
 
                 MXWeakify(self);
                 MXHTTPOperation *operation2 = [self.mxSession.matrixRestClient membersOfRoom:self.roomId
@@ -267,7 +270,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                 {
                     MXStrongifyAndReturnIfNil(self);
                     
-                    NSLog(@"[MXRoom] members: roomId: %@. /members returned %@ members", self.roomId, @(roomMemberEvents.count));
+                    MXLogDebug(@"[MXRoom] members: roomId: %@. /members returned %@ members", self.roomId, @(roomMemberEvents.count));
 
                     // Manage the possible race condition where we could have received
                     // update of members from the events stream (/sync) while the /members
@@ -301,7 +304,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                         }
                     }
 
-                    NSLog(@"[MXRoom] members: roomId: %@. /members succeeded. Pending requesters: %@. Members: %@ joined, %@ invited ",
+                    MXLogDebug(@"[MXRoom] members: roomId: %@. /members succeeded. Pending requesters: %@. Members: %@ joined, %@ invited ",
                           self.roomId, @(self->pendingMembersRequesters.count),
                           @(liveTimeline.state.membersCount.joined), @(liveTimeline.state.membersCount.invited));
                     
@@ -318,7 +321,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                 } failure:^(NSError *error) {
                     MXStrongifyAndReturnIfNil(self);
                     
-                    NSLog(@"[MXRoom] members: roomId: %@. /members failed. Pending requesters: %@", self.roomId, @(self->pendingMembersFailureBlocks.count));
+                    MXLogDebug(@"[MXRoom] members: roomId: %@. /members failed. Pending requesters: %@", self.roomId, @(self->pendingMembersFailureBlocks.count));
                     
                     // Notify the failure to the pending requesters
                     NSArray<void (^)(NSError *)> *pendingRequesters = [self->pendingMembersFailureBlocks copy];
@@ -335,7 +338,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
             }
             else
             {
-                NSLog(@"[MXRoom] members: Request already pending for %@ requesters", @(self->pendingMembersRequesters.count));
+                MXLogDebug(@"[MXRoom] members: Request already pending for %@ requesters", @(self->pendingMembersRequesters.count));
             }
 
             if (success)
@@ -451,7 +454,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         {
             // Mark as direct this room with the invite sender.
             [self setIsDirect:YES withUserId:myUser.originalEvent.sender success:nil failure:^(NSError *error) {
-                NSLog(@"[MXRoom] Failed to tag an invite as a direct chat");
+                MXLogDebug(@"[MXRoom] Failed to tag an invite as a direct chat");
             }];
         }
     }];
@@ -646,13 +649,13 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
             roomOperation = [self preserveOperationOrder:event block:^{
                 MXStrongifyAndReturnIfNil(self);
 
-                NSLog(@"[MXRoom] sendEventOfType(MXCrypto): Encrypting event %@", event.eventId);
+                MXLogDebug(@"[MXRoom] sendEventOfType(MXCrypto): Encrypting event %@", event.eventId);
 
                 MXWeakify(self);
                 MXHTTPOperation *operation = [self->mxSession.crypto encryptEventContent:contentCopyToEncrypt withType:eventTypeString inRoom:self success:^(NSDictionary *encryptedContent, NSString *encryptedEventType) {
                     MXStrongifyAndReturnIfNil(self);
 
-                    NSLog(@"[MXRoom] sendEventOfType(MXCrypto): Encrypt event %@ -> DONE using sessionId: %@", event.eventId, encryptedContent[@"session_id"]);
+                    MXLogDebug(@"[MXRoom] sendEventOfType(MXCrypto): Encrypt event %@ -> DONE using sessionId: %@", event.eventId, encryptedContent[@"session_id"]);
 
                     NSDictionary *finalEncryptedContent;
                     
@@ -693,7 +696,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                     // Send the encrypted content
                     MXHTTPOperation *operation2 = [self _sendEventOfType:encryptedEventType content:finalEncryptedContent txnId:event.eventId success:^(NSString *eventId) {
 
-                        NSLog(@"[MXRoom] sendEventOfType(MXCrypto): Send event %@ -> DONE. Final event id: %@", event.eventId, eventId);
+                        MXLogDebug(@"[MXRoom] sendEventOfType(MXCrypto): Send event %@ -> DONE. Final event id: %@", event.eventId, eventId);
                         onSuccess(eventId);
 
                     } failure:onFailure];
@@ -706,7 +709,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
                 } failure:^(NSError *error) {
 
-                    NSLog(@"[MXRoom] sendEventOfType(MXCrypto): Cannot encrypt event %@. Error: %@", event.eventId, error);
+                    MXLogDebug(@"[MXRoom] sendEventOfType(MXCrypto): Cannot encrypt event %@. Error: %@", event.eventId, error);
 
                     onFailure(error);
                 }];
@@ -862,6 +865,29 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                       success:(void (^)(NSString *eventId))success
                       failure:(void (^)(NSError *error))failure
 {
+    return [self sendImage:imageData
+             withImageSize:imageSize
+                  mimeType:mimetype
+              andThumbnail:thumbnail
+                  blurHash:nil
+                 localEcho:localEcho
+                   success:success
+                   failure:failure];
+}
+
+- (MXHTTPOperation*)sendImage:(NSData*)imageData
+                withImageSize:(CGSize)imageSize
+                     mimeType:(NSString*)mimetype
+#if TARGET_OS_IPHONE
+                 andThumbnail:(UIImage*)thumbnail
+#elif TARGET_OS_OSX
+                 andThumbnail:(NSImage*)thumbnail
+#endif
+                     blurHash:(NSString*)blurhash
+                    localEcho:(MXEvent**)localEcho
+                      success:(void (^)(NSString *eventId))success
+                      failure:(void (^)(NSError *error))failure
+{
     __block MXRoomOperation *roomOperation;
 
     double endRange = 1.0;
@@ -901,6 +927,10 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                                                      @"size": @(imageData.length)
                                                      } mutableCopy]
                                          } mutableCopy];
+    if (blurhash)
+    {
+        msgContent[@"info"][@"blurhash"] = blurhash;
+    }
     
     __block MXEvent *event;
     __block id uploaderObserver;
@@ -993,7 +1023,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
             }];
 
             NSURL *localURL = [NSURL URLWithString:cacheFilePath];
-            [MXEncryptedAttachments encryptAttachment:uploader mimeType:mimetype localUrl:localURL success:^(MXEncryptedContentFile *result) {
+            [MXEncryptedAttachments encryptAttachment:uploader localUrl:localURL success:^(MXEncryptedContentFile *result) {
 
                 [msgContent removeObjectForKey:@"url"];
                 msgContent[@"file"] = result.JSONDictionary;
@@ -1036,7 +1066,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                     NSData *pngImageData = [newRep representationUsingType:NSPNGFileType properties:@{}];
 #endif
 
-                    [MXEncryptedAttachments encryptAttachment:thumbUploader mimeType:@"image/png" data:pngImageData success:^(MXEncryptedContentFile *result) {
+                    [MXEncryptedAttachments encryptAttachment:thumbUploader data:pngImageData success:^(MXEncryptedContentFile *result) {
 
                         msgContent[@"info"][@"thumbnail_file"] = result.JSONDictionary;
 
@@ -1090,6 +1120,20 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                     localEcho:(MXEvent**)localEcho
                       success:(void (^)(NSString *eventId))success
                       failure:(void (^)(NSError *error))failure
+{
+    AVURLAsset *videoAsset = [AVURLAsset assetWithURL:videoLocalURL];
+    return [self sendVideoAsset:videoAsset withThumbnail:videoThumbnail localEcho:localEcho success:success failure:failure];
+}
+
+- (MXHTTPOperation*)sendVideoAsset:(AVAsset*)videoAsset
+#if TARGET_OS_IPHONE
+                     withThumbnail:(UIImage*)videoThumbnail
+#elif TARGET_OS_OSX
+                     withThumbnail:(NSImage*)videoThumbnail
+#endif
+                         localEcho:(MXEvent**)localEcho
+                           success:(void (^)(NSString *eventId))success
+                           failure:(void (^)(NSError *error))failure
 {
     __block MXRoomOperation *roomOperation;
 
@@ -1184,7 +1228,9 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     roomOperation = [self preserveOperationOrder:event block:^{
 
         // Before sending data to the server, convert the video to MP4
-        [MXTools convertVideoToMP4:videoLocalURL success:^(NSURL *convertedLocalURL, NSString *mimetype, CGSize size, double durationInMs) {
+        [MXTools convertVideoAssetToMP4:videoAsset
+                     withTargetFileSize:[self mxSession].maxUploadSize
+                                success:^(NSURL *convertedLocalURL, NSString *mimetype, CGSize size, double durationInMs) {
 
             if (![[NSFileManager defaultManager] fileExistsAtPath:convertedLocalURL.path])
             {
@@ -1200,7 +1246,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
             if (self.mxSession.crypto && self.summary.isEncrypted)
             {
-                [MXEncryptedAttachments encryptAttachment:thumbUploader mimeType:@"image/jpeg" data:videoThumbnailData success:^(MXEncryptedContentFile *result) {
+                [MXEncryptedAttachments encryptAttachment:thumbUploader data:videoThumbnailData success:^(MXEncryptedContentFile *result) {
 
                     // Update thumbnail URL with the actual mxc: URL
                     msgContent[@"info"][@"thumbnail_file"] = result.JSONDictionary;
@@ -1246,7 +1292,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                         }
                     }];
 
-                    [MXEncryptedAttachments encryptAttachment:videoUploader mimeType:mimetype localUrl:convertedLocalURL success:^(MXEncryptedContentFile *result) {
+                    [MXEncryptedAttachments encryptAttachment:videoUploader localUrl:convertedLocalURL success:^(MXEncryptedContentFile *result) {
 
                         // Do not go further if the orignal request has been cancelled
                         if (roomOperation.isCancelled)
@@ -1370,13 +1416,50 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 }
 
 - (MXHTTPOperation*)sendAudioFile:(NSURL*)fileLocalURL
-                    mimeType:(NSString*)mimeType
-                   localEcho:(MXEvent**)localEcho
-                     success:(void (^)(NSString *eventId))success
-                     failure:(void (^)(NSError *error))failure
-          keepActualFilename:(BOOL)keepActualName
+                         mimeType:(NSString*)mimeType
+                        localEcho:(MXEvent**)localEcho
+                          success:(void (^)(NSString *eventId))success
+                          failure:(void (^)(NSError *error))failure
+               keepActualFilename:(BOOL)keepActualName
 {
     return [self sendFile:fileLocalURL msgType:kMXMessageTypeAudio mimeType:mimeType localEcho:localEcho success:success failure:failure keepActualFilename:keepActualName];
+}
+
+- (MXHTTPOperation*)sendVoiceMessage:(NSURL*)fileLocalURL
+                            mimeType:(NSString*)mimeType
+                            duration:(NSUInteger)duration
+                             samples:(NSArray<NSNumber *> *)samples
+                           localEcho:(MXEvent**)localEcho
+                             success:(void (^)(NSString *eventId))success
+                             failure:(void (^)(NSError *error))failure
+                  keepActualFilename:(BOOL)keepActualName
+{
+    NSMutableDictionary *extensibleAudioContent = @{kMXMessageContentKeyExtensibleAudioDuration : @(duration)}.mutableCopy;
+ 
+    static NSUInteger scaledWaveformSampleCeiling = 1024;
+    
+    NSMutableArray *scaledSamples = [NSMutableArray array];
+    for (NSNumber *sample in samples) {
+        if (sample.floatValue < 0.0 || sample.floatValue > 1.0) { // Samples should be linearly normalized to [0, 1]
+            continue;
+        }
+        
+        [scaledSamples addObject:@((NSInteger)(scaledWaveformSampleCeiling * sample.floatValue))];
+    }
+    
+    if (scaledSamples.count) {
+        [extensibleAudioContent setObject:scaledSamples forKey:kMXMessageContentKeyExtensibleAudioWaveform];
+    }
+    
+    return [self _sendFile:fileLocalURL
+                   msgType:kMXMessageTypeAudio
+           additionalTypes:@{kMXMessageContentKeyVoiceMessageMSC3245 : @{},
+                             kMXMessageContentKeyExtensibleAudio: extensibleAudioContent}
+                  mimeType:(mimeType ?: @"audio/ogg")
+                 localEcho:localEcho
+                   success:success
+                   failure:failure
+        keepActualFilename:keepActualName];
 }
 
 - (MXHTTPOperation*)sendFile:(NSURL*)fileLocalURL
@@ -1386,6 +1469,25 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                      success:(void (^)(NSString *eventId))success
                      failure:(void (^)(NSError *error))failure
           keepActualFilename:(BOOL)keepActualName
+{
+    return [self _sendFile:fileLocalURL
+                   msgType:msgType
+           additionalTypes:nil
+                  mimeType:mimeType
+                 localEcho:localEcho
+                   success:success
+                   failure:failure
+        keepActualFilename:keepActualName];
+}
+
+- (MXHTTPOperation*)_sendFile:(NSURL*)fileLocalURL
+                      msgType:(NSString*)msgType
+              additionalTypes:(NSDictionary *)additionalTypes
+                     mimeType:(NSString*)mimeType
+                    localEcho:(MXEvent**)localEcho
+                      success:(void (^)(NSString *eventId))success
+                      failure:(void (^)(NSError *error))failure
+           keepActualFilename:(BOOL)keepActualName
 {
     __block MXRoomOperation *roomOperation;
     
@@ -1430,6 +1532,11 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                                                  @"size": @(fileData.length)
                                                  }
                                          } mutableCopy];
+    
+    if(additionalTypes.count) 
+    {
+        [msgContent addEntriesFromDictionary:additionalTypes];
+    }
     
     __block MXEvent *event;
     __block id uploaderObserver;
@@ -1519,7 +1626,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
             }];
 
-            [MXEncryptedAttachments encryptAttachment:uploader mimeType:mimeType localUrl:fileLocalURL success:^(MXEncryptedContentFile *result) {
+            [MXEncryptedAttachments encryptAttachment:uploader localUrl:fileLocalURL success:^(MXEncryptedContentFile *result) {
 
                 // Do not go further if the orignal request has been cancelled
                 if (roomOperation.isCancelled)
@@ -1788,7 +1895,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 {
     if (![self canReplyToEvent:eventToReply])
     {
-        NSLog(@"[MXRoom] Send reply to this event is not supported");
+        MXLogDebug(@"[MXRoom] Send reply to this event is not supported");
         return nil;
     }
     
@@ -1840,7 +1947,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     }
     else
     {
-        NSLog(@"[MXRoom] Fail to generate reply body and formatted body");
+        MXLogDebug(@"[MXRoom] Fail to generate reply body and formatted body");
     }
     
     return operation;
@@ -1904,6 +2011,11 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         senderMessageBody = stringLocalizations.senderSentAVideo;
         senderMessageFormattedBody = senderMessageBody;
     }
+    else if (eventToReply.isVoiceMessage)
+    {
+        senderMessageBody = stringLocalizations.senderSentAVoiceMessage;
+        senderMessageFormattedBody = senderMessageBody;
+    }
     else if ([msgtype isEqualToString:kMXMessageTypeAudio])
     {
         senderMessageBody = stringLocalizations.senderSentAnAudioFile;
@@ -1917,7 +2029,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     else
     {
         // Other message types are not supported
-        NSLog(@"[MXRoom] Reply to message type %@ is not supported", msgtype);
+        MXLogDebug(@"[MXRoom] Reply to message type %@ is not supported", msgtype);
     }
     
     if (senderMessageBody && senderMessageFormattedBody)
@@ -2041,7 +2153,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     
     if (!eventId || !roomId || !sender)
     {
-        NSLog(@"[MXRoom] roomId, eventId and sender cound not be nil");
+        MXLogDebug(@"[MXRoom] roomId, eventId and sender cound not be nil");
         return nil;
     }
     
@@ -2056,7 +2168,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     
     if (error)
     {
-        NSLog(@"[MXRoom] Fail to strip previous reply to message");
+        MXLogDebug(@"[MXRoom] Fail to strip previous reply to message");
     }
     
     if (senderMessageFormattedBodyWithoutReply)
@@ -2337,11 +2449,14 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     }
 
     // If required, update the last message
-    MXEvent *lastMessageEvent = self.summary.lastMessageEvent;
-    if (lastMessageEvent.sentState != MXEventSentStateSent)
-    {
-        [self.summary resetLastMessage:nil failure:nil commit:YES];
-    }
+    [mxSession eventWithEventId:self.summary.lastMessage.eventId
+                         inRoom:_roomId
+                        success:^(MXEvent *event) {
+        if (event.sentState != MXEventSentStateSent)
+        {
+            [self.summary resetLastMessage:nil failure:nil commit:YES];
+        }
+    } failure:nil];
 }
 
 - (void)removeOutgoingMessage:(NSString*)outgoingMessageEventId
@@ -2354,7 +2469,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     }
 
     // If required, update the last message
-    if ([self.summary.lastMessageEventId isEqualToString:outgoingMessageEventId])
+    if ([self.summary.lastMessage.eventId isEqualToString:outgoingMessageEventId])
     {
         [self.summary resetLastMessage:nil failure:nil commit:YES];
     }
@@ -2922,7 +3037,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     // Sanity check
     if (!userId)
     {
-        NSLog(@"[MXRoom] storeLocalReceipt: Error: nil user id");
+        MXLogDebug(@"[MXRoom] storeLocalReceipt: Error: nil user id");
         return NO;
     }
 
@@ -3219,7 +3334,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
 - (NSComparisonResult)compareLastMessageEventOriginServerTs:(MXRoom *)otherRoom
 {
-    return [self.summary.lastMessageEvent compareOriginServerTs:otherRoom.summary.lastMessageEvent];
+    return [self.summary.lastMessage compareOriginServerTs:otherRoom.summary.lastMessage];
 }
 
 @end

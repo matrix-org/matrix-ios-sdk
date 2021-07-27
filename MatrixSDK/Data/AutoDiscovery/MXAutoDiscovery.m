@@ -57,14 +57,14 @@
 - (MXHTTPOperation *)findClientConfig:(void (^)(MXDiscoveredClientConfig * _Nonnull))complete
                               failure:(void (^)(NSError * _Nonnull))failure
 {
-    NSLog(@"[MXAutoDiscovery] findClientConfig: %@", restClient.homeserver);
+    MXLogDebug(@"[MXAutoDiscovery] findClientConfig: %@", restClient.homeserver);
 
     MXHTTPOperation *operation;
     operation = [self wellKnow:^(MXWellKnown *wellKnown) {
 
         if (!wellKnown.homeServer.baseUrl)
         {
-            NSLog(@"[MXAutoDiscovery] findClientConfig: FAIL_PROMPT");
+            MXLogDebug(@"[MXAutoDiscovery] findClientConfig: FAIL_PROMPT");
             complete([[MXDiscoveredClientConfig alloc] initWithAction:MXDiscoveredClientConfigActionFailPrompt]);
         }
         else
@@ -77,7 +77,7 @@
             }
             else
             {
-                NSLog(@"[MXAutoDiscovery] findClientConfig: FAIL_ERROR (invalid homeserver base_url)");
+                MXLogDebug(@"[MXAutoDiscovery] findClientConfig: FAIL_ERROR (invalid homeserver base_url)");
                 complete([[MXDiscoveredClientConfig alloc] initWithAction:MXDiscoveredClientConfigActionFailError]);
             }
         }
@@ -89,18 +89,18 @@
         {
             if (urlResponse.statusCode == 404)
             {
-                NSLog(@"[MXAutoDiscovery] findClientConfig: IGNORE (HTTP code: 404)");
+                MXLogDebug(@"[MXAutoDiscovery] findClientConfig: IGNORE (HTTP code: 404)");
                 complete([[MXDiscoveredClientConfig alloc] initWithAction:MXDiscoveredClientConfigActionIgnore]);
             }
             else
             {
-                NSLog(@"[MXAutoDiscovery] findClientConfig: FAIL_PROMPT (HTTP code: %@)", @(urlResponse.statusCode));
+                MXLogDebug(@"[MXAutoDiscovery] findClientConfig: FAIL_PROMPT (HTTP code: %@)", @(urlResponse.statusCode));
                 complete([[MXDiscoveredClientConfig alloc] initWithAction:MXDiscoveredClientConfigActionFailPrompt]);
             }
         }
         else
         {
-            NSLog(@"[MXAutoDiscovery] findClientConfig: IGNORE. Error: %@", error);
+            MXLogDebug(@"[MXAutoDiscovery] findClientConfig: IGNORE. Error: %@", error);
             complete([[MXDiscoveredClientConfig alloc] initWithAction:MXDiscoveredClientConfigActionIgnore]);
         }
     }];
@@ -111,7 +111,7 @@
 - (MXHTTPOperation*)wellKnow:(void (^)(MXWellKnown *wellKnown))success
                      failure:(void (^)(NSError *error))failure
 {
-    NSLog(@"[MXAutoDiscovery] wellKnow: %@", restClient.homeserver);
+    MXLogDebug(@"[MXAutoDiscovery] wellKnow: %@", restClient.homeserver);
     return [restClient wellKnow:success failure:failure];
 }
 
@@ -140,7 +140,7 @@
 
         if (!wellKnown.identityServer)
         {
-            NSLog(@"[MXAutoDiscovery] validateHomeserverAndProceed: PROMPT. wellKnown: %@", wellKnown);
+            MXLogDebug(@"[MXAutoDiscovery] validateHomeserverAndProceed: PROMPT. wellKnown: %@", wellKnown);
             complete([[MXDiscoveredClientConfig alloc] initWithAction:MXDiscoveredClientConfigActionPrompt andWellKnown:wellKnown]);
         }
         else
@@ -148,7 +148,7 @@
             // If m.identity_server is present, it must be valid
             if (!wellKnown.identityServer.baseUrl)
             {
-                NSLog(@"[MXAutoDiscovery] validateHomeserverAndProceed: FAIL_ERROR (No identity server base_url)");
+                MXLogDebug(@"[MXAutoDiscovery] validateHomeserverAndProceed: FAIL_ERROR (No identity server base_url)");
                 complete([[MXDiscoveredClientConfig alloc] initWithAction:MXDiscoveredClientConfigActionFailError]);
             }
             else if ([self isValidURL:wellKnown.identityServer.baseUrl])
@@ -158,7 +158,7 @@
             }
             else
             {
-                NSLog(@"[MXAutoDiscovery] validateHomeserverAndProceed: FAIL_ERROR (invalid identity server base_url)");
+                MXLogDebug(@"[MXAutoDiscovery] validateHomeserverAndProceed: FAIL_ERROR (invalid identity server base_url)");
                 complete([[MXDiscoveredClientConfig alloc] initWithAction:MXDiscoveredClientConfigActionFailError]);
             }
         }
@@ -176,12 +176,12 @@
     MXHTTPOperation *operation;
     operation = [self.identityService pingIdentityServer:^{
         
-        NSLog(@"[MXAutoDiscovery] validateIdentityServerAndFinish: PROMPT. wellKnown: %@", wellKnown);
+        MXLogDebug(@"[MXAutoDiscovery] validateIdentityServerAndFinish: PROMPT. wellKnown: %@", wellKnown);
         complete([[MXDiscoveredClientConfig alloc] initWithAction:MXDiscoveredClientConfigActionPrompt andWellKnown:wellKnown]);
         
     } failure:^(NSError *error) {
         
-        NSLog(@"[MXAutoDiscovery] validateIdentityServerAndFinish: FAIL_ERROR (invalid identity server not responding)");
+        MXLogDebug(@"[MXAutoDiscovery] validateIdentityServerAndFinish: FAIL_ERROR (invalid identity server not responding)");
         complete([[MXDiscoveredClientConfig alloc] initWithAction:MXDiscoveredClientConfigActionFailError]);
     }];
     

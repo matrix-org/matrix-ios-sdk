@@ -252,7 +252,7 @@
 
         if (error)
         {
-            NSLog(@"[MXRealmMediaScanStore] Failed to open Realm on background worker: %@", error);
+            MXLogDebug(@"[MXRealmMediaScanStore] Failed to open Realm on background worker: %@", error);
         }
         else if (change)
         {            

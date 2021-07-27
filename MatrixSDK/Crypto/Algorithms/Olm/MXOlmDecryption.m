@@ -56,7 +56,7 @@
 
 - (BOOL)hasKeysToDecryptEvent:(MXEvent *)event
 {
-    NSLog(@"[MXOlmDecryption] hasKeysToDecryptEvent: ERROR: Not implemented yet");
+    MXLogDebug(@"[MXOlmDecryption] hasKeysToDecryptEvent: ERROR: Not implemented yet");
     return NO;
 }
 
@@ -70,7 +70,7 @@
 
     if (!ciphertext)
     {
-        NSLog(@"[MXOlmDecryption] decryptEvent: Error: Missing ciphertext");
+        MXLogDebug(@"[MXOlmDecryption] decryptEvent: Error: Missing ciphertext");
         
         MXEventDecryptionResult *result = [MXEventDecryptionResult new];
         result.error = [NSError errorWithDomain:MXDecryptingErrorDomain
@@ -83,7 +83,7 @@
 
     if (!ciphertext[olmDevice.deviceCurve25519Key])
     {
-        NSLog(@"[MXOlmDecryption] decryptEvent: Error: our device %@ is not included in recipients. Event: %@", olmDevice.deviceCurve25519Key, event.JSONDictionary);
+        MXLogDebug(@"[MXOlmDecryption] decryptEvent: Error: our device %@ is not included in recipients. Event: %@", olmDevice.deviceCurve25519Key, event.JSONDictionary);
         
         MXEventDecryptionResult *result = [MXEventDecryptionResult new];
         result.error = [NSError errorWithDomain:MXDecryptingErrorDomain
@@ -100,7 +100,7 @@
     NSString *payloadString = [self decryptMessage:message andTheirDeviceIdentityKey:deviceKey];
     if (!payloadString)
     {
-        NSLog(@"[MXOlmDecryption] decryptEvent: Failed to decrypt Olm event (id= %@) from %@", event.eventId, deviceKey);
+        MXLogDebug(@"[MXOlmDecryption] decryptEvent: Failed to decrypt Olm event (id= %@) from %@", event.eventId, deviceKey);
         
         MXEventDecryptionResult *result = [MXEventDecryptionResult new];
         result.error = [NSError errorWithDomain:MXDecryptingErrorDomain
@@ -117,7 +117,7 @@
     // https://github.com/vector-im/vector-web/issues/2483
     if (!payload[@"recipient"])
     {
-        NSLog(@"[MXOlmDecryption] decryptEvent: Olm event (id=%@) contains no 'recipient' property; cannot prevent unknown-key attack", event.eventId);
+        MXLogDebug(@"[MXOlmDecryption] decryptEvent: Olm event (id=%@) contains no 'recipient' property; cannot prevent unknown-key attack", event.eventId);
         
         MXEventDecryptionResult *result = [MXEventDecryptionResult new];
         result.error = [NSError errorWithDomain:MXDecryptingErrorDomain
@@ -129,7 +129,7 @@
     }
     else if (![payload[@"recipient"] isEqualToString:userId])
     {
-        NSLog(@"[MXOlmDecryption] decryptEvent: Event %@: Intended recipient %@ does not match our id %@", event.eventId, payload[@"recipient"], userId);
+        MXLogDebug(@"[MXOlmDecryption] decryptEvent: Event %@: Intended recipient %@ does not match our id %@", event.eventId, payload[@"recipient"], userId);
 
         MXEventDecryptionResult *result = [MXEventDecryptionResult new];
         result.error = [NSError errorWithDomain:MXDecryptingErrorDomain
@@ -142,7 +142,7 @@
 
     if (!payload[@"recipient_keys"])
     {
-        NSLog(@"[MXOlmDecryption] decryptEvent: Olm event (id=%@) contains no 'recipient_keys' property; cannot prevent unknown-key attack", event.eventId);
+        MXLogDebug(@"[MXOlmDecryption] decryptEvent: Olm event (id=%@) contains no 'recipient_keys' property; cannot prevent unknown-key attack", event.eventId);
 
         MXEventDecryptionResult *result = [MXEventDecryptionResult new];
         result.error = [NSError errorWithDomain:MXDecryptingErrorDomain
@@ -154,7 +154,7 @@
     }
     else if (![payload[@"recipient_keys"][@"ed25519"] isEqualToString:olmDevice.deviceEd25519Key])
     {
-        NSLog(@"[MXOlmDecryption] decryptEvent: Event %@: Intended recipient ed25519 key %@ does not match ours", event.eventId, payload[@"recipient_keys"][@"ed25519"]);
+        MXLogDebug(@"[MXOlmDecryption] decryptEvent: Event %@: Intended recipient ed25519 key %@ does not match ours", event.eventId, payload[@"recipient_keys"][@"ed25519"]);
 
         MXEventDecryptionResult *result = [MXEventDecryptionResult new];
         result.error = [NSError errorWithDomain:MXDecryptingErrorDomain
@@ -171,7 +171,7 @@
     // which is checked elsewhere).
     if (!payload[@"sender"])
     {
-        NSLog(@"[MXOlmDecryption] decryptEvent: Olm event (id=%@) contains no 'sender' property; cannot prevent unknown-key attack", event.eventId);
+        MXLogDebug(@"[MXOlmDecryption] decryptEvent: Olm event (id=%@) contains no 'sender' property; cannot prevent unknown-key attack", event.eventId);
 
         MXEventDecryptionResult *result = [MXEventDecryptionResult new];
         result.error = [NSError errorWithDomain:MXDecryptingErrorDomain
@@ -183,7 +183,7 @@
     }
     else if (![payload[@"sender"] isEqualToString:event.sender])
     {
-        NSLog(@"[MXOlmDecryption] decryptEvent: Event %@: original sender %@ does not match reported sender %@", event.eventId, payload[@"sender"], event.sender);
+        MXLogDebug(@"[MXOlmDecryption] decryptEvent: Event %@: original sender %@ does not match reported sender %@", event.eventId, payload[@"sender"], event.sender);
 
         MXEventDecryptionResult *result = [MXEventDecryptionResult new];
         result.error = [NSError errorWithDomain:MXDecryptingErrorDomain
@@ -197,7 +197,7 @@
     // Olm events intended for a room have a room_id.
     if (event.roomId && ![payload[@"room_id"] isEqualToString:event.roomId])
     {
-        NSLog(@"[MXOlmDecryption] decryptEvent: Event %@: original room %@ does not match reported room %@", event.eventId, payload[@"room_id"], event.roomId);
+        MXLogDebug(@"[MXOlmDecryption] decryptEvent: Event %@: original room %@ does not match reported room %@", event.eventId, payload[@"room_id"], event.roomId);
 
         MXEventDecryptionResult *result = [MXEventDecryptionResult new];
         result.error = [NSError errorWithDomain:MXDecryptingErrorDomain
@@ -268,7 +268,7 @@
 
         if (payload)
         {
-            NSLog(@"[MXOlmDecryption] decryptMessage: Decrypted Olm message from sender key %@ with session %@", theirDeviceIdentityKey, sessionId);
+            MXLogDebug(@"[MXOlmDecryption] decryptMessage: Decrypted Olm message from sender key %@ with session %@", theirDeviceIdentityKey, sessionId);
             return payload;
         }
         else
@@ -279,7 +279,7 @@
             {
                 // Decryption failed, but it was a prekey message matching this
                 // session, so it should have worked.
-                NSLog(@"[MXOlmDecryption] Error decrypting prekey message with existing session id %@", sessionId);
+                MXLogDebug(@"[MXOlmDecryption] Error decrypting prekey message with existing session id %@", sessionId);
                 return nil;
             }
         }
@@ -291,11 +291,11 @@
         // didn't work.
         if (sessionIds.count == 0)
         {
-            NSLog(@"[MXOlmDecryption] decryptMessage: No existing sessions");
+            MXLogDebug(@"[MXOlmDecryption] decryptMessage: No existing sessions");
         }
         else
         {
-            NSLog(@"[MXOlmDecryption] decryptMessage: Error decrypting non-prekey message with existing sessions");
+            MXLogDebug(@"[MXOlmDecryption] decryptMessage: Error decrypting non-prekey message with existing sessions");
         }
 
         return nil;
@@ -307,11 +307,11 @@
     NSString *sessionId = [olmDevice createInboundSession:theirDeviceIdentityKey messageType:messageType cipherText:messageBody payload:&payload];
     if (!sessionId)
     {
-        NSLog(@"[MXOlmDecryption] decryptMessage: Cannot create new inbound Olm session. Error decrypting non-prekey message with existing sessions");
+        MXLogDebug(@"[MXOlmDecryption] decryptMessage: Cannot create new inbound Olm session. Error decrypting non-prekey message with existing sessions");
         return nil;
     }
 
-    NSLog(@"[MXOlmDecryption] Created new inbound Olm session id %@ with %@", sessionId, theirDeviceIdentityKey);
+    MXLogDebug(@"[MXOlmDecryption] Created new inbound Olm session id %@ with %@", sessionId, theirDeviceIdentityKey);
 
     return payload;
 };

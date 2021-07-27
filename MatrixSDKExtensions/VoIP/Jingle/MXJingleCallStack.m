@@ -16,6 +16,7 @@
 
 #import "MXJingleCallStack.h"
 
+#import "MXLog.h"
 #import "MXJingleCallStackCall.h"
 #import <WebRTC/RTCPeerConnectionFactory.h>
 #import <WebRTC/RTCDefaultVideoEncoderFactory.h>
@@ -43,7 +44,7 @@
         CallBackLogger.severity = RTCLoggingSeverityError;
 #endif
         [CallBackLogger start:^(NSString * _Nonnull message) {
-            NSLog(@"[WebRTC] %@", message);
+            MXLogDebug(@"[WebRTC] %@", message);
         }];
     });
 }

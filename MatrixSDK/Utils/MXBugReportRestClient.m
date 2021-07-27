@@ -102,7 +102,7 @@
 {
     if (_state != MXBugReportStateReady)
     {
-        NSLog(@"[MXBugReport] sendBugReport failed. There is already a submission in progress. state: %@", @(_state));
+        MXLogDebug(@"[MXBugReport] sendBugReport failed. There is already a submission in progress. state: %@", @(_state));
 
         if (failure)
         {
@@ -227,7 +227,7 @@
 
     if (error)
     {
-        NSLog(@"[MXBugReport] sendBugReport: multipartFormRequestWithMethod failed. Error: %@", error);
+        MXLogDebug(@"[MXBugReport] sendBugReport: multipartFormRequestWithMethod failed. Error: %@", error);
 
         _state = MXBugReportStateReady;
 
@@ -244,7 +244,7 @@
                                           progress:^(NSProgress * _Nonnull uploadProgress) {
                                               MXStrongifyAndReturnIfNil(self);
 
-                                              NSLog(@"[MXBugReport] sendBugReport: uploadProgress: %@", @(uploadProgress.fractionCompleted));
+                                              MXLogDebug(@"[MXBugReport] sendBugReport: uploadProgress: %@", @(uploadProgress.fractionCompleted));
 
                                               if (progress)
                                               {
@@ -266,7 +266,7 @@
 
                                               if (error)
                                               {
-                                                  NSLog(@"[MXBugReport] sendBugReport: report failed. Error: %@", error);
+                                                  MXLogDebug(@"[MXBugReport] sendBugReport: report failed. Error: %@", error);
 
                                                   if (failure)
                                                   {
@@ -275,7 +275,7 @@
                                               }
                                               else
                                               {
-                                                  NSLog(@"[MXBugReport] sendBugReport: report done in %.3fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+                                                  MXLogDebug(@"[MXBugReport] sendBugReport: report done in %.3fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 
                                                   if (success)
                                                   {
@@ -352,7 +352,7 @@
                 }
                 else
                 {
-                    NSLog(@"[MXBugReport] zipLogFiles: Failed to zip %@", logFile);
+                    MXLogDebug(@"[MXBugReport] zipLogFiles: Failed to zip %@", logFile);
                 }
 
                 if (progress)
@@ -365,7 +365,7 @@
                 }
             }
 
-            NSLog(@"[MXBugReport] zipLogFiles: Zipped %tu logs (%@ to %@) in %.3fms", logFiles.count,
+            MXLogDebug(@"[MXBugReport] zipLogFiles: Zipped %tu logs (%@ to %@) in %.3fms", logFiles.count,
                   [NSByteCountFormatter stringFromByteCount:size countStyle:NSByteCountFormatterCountStyleFile],
                   [NSByteCountFormatter stringFromByteCount:zipSize countStyle:NSByteCountFormatterCountStyleFile],
                   [[NSDate date] timeIntervalSinceDate:startDate] * 1000);

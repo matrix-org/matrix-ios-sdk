@@ -303,8 +303,8 @@
 
             if (observer)
             {
-                NSLog(@"[testDirectRoomsRaceConditions] Direct rooms with Alice: %@", @(bobSession.directRooms[aliceUserId].count));
-                NSLog(@"[testDirectRoomsRaceConditions] Direct rooms with Charlie: %@", @(bobSession.directRooms[charlieUserId].count));
+                MXLogDebug(@"[testDirectRoomsRaceConditions] Direct rooms with Alice: %@", @(bobSession.directRooms[aliceUserId].count));
+                MXLogDebug(@"[testDirectRoomsRaceConditions] Direct rooms with Charlie: %@", @(bobSession.directRooms[charlieUserId].count));
 
                 notificationCount++;
             }

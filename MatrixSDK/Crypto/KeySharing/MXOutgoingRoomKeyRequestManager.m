@@ -79,7 +79,7 @@ NSUInteger const SEND_KEY_REQUESTS_DELAY_MS = 500;
 
 - (void)setEnabled:(BOOL)enabled
 {
-    NSLog(@"[MXOutgoingRoomKeyRequestManager] setEnabled: %@ (old: %@)", @(enabled), @(_enabled));
+    MXLogDebug(@"[MXOutgoingRoomKeyRequestManager] setEnabled: %@ (old: %@)", @(enabled), @(_enabled));
     if (enabled == _enabled)
     {
         return;
@@ -126,7 +126,7 @@ NSUInteger const SEND_KEY_REQUESTS_DELAY_MS = 500;
         return;
     }
 
-    NSLog(@"[MXOutgoingRoomKeyRequestManager] cancelRoomKeyRequest:andResend:%@: request.requestId: %@. state: %@", @(resend), request.requestId,  @(request.state));
+    MXLogDebug(@"[MXOutgoingRoomKeyRequestManager] cancelRoomKeyRequest:andResend:%@: request.requestId: %@. state: %@", @(resend), request.requestId,  @(request.state));
 
     switch (request.state)
     {
@@ -143,7 +143,7 @@ NSUInteger const SEND_KEY_REQUESTS_DELAY_MS = 500;
             // may have seen it, so we still need to send a cancellation
             // in that case :/
 
-            NSLog(@"[MXOutgoingRoomKeyRequestManager] cancelRoomKeyRequest: deleting unnecessary room key request %@", request.requestId);
+            MXLogDebug(@"[MXOutgoingRoomKeyRequestManager] cancelRoomKeyRequest: deleting unnecessary room key request %@", request.requestId);
 
             [cryptoStore deleteOutgoingRoomKeyRequestWithRequestId:request.requestId];
             break;
@@ -169,7 +169,7 @@ NSUInteger const SEND_KEY_REQUESTS_DELAY_MS = 500;
             [self sendOutgoingRoomKeyRequestCancellation:request andResend:resend success:nil failure:^(NSError *error) {
                 MXStrongifyAndReturnIfNil(self);
 
-                NSLog(@"[MXOutgoingRoomKeyRequestManager] cancelRoomKeyRequest: Error sending room key request cancellation; will retry later.");
+                MXLogDebug(@"[MXOutgoingRoomKeyRequestManager] cancelRoomKeyRequest: Error sending room key request cancellation; will retry later.");
 
                 [self startTimer];
             }];
@@ -218,7 +218,7 @@ NSUInteger const SEND_KEY_REQUESTS_DELAY_MS = 500;
         }
     }
     
-    NSLog(@"[MXOutgoingRoomKeyRequestManager] checkAllPendingOutgoingRoomKeyRequests: Cleared %@ requests out of %@", @(deleted), @(requests.count));
+    MXLogDebug(@"[MXOutgoingRoomKeyRequestManager] checkAllPendingOutgoingRoomKeyRequests: Cleared %@ requests out of %@", @(deleted), @(requests.count));
 }
 
 - (void)sendOutgoingRoomKeyRequests
@@ -229,11 +229,11 @@ NSUInteger const SEND_KEY_REQUESTS_DELAY_MS = 500;
     // Do not start
     if (!self.isEnabled)
     {
-        NSLog(@"[MXOutgoingRoomKeyRequestManager] startSendingOutgoingRoomKeyRequests: Disabled.");
+        MXLogDebug(@"[MXOutgoingRoomKeyRequestManager] startSendingOutgoingRoomKeyRequests: Disabled.");
         return;
     }
     
-    NSLog(@"[MXOutgoingRoomKeyRequestManager] startSendingOutgoingRoomKeyRequests: Looking for queued outgoing room key requests.");
+    MXLogDebug(@"[MXOutgoingRoomKeyRequestManager] startSendingOutgoingRoomKeyRequests: Looking for queued outgoing room key requests.");
 
     // This method is called on the [NSRunLoop mainRunLoop]. Go to the crypto thread
     MXWeakify(self);
@@ -248,7 +248,7 @@ NSUInteger const SEND_KEY_REQUESTS_DELAY_MS = 500;
 
         if (!request)
         {
-            NSLog(@"[MXOutgoingRoomKeyRequestManager] startSendingOutgoingRoomKeyRequests: No more outgoing room key requests");
+            MXLogDebug(@"[MXOutgoingRoomKeyRequestManager] startSendingOutgoingRoomKeyRequests: No more outgoing room key requests");
             return;
         }
 
@@ -291,7 +291,7 @@ NSUInteger const SEND_KEY_REQUESTS_DELAY_MS = 500;
                            success:(void (^)(void))success
                            failure:(void (^)(NSError *error))failure
 {
-    NSLog(@"[MXOutgoingRoomKeyRequestManager] sendOutgoingRoomKeyRequest: Requesting key %@ using request id %@ to %@: %@", request.sessionId, request.requestId, request.recipients, request.requestBody);
+    MXLogDebug(@"[MXOutgoingRoomKeyRequestManager] sendOutgoingRoomKeyRequest: Requesting key %@ using request id %@ to %@: %@", request.sessionId, request.requestId, request.recipients, request.requestBody);
 
     NSDictionary *requestMessage = @{
                                      @"action": @"request",
@@ -319,7 +319,7 @@ NSUInteger const SEND_KEY_REQUESTS_DELAY_MS = 500;
                                        success:(void (^)(void))success
                                        failure:(void (^)(NSError *error))failure
 {
-    NSLog(@"[MXOutgoingRoomKeyRequestManager] sendOutgoingRoomKeyRequestCancellation: Sending cancellation for key request (request id %@) for key %@ (cancellation id %@)", request.requestId, request.sessionId, request.cancellationTxnId);
+    MXLogDebug(@"[MXOutgoingRoomKeyRequestManager] sendOutgoingRoomKeyRequestCancellation: Sending cancellation for key request (request id %@) for key %@ (cancellation id %@)", request.requestId, request.sessionId, request.cancellationTxnId);
 
     NSDictionary *requestMessage = @{
                                      @"action": @"request_cancellation",
@@ -378,13 +378,13 @@ NSUInteger const SEND_KEY_REQUESTS_DELAY_MS = 500;
     if (outgoingRoomKeyRequest)
     {
         // this entry matches the request - return it.
-        NSLog(@"[MXOutgoingRoomKeyRequestManager] getOrAddOutgoingRoomKeyRequest: already have key request outstanding for %@ / %@: not sending another", requestBody[@"room_id"], requestBody[@"session_id"]);
+        MXLogDebug(@"[MXOutgoingRoomKeyRequestManager] getOrAddOutgoingRoomKeyRequest: already have key request outstanding for %@ / %@: not sending another", requestBody[@"room_id"], requestBody[@"session_id"]);
         return outgoingRoomKeyRequest;
     }
 
     // we got to the end of the list without finding a match
     // - add the new request.
-    NSLog(@"[MXOutgoingRoomKeyRequestManager] getOrAddOutgoingRoomKeyRequest: enqueueing key request for %@ / %@", requestBody[@"room_id"], requestBody[@"session_id"]);
+    MXLogDebug(@"[MXOutgoingRoomKeyRequestManager] getOrAddOutgoingRoomKeyRequest: enqueueing key request for %@ / %@", requestBody[@"room_id"], requestBody[@"session_id"]);
 
     outgoingRoomKeyRequest = [[MXOutgoingRoomKeyRequest alloc] init];
     outgoingRoomKeyRequest.requestBody = requestBody;

@@ -40,6 +40,7 @@ FOUNDATION_EXPORT NSString *MatrixSDKVersion;
 #import "MXEventsByTypesEnumeratorOnArray.h"
 
 #import "MXLogger.h"
+#import "MXLog.h"
 
 #import "MXTools.h"
 #import "MXThrottler.h"
@@ -128,6 +129,9 @@ FOUNDATION_EXPORT NSString *MatrixSDKVersion;
 #import "MXAesKeyData.h"
 #import "MXRawDataKey.h"
 
+#import "MXSpaceChildContent.h"
+#import "MXRoomLastMessage.h"
+
 //  Bridging to Swift
 #import "MXCryptoStore.h"
 #import "MXRealmCryptoStore.h"
@@ -143,3 +147,23 @@ FOUNDATION_EXPORT NSString *MatrixSDKVersion;
 #import "MXCachedSyncResponse.h"
 #import "MXBackgroundCryptoStore.h"
 #import "MXRoomSummaryStore.h"
+
+//  Sync response models
+#import "MXSyncResponse.h"
+#import "MXPresenceSyncResponse.h"
+#import "MXToDeviceSyncResponse.h"
+#import "MXDeviceListResponse.h"
+#import "MXRoomsSyncResponse.h"
+#import "MXRoomSync.h"
+#import "MXRoomSyncState.h"
+#import "MXRoomSyncTimeline.h"
+#import "MXRoomSyncEphemeral.h"
+#import "MXRoomSyncAccountData.h"
+#import "MXRoomSyncUnreadNotifications.h"
+#import "MXRoomSyncSummary.h"
+#import "MXInvitedRoomSync.h"
+#import "MXRoomInviteState.h"
+#import "MXGroupsSyncResponse.h"
+#import "MXInvitedGroupSync.h"
+#import "MXGroupSyncProfile.h"
+#import "MXDehydrationService.h"

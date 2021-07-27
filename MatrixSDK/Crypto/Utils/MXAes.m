@@ -19,6 +19,8 @@
 #import <CommonCrypto/CommonKeyDerivation.h>
 #import <CommonCrypto/CommonCryptor.h>
 
+#import "MXLog.h"
+
 
 #pragma mark - Constants
 
@@ -34,7 +36,7 @@ NSString *const MXAesErrorDomain = @"org.matrix.sdk.MXAes";
     int result = SecRandomCopyBytes(kSecRandomDefault, ivLength, iv.mutableBytes);
     if (result != 0)
     {
-        NSLog(@"[MXAes] iv failed. result: %@", @(result));
+        MXLogDebug(@"[MXAes] iv failed. result: %@", @(result));
     }
     
     // Clear bit 63 of the IV to stop us hitting the 64-bit counter boundary
@@ -94,7 +96,7 @@ NSString *const MXAesErrorDomain = @"org.matrix.sdk.MXAes";
     return cipher;
 }
 
-+ (nullable NSData*)decrypt:(NSData*)cipher
++ (nullable NSData*)decrypt:(NSData*)data
                      aesKey:(NSData*)aesKey iv:(NSData*)iv
                       error:(NSError**)error
 {
@@ -115,13 +117,13 @@ NSString *const MXAesErrorDomain = @"org.matrix.sdk.MXAes";
         return nil;
     }
     
-    size_t bufferLength = CCCryptorGetOutputLength(cryptor, cipher.length, false);
+    size_t bufferLength = CCCryptorGetOutputLength(cryptor, data.length, false);
     NSMutableData *buffer = [NSMutableData dataWithLength:bufferLength];
     
     size_t outLength;
     status |= CCCryptorUpdate(cryptor,
-                              cipher.bytes,
-                              cipher.length,
+                              data.bytes,
+                              data.length,
                               [buffer mutableBytes],
                               [buffer length],
                               &outLength);

@@ -98,7 +98,7 @@ public class MXSyncResponseFileStore: NSObject {
             fileOperationQueue.sync {
                 fileContents = try? String(contentsOf: path,
                                            encoding: Constants.fileEncoding)
-                NSLog("[MXSyncResponseFileStore] readData: File read of \(fileContents?.count ?? 0) bytes lasted \(stopwatch.readable()). Free memory: \(MXMemory.formattedMemoryAvailable())")
+                MXLog.debug("[MXSyncResponseFileStore] readData: File read of \(fileContents?.count ?? 0) bytes lasted \(stopwatch.readable()). Free memory: \(MXMemory.formattedMemoryAvailable())")
                 
             }
             
@@ -112,7 +112,7 @@ public class MXSyncResponseFileStore: NSObject {
             
             let syncResponse = MXCachedSyncResponse(fromJSON: json)
             
-            NSLog("[MXSyncResponseFileStore] readData: Consersion to model lasted \(stopwatch.readable()). Free memory: \(MXMemory.formattedMemoryAvailable())")
+            MXLog.debug("[MXSyncResponseFileStore] readData: Consersion to model lasted \(stopwatch.readable()). Free memory: \(MXMemory.formattedMemoryAvailable())")
             return syncResponse
         }
     }
@@ -123,14 +123,14 @@ public class MXSyncResponseFileStore: NSObject {
         fileOperationQueue.async {
             guard let syncResponse = syncResponse else {
                 try? FileManager.default.removeItem(at: path)
-                NSLog("[MXSyncResponseFileStore] saveData: File remove lasted \(stopwatch.readable())")
+                MXLog.debug("[MXSyncResponseFileStore] saveData: File remove lasted \(stopwatch.readable())")
                 return
             }
             
             try? syncResponse.jsonString()?.write(to: path,
                                                   atomically: true,
                                                   encoding: Constants.fileEncoding)
-            NSLog("[MXSyncResponseFileStore] saveData: File write lasted \(stopwatch.readable()). Free memory: \(MXMemory.formattedMemoryAvailable())")
+            MXLog.debug("[MXSyncResponseFileStore] saveData: File write lasted \(stopwatch.readable()). Free memory: \(MXMemory.formattedMemoryAvailable())")
         }
     }
     
@@ -141,7 +141,7 @@ public class MXSyncResponseFileStore: NSObject {
         }
         
         guard let data = fileData else {
-            NSLog("[MXSyncResponseFileStore] readMetaData: File does not exist")
+            MXLog.debug("[MXSyncResponseFileStore] readMetaData: File does not exist")
             return MXSyncResponseStoreMetaDataModel()
         }
         
@@ -149,7 +149,7 @@ public class MXSyncResponseFileStore: NSObject {
             let metadata = try PropertyListDecoder().decode(MXSyncResponseStoreMetaDataModel.self, from: data)
             return metadata
         } catch let error {
-            NSLog("[MXSyncResponseFileStore] readMetaData: Failed to decode. Error: \(error)")
+            MXLog.debug("[MXSyncResponseFileStore] readMetaData: Failed to decode. Error: \(error)")
             return MXSyncResponseStoreMetaDataModel()
         }
     }
@@ -158,7 +158,7 @@ public class MXSyncResponseFileStore: NSObject {
         fileOperationQueue.async {
             guard let metadata = metadata else {
                 try? FileManager.default.removeItem(at: self.metadataFilePath)
-                NSLog("[MXSyncResponseFileStore] saveMetaData: Remove file")
+                MXLog.debug("[MXSyncResponseFileStore] saveMetaData: Remove file")
                 return
             }
             
@@ -166,7 +166,7 @@ public class MXSyncResponseFileStore: NSObject {
                 let data = try PropertyListEncoder().encode(metadata)
                 try data.write(to: self.metadataFilePath)
             } catch let error {
-                NSLog("[MXSyncResponseFileStore] saveMetaData: Failed to store. Error: \(error)")
+                MXLog.debug("[MXSyncResponseFileStore] saveMetaData: Failed to store. Error: \(error)")
             }
         }
     }

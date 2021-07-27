@@ -127,7 +127,8 @@ NSCharacterSet *uriComponentCharset;
                                 kMXEventTypeStringSecretRequest,
                                 kMXEventTypeStringSecretSend,
                                 kMXEventTypeStringSecretStorageDefaultKey,
-                                kMXEventTypeStringTaggedEvents
+                                kMXEventTypeStringTaggedEvents,
+                                kMXEventTypeStringSpaceChild
                                 ];
 
         NSMutableDictionary *map = [NSMutableDictionary dictionaryWithCapacity:eventTypeMapEnumToString.count];
@@ -808,8 +809,18 @@ static NSMutableDictionary *fileExtensionByContentType = nil;
 #pragma mark - Video processing
 
 + (void)convertVideoToMP4:(NSURL*)videoLocalURL
+       withTargetFileSize:(NSInteger)targetFileSize
                   success:(void(^)(NSURL *videoLocalURL, NSString *mimetype, CGSize size, double durationInMs))success
                   failure:(void(^)(void))failure
+{
+    AVURLAsset *videoAsset = [AVURLAsset assetWithURL:videoLocalURL];
+    [self convertVideoAssetToMP4:videoAsset withTargetFileSize:targetFileSize success:success failure:failure];
+}
+
++ (void)convertVideoAssetToMP4:(AVAsset*)videoAsset
+            withTargetFileSize:(NSInteger)targetFileSize
+                       success:(void(^)(NSURL *videoLocalURL, NSString *mimetype, CGSize size, double durationInMs))success
+                       failure:(void(^)(void))failure
 {
     NSParameterAssert(success);
     NSParameterAssert(failure);
@@ -823,11 +834,16 @@ static NSMutableDictionary *fileExtensionByContentType = nil;
     NSString *cacheRoot = [paths objectAtIndex:0];
     outputVideoLocalURL = [NSURL fileURLWithPath:[cacheRoot stringByAppendingPathComponent:outputFileName]];
     
-    // Convert video container to mp4
-    // Use medium quality to save bandwidth
-    AVURLAsset* videoAsset = [AVURLAsset URLAssetWithURL:videoLocalURL options:nil];
-    AVAssetExportSession *exportSession = [AVAssetExportSession exportSessionWithAsset:videoAsset presetName:AVAssetExportPresetMediumQuality];
+    // Convert video container to mp4 using preset from MXSDKOptions.
+    NSString *presetName = [MXSDKOptions sharedInstance].videoConversionPresetName;
+    AVAssetExportSession *exportSession = [AVAssetExportSession exportSessionWithAsset:videoAsset presetName:presetName];
     exportSession.outputURL = outputVideoLocalURL;
+    
+    if (targetFileSize > 0)
+    {
+        // Reduce the target file size by 10% as fileLengthLimit isn't a hard limit
+        exportSession.fileLengthLimit = targetFileSize * 0.9;
+    }
     
     // Check output file types supported by the device
     NSArray *supportedFileTypes = exportSession.supportedFileTypes;
@@ -838,7 +854,7 @@ static NSMutableDictionary *fileExtensionByContentType = nil;
     }
     else
     {
-        NSLog(@"[MXTools] convertVideoToMP4: Warning: MPEG-4 file format is not supported. Use QuickTime format.");
+        MXLogDebug(@"[MXTools] convertVideoAssetToMP4: Warning: MPEG-4 file format is not supported. Use QuickTime format.");
         
         // Fallback to QuickTime format
         exportSession.outputFileType = AVFileTypeQuickTimeMovie;
@@ -881,7 +897,7 @@ static NSMutableDictionary *fileExtensionByContentType = nil;
                 else
                 {
                     
-                    NSLog(@"[MXTools] convertVideoToMP4: Video export failed. Cannot extract video size.");
+                    MXLogDebug(@"[MXTools] convertVideoAssetToMP4: Video export failed. Cannot extract video size.");
                     
                     // Remove output file (if any)
                     [[NSFileManager defaultManager] removeItemAtPath:[outputVideoLocalURL path] error:nil];
@@ -891,7 +907,7 @@ static NSMutableDictionary *fileExtensionByContentType = nil;
             else
             {
                 
-                NSLog(@"[MXTools] convertVideoToMP4: Video export failed. exportSession.status: %tu", status);
+                MXLogDebug(@"[MXTools] convertVideoAssetToMP4: Video export failed. exportSession.status: %tu", status);
                 
                 // Remove output file (if any)
                 [[NSFileManager defaultManager] removeItemAtPath:[outputVideoLocalURL path] error:nil];

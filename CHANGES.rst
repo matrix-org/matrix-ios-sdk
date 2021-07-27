@@ -5,6 +5,193 @@ Changes to be released in next version
  * 
 
 🙌 Improvements
+ * 
+
+🐛 Bugfix
+ * 
+
+⚠️ API Changes
+ * 
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * Separated CI jobs into individual actions
+
+Changes in 0.19.5 (2021-07-22)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
+ * MXRoomSummary: Cache local unread event count (vector-im/element-ios/issues/4585).
+
+🐛 Bugfix
+ * MXCryptoStore: Use UI background task to make sure that write operations complete (vector-im/element-ios/issues/4579).
+
+⚠️ API Changes
+ * 
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+Improvements:
+
+
+Changes in 0.19.4 (2021-07-15)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
+ * MXTools: Default to 1080p when converting a video (vector-im/element-ios/issues/4478).
+ * MXEvent: add support for voice messages
+ * MXRoom: Add support for sending slow motion videos using AVAsset (vector-im/element-ios/issues/4483).
+ * MXSendReplyEventStringsLocalizable: Added senderSentAVoiceMessage property
+
+🐛 Bugfix
+ * Fix QR self verification with QR code (#1147)
+ * VoIP: Check for virtual users on attended call transfers.
+ * MXBackgroundCryptoStore: Remove read-only Realm and try again if Olm account not found in crypto store (vector-im/element-ios/issues/4534).
+
+⚠️ API Changes
+ * MXSDKOptions: Add videoConversionPresetName to customise video conversion quality.
+ * MXRoom: Added duration and sample parameters on the sendVoiceMessage method (vector-im/element-ios/issues/4090)
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * Fixed a nullability warning and some header warnings.
+
+
+Improvements:
+
+
+Changes in 0.19.3 (2021-06-30)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
+ * MXDehydrationService: Support full rehydration feature (vector-im/element-ios/issues/1117).
+ * MXSDKOptions: Add wellknownDomainUrl to customise the domain for wellknown (vector-im/element-ios/issues/#4489).
+ * MXSession: Refresh homeserverWellknown on every start.
+ * MXRoom: Added support for posting `m.image`s with BlurHash (MSC 2448).
+ * VoIP: Implement bridged version for call transfers.
+ * VoIP: Implement MXiOSAudioOutputRouter.
+
+🐛 Bugfix
+ * 
+
+⚠️ API Changes
+ * MXCall: `audioToSpeaker` property removed. Use `audioOutputRouter` instead.
+ * MXCallStackCall: `audioToSpeaker` property removed. Audio routing should be handled high-level.
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+Improvements:
+
+
+Changes in 0.19.2 (2021-06-24)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
+ * MXSDKOptions: Introduce an option to auto-accept room invites.
+
+🐛 Bugfix
+ * MXSession.homeserverWellknown was no more computed since 0.19.0.
+
+⚠️ API Changes
+ * 
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+Improvements:
+
+
+Changes in 0.19.1 (2021-06-21)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
+ * MXRoomLastMessage: Use MXKeyProvider methods to encrypt/decrypt last message dictionary.
+ * VoIP: Change hold direction to send-only.
+ * Encrypted Media: Remove redundant and undocumented mimetype fields from encrypted attachments (vector-im/element-ios/issues/4303).
+ * MXRecoveryService: Expose checkPrivateKey to validate a private key (vector-im/element-ios/issues/4430).
+ * VoIP: Use headphones and Bluetooth devices when available for calls.
+
+🐛 Bugfix
+ * MXSession: Fix app that can fail to resume (vector-im/element-ios/issues/4417).
+ * MXRealmCryptoStore: Run migration once before opening read-only Realms (vector-im/element-ios/issues/4418).
+ * VoIP: Handle offers when peer connection is stable (vector-im/element-ios/issues/4421).
+ * MXEventTimeline: Fix regression on clear cache where the last message of an encrypted room is not encrypted.
+ * MXBackgroundSyncService: Make credentials public (vector-im/element-ios/issues/3695).
+ * MXCredentials: Implement equatable & hashable methods (vector-im/element-ios/issues/3695).
+
+⚠️ API Changes
+ * MXRoomSummary: `lastMessageEvent` property removed for performance reasons (vector-im/element-ios/issues/4360).
+ * MXRoomSummary: All properties about lastMessage are moved into `lastMessage` property.
+ * MXSession: Does not compute anymore last events for every room summaries by default. Use -[MXSession eventWithEventId:inRoom:success:failure:] method to load the last event for a room summary.
+ * MXRoom: Added method for seding voice messages (vector-im/element-ios/issues/4090).
+ * MXMediaManager: Added `mimeType` param to download encrypted media methods (vector-im/element-ios/issues/4303).
+ * MXEncryptedContentFile: `mimetype` parameter removed (vector-im/element-ios/issues/4303).
+ * MXEncryptedAttachments: `mimetype` parameters removed from encrypt attachment methods (vector-im/element-ios/issues/4303).
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * build.sh: Include debug symbols when building XCFramework 
+
+Others
+ * 
+
+Improvements:
+
+
+Changes in 0.19.0 (2021-06-02)
+=================================================
+
+✨ Features
+ * Spaces: Support Space room type (vector-im/element-ios/issues/4069).
+
+🙌 Improvements
  * MXSession: Cache initial sync response until it is fully handled (vector-im/element-ios/issues/4317).
  * MXStore: New commit method accepting a completion block.
  * MXCrypto: Decrypt events asynchronously and no more on the main thread )(vector-im/element-ios/issues/4306).
@@ -14,9 +201,18 @@ Changes to be released in next version
  * MXCrypto: eventDeviceInfo: Do not synchronise anymore the operation with the decryption queue.
  * MXRoomSummary: Improve reset resetLastMessage to avoid pagination loop and to limit number of decryptions.
  * MXSession: Limit the number of decryptions when processing an initial sync (vector-im/element-ios/issues/4307).
+ * Adapt sync response models to new sync API (vector-im/element-ios/issues/4309).
+ * MXKeyBackup: Do not reset the backup if forceRefresh() is called too early.
+ * Pod: Update Realm to 10.7.6.
+ * Pod: Update Jitsi to 3.5.0.
+ * Pod: Update OLMKit to 3.2.4.
+ * MXRealmCryptoStore: Use Realm instances as read-only in background store (vector-im/element-ios/issues/4352).
+ * MXLog: centralised logging facility, use everywhere instead of NSLog (vector-im/element-ios/issues/4351).
 
 🐛 Bugfix
  * MXRoomSummary: Fix decryption of the last message when it is edited (vector-im/element-ios/issues/4322).
+ * MXCall: Check remote partyId for select_answer events (vector-im/element-ios/issues/4337).
+ * MXSession: Fix used initial sync cache.
 
 ⚠️ API Changes
  * MXRoom: MXRoom.outgoingMessages does not decrypt messages anymore. Use MXSession.decryptEvents to get decrypted events.
@@ -32,6 +228,9 @@ Changes to be released in next version
 
 Others
  * 
+
+Improvements:
+
 
 Changes in 0.18.12 (2021-05-12)
 =================================================
@@ -104,6 +303,10 @@ Changes in 0.18.10 (2021-04-22)
 
 🙌 Improvements
  * MXHTTPOperation: Expose the HTTP response (vector-im/element-ios/issues/4206).
+ * MXRoomPowerLevels: Handle undefined values and add init with default spec values.
+ * MXRoomCreationParameters: Add roomType and powerLevelContentOverride properties. Add initial state events update method.
+ * MXResponse: Add convenient uncurry method to convert a Swift method into Objective-C.
+ * Add MXRoomInitialStateEventBuilder that enables to build initial state events.
 
 🐛 Bugfix
  * MXCrypto: Disable optimisation on room members list to make sure we share keys to all (vector-im/element-ios/issues/3807).

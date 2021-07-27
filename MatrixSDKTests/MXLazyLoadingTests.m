@@ -935,7 +935,7 @@ Common initial conditions:
                         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 2000 * USEC_PER_SEC), dispatch_get_main_queue(), ^{
 
                             // Keep a ref to room2 so that requests on it can complete
-                            NSLog(@"%@", room2);
+                            MXLogDebug(@"%@", room2);
 
                             MXRoom *room2b = [aliceSession2 roomWithRoomId:roomId];
                             MXRoomSummary *summary2b = [aliceSession2 roomSummaryWithRoomId:roomId];
@@ -1240,7 +1240,7 @@ Common initial conditions:
         MXRoomSummary *summary = [aliceSession roomSummaryWithRoomId:roomId];
         MXRoom *room = [aliceSession roomWithRoomId:roomId];
 
-        MXEventTimeline *eventTimeline = [room timelineOnEvent:summary.lastMessageEventId];
+        MXEventTimeline *eventTimeline = [room timelineOnEvent:summary.lastMessage.eventId];
 
         [eventTimeline resetPaginationAroundInitialEventWithLimit:10 success:^{
 
@@ -1298,7 +1298,7 @@ Common initial conditions:
         MXRoomSummary *summary = [aliceSession roomSummaryWithRoomId:roomId];
         MXRoom *room = [aliceSession roomWithRoomId:roomId];
 
-        MXEventTimeline *eventTimeline = [room timelineOnEvent:summary.lastMessageEventId];
+        MXEventTimeline *eventTimeline = [room timelineOnEvent:summary.lastMessage.eventId];
 
         __block NSUInteger messageCount = 0;
         [eventTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {

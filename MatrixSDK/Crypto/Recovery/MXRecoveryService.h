@@ -86,6 +86,14 @@ typedef NS_ENUM(NSInteger, MXRecoveryServiceErrorCode)
                                         success:(void (^)(void))success
                                         failure:(void (^)(NSError *error))failure;
 
+/**
+ Check whether a private key corresponds to the current recovery.
+ 
+ @param privateKey the private key.
+ @param complete called with a boolean that indicates whether or not the key matches
+ */
+- (void)checkPrivateKey:(NSData*)privateKey complete:(void (^)(BOOL match))complete;
+
 
 #pragma mark - Secrets in the recovery
 

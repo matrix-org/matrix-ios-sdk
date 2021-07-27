@@ -21,7 +21,7 @@
 
 #import "MXSession.h"
 #import "MXTools.h"
-
+#import "MXMemoryStore.h"
 
 // Do not bother with retain cycles warnings in tests
 #pragma clang diagnostic push
@@ -838,46 +838,47 @@
         
         [self createInviteByUserScenario:bobRestClient inRoom:roomId inviteAlice:YES expectation:expectation onComplete:^{
             
-            [matrixSDKTestsData doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
+            [matrixSDKTestsData doMXSessionTestWithAlice:nil andStore:[MXMemoryStore new] readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation2) {
                 
-                mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+                mxSession = aliceSession;
                 
-                [mxSession start:^{
-                    
-                    MXRoom *newRoom = [mxSession roomWithRoomId:roomId];
-                    
-                    XCTAssertNotNil(newRoom);
-                    
-                    XCTAssertEqual(newRoom.summary.membership, MXMembershipInvite);
-                    
-                    // The room has 2 members (Alice & Bob)
-                    XCTAssertEqual(newRoom.summary.membersCount.members, 2);
+                MXRoom *newRoom = [mxSession roomWithRoomId:roomId];
+                
+                XCTAssertNotNil(newRoom);
+                
+                XCTAssertEqual(newRoom.summary.membership, MXMembershipInvite);
+                
+                // The room has 2 members (Alice & Bob)
+                XCTAssertEqual(newRoom.summary.membersCount.members, 2);
 
-                    [newRoom members:^(MXRoomMembers *roomMembers) {
+                [newRoom members:^(MXRoomMembers *roomMembers) {
 
-                        MXRoomMember *alice = [roomMembers memberWithUserId:aliceRestClient.credentials.userId];
-                        XCTAssertNotNil(alice);
-                        XCTAssertEqual(alice.membership, MXMembershipInvite);
-                        XCTAssert([alice.originUserId isEqualToString:bobRestClient.credentials.userId], @"Wrong inviter: %@", alice.originUserId);
+                    MXRoomMember *alice = [roomMembers memberWithUserId:aliceSession.myUserId];
+                    XCTAssertNotNil(alice);
+                    XCTAssertEqual(alice.membership, MXMembershipInvite);
+                    XCTAssert([alice.originUserId isEqualToString:bobRestClient.credentials.userId], @"Wrong inviter: %@", alice.originUserId);
 
-                        // The last message should be an invite m.room.member
-                        MXEvent *lastMessage = newRoom.summary.lastMessageEvent;
+                    // The last message should be an invite m.room.member
+                    [mxSession eventWithEventId:newRoom.summary.lastMessage.eventId
+                                         inRoom:newRoom.roomId
+                                        success:^(MXEvent *lastMessage) {
+                        
                         XCTAssertEqual(lastMessage.eventType, MXEventTypeRoomMember, @"The last message should be an invite m.room.member");
                         XCTAssertLessThan([[NSDate date] timeIntervalSince1970] * 1000 - lastMessage.originServerTs, 3000);
 
                         [expectation fulfill];
-
+                        
                     } failure:^(NSError *error) {
                         XCTFail(@"The request should not fail - NSError: %@", error);
                         [expectation fulfill];
                     }];
-                    
+
                 } failure:^(NSError *error) {
                     XCTFail(@"The request should not fail - NSError: %@", error);
                     [expectation fulfill];
                 }];
+                
             }];
-            
         }];
         
     }];
@@ -887,68 +888,72 @@
 {
     [matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
-        [matrixSDKTestsData doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
+        [matrixSDKTestsData doMXSessionTestWithAlice:nil andStore:[MXMemoryStore new] readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation2) {
             
-            mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+            mxSession = aliceSession;
             
-            [mxSession start:^{
+            __block MXRoom *newRoom;
+            __block id listener;
+            
+            listener = [mxSession listenToEvents:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
                 
-                __block MXRoom *newRoom;
-                
-                [mxSession listenToEvents:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
+                if ([event.roomId isEqualToString:roomId])
+                {
+                    newRoom = [mxSession roomWithRoomId:roomId];
                     
-                    if ([event.roomId isEqualToString:roomId])
+                    XCTAssertNotNil(newRoom);
+                    
+                    if (newRoom.summary.membership != MXMembershipUnknown)
                     {
-                        newRoom = [mxSession roomWithRoomId:roomId];
+                        [mxSession removeListener:listener];
+                        XCTAssertEqual(newRoom.summary.membership, MXMembershipInvite);
                         
-                        XCTAssertNotNil(newRoom);
-
-                        if (newRoom.summary.membership != MXMembershipUnknown)
-                        {
-                            XCTAssertEqual(newRoom.summary.membership, MXMembershipInvite);
-
-                            // The room has 2 members (Alice & Bob)
-                            XCTAssertEqual(newRoom.summary.membersCount.members, 2);
-
-                            [newRoom members:^(MXRoomMembers *roomMembers) {
-
-                                MXRoomMember *alice = [roomMembers memberWithUserId:aliceRestClient.credentials.userId];
-                                XCTAssertNotNil(alice);
-                                XCTAssertEqual(alice.membership, MXMembershipInvite);
-                                XCTAssert([alice.originUserId isEqualToString:bobRestClient.credentials.userId], @"Wrong inviter: %@", alice.originUserId);
-
-                                // The last message should be an invite m.room.member
-                                dispatch_async(dispatch_get_main_queue(), ^{    // We could also wait for kMXRoomSummaryDidChangeNotification
-
-                                    MXEvent *lastMessage = newRoom.summary.lastMessageEvent;
+                        // The room has 2 members (Alice & Bob)
+                        XCTAssertEqual(newRoom.summary.membersCount.members, 2);
+                        
+                        [newRoom members:^(MXRoomMembers *roomMembers) {
+                            
+                            MXRoomMember *alice = [roomMembers memberWithUserId:aliceSession.myUserId];
+                            XCTAssertNotNil(alice);
+                            XCTAssertEqual(alice.membership, MXMembershipInvite);
+                            XCTAssert([alice.originUserId isEqualToString:bobRestClient.credentials.userId], @"Wrong inviter: %@", alice.originUserId);
+                            
+                            // The last message should be an invite m.room.member
+                            dispatch_async(dispatch_get_main_queue(), ^{    // We could also wait for kMXRoomSummaryDidChangeNotification
+                                
+                                [mxSession eventWithEventId:newRoom.summary.lastMessage.eventId
+                                                     inRoom:newRoom.roomId
+                                                    success:^(MXEvent *lastMessage) {
+                                    
                                     XCTAssertNotNil(lastMessage);
                                     XCTAssertEqual(lastMessage.eventType, MXEventTypeRoomMember, @"The last message should be an invite m.room.member");
                                     XCTAssertLessThan([[NSDate date] timeIntervalSince1970] * 1000 - lastMessage.originServerTs, 3000);
-
-                                });
+                                    
+                                    [expectation fulfill];
+                                    
+                                } failure:^(NSError *error) {
+                                    XCTFail(@"The request should not fail - NSError: %@", error);
+                                    [expectation fulfill];
+                                }];
                                 
-                            } failure:^(NSError *error) {
-                                XCTFail(@"The request should not fail - NSError: %@", error);
-                                [expectation fulfill];
-                            }];
-                        }
+                            });
+                            
+                        } failure:^(NSError *error) {
+                            XCTFail(@"The request should not fail - NSError: %@", error);
+                            [expectation fulfill];
+                        }];
                     }
-                    
-                }];
+                }
                 
-                [self createInviteByUserScenario:bobRestClient inRoom:roomId inviteAlice:YES expectation:expectation onComplete:^{
-                    
-                    // Make sure we have tested something
-                    XCTAssertNotNil(newRoom);
-                    [expectation fulfill];
-                    
-                }];
-                
-            } failure:^(NSError *error) {
-                XCTFail(@"The request should not fail - NSError: %@", error);
-                [expectation fulfill];
             }];
             
+            [self createInviteByUserScenario:bobRestClient inRoom:roomId inviteAlice:YES expectation:expectation onComplete:^{
+                
+                // Make sure we have tested something
+                XCTAssertNotNil(newRoom);
+                
+            }];
+                
         }];
         
     }];
@@ -1002,12 +1007,22 @@
                         
                         XCTAssertEqual(newRoom.summary.membership, MXMembershipJoin);
 
-                        XCTAssertNotNil(newRoom.summary.lastMessageEventId);
-                        XCTAssertNotNil(newRoom.summary.lastMessageEvent);
+                        XCTAssertNotNil(newRoom.summary.lastMessage.eventId);
                         
-                        XCTAssertEqual(newRoom.summary.lastMessageEvent.eventType, MXEventTypeRoomMember, @"The last should be a m.room.member event indicating Alice joining the room");
-                        
-                        [expectation fulfill];
+                        [mxSession eventWithEventId:newRoom.summary.lastMessage.eventId
+                                             inRoom:newRoom.roomId
+                                            success:^(MXEvent *event) {
+                            
+                            XCTAssertNotNil(event);
+                            
+                            XCTAssertEqual(event.eventType, MXEventTypeRoomMember, @"The last should be a m.room.member event indicating Alice joining the room");
+                            
+                            [expectation fulfill];
+                            
+                        } failure:^(NSError *error) {
+                            XCTFail(@"The request should not fail - NSError: %@", error);
+                            [expectation fulfill];
+                        }];
                         
                     } failure:^(NSError *error) {
                         XCTFail(@"The request should not fail - NSError: %@", error);
@@ -1058,10 +1073,21 @@
                             XCTAssertEqualObjects(roomState.topic, @"We test room invitation here");
 
                             XCTAssertEqual(newRoom.summary.membership, MXMembershipJoin);
-                            XCTAssertNotNil(newRoom.summary.lastMessageEvent);
-                            XCTAssertEqual(newRoom.summary.lastMessageEvent.eventType, MXEventTypeRoomMember, @"The last should be a m.room.member event indicating Alice joining the room");
+                            XCTAssertNotNil(newRoom.summary.lastMessage);
+                            
+                            [mxSession eventWithEventId:newRoom.summary.lastMessage.eventId
+                                                 inRoom:newRoom.roomId
+                                                success:^(MXEvent *event) {
+                                
+                                XCTAssertEqual(event.eventType, MXEventTypeRoomMember, @"The last should be a m.room.member event indicating Alice joining the room");
 
-                            [expectation fulfill];
+                                [expectation fulfill];
+                                
+                            } failure:^(NSError *error) {
+                                XCTFail(@"The request should not fail - NSError: %@", error);
+                                [expectation fulfill];
+                            }];
+                            
                         }];
                         
                     } failure:^(NSError *error) {

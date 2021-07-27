@@ -102,14 +102,14 @@ static NSUInteger const kMXDeviceListOperationsPoolKeyQueryLimit = 250;
 
 - (void)doKeyDownloadForUsers:(NSArray<NSString *> *)users token:(NSString *)token complete:(void (^)(NSDictionary<NSString *, NSDictionary *> *failedUserIds))complete
 {
-    NSLog(@"[MXDeviceListOperationsPool] doKeyDownloadForUsers(pool: %p) %@ users: %@", self, @(users.count), users);
+    MXLogDebug(@"[MXDeviceListOperationsPool] doKeyDownloadForUsers(pool: %p) %@ users: %@", self, @(users.count), users);
 
     // Download
     MXWeakify(self);
     _httpOperation = [crypto.matrixRestClient downloadKeysByChunkForUsers:users token:token chunkSize:kMXDeviceListOperationsPoolKeyQueryLimit success:^(MXKeysQueryResponse *keysQueryResponse) {
         MXStrongifyAndReturnIfNil(self);
 
-        NSLog(@"[MXDeviceListOperationsPool] doKeyDownloadForUsers(pool: %p) -> DONE. Got keys for %@ users and %@ devices. Got cross-signing keys for %@ users", self, @(keysQueryResponse.deviceKeys.map.count), @(keysQueryResponse.deviceKeys.count), @(keysQueryResponse.crossSigningKeys.count));
+        MXLogDebug(@"[MXDeviceListOperationsPool] doKeyDownloadForUsers(pool: %p) -> DONE. Got keys for %@ users and %@ devices. Got cross-signing keys for %@ users", self, @(keysQueryResponse.deviceKeys.map.count), @(keysQueryResponse.deviceKeys.count), @(keysQueryResponse.crossSigningKeys.count));
 
         self->_httpOperation = nil;
         
@@ -124,7 +124,7 @@ static NSUInteger const kMXDeviceListOperationsPoolKeyQueryLimit = 250;
             MXCrossSigningInfo *crossSigningKeys = keysQueryResponse.crossSigningKeys[userId];
             if (crossSigningKeys)
             {
-                NSLog(@"[MXDeviceListOperationsPool] doKeyDownloadForUsers: Got cross-signing keys for %@: %@", userId, crossSigningKeys);
+                MXLogDebug(@"[MXDeviceListOperationsPool] doKeyDownloadForUsers: Got cross-signing keys for %@: %@", userId, crossSigningKeys);
              
                 MXCrossSigningInfo *storedCrossSigningKeys = [self->crypto.store crossSigningKeysForUser:userId];
 
@@ -134,7 +134,7 @@ static NSUInteger const kMXDeviceListOperationsPoolKeyQueryLimit = 250;
                     && ![storedCrossSigningKeys hasSameKeysAsCrossSigningInfo:crossSigningKeys])
                 {
                     // Cross-signing keys have been reset from another device
-                    NSLog(@"[MXDeviceListOperationsPool] doKeyDownloadForUsers: Detected cross-signing keys rotation");
+                    MXLogDebug(@"[MXDeviceListOperationsPool] doKeyDownloadForUsers: Detected cross-signing keys rotation");
                     myUserCrossSigningKeysChanged = YES;
                 }
                 
@@ -164,7 +164,7 @@ static NSUInteger const kMXDeviceListOperationsPoolKeyQueryLimit = 250;
             // Handle user devices keys
             NSDictionary<NSString*, MXDeviceInfo*> *devices = keysQueryResponse.deviceKeys.map[userId];
 
-            NSLog(@"[MXDeviceListOperationsPool] doKeyDownloadForUsers: Got keys for %@: %@ devices: %@", userId, @(devices.count), devices);
+            MXLogDebug(@"[MXDeviceListOperationsPool] doKeyDownloadForUsers: Got keys for %@: %@ devices: %@", userId, @(devices.count), devices);
 
             if (devices)
             {
@@ -253,7 +253,7 @@ static NSUInteger const kMXDeviceListOperationsPoolKeyQueryLimit = 250;
         
         if (myUserCrossSigningKeysChanged)
         {
-            NSLog(@"[MXDeviceListOperationsPool] doKeyDownloadForUsers: Reset cross-signing state.");
+            MXLogDebug(@"[MXDeviceListOperationsPool] doKeyDownloadForUsers: Reset cross-signing state.");
             [self->crypto.crossSigning refreshStateWithSuccess:nil failure:nil];
         }
         
@@ -291,7 +291,7 @@ static NSUInteger const kMXDeviceListOperationsPoolKeyQueryLimit = 250;
         {
             if (keysQueryResponse.failures.count)
             {
-                NSLog(@"[MXDeviceListOperationsPool] doKeyDownloadForUsers. Failures: %@", keysQueryResponse.failures);
+                MXLogDebug(@"[MXDeviceListOperationsPool] doKeyDownloadForUsers. Failures: %@", keysQueryResponse.failures);
             }
             complete(keysQueryResponse.failures);
         }
@@ -301,7 +301,7 @@ static NSUInteger const kMXDeviceListOperationsPoolKeyQueryLimit = 250;
 
         self->_httpOperation = nil;
 
-        NSLog(@"[MXDeviceListOperationsPool] doKeyDownloadForUsers(pool: %p) -> FAILED. Error: %@", self, error);
+        MXLogDebug(@"[MXDeviceListOperationsPool] doKeyDownloadForUsers(pool: %p) -> FAILED. Error: %@", self, error);
 
         dispatch_async(self->crypto.matrixRestClient.completionQueue, ^{
             for (MXDeviceListOperation *operation in self.operations)
@@ -341,12 +341,12 @@ static NSUInteger const kMXDeviceListOperationsPoolKeyQueryLimit = 250;
     // Check that the user_id and device_id in the received deviceKeys are correct
     if (![deviceKeys.userId isEqualToString:userId])
     {
-        NSLog(@"[MXDeviceListOperationsPool] validateDeviceKeys: Mismatched user_id %@ in keys from %@:%@", deviceKeys.userId, userId, deviceId);
+        MXLogDebug(@"[MXDeviceListOperationsPool] validateDeviceKeys: Mismatched user_id %@ in keys from %@:%@", deviceKeys.userId, userId, deviceId);
         return NO;
     }
     if (![deviceKeys.deviceId isEqualToString:deviceId])
     {
-        NSLog(@"[MXDeviceListOperationsPool] validateDeviceKeys: Mismatched device_id %@ in keys from %@:%@", deviceKeys.deviceId, userId, deviceId);
+        MXLogDebug(@"[MXDeviceListOperationsPool] validateDeviceKeys: Mismatched device_id %@ in keys from %@:%@", deviceKeys.deviceId, userId, deviceId);
         return NO;
     }
 
@@ -354,21 +354,21 @@ static NSUInteger const kMXDeviceListOperationsPoolKeyQueryLimit = 250;
     NSString* signKey = deviceKeys.keys[signKeyId];
     if (!signKey)
     {
-        NSLog(@"[MXDeviceListOperationsPool] validateDeviceKeys: Device %@:%@ has no ed25519 key", userId, deviceKeys.deviceId);
+        MXLogDebug(@"[MXDeviceListOperationsPool] validateDeviceKeys: Device %@:%@ has no ed25519 key", userId, deviceKeys.deviceId);
         return NO;
     }
 
     NSString *signature = deviceKeys.signatures[userId][signKeyId];
     if (!signature)
     {
-        NSLog(@"[MXDeviceListOperationsPool] validateDeviceKeys: Device %@:%@ is not signed", userId, deviceKeys.deviceId);
+        MXLogDebug(@"[MXDeviceListOperationsPool] validateDeviceKeys: Device %@:%@ is not signed", userId, deviceKeys.deviceId);
         return NO;
     }
 
     NSError *error;
     if (![crypto.olmDevice verifySignature:signKey JSON:deviceKeys.signalableJSONDictionary signature:signature error:&error])
     {
-        NSLog(@"[MXDeviceListOperationsPool] validateDeviceKeys: Unable to verify signature on device %@:%@", userId, deviceKeys.deviceId);
+        MXLogDebug(@"[MXDeviceListOperationsPool] validateDeviceKeys: Unable to verify signature on device %@:%@", userId, deviceKeys.deviceId);
         return NO;
     }
 
@@ -380,9 +380,9 @@ static NSUInteger const kMXDeviceListOperationsPoolKeyQueryLimit = 250;
             // best off sticking with the original keys.
             //
             // Should we warn the user about it somehow?
-            NSLog(@"[MXDeviceListOperationsPool] validateDeviceKeys: WARNING:Ed25519 key for device %@:%@ has changed: %@ -> %@", userId, deviceKeys.deviceId, previouslyStoredDeviceKeys.fingerprint, signKey);
-            NSLog(@"[MXDeviceListOperationsPool] validateDeviceKeys: %@ -> %@", previouslyStoredDeviceKeys, deviceKeys);
-            NSLog(@"[MXDeviceListOperationsPool] validateDeviceKeys: %@ -> %@", previouslyStoredDeviceKeys.keys, deviceKeys.keys);
+            MXLogDebug(@"[MXDeviceListOperationsPool] validateDeviceKeys: WARNING:Ed25519 key for device %@:%@ has changed: %@ -> %@", userId, deviceKeys.deviceId, previouslyStoredDeviceKeys.fingerprint, signKey);
+            MXLogDebug(@"[MXDeviceListOperationsPool] validateDeviceKeys: %@ -> %@", previouslyStoredDeviceKeys, deviceKeys);
+            MXLogDebug(@"[MXDeviceListOperationsPool] validateDeviceKeys: %@ -> %@", previouslyStoredDeviceKeys.keys, deviceKeys.keys);
             return NO;
         }
     }

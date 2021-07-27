@@ -356,6 +356,7 @@ FOUNDATION_EXPORT NSString *const kMXSessionNotificationUserIdsArrayKey;
  */
 FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
 
+@class MXSpaceService;
 
 #pragma mark - MXSession
 /**
@@ -396,6 +397,11 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
  The media manager used to handle the media stored on the Matrix Content repository.
  */
 @property (nonatomic, readonly) MXMediaManager *mediaManager;
+
+/**
+ The maximum size an upload can be in bytes.
+ */
+@property (nonatomic, readonly) NSInteger maxUploadSize;
 
 /**
  The current state of the session.
@@ -475,6 +481,11 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
  The module that manages aggregations (reactions, edition, ...).
  */
 @property (nonatomic, readonly) MXAggregations *aggregations;
+
+/**
+ The module that manages spaces.
+ */
+@property (nonatomic, readonly) MXSpaceService *spaceService;
 
 #pragma mark - Class methods
 
@@ -1021,9 +1032,19 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  This may lead to pagination requests to the homeserver. Updated room summaries will be 
  notified by `kMXRoomSummaryDidChangeNotification`.
  
- @param maxServerPaginationCount the maximal number of messages to paginate from the homeserver. Default is 50.
+ Calling this method will paginate a maximum of 50 messages from the homeserver.
+ Use `fixRoomsSummariesLastMessageWithMaxServerPaginationCount:` to customize this value.
  */
 - (void)fixRoomsSummariesLastMessage;
+
+/**
+ Make sure that all room summaries have a last message.
+ 
+ This may lead to pagination requests to the homeserver. Updated room summaries will be
+ notified by `kMXRoomSummaryDidChangeNotification`.
+ 
+ @param maxServerPaginationCount the maximal number of messages to paginate from the homeserver.
+ */
 - (void)fixRoomsSummariesLastMessageWithMaxServerPaginationCount:(NSUInteger)maxServerPaginationCount;
 
 /**

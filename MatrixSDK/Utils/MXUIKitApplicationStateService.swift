@@ -92,7 +92,7 @@ public class MXUIKitApplicationStateService: NSObject {
         if newApplicationState != applicationState {
             let applicationStateString = MXUIKitApplicationStateService.readableApplicationState(applicationState: applicationState)
             let newApplicationStateString = MXUIKitApplicationStateService.readableApplicationState(applicationState: newApplicationState)
-            NSLog("[MXUIKitApplicationStateService] applicationStateDidChange: from \(applicationStateString) to \(newApplicationStateString)")
+            MXLog.debug("[MXUIKitApplicationStateService] applicationStateDidChange: from \(applicationStateString) to \(newApplicationStateString)")
             
             applicationState = newApplicationState
         }

@@ -56,4 +56,9 @@
  */
 @property (nonatomic) MXWellKnown *homeserverWellknown;
 
+/**
+ The maximum size an upload can be in bytes.
+ */
+@property (nonatomic) NSInteger maxUploadSize;
+
 @end

@@ -41,9 +41,13 @@
 #import "MXPusher.h"
 #import "MXRoomCreationParameters.h"
 #import "MXTurnServerResponse.h"
+#import "MXSpaceChildrenResponse.h"
 
 @class MXThirdpartyProtocolsResponse;
 @class MXThirdPartyUsersResponse;
+@class MXSyncResponse;
+@class MXDeviceListResponse;
+@class MXSpaceChildrenRequestParameters;
 
 #pragma mark - Constants definitions
 /**
@@ -1921,6 +1925,17 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
                           failure:(void (^)(NSError *error))failure
                    uploadProgress:(void (^)(NSProgress *uploadProgress))uploadProgress NS_REFINED_FOR_SWIFT;
 
+/**
+Get the maximum size a media upload can be in bytes.
+ 
+@param success A block object called when the operation succeeds. It provides the maximum size an upload can be in bytes.
+@param failure A block object called when the operation fails.
+
+@return a MXHTTPOperation instance.
+*/
+- (MXHTTPOperation*) maxUploadSize:(void (^)(NSInteger maxUploadSize))success
+                           failure:(void (^)(NSError *error))failure;
+
 
 #pragma mark - Antivirus server API
 
@@ -2118,6 +2133,23 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
                        failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
+ Upload device and/or one-time keys.
+
+ @param deviceKeys the device keys to send.
+ @param oneTimeKeys the one-time keys to send.
+ @param deviceId ID of the device the keys belong to. Nil to upload keys to the device of the current session.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)uploadKeys:(NSDictionary*)deviceKeys oneTimeKeys:(NSDictionary*)oneTimeKeys
+               forDeviceWithId:(NSString*)deviceId
+                       success:(void (^)(MXKeysUploadResponse *keysUploadResponse))success
+                       failure:(void (^)(NSError *error))failure;
+
+/**
  Upload signatures of device keys.
 
  @param signatures the signatures content.
@@ -2191,7 +2223,35 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)dehydratedDeviceWithSuccess:(void (^)(MXDehydratedDevice *device))success
-                                        failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+                                        failure:(void (^)(NSError *error))failure;
+
+/**
+ Set a given device as the dehydrated device of the current account.
+
+ @param device data of the dehydrated device
+ @param deviceDisplayName display name of the dehydrated device
+ @param success A block object called when the operation succeeds. It provides the ID of the newly dehydrated device.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)setDehydratedDevice:(MXDehydratedDevice *)device
+                        withDisplayName:(NSString *)deviceDisplayName
+                                success:(void (^)(NSString *deviceId))success
+                                failure:(void (^)(NSError *error))failure;
+
+/**
+ Claim the dehydrated device of the current account.
+
+ @param deviceId ID of the dehydrated to be claimed.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)claimDehydratedDeviceWithId:(NSString*)deviceId
+                                        Success:(void (^)(BOOL success))success
+                                        failure:(void (^)(NSError *error))failure;
 
 #pragma mark - Crypto: e2e keys backup
 
@@ -2692,5 +2752,18 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
                                 limit:(NSUInteger)limit
                               success:(void (^)(MXAggregationPaginatedResponse *paginatedResponse))success
                               failure:(void (^)(NSError *error))failure;
+
+#pragma mark - Spaces
+
+/// Get the space children of a given space.
+/// @param spaceId The room id of the queried space.
+/// @param parameters Space children request parameters.
+/// @param success A block object called when the operation succeeds. It provides a `MXSpaceChildrenResponse` object.
+/// @param failure A block object called when the operation fails.
+/// @return a MXHTTPOperation instance.
+- (MXHTTPOperation*)getSpaceChildrenForSpaceWithId:(NSString*)spaceId
+                                        parameters:(MXSpaceChildrenRequestParameters*)parameters
+                                          success:(void (^)(MXSpaceChildrenResponse *spaceChildrenResponse))success
+                                          failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 @end
