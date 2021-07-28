@@ -88,7 +88,10 @@ NSString *const kCodingKeyOthers = @"others";
         _isEncrypted = model.isEncrypted;
         _sender = model.sender;
         _text = model.text;
-        _attributedText = model.attributedText;
+        if (model.attributedText)
+        {
+            _attributedText = [NSKeyedUnarchiver unarchiveObjectWithData:model.attributedText];
+        }
         if (model.others)
         {
             _others = [NSKeyedUnarchiver unarchiveObjectWithData:model.others];

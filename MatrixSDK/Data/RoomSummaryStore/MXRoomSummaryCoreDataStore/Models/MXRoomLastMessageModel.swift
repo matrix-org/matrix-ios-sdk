@@ -33,7 +33,7 @@ public class MXRoomLastMessageModel: NSManagedObject {
     @NSManaged public var isEncrypted: Bool
     @NSManaged public var sender: String
     @NSManaged public var text: String?
-    @NSManaged public var attributedText: NSAttributedString?
+    @NSManaged public var attributedText: Data?
     @NSManaged public var others: Data?
     
     internal static func from(roomLastMessage lastMessage: MXRoomLastMessage,
@@ -48,7 +48,12 @@ public class MXRoomLastMessageModel: NSManagedObject {
         model.isEncrypted = lastMessage.isEncrypted
         model.sender = lastMessage.sender
         model.text = lastMessage.text
-        model.attributedText = lastMessage.attributedText
+        
+        if let attributedText = lastMessage.attributedText {
+            model.attributedText = NSKeyedArchiver.archivedData(withRootObject: attributedText)
+        } else {
+            model.attributedText = nil
+        }
         
         if let others = lastMessage.others {
             model.others = NSKeyedArchiver.archivedData(withRootObject: others)
