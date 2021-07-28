@@ -8,6 +8,7 @@ Changes to be released in next version
  * 
 
 🐛 Bugfix
+ * MXCryptoStore: Keep current store version after resetting data to avoid dead state on an initial sync (vector-im/element-ios/issues/4594).
  * Prevent session pause until reject/hangup event is sent (vector-im/element-ios/issues/4612).
 
 ⚠️ API Changes
