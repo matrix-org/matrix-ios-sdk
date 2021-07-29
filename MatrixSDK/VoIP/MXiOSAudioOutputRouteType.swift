@@ -30,3 +30,22 @@ public enum MXiOSAudioOutputRouteType: Int {
     /// external CarPlay device
     case externalCar
 }
+
+extension MXiOSAudioOutputRouteType: CustomStringConvertible {
+    
+    public var description: String {
+        switch self {
+        case .builtIn:
+            return "builtIn"
+        case .loudSpeakers:
+            return "loudSpeakers"
+        case .externalWired:
+            return "externalWired"
+        case .externalBluetooth:
+            return "externalBluetooth"
+        case .externalCar:
+            return "externalCar"
+        }
+    }
+    
+}
