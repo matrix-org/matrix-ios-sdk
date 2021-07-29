@@ -1725,11 +1725,11 @@ typedef void (^MXOnResumeDone)(void);
 
                     // Use the IS from the account data
                     [self setIdentityServer:identityServer andAccessToken:nil];
+                    
+                    [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionAccountDataDidChangeIdentityServerNotification
+                                                                        object:self
+                                                                      userInfo:nil];
                 }
-
-                [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionAccountDataDidChangeIdentityServerNotification
-                                                                    object:self
-                                                                  userInfo:nil];
             }
         }
 
