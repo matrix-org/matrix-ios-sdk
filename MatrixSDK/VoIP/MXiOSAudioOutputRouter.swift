@@ -115,6 +115,7 @@ public class MXiOSAudioOutputRouter: NSObject {
     private func shouldAddBuiltIn(to routes: [MXiOSAudioOutputRoute]) -> Bool {
         return routes.first(where: { $0.routeType == .builtIn }) == nil
             && routes.first(where: { $0.routeType == .externalWired }) == nil
+            && defaultRouteType == .builtIn
     }
     
     private func recomputeAllRoutes() {
