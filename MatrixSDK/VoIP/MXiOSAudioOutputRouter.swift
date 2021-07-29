@@ -155,7 +155,7 @@ public class MXiOSAudioOutputRouter: NSObject {
     }
     
     private func updateRoute(to route: MXiOSAudioOutputRoute) {
-        MXLog.debug("[MXiOSAudioOutputRouter] updateRoute: for type: \(route.routeType.rawValue)")
+        MXLog.debug("[MXiOSAudioOutputRouter] updateRoute: to: \(route)")
         
         do {
             switch route.routeType {
