@@ -1,4 +1,4 @@
-Changes to be released in next version
+Changes in 0.19.6 (2021-07-29)
 =================================================
 
 ✨ Features
@@ -24,6 +24,9 @@ Changes to be released in next version
 
 Others
  * Separated CI jobs into individual actions
+
+Improvements:
+
 
 Changes in 0.19.5 (2021-07-22)
 =================================================
