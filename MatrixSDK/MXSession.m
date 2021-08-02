@@ -2907,6 +2907,12 @@ typedef void (^MXOnResumeDone)(void);
     
     for (MXRoomSummary *summary in self.roomsSummaries)
     {
+        //  ignore this room if there is no change
+        if (summary.storedHash == summary.hash)
+        {
+            continue;
+        }
+        
         if (summary.lastMessage.isEncrypted)
         {
             dispatch_group_enter(dispatchGroup);
