@@ -63,17 +63,17 @@ public class MXSpaceService: NSObject {
     private var parentIdsPerRoomId: [String : Set<String>] = [:]
     private var flattenedParentIds: [String: Set<String>] = [:]
 
-    private var rootSpaces: [MXSpace] = []
-    private var orphanedRooms: [MXRoom] = []
-    private var orphanedDirectRooms: [MXRoom] = []
-    
-    public var rootSpaceSummaries: [MXRoomSummary] {
-        get {
-            return rootSpaces.compactMap { space in
+    private var rootSpaces: [MXSpace] = [] {
+        didSet {
+            self.rootSpaceSummaries = rootSpaces.compactMap { space in
                 return space.summary
             }
         }
     }
+    private var orphanedRooms: [MXRoom] = []
+    private var orphanedDirectRooms: [MXRoom] = []
+    
+    public private(set) var rootSpaceSummaries: [MXRoomSummary] = []
     
     // MARK: - Setup
     
