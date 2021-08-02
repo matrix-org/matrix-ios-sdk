@@ -1,0 +1,22 @@
+[tool.towncrier]
+name = "Changes in"
+version = "1.2.3"
+filename = "CHANGES.rst"
+directory = "changelog.d"
+template = "changelog.d/_template.rst"
+#issue_format = "dfdsds [\\#{issue}](https://github.com/vector-im/element-ios/issues/{issue})"
+
+[[tool.towncrier.type]]
+    directory = "feature"
+    name = "✨ Features"
+    showcontent = true
+
+[[tool.towncrier.type]]
+    directory = "bugfix"
+    name = "🐛 Bugfixes"
+    showcontent = true
+
+[[tool.towncrier.type]]
+    directory = "build"
+    name = "🧱 Build"
+    showcontent = true
