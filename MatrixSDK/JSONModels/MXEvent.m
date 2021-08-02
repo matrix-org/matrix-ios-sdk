@@ -81,9 +81,7 @@ NSString *const kMXEventTypeStringSecretRequest         = @"m.secret.request";
 NSString *const kMXEventTypeStringSecretSend            = @"m.secret.send";
 NSString *const kMXEventTypeStringSecretStorageDefaultKey   = @"m.secret_storage.default_key";
 NSString *const kMXEventTypeStringTaggedEvents          = @"m.tagged_events";
-//NSString *const kMXEventTypeStringSpaceChild            = @"m.space.child";
-// Use temporary event type until the MSC approval
-NSString *const kMXEventTypeStringSpaceChild            = @"org.matrix.msc1772.space.child";
+NSString *const kMXEventTypeStringSpaceChild            = @"m.space.child";
 
 NSString *const kMXMessageTypeText                   = @"m.text";
 NSString *const kMXMessageTypeEmote                  = @"m.emote";

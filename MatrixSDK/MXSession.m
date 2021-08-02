@@ -660,6 +660,8 @@ typedef void (^MXOnResumeDone)(void);
             MXLogDebug(@"[MXSession] Next sync token: %@", syncResponse.nextBatch);
             self.store.eventStreamToken = syncResponse.nextBatch;
             
+            [self.spaceService buildGraphWith:self.rooms];
+            
             if (completion)
             {
                 completion();
