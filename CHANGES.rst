@@ -5,7 +5,7 @@ Changes to be released in next version
  * 
 
 🙌 Improvements
- * 
+ * MXSession: Improve and fix fixRoomsSummariesLastMessage (vector-im/element-ios/issues/4440).
 
 🐛 Bugfix
  * 
