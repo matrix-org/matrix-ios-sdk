@@ -62,6 +62,10 @@ public class MXiOSAudioOutputRoute: NSObject {
         }
     }
     
+    public override var description: String {
+        return "<MXiOSAudioOutputRoute: identifier: \(identifier), type: \(routeType), name: \(name) >"
+    }
+    
 }
 
 //  MARK: - AVAudioSessionPortDescription Extension

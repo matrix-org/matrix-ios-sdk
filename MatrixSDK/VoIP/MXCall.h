@@ -344,7 +344,7 @@ extern NSString *const kMXCallSupportsTransferringStatusDidChange;
 /**
  Audio output router.
  */
-@property (nonatomic, readonly) MXiOSAudioOutputRouter *audioOutputRouter;
+@property (nonatomic, readonly) MXiOSAudioOutputRouter *audioOutputRouter API_AVAILABLE(ios(10.0));
 #endif
 
 /**

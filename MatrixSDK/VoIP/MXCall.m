@@ -486,25 +486,33 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
                                   @"party_id": self.partyId
                                   };
         
+        void(^terminateBlock)(void) = ^{
+            //  terminate with a fake reject event
+            MXEvent *fakeEvent = [MXEvent modelFromJSON:@{
+                @"type": kMXEventTypeStringCallReject,
+                @"content": content
+            }];
+            fakeEvent.sender = self->callManager.mxSession.myUserId;
+            [self terminateWithReason:fakeEvent];
+        };
+        
         if (signal)
         {
             // Send the reject event
             MXWeakify(self);
-            [_callSignalingRoom sendEventOfType:kMXEventTypeStringCallReject content:content localEcho:nil success:nil failure:^(NSError *error) {
+            [_callSignalingRoom sendEventOfType:kMXEventTypeStringCallReject content:content localEcho:nil success:^(NSString *eventId) {
+                terminateBlock();
+            } failure:^(NSError *error) {
                 MXStrongifyAndReturnIfNil(self);
                 
                 MXLogError(@"[MXCall][%@] hangup: ERROR: Cannot send m.call.reject event.", self.callId);
                 [self didEncounterError:error reason:MXCallHangupReasonUnknownError];
             }];
         }
-        
-        //  terminate with a fake reject event
-        MXEvent *fakeEvent = [MXEvent modelFromJSON:@{
-            @"type": kMXEventTypeStringCallReject,
-            @"content": content
-        }];
-        fakeEvent.sender = callManager.mxSession.myUserId;
-        [self terminateWithReason:fakeEvent];
+        else
+        {
+            terminateBlock();
+        }
         return;
     }
     
@@ -517,6 +525,17 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
                                   @"party_id": self.partyId,
                                   @"reason": [MXTools callHangupReasonString:reason]
                                   };
+        
+        void(^terminateBlock)(void) = ^{
+            //  terminate with a fake hangup event
+            MXEvent *fakeEvent = [MXEvent modelFromJSON:@{
+                @"type": kMXEventTypeStringCallHangup,
+                @"content": content
+            }];
+            fakeEvent.sender = self->callManager.mxSession.myUserId;
+            [self terminateWithReason:fakeEvent];
+        };
+        
         if (signal)
         {
             //  Send the hangup event
@@ -525,6 +544,8 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
                 [[MXSDKOptions sharedInstance].analyticsDelegate trackValue:@(reason)
                                                                    category:kMXAnalyticsVoipCategory
                                                                        name:kMXAnalyticsVoipNameCallHangup];
+                
+                terminateBlock();
             } failure:^(NSError *error) {
                 MXStrongifyAndReturnIfNil(self);
                 
@@ -532,14 +553,10 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
                 [self didEncounterError:error reason:MXCallHangupReasonUnknownError];
             }];
         }
-        
-        //  terminate with a fake hangup event
-        MXEvent *fakeEvent = [MXEvent modelFromJSON:@{
-            @"type": kMXEventTypeStringCallHangup,
-            @"content": content
-        }];
-        fakeEvent.sender = callManager.mxSession.myUserId;
-        [self terminateWithReason:fakeEvent];
+        else
+        {
+            terminateBlock();
+        }
     }
 }
 
