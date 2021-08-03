@@ -181,6 +181,11 @@ typedef void (^MXOnResumeDone)(void);
      Async queue to run a single task at a time.
      */
     MXAsyncTaskQueue *asyncTaskQueue;
+    
+    /**
+     Flag to indicate whether a fixRoomsLastMessage execution is ongoing.
+     */
+    BOOL fixingRoomsLastMessages;
 }
 
 /**
@@ -2911,6 +2916,12 @@ typedef void (^MXOnResumeDone)(void);
 - (void)fixRoomsSummariesLastMessageWithMaxServerPaginationCount:(NSUInteger)maxServerPaginationCount
                                                            force:(BOOL)force
 {
+    if (fixingRoomsLastMessages)
+    {
+        return;
+    }
+    fixingRoomsLastMessages = YES;
+    
     dispatch_group_t dispatchGroup = dispatch_group_create();
     
     for (MXRoomSummary *summary in self.roomsSummaries)
@@ -2981,6 +2992,8 @@ typedef void (^MXOnResumeDone)(void);
     }
     
     dispatch_group_notify(dispatchGroup, dispatch_get_main_queue(), ^{
+        self->fixingRoomsLastMessages = NO;
+        
         // Commit store changes done
         if ([self.store respondsToSelector:@selector(commit)])
         {
