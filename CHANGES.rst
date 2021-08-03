@@ -1360,6 +1360,7 @@ Changes in Matrix iOS SDK in 0.16.6 (2020-06-30)
 ================================================
 
 Improvements:
+ * MXStore: Add a method to remove all the messages sent before a specific timestamp in a room.
  * MXCrypto: Only create one olm session at a time per device (vector-im/riot-ios/issues/2331).
  * MXCrossSigning: Add the bootstrapWithAuthParams method.
  * MXRecoveryService: Create this service to manage keys we want to store in SSSS.
