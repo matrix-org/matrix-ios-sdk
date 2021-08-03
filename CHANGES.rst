@@ -5,7 +5,7 @@ Changes to be released in next version
  * 
 
 🙌 Improvements
- * 
+ * SSO: stable ids for MSC 2858 (vector-im/element-ios/issues/4362).
 
 🐛 Bugfix
  * 
