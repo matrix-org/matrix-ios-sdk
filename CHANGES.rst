@@ -8,7 +8,34 @@ Changes to be released in next version
  * 
 
 🐛 Bugfix
+ * Tests: Fix a crash in various tests from a missing `storeMaxUploadSize` method (#1175).
+
+⚠️ API Changes
  * 
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+Changes in 0.19.6 (2021-07-29)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
+ * 
+
+🐛 Bugfix
+ * MXCryptoStore: Keep current store version after resetting data to avoid dead state on an initial sync (vector-im/element-ios/issues/4594).
+ * Prevent session pause until reject/hangup event is sent (vector-im/element-ios/issues/4612).
+ * Only post identity server changed notification if the server actually changed.
+ * Fix audio routing issues for Bluetooth devices (vector-im/element-ios/issues/4622).
 
 ⚠️ API Changes
  * 
@@ -21,6 +48,9 @@ Changes to be released in next version
 
 Others
  * Separated CI jobs into individual actions
+
+Improvements:
+
 
 Changes in 0.19.5 (2021-07-22)
 =================================================
