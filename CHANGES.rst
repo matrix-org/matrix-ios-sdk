@@ -8,7 +8,7 @@ Changes to be released in next version
  * 
 
 🐛 Bugfix
- * 
+ * Tests: Fix a crash in various tests from a missing `storeMaxUploadSize` method (#1175).
 
 ⚠️ API Changes
  * 
