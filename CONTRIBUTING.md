@@ -54,12 +54,12 @@ named in the format of `ElementIOSIssueNumber.type`. The type can be one of the
 following:
 
 - `feature` for a new feature
-- `bugfix` for bug fix
 - `change` for updates to an existing feature
-- `doc` for updates to the documentation
+- `bugfix` for bug fix
 - `api` for an api break
-- `build` for changes related to build, tools, CI/CD
 - `i18n` for translations
+- `build` for changes related to build, tools, CI/CD
+- `doc` for updates to the documentation
 - `misc` for other changes
 
 This file will become part of our [changelog](CHANGES.md) at the next
