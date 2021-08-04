@@ -72,7 +72,7 @@ consistency.
 Adding credits to the changelog is encouraged, we value your
 contributions and would like to have you shouted out in the release notes!
 
-For example, a fix in PR #1234 would have its changelog entry in
+For example, a fix for an issue #1234 would have its changelog entry in
 `changelog.d/1234.bugfix`, and contain content like:
 
 > Voice Messages: Fix a crash when sending a voice message. Contributed by
@@ -89,6 +89,12 @@ it is not encouraged, you can use:
 - `pr-[PRNumber].type` for a PR with no related issue
 - `sdk-[iOSSDKIssueNumber].type` for a PR related a matrix-ios-sdk issue
 - `kit-[iOSKitIssueNumber].type` for a PR related a matrix-ios-kit issue
+
+To preview the changelog for pending changelog entries, use:
+
+```bash
+$ towncrier build --draft --version 1.2.3
+```
 
 ## Sign off
 
