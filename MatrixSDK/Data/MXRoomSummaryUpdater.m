@@ -559,22 +559,24 @@
         avatar = roomState.avatar;
     }
     // Else, use Matrix room summaries and heroes
-    else if (serverRoomSummary && [self filteredHeroesFromServerRoomSummary:serverRoomSummary excludingUserIDs:excludedUserIDs].count == 1)
-    {
-        // FIXME: Calling filteredHeroes twice.
-        NSString *hero = [self filteredHeroesFromServerRoomSummary:serverRoomSummary excludingUserIDs:excludedUserIDs].firstObject;
-        MXRoomMember *otherMember = [roomState.members memberWithUserId:hero];
-        avatar = otherMember.avatarUrl;
-    }
-    // Or in case of non lazy loading or no server room summary,
-    // use the full room state
     else
     {
-        NSArray<MXRoomMember*> *otherMembers = [self sortedOtherMembersInRoomState:roomState withMatrixSession:session];
-        NSArray<MXRoomMember*> *filteredMembers = [self filteredMembersFromMembers:otherMembers excludingUserIDs:excludedUserIDs];
-        if (filteredMembers.count == 1)
+        NSArray<NSString *> *filteredHeroes = [self filteredHeroesFromServerRoomSummary:serverRoomSummary excludingUserIDs:excludedUserIDs];
+        if (filteredHeroes.count == 1)
         {
-            avatar = filteredMembers.firstObject.avatarUrl;
+            MXRoomMember *otherMember = [roomState.members memberWithUserId:filteredHeroes.firstObject];
+            avatar = otherMember.avatarUrl;
+        }
+        // Or in case of non lazy loading or no server room summary,
+        // use the full room state
+        else
+        {
+            NSArray<MXRoomMember*> *otherMembers = [self sortedOtherMembersInRoomState:roomState withMatrixSession:session];
+            NSArray<MXRoomMember*> *filteredMembers = [self filteredMembersFromMembers:otherMembers excludingUserIDs:excludedUserIDs];
+            if (filteredMembers.count == 1)
+            {
+                avatar = filteredMembers.firstObject.avatarUrl;
+            }
         }
     }
 
@@ -592,6 +594,11 @@
  */
 - (NSArray<NSString *> *)filteredHeroesFromServerRoomSummary:(MXRoomSyncSummary *)serverRoomSummary excludingUserIDs:(NSArray<NSString *> *)excludedUserIDs
 {
+    if (serverRoomSummary == nil)
+    {
+        return @[];
+    }
+    
     NSMutableArray<NSString*> *filteredHeroes = [NSMutableArray arrayWithCapacity:serverRoomSummary.heroes.count];
     for (NSString *hero in serverRoomSummary.heroes)
     {
