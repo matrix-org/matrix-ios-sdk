@@ -468,50 +468,20 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
 
 - (void)testRoomDisplaynameExcludingUsers
 {
-    __block BOOL hasInvitedAlice = NO;
-    __block NSString *aliceUserID = @"";
-    
-    // Set up a room with bob as a starting point.
-    [matrixSDKTestsData doMXSessionTestWithBobAndARoom:self
-                                              andStore:[[MXFileStore alloc] init]
-                                           readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXSession *bobSession, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
+        MXRoom *room = [bobSession roomWithRoomId:roomId];
         MXRoomSummary *summary = room.summary;
-        MXRoomSummaryUpdater *updater = (MXRoomSummaryUpdater*)mxSession.roomSummaryUpdateDelegate;
-
-        observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+        MXRoomSummaryUpdater *updater = (MXRoomSummaryUpdater*)bobSession.roomSummaryUpdateDelegate;
+        
+        [room state:^(MXRoomState *roomState) {
+            // Given a room with two users.
+            XCTAssertEqualObjects(summary.displayname, @"mxAlice", @"A room with one other user should be given the name of that user.");
             
-            if (!hasInvitedAlice)
-            {
-                // Given a room with only the current user as a member.
-                XCTAssertEqualObjects(summary.displayname, @"Empty room", @"A room with no other users that has no display name should be shown as empty.");
-                
-                // When adding a second user who is excluded from updateSummaryDisplayname in summary updater.
-                [matrixSDKTestsData doMXSessionTestWithAlice:nil readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation2) {
-                    aliceUserID = aliceSession.myUser.userId;
-                    
-                    [room inviteUser:aliceUserID success:nil failure:^(NSError *error) {
-                        XCTFail(@"Cannot set up initial test conditions - error: %@", error);
-                        [expectation fulfill];
-                    }];
-                }];
-                
-                hasInvitedAlice = YES;
-            }
-            else if (room.summary.membersCount.members == 2)
-            {
-                [room state:^(MXRoomState *roomState) {
-                    [updater updateSummaryDisplayname:summary session:mxSession withServerRoomSummary:nil roomState:roomState excludingUserIDs: @[aliceUserID]];
-                    
-                    // Then the name of the room should not change.
-                    XCTAssertEqualObjects(summary.displayname, @"Empty room", @"The name of the room should not be updated when an unimportant user is added.");
-                    [expectation fulfill];
-                }];
-            }
-         }];
-
-        // Set an empty name to allow the roomSummaryUpdateDelegate to compute the name.
-        [room setName:@"" success:nil failure:^(NSError *error) {
-            XCTFail(@"Cannot set up initial test conditions - error: %@", error);
+            // When excluding the other user during a display name update.
+            [updater updateSummaryDisplayname:summary session:bobSession withServerRoomSummary:nil roomState:roomState excludingUserIDs: @[aliceRestClient.credentials.userId]];
+            
+            // Then the name of the room should no longer include the other user.
+            XCTAssertEqualObjects(summary.displayname, @"Empty room", @"The name of the room should not include the other user when they are excluded.");
             [expectation fulfill];
         }];
     }];
@@ -519,57 +489,26 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
 
 - (void)testRoomAvatarExcludingUsers
 {
-    __block BOOL hasInvitedAlice = NO;
-    __block NSString *aliceUserID = @"";
-    
-    // Set up a room with bob as a starting point.
-    [matrixSDKTestsData doMXSessionTestWithBobAndARoom:self
-                                              andStore:[[MXFileStore alloc] init]
-                                           readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXSession *bobSession, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
+        MXRoom *room = [bobSession roomWithRoomId:roomId];
         MXRoomSummary *summary = room.summary;
-        MXRoomSummaryUpdater *updater = (MXRoomSummaryUpdater*)mxSession.roomSummaryUpdateDelegate;
-
-        observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
-            
-            if (!hasInvitedAlice)
-            {
-                // Given a room with only the current user as a member.
-                XCTAssertEqualObjects(summary.avatar, nil, @"A room with no other users should not have an avatar.");
+        MXRoomSummaryUpdater *updater = (MXRoomSummaryUpdater*)bobSession.roomSummaryUpdateDelegate;
+        
+        NSString *avatarURL = @"http://matrix.org/matrix.png";
+        
+        [aliceRestClient setAvatarUrl:avatarURL success:^{
+            [room state:^(MXRoomState *roomState) {
+                // Given a room with two users.
+                XCTAssertNotEqualObjects(summary.avatar, nil, @"A room with one other user who has set an avatar should have that same avatar.");
                 
-                // When adding a second user who has set an avatar and is excluded from updateSummaryAvatar in summary updater.
-                [matrixSDKTestsData doMXSessionTestWithAlice:nil readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation2) {
-                    aliceUserID = aliceSession.myUser.userId;
-                    
-                    NSString *avatarURL = @"http://matrix.org/matrix.png";
-                    [aliceSession.matrixRestClient setAvatarUrl:avatarURL success:^{
-                        XCTAssertNotEqualObjects(aliceSession.myUser.avatarUrl, nil, @"The user should have an avatar after setting it.");
-                        
-                        [room inviteUser:aliceSession.myUser.userId success:nil failure:^(NSError *error) {
-                            XCTFail(@"Cannot set up initial test conditions - error: %@", error);
-                            [expectation fulfill];
-                        }];
-                    } failure:^(NSError *error) {
-                        XCTFail(@"Cannot set up initial test conditions - error: %@", error);
-                        [expectation fulfill];
-                    }];
-                }];
+                // When excluding the other user during an avatar update.
+                [updater updateSummaryAvatar:summary session:bobSession withServerRoomSummary:nil roomState:roomState excludingUserIDs: @[aliceRestClient.credentials.userId]];
                 
-                hasInvitedAlice = YES;
-            }
-            else if (room.summary.membersCount.members == 2)
-            {
-                [room state:^(MXRoomState *roomState) {
-                    [updater updateSummaryAvatar:summary session:mxSession withServerRoomSummary:nil roomState:roomState excludingUserIDs: @[aliceUserID]];
-                        
-                    // Then the room should not be given an avatar.
-                    XCTAssertEqualObjects(summary.avatar, nil, @"A room where the only other user is unimportant should not have an avatar");
-                    [expectation fulfill];
-                }];
-            }
-         }];
-
-        // Set the room's name to trigger the observer.
-        [room setName:@"" success:nil failure:^(NSError *error) {
+                // Then the room should no longer display that user's avatar.
+                XCTAssertEqualObjects(summary.avatar, nil, @"A room where the only other user is unimportant should not have an avatar");
+                [expectation fulfill];
+            }];
+        } failure:^(NSError *error) {
             XCTFail(@"Cannot set up initial test conditions - error: %@", error);
             [expectation fulfill];
         }];
