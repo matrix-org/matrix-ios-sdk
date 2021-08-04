@@ -1,6 +1,6 @@
 [tool.towncrier]
 name = "Changes in"
-filename = "CHANGES.rst"
+filename = "CHANGES.md"
 directory = "changelog.d"
 template = "changelog.d/_template.md.jinja"
 
