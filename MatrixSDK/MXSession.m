@@ -2946,7 +2946,7 @@ typedef void (^MXOnResumeDone)(void);
             }
                                                            commit:NO];
         }
-        else if (summary.lastMessage.isEncrypted)
+        else if (summary.lastMessage.isEncrypted && !summary.lastMessage.text)
         {
             dispatch_group_enter(dispatchGroup);
             [self eventWithEventId:summary.lastMessage.eventId
