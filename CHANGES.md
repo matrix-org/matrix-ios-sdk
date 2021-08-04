@@ -1,43 +1,16 @@
 ## Changes in 0.19.6 (2021-07-29)
 
-✨ Features
-
- * 
-
-🙌 Improvements
-
- * 
-
 🐛 Bugfix
  * MXCryptoStore: Keep current store version after resetting data to avoid dead state on an initial sync (vector-im/element-ios/issues/4594).
  * Prevent session pause until reject/hangup event is sent (vector-im/element-ios/issues/4612).
  * Only post identity server changed notification if the server actually changed.
  * Fix audio routing issues for Bluetooth devices (vector-im/element-ios/issues/4622).
 
-⚠️ API Changes
-
- * 
-
-🗣 Translations
-
- * 
-    
-🧱 Build
-
- * 
-
 Others
 
  * Separated CI jobs into individual actions
 
-Improvements:
-
-
 ## Changes in 0.19.5 (2021-07-22)
-
-✨ Features
-
- * 
 
 🙌 Improvements
 
@@ -46,30 +19,7 @@ Improvements:
 🐛 Bugfix
  * MXCryptoStore: Use UI background task to make sure that write operations complete (vector-im/element-ios/issues/4579).
 
-⚠️ API Changes
-
- * 
-
-🗣 Translations
-
- * 
-    
-🧱 Build
-
- * 
-
-Others
-
- * 
-
-Improvements:
-
-
 ## Changes in 0.19.4 (2021-07-15)
-
-✨ Features
-
- * 
 
 🙌 Improvements
 
@@ -88,27 +38,12 @@ Improvements:
  * MXSDKOptions: Add videoConversionPresetName to customise video conversion quality.
  * MXRoom: Added duration and sample parameters on the sendVoiceMessage method (vector-im/element-ios/issues/4090)
 
-🗣 Translations
-
- * 
-    
-🧱 Build
-
- * 
-
 Others
 
  * Fixed a nullability warning and some header warnings.
 
 
-Improvements:
-
-
 ## Changes in 0.19.3 (2021-06-30)
-
-✨ Features
-
- * 
 
 🙌 Improvements
 
@@ -127,26 +62,7 @@ Improvements:
  * MXCall: `audioToSpeaker` property removed. Use `audioOutputRouter` instead.
  * MXCallStackCall: `audioToSpeaker` property removed. Audio routing should be handled high-level.
 
-🗣 Translations
-
- * 
-    
-🧱 Build
-
- * 
-
-Others
-
- * 
-
-Improvements:
-
-
 ## Changes in 0.19.2 (2021-06-24)
-
-✨ Features
-
- * 
 
 🙌 Improvements
 
@@ -155,30 +71,7 @@ Improvements:
 🐛 Bugfix
  * MXSession.homeserverWellknown was no more computed since 0.19.0.
 
-⚠️ API Changes
-
- * 
-
-🗣 Translations
-
- * 
-    
-🧱 Build
-
- * 
-
-Others
-
- * 
-
-Improvements:
-
-
 ## Changes in 0.19.1 (2021-06-21)
-
-✨ Features
-
- * 
 
 🙌 Improvements
 
@@ -206,20 +99,9 @@ Improvements:
  * MXEncryptedContentFile: `mimetype` parameter removed (vector-im/element-ios/issues/4303).
  * MXEncryptedAttachments: `mimetype` parameters removed from encrypt attachment methods (vector-im/element-ios/issues/4303).
 
-🗣 Translations
-
- * 
-    
 🧱 Build
 
  * build.sh: Include debug symbols when building XCFramework 
-
-Others
-
- * 
-
-Improvements:
-
 
 ## Changes in 0.19.0 (2021-06-02)
 
@@ -258,26 +140,7 @@ Improvements:
  * MXCrypto: [MXCrypto decryptEvent:inTimeline:] is deprecated, use [MXCrypto decryptEvents:inTimeline:onComplete:] instead.
  * MXCrypto: [MXCrypto hasKeysToDecryptEvent:] is now asynchronous.
 
-🗣 Translations
-
- * 
-    
-🧱 Build
-
- * 
-
-Others
-
- * 
-
-Improvements:
-
-
 ## Changes in 0.18.12 (2021-05-12)
-
-✨ Features
-
- * 
 
 🙌 Improvements
 
@@ -286,30 +149,7 @@ Improvements:
 🐛 Bugfix
  * MXRoomCreateContent: Fix room type JSON key.
 
-⚠️ API Changes
-
- * 
-
-🗣 Translations
-
- * 
-    
-🧱 Build
-
- * 
-
-Others
-
- * 
-
-Improvements:
-
-
 ## Changes in 0.18.11 (2021-05-07)
-
-✨ Features
-
- * 
 
 🙌 Improvements
 
@@ -327,10 +167,6 @@ Improvements:
 
  * Spaces and room type: Remove all MSC1772 JSON key prefixes and use stable ones.
 
-🗣 Translations
-
- * 
-    
 🧱 Build
 
  * Tests: Use UnitTests suffix for unit tests classes.
@@ -339,18 +175,7 @@ Improvements:
  * GH Actions: Run unit tests on every PR and develop branch update.
  * GH Actions: Run integration tests nightly on develop using last Synapse release.
 
-Others
-
- * 
-
-Improvements:
-
-
 ## Changes in 0.18.10 (2021-04-22)
-
-✨ Features
-
- * 
 
 🙌 Improvements
 
@@ -363,95 +188,18 @@ Improvements:
 🐛 Bugfix
  * MXCrypto: Disable optimisation on room members list to make sure we share keys to all (vector-im/element-ios/issues/3807).
 
-⚠️ API Changes
-
- * 
-
-🗣 Translations
-
- * 
-    
-🧱 Build
-
- * 
-
-Others
-
- * 
-
-Improvements:
-
-
 ## Changes in 0.18.9 (2021-04-16)
-
-✨ Features
-
- * 
-
-🙌 Improvements
-
- * 
 
 🐛 Bugfix
 * Notifications: Fix sender display name that can miss (vector-im/element-ios/issues/#4222). 
 
-⚠️ API Changes
-
- * 
-
-🗣 Translations
-
- * 
-    
-🧱 Build
-
- * 
-
-Others
-
- * 
-
-Improvements:
-
-
 ## Changes in 0.18.8 (2021-04-14)
-
-✨ Features
-
- * 
-
-🙌 Improvements
-
- * 
 
 🐛 Bugfix
  * MXSession: Fix deadlock regression in resume() (vector-im/element-ios/issues/4202).
  * MXRoomMembers: Fix wrong view of room members when paginating (vector-im/element-ios/issues/4204).
 
-⚠️ API Changes
-
- * 
-
-🗣 Translations
-
- * 
-    
-🧱 Build
-
- * 
-
-Others
-
- * 
-
-Improvements:
-
-
 ## Changes in 0.18.7 (2021-04-09)
-
-✨ Features
-
- * 
 
 🙌 Improvements
 
@@ -465,30 +213,7 @@ Improvements:
  * Remove padding from base64 encoded `iv` value (vector-im/element-ios/issues/4172).
  * Check for null before changing a user's displayname or avatar URL based on an m.room.member event.
 
-⚠️ API Changes
-
- * 
-
-🗣 Translations
-
- * 
-    
-🧱 Build
-
- * 
-
-Others
-
- * 
-
-Improvements:
-
-
 ## Changes in 0.18.6 (2021-03-24)
-
-✨ Features
-
- * 
 
 🙌 Improvements
 
@@ -506,14 +231,6 @@ Improvements:
  * MXKeyBackup: Add sanity checks to avoid crashes (vector-im/element-ios/issues/4113).
  * MXTools: Avoid releasing null pointer to fix crash on M1 simulator (vector-im/element-ios/issues/4140)
 
-⚠️ API Changes
-
- * 
-
-🗣 Translations
-
- * 
-    
 🧱 Build
 
  * build.sh: Support passing CFBundleShortVersionString and CFBundleVersion when building an xcframework.
@@ -523,111 +240,27 @@ Others
 
  * GitHub Actions: Run pod lib lint
 
-Improvements:
-
-
 ## Changes in 0.18.5 (2021-03-11)
-
-✨ Features
-
- * 
-
-🙌 Improvements
-
- * 
 
 🐛 Bugfix
  * VoIP: Fix too quick call answer failure (vector-im/element-ios/issues/4109).
  * Crypto: Duplicate message index after using the share extension (vector-im/element-ios#4104)
 
-⚠️ API Changes
-
- * 
-
-🗣 Translations
-
- * 
-    
-🧱 Build
-
- * 
-
 Others
 
  * Ignore event editors other than the original sender.
 
-Improvements:
-
-
 ## Changes in 0.18.4 (2021-03-03)
-
-✨ Features
-
- * 
-
-🙌 Improvements
-
- * 
 
 🐛 Bugfix
  * MXCrossSigning: Fix setupWithPassword method crash when a grace period is enabled (Fix vector-im/element-ios#4099).
 
-⚠️ API Changes
-
- * 
-
-🗣 Translations
-
- * 
-    
-🧱 Build
-
- * 
-
-Others
-
- * 
-
-Improvements:
-
-
 ## Changes in 0.18.3 (2021-02-26)
-
-✨ Features
-
- * 
-
-🙌 Improvements
-
- * 
 
 🐛 Bugfix
  * Fix connection state & ice connection failures (vector-im/element-ios/issues/4039).
 
-⚠️ API Changes
-
- * 
-
-🗣 Translations
-
- * 
-    
-🧱 Build
-
- * 
-
-Others
-
- * 
-
-Improvements:
-
-
 ## Changes in 0.18.2 (2021-02-24)
-
-✨ Features
-
- * 
 
 🙌 Improvements
 
@@ -639,31 +272,12 @@ Improvements:
 🐛 Bugfix
  * Fix calls from my own users (vector-im/element-ios/issues/4031).
 
-⚠️ API Changes
-
- * 
-
-🗣 Translations
-
- * 
-    
 🧱 Build
 
  * build.sh: Add xcframework argument to build a universal MatrixSDK.xcframework
  * MatrixSDKTests-macOS: Remove tests from macOS profile and archive builds to match iOS.
 
-Others
-
- * 
-
-Improvements:
-
-
 ## Changes in 0.18.1 (2021-02-12)
-
-✨ Features
-
- * 
 
 🙌 Improvements
 
@@ -673,30 +287,7 @@ Improvements:
  * Support VP8/VP9 codecs in video calls (vector-im/element-ios/issues/4026).
  * Handle call rejects from other devices (vector-im/element-ios/issues/4030).
 
-⚠️ API Changes
-
- * 
-
-🗣 Translations
-
- * 
-    
-🧱 Build
-
- * 
-
-Others
-
- * 
-
-Improvements:
-
-
 ## Changes in 0.18.0 (2021-02-11)
-
-✨ Features
-
- * 
 
 🙌 Improvements
 
@@ -710,30 +301,11 @@ Improvements:
 🐛 Bugfix
  * MXRoomSummary: directUserId may be missing (null) for a direct chat if it was joined on another device.
 
-⚠️ API Changes
-
- * 
-
-🗣 Translations
-
- * 
-    
-🧱 Build
-
- * 
-
 Others
 
  * README: Fix a couple of typos and improve consistency of the README.
 
-Improvements:
-
-
 ## Changes in 0.17.11 (2021-02-03)
-
-✨ Features
-
- * 
 
 🙌 Improvements
 
@@ -751,30 +323,7 @@ Improvements:
  * MX3PidAddManager: Use a non empty client_secret to discover /account/3pid/add flows (vector-im/element-ios/issues/3966).
  * VoIP: Fix camera indicator when video call answered elsewhere (vector-im/element-ios/issues/3971).
 
-⚠️ API Changes
-
- * 
-
-🗣 Translations
-
- * 
-    
-🧱 Build
-
- * 
-
-Others
-
- * 
-
-Improvements:
-
-
 ## Changes in 0.17.10 (2021-01-27)
-
-✨ Features
-
- * 
 
 🙌 Improvements
 
@@ -785,94 +334,17 @@ Improvements:
  * MXBackgroundSyncService: Clear the bg sync crypto db if needed (vector-im/element-ios/issues/3956).
  * MXCrypto: Add a workaround when the megolm key is not shared to all members (vector-im/element-ios/issues/3807).
 
-⚠️ API Changes
-
- * 
-
-🗣 Translations
-
- * 
-    
-🧱 Build
-
- * 
-
-Others
-
- * 
-
-Improvements:
-
-
 ## Changes in 0.17.9 (2021-01-18)
-
-✨ Features
-
- * 
-
-🙌 Improvements
-
- * 
 
 🐛 Bugfix
  * MXEvent: Fix a regression on edits and replies in e2ee rooms (vector-im/element-ios/issues/3944).
 
-⚠️ API Changes
-
- * 
-
-🗣 Translations
-
- * 
-    
-🧱 Build
-
- * 
-
-Others
-
- * 
-
-Improvements:
-
-
 ## Changes in 0.17.8 (2021-01-15)
-
-✨ Features
-
- * 
-
-🙌 Improvements
-
- * 
 
 🐛 Bugfix
  * Avoid calling background task expiration handlers in app extensions (vector-im/element-ios/issues/3935).
 
-⚠️ API Changes
-
- * 
-
-🗣 Translations
-
- * 
-    
-🧱 Build
-
- * 
-
-Others
-
- * 
-
-Improvements:
-
-
 ## Changes in 0.17.7 (2021-01-14)
-
-✨ Features
-
- * 
 
 🙌 Improvements
 
@@ -888,52 +360,10 @@ Improvements:
 
  * MXLoginSSOFlow: Use unstable identity providers field while the MSC2858 is not approved.
 
-🗣 Translations
-
- * 
-    
-🧱 Build
-
- * 
-
-Others
-
- * 
-
-Improvements:
-
-
 ## Changes in 0.17.6 (2020-12-18)
-
-✨ Features
-
- * 
-
-🙌 Improvements
-
- * 
 
 🐛 Bugfix
  * MXUIKitBackgroundTask: Handle invalid identifier case, introduce a threshold for background time remaining, set expiration handler in initAndStart.
-
-⚠️ API Changes
-
- * 
-
-🗣 Translations
-
- * 
-    
-🧱 Build
-
- * 
-
-Others
-
- * 
-
-Improvements:
-
 
 ## Changes in 0.17.5 (2020-12-16)
 
@@ -954,21 +384,6 @@ Improvements:
 
  *
 
-🗣 Translations
-
- * 
-    
-🧱 Build
-
- * 
-
-Others
-
- * 
-
-Improvements:
-
-
 ## Changes in 0.17.4 (2020-12-02)
 
 ✨ Features
@@ -988,26 +403,7 @@ Improvements:
 
  * MXRoomSummary: Add a property to indicate room membership transition state.
 
-🗣 Translations
-
- * 
-    
-🧱 Build
-
- * 
-
-Others
-
- * 
-
-Improvements:
-
-
 ## Changes in 0.17.3 (2020-11-24)
-
-✨ Features
-
- * 
 
 🙌 Improvements
 
@@ -1017,67 +413,13 @@ Improvements:
  * MXOlmDevice: Make usage of libolm data process-safe (vector-im/element-ios/3817).
  * MXCrypto: Use MXCryptoMigration to purge all one time keys because some may be bad (vector-im/element-ios/3818).
 
-⚠️ API Changes
-
- * 
-
-🗣 Translations
-
- * 
-    
-🧱 Build
-
- * 
-
-Others
-
- * 
-
-Improvements:
-
-
 ## Changes in 0.17.2 (2020-11-17)
-
-✨ Features
-
- * 
-
-🙌 Improvements
-
- * 
 
 🐛 Bugfix
  * Podspec: Fix arm64 simulator issue with JitsiMeetSDK.
  * Realm: Stick on 10.1.2 because the CI cannot build.
 
-⚠️ API Changes
-
- * 
-
-🗣 Translations
-
- * 
-    
-🧱 Build
-
- * 
-
-Others
-
- * 
-
-Improvements:
-
-
 ## Changes in 0.17.1 (2020-11-17)
-
-✨ Features
-
- * 
-
-🙌 Improvements
-
- * 
 
 🐛 Bugfix
  * 
@@ -1087,27 +429,8 @@ Improvements:
  * Update Realm to 10.2.1 and CocoaPods to 1.10.0.
  * CocoaPods 1.10.0 is mandatory.
 
-🗣 Translations
-
- * 
-    
-🧱 Build
-
- * 
-
-Others
-
- * 
-
  
-Improvements:
-
-
  ## Changes in 0.17.0 (2020-11-13)
-
-✨ Features
-
- * 
 
 🙌 Improvements
 
@@ -1124,24 +447,8 @@ Improvements:
 
  * Xcode 12 is now mandatory for using the JingleCallStack sub pod.
 
-🗣 Translations
-
- * 
-    
-🧱 Build
-
- * 
-
-Others
-
- * 
-
 
 ## Changes in 0.16.20 (2020-10-27)
-
-✨ Features
-
- * 
 
 🙌 Improvements
 
@@ -1157,26 +464,7 @@ Others
 
  * SwiftSupport subspec removed. Swift is default now.
 
-🗣 Translations
-
- * 
-    
-🧱 Build
-
- * 
-
-Others
-
- * 
-
-Improvements:
-
-
 ## Changes in 0.16.19 (2020-10-14)
-
-✨ Features
-
- * 
 
 🙌 Improvements
 
@@ -1188,62 +476,12 @@ Improvements:
  * Tests: Fix testMXDeviceListDidUpdateUsersDevicesNotification.
  * MXCrossSigning: Trust cross-signing because we locally trust the device that created it.
 
-⚠️ API Changes
-
- * 
-
-🗣 Translations
-
- * 
-    
-🧱 Build
-
- * 
-
-Others
-
- * 
-
-Improvements:
-
-
 ## Changes in 0.16.18 (2020-10-13)
-
-✨ Features
-
- * 
-
-🙌 Improvements
-
- * 
 
 🐛 Bugfix
  * Fix nonstring msgtyped room messages, by removing msgtype from the wire and prev contents. 
 
-⚠️ API Changes
-
- * 
-
-🗣 Translations
-
- * 
-    
-🧱 Build
-
- * 
-
-Others
-
- * 
-
-Improvements:
-
-
 ## Changes in 0.16.17 (2020-10-09)
-
-✨ Features
-
- * 
 
 🙌 Improvements
 
@@ -1254,25 +492,6 @@ Improvements:
  * MXCrypto: Send MXCrossSigningMyUserDidSignInOnNewDeviceNotification and MXDeviceListDidUpdateUsersDevicesNotification on the main thread.
  * MXCrossSigning: Do not send MXCrossSigningMyUserDidSignInOnNewDeviceNotification again if the device has been verified from another thread.
  
-⚠️ API Changes
-
- * 
-
-🗣 Translations
-
- * 
-    
-🧱 Build
-
- * 
-
-Others
-
- * 
-
-Improvements:
-
-
 ## Changes in 0.16.16 (2020-09-30)
 
 Features:
