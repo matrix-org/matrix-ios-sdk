@@ -587,6 +587,9 @@
     return NO;
 }
 
+/**
+ Returns the heroes from the serverRoomSummary, excluding any of the specified user IDs.
+ */
 - (NSArray<NSString *> *)filteredHeroesFromServerRoomSummary:(MXRoomSyncSummary *)serverRoomSummary excludingUserIDs:(NSArray<NSString *> *)excludedUserIDs
 {
     NSMutableArray<NSString*> *filteredHeroes = [NSMutableArray arrayWithCapacity:serverRoomSummary.heroes.count];
@@ -601,6 +604,9 @@
     return filteredHeroes;
 }
 
+/**
+ Returns the members array, excluding any members who match one of the specified user IDs.
+ */
 - (NSArray<MXRoomMember *> *)filteredMembersFromMembers:(NSArray<MXRoomMember *> *)members excludingUserIDs:(NSArray<NSString *> *)excludedUserIDs
 {
     NSMutableArray<MXRoomMember*> *filteredMembers = [NSMutableArray arrayWithCapacity:members.count];

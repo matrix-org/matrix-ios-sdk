@@ -5,7 +5,7 @@ Changes to be released in next version
  * 
 
 🙌 Improvements
- * 
+ * MXRoomSummaryUpdater: Add variants of updateSummaryDisplayname and updateSummaryAvatar methods that can exclude specified user IDs (vector-im/element-ios/issues/4609).
 
 🐛 Bugfix
  * 
