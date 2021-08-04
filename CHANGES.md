@@ -1,10 +1,10 @@
 ## Changes in 0.19.6 (2021-07-29)
 
 🐛 Bugfix
- * MXCryptoStore: Keep current store version after resetting data to avoid dead state on an initial sync (vector-im/element-ios/issues/4594).
- * Prevent session pause until reject/hangup event is sent (vector-im/element-ios/issues/4612).
+ * MXCryptoStore: Keep current store version after resetting data to avoid dead state on an initial sync ([#4594](https://github.com/vector-im/element-ios/issues/4594)).
+ * Prevent session pause until reject/hangup event is sent ([#4612](https://github.com/vector-im/element-ios/issues/4612)).
  * Only post identity server changed notification if the server actually changed.
- * Fix audio routing issues for Bluetooth devices (vector-im/element-ios/issues/4622).
+ * Fix audio routing issues for Bluetooth devices ([#4622](https://github.com/vector-im/element-ios/issues/4622)).
 
 Others
 
@@ -14,29 +14,29 @@ Others
 
 🙌 Improvements
 
- * MXRoomSummary: Cache local unread event count (vector-im/element-ios/issues/4585).
+ * MXRoomSummary: Cache local unread event count ([#4585](https://github.com/vector-im/element-ios/issues/4585)).
 
 🐛 Bugfix
- * MXCryptoStore: Use UI background task to make sure that write operations complete (vector-im/element-ios/issues/4579).
+ * MXCryptoStore: Use UI background task to make sure that write operations complete ([#4579](https://github.com/vector-im/element-ios/issues/4579)).
 
 ## Changes in 0.19.4 (2021-07-15)
 
 🙌 Improvements
 
- * MXTools: Default to 1080p when converting a video (vector-im/element-ios/issues/4478).
+ * MXTools: Default to 1080p when converting a video ([#4478](https://github.com/vector-im/element-ios/issues/4478)).
  * MXEvent: add support for voice messages
- * MXRoom: Add support for sending slow motion videos using AVAsset (vector-im/element-ios/issues/4483).
+ * MXRoom: Add support for sending slow motion videos using AVAsset ([#4483](https://github.com/vector-im/element-ios/issues/4483)).
  * MXSendReplyEventStringsLocalizable: Added senderSentAVoiceMessage property
 
 🐛 Bugfix
  * Fix QR self verification with QR code (#1147)
  * VoIP: Check for virtual users on attended call transfers.
- * MXBackgroundCryptoStore: Remove read-only Realm and try again if Olm account not found in crypto store (vector-im/element-ios/issues/4534).
+ * MXBackgroundCryptoStore: Remove read-only Realm and try again if Olm account not found in crypto store ([#4534](https://github.com/vector-im/element-ios/issues/4534)).
 
 ⚠️ API Changes
 
  * MXSDKOptions: Add videoConversionPresetName to customise video conversion quality.
- * MXRoom: Added duration and sample parameters on the sendVoiceMessage method (vector-im/element-ios/issues/4090)
+ * MXRoom: Added duration and sample parameters on the sendVoiceMessage method ([#4090](https://github.com/vector-im/element-ios/issues/4090))
 
 Others
 
@@ -47,8 +47,8 @@ Others
 
 🙌 Improvements
 
- * MXDehydrationService: Support full rehydration feature (vector-im/element-ios/issues/1117).
- * MXSDKOptions: Add wellknownDomainUrl to customise the domain for wellknown (vector-im/element-ios/issues/#4489).
+ * MXDehydrationService: Support full rehydration feature ([#1117](https://github.com/vector-im/element-ios/issues/1117)).
+ * MXSDKOptions: Add wellknownDomainUrl to customise the domain for wellknown ([##4489](https://github.com/vector-im/element-ios/issues/#4489)).
  * MXSession: Refresh homeserverWellknown on every start.
  * MXRoom: Added support for posting `m.image`s with BlurHash (MSC 2448).
  * VoIP: Implement bridged version for call transfers.
@@ -77,27 +77,27 @@ Others
 
  * MXRoomLastMessage: Use MXKeyProvider methods to encrypt/decrypt last message dictionary.
  * VoIP: Change hold direction to send-only.
- * Encrypted Media: Remove redundant and undocumented mimetype fields from encrypted attachments (vector-im/element-ios/issues/4303).
- * MXRecoveryService: Expose checkPrivateKey to validate a private key (vector-im/element-ios/issues/4430).
+ * Encrypted Media: Remove redundant and undocumented mimetype fields from encrypted attachments ([#4303](https://github.com/vector-im/element-ios/issues/4303)).
+ * MXRecoveryService: Expose checkPrivateKey to validate a private key ([#4430](https://github.com/vector-im/element-ios/issues/4430)).
  * VoIP: Use headphones and Bluetooth devices when available for calls.
 
 🐛 Bugfix
- * MXSession: Fix app that can fail to resume (vector-im/element-ios/issues/4417).
- * MXRealmCryptoStore: Run migration once before opening read-only Realms (vector-im/element-ios/issues/4418).
- * VoIP: Handle offers when peer connection is stable (vector-im/element-ios/issues/4421).
+ * MXSession: Fix app that can fail to resume ([#4417](https://github.com/vector-im/element-ios/issues/4417)).
+ * MXRealmCryptoStore: Run migration once before opening read-only Realms ([#4418](https://github.com/vector-im/element-ios/issues/4418)).
+ * VoIP: Handle offers when peer connection is stable ([#4421](https://github.com/vector-im/element-ios/issues/4421)).
  * MXEventTimeline: Fix regression on clear cache where the last message of an encrypted room is not encrypted.
- * MXBackgroundSyncService: Make credentials public (vector-im/element-ios/issues/3695).
- * MXCredentials: Implement equatable & hashable methods (vector-im/element-ios/issues/3695).
+ * MXBackgroundSyncService: Make credentials public ([#3695](https://github.com/vector-im/element-ios/issues/3695)).
+ * MXCredentials: Implement equatable & hashable methods ([#3695](https://github.com/vector-im/element-ios/issues/3695)).
 
 ⚠️ API Changes
 
- * MXRoomSummary: `lastMessageEvent` property removed for performance reasons (vector-im/element-ios/issues/4360).
+ * MXRoomSummary: `lastMessageEvent` property removed for performance reasons ([#4360](https://github.com/vector-im/element-ios/issues/4360)).
  * MXRoomSummary: All properties about lastMessage are moved into `lastMessage` property.
  * MXSession: Does not compute anymore last events for every room summaries by default. Use -[MXSession eventWithEventId:inRoom:success:failure:] method to load the last event for a room summary.
- * MXRoom: Added method for seding voice messages (vector-im/element-ios/issues/4090).
- * MXMediaManager: Added `mimeType` param to download encrypted media methods (vector-im/element-ios/issues/4303).
- * MXEncryptedContentFile: `mimetype` parameter removed (vector-im/element-ios/issues/4303).
- * MXEncryptedAttachments: `mimetype` parameters removed from encrypt attachment methods (vector-im/element-ios/issues/4303).
+ * MXRoom: Added method for seding voice messages ([#4090](https://github.com/vector-im/element-ios/issues/4090)).
+ * MXMediaManager: Added `mimeType` param to download encrypted media methods ([#4303](https://github.com/vector-im/element-ios/issues/4303)).
+ * MXEncryptedContentFile: `mimetype` parameter removed ([#4303](https://github.com/vector-im/element-ios/issues/4303)).
+ * MXEncryptedAttachments: `mimetype` parameters removed from encrypt attachment methods ([#4303](https://github.com/vector-im/element-ios/issues/4303)).
 
 🧱 Build
 
@@ -107,30 +107,30 @@ Others
 
 ✨ Features
 
- * Spaces: Support Space room type (vector-im/element-ios/issues/4069).
+ * Spaces: Support Space room type ([#4069](https://github.com/vector-im/element-ios/issues/4069)).
 
 🙌 Improvements
 
- * MXSession: Cache initial sync response until it is fully handled (vector-im/element-ios/issues/4317).
+ * MXSession: Cache initial sync response until it is fully handled ([#4317](https://github.com/vector-im/element-ios/issues/4317)).
  * MXStore: New commit method accepting a completion block.
- * MXCrypto: Decrypt events asynchronously and no more on the main thread )(vector-im/element-ios/issues/4306).
+ * MXCrypto: Decrypt events asynchronously and no more on the main thread )([#4306](https://github.com/vector-im/element-ios/issues/4306)).
  * MXSession: Add the decryptEvents method to decypt a bunch of events asynchronously.
  * MXSession: Make the eventWithEventId method decrypt the event if needed.
  * MXEventTimeline: Add NSCopying implementation so that another pagination can be done on the same set of data.
  * MXCrypto: eventDeviceInfo: Do not synchronise anymore the operation with the decryption queue.
  * MXRoomSummary: Improve reset resetLastMessage to avoid pagination loop and to limit number of decryptions.
- * MXSession: Limit the number of decryptions when processing an initial sync (vector-im/element-ios/issues/4307).
- * Adapt sync response models to new sync API (vector-im/element-ios/issues/4309).
+ * MXSession: Limit the number of decryptions when processing an initial sync ([#4307](https://github.com/vector-im/element-ios/issues/4307)).
+ * Adapt sync response models to new sync API ([#4309](https://github.com/vector-im/element-ios/issues/4309)).
  * MXKeyBackup: Do not reset the backup if forceRefresh() is called too early.
  * Pod: Update Realm to 10.7.6.
  * Pod: Update Jitsi to 3.5.0.
  * Pod: Update OLMKit to 3.2.4.
- * MXRealmCryptoStore: Use Realm instances as read-only in background store (vector-im/element-ios/issues/4352).
- * MXLog: centralised logging facility, use everywhere instead of NSLog (vector-im/element-ios/issues/4351).
+ * MXRealmCryptoStore: Use Realm instances as read-only in background store ([#4352](https://github.com/vector-im/element-ios/issues/4352)).
+ * MXLog: centralised logging facility, use everywhere instead of NSLog ([#4351](https://github.com/vector-im/element-ios/issues/4351)).
 
 🐛 Bugfix
- * MXRoomSummary: Fix decryption of the last message when it is edited (vector-im/element-ios/issues/4322).
- * MXCall: Check remote partyId for select_answer events (vector-im/element-ios/issues/4337).
+ * MXRoomSummary: Fix decryption of the last message when it is edited ([#4322](https://github.com/vector-im/element-ios/issues/4322)).
+ * MXCall: Check remote partyId for select_answer events ([#4337](https://github.com/vector-im/element-ios/issues/4337)).
  * MXSession: Fix used initial sync cache.
 
 ⚠️ API Changes
@@ -159,7 +159,7 @@ Others
  * VoIP: Implement asserted identity for calls: MSC3086 (matrix-org/matrix-doc/pull/3086).
 
 🐛 Bugfix
- * MXTools: Fix bad linkification of matrix alias and URL (vector-im/element-ios/issues/4258).
+ * MXTools: Fix bad linkification of matrix alias and URL ([#4258](https://github.com/vector-im/element-ios/issues/4258)).
  * MXRoomSummary: Fix roomType property deserialization issue.
  * MXCall: Disable call transferee capability & fix call transfer feature check.
 
@@ -179,57 +179,57 @@ Others
 
 🙌 Improvements
 
- * MXHTTPOperation: Expose the HTTP response (vector-im/element-ios/issues/4206).
+ * MXHTTPOperation: Expose the HTTP response ([#4206](https://github.com/vector-im/element-ios/issues/4206)).
  * MXRoomPowerLevels: Handle undefined values and add init with default spec values.
  * MXRoomCreationParameters: Add roomType and powerLevelContentOverride properties. Add initial state events update method.
  * MXResponse: Add convenient uncurry method to convert a Swift method into Objective-C.
  * Add MXRoomInitialStateEventBuilder that enables to build initial state events.
 
 🐛 Bugfix
- * MXCrypto: Disable optimisation on room members list to make sure we share keys to all (vector-im/element-ios/issues/3807).
+ * MXCrypto: Disable optimisation on room members list to make sure we share keys to all ([#3807](https://github.com/vector-im/element-ios/issues/3807)).
 
 ## Changes in 0.18.9 (2021-04-16)
 
 🐛 Bugfix
-* Notifications: Fix sender display name that can miss (vector-im/element-ios/issues/#4222). 
+* Notifications: Fix sender display name that can miss ([##4222](https://github.com/vector-im/element-ios/issues/#4222)). 
 
 ## Changes in 0.18.8 (2021-04-14)
 
 🐛 Bugfix
- * MXSession: Fix deadlock regression in resume() (vector-im/element-ios/issues/4202).
- * MXRoomMembers: Fix wrong view of room members when paginating (vector-im/element-ios/issues/4204).
+ * MXSession: Fix deadlock regression in resume() ([#4202](https://github.com/vector-im/element-ios/issues/4202)).
+ * MXRoomMembers: Fix wrong view of room members when paginating ([#4204](https://github.com/vector-im/element-ios/issues/4204)).
 
 ## Changes in 0.18.7 (2021-04-09)
 
 🙌 Improvements
 
- * Create secret storage with a given private key (vector-im/element-ios/issues/4189).
+ * Create secret storage with a given private key ([#4189](https://github.com/vector-im/element-ios/issues/4189)).
  * MXAsyncTaskQueue: New tool to run asynchronous tasks one at a time.
- * MXRestClient: Add the dehydratedDevice() method to get the dehydrated device data (vector-im/element-ios/issues/4194).
+ * MXRestClient: Add the dehydratedDevice() method to get the dehydrated device data ([#4194](https://github.com/vector-im/element-ios/issues/4194)).
 
 🐛 Bugfix
  * Notifications: Fix background sync out of memory (vector-im/element-ios#3957).
  * Notifications: MXBackgroundService: Keep all cached sync responses until there are processed by MXSession (vector-im/element-ios#4074).
- * Remove padding from base64 encoded `iv` value (vector-im/element-ios/issues/4172).
+ * Remove padding from base64 encoded `iv` value ([#4172](https://github.com/vector-im/element-ios/issues/4172)).
  * Check for null before changing a user's displayname or avatar URL based on an m.room.member event.
 
 ## Changes in 0.18.6 (2021-03-24)
 
 🙌 Improvements
 
- * Support room type as described in MSC1840 (vector-im/element-ios/issues/4050).
- * Pods: Update JitsiMeetSDK, OHHTTPStubs, Realm (vector-im/element-ios/issues/4120).
+ * Support room type as described in MSC1840 ([#4050](https://github.com/vector-im/element-ios/issues/4050)).
+ * Pods: Update JitsiMeetSDK, OHHTTPStubs, Realm ([#4120](https://github.com/vector-im/element-ios/issues/4120)).
  * MXCrypto: Do not load room members in e2e rooms after an initial sync.
- * MXRoomSummary: Add enableTrustTracking() to compute and maintain trust value for the given room (vector-im/element-ios/issues/4115).
+ * MXRoomSummary: Add enableTrustTracking() to compute and maintain trust value for the given room ([#4115](https://github.com/vector-im/element-ios/issues/4115)).
  * VoIP: Virtual rooms implementation.
- * MXCrypto: Split network request `/keys/query` into smaller requests (250 users max) (vector-im/element-ios/issues/4123).
+ * MXCrypto: Split network request `/keys/query` into smaller requests (250 users max) ([#4123](https://github.com/vector-im/element-ios/issues/4123)).
 
 🐛 Bugfix
  * MXDeviceList: Fix memory leak.
  * MXDeviceListOperation: Fix memory leak.
  * MXRoomState/MXRoomMembers: Fix memory leak and copying.
- * MXKeyBackup: Add sanity checks to avoid crashes (vector-im/element-ios/issues/4113).
- * MXTools: Avoid releasing null pointer to fix crash on M1 simulator (vector-im/element-ios/issues/4140)
+ * MXKeyBackup: Add sanity checks to avoid crashes ([#4113](https://github.com/vector-im/element-ios/issues/4113)).
+ * MXTools: Avoid releasing null pointer to fix crash on M1 simulator ([#4140](https://github.com/vector-im/element-ios/issues/4140))
 
 🧱 Build
 
@@ -243,7 +243,7 @@ Others
 ## Changes in 0.18.5 (2021-03-11)
 
 🐛 Bugfix
- * VoIP: Fix too quick call answer failure (vector-im/element-ios/issues/4109).
+ * VoIP: Fix too quick call answer failure ([#4109](https://github.com/vector-im/element-ios/issues/4109)).
  * Crypto: Duplicate message index after using the share extension (vector-im/element-ios#4104)
 
 Others
@@ -258,7 +258,7 @@ Others
 ## Changes in 0.18.3 (2021-02-26)
 
 🐛 Bugfix
- * Fix connection state & ice connection failures (vector-im/element-ios/issues/4039).
+ * Fix connection state & ice connection failures ([#4039](https://github.com/vector-im/element-ios/issues/4039)).
 
 ## Changes in 0.18.2 (2021-02-24)
 
@@ -270,7 +270,7 @@ Others
  * Crypto: Upgrade OLMKit(3.2.2).
 
 🐛 Bugfix
- * Fix calls from my own users (vector-im/element-ios/issues/4031).
+ * Fix calls from my own users ([#4031](https://github.com/vector-im/element-ios/issues/4031)).
 
 🧱 Build
 
@@ -281,22 +281,22 @@ Others
 
 🙌 Improvements
 
- * MXCredentials: Expose additional server login response data (vector-im/element-ios/issues/4024).
+ * MXCredentials: Expose additional server login response data ([#4024](https://github.com/vector-im/element-ios/issues/4024)).
 
 🐛 Bugfix
- * Support VP8/VP9 codecs in video calls (vector-im/element-ios/issues/4026).
- * Handle call rejects from other devices (vector-im/element-ios/issues/4030).
+ * Support VP8/VP9 codecs in video calls ([#4026](https://github.com/vector-im/element-ios/issues/4026)).
+ * Handle call rejects from other devices ([#4030](https://github.com/vector-im/element-ios/issues/4030)).
 
 ## Changes in 0.18.0 (2021-02-11)
 
 🙌 Improvements
 
  * Pods: Update JitsiMeetSDK to 3.1.0.
- * Send VoIP analytics events (vector-im/element-ios/issues/3855).
- * Add hold support for CallKit calls (vector-im/element-ios/issues/3834).
- * Fix video call with web (vector-im/element-ios/issues/3862).
- * VoIP: Call transfers initiation (vector-im/element-ios/issues/3872).
- * VoIP: DTMF support in calls (vector-im/element-ios/issues/3929).
+ * Send VoIP analytics events ([#3855](https://github.com/vector-im/element-ios/issues/3855)).
+ * Add hold support for CallKit calls ([#3834](https://github.com/vector-im/element-ios/issues/3834)).
+ * Fix video call with web ([#3862](https://github.com/vector-im/element-ios/issues/3862)).
+ * VoIP: Call transfers initiation ([#3872](https://github.com/vector-im/element-ios/issues/3872)).
+ * VoIP: DTMF support in calls ([#3929](https://github.com/vector-im/element-ios/issues/3929)).
 
 🐛 Bugfix
  * MXRoomSummary: directUserId may be missing (null) for a direct chat if it was joined on another device.
@@ -311,17 +311,17 @@ Others
 
  * MXMemory: New utility class to track memory usage.
  * MXRealmCryptoStore: Compact Realm DB only once, at the first usage.
- * MXLoginSSOIdentityProvider: Add new `brand` field as described in MSC2858 (vector-im/element-ios/issues/3980).
- * MXSession: Make `handleBackgroundSyncCacheIfRequiredWithCompletion` method public (vector-im/element-ios/issues/3986).
+ * MXLoginSSOIdentityProvider: Add new `brand` field as described in MSC2858 ([#3980](https://github.com/vector-im/element-ios/issues/3980)).
+ * MXSession: Make `handleBackgroundSyncCacheIfRequiredWithCompletion` method public ([#3986](https://github.com/vector-im/element-ios/issues/3986)).
  * MXLogger: Remove log files that are no more part of the rotation.
- * MXLogger: Add an option to limit logs size (vector-im/element-ios/issues/#3903).
+ * MXLogger: Add an option to limit logs size ([##3903](https://github.com/vector-im/element-ios/issues/#3903)).
  * MXRestClient: Handle grace period in `authSessionForRequestWithMethod`.
 
 🐛 Bugfix
- * Background Sync: Use autoreleasepool to limit RAM usage (vector-im/element-ios/issues/3957).
+ * Background Sync: Use autoreleasepool to limit RAM usage ([#3957](https://github.com/vector-im/element-ios/issues/3957)).
  * Background Sync: Do not compact Realm DB from background process.
- * MX3PidAddManager: Use a non empty client_secret to discover /account/3pid/add flows (vector-im/element-ios/issues/3966).
- * VoIP: Fix camera indicator when video call answered elsewhere (vector-im/element-ios/issues/3971).
+ * MX3PidAddManager: Use a non empty client_secret to discover /account/3pid/add flows ([#3966](https://github.com/vector-im/element-ios/issues/3966)).
+ * VoIP: Fix camera indicator when video call answered elsewhere ([#3971](https://github.com/vector-im/element-ios/issues/3971)).
 
 ## Changes in 0.17.10 (2021-01-27)
 
@@ -331,30 +331,30 @@ Others
  * MXRealmCryptoStore: store chain index of shared outbound group sessions to improve re-share session keys
 
 🐛 Bugfix
- * MXBackgroundSyncService: Clear the bg sync crypto db if needed (vector-im/element-ios/issues/3956).
- * MXCrypto: Add a workaround when the megolm key is not shared to all members (vector-im/element-ios/issues/3807).
+ * MXBackgroundSyncService: Clear the bg sync crypto db if needed ([#3956](https://github.com/vector-im/element-ios/issues/3956)).
+ * MXCrypto: Add a workaround when the megolm key is not shared to all members ([#3807](https://github.com/vector-im/element-ios/issues/3807)).
 
 ## Changes in 0.17.9 (2021-01-18)
 
 🐛 Bugfix
- * MXEvent: Fix a regression on edits and replies in e2ee rooms (vector-im/element-ios/issues/3944).
+ * MXEvent: Fix a regression on edits and replies in e2ee rooms ([#3944](https://github.com/vector-im/element-ios/issues/3944)).
 
 ## Changes in 0.17.8 (2021-01-15)
 
 🐛 Bugfix
- * Avoid calling background task expiration handlers in app extensions (vector-im/element-ios/issues/3935).
+ * Avoid calling background task expiration handlers in app extensions ([#3935](https://github.com/vector-im/element-ios/issues/3935)).
 
 ## Changes in 0.17.7 (2021-01-14)
 
 🙌 Improvements
 
- * MXCrypto: Store megolm outbound session to improve send time of first message after app launch (vector-im/element-ios/issues/#3904).
+ * MXCrypto: Store megolm outbound session to improve send time of first message after app launch ([##3904](https://github.com/vector-im/element-ios/issues/#3904)).
  * MXUIKitApplicationStateService: Add this service to track UIKit application state.
 
 🐛 Bugfix
- * MXBackgroundSyncService: Fix `m.buddy` to-device event crashes (vector-im/element-ios/issues/3889).
- * MXBackgroundSyncService: Fix app deadlock created between the app process and the notification service extension process (vector-im/element-ios/issues/3906).
- * MXUIKitBackgroundTask: Avoid thread switching when creating a background task to keep threading model (vector-im/element-ios/issues/3917).
+ * MXBackgroundSyncService: Fix `m.buddy` to-device event crashes ([#3889](https://github.com/vector-im/element-ios/issues/3889)).
+ * MXBackgroundSyncService: Fix app deadlock created between the app process and the notification service extension process ([#3906](https://github.com/vector-im/element-ios/issues/3906)).
+ * MXUIKitBackgroundTask: Avoid thread switching when creating a background task to keep threading model ([#3917](https://github.com/vector-im/element-ios/issues/3917)).
 
 ⚠️ API Changes
 
@@ -374,11 +374,11 @@ Others
 🙌 Improvements
 
  * MXTaggedEvents: Expose "m.tagged_events" according to [MSC2437](https://github.com/matrix-org/matrix-doc/pull/2437).
- * Login flow: Add MXLoginSSOFlow to support multiple SSO Identity Providers ([MSC2858](https://github.com/matrix-org/matrix-doc/pull/2858)) (vector-im/element-ios/issues/3846).
+ * Login flow: Add MXLoginSSOFlow to support multiple SSO Identity Providers ([MSC2858](https://github.com/matrix-org/matrix-doc/pull/2858)) ([#3846](https://github.com/vector-im/element-ios/issues/3846)).
 
 🐛 Bugfix
  * MXRestClient: Fix the format of the request body when querying device keys for users (vector-im/element-ios#3539).
- * MXRoomSummary: Fix crash when decoding lastMessageData (vector-im/element-ios/issues/3879).
+ * MXRoomSummary: Fix crash when decoding lastMessageData ([#3879](https://github.com/vector-im/element-ios/issues/3879)).
 
 ⚠️ API Changes
 
@@ -388,12 +388,12 @@ Others
 
 ✨ Features
 
- * Added MXAes encryption helper class (vector-im/element-ios/issues/3833).
+ * Added MXAes encryption helper class ([#3833](https://github.com/vector-im/element-ios/issues/3833)).
 
 🙌 Improvements
 
- * Pods: Update JitsiMeetSDK to 2.11.0 to be able to build using Xcode 12.2 (vector-im/element-ios/issues/3808).
- * Pods: Update Realm to 10.1.4 to be able to `pod lib lint` using Xcode 12.2 (vector-im/element-ios/issues/3808).
+ * Pods: Update JitsiMeetSDK to 2.11.0 to be able to build using Xcode 12.2 ([#3808](https://github.com/vector-im/element-ios/issues/3808)).
+ * Pods: Update Realm to 10.1.4 to be able to `pod lib lint` using Xcode 12.2 ([#3808](https://github.com/vector-im/element-ios/issues/3808)).
 
 🐛 Bugfix
  * MXSession: Fix a race conditions that prevented MXSession from actually being paused.
@@ -455,7 +455,7 @@ Others
  * Update GZIP to 1.3.0 (vector-im/element-ios/3570).
  * Update Realm to 5.4.8 (vector-im/element-ios/3570).
  * Update JitsiMeetSDK to 2.10.0 (vector-im/element-ios/3570).
- * Introduce MXBackgroundSyncService and helper classes (vector-im/element-ios/issues/3579).
+ * Introduce MXBackgroundSyncService and helper classes ([#3579](https://github.com/vector-im/element-ios/issues/3579)).
 
 🐛 Bugfix
  * 
@@ -469,8 +469,8 @@ Others
 🙌 Improvements
 
  * MXCrossSigning: Detect when cross-signing keys have been reset and send MXCrossSigningDidChangeCrossSigningKeysNotification.
- * MXSession: Introduce handleSyncResponse method to process sync responses from out of the session (vector-im/element-ios/issues/3579).
- * MXJSONModels: Implement JSONDictionary methods for MXSyncResponse and inner classes (vector-im/element-ios/issues/3579).
+ * MXSession: Introduce handleSyncResponse method to process sync responses from out of the session ([#3579](https://github.com/vector-im/element-ios/issues/3579)).
+ * MXJSONModels: Implement JSONDictionary methods for MXSyncResponse and inner classes ([#3579](https://github.com/vector-im/element-ios/issues/3579)).
 
 🐛 Bugfix
  * Tests: Fix testMXDeviceListDidUpdateUsersDevicesNotification.
@@ -503,7 +503,7 @@ Improvements:
 Bugfix:
  * MXBase64Tools: Make sure the SDK decode padded and unpadded base64 strings like other platforms (vector-im/riot-ios/issues/3667).
  * SSSS: Use unpadded base64 for secrets data (vector-im/riot-ios/issues/3669).
- * MXSession: Fix `refreshHomeserverWellknown` method not reading Well-Known from the homeserver domain (vector-im/element-ios/issues/3653).
+ * MXSession: Fix `refreshHomeserverWellknown` method not reading Well-Known from the homeserver domain ([#3653](https://github.com/vector-im/element-ios/issues/3653)).
 
 API Change:
  * 
@@ -556,7 +556,7 @@ Improvements:
  * 
 
 Bugfix:
- * MXCredentials: Try to guess homeserver in credentials when not provided in wellknown (vector-im/element-ios/issues/3448). 
+ * MXCredentials: Try to guess homeserver in credentials when not provided in wellknown ([#3448](https://github.com/vector-im/element-ios/issues/3448)). 
 
 API Change:
  * 
