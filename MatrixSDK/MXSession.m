@@ -882,7 +882,7 @@ typedef void (^MXOnResumeDone)(void);
     // Refresh wellknown data
     [self refreshHomeserverWellknown:nil failure:nil];
     
-    // Get the maxmium file size allowed for uploading media
+    // Get the maximum file size allowed for uploading media
     [self.matrixRestClient maxUploadSize:^(NSInteger maxUploadSize) {
         [self.store storeMaxUploadSize:maxUploadSize];
     } failure:^(NSError *error) {
