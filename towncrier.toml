@@ -1,10 +1,8 @@
 [tool.towncrier]
 name = "Changes in"
-version = "1.2.3"
 filename = "CHANGES.rst"
 directory = "changelog.d"
-template = "changelog.d/_template.rst"
-#issue_format = "dfdsds [\\#{issue}](https://github.com/vector-im/element-ios/issues/{issue})"
+template = "changelog.d/_template.md.jinja"
 
 [[tool.towncrier.type]]
     directory = "feature"
