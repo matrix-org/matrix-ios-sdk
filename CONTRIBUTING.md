@@ -1,29 +1,29 @@
 # Contributing to Matrix iOS SDK, Kit and Element-iOS
 
 Everyone is welcome to contribute code to matrix-ios-sdk, matrix-ios-kit,
-element-ios, provided that theyvcare willing to license their contributions
+element-ios, provided that they are willing to license their contributions
 under the same license as the project itself. We follow a simple
-'inbound=outbound' model for contributions:cthe act of submitting an
-'inbound' contribution means that the contributorcagrees to license the code
-under the same terms as the project's overallc'outbound' license - in this case
-, Apache Software License v2 (see [LICENSE](LICENSE)).
+'inbound=outbound' model for contributions: the act of submitting an
+'inbound' contribution means that the contributor agrees to license the code
+under the same terms as the project's overall 'outbound' license - in this case,
+Apache Software License v2 (see [LICENSE](LICENSE)).
 
 To simplify project management, Matrix iOS SDK and Matrix iOS Kit issues are
-managed in the Element-iOS.
+managed in the Element-iOS
 [repository](https://github.com/vector-im/element-ios/issues).
 
 ## How to contribute
 
 The preferred and easiest way to contribute changes to the project is to fork
-it on github, and then create a pull request to ask us to pull your changes
-into our repo (<https://help.github.com/articles/using-pull-requests/>)
+it on GitHub, and then [create a pull request](https://docs.github.com/en/github/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests) to ask us to pull your changes
+into our repo.
 
 We use GitHub's pull request workflow to review the contribution, and either
 ask you to make any refinements needed or merge it and make them ourselves.
 
 Things that should go into your PR description:
 
-- References to any bugs fixed by the change (in GitHub's `Fixes` notation)
+- References to any bugs fixed by the change (in GitHub's `Fixes` [notation](https://docs.github.com/en/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue#linking-a-pull-request-to-an-issue-using-a-keyword))
 - Notes for the reviewer that might help them to understand why the change
 is necessary or how they might better review it
 - Screenshots or videos if applicable
@@ -41,8 +41,8 @@ Everyone who contributes anything to Matrix is welcome to be listed in the
 to include a change to AUTHORS.rst in your pull request to list yourself and
 a short description of the area(s) you've worked on. Also, we sometimes have
 swag to give away to contributors - if you feel that Matrix-branded apparel is
-missing from your life, please mail us your shipping address to matrix at
-matrix.org and we'll try to fix it :).
+missing from your life, please mail us your shipping address to <em>matrix at
+matrix.org</em> and we'll try to fix it :).
 
 ## Changelog
 
