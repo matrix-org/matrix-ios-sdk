@@ -666,6 +666,9 @@
 		9274AFE81EE580240009BEB6 /* MXCallKitAdapter.h in Headers */ = {isa = PBXBuildFile; fileRef = 9274AFE61EE580240009BEB6 /* MXCallKitAdapter.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		9274AFE91EE580240009BEB6 /* MXCallKitAdapter.m in Sources */ = {isa = PBXBuildFile; fileRef = 9274AFE71EE580240009BEB6 /* MXCallKitAdapter.m */; };
 		9CC8EFC1457B94FB58DFF1F7 /* libPods-MatrixSDK-MatrixSDK-macOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FA84A2BE7767F3645CAEC2AF /* libPods-MatrixSDK-MatrixSDK-macOS.a */; };
+		A02C04B526BC02A700EEE4C9 /* MXBackgroundTask.h in Headers */ = {isa = PBXBuildFile; fileRef = B11976FD236B27220001EC86 /* MXBackgroundTask.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A02C04B626BC02A800EEE4C9 /* MXBackgroundTask.h in Headers */ = {isa = PBXBuildFile; fileRef = B11976FD236B27220001EC86 /* MXBackgroundTask.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A02C04B726BC03A300EEE4C9 /* MXPushGatewayRestClient.h in Headers */ = {isa = PBXBuildFile; fileRef = EC619D9124DD834B00663A80 /* MXPushGatewayRestClient.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		A816247C25F60C7700A46F05 /* MXDeviceListOperationsPoolUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A816247B25F60C7700A46F05 /* MXDeviceListOperationsPoolUnitTests.swift */; };
 		A816248525F60D0300A46F05 /* MXDeviceListOperationsPoolUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A816247B25F60C7700A46F05 /* MXDeviceListOperationsPoolUnitTests.swift */; };
 		B105CD9D261E0B70006EB204 /* MXSpaceChildrenSummary.swift in Sources */ = {isa = PBXBuildFile; fileRef = B105CD9C261E0B70006EB204 /* MXSpaceChildrenSummary.swift */; };
@@ -962,7 +965,7 @@
 		B14EF2A72397E90400758AF0 /* MXPushRuleConditionChecker.h in Headers */ = {isa = PBXBuildFile; fileRef = 32DC15CC1A8CF7AE006F9AD3 /* MXPushRuleConditionChecker.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B14EF2A82397E90400758AF0 /* MXServiceTermsRestClient.h in Headers */ = {isa = PBXBuildFile; fileRef = 3294FD9B22F321B0007F1E60 /* MXServiceTermsRestClient.h */; };
 		B14EF2A92397E90400758AF0 /* MXServerNoticeContent.h in Headers */ = {isa = PBXBuildFile; fileRef = 32954017216385F100E300FC /* MXServerNoticeContent.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		B14EF2AB2397E90400758AF0 /* MXUIKitBackgroundTask.h in Headers */ = {isa = PBXBuildFile; fileRef = B17B2BDA2369FC81009D6650 /* MXUIKitBackgroundTask.h */; };
+		B14EF2AB2397E90400758AF0 /* MXUIKitBackgroundTask.h in Headers */ = {isa = PBXBuildFile; fileRef = B17B2BDA2369FC81009D6650 /* MXUIKitBackgroundTask.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B14EF2AC2397E90400758AF0 /* MXMemoryStore.h in Headers */ = {isa = PBXBuildFile; fileRef = 32D7767B1A27860600FC4AA2 /* MXMemoryStore.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B14EF2AD2397E90400758AF0 /* MXEventAnnotationChunk.h in Headers */ = {isa = PBXBuildFile; fileRef = 327E9AD32284803000A98BC1 /* MXEventAnnotationChunk.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B14EF2AF2397E90400758AF0 /* MXWellKnown.h in Headers */ = {isa = PBXBuildFile; fileRef = 323547D32226D3F500F15F94 /* MXWellKnown.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1020,7 +1023,7 @@
 		B14EF2E52397E90400758AF0 /* MXRoomNameDefaultStringLocalizations.h in Headers */ = {isa = PBXBuildFile; fileRef = 32BA86AD2152A79E008F277E /* MXRoomNameDefaultStringLocalizations.h */; };
 		B14EF2E62397E90400758AF0 /* MXMegolmEncryption.h in Headers */ = {isa = PBXBuildFile; fileRef = 32A151371DAD292400400192 /* MXMegolmEncryption.h */; };
 		B14EF2E72397E90400758AF0 /* MXLRUCache.h in Headers */ = {isa = PBXBuildFile; fileRef = F03EF5021DF01596009DF592 /* MXLRUCache.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		B14EF2E82397E90400758AF0 /* MXSendReplyEventDefaultStringLocalizations.h in Headers */ = {isa = PBXBuildFile; fileRef = B172857A2100D4F60052C51E /* MXSendReplyEventDefaultStringLocalizations.h */; };
+		B14EF2E82397E90400758AF0 /* MXSendReplyEventDefaultStringLocalizations.h in Headers */ = {isa = PBXBuildFile; fileRef = B172857A2100D4F60052C51E /* MXSendReplyEventDefaultStringLocalizations.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B14EF2E92397E90400758AF0 /* MXTools.h in Headers */ = {isa = PBXBuildFile; fileRef = 329FB1771A0A74B100A5E88E /* MXTools.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B14EF2EA2397E90400758AF0 /* MXDeviceListOperation.h in Headers */ = {isa = PBXBuildFile; fileRef = 322691301E5EF77D00966A6E /* MXDeviceListOperation.h */; };
 		B14EF2EB2397E90400758AF0 /* MXRoomAccountData.h in Headers */ = {isa = PBXBuildFile; fileRef = 32481A821C03572900782AD3 /* MXRoomAccountData.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1046,7 +1049,7 @@
 		B14EF2FF2397E90400758AF0 /* MXSendReplyEventStringsLocalizable.h in Headers */ = {isa = PBXBuildFile; fileRef = B17285782100C88A0052C51E /* MXSendReplyEventStringsLocalizable.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B14EF3002397E90400758AF0 /* MXQueuedEncryption.h in Headers */ = {isa = PBXBuildFile; fileRef = 32A151501DAF8A7200400192 /* MXQueuedEncryption.h */; };
 		B14EF3012397E90400758AF0 /* MXIncomingRoomKeyRequestManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 32A30B161FB4813400C8309E /* MXIncomingRoomKeyRequestManager.h */; };
-		B14EF3022397E90400758AF0 /* MXEncryptedAttachments.h in Headers */ = {isa = PBXBuildFile; fileRef = F03EF5061DF071D5009DF592 /* MXEncryptedAttachments.h */; };
+		B14EF3022397E90400758AF0 /* MXEncryptedAttachments.h in Headers */ = {isa = PBXBuildFile; fileRef = F03EF5061DF071D5009DF592 /* MXEncryptedAttachments.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B14EF3032397E90400758AF0 /* MXEventsByTypesEnumeratorOnArray.h in Headers */ = {isa = PBXBuildFile; fileRef = 320BBF3E1D6C81550079890E /* MXEventsByTypesEnumeratorOnArray.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B14EF3042397E90400758AF0 /* MXKeyVerificationTransaction.h in Headers */ = {isa = PBXBuildFile; fileRef = 3252DCB5224BEA610032264F /* MXKeyVerificationTransaction.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B14EF3052397E90400758AF0 /* MXIdentityServerHashDetails.h in Headers */ = {isa = PBXBuildFile; fileRef = B182B08523167A640057972E /* MXIdentityServerHashDetails.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1059,7 +1062,7 @@
 		B14EF30C2397E90400758AF0 /* MXDeviceInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = 32A151401DAF7C0C00400192 /* MXDeviceInfo.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B14EF30D2397E90400758AF0 /* MXEventRelations.h in Headers */ = {isa = PBXBuildFile; fileRef = 327E9ADA2284804500A98BC1 /* MXEventRelations.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B14EF30E2397E90400758AF0 /* MXPushRuleRoomMemberCountConditionChecker.h in Headers */ = {isa = PBXBuildFile; fileRef = 32CAB1051A91EA34008C5BB9 /* MXPushRuleRoomMemberCountConditionChecker.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		B14EF30F2397E90400758AF0 /* SwiftMatrixSDK.h in Headers */ = {isa = PBXBuildFile; fileRef = C61A4CC31E5F38CB00442158 /* SwiftMatrixSDK.h */; };
+		B14EF30F2397E90400758AF0 /* SwiftMatrixSDK.h in Headers */ = {isa = PBXBuildFile; fileRef = C61A4CC31E5F38CB00442158 /* SwiftMatrixSDK.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B14EF3102397E90400758AF0 /* MXEmojiRepresentation.h in Headers */ = {isa = PBXBuildFile; fileRef = 321CFDFD2254E8C4004D31DF /* MXEmojiRepresentation.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B14EF3112397E90400758AF0 /* MXMegolmExportEncryption.h in Headers */ = {isa = PBXBuildFile; fileRef = 324BE4661E3FADB1008D99D4 /* MXMegolmExportEncryption.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B14EF3122397E90400758AF0 /* MXIdentityServerRestClient.h in Headers */ = {isa = PBXBuildFile; fileRef = B113695F230AC9D900E2B2FA /* MXIdentityServerRestClient.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -4146,6 +4149,7 @@
 				32D7767D1A27860600FC4AA2 /* MXMemoryStore.h in Headers */,
 				327E9AD72284803100A98BC1 /* MXEventAnnotationChunk.h in Headers */,
 				323547D52226D3F500F15F94 /* MXWellKnown.h in Headers */,
+				A02C04B526BC02A700EEE4C9 /* MXBackgroundTask.h in Headers */,
 				32FFB4F0217E146A00C96002 /* MXRecoveryKey.h in Headers */,
 				32AF928A240EA3880008A0FD /* MXSecretShareSend.h in Headers */,
 				B14EECE52577F76100448735 /* MXLoginSSOFlow.h in Headers */,
@@ -4223,7 +4227,6 @@
 				32D2CC0423422462002BD8CA /* MX3PidAddManager.h in Headers */,
 				323F877B25546170009E9E67 /* MXBaseProfiler.h in Headers */,
 				324DD2C5246E638B00377005 /* MXAesHmacSha2.h in Headers */,
-				3271877D1DA7CB2F0071C818 /* MXDecrypting.h in Headers */,
 				8EC5110A256822B400EC4E5B /* MXTaggedEvents.h in Headers */,
 				32114A851A262CE000FF2EC4 /* MXStore.h in Headers */,
 				EC60ED67265CFC7200B39A4E /* MXPresenceSyncResponse.h in Headers */,
@@ -4463,6 +4466,7 @@
 				B14EF29A2397E90400758AF0 /* MXRealmCryptoStore.h in Headers */,
 				3297912F23AA126500F7BB9B /* MXKeyVerificationStatusResolver.h in Headers */,
 				B14EF29B2397E90400758AF0 /* MXMemoryRoomStore.h in Headers */,
+				A02C04B726BC03A300EEE4C9 /* MXPushGatewayRestClient.h in Headers */,
 				B14EF29C2397E90400758AF0 /* MXRealmMediaScan.h in Headers */,
 				324AAC812399143400380A66 /* MXKeyVerificationKey.h in Headers */,
 				B1798D0724091A0100308A8F /* MXBase64Tools.h in Headers */,
@@ -4637,6 +4641,7 @@
 				324AAC802399143400380A66 /* MXKeyVerificationJSONModel.h in Headers */,
 				EC60ED9B265CFE1700B39A4E /* MXRoomSyncState.h in Headers */,
 				B14EF30D2397E90400758AF0 /* MXEventRelations.h in Headers */,
+				A02C04B626BC02A800EEE4C9 /* MXBackgroundTask.h in Headers */,
 				32261B8B23C74A230018F1E2 /* MXDeviceTrustLevel.h in Headers */,
 				324DD2B7246C21C700377005 /* MXSecretStorageKeyCreationInfo.h in Headers */,
 				B14EF30F2397E90400758AF0 /* SwiftMatrixSDK.h in Headers */,
@@ -4862,7 +4867,7 @@
 		32C6F92419DD814400EA4E9C /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1160;
+				LastUpgradeCheck = 1250;
 				ORGANIZATIONNAME = matrix.org;
 				TargetAttributes = {
 					32C6F92C19DD814400EA4E9C = {
@@ -4872,20 +4877,21 @@
 					32C6F93719DD814400EA4E9C = {
 						CreatedOnToolsVersion = 6.0;
 						LastSwiftMigration = 1020;
+						ProvisioningStyle = Manual;
 					};
 					B1E09A0D2397FA950057C069 = {
 						CreatedOnToolsVersion = 10.3;
-						ProvisioningStyle = Automatic;
+						ProvisioningStyle = Manual;
 					};
 				};
 			};
 			buildConfigurationList = 32C6F92719DD814400EA4E9C /* Build configuration list for PBXProject "MatrixSDK" */;
 			compatibilityVersion = "Xcode 3.2";
-			developmentRegion = English;
+			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
-				English,
 				en,
+				Base,
 			);
 			mainGroup = 32C6F92319DD814400EA4E9C;
 			productRefGroup = 32C6F92E19DD814400EA4E9C /* Products */;
@@ -5933,6 +5939,7 @@
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
@@ -5994,6 +6001,7 @@
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
@@ -6084,6 +6092,8 @@
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = NO;
+				CODE_SIGN_STYLE = Manual;
+				DEVELOPMENT_TEAM = "";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(SDKROOT)/Developer/Library/Frameworks",
 					"$(inherited)",
@@ -6099,6 +6109,8 @@
 				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = "org.matrix.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=macosx*]" = "";
 				SDKROOT = iphoneos;
 				SWIFT_OBJC_BRIDGING_HEADER = "$(SRCROOT)/MatrixSDKTests/MatrixSDKTests-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -6112,6 +6124,8 @@
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = NO;
+				CODE_SIGN_STYLE = Manual;
+				DEVELOPMENT_TEAM = "";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(SDKROOT)/Developer/Library/Frameworks",
 					"$(inherited)",
@@ -6124,6 +6138,8 @@
 				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = "org.matrix.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=macosx*]" = "";
 				SDKROOT = iphoneos;
 				SWIFT_OBJC_BRIDGING_HEADER = "$(SRCROOT)/MatrixSDKTests/MatrixSDKTests-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
@@ -6195,9 +6211,10 @@
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CODE_SIGN_IDENTITY = "-";
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = "";
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				HEADER_SEARCH_PATHS = "$(inherited)";
 				INFOPLIST_FILE = MatrixSDKTests/Info.plist;
@@ -6207,6 +6224,7 @@
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = "matrix.org.MatrixSDKTests-macOS";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = macosx;
 				SWIFT_OBJC_BRIDGING_HEADER = "$(SRCROOT)/MatrixSDKTests/MatrixSDKTests-Bridging-Header.h";
 			};
@@ -6224,10 +6242,11 @@
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CODE_SIGN_IDENTITY = "-";
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = "";
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				HEADER_SEARCH_PATHS = "$(inherited)";
 				INFOPLIST_FILE = MatrixSDKTests/Info.plist;
@@ -6236,6 +6255,7 @@
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = "matrix.org.MatrixSDKTests-macOS";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = macosx;
 				SWIFT_OBJC_BRIDGING_HEADER = "$(SRCROOT)/MatrixSDKTests/MatrixSDKTests-Bridging-Header.h";
 			};
