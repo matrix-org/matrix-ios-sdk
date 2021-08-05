@@ -255,17 +255,44 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
  */
 - (MXHTTPOperation*)testUserRegistration:(NSString*)username
                                 callback:(void (^)(MXError *mxError))callback;
+/**
+ Make a ping to the registration endpoint to detect a possible registration problem earlier.
+
+ @param username the user name to test (This value must not be nil).
+ @param headers Optional HTTP headers to add to the request.
+ @param callback A block object called when the operation is completed.
+                 It provides a MXError to check to verify if the user can be registered.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)testUserRegistration:(NSString*)username
+                                 headers:(NSDictionary*)headers
+                                callback:(void (^)(MXError *mxError))callback;
 
 /**
  Check whether a username is already in use.
 
- @username the user name to test (This value must not be nil).
+ @param username the user name to test (This value must not be nil).
  @param callback A block object called when the operation is completed.
 
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)isUserNameInUse:(NSString*)username
                            callback:(void (^)(BOOL isUserNameInUse))callback NS_REFINED_FOR_SWIFT;
+
+/**
+ Check whether a username is already in use.
+
+ @param username the user name to test (This value must not be nil).
+ @param headers Optional HTTP headers to add to the request.
+ @param callback A block object called when the operation is completed.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)isUserNameInUse:(NSString*)username
+                            headers:(NSDictionary*)headers
+                           callback:(void (^)(BOOL isUserNameInUse))callback NS_REFINED_FOR_SWIFT;
+
 /**
  Get the list of register flows supported by the home server.
 
@@ -288,7 +315,7 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
 
  At the end of the registration process, the SDK user should be able to construct a MXCredentials object
  from the response of the last registration action request.
- 
+
  @note The caller may provide the device display name by adding @"initial_device_display_name" key
  in the `parameters` dictionary. If the caller does not provide it, the device display name field
  is filled with the device name.
@@ -305,8 +332,36 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
                                    failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
+ Generic registration action request.
+
+ As described in http://matrix.org/docs/spec/client_server/r0.2.0.html#client-authentication some registration flows require to
+ complete several stages in order to complete user registration.
+ This can lead to make several requests to the home server with different kinds of parameters.
+ This generic method with open parameters and response exists to handle any kind of registration flow stage.
+
+ At the end of the registration process, the SDK user should be able to construct a MXCredentials object
+ from the response of the last registration action request.
+
+ @note The caller may provide the device display name by adding @"initial_device_display_name" key
+ in the `parameters` dictionary. If the caller does not provide it, the device display name field
+ is filled with the device name.
+
+ @param parameters the parameters required for the current registration stage
+ @param headers Optional HTTP headers to add to the request.
+ @param success A block object called when the operation succeeds. It provides the raw JSON response
+ from the server.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)registerWithParameters:(NSDictionary*)parameters
+                                   headers:(NSDictionary *)headers
+                                   success:(void (^)(NSDictionary *JSONResponse))success
+                                   failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
+/**
  Register a user.
- 
+
  This method manages the full flow for simple login types and returns the credentials of the newly created matrix user.
 
  @param loginType the login type. Only kMXLoginFlowTypePassword and kMXLoginFlowTypeDummy (m.login.password and m.login.dummy) are supported.
@@ -318,6 +373,25 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)registerWithLoginType:(NSString*)loginType username:(NSString*)username password:(NSString*)password
+                                  success:(void (^)(MXCredentials *credentials))success
+                                  failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
+/**
+ Register a user.
+
+ This method manages the full flow for simple login types and returns the credentials of the newly created matrix user.
+
+ @param loginType the login type. Only kMXLoginFlowTypePassword and kMXLoginFlowTypeDummy (m.login.password and m.login.dummy) are supported.
+ @param username the user id (ex: "@bob:matrix.org") or the user id localpart (ex: "bob") of the user to register. Can be nil.
+ @param password his password.
+ @param headers Optional HTTP headers to add to the request.
+ @param success A block object called when the operation succeeds. It provides credentials to use to create a MXRestClient.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)registerWithLoginType:(NSString*)loginType username:(NSString*)username password:(NSString*)password
+                                  headers:(NSDictionary *)headers
                                   success:(void (^)(MXCredentials *credentials))success
                                   failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
@@ -373,11 +447,11 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
 
  @see the register method for explanation of flows that require to make several request to the
  home server.
- 
+
  @note The caller may provide the device display name by adding @"initial_device_display_name" key
  in the `parameters` dictionary. If the caller does not provide it, the device display name field
  is filled with the device name.
- 
+
  @param parameters the parameters required for the current login stage
  @param success A block object called when the operation succeeds. It provides the raw JSON response
  from the server.
@@ -390,10 +464,33 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
                   failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
+ Generic login action request.
+
+ @see the register method for explanation of flows that require to make several request to the
+ home server.
+
+ @note The caller may provide the device display name by adding @"initial_device_display_name" key
+ in the `parameters` dictionary. If the caller does not provide it, the device display name field
+ is filled with the device name.
+
+ @param parameters the parameters required for the current login stage
+ @param headers Optional HTTP headers to add to the request.
+ @param success A block object called when the operation succeeds. It provides the raw JSON response
+ from the server.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)login:(NSDictionary*)parameters
+                  headers:(NSDictionary *)headers
+                  success:(void (^)(NSDictionary *JSONResponse))success
+                  failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
+/**
  Log a user in.
 
  This method manages the full flow for simple login types and returns the credentials of the logged matrix user.
- 
+
  @note The device display name field is filled with the device name by default.
 
  @param loginType the login type. Only kMXLoginFlowTypePassword (m.login.password) is supported.
@@ -405,6 +502,28 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)loginWithLoginType:(NSString*)loginType username:(NSString*)username password:(NSString*)password
+                               success:(void (^)(MXCredentials *credentials))success
+                               failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
+
+/**
+ Log a user in.
+
+ This method manages the full flow for simple login types and returns the credentials of the logged matrix user.
+
+ @note The device display name field is filled with the device name by default.
+
+ @param loginType the login type. Only kMXLoginFlowTypePassword (m.login.password) is supported.
+ @param username the user id (ex: "@bob:matrix.org") or the user id localpart (ex: "bob") of the user to register.
+ @param password his password.
+ @param headers Optional HTTP headers to add to the request.
+ @param success A block object called when the operation succeeds. It provides credentials to use to create a MXRestClient.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)loginWithLoginType:(NSString*)loginType username:(NSString*)username password:(NSString*)password
+                               headers:(NSDictionary*)headers
                                success:(void (^)(MXCredentials *credentials))success
                                failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 

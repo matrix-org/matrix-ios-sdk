@@ -102,13 +102,14 @@ public extension MXRestClient {
      
      - parameters:
          - username: The user name to test.
+         - headers: Optional HTTP headers to add to the request.
          - completion: A block object called when the operation is completed.
          - inUse: Whether the username is in use
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func isUserNameInUse(_ username: String, completion: @escaping (_ inUse: Bool) -> Void) -> MXHTTPOperation {
-        return __isUserName(inUse: username, callback: completion)
+    @nonobjc @discardableResult func isUserNameInUse(_ username: String, headers: [String: String]? = nil, completion: @escaping (_ inUse: Bool) -> Void) -> MXHTTPOperation {
+        return __isUserName(inUse: username, headers: headers, callback: completion)
     }
     
     /**
@@ -138,13 +139,14 @@ public extension MXRestClient {
      
      - parameters:
          - parameters: the parameters required for the current registration stage
+         - headers: Optional HTTP headers to add to the request.
          - completion: A block object called when the operation completes.
          - response: Provides the raw JSON response from the server.
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func register(parameters: [String: Any], completion: @escaping (_ response: MXResponse<[String: Any]>) -> Void) -> MXHTTPOperation {
-        return __register(withParameters: parameters, success: currySuccess(completion), failure: curryFailure(completion))
+    @nonobjc @discardableResult func register(parameters: [String: Any], headers: [String: String]? = nil, completion: @escaping (_ response: MXResponse<[String: Any]>) -> Void) -> MXHTTPOperation {
+        return __register(withParameters: parameters, headers: headers, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
     
@@ -211,13 +213,14 @@ public extension MXRestClient {
      
      - parameters:
          - parameters: the parameters required for the current login stage
+         - headers: Optional HTTP headers to add to the request.
          - completion: A block object called when the operation completes.
          - response: Provides the raw JSON response from the server.
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func login(parameters: [String: Any], completion: @escaping (_ response: MXResponse<[String: Any]>) -> Void) -> MXHTTPOperation {
-        return __login(parameters, success: currySuccess(completion), failure: curryFailure(completion))
+    @nonobjc @discardableResult func login(parameters: [String: Any], headers: [String: String]? = nil, completion: @escaping (_ response: MXResponse<[String: Any]>) -> Void) -> MXHTTPOperation {
+        return __login(parameters, headers: headers, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
     /**
@@ -229,13 +232,14 @@ public extension MXRestClient {
          - type: the login type. Only `MXLoginFlowType.password` (m.login.password) is supported.
          - username: the user id (ex: "@bob:matrix.org") or the user id localpart (ex: "bob") of the user to authenticate.
          - password: the user's password.
+         - headers: Optional HTTP headers to add to the request.
          - completion: A block object called when the operation succeeds.
          - response: Provides credentials for this user on `success`
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func login(type loginType: MXLoginFlowType = .password, username: String, password: String, completion: @escaping (_ response: MXResponse<MXCredentials>) -> Void) -> MXHTTPOperation {
-        return __login(withLoginType: loginType.identifier, username: username, password: password, success: currySuccess(completion), failure: curryFailure(completion))
+    @nonobjc @discardableResult func login(type loginType: MXLoginFlowType = .password, username: String, password: String, headers: [String: String]? = nil, completion: @escaping (_ response: MXResponse<MXCredentials>) -> Void) -> MXHTTPOperation {
+        return __login(withLoginType: loginType.identifier, username: username, password: password, headers: headers,success: currySuccess(completion), failure: curryFailure(completion))
     }
     
     

@@ -299,8 +299,14 @@ MXAuthAction;
 #pragma mark - Registration operations
 - (MXHTTPOperation *)testUserRegistration:(NSString *)username callback:(void (^)(MXError *mxError))callback
 {
+    return [self testUserRegistration:username headers:nil callback:callback];
+}
+
+- (MXHTTPOperation *)testUserRegistration:(NSString *)username headers:(NSDictionary *)headers callback:(void (^)(MXError *mxError))callback
+{
     // Trigger a fake registration to know whether the user name can be registered
     return [self registerWithParameters:@{@"username": username}
+                                headers:headers
                                 success:nil
                                 failure:^(NSError *error)
             {
@@ -313,7 +319,14 @@ MXAuthAction;
 - (MXHTTPOperation*)isUserNameInUse:(NSString*)username
                            callback:(void (^)(BOOL isUserNameInUse))callback
 {
-    return [self testUserRegistration:username callback:^(MXError *mxError) {
+    return [self isUserNameInUse:username headers:nil callback:callback];
+}
+
+- (MXHTTPOperation*)isUserNameInUse:(NSString*)username
+                            headers:(NSDictionary*)headers
+                           callback:(void (^)(BOOL isUserNameInUse))callback
+{
+    return [self testUserRegistration:username headers:headers callback:^(MXError *mxError) {
 
         BOOL isUserNameInUse = ([mxError.errcode isEqualToString:kMXErrCodeStringUserInUse]);
         callback(isUserNameInUse);
@@ -381,10 +394,26 @@ MXAuthAction;
                                    success:(void (^)(NSDictionary *JSONResponse))success
                                    failure:(void (^)(NSError *error))failure
 {
-    return [self registerOrLogin:MXAuthActionRegister parameters:parameters success:success failure:failure];
+    return [self registerWithParameters:parameters headers:nil success:success failure:failure];
+}
+
+- (MXHTTPOperation*)registerWithParameters:(NSDictionary*)parameters
+                                   headers:(NSDictionary*)headers
+                                   success:(void (^)(NSDictionary *JSONResponse))success
+                                   failure:(void (^)(NSError *error))failure
+{
+    return [self registerOrLogin:MXAuthActionRegister parameters:parameters headers:headers success:success failure:failure];
 }
 
 - (MXHTTPOperation *)registerWithLoginType:(NSString *)loginType username:(NSString *)username password:(NSString *)password
+                                   success:(void (^)(MXCredentials *))success
+                                   failure:(void (^)(NSError *))failure
+{
+    return [self registerWithLoginType:loginType username:username password:password headers:nil success:success failure:failure];
+}
+
+- (MXHTTPOperation *)registerWithLoginType:(NSString *)loginType username:(NSString *)username password:(NSString *)password
+                                   headers:(NSDictionary *)headers
                                    success:(void (^)(MXCredentials *))success
                                    failure:(void (^)(NSError *))failure
 {
@@ -413,7 +442,7 @@ MXAuthAction;
         }
 
         MXWeakify(self);
-        MXHTTPOperation *operation2 = [self registerWithParameters: parameters success:^(NSDictionary *JSONResponse) {
+        MXHTTPOperation *operation2 = [self registerWithParameters: parameters headers: headers success:^(NSDictionary *JSONResponse) {
             MXStrongifyAndReturnIfNil(self);
 
             [self dispatchProcessing:nil andCompletion:^{
@@ -521,12 +550,32 @@ MXAuthAction;
                   success:(void (^)(NSDictionary *JSONResponse))success
                   failure:(void (^)(NSError *error))failure
 {
-    return [self registerOrLogin:MXAuthActionLogin parameters:parameters success:success failure:failure];
+    return [self login:parameters headers:nil success:success failure:failure];
 }
 
-- (MXHTTPOperation *)loginWithLoginType:(NSString *)loginType username:(NSString *)username password:(NSString *)password
+- (MXHTTPOperation*)login:(NSDictionary*)parameters
+                  headers:(NSDictionary*)headers
+                  success:(void (^)(NSDictionary *JSONResponse))success
+                  failure:(void (^)(NSError *error))failure
+{
+    return [self registerOrLogin:MXAuthActionLogin parameters:parameters headers:headers success:success failure:failure];
+}
+
+- (MXHTTPOperation *)loginWithLoginType:(NSString *)loginType
+                               username:(NSString *)username
+                               password:(NSString *)password
                                    success:(void (^)(MXCredentials *))success
                                    failure:(void (^)(NSError *))failure
+{
+    return [self loginWithLoginType:loginType username:username password:password headers:nil success:success failure:failure];
+}
+
+- (MXHTTPOperation *)loginWithLoginType:(NSString *)loginType
+                               username:(NSString *)username
+                               password:(NSString *)password
+                                headers:(NSDictionary *)headers
+                                success:(void (^)(MXCredentials *))success
+                                failure:(void (^)(NSError *))failure
 {
     if (![loginType isEqualToString:kMXLoginFlowTypePassword])
     {
@@ -548,7 +597,7 @@ MXAuthAction;
                                  };
 
     MXWeakify(self);
-    return [self login:parameters
+    return [self login:parameters headers:headers
                success:^(NSDictionary *JSONResponse) {
                    [self dispatchProcessing:nil andCompletion:^{
                        MXStrongifyAndReturnIfNil(self);
@@ -672,7 +721,7 @@ MXAuthAction;
     return [NSString stringWithFormat:@"%@/%@", apiPathPrefix, authActionPath];
 }
 
-- (MXHTTPOperation*)registerOrLogin:(MXAuthAction)authAction parameters:(NSDictionary *)parameters success:(void (^)(NSDictionary *JSONResponse))success failure:(void (^)(NSError *))failure
+- (MXHTTPOperation*)registerOrLogin:(MXAuthAction)authAction parameters:(NSDictionary *)parameters headers:(NSDictionary *)headers success:(void (^)(NSDictionary *JSONResponse))success failure:(void (^)(NSError *))failure
 {
     // If the caller does not provide it, fill the device display name field with the device name
     // Do it only if parameters contains the password field, do make homeserver happy.
@@ -712,6 +761,10 @@ MXAuthAction;
     return [httpClient requestWithMethod:@"POST"
                                     path:[self authActionPath:authAction]
                               parameters:parameters
+                                    data:nil
+                                 headers:headers
+                                 timeout:-1
+                          uploadProgress:nil
                                  success:^(NSDictionary *JSONResponse) {
                                      MXStrongifyAndReturnIfNil(self);
 
