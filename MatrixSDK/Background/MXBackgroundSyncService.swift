@@ -38,7 +38,7 @@ public enum MXBackgroundSyncServiceError: Error {
     }
     
     private let processingQueue: DispatchQueue
-    private let credentials: MXCredentials
+    public let credentials: MXCredentials
     private let syncResponseStoreManager: MXSyncResponseStoreManager
     private var store: MXStore
     private let cryptoStore: MXBackgroundCryptoStore
@@ -502,6 +502,21 @@ public enum MXBackgroundSyncServiceError: Error {
         
         for event in syncResponse.toDevice?.events ?? [] {
             handleToDeviceEvent(event)
+        }
+        
+        if MXSDKOptions.sharedInstance().autoAcceptRoomInvites,
+           let invitedRooms = syncResponse.rooms?.invite {
+            invitedRooms.forEach { roomId, roomSync in
+                MXLog.debug("[MXBackgroundSyncService] handleSyncResponse: Auto-accepting room invite for \(roomId)")
+                restClient.joinRoom(roomId) { response in
+                    switch response {
+                    case .success:
+                        MXLog.debug("[MXBackgroundSyncService] handleSyncResponse: Joined room: \(roomId)")
+                    case .failure(let error):
+                        MXLog.error("[MXBackgroundSyncService] handleSyncResponse: Failed to join room: \(roomId), error: \(error)")
+                    }
+                }
+            }
         }
         
         MXLog.debug("[MXBackgroundSyncService] handleSyncResponse: Next sync token: \(syncResponse.nextBatch)")

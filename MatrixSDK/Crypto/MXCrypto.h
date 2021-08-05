@@ -36,6 +36,7 @@
 #import "MXKeyVerificationManager.h"
 #import "MXCrossSigning.h"
 #import "MXUsersTrustLevelSummary.h"
+#import "MXExportedOlmDevice.h"
 
 @class MXSession;
 
@@ -135,6 +136,17 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
  @param complete a block called in any case when the operation completes.
  */
 + (void)checkCryptoWithMatrixSession:(MXSession*)mxSession complete:(void (^)(MXCrypto *crypto))complete;
+
+/**
+ Stores the exportedOlmDevice related to the credentials into the store.
+
+ @param exportedOlmDevice OlmDevice data to be stored
+ @param credentials credentials related to the exportedOlmDevice
+ @param complete a block called in any case when the operation completes.
+ */
++ (void)rehydrateExportedOlmDevice:(MXExportedOlmDevice*)exportedOlmDevice
+                   withCredentials:(MXCredentials *)credentials
+                          complete:(void (^)(BOOL success))complete;
 
 /**
  Start the crypto module.

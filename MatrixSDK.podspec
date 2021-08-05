@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
 
   s.name         = "MatrixSDK"
-  s.version      = "0.19.0"
+  s.version      = "0.19.6"
   s.summary      = "The iOS SDK to build apps compatible with Matrix (https://www.matrix.org)"
 
   s.description  = <<-DESC
@@ -31,7 +31,7 @@ Pod::Spec.new do |s|
       ss.osx.deployment_target = "10.10"
       
       ss.source_files = "MatrixSDK", "MatrixSDK/**/*.{h,m}", "MatrixSDK/**/*.{swift}"
-      
+      ss.osx.exclude_files = "MatrixSDK/VoIP/MXiOSAudioOutputRoute*.swift"
 
       ss.dependency 'AFNetworking', '~> 4.0.0'
       ss.dependency 'GZIP', '~> 1.3.0'

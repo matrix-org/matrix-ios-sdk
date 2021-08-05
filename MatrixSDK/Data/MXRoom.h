@@ -18,6 +18,7 @@
  */
 
 #import <Foundation/Foundation.h>
+#import <AVFoundation/AVFoundation.h>
 
 #if TARGET_OS_IPHONE
 #import <UIKit/UIKit.h>
@@ -61,6 +62,11 @@ FOUNDATION_EXPORT NSString *const kMXRoomInitialSyncNotification;
  The notification object is the concerned room (MXRoom instance).
  */
 FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
+
+/**
+ Error code when tried to join an already joined room.
+ */
+FOUNDATION_EXPORT NSInteger const kMXRoomAlreadyJoinedErrorCode;
 
 /**
  `MXRoom` is the class
@@ -400,10 +406,38 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
 #endif
                     localEcho:(MXEvent**)localEcho
                       success:(void (^)(NSString *eventId))success
+                      failure:(void (^)(NSError *error))failure;
+
+/**
+ Send an image to the room.
+
+ @param imageData the data of the image to send.
+ @param imageSize the original size of the image.
+ @param mimetype  the image mimetype.
+ @param thumbnail optional thumbnail image (may be nil).
+ @param blurhash optional BlurHash (may be nil).
+ @param localEcho a pointer to a MXEvent object (@see sendMessageWithContent: for details).
+ @param success A block object called when the operation succeeds. It returns
+                the event id of the event generated on the home server
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)sendImage:(NSData*)imageData
+                withImageSize:(CGSize)imageSize
+                     mimeType:(NSString*)mimetype
+#if TARGET_OS_IPHONE
+                 andThumbnail:(UIImage*)thumbnail
+#elif TARGET_OS_OSX
+                 andThumbnail:(NSImage*)thumbnail
+#endif
+                     blurHash:(NSString*)blurhash
+                    localEcho:(MXEvent**)localEcho
+                      success:(void (^)(NSString *eventId))success
                       failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
- Send an video to the room.
+ Send a video to the room.
  
  @param videoLocalURL the local filesystem path of the video to send.
  @param videoThumbnail the UIImage hosting a video thumbnail.
@@ -423,6 +457,28 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
                     localEcho:(MXEvent**)localEcho
                       success:(void (^)(NSString *eventId))success
                       failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
+/**
+ Send a video to the room.
+ 
+ @param videoAsset an AVAsset that represents the video to send.
+ @param videoThumbnail the UIImage hosting a video thumbnail.
+ @param localEcho a pointer to a MXEvent object (@see sendMessageWithContent: for details).
+ @param success A block object called when the operation succeeds. It returns
+                the event id of the event generated on the home server
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)sendVideoAsset:(AVAsset*)videoAsset
+#if TARGET_OS_IPHONE
+                     withThumbnail:(UIImage*)videoThumbnail
+#elif TARGET_OS_OSX
+                     withThumbnail:(NSImage*)videoThumbnail
+#endif
+                         localEcho:(MXEvent**)localEcho
+                           success:(void (^)(NSString *eventId))success
+                           failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Send a file to the room.
@@ -472,6 +528,30 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
                      success:(void (^)(NSString *eventId))success
                      failure:(void (^)(NSError *error))failure
           keepActualFilename:(BOOL)keepActualName NS_REFINED_FOR_SWIFT;
+
+/**
+ Send a voice message to the room.
+ 
+ @param fileLocalURL the local filesystem path of the file to send.
+ @param mimeType (optional) the mime type of the file. Defaults to `audio/ogg`
+ @param duration the length of the voice message in milliseconds
+ @param samples an array of floating point values normalized to [0, 1], boxed within NSNumbers
+ @param localEcho a pointer to a MXEvent object (@see sendMessageWithContent: for details).
+ @param success A block object called when the operation succeeds. It returns
+ the event id of the event generated on the home server
+ @param failure A block object called when the operation fails.
+ @param keepActualName if YES, the filename in the local storage will be kept while sending.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)sendVoiceMessage:(NSURL*)fileLocalURL
+                            mimeType:(NSString*)mimeType
+                            duration:(NSUInteger)duration
+                             samples:(NSArray<NSNumber *> *)samples
+                           localEcho:(MXEvent**)localEcho
+                             success:(void (^)(NSString *eventId))success
+                             failure:(void (^)(NSError *error))failure
+                  keepActualFilename:(BOOL)keepActualName NS_REFINED_FOR_SWIFT;
 
 /**
  Cancel a sending operation.

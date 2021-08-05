@@ -5,15 +5,13 @@ Changes to be released in next version
  * 
 
 🙌 Improvements
- * MXRoomLastMessage: Use MXKeyProvider methods to encrypt/decrypt last message dictionary.
-
-🐛 Bugfix
  * 
 
+🐛 Bugfix
+ * Tests: Fix a crash in various tests from a missing `storeMaxUploadSize` method (#1175).
+
 ⚠️ API Changes
- * MXRoomSummary: `lastMessageEvent` property removed for performance reasons (vector-im/element-ios/issues/4360).
- * MXRoomSummary: All properties about lastMessage are moved into `lastMessage` property.
- * MXSession: Does not compute anymore last events for every room summaries by default. Use -[MXSession eventWithEventId:inRoom:success:failure:] method to load the last event for a room summary.
+ * 
 
 🗣 Translations
  * 
@@ -23,6 +21,199 @@ Changes to be released in next version
 
 Others
  * 
+
+Changes in 0.19.6 (2021-07-29)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
+ * 
+
+🐛 Bugfix
+ * MXCryptoStore: Keep current store version after resetting data to avoid dead state on an initial sync (vector-im/element-ios/issues/4594).
+ * Prevent session pause until reject/hangup event is sent (vector-im/element-ios/issues/4612).
+ * Only post identity server changed notification if the server actually changed.
+ * Fix audio routing issues for Bluetooth devices (vector-im/element-ios/issues/4622).
+
+⚠️ API Changes
+ * 
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * Separated CI jobs into individual actions
+
+Improvements:
+
+
+Changes in 0.19.5 (2021-07-22)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
+ * MXRoomSummary: Cache local unread event count (vector-im/element-ios/issues/4585).
+
+🐛 Bugfix
+ * MXCryptoStore: Use UI background task to make sure that write operations complete (vector-im/element-ios/issues/4579).
+
+⚠️ API Changes
+ * 
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+Improvements:
+
+
+Changes in 0.19.4 (2021-07-15)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
+ * MXTools: Default to 1080p when converting a video (vector-im/element-ios/issues/4478).
+ * MXEvent: add support for voice messages
+ * MXRoom: Add support for sending slow motion videos using AVAsset (vector-im/element-ios/issues/4483).
+ * MXSendReplyEventStringsLocalizable: Added senderSentAVoiceMessage property
+
+🐛 Bugfix
+ * Fix QR self verification with QR code (#1147)
+ * VoIP: Check for virtual users on attended call transfers.
+ * MXBackgroundCryptoStore: Remove read-only Realm and try again if Olm account not found in crypto store (vector-im/element-ios/issues/4534).
+
+⚠️ API Changes
+ * MXSDKOptions: Add videoConversionPresetName to customise video conversion quality.
+ * MXRoom: Added duration and sample parameters on the sendVoiceMessage method (vector-im/element-ios/issues/4090)
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * Fixed a nullability warning and some header warnings.
+
+
+Improvements:
+
+
+Changes in 0.19.3 (2021-06-30)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
+ * MXDehydrationService: Support full rehydration feature (vector-im/element-ios/issues/1117).
+ * MXSDKOptions: Add wellknownDomainUrl to customise the domain for wellknown (vector-im/element-ios/issues/#4489).
+ * MXSession: Refresh homeserverWellknown on every start.
+ * MXRoom: Added support for posting `m.image`s with BlurHash (MSC 2448).
+ * VoIP: Implement bridged version for call transfers.
+ * VoIP: Implement MXiOSAudioOutputRouter.
+
+🐛 Bugfix
+ * 
+
+⚠️ API Changes
+ * MXCall: `audioToSpeaker` property removed. Use `audioOutputRouter` instead.
+ * MXCallStackCall: `audioToSpeaker` property removed. Audio routing should be handled high-level.
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+Improvements:
+
+
+Changes in 0.19.2 (2021-06-24)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
+ * MXSDKOptions: Introduce an option to auto-accept room invites.
+
+🐛 Bugfix
+ * MXSession.homeserverWellknown was no more computed since 0.19.0.
+
+⚠️ API Changes
+ * 
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+Improvements:
+
+
+Changes in 0.19.1 (2021-06-21)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
+ * MXRoomLastMessage: Use MXKeyProvider methods to encrypt/decrypt last message dictionary.
+ * VoIP: Change hold direction to send-only.
+ * Encrypted Media: Remove redundant and undocumented mimetype fields from encrypted attachments (vector-im/element-ios/issues/4303).
+ * MXRecoveryService: Expose checkPrivateKey to validate a private key (vector-im/element-ios/issues/4430).
+ * VoIP: Use headphones and Bluetooth devices when available for calls.
+
+🐛 Bugfix
+ * MXSession: Fix app that can fail to resume (vector-im/element-ios/issues/4417).
+ * MXRealmCryptoStore: Run migration once before opening read-only Realms (vector-im/element-ios/issues/4418).
+ * VoIP: Handle offers when peer connection is stable (vector-im/element-ios/issues/4421).
+ * MXEventTimeline: Fix regression on clear cache where the last message of an encrypted room is not encrypted.
+ * MXBackgroundSyncService: Make credentials public (vector-im/element-ios/issues/3695).
+ * MXCredentials: Implement equatable & hashable methods (vector-im/element-ios/issues/3695).
+
+⚠️ API Changes
+ * MXRoomSummary: `lastMessageEvent` property removed for performance reasons (vector-im/element-ios/issues/4360).
+ * MXRoomSummary: All properties about lastMessage are moved into `lastMessage` property.
+ * MXSession: Does not compute anymore last events for every room summaries by default. Use -[MXSession eventWithEventId:inRoom:success:failure:] method to load the last event for a room summary.
+ * MXRoom: Added method for seding voice messages (vector-im/element-ios/issues/4090).
+ * MXMediaManager: Added `mimeType` param to download encrypted media methods (vector-im/element-ios/issues/4303).
+ * MXEncryptedContentFile: `mimetype` parameter removed (vector-im/element-ios/issues/4303).
+ * MXEncryptedAttachments: `mimetype` parameters removed from encrypt attachment methods (vector-im/element-ios/issues/4303).
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * build.sh: Include debug symbols when building XCFramework 
+
+Others
+ * 
+
+Improvements:
+
 
 Changes in 0.19.0 (2021-06-02)
 =================================================

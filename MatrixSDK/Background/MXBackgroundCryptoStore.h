@@ -31,7 +31,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Create the store for the passed credentials.
  
- @param credentials the credentials of the account.
+ @param theCredentials the credentials of the account.
  @param resetBackgroundCryptoStore if YES, clear the separate DB.
  @return the store.
  */

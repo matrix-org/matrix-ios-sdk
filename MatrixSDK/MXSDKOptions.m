@@ -43,8 +43,11 @@ static MXSDKOptions *sharedOnceInstance = nil;
         _enableCryptoWhenStartingMXSession = NO;
         _enableKeyBackupWhenStartingMXCrypto = YES;
         _mediaCacheAppVersion = 0;
+        _videoConversionPresetName = AVAssetExportPreset1920x1080;
         _applicationGroupIdentifier = nil;
         _HTTPAdditionalHeaders = @{};
+        _autoAcceptRoomInvites = NO;
+        _callTransferType = MXCallTransferTypeBridged;
     }
     
     return self;

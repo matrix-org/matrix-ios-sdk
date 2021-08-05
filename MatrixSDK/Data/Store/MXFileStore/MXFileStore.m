@@ -26,7 +26,7 @@
 #import "MXSDKOptions.h"
 #import "MXTools.h"
 
-static NSUInteger const kMXFileVersion = 73;
+static NSUInteger const kMXFileVersion = 74;
 
 static NSString *const kMXFileStoreFolder = @"MXFileStore";
 static NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
@@ -443,6 +443,20 @@ static NSUInteger preloadOptions;
     if (metaData)
     {
         metaData.homeserverWellknown = wellknown;
+        metaDataHasChanged = YES;
+    }
+}
+
+- (NSInteger)maxUploadSize
+{
+    return metaData.maxUploadSize;
+}
+
+- (void)storeMaxUploadSize:(NSInteger)maxUploadSize
+{
+    if (metaData)
+    {
+        metaData.maxUploadSize = maxUploadSize;
         metaDataHasChanged = YES;
     }
 }
