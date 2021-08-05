@@ -1,1 +1,1 @@
-MXSession: Fix `fixRoomsSummariesLastMessage` method for last messages and improve it to use a hash to not run every time
+MXSession: Fix `fixRoomsSummariesLastMessage` method for last messages and improve it to use a hash not to run every time
