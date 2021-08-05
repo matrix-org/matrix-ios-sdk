@@ -64,10 +64,10 @@ following:
 
 This file will become part of our [changelog](CHANGES.md) at the next
 release, so the content of the file should be a short description of your
-change in the same style as the rest of the changelog. The file can contain
-Markdown formatting. It should start with the area of the change (screen,
-module, ...) and end with a full stop (.) or an exclamation mark (!) for
-consistency.
+change in the same style as the rest of the changelog. The file must only
+contain one line. It can contain Markdown formatting. It should start with the
+area of the change (screen, module, ...) and end with a full stop (.) or an
+exclamation mark (!) for consistency.
 
 Adding credits to the changelog is encouraged, we value your
 contributions and would like to have you shouted out in the release notes!
