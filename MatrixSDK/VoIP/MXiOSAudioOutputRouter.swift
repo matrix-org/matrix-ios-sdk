@@ -18,6 +18,7 @@ import Foundation
 import AVFoundation
 
 /// Audio output router class
+@available(iOS 10.0, *)
 @objcMembers
 public class MXiOSAudioOutputRouter: NSObject {
     
@@ -115,6 +116,7 @@ public class MXiOSAudioOutputRouter: NSObject {
     private func shouldAddBuiltIn(to routes: [MXiOSAudioOutputRoute]) -> Bool {
         return routes.first(where: { $0.routeType == .builtIn }) == nil
             && routes.first(where: { $0.routeType == .externalWired }) == nil
+            && defaultRouteType == .builtIn
     }
     
     private func recomputeAllRoutes() {
@@ -155,17 +157,33 @@ public class MXiOSAudioOutputRouter: NSObject {
     }
     
     private func updateRoute(to route: MXiOSAudioOutputRoute) {
-        MXLog.debug("[MXiOSAudioOutputRouter] updateRoute: for type: \(route.routeType.rawValue)")
+        MXLog.debug("[MXiOSAudioOutputRouter] updateRoute: to: \(route)")
         
         do {
             switch route.routeType {
             case .loudSpeakers:
+                if AVAudioSession.sharedInstance().category != .playAndRecord
+                    || AVAudioSession.sharedInstance().categoryOptions != [.allowBluetooth, .allowBluetoothA2DP] {
+                    try AVAudioSession.sharedInstance().setCategory(.playAndRecord,
+                                                                    options: [.allowBluetooth, .allowBluetoothA2DP])
+                }
                 try AVAudioSession.sharedInstance().overrideOutputAudioPort(.speaker)
                 try AVAudioSession.sharedInstance().setPreferredInput(nil)
             case .builtIn:
+                if AVAudioSession.sharedInstance().category != .playAndRecord
+                    || AVAudioSession.sharedInstance().categoryOptions != .init(rawValue: 0) {
+                    try AVAudioSession.sharedInstance().setCategory(.playAndRecord,
+                                                                    options: .init(rawValue: 0))
+                }
                 try AVAudioSession.sharedInstance().overrideOutputAudioPort(.none)
                 try AVAudioSession.sharedInstance().setPreferredInput(nil)
             default:
+                if AVAudioSession.sharedInstance().category != .playAndRecord
+                    || AVAudioSession.sharedInstance().categoryOptions != [.allowBluetooth, .allowBluetoothA2DP] {
+                    try AVAudioSession.sharedInstance().setCategory(.playAndRecord,
+                                                                    options: [.allowBluetooth, .allowBluetoothA2DP])
+                }
+                try AVAudioSession.sharedInstance().setActive(true, options: .notifyOthersOnDeactivation)
                 try AVAudioSession.sharedInstance().overrideOutputAudioPort(.none)
                 try AVAudioSession.sharedInstance().setPreferredInput(route.port)
             }

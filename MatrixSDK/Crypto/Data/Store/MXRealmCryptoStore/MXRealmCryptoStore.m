@@ -29,9 +29,10 @@
 #import "MXAes.h"
 #import "MatrixSDKSwiftHeader.h"
 #import "MXRealmHelper.h"
+#import "MXBackgroundModeHandler.h"
 
 
-NSUInteger const kMXRealmCryptoStoreVersion = 16;
+NSUInteger const kMXRealmCryptoStoreVersion = 17;
 
 static NSString *const kMXRealmCryptoStoreFolder = @"MXRealmCryptoStore";
 
@@ -401,7 +402,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
     [RLMRealm deleteFilesForConfiguration:config error:&error];
     if (error)
     {
-        MXLogDebug(@"[MXRealmCryptoStore] deleteStore: Error: %@", error);
+        MXLogError(@"[MXRealmCryptoStore] deleteStore: Error: %@", error);
         
         if (!readOnly)
         {
@@ -418,7 +419,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
             }
             else
             {
-                MXLogDebug(@"[MXRealmCryptoStore] deleteStore: Cannot open realm. Error: %@", error);
+                MXLogError(@"[MXRealmCryptoStore] deleteStore: Cannot open realm. Error: %@", error);
             }
         }
     }
@@ -446,7 +447,8 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
             {
                 MXLogDebug(@"[MXRealmCryptoStore] Credentials do not match");
                 [MXRealmCryptoStore deleteStoreWithCredentials:credentials];
-                return [MXRealmCryptoStore createStoreWithCredentials:credentials];
+                self = [MXRealmCryptoStore createStoreWithCredentials:credentials];
+                self.cryptoVersion = MXCryptoVersionLast;
             }
         }
         
@@ -511,8 +513,11 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
 
 - (void)performAccountOperationWithBlock:(void (^)(OLMAccount *))block
 {
-    NSDate *startDate = [NSDate date];
-    
+    // Make sure write operations complete in background to avoid to keep the realm internal lock until the app resumes.
+    // Thus, other components (Notification Extension Service, Share Extension, ...) will not be blocked by this lock.
+    id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
+    id<MXBackgroundTask> backgroundTask = [handler startBackgroundTaskWithName:@"[MXRealmCryptoStore] performAccountOperationWithBlock" expirationHandler:nil];
+                                           
     MXRealmOlmAccount *account = self.accountInCurrentThread;
     if (account.olmAccountData)
     {
@@ -539,8 +544,8 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
         MXLogDebug(@"[MXRealmCryptoStore] performAccountOperationWithBlock. Error: No OLMAccount yet");
         block(nil);
     }
-    
-    MXLogDebug(@"[MXRealmCryptoStore] performAccountOperationWithBlock done in %.3fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+
+    [backgroundTask stop];
 }
 
 - (void)storeDeviceSyncToken:(NSString*)deviceSyncToken
@@ -872,7 +877,10 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
 
 - (void)performSessionOperationWithDevice:(NSString*)deviceKey andSessionId:(NSString*)sessionId block:(void (^)(MXOlmSession *olmSession))block
 {
-    NSDate *startDate = [NSDate date];
+    // Make sure write operations complete in background to avoid to keep the realm internal lock until the app resumes.
+    // Thus, other components (Notification Extension Service, Share Extension, ...) will not be blocked by this lock.
+    id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
+    id<MXBackgroundTask> backgroundTask = [handler startBackgroundTaskWithName:@"[MXRealmCryptoStore] performSessionOperationWithDevice" expirationHandler:nil];
     
     RLMRealm *realm = self.realm;
     
@@ -898,8 +906,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
     }
     
     [realm commitWriteTransaction];
-    
-    MXLogDebug(@"[MXRealmCryptoStore] performSessionOperationWithDevice done in %.3fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+    [backgroundTask stop];
 }
 
 - (NSArray<MXOlmSession*>*)sessionsWithDevice:(NSString*)deviceKey;
@@ -996,7 +1003,10 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
 
 - (void)performSessionOperationWithGroupSessionWithId:(NSString*)sessionId senderKey:(NSString*)senderKey block:(void (^)(MXOlmInboundGroupSession *inboundGroupSession))block
 {
-    NSDate *startDate = [NSDate date];
+    // Make sure write operations complete in background to avoid to keep the realm internal lock until the app resumes.
+    // Thus, other components (Notification Extension Service, Share Extension, ...) will not be blocked by this lock.
+    id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
+    id<MXBackgroundTask> backgroundTask = [handler startBackgroundTaskWithName:@"[MXRealmCryptoStore] performSessionOperationWithGroupSessionWithId" expirationHandler:nil];
     
     RLMRealm *realm = self.realm;
     
@@ -1029,8 +1039,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
     }
     
     [realm commitWriteTransaction];
-    
-    MXLogDebug(@"[MXRealmCryptoStore] performSessionOperationWithGroupSessionWithId done in %.3fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+    [backgroundTask stop];
 }
 
 - (NSArray<MXOlmInboundGroupSession *> *)inboundGroupSessions
@@ -2158,6 +2167,20 @@ static BOOL shouldCompactOnLaunch = YES;
                 
             case 15:
                 MXLogDebug(@"[MXRealmCryptoStore] Migration from schema #15 -> #16: Nothing to do (added optional MXRealmSecret.encryptedSecret)");
+                
+            case 16:
+                MXLogDebug(@"[MXRealmCryptoStore] Migration from schema #16 -> #17");
+                
+                MXLogDebug(@"[MXRealmCryptoStore]    Make sure MXRealmOlmAccount.cryptoVersion is MXCryptoVersion2");
+                [migration enumerateObjects:MXRealmOlmAccount.className block:^(RLMObject *oldObject, RLMObject *newObject) {
+                    NSNumber *version;
+                    MXJSONModelSetNumber(version, oldObject[@"cryptoVersion"]);
+                    if (version && version.intValue == 0)
+                    {
+                        MXLogDebug(@"[MXRealmCryptoStore]    -> Fix MXRealmOlmAccount.cryptoVersion");
+                        newObject[@"cryptoVersion"] = @(MXCryptoVersion2);
+                    }
+                }];
         }
     }
     

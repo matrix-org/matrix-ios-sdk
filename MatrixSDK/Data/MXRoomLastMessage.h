@@ -16,14 +16,14 @@
 
 #import <Foundation/Foundation.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
 /**
  Used to identify the type of data when requesting MXKeyProvider
  */
 FOUNDATION_EXPORT NSString *const MXRoomLastMessageDataType;
 
 @class MXEvent;
-
-NS_ASSUME_NONNULL_BEGIN
 
 /**
  `MXRoomLastMessage` is a model class to store some lastMessage properties for room summary objects.

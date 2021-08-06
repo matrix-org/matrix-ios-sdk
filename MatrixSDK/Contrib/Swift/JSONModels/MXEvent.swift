@@ -141,7 +141,7 @@ public enum MXEventType: Equatable, Hashable {
 
 /// Types of messages
 public enum MXMessageType: Equatable, Hashable {
-    case text, emote, notice, image, audio, voiceMessage, video, location, file
+    case text, emote, notice, image, audio, video, location, file
     case custom(String)
     
     public var identifier: String {
@@ -151,7 +151,6 @@ public enum MXMessageType: Equatable, Hashable {
         case .notice: return kMXMessageTypeNotice
         case .image: return kMXMessageTypeImage
         case .audio: return kMXMessageTypeAudio
-        case .voiceMessage: return kMXMessageTypeVoiceMessage
         case .video: return kMXMessageTypeVideo
         case .location: return kMXMessageTypeLocation
         case .file: return kMXMessageTypeFile
@@ -160,7 +159,7 @@ public enum MXMessageType: Equatable, Hashable {
     }
 
     public init(identifier: String) {
-        let messages: [MXMessageType] = [.text, .emote, .notice, .image, .audio, .voiceMessage, .video, .location, .file]
+        let messages: [MXMessageType] = [.text, .emote, .notice, .image, .audio, .video, .location, .file]
         self = messages.first(where: { $0.identifier == identifier }) ?? .custom(identifier)
     }
 }

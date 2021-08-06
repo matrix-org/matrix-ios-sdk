@@ -181,10 +181,6 @@ FOUNDATION_EXPORT NSString *const kMXMessageTypeFile;
 FOUNDATION_EXPORT NSString *const kMXMessageTypeServerNotice;
 FOUNDATION_EXPORT NSString *const kMXMessageTypeKeyVerificationRequest;
 
-FOUNDATION_EXPORT NSString *const kMXMessageTypeVoiceMessage;
-FOUNDATION_EXPORT NSString *const kMXMessageTypeVoiceMessageMSC2516;
-FOUNDATION_EXPORT NSString *const kMXMessageTypeVoiceMessageMSC3245;
-
 /**
  Event relations
  */
@@ -196,6 +192,14 @@ FOUNDATION_EXPORT NSString *const MXEventRelationTypeReplace;       // Edition
  Prefix used for id of temporary local event.
  */
 FOUNDATION_EXPORT NSString *const kMXEventLocalEventIdPrefix;
+
+
+FOUNDATION_EXPORT NSString *const kMXMessageContentKeyVoiceMessage;
+FOUNDATION_EXPORT NSString *const kMXMessageContentKeyVoiceMessageMSC2516;
+FOUNDATION_EXPORT NSString *const kMXMessageContentKeyVoiceMessageMSC3245;
+FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleAudio;
+FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleAudioDuration;
+FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleAudioWaveform;
 
 /**
  The internal event state used to handle the different steps of the event sending.
@@ -449,6 +453,11 @@ extern NSString *const kMXEventIdentifierKey;
  Return YES if the event is a reply event.
  */
 - (BOOL)isReplyEvent;
+
+/**
+ Return YES if the event contains a voice message
+ */
+- (BOOL)isVoiceMessage;
 
 /**
  Return YES if the event content has been edited.

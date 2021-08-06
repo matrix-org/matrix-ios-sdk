@@ -519,9 +519,6 @@
 		32BD34BE1E84134A006EDC0D /* MatrixSDKTestsE2EData.m in Sources */ = {isa = PBXBuildFile; fileRef = 32BD34BD1E84134A006EDC0D /* MatrixSDKTestsE2EData.m */; };
 		32BED28F1B00A23F00E668FE /* MXCallStack.h in Headers */ = {isa = PBXBuildFile; fileRef = 32BED28E1B00A23F00E668FE /* MXCallStack.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32C03CB62123076F00D92712 /* DirectRoomTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 32C03CB52123076F00D92712 /* DirectRoomTests.m */; };
-		32C03CBB21231C2600D92712 /* Podfile in Resources */ = {isa = PBXBuildFile; fileRef = 32C03CB721231C2500D92712 /* Podfile */; };
-		32C03CBD21231C2600D92712 /* CHANGES.rst in Resources */ = {isa = PBXBuildFile; fileRef = 32C03CB921231C2500D92712 /* CHANGES.rst */; };
-		32C03CBE21231C2600D92712 /* AUTHORS.rst in Resources */ = {isa = PBXBuildFile; fileRef = 32C03CBA21231C2500D92712 /* AUTHORS.rst */; };
 		32C235721F827F3800E38FC5 /* MXRoomOperation.h in Headers */ = {isa = PBXBuildFile; fileRef = 32C235701F827F3800E38FC5 /* MXRoomOperation.h */; };
 		32C235731F827F3800E38FC5 /* MXRoomOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 32C235711F827F3800E38FC5 /* MXRoomOperation.m */; };
 		32C474C122AF7A2D00CFBCD2 /* MXReactionOperation.h in Headers */ = {isa = PBXBuildFile; fileRef = 32C474BF22AF7A2D00CFBCD2 /* MXReactionOperation.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1158,7 +1155,7 @@
 		B17285792100C8EA0052C51E /* MXSendReplyEventStringsLocalizable.h in Headers */ = {isa = PBXBuildFile; fileRef = B17285782100C88A0052C51E /* MXSendReplyEventStringsLocalizable.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B172857C2100D4F60052C51E /* MXSendReplyEventDefaultStringLocalizations.h in Headers */ = {isa = PBXBuildFile; fileRef = B172857A2100D4F60052C51E /* MXSendReplyEventDefaultStringLocalizations.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B172857D2100D4F60052C51E /* MXSendReplyEventDefaultStringLocalizations.m in Sources */ = {isa = PBXBuildFile; fileRef = B172857B2100D4F60052C51E /* MXSendReplyEventDefaultStringLocalizations.m */; };
-		B176B25123EB03E4001879C6 /* MXAggregationPaginatedResponse_Private.h in Headers */ = {isa = PBXBuildFile; fileRef = B176B25023EB03E3001879C6 /* MXAggregationPaginatedResponse_Private.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		B176B25123EB03E4001879C6 /* MXAggregationPaginatedResponse_Private.h in Headers */ = {isa = PBXBuildFile; fileRef = B176B25023EB03E3001879C6 /* MXAggregationPaginatedResponse_Private.h */; };
 		B176B25223EB03E4001879C6 /* MXAggregationPaginatedResponse_Private.h in Headers */ = {isa = PBXBuildFile; fileRef = B176B25023EB03E3001879C6 /* MXAggregationPaginatedResponse_Private.h */; };
 		B17982F52119E4A2001FD722 /* MXRoomCreateContent.h in Headers */ = {isa = PBXBuildFile; fileRef = B17982ED2119E49E001FD722 /* MXRoomCreateContent.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B17982F62119E4A2001FD722 /* MXRoomTombStoneContent.m in Sources */ = {isa = PBXBuildFile; fileRef = B17982EE2119E49F001FD722 /* MXRoomTombStoneContent.m */; };
@@ -1186,7 +1183,7 @@
 		B18D18C22152B8E4003677D1 /* MXRoomMember.swift in Sources */ = {isa = PBXBuildFile; fileRef = B18D18C12152B8E4003677D1 /* MXRoomMember.swift */; };
 		B19A309C240424BD00FB6F35 /* MXQRCodeTransaction.h in Headers */ = {isa = PBXBuildFile; fileRef = B19A3099240424BD00FB6F35 /* MXQRCodeTransaction.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B19A309D240424BD00FB6F35 /* MXQRCodeTransaction.h in Headers */ = {isa = PBXBuildFile; fileRef = B19A3099240424BD00FB6F35 /* MXQRCodeTransaction.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		B19A309E240424BD00FB6F35 /* MXQRCodeTransaction_Private.h in Headers */ = {isa = PBXBuildFile; fileRef = B19A309A240424BD00FB6F35 /* MXQRCodeTransaction_Private.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		B19A309E240424BD00FB6F35 /* MXQRCodeTransaction_Private.h in Headers */ = {isa = PBXBuildFile; fileRef = B19A309A240424BD00FB6F35 /* MXQRCodeTransaction_Private.h */; };
 		B19A309F240424BD00FB6F35 /* MXQRCodeTransaction_Private.h in Headers */ = {isa = PBXBuildFile; fileRef = B19A309A240424BD00FB6F35 /* MXQRCodeTransaction_Private.h */; };
 		B19A30A0240424BD00FB6F35 /* MXQRCodeTransaction.m in Sources */ = {isa = PBXBuildFile; fileRef = B19A309B240424BD00FB6F35 /* MXQRCodeTransaction.m */; };
 		B19A30A1240424BD00FB6F35 /* MXQRCodeTransaction.m in Sources */ = {isa = PBXBuildFile; fileRef = B19A309B240424BD00FB6F35 /* MXQRCodeTransaction.m */; };
@@ -1238,7 +1235,7 @@
 		B1A0270326162110001AADFF /* MXSpaceChildrenResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = B1A026FF26162110001AADFF /* MXSpaceChildrenResponse.m */; };
 		B1C854EE25E7B497005867D0 /* MXRoomType.h in Headers */ = {isa = PBXBuildFile; fileRef = B1C854ED25E7B492005867D0 /* MXRoomType.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B1C854EF25E7B498005867D0 /* MXRoomType.h in Headers */ = {isa = PBXBuildFile; fileRef = B1C854ED25E7B492005867D0 /* MXRoomType.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		B1DDC9D62418098200D208E3 /* MXIncomingSASTransaction_Private.h in Headers */ = {isa = PBXBuildFile; fileRef = B1DDC9D52418098200D208E3 /* MXIncomingSASTransaction_Private.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		B1DDC9D62418098200D208E3 /* MXIncomingSASTransaction_Private.h in Headers */ = {isa = PBXBuildFile; fileRef = B1DDC9D52418098200D208E3 /* MXIncomingSASTransaction_Private.h */; };
 		B1DDC9D72418098200D208E3 /* MXIncomingSASTransaction_Private.h in Headers */ = {isa = PBXBuildFile; fileRef = B1DDC9D52418098200D208E3 /* MXIncomingSASTransaction_Private.h */; };
 		B1E09A132397FA950057C069 /* MatrixSDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B14EF36B2397E90400758AF0 /* MatrixSDK.framework */; };
 		B1E09A192397FCE90057C069 /* MXReplyEventParserUnitTests.m in Sources */ = {isa = PBXBuildFile; fileRef = B11BD45B22CB8ABC0064D8B0 /* MXReplyEventParserUnitTests.m */; };
@@ -1970,7 +1967,6 @@
 		32BED28E1B00A23F00E668FE /* MXCallStack.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXCallStack.h; sourceTree = "<group>"; };
 		32C03CB52123076F00D92712 /* DirectRoomTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DirectRoomTests.m; sourceTree = "<group>"; };
 		32C03CB721231C2500D92712 /* Podfile */ = {isa = PBXFileReference; explicitFileType = text.script.ruby; fileEncoding = 4; path = Podfile; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
-		32C03CB921231C2500D92712 /* CHANGES.rst */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CHANGES.rst; sourceTree = "<group>"; };
 		32C03CBA21231C2500D92712 /* AUTHORS.rst */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = AUTHORS.rst; sourceTree = "<group>"; };
 		32C235701F827F3800E38FC5 /* MXRoomOperation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXRoomOperation.h; sourceTree = "<group>"; };
 		32C235711F827F3800E38FC5 /* MXRoomOperation.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXRoomOperation.m; sourceTree = "<group>"; };
@@ -2007,6 +2003,7 @@
 		32D2CC0123422462002BD8CA /* MX3PidAddSession.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MX3PidAddSession.h; sourceTree = "<group>"; };
 		32D2CC0223422462002BD8CA /* MX3PidAddManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MX3PidAddManager.m; sourceTree = "<group>"; };
 		32D2CC08234336D6002BD8CA /* MX3PidAddManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MX3PidAddManager.swift; sourceTree = "<group>"; };
+		32D5573526BAF1540023D286 /* CHANGES.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = CHANGES.md; sourceTree = "<group>"; };
 		32D5D16223E400A600E3E37C /* MXRoomSummaryTrustTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXRoomSummaryTrustTests.m; sourceTree = "<group>"; };
 		32D7767B1A27860600FC4AA2 /* MXMemoryStore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXMemoryStore.h; sourceTree = "<group>"; };
 		32D7767C1A27860600FC4AA2 /* MXMemoryStore.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXMemoryStore.m; sourceTree = "<group>"; };
@@ -3315,7 +3312,7 @@
 			isa = PBXGroup;
 			children = (
 				32C03CBA21231C2500D92712 /* AUTHORS.rst */,
-				32C03CB921231C2500D92712 /* CHANGES.rst */,
+				32D5573526BAF1540023D286 /* CHANGES.md */,
 				32C03CB721231C2500D92712 /* Podfile */,
 				B14B17682464419E00C2751E /* MatrixSDK.podspec */,
 				32C6F92F19DD814400EA4E9C /* MatrixSDK */,
@@ -4916,9 +4913,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				32C03CBE21231C2600D92712 /* AUTHORS.rst in Resources */,
-				32C03CBD21231C2600D92712 /* CHANGES.rst in Resources */,
-				32C03CBB21231C2600D92712 /* Podfile in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

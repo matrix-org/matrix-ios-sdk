@@ -181,6 +181,11 @@ typedef void (^MXOnResumeDone)(void);
      Async queue to run a single task at a time.
      */
     MXAsyncTaskQueue *asyncTaskQueue;
+    
+    /**
+     Flag to indicate whether a fixRoomsLastMessage execution is ongoing.
+     */
+    BOOL fixingRoomsLastMessages;
 }
 
 /**
@@ -876,7 +881,7 @@ typedef void (^MXOnResumeDone)(void);
     // Refresh wellknown data
     [self refreshHomeserverWellknown:nil failure:nil];
     
-    // Get the maxmium file size allowed for uploading media
+    // Get the maximum file size allowed for uploading media
     [self.matrixRestClient maxUploadSize:^(NSInteger maxUploadSize) {
         [self.store storeMaxUploadSize:maxUploadSize];
     } failure:^(NSError *error) {
@@ -1362,6 +1367,12 @@ typedef void (^MXOnResumeDone)(void);
                                                                        name:kMXAnalyticsStatsRooms];
             }
             
+            if (isInitialSync)
+            {
+                [self fixRoomsSummariesLastMessageWithMaxServerPaginationCount:MXRoomSummaryPaginationChunkSize
+                                                                         force:YES];
+            }
+            
             // Do a loop of /syncs until catching up is done
             if (nextServerTimeout == 0)
             {
@@ -1719,11 +1730,11 @@ typedef void (^MXOnResumeDone)(void);
 
                     // Use the IS from the account data
                     [self setIdentityServer:identityServer andAccessToken:nil];
+                    
+                    [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionAccountDataDidChangeIdentityServerNotification
+                                                                        object:self
+                                                                      userInfo:nil];
                 }
-
-                [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionAccountDataDidChangeIdentityServerNotification
-                                                                    object:self
-                                                                  userInfo:nil];
             }
         }
 
@@ -2894,16 +2905,44 @@ typedef void (^MXOnResumeDone)(void);
 
 - (void)fixRoomsSummariesLastMessage
 {
-    [self fixRoomsSummariesLastMessageWithMaxServerPaginationCount:MXRoomSummaryPaginationChunkSize];
+    [self fixRoomsSummariesLastMessageWithMaxServerPaginationCount:MXRoomSummaryPaginationChunkSize
+                                                             force:NO];
 }
 
 - (void)fixRoomsSummariesLastMessageWithMaxServerPaginationCount:(NSUInteger)maxServerPaginationCount
+                                                           force:(BOOL)force
 {
+    if (fixingRoomsLastMessages)
+    {
+        return;
+    }
+    fixingRoomsLastMessages = YES;
+    
     dispatch_group_t dispatchGroup = dispatch_group_create();
     
     for (MXRoomSummary *summary in self.roomsSummaries)
     {
-        if (summary.lastMessage.isEncrypted)
+        //  ignore this room if there is no change
+        if (!force && summary.storedHash == summary.hash)
+        {
+            continue;
+        }
+        
+        if (force)
+        {
+            dispatch_group_enter(dispatchGroup);
+            MXLogDebug(@"[MXSession] fixRoomsSummariesLastMessage: Fixing last message for room %@", summary.roomId);
+            
+            [summary resetLastMessageWithMaxServerPaginationCount:maxServerPaginationCount onComplete:^{
+                MXLogDebug(@"[MXSession] fixRoomsSummariesLastMessage:Fixing last message operation for room %@ has complete. lastMessageEventId: %@", summary.roomId, summary.lastMessage.eventId);
+                dispatch_group_leave(dispatchGroup);
+            } failure:^(NSError *error) {
+                MXLogDebug(@"[MXSession] fixRoomsSummariesLastMessage: Cannot fix last message for room %@ with maxServerPaginationCount: %@", summary.roomId, @(maxServerPaginationCount));
+                dispatch_group_leave(dispatchGroup);
+            }
+                                                           commit:NO];
+        }
+        else if (summary.lastMessage.isEncrypted && !summary.lastMessage.text)
         {
             dispatch_group_enter(dispatchGroup);
             [self eventWithEventId:summary.lastMessage.eventId
@@ -2949,6 +2988,8 @@ typedef void (^MXOnResumeDone)(void);
     }
     
     dispatch_group_notify(dispatchGroup, dispatch_get_main_queue(), ^{
+        self->fixingRoomsLastMessages = NO;
+        
         // Commit store changes done
         if ([self.store respondsToSelector:@selector(commit)])
         {
