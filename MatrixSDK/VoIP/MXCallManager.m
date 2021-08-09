@@ -1152,7 +1152,7 @@ NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
                     if ([event.sender isEqualToString:userId])
                     {
                         MXRoomMemberEventContent *content = [MXRoomMemberEventContent modelFromJSON:event.content];
-                        if (content.membership == kMXMembershipStringJoin)
+                        if ([MXTools membership:content.membership] == MXMembershipJoin)
                         {
                             joined = YES;
                             [room removeListener:listener];
@@ -1659,7 +1659,7 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
                     if ([event.sender isEqualToString:userId])
                     {
                         MXRoomMemberEventContent *content = [MXRoomMemberEventContent modelFromJSON:event.content];
-                        if (content.membership == kMXMembershipStringJoin)
+                        if ([MXTools membership:content.membership] == MXMembershipJoin)
                         {
                             joined = YES;
                             [room removeListener:listener];
