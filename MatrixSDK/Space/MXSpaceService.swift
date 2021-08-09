@@ -243,6 +243,22 @@ public class MXSpaceService: NSObject {
 
                     let spaceChildrenSummary = MXSpaceChildrenSummary(spaceSummary: spaceSummary, childInfos: childInfos)
                     
+                    var spaceChildEventsPerChildRoomId: [String:[String:Any]] = [:]
+                    spaceChildrenResponse.events?.forEach({ event in
+                        if event.type == kMXEventTypeStringSpaceChild && event.wireContent.count > 0 {
+                            spaceChildEventsPerChildRoomId[event.stateKey] = event.wireContent
+                        }
+                    })
+                    
+                    spaceChildrenSummary.childInfos.forEach { childInfo in
+                        if let suggested = spaceChildEventsPerChildRoomId[childInfo.childRoomId]?["suggested"] as? Bool {
+                            childInfo.suggested = suggested
+                        }
+                        if let autoJoin = spaceChildEventsPerChildRoomId[childInfo.childRoomId]?["auto_join"] as? Bool {
+                            childInfo.autoJoin = autoJoin
+                        }
+                    }
+
                     self.spacesPerId[spaceId]?.lastSpaceChildrenSummary = spaceChildrenSummary
 
                     self.completionQueue.async {

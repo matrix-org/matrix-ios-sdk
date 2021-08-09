@@ -52,7 +52,10 @@ public class MXSpaceChildInfo: NSObject {
     public let activeMemberCount: Int
     
     /// Allows a space admin to list the sub-spaces and rooms in that space which should be automatically joined by members of that space.
-    public let autoJoin: Bool
+    public var autoJoin: Bool
+    
+    /// `true` if the room is suggested. `false` otherwise.
+    public var suggested: Bool = false
     
     /// Gives a list of candidate servers that can be used to join the space.
     public let viaServers: [String]
