@@ -8,6 +8,7 @@
 
 Others
 
+ * MXStore: Add a method to remove all the messages sent before a specific timestamp in a room.
  * Separated CI jobs into individual actions
 
 ## Changes in 0.19.5 (2021-07-22)

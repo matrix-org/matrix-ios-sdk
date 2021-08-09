@@ -52,6 +52,16 @@
 - (void)replaceEvent:(MXEvent*)event;
 
 /**
+ Remove all the messages sent before a specific timestamp in a room.
+ The state events are not removed during this operation. We keep them in the timeline.
+ 
+ @param limitTs the timestamp from which the messages are kept.
+ 
+ @return YES if at least one event has been removed.
+ */
+- (BOOL)removeAllMessagesSentBefore:(uint64_t)limitTs;
+
+/**
  Get an event from this room.
 
  @return the MXEvent object or nil if not found.
