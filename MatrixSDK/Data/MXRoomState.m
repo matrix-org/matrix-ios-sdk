@@ -220,7 +220,7 @@
         NSDictionary<NSString *, id> *eventContent = [self contentOfEvent:event];
         NSArray<NSString *> *aliasesBunch = eventContent[@"aliases"];
         
-        if (aliasesBunch.count)
+        if ([aliasesBunch isKindOfClass:[NSArray class]] && aliasesBunch.count)
         {
             [aliases addObjectsFromArray:aliasesBunch];
         }
