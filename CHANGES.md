@@ -1,3 +1,26 @@
+## Changes in 0.19.7 (2021-08-10)
+
+🐛 Bugfixes
+
+- Tests: Fix a crash in various tests from a missing `storeMaxUploadSize` method. ([#1175](https://github.com/matrix-org/matrix-ios-sdk/issues/1175))
+- MXSession: Fix `fixRoomsSummariesLastMessage` method for last messages and improve it to use a hash not to run every time ([#4440](https://github.com/vector-im/element-ios/issues/4440))
+- VoIP: Fix detection of other party when joined the room. ([#4664](https://github.com/vector-im/element-ios/issues/4664))
+- MXRoomState: Fix a crash on `aliases` getter. ([#4678](https://github.com/vector-im/element-ios/issues/4678))
+- MXOlmDevice: Fix a crash on `sessionIdsForDevice` method. ([#4679](https://github.com/vector-im/element-ios/issues/4679))
+
+⚠️ API Changes
+
+- SSO: Stable ids for MSC 2858. ([#4362](https://github.com/vector-im/element-ios/issues/4362))
+
+🧱 Build
+
+- CHANGES.md: Use towncrier to manage the change log. More info in [CONTRIBUTING](CONTRIBUTING.md#changelog). ([#4393](https://github.com/vector-im/element-ios/issues/4393))
+
+📄 Documentation
+
+- Convert CHANGES and CONTRIBUTING to MarkDown. ([#4393](https://github.com/vector-im/element-ios/issues/4393))
+
+
 ## Changes in 0.19.6 (2021-07-29)
 
 🐛 Bugfix
