@@ -227,7 +227,7 @@
 
         [self registerListener];
     }
-
+    
     return self;
 }
 
@@ -236,8 +236,7 @@
     MXEventRelations *relations = event.unsignedData.relations;
     if (relations.annotation)
     {
-        // TODO: Uncomment when reaction aggregation API will be updated.
-        // [self.aggregatedReactionsUpdater handleOriginalAggregatedDataOfEvent:event annotations:relations.annotation];
+        [self.aggregatedReactionsUpdater handleOriginalAggregatedDataOfEvent:event annotations:relations.annotation];
     }
 }
 

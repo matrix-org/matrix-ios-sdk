@@ -2705,31 +2705,6 @@ Get the maximum size a media upload can be in bytes.
 #pragma mark - Aggregations
 
 /**
- Send a relation to an event.
-
- @param eventId the id of the parent event.
- @param roomId the id of the room.
- @param relationType the type of relation (@see MXEventRelationTypeAnnotation and siblings).
- @param eventType event type of the message.
- @param parameters (optional) query parameters.
- @param content (optional) the message content.
-
- @param success A block object called when the operation succeeds. It returns
-                the event id of the event generated on the homeserver.
- @param failure A block object called when the operation fails.
-
- @return a MXHTTPOperation instance.
- */
-- (MXHTTPOperation*)sendRelationToEvent:(NSString*)eventId
-                                 inRoom:(NSString*)roomId
-                           relationType:(NSString*)relationType
-                              eventType:(NSString*)eventType
-                             parameters:(NSDictionary*)parameters
-                                content:(NSDictionary*)content
-                                success:(void (^)(NSString *eventId))success
-                                failure:(void (^)(NSError *error))failure;
-
-/**
  Get relations for a given event.
 
  @param eventId the id of the event,
