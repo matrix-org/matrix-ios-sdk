@@ -181,6 +181,11 @@ typedef void (^MXOnResumeDone)(void);
      Async queue to run a single task at a time.
      */
     MXAsyncTaskQueue *asyncTaskQueue;
+    
+    /**
+     Flag to indicate whether a fixRoomsLastMessage execution is ongoing.
+     */
+    BOOL fixingRoomsLastMessages;
 }
 
 /**
@@ -1366,6 +1371,12 @@ typedef void (^MXOnResumeDone)(void);
                 [[MXSDKOptions sharedInstance].analyticsDelegate trackValue:@(self->rooms.count)
                                                                    category:kMXAnalyticsStatsCategory
                                                                        name:kMXAnalyticsStatsRooms];
+            }
+            
+            if (isInitialSync)
+            {
+                [self fixRoomsSummariesLastMessageWithMaxServerPaginationCount:MXRoomSummaryPaginationChunkSize
+                                                                         force:YES];
             }
             
             // Do a loop of /syncs until catching up is done
@@ -2898,16 +2909,44 @@ typedef void (^MXOnResumeDone)(void);
 
 - (void)fixRoomsSummariesLastMessage
 {
-    [self fixRoomsSummariesLastMessageWithMaxServerPaginationCount:MXRoomSummaryPaginationChunkSize];
+    [self fixRoomsSummariesLastMessageWithMaxServerPaginationCount:MXRoomSummaryPaginationChunkSize
+                                                             force:NO];
 }
 
 - (void)fixRoomsSummariesLastMessageWithMaxServerPaginationCount:(NSUInteger)maxServerPaginationCount
+                                                           force:(BOOL)force
 {
+    if (fixingRoomsLastMessages)
+    {
+        return;
+    }
+    fixingRoomsLastMessages = YES;
+    
     dispatch_group_t dispatchGroup = dispatch_group_create();
     
     for (MXRoomSummary *summary in self.roomsSummaries)
     {
-        if (summary.lastMessage.isEncrypted)
+        //  ignore this room if there is no change
+        if (!force && summary.storedHash == summary.hash)
+        {
+            continue;
+        }
+        
+        if (force)
+        {
+            dispatch_group_enter(dispatchGroup);
+            MXLogDebug(@"[MXSession] fixRoomsSummariesLastMessage: Fixing last message for room %@", summary.roomId);
+            
+            [summary resetLastMessageWithMaxServerPaginationCount:maxServerPaginationCount onComplete:^{
+                MXLogDebug(@"[MXSession] fixRoomsSummariesLastMessage:Fixing last message operation for room %@ has complete. lastMessageEventId: %@", summary.roomId, summary.lastMessage.eventId);
+                dispatch_group_leave(dispatchGroup);
+            } failure:^(NSError *error) {
+                MXLogDebug(@"[MXSession] fixRoomsSummariesLastMessage: Cannot fix last message for room %@ with maxServerPaginationCount: %@", summary.roomId, @(maxServerPaginationCount));
+                dispatch_group_leave(dispatchGroup);
+            }
+                                                           commit:NO];
+        }
+        else if (summary.lastMessage.isEncrypted && !summary.lastMessage.text)
         {
             dispatch_group_enter(dispatchGroup);
             [self eventWithEventId:summary.lastMessage.eventId
@@ -2953,6 +2992,8 @@ typedef void (^MXOnResumeDone)(void);
     }
     
     dispatch_group_notify(dispatchGroup, dispatch_get_main_queue(), ^{
+        self->fixingRoomsLastMessages = NO;
+        
         // Commit store changes done
         if ([self.store respondsToSelector:@selector(commit)])
         {
