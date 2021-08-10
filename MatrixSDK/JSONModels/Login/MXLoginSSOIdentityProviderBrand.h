@@ -19,9 +19,9 @@
 /// Clients are free to implement any set of brands they wish, including all or any of the bellow, but are expected to apply a sensible unbranded fallback for any brand they do not recognise/support.
 typedef NSString *const MXLoginSSOIdentityProviderBrand NS_TYPED_EXTENSIBLE_ENUM;
 
-static MXLoginSSOIdentityProviderBrand const MXLoginSSOIdentityProviderBrandGitlab = @"org.matrix.gitlab";
-static MXLoginSSOIdentityProviderBrand const MXLoginSSOIdentityProviderBrandGithub = @"org.matrix.github";
-static MXLoginSSOIdentityProviderBrand const MXLoginSSOIdentityProviderBrandApple = @"org.matrix.apple";
-static MXLoginSSOIdentityProviderBrand const MXLoginSSOIdentityProviderBrandGoogle = @"org.matrix.google";
-static MXLoginSSOIdentityProviderBrand const MXLoginSSOIdentityProviderBrandFacebook = @"org.matrix.facebook";
-static MXLoginSSOIdentityProviderBrand const MXLoginSSOIdentityProviderBrandTwitter = @"org.matrix.twitter";
+static MXLoginSSOIdentityProviderBrand const MXLoginSSOIdentityProviderBrandGitlab = @"gitlab";
+static MXLoginSSOIdentityProviderBrand const MXLoginSSOIdentityProviderBrandGithub = @"github";
+static MXLoginSSOIdentityProviderBrand const MXLoginSSOIdentityProviderBrandApple = @"apple";
+static MXLoginSSOIdentityProviderBrand const MXLoginSSOIdentityProviderBrandGoogle = @"google";
+static MXLoginSSOIdentityProviderBrand const MXLoginSSOIdentityProviderBrandFacebook = @"facebook";
+static MXLoginSSOIdentityProviderBrand const MXLoginSSOIdentityProviderBrandTwitter = @"twitter";
