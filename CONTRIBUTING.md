@@ -89,7 +89,7 @@ it is not encouraged, you can use:
 - `pr-[PRNumber].type` for a PR with no related issue
 - `sdk-[iOSSDKIssueNumber].type` for a PR related a matrix-ios-sdk issue
 - `kit-[iOSKitIssueNumber].type` for a PR related a matrix-ios-kit issue
-- `x-nolink-[Number].type` for a PR with a change entry that will not have a link automatically appended
+- `x-nolink-[AnyNumber].type` for a PR with a change entry that will not have a link automatically appended. It must be used for internal project update only. `AnyNumber` should be a value that does not clash with existing files.
 
 To preview the changelog for pending changelog entries, use:
 
