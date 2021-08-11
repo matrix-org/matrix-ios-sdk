@@ -1,1 +1,0 @@
-Tests: Fix a crash in various tests from a missing `storeMaxUploadSize` method.
