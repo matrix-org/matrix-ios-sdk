@@ -376,6 +376,9 @@ typedef void (^MXOnResumeDone)(void);
 
                 // Load user account data
                 [self handleAccountData:self.store.userAccountData];
+                
+                // Refresh identity server terms with complete account data
+                [self refreshIdentityServerServiceTerms];
 
                 // Load MXRoomSummaries from the store
                 NSDate *startDate2 = [NSDate date];
@@ -695,6 +698,13 @@ typedef void (^MXOnResumeDone)(void);
     if (identityServer)
     {
         _identityService = [[MXIdentityService alloc] initWithIdentityServer:identityServer accessToken:accessToken andHomeserverRestClient:matrixRestClient];
+        
+        // Only refresh the terms after the first sync to
+        // avoid multiple requests from -setStore:success:failure:
+        if (firstSyncDone)
+        {
+            [self refreshIdentityServerServiceTerms];
+        }
     }
     else
     {
@@ -1740,6 +1750,16 @@ typedef void (^MXOnResumeDone)(void);
                     [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionAccountDataDidChangeIdentityServerNotification
                                                                         object:self
                                                                       userInfo:nil];
+                }
+            }
+            
+            if([event[@"type"] isEqualToString:kMXAccountDataTypeAcceptedTerms])
+            {
+                // Only refresh the terms after the first sync to
+                // avoid multiple requests from -setStore:success:failure:
+                if (firstSyncDone)
+                {
+                    [self refreshIdentityServerServiceTerms];
                 }
             }
         }
@@ -4124,6 +4144,28 @@ typedef void (^MXOnResumeDone)(void);
     MXJSONModelSetString(accountDataIdentityServer, content[kMXAccountDataKeyIdentityServer]);
 
     return accountDataIdentityServer;
+}
+
+- (void)refreshIdentityServerServiceTerms
+{
+    if (!self.identityService)
+    {
+        MXLogDebug(@"[MXSession] No identity service available to check terms for.")
+        return;
+    }
+    
+    // Get the access token for the identity service
+    [self.identityService accessTokenWithSuccess:^(NSString * _Nullable accessToken) {
+        // Create the service terms and use this to update the identity service.
+        MXServiceTerms *serviceTerms = [[MXServiceTerms alloc] initWithBaseUrl:self.identityService.identityServer
+                                                                   serviceType:MXServiceTypeIdentityService
+                                                                 matrixSession:self
+                                                                   accessToken:accessToken];
+        
+        [self.identityService updateAreAllTermsAgreedFromServiceTerms:serviceTerms];
+    } failure:^(NSError * _Nonnull error) {
+        MXLogDebug(@"[MXSession] Unable to check identity server terms due to missing token.")
+    }];
 }
 
 

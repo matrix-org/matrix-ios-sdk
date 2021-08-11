@@ -22,6 +22,8 @@
 #import "MXCredentials.h"
 #import "MXIdentityServerRestClient.h"
 
+@class MXServiceTerms;
+
 NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - Defines & Constants
@@ -58,6 +60,12 @@ extern NSString *const MXIdentityServiceNotificationAccessTokenKey;
  The identity server URL.
  */
 @property (nonatomic, readonly) NSString *identityServer;
+
+/**
+ Whether or not the terms for this identity server have been agreed to, or nil if unknown.
+ Call `updateAreAllTermsAgreedWithSession` to update the value of this property.
+ */
+@property (nonatomic, readonly) BOOL areAllTermsAgreed;
 
 /**
  The queue on which asynchronous response blocks are called.
@@ -105,6 +113,14 @@ extern NSString *const MXIdentityServiceNotificationAccessTokenKey;
  */
 - (nullable MXHTTPOperation *)accessTokenWithSuccess:(void (^)(NSString * _Nullable accessToken))success
                                              failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
+#pragma mark Terms of Service
+
+/**
+ Checks whether the identity server's terms of service have been agreed to and updates the value
+ of `areAllTermsAgreed` accordingly.
+ */
+- (void)updateAreAllTermsAgreedFromServiceTerms:(MXServiceTerms *)serviceTerms;
 
 #pragma mark -
 

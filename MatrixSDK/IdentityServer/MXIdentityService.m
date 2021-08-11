@@ -15,6 +15,7 @@
  */
 
 #import "MXIdentityService.h"
+#import "MXServiceTerms.h"
 
 #import "MXRestClient.h"
 #import "MXTools.h"
@@ -141,6 +142,19 @@ NSString *const MXIdentityServiceNotificationAccessTokenKey = @"accessToken";
         // If we get here, we have an access token
         success(self.accessToken);
     } failure:failure];
+}
+
+#pragma mark Terms of Service
+
+- (void)updateAreAllTermsAgreedFromServiceTerms:(MXServiceTerms *)serviceTerms
+{
+    MXWeakify(self);
+    
+    [serviceTerms areAllTermsAgreed:^(NSProgress * _Nonnull agreedTermsProgress) {
+        MXStrongifyAndReturnIfNil(self);
+        
+        self->_areAllTermsAgreed = agreedTermsProgress.finished;
+    } failure:nil];
 }
 
 #pragma mark Association lookup
