@@ -89,6 +89,7 @@ it is not encouraged, you can use:
 - `pr-[PRNumber].type` for a PR with no related issue
 - `sdk-[iOSSDKIssueNumber].type` for a PR related a matrix-ios-sdk issue
 - `kit-[iOSKitIssueNumber].type` for a PR related a matrix-ios-kit issue
+- `x-nolink-[Number].type` for a PR with a change entry that will not have a link automatically appended
 
 To preview the changelog for pending changelog entries, use:
 

@@ -27,11 +27,17 @@
     {%- elif value.startswith("pr-") %}
         {%- set pr = value.replace("pr-", "#") -%}
         {{- links.append(pr) | default("", True) -}}
+    {%- elif value.startswith("x-nolink-") %}
+        {{- nil | default("", True) -}}
     {% else %}
         {{- links.append(value) | default("", True) -}}
     {% endif -%}
 {% endfor -%}
+{% if links|length == 0 %}
+- {{ text }}
+{% else %}
 - {{ text }} ({{ links | join(', ') }})
+{% endif %}
 {% endfor %}
 {% else %}
 - {{ sections[section][category]['']|join(', ') }}
