@@ -1,1 +1,0 @@
-MXRoomSummaryUpdater: Add variants of updateSummaryDisplayname and updateSummaryAvatar methods that can exclude specified user IDs.
