@@ -128,7 +128,8 @@ NSCharacterSet *uriComponentCharset;
                                 kMXEventTypeStringSecretSend,
                                 kMXEventTypeStringSecretStorageDefaultKey,
                                 kMXEventTypeStringTaggedEvents,
-                                kMXEventTypeStringSpaceChild
+                                kMXEventTypeStringSpaceChild,
+                                kMXEventTypeStringRoomRetention
                                 ];
 
         NSMutableDictionary *map = [NSMutableDictionary dictionaryWithCapacity:eventTypeMapEnumToString.count];

@@ -3,6 +3,7 @@
 🙌 Improvements
 
 - MXRoomSummaryUpdater: Add variants of updateSummaryDisplayname and updateSummaryAvatar methods that can exclude specified user IDs. ([#4609](https://github.com/vector-im/element-ios/issues/4609))
+- MXStore: Add a method to remove all the messages sent before a specific timestamp in a room.
 
 🐛 Bugfixes
 
