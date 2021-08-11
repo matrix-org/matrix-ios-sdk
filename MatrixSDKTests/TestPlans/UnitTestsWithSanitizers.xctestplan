@@ -63,6 +63,8 @@
         "MXQRCodeDataUnitTests",
         "MXReplyEventParserUnitTests",
         "MXResponseUnitTests",
+        "MXSyncResponseUnitTests\/testMergingArrays()",
+        "MXSyncResponseUnitTests\/testMergingDictionaries()",
         "MXToolsUnitTests"
       ],
       "target" : {

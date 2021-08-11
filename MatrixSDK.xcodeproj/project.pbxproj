@@ -1334,6 +1334,8 @@
 		EC383BB72541C518002FBBE6 /* MXBackgroundPushRulesManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC383BB52540E15E002FBBE6 /* MXBackgroundPushRulesManager.swift */; };
 		EC383BBF2542F1E3002FBBE6 /* MXBackgroundSyncServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC383BBD2542F141002FBBE6 /* MXBackgroundSyncServiceTests.swift */; };
 		EC383BC02542F1E4002FBBE6 /* MXBackgroundSyncServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC383BBD2542F141002FBBE6 /* MXBackgroundSyncServiceTests.swift */; };
+		EC51019D26C41981007D6D88 /* MXSyncResponseUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC51019C26C41981007D6D88 /* MXSyncResponseUnitTests.swift */; };
+		EC51019E26C41981007D6D88 /* MXSyncResponseUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC51019C26C41981007D6D88 /* MXSyncResponseUnitTests.swift */; };
 		EC60ED5D265CFC2C00B39A4E /* MXSyncResponse.h in Headers */ = {isa = PBXBuildFile; fileRef = EC60ED5B265CFC2C00B39A4E /* MXSyncResponse.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		EC60ED5E265CFC2C00B39A4E /* MXSyncResponse.h in Headers */ = {isa = PBXBuildFile; fileRef = EC60ED5B265CFC2C00B39A4E /* MXSyncResponse.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		EC60ED5F265CFC2C00B39A4E /* MXSyncResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = EC60ED5C265CFC2C00B39A4E /* MXSyncResponse.m */; };
@@ -2252,6 +2254,7 @@
 		EC383BB52540E15E002FBBE6 /* MXBackgroundPushRulesManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXBackgroundPushRulesManager.swift; sourceTree = "<group>"; };
 		EC383BBD2542F141002FBBE6 /* MXBackgroundSyncServiceTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MXBackgroundSyncServiceTests.swift; sourceTree = "<group>"; };
 		EC383BC12542F251002FBBE6 /* MatrixSDKTests-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "MatrixSDKTests-Bridging-Header.h"; sourceTree = "<group>"; };
+		EC51019C26C41981007D6D88 /* MXSyncResponseUnitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXSyncResponseUnitTests.swift; sourceTree = "<group>"; };
 		EC60ED5B265CFC2C00B39A4E /* MXSyncResponse.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXSyncResponse.h; sourceTree = "<group>"; };
 		EC60ED5C265CFC2C00B39A4E /* MXSyncResponse.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXSyncResponse.m; sourceTree = "<group>"; };
 		EC60ED65265CFC7200B39A4E /* MXPresenceSyncResponse.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXPresenceSyncResponse.h; sourceTree = "<group>"; };
@@ -3407,6 +3410,7 @@
 				327E9ACE2284783E00A98BC1 /* MXEventAnnotationUnitTests.swift */,
 				32B0E3E623A3864C0054FF1A /* MXEventReferenceUnitTests.swift */,
 				EC383BBD2542F141002FBBE6 /* MXBackgroundSyncServiceTests.swift */,
+				EC51019C26C41981007D6D88 /* MXSyncResponseUnitTests.swift */,
 				329E808E22512DF500A48C3A /* MXCryptoKeyVerificationTests.m */,
 				322D01C322492B0700150C68 /* MXCryptoShareTests.m */,
 				32720DA1222EB5650086FFF5 /* MXAutoDiscoveryTests.m */,
@@ -5402,6 +5406,7 @@
 				32C9B71823E81A1C00C6F30A /* MXCrossSigningVerificationTests.m in Sources */,
 				323C5A081A70E53500FB0549 /* MXToolsUnitTests.m in Sources */,
 				3281E89E19E299C000976E1A /* MXErrorUnitTests.m in Sources */,
+				EC51019D26C41981007D6D88 /* MXSyncResponseUnitTests.swift in Sources */,
 				3265CB3B1A151C3800E24B2F /* MXRoomStateTests.m in Sources */,
 				32CEEF3D23AD134A0039BA98 /* MXCrossSigningTests.m in Sources */,
 				326D1EF51BFC79300030947B /* MXPushRuleUnitTests.m in Sources */,
@@ -5832,6 +5837,7 @@
 				B1E09A3D2397FD820057C069 /* MXStoreFileStoreTests.m in Sources */,
 				32CEEF3E23AD134A0039BA98 /* MXCrossSigningTests.m in Sources */,
 				32EEA8402603CA140041425B /* MXRestClientExtensionsTests.m in Sources */,
+				EC51019E26C41981007D6D88 /* MXSyncResponseUnitTests.swift in Sources */,
 				32B477AA2638186000EA5800 /* MXHTTPAdditionalHeadersUnitTests.m in Sources */,
 				B1E09A2B2397FD6B0057C069 /* MatrixSDKTestsE2EData.m in Sources */,
 				B1E09A3C2397FD820057C069 /* MXStoreMemoryStoreTests.m in Sources */,
