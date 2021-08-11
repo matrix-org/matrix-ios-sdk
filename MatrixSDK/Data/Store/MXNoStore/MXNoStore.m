@@ -374,6 +374,15 @@
 {
 }
 
+- (NSInteger)maxUploadSize
+{
+    return -1;
+}
+
+- (void)storeMaxUploadSize:(NSInteger)maxUploadSize
+{
+}
+
 - (void)close
 {
     [paginationTokens removeAllObjects];
