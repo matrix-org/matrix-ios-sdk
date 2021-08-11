@@ -709,15 +709,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     // Notify the aggregation manager for every events so that it can store
     // aggregated data sent by the server
 
-    // TODO: remove this check once https://github.com/matrix-org/synapse/pull/5220 is merged
-    if (_isLiveTimeline && direction == MXTimelineDirectionForwards && isRoomInitialSync)
-    {
-        // Do nothing to avoid double counting
-    }
-    else
-    {
-        [room.mxSession.aggregations handleOriginalDataOfEvent:event];
-    }
+    [room.mxSession.aggregations handleOriginalDataOfEvent:event];
 
     // Notify listeners
     [self notifyListeners:event direction:direction];
