@@ -98,8 +98,8 @@ public class MXSyncResponseStoreManager: NSObject {
             var syncToken: String?
             for responseId in responseIds {
                 if let response = try? self.syncResponseStore.syncResponse(withId: responseId) {
-                    if var result = result {
-                        result = self.merged(response.syncResponse, onto: result)
+                    if let tmpResult = result {
+                        result = self.merged(response.syncResponse, onto: tmpResult)
                     } else {
                         result = response.syncResponse
                         syncToken = response.syncToken
