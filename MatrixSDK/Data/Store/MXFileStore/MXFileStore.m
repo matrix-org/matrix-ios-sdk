@@ -127,7 +127,7 @@ static NSUInteger preloadOptions;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
 
-        // By default, we do not need to preload rooms states now
+        // By default, we do not need to preload rooms states or messages now
         preloadOptions = MXFileStorePreloadOptionRoomSummary | MXFileStorePreloadOptionRoomAccountData;
     });
 }
@@ -225,7 +225,10 @@ static NSUInteger preloadOptions;
                 
                 MXLogDebug(@"[MXFileStore] Start data loading from files");
 
-                [self loadRoomsMessages];
+                if (preloadOptions & MXFileStorePreloadOptionRoomMessage)
+                {
+                    [self preloadRoomsMessages];
+                }
                 if (preloadOptions & MXFileStorePreloadOptionRoomState)
                 {
                     [self preloadRoomsStates];
@@ -242,7 +245,7 @@ static NSUInteger preloadOptions;
                 [self loadUsers];
                 [self loadGroups];
 
-                taskProfile.units = self->roomStores.count;
+                taskProfile.units = self.rooms.count;
                 [MXSDKOptions.sharedInstance.profiler stopMeasuringTaskWithProfile:taskProfile];
                 MXLogDebug(@"[MXFileStore] Data loaded from files in %.0fms", taskProfile.duration * 1000);
             }
@@ -478,7 +481,8 @@ static NSUInteger preloadOptions;
 
 - (NSArray *)rooms
 {
-    return roomStores.allKeys;
+    NSArray<NSString *> *roomIDs = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:storeRoomsPath error:nil];
+    return roomIDs;
 }
 
 - (void)storeStateForRoom:(NSString*)roomId stateEvents:(NSArray*)stateEvents
@@ -823,9 +827,42 @@ static NSUInteger preloadOptions;
     MXFileRoomStore *roomStore = roomStores[roomId];
     if (nil == roomStore)
     {
-        // MXFileStore requires MXFileRoomStore objets
-        roomStore = [[MXFileRoomStore alloc] init];
-        roomStores[roomId] = roomStore;
+        NSString *roomFile = [self messagesFileForRoom:roomId forBackup:NO];
+        
+        if ([[NSFileManager defaultManager] fileExistsAtPath:roomFile])
+        {
+            MXFileRoomStore *roomStore;
+            @try
+            {
+                NSDate *startDate = [NSDate date];
+                roomStore = [NSKeyedUnarchiver unarchiveObjectWithFile:roomFile];
+                MXLogDebug(@"[MXFileStore] Loaded room messages of room: %@ in %.0fms", roomId, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+            }
+            @catch (NSException *exception)
+            {
+                MXLogDebug(@"[MXFileStore] Warning: MXFileRoomStore file for room %@ has been corrupted. Exception: %@", roomId, exception);
+            }
+
+            if (roomStore)
+            {
+                //MXLogDebug(@"   - %@: %@", roomId, roomStore);
+                roomStores[roomId] = roomStore;
+            }
+            else
+            {
+                MXLogDebug(@"[MXFileStore] Warning: MXFileStore has been reset due to room file corruption. Room id: %@. File path: %@",
+                      roomId, roomFile);
+                
+                [self logFiles];
+                [self deleteAllData];
+            }
+        }
+        else
+        {
+            //  MXFileStore requires MXFileRoomStore objects
+            roomStore = [[MXFileRoomStore alloc] init];
+            roomStores[roomId] = roomStore;
+        }
     }
     return roomStore;
 }
@@ -1088,7 +1125,7 @@ static NSUInteger preloadOptions;
 
 #pragma mark - Rooms messages
 // Load the data store in files
-- (void)loadRoomsMessages
+- (void)preloadRoomsMessages
 {
     NSArray<NSString *> *roomIDs = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:storeRoomsPath error:nil];
 
@@ -1148,7 +1185,7 @@ static NSUInteger preloadOptions;
             // Save rooms where there was changes
             for (NSString *roomId in roomsToCommit)
             {
-                MXFileRoomStore *roomStore = self->roomStores[roomId];
+                MXFileRoomStore *roomStore = (MXFileRoomStore *)[self getOrCreateRoomStore:roomId];
                 if (roomStore)
                 {
                     NSString *file = [self messagesFileForRoom:roomId forBackup:NO];
