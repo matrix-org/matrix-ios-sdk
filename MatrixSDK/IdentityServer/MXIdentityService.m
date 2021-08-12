@@ -23,6 +23,7 @@
 #pragma mark - Defines & Constants
 
 NSString *const MXIdentityServiceTermsNotSignedNotification = @"MXIdentityServiceTermsNotSignedNotification";
+NSString *const MXIdentityServiceTermsAcceptedNotification = @"MXIdentityServiceTermsAcceptedNotification";
 
 NSString *const MXIdentityServiceDidChangeAccessTokenNotification = @"MXIdentityServiceDidChangeAccessTokenNotification";
 
@@ -122,6 +123,7 @@ NSString *const MXIdentityServiceNotificationAccessTokenKey = @"accessToken";
         self.homeserverRestClient = homeserverRestClient;
         
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleHTTPClientError:) name:kMXHTTPClientMatrixErrorNotification object:nil];
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleServiceTermsAccepted:) name:MXIdentityServiceTermsAcceptedNotification object:nil];
     }
     return self;
 }
@@ -155,6 +157,19 @@ NSString *const MXIdentityServiceNotificationAccessTokenKey = @"accessToken";
         
         self->_areAllTermsAgreed = agreedTermsProgress.finished;
     } failure:nil];
+}
+
+- (void)handleServiceTermsAccepted:(NSNotification*)notification
+{
+    NSString *identityServer = notification.userInfo[MXIdentityServiceNotificationIdentityServerKey];
+    
+    // Ensure the terms are for this identity service
+    if (identityServer == self.identityServer)
+    {
+        // And update if they are. This will be double checked when the account
+        // data gets updated, but for now this allows UI updates to take place.
+        self->_areAllTermsAgreed = YES;
+    }
 }
 
 #pragma mark Association lookup
@@ -472,6 +487,8 @@ NSString *const MXIdentityServiceNotificationAccessTokenKey = @"accessToken";
         && [httpClient.baseURL.absoluteString hasPrefix:self.identityServer]
         && [mxError.errcode isEqualToString:kMXErrCodeStringTermsNotSigned] && accessToken)
     {
+        self->_areAllTermsAgreed = NO;
+        
         NSDictionary *userInfo = [self notificationUserInfoWithAccessToken:accessToken];
         [[NSNotificationCenter defaultCenter] postNotificationName:MXIdentityServiceTermsNotSignedNotification object:nil userInfo:userInfo];
     }

@@ -35,6 +35,12 @@ NS_ASSUME_NONNULL_BEGIN
 extern NSString *const MXIdentityServiceTermsNotSignedNotification;
 
 /**
+ Notification name to send when MXServiceTerms have been accepted. Must provides the the identity server whose terms were accepted.
+ Give an associated userInfo dictionary of type NSDictionary<NSString*, NSString*> with following key: "identityServer". Use constant below for convenience.
+ */
+extern NSString *const MXIdentityServiceTermsAcceptedNotification;
+
+/**
  Notification name sent when access token change. Provides user id, identity server and access token.
  Give an associated userInfo dictionary of type NSDictionary<NSString*, NSString*> with following keys: "userId", "identityServer", "accessToken". Use constants below for convenience.
  */
