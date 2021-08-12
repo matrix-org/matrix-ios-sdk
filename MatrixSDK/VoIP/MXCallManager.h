@@ -290,14 +290,15 @@ extern NSString *const kMXProtocolVectorSipVirtual;
 
 /**
  Get recent contacts with whom a call was present, either incoming or outgoing.
- Result will be descending order according to the call time.
- So most recent call's contact will be at the beginning of the result.
  
  @param maxNumberOfUsers Maximum number of desired users. Please note that return value could be less than this.
  @param ignoredUserIds Ignored user ids for desired users.
+ @param completion Completion block. Result will be descending ordered according to the call time.
+ So most recent call's contact will be at the beginning of the result.
  */
-- (NSArray<MXUser *> * _Nonnull)getRecentCalledUsers:(NSUInteger)maxNumberOfUsers
-                                      ignoredUserIds:(NSArray<NSString*> * _Nullable)ignoredUserIds;
+- (void)getRecentCalledUsers:(NSUInteger)maxNumberOfUsers
+              ignoredUserIds:(NSArray<NSString*> * _Nullable)ignoredUserIds
+                  completion:(nonnull void (^)(NSArray<MXUser *> * _Nonnull))completion;
 
 @end
 

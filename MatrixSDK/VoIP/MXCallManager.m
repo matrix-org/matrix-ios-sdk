@@ -1732,65 +1732,80 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
 
 #pragma mark - Recent
 
-- (NSArray<MXUser *> * _Nonnull)getRecentCalledUsers:(NSUInteger)maxNumberOfUsers
-                                      ignoredUserIds:(NSArray<NSString*> * _Nullable)ignoredUserIds
+- (void)getRecentCalledUsers:(NSUInteger)maxNumberOfUsers
+              ignoredUserIds:(NSArray<NSString*> * _Nullable)ignoredUserIds
+                  completion:(nonnull void (^)(NSArray<MXUser *> * _Nonnull))completion
 {
     if (maxNumberOfUsers == 0)
     {
-        return NSArray.array;
+        dispatch_async(dispatch_get_main_queue(), ^{
+            completion(@[]);
+        });
+        return;
     }
     
     NSArray<MXRoom *> *rooms = _mxSession.rooms;
     
     if (rooms.count == 0)
     {
-        return NSArray.array;
+        dispatch_async(dispatch_get_main_queue(), ^{
+            completion(@[]);
+        });
+        return;
     }
     
     NSMutableArray *callEvents = [NSMutableArray arrayWithCapacity:rooms.count];
     
+    dispatch_group_t dispatchGroup = dispatch_group_create();
     for (MXRoom *room in rooms) {
-        id<MXEventsEnumerator> enumerator = [room enumeratorForStoredMessagesWithTypeIn:@[kMXEventTypeStringCallInvite]];
-        MXEvent *callEvent = enumerator.nextEvent;
-        if (callEvent)
-        {
-            [callEvents addObject:callEvent];
-        }
-    }
-    
-    [callEvents sortUsingComparator:^NSComparisonResult(MXEvent * _Nonnull event1, MXEvent * _Nonnull event2) {
-        return [@(event1.age) compare:@(event2.age)];
-    }];
-    
-    NSMutableArray *users = [NSMutableArray arrayWithCapacity:callEvents.count];
-    
-    for (MXEvent *event in callEvents) {
-        NSString *userId = nil;
-        if ([event.sender isEqualToString:_mxSession.myUserId])
-        {
-            userId = [_mxSession directUserIdInRoom:event.roomId];
-        }
-        else
-        {
-            userId = event.sender;
-        }
-        
-        if (userId && ![ignoredUserIds containsObject:userId])
-        {
-            MXUser *user = [_mxSession userWithUserId:userId];
-            if (user)
+        dispatch_group_enter(dispatchGroup);
+        [room enumeratorForStoredMessagesWithTypeIn:@[kMXEventTypeStringCallInvite]
+                                            success:^(id<MXEventsEnumerator> _Nonnull enumerator) {
+            MXEvent *callEvent = enumerator.nextEvent;
+            if (callEvent)
             {
-                [users addObject:user];
-                if (users.count == maxNumberOfUsers)
+                [callEvents addObject:callEvent];
+            }
+            dispatch_group_leave(dispatchGroup);
+        } failure:^(NSError * _Nonnull error) {
+            dispatch_group_leave(dispatchGroup);
+        }];
+    }
+    dispatch_group_notify(dispatchGroup, dispatch_get_main_queue(), ^{
+        [callEvents sortUsingComparator:^NSComparisonResult(MXEvent * _Nonnull event1, MXEvent * _Nonnull event2) {
+            return [@(event1.age) compare:@(event2.age)];
+        }];
+        
+        NSMutableArray *users = [NSMutableArray arrayWithCapacity:callEvents.count];
+        
+        for (MXEvent *event in callEvents) {
+            NSString *userId = nil;
+            if ([event.sender isEqualToString:self.mxSession.myUserId])
+            {
+                userId = [self.mxSession directUserIdInRoom:event.roomId];
+            }
+            else
+            {
+                userId = event.sender;
+            }
+            
+            if (userId && ![ignoredUserIds containsObject:userId])
+            {
+                MXUser *user = [self.mxSession userWithUserId:userId];
+                if (user)
                 {
-                    //  no need to go further
-                    break;
+                    [users addObject:user];
+                    if (users.count == maxNumberOfUsers)
+                    {
+                        //  no need to go further
+                        break;
+                    }
                 }
             }
         }
-    }
-    
-    return users;
+        
+        completion(users);
+    });
 }
 
 @end
