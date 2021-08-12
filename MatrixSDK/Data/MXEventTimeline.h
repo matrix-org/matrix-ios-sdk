@@ -196,9 +196,9 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXTimelineDirection direction, MXR
  Get the number of messages we can still back paginate from the store.
  It provides the count of events available without making a request to the home server.
 
- @return the count of remaining messages in store.
+ @param completion Completion block returning the count of remaining messages in store.
  */
-- (NSUInteger)remainingMessagesForBackPaginationInStore;
+- (void)remainingMessagesForBackPaginationInStoreWithCompletion:(void (^)(NSUInteger))completion;
 
 
 #pragma mark - Server sync

@@ -54,7 +54,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     id<MXStore> store;
 
     // The events enumerator to paginate messages from the store.
-    id<MXEventsEnumerator> storeMessagesEnumerator;
+    id<MXEventsEnumerator> cachedStoreMessagesEnumerator;
  
     // MXStore does only back pagination. So, the forward pagination token for
     // past timelines is managed locally.
@@ -156,6 +156,23 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     }
 }
 
+- (void)storeMessagesEnumerator:(void (^)(id<MXEventsEnumerator>))completion
+{
+    if (cachedStoreMessagesEnumerator)
+    {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            completion(self->cachedStoreMessagesEnumerator);
+        });
+        return;
+    }
+    [store messagesEnumeratorForRoom:_state.roomId success:^(id<MXEventsEnumerator> _Nonnull enumerator) {
+        self->cachedStoreMessagesEnumerator = enumerator;
+        if (completion)
+        {
+            completion(enumerator);
+        }
+    } failure:nil];
+}
 
 #pragma mark - Pagination
 - (BOOL)canPaginate:(MXTimelineDirection)direction
@@ -167,7 +184,8 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         // canPaginate depends on two things:
         //  - did we end to paginate from the MXStore?
         //  - did we reach the top of the pagination in our requests to the home server?
-        canPaginate = (0 < storeMessagesEnumerator.remaining)
+        canPaginate = !cachedStoreMessagesEnumerator
+            || (0 < cachedStoreMessagesEnumerator.remaining)
             || ![store hasReachedHomeServerPaginationEndForRoom:_state.roomId];
     }
     else
@@ -194,7 +212,8 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     backState = [[MXRoomState alloc] initBackStateWith:_state];
 
     // Reset store pagination
-    storeMessagesEnumerator = [store messagesEnumeratorForRoom:_state.roomId];
+    cachedStoreMessagesEnumerator = nil;
+    [self storeMessagesEnumerator:nil];
 }
 
 - (MXHTTPOperation *)resetPaginationAroundInitialEventWithLimit:(NSUInteger)limit success:(void (^)(void))success failure:(void (^)(NSError *))failure
@@ -254,17 +273,19 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     if (direction == MXTimelineDirectionBackwards)
     {
         // For back pagination, try to get messages from the store first
-        NSArray<MXEvent *> *eventsFromStore = [storeMessagesEnumerator nextEventsBatch:numItems];
-        
-        // messagesFromStore are in chronological order
-        // Handle events from the most recent
-        //?
-        
-        [self decryptEvents:eventsFromStore onComplete:^{
+        [self storeMessagesEnumerator:^(id<MXEventsEnumerator> enumerator) {
+            NSArray<MXEvent *> *eventsFromStore = [enumerator nextEventsBatch:numItems];
             
-            MXLogDebug(@"[MXEventTimeline] paginateFromStore %tu messages in %@ (%tu are retrieved from the store)", numItems, self.state.roomId, eventsFromStore.count);
+            // messagesFromStore are in chronological order
+            // Handle events from the most recent
+            //?
+            
+            [self decryptEvents:eventsFromStore onComplete:^{
+                
+                MXLogDebug(@"[MXEventTimeline] paginateFromStore %tu messages in %@ (%tu are retrieved from the store)", numItems, self.state.roomId, eventsFromStore.count);
 
-            onComplete(eventsFromStore);
+                onComplete(eventsFromStore);
+            }];
         }];
     }
     else
@@ -420,9 +441,11 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     return operation;
 }
 
-- (NSUInteger)remainingMessagesForBackPaginationInStore
+- (void)remainingMessagesForBackPaginationInStoreWithCompletion:(void (^)(NSUInteger))completion
 {
-    return storeMessagesEnumerator.remaining;
+    [self storeMessagesEnumerator:^(id<MXEventsEnumerator> enumerator) {
+        completion(enumerator.remaining);
+    }];
 }
 
 
@@ -933,15 +956,18 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     if (_isLiveTimeline && (direction == MXTimelineDirectionForwards))
     {
         // Check for local echo suppression
-        if (room.outgoingMessages.count && [event.sender isEqualToString:room.mxSession.myUserId])
-        {
-            MXEvent *localEcho = [room pendingLocalEchoRelatedToEvent:event];
-            if (localEcho)
+        [room outgoingMessagesWithCompletion:^(NSArray<MXEvent *> * _Nullable outgoingMessages) {
+            if (outgoingMessages.count && [event.sender isEqualToString:self->room.mxSession.myUserId])
             {
-                // Remove the event from the pending local echo list
-                [room removePendingLocalEcho:localEcho.eventId];
+                [self->room pendingLocalEchoRelatedToEvent:event completion:^(MXEvent * _Nullable localEcho) {
+                    if (localEcho)
+                    {
+                        // Remove the event from the pending local echo list
+                        [self->room removePendingLocalEcho:localEcho.eventId];
+                    }
+                }];
             }
-        }
+        }];
     }
 }
 
