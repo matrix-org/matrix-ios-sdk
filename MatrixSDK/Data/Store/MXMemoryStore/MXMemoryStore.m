@@ -143,17 +143,25 @@
     return roomStore.hasLoadedAllRoomMembersForRoom;
 }
 
-
-- (id<MXEventsEnumerator>)messagesEnumeratorForRoom:(NSString *)roomId
+- (void)messagesEnumeratorForRoom:(nonnull NSString *)roomId
+                          success:(nonnull void (^)(id<MXEventsEnumerator> _Nonnull))success
+                          failure:(nullable void (^)(NSError * _Nonnull error))failure
 {
     MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
-    return roomStore.messagesEnumerator;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        success(roomStore.messagesEnumerator);
+    });
 }
 
-- (id<MXEventsEnumerator>)messagesEnumeratorForRoom:(NSString *)roomId withTypeIn:(NSArray *)types
+- (void)messagesEnumeratorForRoom:(nonnull NSString *)roomId
+                      withTypeIn:(nullable NSArray<MXEventTypeString> *)types
+                         success:(nonnull void (^)(id<MXEventsEnumerator> _Nonnull))success
+                         failure:(nullable void (^)(NSError * _Nonnull error))failure
 {
     MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
-    return [roomStore enumeratorForMessagesWithTypeIn:types];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        success([roomStore enumeratorForMessagesWithTypeIn:types]);
+    });
 }
 
 - (void)storePartialTextMessageForRoom:(NSString *)roomId partialTextMessage:(NSString *)partialTextMessage
@@ -373,10 +381,12 @@
     [roomStore removeOutgoingMessage:outgoingMessageEventId];
 }
 
-- (NSArray<MXEvent*>*)outgoingMessagesInRoom:(NSString*)roomId
+- (void)outgoingMessagesInRoom:(NSString *)roomId completion:(void (^)(NSArray<MXEvent *> * _Nullable))completion
 {
     MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
-    return roomStore.outgoingMessages;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        completion(roomStore.outgoingMessages);
+    });
 }
 
 

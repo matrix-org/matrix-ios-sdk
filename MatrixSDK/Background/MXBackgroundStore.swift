@@ -165,12 +165,16 @@ class MXBackgroundStore: NSObject, MXStore {
         return false
     }
     
-    func messagesEnumerator(forRoom roomId: String) -> MXEventsEnumerator {
-        return MXEventsEnumeratorOnArray(messages: [])
+    func messagesEnumerator(forRoom roomId: String, success: @escaping (MXEventsEnumerator) -> Void, failure: ((Error) -> Void)? = nil) {
+        DispatchQueue.main.async {
+            success(MXEventsEnumeratorOnArray(messages: []))
+        }
     }
     
-    func messagesEnumerator(forRoom roomId: String, withTypeIn types: [Any]?) -> MXEventsEnumerator {
-        return MXEventsEnumeratorOnArray(messages: [])
+    func messagesEnumerator(forRoom roomId: String, withTypeIn types: [String]?, success: @escaping (MXEventsEnumerator) -> Void, failure: ((Error) -> Void)? = nil) {
+        DispatchQueue.main.async {
+            success(MXEventsEnumeratorOnArray(messages: []))
+        }
     }
     
     func relations(forEvent eventId: String, inRoom roomId: String, relationType: String) -> [MXEvent] {

@@ -214,7 +214,9 @@
 }
 
 
-- (id<MXEventsEnumerator>)messagesEnumeratorForRoom:(NSString *)roomId
+- (void)messagesEnumeratorForRoom:(nonnull NSString *)roomId
+                          success:(nonnull void (^)(id<MXEventsEnumerator> _Nonnull))success
+                          failure:(nullable void (^)(NSError * _Nonnull error))failure
 {
     // As the back pagination is based on the HS back pagination API, reset data about it
     [self storePaginationTokenOfRoom:roomId andToken:@"END"];
@@ -224,15 +226,22 @@
     // of MXNoStore is to not store messages so that all paginations are made
     // via requests to the homeserver.
     // So, return an empty enumerator.
-    return [[MXEventsEnumeratorOnArray alloc] initWithMessages:@[]];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        success([[MXEventsEnumeratorOnArray alloc] initWithMessages:@[]]);
+    });
 }
 
-- (id<MXEventsEnumerator>)messagesEnumeratorForRoom:(NSString *)roomId withTypeIn:(NSArray *)types
+- (void)messagesEnumeratorForRoom:(nonnull NSString *)roomId
+                       withTypeIn:(nullable NSArray<MXEventTypeString> *)types
+                          success:(nonnull void (^)(id<MXEventsEnumerator> _Nonnull))success
+                          failure:(nullable void (^)(NSError * _Nonnull error))failure
 {
     // [MXStore messagesEnumeratorForRoom: withTypeIn: ignoreMemberProfileChanges:] is used
     // to get the last message of the room which must not be nil.
     // So return an enumerator with the last message we have without caring of its type.
-    return [[MXEventsEnumeratorOnArray alloc] initWithMessages:@[lastMessages[roomId]]];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        success([[MXEventsEnumeratorOnArray alloc] initWithMessages:@[self->lastMessages[roomId]]]);
+    });
 }
 
 - (NSArray<MXEvent *> *)relationsForEvent:(NSString *)eventId inRoom:(NSString *)roomId relationType:(NSString *)relationType
@@ -300,9 +309,11 @@
 {
 }
 
-- (NSArray<MXEvent*>*)outgoingMessagesInRoom:(NSString*)roomId
+- (void)outgoingMessagesInRoom:(NSString *)roomId completion:(void (^)(NSArray<MXEvent *> * _Nullable))completion
 {
-    return @[];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        completion(@[]);
+    });
 }
 
 #pragma mark - Matrix filters

@@ -134,20 +134,27 @@
 
 /**
  Get an events enumerator on all messages of a room.
- 
+
  @param roomId the id of the room.
- @return the events enumerator.
+ @param success A block object called when the operation succeeds. Contains the events enumerator.
+ @param failure A block object called when the operation fails.
  */
-- (id<MXEventsEnumerator> _Nonnull)messagesEnumeratorForRoom:(nonnull NSString*)roomId;
+- (void)messagesEnumeratorForRoom:(nonnull NSString *)roomId
+                          success:(nonnull void (^)(id<MXEventsEnumerator> _Nonnull))success
+                          failure:(nullable void (^)(NSError * _Nonnull error))failure;
 
 /**
  Get an events enumerator on messages of a room with a filter on the events types.
 
  @param roomId the id of the room.
  @param types an array of event types strings (MXEventTypeString).
- @return the events enumerator.
+ @param success A block object called when the operation succeeds. Contains the events enumerator.
+ @param failure A block object called when the operation fails.
  */
-- (id<MXEventsEnumerator> _Nonnull)messagesEnumeratorForRoom:(nonnull NSString*)roomId withTypeIn:(nullable NSArray*)types;
+- (void)messagesEnumeratorForRoom:(nonnull NSString *)roomId
+                       withTypeIn:(nullable NSArray<MXEventTypeString> *)types
+                          success:(nonnull void (^)(id<MXEventsEnumerator> _Nonnull))success
+                          failure:(nullable void (^)(NSError * _Nonnull error))failure;
 
 /**
  Get events related to a specific event.
@@ -450,9 +457,10 @@
  Get all outgoing messages pending in a room.
 
  @param roomId the id of the room.
- @return the list of messages that have not been sent yet
+ @param completion Completion block.
  */
-- (NSArray<MXEvent*>* _Nullable)outgoingMessagesInRoom:(nonnull NSString*)roomId;
+- (void)outgoingMessagesInRoom:(nonnull NSString*)roomId
+                    completion:(nonnull void (^)(NSArray<MXEvent*>* _Nullable))completion;
 
 
 #pragma mark - User Account data
