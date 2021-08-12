@@ -246,7 +246,8 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
                                                        onComplete:(void (^)(void))onComplete
                                                           failure:(void (^)(NSError *))failure
                                                          timeline:(MXEventTimeline *)timeline
-                                                        operation:(MXHTTPOperation *)operation commit:(BOOL)commit
+                                                        operation:(MXHTTPOperation *)operation
+                                                           commit:(BOOL)commit
 {
     // Sanity checks
     MXRoom *room = self.room;
@@ -294,63 +295,64 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
         }
     }];
     
-   
-    if (timeline.remainingMessagesForBackPaginationInStore)
-    {
-        // First, for performance reason, read messages only from the store
-        // Do it one by one to decrypt the minimal number of events.
-        MXHTTPOperation *newOperation = [timeline paginate:1 direction:MXTimelineDirectionBackwards onlyFromStore:YES complete:^{
-            if (lastMessageUpdated)
-            {
-                // We are done
-                [self save:commit];
-                onComplete();
-            }
-            else
-            {
-                // Need more messages
-                [self fetchLastMessageWithMaxServerPaginationCount:maxServerPaginationCount onComplete:onComplete failure:failure timeline:timeline operation:operation commit:commit];
-            }
+    [timeline remainingMessagesForBackPaginationInStoreWithCompletion:^(NSUInteger remainingMessagesForBackPaginationInStore) {
+        if (remainingMessagesForBackPaginationInStore)
+        {
+            // First, for performance reason, read messages only from the store
+            // Do it one by one to decrypt the minimal number of events.
+            MXHTTPOperation *newOperation = [timeline paginate:1 direction:MXTimelineDirectionBackwards onlyFromStore:YES complete:^{
+                if (lastMessageUpdated)
+                {
+                    // We are done
+                    [self save:commit];
+                    onComplete();
+                }
+                else
+                {
+                    // Need more messages
+                    [self fetchLastMessageWithMaxServerPaginationCount:maxServerPaginationCount onComplete:onComplete failure:failure timeline:timeline operation:operation commit:commit];
+                }
+                
+            } failure:failure];
             
-        } failure:failure];
-        
-        [operation mutateTo:newOperation];
-    }
-    else if (maxServerPaginationCount)
-    {
-        // If requested, get messages from the homeserver
-        // Fetch them by batch of 50 messages
-        NSUInteger paginationCount = MIN(maxServerPaginationCount, MXRoomSummaryPaginationChunkSize);
-        MXLogDebug(@"[MXRoomSummary] fetchLastMessage: paginate %@ (%@) messages from the server in %@", @(paginationCount), @(maxServerPaginationCount), _roomId);
-        
-        MXHTTPOperation *newOperation = [timeline paginate:paginationCount direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
-            if (lastMessageUpdated)
-            {
-                // We are done
-                [self save:commit];
-                onComplete();
-            }
-            else if (maxServerPaginationCount > MXRoomSummaryPaginationChunkSize)
-            {
-                MXLogDebug(@"[MXRoomSummary] fetchLastMessage: Failed to find last message in %@. Paginate more...", self.roomId);
-                NSUInteger newMaxServerPaginationCount = maxServerPaginationCount - MXRoomSummaryPaginationChunkSize;
-                [self fetchLastMessageWithMaxServerPaginationCount:newMaxServerPaginationCount onComplete:onComplete failure:failure timeline:timeline operation:operation commit:commit];
-            }
-            else
-            {
-                MXLogDebug(@"[MXRoomSummary] fetchLastMessage: Failed to find last message in %@. Stop paginating.", self.roomId);
-                onComplete();
-            }
+            [operation mutateTo:newOperation];
+        }
+        else if (maxServerPaginationCount)
+        {
+            // If requested, get messages from the homeserver
+            // Fetch them by batch of 50 messages
+            NSUInteger paginationCount = MIN(maxServerPaginationCount, MXRoomSummaryPaginationChunkSize);
+            MXLogDebug(@"[MXRoomSummary] fetchLastMessage: paginate %@ (%@) messages from the server in %@", @(paginationCount), @(maxServerPaginationCount), self.roomId);
             
-        } failure:failure];
-        
-        [operation mutateTo:newOperation];
-    }
-    else
-    {
-        MXLogDebug(@"[MXRoomSummary] fetchLastMessage: Failed to find last message in %@.", self.roomId);
-        onComplete();
-    }
+            MXHTTPOperation *newOperation = [timeline paginate:paginationCount direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
+                if (lastMessageUpdated)
+                {
+                    // We are done
+                    [self save:commit];
+                    onComplete();
+                }
+                else if (maxServerPaginationCount > MXRoomSummaryPaginationChunkSize)
+                {
+                    MXLogDebug(@"[MXRoomSummary] fetchLastMessage: Failed to find last message in %@. Paginate more...", self.roomId);
+                    NSUInteger newMaxServerPaginationCount = maxServerPaginationCount - MXRoomSummaryPaginationChunkSize;
+                    [self fetchLastMessageWithMaxServerPaginationCount:newMaxServerPaginationCount onComplete:onComplete failure:failure timeline:timeline operation:operation commit:commit];
+                }
+                else
+                {
+                    MXLogDebug(@"[MXRoomSummary] fetchLastMessage: Failed to find last message in %@. Stop paginating.", self.roomId);
+                    onComplete();
+                }
+                
+            } failure:failure];
+            
+            [operation mutateTo:newOperation];
+        }
+        else
+        {
+            MXLogDebug(@"[MXRoomSummary] fetchLastMessage: Failed to find last message in %@.", self.roomId);
+            onComplete();
+        }
+    }];
     
     return operation;
 }
@@ -887,7 +889,6 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
 
     result = prime * result + [_lastMessage.eventId hash];
     result = prime * result + [_lastMessage.text hash];
-    result = prime * result + self.room.storedMessagesCount;
 
     return result;
 }
