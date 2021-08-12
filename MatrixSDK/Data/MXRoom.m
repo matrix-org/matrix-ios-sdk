@@ -486,29 +486,29 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
 
 
 #pragma mark - Stored messages enumerator
-- (id<MXEventsEnumerator>)enumeratorForStoredMessages
+- (void)enumeratorForStoredMessagesWithSuccess:(nonnull void (^)(id<MXEventsEnumerator> _Nonnull))success
+                                       failure:(nullable void (^)(NSError * _Nonnull error))failure
 {
-    return [mxSession.store messagesEnumeratorForRoom:self.roomId];
+    [mxSession.store messagesEnumeratorForRoom:self.roomId success:success failure:failure];
 }
 
-- (id<MXEventsEnumerator>)enumeratorForStoredMessagesWithTypeIn:(NSArray<MXEventTypeString> *)types
+- (void)enumeratorForStoredMessagesWithTypeIn:(nullable NSArray<MXEventTypeString> *)types
+                                      success:(nonnull void (^)(id<MXEventsEnumerator> _Nonnull))success
+                                      failure:(nullable void (^)(NSError * _Nonnull error))failure
 {
-    return [mxSession.store messagesEnumeratorForRoom:self.roomId withTypeIn:types];
+    [mxSession.store messagesEnumeratorForRoom:self.roomId withTypeIn:types success:success failure:failure];
 }
 
-- (NSUInteger)storedMessagesCount
+- (void)storedMessagesCountWithSuccess:(nonnull void (^)(NSUInteger))success
+                               failure:(nullable void (^)(NSError * _Nonnull error))failure
 {
-    NSUInteger storedMessagesCount = 0;
-
-    @autoreleasepool
-    {
+    [self enumeratorForStoredMessagesWithSuccess:^(id<MXEventsEnumerator> _Nonnull enumerator) {
         // Note: For performance, it may worth to have a dedicated MXStore method to get
         // this value
-        storedMessagesCount = self.enumeratorForStoredMessages.remaining;
-    }
-
-    return storedMessagesCount;
+        success(enumerator.remaining);
+    } failure:failure];
 }
+
 
 
 #pragma mark - Room operations
@@ -2494,53 +2494,50 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     }
 }
 
-- (NSArray<MXEvent*>*)outgoingMessages
+- (void)outgoingMessagesWithCompletion:(nonnull void (^)(NSArray<MXEvent*>* _Nullable))completion;
 {
-    if ([mxSession.store respondsToSelector:@selector(outgoingMessagesInRoom:)])
+    if ([mxSession.store respondsToSelector:@selector(outgoingMessagesInRoom:completion:)])
     {
-        NSArray<MXEvent*> *outgoingMessages = [mxSession.store outgoingMessagesInRoom:self.roomId];
-        return outgoingMessages;
+        [mxSession.store outgoingMessagesInRoom:self.roomId completion:completion];
     }
     else
     {
-        return nil;
+        dispatch_async(dispatch_get_main_queue(), ^{
+            completion(nil);
+        });
     }
 }
 
 - (void)refreshOutgoingMessages
 {
     // Update the stored outgoing messages, by removing the sent messages and tagging as failed the others.
-    NSArray<MXEvent*>* outgoingMessages = self.outgoingMessages;
-    
-    if (outgoingMessages.count && [mxSession.store respondsToSelector:@selector(commit)])
-    {
-        for (NSInteger index = 0; index < outgoingMessages.count;)
+    [self outgoingMessagesWithCompletion:^(NSArray<MXEvent *> * _Nullable outgoingMessages) {
+        if (outgoingMessages.count && [self->mxSession.store respondsToSelector:@selector(commit)])
         {
-            MXEvent *outgoingMessage = [outgoingMessages objectAtIndex:index];
-            
-            // Remove successfully sent messages
-            if (outgoingMessage.isLocalEvent == NO)
+            for (MXEvent *outgoingMessage in outgoingMessages)
             {
-                if ([mxSession.store respondsToSelector:@selector(removeOutgoingMessageFromRoom:outgoingMessage:)])
+                // Remove successfully sent messages
+                if (outgoingMessage.isLocalEvent == NO)
                 {
-                    [mxSession.store removeOutgoingMessageFromRoom:_roomId outgoingMessage:outgoingMessage.eventId];
-                    continue;
+                    if ([self->mxSession.store respondsToSelector:@selector(removeOutgoingMessageFromRoom:outgoingMessage:)])
+                    {
+                        [self->mxSession.store removeOutgoingMessageFromRoom:self.roomId outgoingMessage:outgoingMessage.eventId];
+                        continue;
+                    }
+                }
+                else
+                {
+                    // Here the message sending has failed
+                    outgoingMessage.sentState = MXEventSentStateFailed;
+                    
+                    // Erase the timestamp
+                    outgoingMessage.originServerTs = kMXUndefinedTimestamp;
                 }
             }
-            else
-            {
-                // Here the message sending has failed
-                outgoingMessage.sentState = MXEventSentStateFailed;
-                
-                // Erase the timestamp
-                outgoingMessage.originServerTs = kMXUndefinedTimestamp;
-            }
             
-            index++;
+            [self->mxSession.store commit];
         }
-        
-        [mxSession.store commit];
-    }
+    }];
 }
 
 #pragma mark - Local echo handling
@@ -2560,77 +2557,87 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     return localEcho;
 }
 
-- (MXEvent*)pendingLocalEchoRelatedToEvent:(MXEvent*)event
+- (void)pendingLocalEchoRelatedToEvent:(MXEvent*)event
+                            completion:(nonnull void (^)(MXEvent* _Nullable))completion
 {
-    // Note: event is supposed here to be an outgoing event received from the server sync.
-    MXEvent *localEcho = nil;
-
     NSString *msgtype;
     MXJSONModelSetString(msgtype, event.content[@"msgtype"]);
 
     if (msgtype)
     {
         // We look first for a pending event with the same event id (This happens when server response is received before server sync).
-        NSArray<MXEvent*>* pendingLocalEchoes = self.outgoingMessages;
-        for (NSInteger index = 0; index < pendingLocalEchoes.count; index++)
-        {
-            localEcho = [pendingLocalEchoes objectAtIndex:index];
-            if ([localEcho.eventId isEqualToString:event.eventId])
-            {
-                break;
-            }
-            localEcho = nil;
-        }
-
-        // If none, we return the pending event (if any) whose content matches with received event content.
-        if (!localEcho)
-        {
+        [self outgoingMessagesWithCompletion:^(NSArray<MXEvent *> * _Nullable pendingLocalEchoes) {
+            // Note: event is supposed here to be an outgoing event received from the server sync.
+            MXEvent *localEcho = nil;
+            
             for (NSInteger index = 0; index < pendingLocalEchoes.count; index++)
             {
                 localEcho = [pendingLocalEchoes objectAtIndex:index];
-                NSString *pendingEventType = localEcho.content[@"msgtype"];
-
-                if ([msgtype isEqualToString:pendingEventType])
+                if ([localEcho.eventId isEqualToString:event.eventId])
                 {
-                    if ([msgtype isEqualToString:kMXMessageTypeText] || [msgtype isEqualToString:kMXMessageTypeEmote])
+                    break;
+                }
+                localEcho = nil;
+            }
+
+            // If none, we return the pending event (if any) whose content matches with received event content.
+            if (!localEcho)
+            {
+                for (NSInteger index = 0; index < pendingLocalEchoes.count; index++)
+                {
+                    localEcho = [pendingLocalEchoes objectAtIndex:index];
+                    NSString *pendingEventType = localEcho.content[@"msgtype"];
+
+                    if ([msgtype isEqualToString:pendingEventType])
                     {
-                        // Compare content body
-                        if ([event.content[@"body"] isEqualToString:localEcho.content[@"body"]])
+                        if ([msgtype isEqualToString:kMXMessageTypeText] || [msgtype isEqualToString:kMXMessageTypeEmote])
                         {
-                            break;
-                        }
-                    }
-                    else if ([msgtype isEqualToString:kMXMessageTypeLocation])
-                    {
-                        // Compare geo uri
-                        if ([event.content[@"geo_uri"] isEqualToString:localEcho.content[@"geo_uri"]])
-                        {
-                            break;
-                        }
-                    }
-                    else
-                    {
-                        // Here the type is kMXMessageTypeImage, kMXMessageTypeAudio, kMXMessageTypeVideo or kMXMessageTypeFile
-                        if (event.content[@"file"])
-                        {
-                            // This is an encrypted attachment
-                            if (localEcho.content[@"file"] && [event.content[@"file"][@"url"] isEqualToString:localEcho.content[@"file"][@"url"]])
+                            // Compare content body
+                            if ([event.content[@"body"] isEqualToString:localEcho.content[@"body"]])
                             {
                                 break;
                             }
                         }
-                        else if ([event.content[@"url"] isEqualToString:localEcho.content[@"url"]])
+                        else if ([msgtype isEqualToString:kMXMessageTypeLocation])
                         {
-                            break;
+                            // Compare geo uri
+                            if ([event.content[@"geo_uri"] isEqualToString:localEcho.content[@"geo_uri"]])
+                            {
+                                break;
+                            }
+                        }
+                        else
+                        {
+                            // Here the type is kMXMessageTypeImage, kMXMessageTypeAudio, kMXMessageTypeVideo or kMXMessageTypeFile
+                            if (event.content[@"file"])
+                            {
+                                // This is an encrypted attachment
+                                if (localEcho.content[@"file"] && [event.content[@"file"][@"url"] isEqualToString:localEcho.content[@"file"][@"url"]])
+                                {
+                                    break;
+                                }
+                            }
+                            else if ([event.content[@"url"] isEqualToString:localEcho.content[@"url"]])
+                            {
+                                break;
+                            }
                         }
                     }
+                    localEcho = nil;
                 }
-                localEcho = nil;
             }
-        }
+            
+            dispatch_async(dispatch_get_main_queue(), ^{
+                completion(localEcho);
+            });
+        }];
     }
-
-    return localEcho;
+    else
+    {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            completion(nil);
+        });
+    }
 }
 
 - (void)removePendingLocalEcho:(NSString*)localEchoEventId
@@ -2815,8 +2822,8 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
         return;
     }
     
-    MXEvent *updatedReadReceiptEvent = nil;
-    NSString *readMarkerEventId = nil;
+    __block MXEvent *updatedReadReceiptEvent = nil;
+    __block NSString *readMarkerEventId = nil;
     
     // Prepare read receipt update.
     // Retrieve the current read receipt event id
@@ -2831,34 +2838,43 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     // Check whether the provided event is acknowledgeable
     BOOL isAcknowledgeable = (![event.eventId hasPrefix:kMXEventLocalEventIdPrefix] && [mxSession.acknowledgableEventTypes indexOfObject:event.type] != NSNotFound);
     
+    dispatch_group_t dispatchGroup = dispatch_group_create();
+    
     // Check whether the event is posterior to the current position (if any).
     // Look for an acknowledgeable event if the event type is not acknowledgeable.
     if (currentReadReceiptEventId || !isAcknowledgeable)
     {
         @autoreleasepool
         {
+            dispatch_group_enter(dispatchGroup);
             // Enumerate all the acknowledgeable events of the room
-            id<MXEventsEnumerator> messagesEnumerator = [mxSession.store messagesEnumeratorForRoom:self.roomId withTypeIn:mxSession.acknowledgableEventTypes];
-
-            MXEvent *nextEvent;
-            while ((nextEvent = messagesEnumerator.nextEvent))
-            {
-                // Check whether the current acknowledged event is posterior to the provided event.
-                if (currentReadReceiptEventId && [nextEvent.eventId isEqualToString:currentReadReceiptEventId])
+            [mxSession.store messagesEnumeratorForRoom:self.roomId
+                                            withTypeIn:mxSession.acknowledgableEventTypes
+                                               success:^(id<MXEventsEnumerator> _Nonnull messagesEnumerator) {
+                MXEvent *nextEvent;
+                while ((nextEvent = messagesEnumerator.nextEvent))
                 {
-                    // No change is required
-                    break;
+                    // Check whether the current acknowledged event is posterior to the provided event.
+                    if (currentReadReceiptEventId && [nextEvent.eventId isEqualToString:currentReadReceiptEventId])
+                    {
+                        // No change is required
+                        break;
+                    }
+                    
+                    // Look for the first acknowledgeable event prior the event timestamp
+                    if (nextEvent.originServerTs <= event.originServerTs && nextEvent.eventId)
+                    {
+                        updatedReadReceiptEvent = nextEvent;
+                        
+                        // Here we find the right event to acknowledge, and it is posterior to the current position (if any).
+                        break;
+                    }
                 }
                 
-                // Look for the first acknowledgeable event prior the event timestamp
-                if (nextEvent.originServerTs <= event.originServerTs && nextEvent.eventId)
-                {
-                    updatedReadReceiptEvent = nextEvent;
-
-                    // Here we find the right event to acknowledge, and it is posterior to the current position (if any).
-                    break;
-                }                
-            }
+                dispatch_group_leave(dispatchGroup);
+            } failure:^(NSError * _Nonnull error) {
+                dispatch_group_leave(dispatchGroup);
+            }];
         }
     }
     else
@@ -2866,138 +2882,143 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
         updatedReadReceiptEvent = event;
     }
     
-    // Sanity check: Do not send read receipt on a fake event id
-    if ([updatedReadReceiptEvent.eventId hasPrefix:kMXRoomInviteStateEventIdPrefix])
-    {
-        updatedReadReceiptEvent = nil;
-    }
-    
-    if (updatedReadReceiptEvent)
-    {
-        // Update the oneself receipts
-        if ([self storeLocalReceipt:kMXEventTypeStringRead eventId:updatedReadReceiptEvent.eventId userId:myUserId ts:(uint64_t) ([[NSDate date] timeIntervalSince1970] * 1000)]
-            && [mxSession.store respondsToSelector:@selector(commit)])
+    dispatch_group_notify(dispatchGroup, dispatch_get_main_queue(), ^{
+        // Sanity check: Do not send read receipt on a fake event id
+        if ([updatedReadReceiptEvent.eventId hasPrefix:kMXRoomInviteStateEventIdPrefix])
         {
-            [mxSession.store commit];
-        }
-    }
-    
-    // Prepare read marker update
-    if (updateReadMarker)
-    {
-        MXEvent *updatedReadMarkerEvent = nil;
-        
-        // Sanity check: Do not send read marker on a fake event id
-        if (![event.eventId hasPrefix:kMXEventLocalEventIdPrefix] && ![event.eventId hasPrefix:kMXRoomInviteStateEventIdPrefix])
-        {
-            updatedReadMarkerEvent = event;
-        }
-        else
-        {
-            // Use by default the read receipt event.
-            updatedReadMarkerEvent = updatedReadReceiptEvent;
+            updatedReadReceiptEvent = nil;
         }
         
-        
-        if (updatedReadMarkerEvent && ![_accountData.readMarkerEventId isEqualToString:updatedReadMarkerEvent.eventId])
+        if (updatedReadReceiptEvent)
         {
-            readMarkerEventId = updatedReadMarkerEvent.eventId;
+            // Update the oneself receipts
+            if ([self storeLocalReceipt:kMXEventTypeStringRead eventId:updatedReadReceiptEvent.eventId userId:myUserId ts:(uint64_t) ([[NSDate date] timeIntervalSince1970] * 1000)]
+                && [self->mxSession.store respondsToSelector:@selector(commit)])
+            {
+                [self->mxSession.store commit];
+            }
         }
-    }
-    
-    if (readMarkerEventId)
-    {
-        [self setReadMarker:readMarkerEventId withReadReceipt:updatedReadReceiptEvent.eventId];
-    }
-    else if (updatedReadReceiptEvent)
-    {
-        [mxSession.matrixRestClient sendReadReceipt:self.roomId
-                                            eventId:updatedReadReceiptEvent.eventId
-                                            success:nil
-                                            failure:nil];
-    }
+        
+        // Prepare read marker update
+        if (updateReadMarker)
+        {
+            MXEvent *updatedReadMarkerEvent = nil;
+            
+            // Sanity check: Do not send read marker on a fake event id
+            if (![event.eventId hasPrefix:kMXEventLocalEventIdPrefix] && ![event.eventId hasPrefix:kMXRoomInviteStateEventIdPrefix])
+            {
+                updatedReadMarkerEvent = event;
+            }
+            else
+            {
+                // Use by default the read receipt event.
+                updatedReadMarkerEvent = updatedReadReceiptEvent;
+            }
+            
+            
+            if (updatedReadMarkerEvent && ![self.accountData.readMarkerEventId isEqualToString:updatedReadMarkerEvent.eventId])
+            {
+                readMarkerEventId = updatedReadMarkerEvent.eventId;
+            }
+        }
+        
+        if (readMarkerEventId)
+        {
+            [self setReadMarker:readMarkerEventId withReadReceipt:updatedReadReceiptEvent.eventId];
+        }
+        else if (updatedReadReceiptEvent)
+        {
+            [self->mxSession.matrixRestClient sendReadReceipt:self.roomId
+                                                eventId:updatedReadReceiptEvent.eventId
+                                                success:nil
+                                                failure:nil];
+        }
+    });
 }
 
 - (void)markAllAsRead
 {
-    NSString *readMarkerEventId = nil;
-    MXReceiptData *updatedReceiptData = nil;
-    
-    // Retrieve the most recent event of the room.
-    MXEvent *lastEvent = [mxSession.store messagesEnumeratorForRoom:self.roomId].nextEvent;
-    NSString *lastMessageEventId = lastEvent.eventId;
-    
-    // Sanity check: Do not send read marker on event without id.
-    if (!lastMessageEventId || [lastMessageEventId hasPrefix:kMXRoomInviteStateEventIdPrefix])
-    {
-        return;
-    }
-    
-    // Prepare updated read marker
-    if (![_accountData.readMarkerEventId isEqualToString:lastMessageEventId])
-    {
-        readMarkerEventId = lastMessageEventId;
-    }
-
-    MXEvent *event;
-    NSString* myUserId = mxSession.myUserId;
-    MXReceiptData *currentReceiptData = [mxSession.store getReceiptInRoom:self.roomId forUserId:myUserId];
-
-    // Prepare updated read receipt
-    @autoreleasepool
-    {
-        id<MXEventsEnumerator> messagesEnumerator = [mxSession.store messagesEnumeratorForRoom:self.roomId withTypeIn:mxSession.acknowledgableEventTypes];
-
-        // Acknowledge the lastest valid event
-        while ((event = messagesEnumerator.nextEvent))
+    [mxSession.store messagesEnumeratorForRoom:self.roomId success:^(id<MXEventsEnumerator> _Nonnull enumerator) {
+        // Retrieve the most recent event of the room.
+        MXEvent *lastEvent = enumerator.nextEvent;
+        NSString *lastMessageEventId = lastEvent.eventId;
+        
+        __block NSString *readMarkerEventId = nil;
+        __block MXReceiptData *updatedReceiptData = nil;
+        
+        // Sanity check: Do not send read marker on event without id.
+        if (!lastMessageEventId || [lastMessageEventId hasPrefix:kMXRoomInviteStateEventIdPrefix])
         {
-            // Sanity check on event id: Do not send read receipt on event without id
-            if (event.eventId && ([event.eventId hasPrefix:kMXRoomInviteStateEventIdPrefix] == NO))
+            return;
+        }
+        
+        // Prepare updated read marker
+        if (![self.accountData.readMarkerEventId isEqualToString:lastMessageEventId])
+        {
+            readMarkerEventId = lastMessageEventId;
+        }
+
+        __block MXEvent *event;
+        NSString* myUserId = self->mxSession.myUserId;
+        MXReceiptData *currentReceiptData = [self->mxSession.store getReceiptInRoom:self.roomId forUserId:myUserId];
+
+        // Prepare updated read receipt
+        [self->mxSession.store messagesEnumeratorForRoom:self.roomId
+                                              withTypeIn:self->mxSession.acknowledgableEventTypes
+                                                 success:^(id<MXEventsEnumerator> _Nonnull messagesEnumerator) {
+            
+            // Acknowledge the lastest valid event
+            while ((event = messagesEnumerator.nextEvent))
             {
-                // Check whether this is not the current position of the user
-                if (!currentReceiptData || ![currentReceiptData.eventId isEqualToString:event.eventId])
+                // Sanity check on event id: Do not send read receipt on event without id
+                if (event.eventId && ([event.eventId hasPrefix:kMXRoomInviteStateEventIdPrefix] == NO))
                 {
-                    // Update the oneself receipts
-                    updatedReceiptData = [[MXReceiptData alloc] init];
-                    
-                    updatedReceiptData.userId = myUserId;
-                    updatedReceiptData.eventId = event.eventId;
-                    updatedReceiptData.ts = (uint64_t) ([[NSDate date] timeIntervalSince1970] * 1000);
-                    
-                    if ([mxSession.store storeReceipt:updatedReceiptData inRoom:self.roomId])
+                    // Check whether this is not the current position of the user
+                    if (!currentReceiptData || ![currentReceiptData.eventId isEqualToString:event.eventId])
                     {
-                        if ([mxSession.store respondsToSelector:@selector(commit)])
+                        // Update the oneself receipts
+                        updatedReceiptData = [[MXReceiptData alloc] init];
+                        
+                        updatedReceiptData.userId = myUserId;
+                        updatedReceiptData.eventId = event.eventId;
+                        updatedReceiptData.ts = (uint64_t) ([[NSDate date] timeIntervalSince1970] * 1000);
+                        
+                        if ([self->mxSession.store storeReceipt:updatedReceiptData inRoom:self.roomId])
                         {
-                            [mxSession.store commit];
+                            if ([self->mxSession.store respondsToSelector:@selector(commit)])
+                            {
+                                [self->mxSession.store commit];
+                            }
                         }
                     }
+                    
+                    // Break the loop
+                    break;
                 }
-                
-                // Break the loop
-                break;
             }
-        }
-    }
-    
-    if (readMarkerEventId)
-    {
-        NSString *readReceiptEventId = updatedReceiptData.eventId;
-        if (!readReceiptEventId)
-        {
-            // A non nil read receipt must be passed in order to not break notifications counters
-            // homeserver side
-            readReceiptEventId = currentReceiptData.eventId;
-        }
+            
+            if (readMarkerEventId)
+            {
+                NSString *readReceiptEventId = updatedReceiptData.eventId;
+                if (!readReceiptEventId)
+                {
+                    // A non nil read receipt must be passed in order to not break notifications counters
+                    // homeserver side
+                    readReceiptEventId = currentReceiptData.eventId;
+                }
 
-        [self setReadMarker:readMarkerEventId withReadReceipt:readReceiptEventId];
-    }
-    else if (updatedReceiptData)
-    {
-        [mxSession.matrixRestClient sendReadReceipt:self.roomId
-                                            eventId:updatedReceiptData.eventId
-                                            success:nil
-                                            failure:nil];
-    }
+                [self setReadMarker:readMarkerEventId withReadReceipt:readReceiptEventId];
+            }
+            else if (updatedReceiptData)
+            {
+                [self->mxSession.matrixRestClient sendReadReceipt:self.roomId
+                                                          eventId:updatedReceiptData.eventId
+                                                          success:nil
+                                                          failure:nil];
+            }
+            
+        } failure:nil];
+    } failure:nil];
 }
 
 - (NSArray<MXReceiptData*> *)getEventReceipts:(NSString*)eventId sorted:(BOOL)sort

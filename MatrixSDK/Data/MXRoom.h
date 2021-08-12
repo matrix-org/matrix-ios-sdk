@@ -246,8 +246,12 @@ FOUNDATION_EXPORT NSInteger const kMXRoomAlreadyJoinedErrorCode;
 #pragma mark - Stored messages enumerator
 /**
  Get an enumerator on all messages of the room downloaded so far.
+ 
+ @param success Success block
+ @param failure Failure block
  */
-@property (nonatomic, readonly) id<MXEventsEnumerator> enumeratorForStoredMessages;
+- (void)enumeratorForStoredMessagesWithSuccess:(void (^)(id<MXEventsEnumerator>))success
+                                       failure:(void (^)(NSError * error))failure;
 
 /**
  Get an events enumerator on messages of the room with a filter on the events types.
@@ -255,15 +259,21 @@ FOUNDATION_EXPORT NSInteger const kMXRoomAlreadyJoinedErrorCode;
  An optional array of event types may be provided to filter room events. When this array is not nil,
  the type of the returned last event should match with one of the provided types.
 
- @param types an array of event types strings (MXEventTypeString).
- @return the events enumerator.
+ @param types an array of event types strings.
+ @param success Success block
+ @param failure Failure block
  */
-- (id<MXEventsEnumerator>)enumeratorForStoredMessagesWithTypeIn:(NSArray<MXEventTypeString> *)types;
+- (void)enumeratorForStoredMessagesWithTypeIn:(NSArray<MXEventTypeString> *)types
+                            success:(void (^)(id<MXEventsEnumerator>))success
+                            failure:(void (^)(NSError * error))failure;
 
 /**
  The count of stored messages for this room.
+ @param success Success block
+ @param failure Failure block
  */
-@property (nonatomic, readonly) NSUInteger storedMessagesCount;
+- (void)storedMessagesCountWithSuccess:(void (^)(NSUInteger))success
+                               failure:(void (^)(NSError * error))failure;
 
 
 #pragma mark - Room operations
@@ -568,9 +578,10 @@ FOUNDATION_EXPORT NSInteger const kMXRoomAlreadyJoinedErrorCode;
  Determine if an event has a local echo.
  
  @param event the concerned event.
- @return a local echo event corresponding to the event. Nil if there is no match.
+ @param completion Completion block.
  */
-- (MXEvent*)pendingLocalEchoRelatedToEvent:(MXEvent*)event;
+- (void)pendingLocalEchoRelatedToEvent:(MXEvent*)event
+                            completion:(void (^)(MXEvent*))completion;
 
 /**
  Remove a local echo event from the pending queue.
@@ -1027,7 +1038,7 @@ FOUNDATION_EXPORT NSInteger const kMXRoomAlreadyJoinedErrorCode;
 /**
  All outgoing messages pending in the room.
  */
-- (NSArray<MXEvent*>*)outgoingMessages;
+- (void)outgoingMessagesWithCompletion:(void (^)(NSArray<MXEvent*>*))completion;
 
 
 #pragma mark - Room tags operations
