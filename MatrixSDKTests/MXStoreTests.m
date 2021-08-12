@@ -425,14 +425,18 @@
 
                 if (mxSession.store.isPermanent)
                 {
-                    XCTAssertGreaterThanOrEqual(room2LiveTimeline.remainingMessagesForBackPaginationInStore, 7);
+                    [room2LiveTimeline remainingMessagesForBackPaginationInStoreWithCompletion:^(NSUInteger remaining) {
+                        XCTAssertGreaterThanOrEqual(remaining, 7);
+                    }];
                 }
 
                 [room2LiveTimeline paginate:2 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
 
                     if (mxSession.store.isPermanent)
                     {
-                        XCTAssertGreaterThanOrEqual(room2LiveTimeline.remainingMessagesForBackPaginationInStore, 5);
+                        [room2LiveTimeline remainingMessagesForBackPaginationInStoreWithCompletion:^(NSUInteger remaining) {
+                            XCTAssertGreaterThanOrEqual(remaining, 5);
+                        }];
                     }
 
                     [room2LiveTimeline paginate:5 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
@@ -514,14 +518,18 @@
                     {
                         if (mxSession.store.isPermanent)
                         {
-                            XCTAssertGreaterThanOrEqual(room2liveTimeline.remainingMessagesForBackPaginationInStore, 7);
+                            [room2liveTimeline remainingMessagesForBackPaginationInStoreWithCompletion:^(NSUInteger remaining) {
+                                XCTAssertGreaterThanOrEqual(remaining, 7);
+                            }];
                         }
 
                         [room2liveTimeline paginate:2 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
 
                             if (mxSession.store.isPermanent)
                             {
-                                XCTAssertGreaterThanOrEqual(room2liveTimeline.remainingMessagesForBackPaginationInStore, 5);
+                                [room2liveTimeline remainingMessagesForBackPaginationInStoreWithCompletion:^(NSUInteger remaining) {
+                                    XCTAssertGreaterThanOrEqual(remaining, 5);
+                                }];
                             }
 
                             // Try with 2 more live events
