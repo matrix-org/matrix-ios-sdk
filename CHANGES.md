@@ -1,3 +1,8 @@
+## Changes in 0.19.8 (2021-08-12)
+
+No significant changes.
+
+
 ## Changes in 0.19.7 (2021-08-11)
 
 🙌 Improvements
