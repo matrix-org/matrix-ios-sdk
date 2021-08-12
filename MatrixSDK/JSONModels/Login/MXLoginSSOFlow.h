@@ -21,7 +21,6 @@
 NS_ASSUME_NONNULL_BEGIN
 
 extern NSString *const MXLoginSSOFlowIdentityProvidersKey;
-extern NSString *const MXLoginSSOFlowMSC2858IdentityProvidersKey; // Unstable key to use MSC2858 is not finalized.
 
 /**
  `MXLoginSSOFlow` represents a SSO login or a register flow supported by the home server (See MSC2858 https://github.com/matrix-org/matrix-doc/pull/2858).
