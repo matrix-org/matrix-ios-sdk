@@ -1750,11 +1750,11 @@ typedef void (^MXOnResumeDone)(void);
                 {
                     MXLogDebug(@"[MXSession] handleAccountData: Update identity server: %@ -> %@", self.identityService.identityServer, identityServer);
                     
-                    // Reset the agreement to the identity server's terms.
+                    // Reset the cached agreement to the identity server's terms.
                     // This will be refreshed once the new identity server is set.
                     if (self.store.areAllIdentityServerTermsAgreed)
                     {
-                        self.store.areAllIdentityServerTermsAgreed = nil;
+                        self.store.areAllIdentityServerTermsAgreed = NO;
                     }
 
                     // Use the IS from the account data
