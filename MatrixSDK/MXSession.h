@@ -43,7 +43,7 @@
 /**
  `MXSessionState` represents the states in the life cycle of a MXSession instance.
  */
-typedef enum : NSUInteger
+typedef NS_ENUM(NSUInteger, MXSessionState)
 {
     /**
      The session is closed (or not initialized yet).
@@ -59,6 +59,11 @@ typedef enum : NSUInteger
      Data from the MXStore has been loaded.
      */
     MXSessionStateStoreDataReady,
+    
+    /**
+     Background sync cache is being processed. More local data will come.
+     */
+    MXSessionStateProcessingBackgroundSyncCache,
 
     /**
      The session is syncing with the server.
@@ -138,7 +143,7 @@ typedef enum : NSUInteger
      */
     MXSessionStateSoftLogout
 
-} MXSessionState;
+};
 
 
 #pragma mark - Notifications

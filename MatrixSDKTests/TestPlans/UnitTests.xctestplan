@@ -53,6 +53,7 @@
         "MXQRCodeDataUnitTests",
         "MXReplyEventParserUnitTests",
         "MXResponseUnitTests",
+        "MXSyncResponseUnitTests",
         "MXToolsUnitTests"
       ],
       "target" : {
