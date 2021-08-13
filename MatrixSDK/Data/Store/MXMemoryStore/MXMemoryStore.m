@@ -44,6 +44,7 @@
         users = [NSMutableDictionary dictionary];
         groups = [NSMutableDictionary dictionary];
         maxUploadSize = -1;
+        self.areAllIdentityServerTermsAgreed = NO;
     }
     return self;
 }

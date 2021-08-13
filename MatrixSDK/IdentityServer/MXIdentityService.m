@@ -148,17 +148,6 @@ NSString *const MXIdentityServiceNotificationAccessTokenKey = @"accessToken";
 
 #pragma mark Terms of Service
 
-- (void)updateAreAllTermsAgreedFromServiceTerms:(MXServiceTerms *)serviceTerms
-{
-    MXWeakify(self);
-    
-    [serviceTerms areAllTermsAgreed:^(NSProgress * _Nonnull agreedTermsProgress) {
-        MXStrongifyAndReturnIfNil(self);
-        
-        self->_areAllTermsAgreed = agreedTermsProgress.finished;
-    } failure:nil];
-}
-
 - (void)handleServiceTermsAccepted:(NSNotification*)notification
 {
     NSString *identityServer = notification.userInfo[MXIdentityServiceNotificationIdentityServerKey];

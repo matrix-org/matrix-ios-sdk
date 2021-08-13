@@ -240,6 +240,15 @@
     return @[];
 }
 
+- (BOOL)areAllIdentityServerTermsAgreed
+{
+    return NO;
+}
+
+- (void)setAreAllIdentityServerTermsAgreed:(BOOL)areAllIdentityServerTermsAgreed
+{
+}
+
 #pragma mark - Matrix users
 - (void)storeUser:(MXUser *)user
 {

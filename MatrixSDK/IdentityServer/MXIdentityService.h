@@ -69,9 +69,9 @@ extern NSString *const MXIdentityServiceNotificationAccessTokenKey;
 
 /**
  Whether or not the terms for this identity server have been agreed to, or nil if unknown.
- Call `updateAreAllTermsAgreedWithSession` to update the value of this property.
+ This value is automatically updated by MXSession as the user account data changes.
  */
-@property (nonatomic, readonly) BOOL areAllTermsAgreed;
+@property (nonatomic) BOOL areAllTermsAgreed;
 
 /**
  The queue on which asynchronous response blocks are called.
@@ -119,14 +119,6 @@ extern NSString *const MXIdentityServiceNotificationAccessTokenKey;
  */
 - (nullable MXHTTPOperation *)accessTokenWithSuccess:(void (^)(NSString * _Nullable accessToken))success
                                              failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
-
-#pragma mark Terms of Service
-
-/**
- Checks whether the identity server's terms of service have been agreed to and updates the value
- of `areAllTermsAgreed` accordingly.
- */
-- (void)updateAreAllTermsAgreedFromServiceTerms:(MXServiceTerms *)serviceTerms;
 
 #pragma mark -
 

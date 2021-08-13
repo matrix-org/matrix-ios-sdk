@@ -461,6 +461,10 @@
  */
 @property (nonatomic) NSDictionary * _Nullable userAccountData;
 
+/**
+ Store/retrieve the state of agreement to the identity server's terms of service.
+ */
+@property (nonatomic) BOOL areAllIdentityServerTermsAgreed;
 
 #pragma mark - Matrix filters
 /**

@@ -373,6 +373,12 @@ typedef void (^MXOnResumeDone)(void);
                 // My user is a MXMyUser object
                 self->_myUser = (MXMyUser*)myUser;
                 self->_myUser.mxSession = self;
+                
+                // Use the cached agreement to identity server terms.
+                if (self.identityService)
+                {
+                    self.identityService.areAllTermsAgreed = self.store.areAllIdentityServerTermsAgreed;
+                }
 
                 // Load user account data
                 [self handleAccountData:self.store.userAccountData];
@@ -1743,6 +1749,13 @@ typedef void (^MXOnResumeDone)(void);
                     && ![identityServer isEqualToString:self.identityService.identityServer])
                 {
                     MXLogDebug(@"[MXSession] handleAccountData: Update identity server: %@ -> %@", self.identityService.identityServer, identityServer);
+                    
+                    // Reset the agreement to the identity server's terms.
+                    // This will be refreshed once the new identity server is set.
+                    if (self.store.areAllIdentityServerTermsAgreed)
+                    {
+                        self.store.areAllIdentityServerTermsAgreed = nil;
+                    }
 
                     // Use the IS from the account data
                     [self setIdentityServer:identityServer andAccessToken:nil];
@@ -4154,15 +4167,33 @@ typedef void (^MXOnResumeDone)(void);
         return;
     }
     
+    NSString *baseURL = self.identityService.identityServer;
+    
     // Get the access token for the identity service
     [self.identityService accessTokenWithSuccess:^(NSString * _Nullable accessToken) {
         // Create the service terms and use this to update the identity service.
-        MXServiceTerms *serviceTerms = [[MXServiceTerms alloc] initWithBaseUrl:self.identityService.identityServer
+        MXServiceTerms *serviceTerms = [[MXServiceTerms alloc] initWithBaseUrl:baseURL
                                                                    serviceType:MXServiceTypeIdentityService
                                                                  matrixSession:self
                                                                    accessToken:accessToken];
         
-        [self.identityService updateAreAllTermsAgreedFromServiceTerms:serviceTerms];
+        [serviceTerms areAllTermsAgreed:^(NSProgress * _Nonnull agreedTermsProgress) {
+            // Ensure the identity server hasn't changed during the requests
+            if (self.identityService.identityServer != baseURL)
+            {
+                return;
+            }
+            
+            // Set the value in the identity service.
+            BOOL areAllTermsAgreed = agreedTermsProgress.finished;
+            self.identityService.areAllTermsAgreed = areAllTermsAgreed;
+            
+            // And update the store if necessary.
+            if (self.store.areAllIdentityServerTermsAgreed != areAllTermsAgreed)
+            {
+                self.store.areAllIdentityServerTermsAgreed = areAllTermsAgreed;
+            }
+        } failure:nil];
     } failure:^(NSError * _Nonnull error) {
         MXLogDebug(@"[MXSession] Unable to check identity server terms due to missing token.")
     }];
