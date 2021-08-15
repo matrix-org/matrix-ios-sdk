@@ -41,6 +41,9 @@ public class MXSpaceChildInfo: NSObject {
     /// The space topic.
     public let topic: String?
     
+    /// the canonical alias
+    public let canonicalAlias: String?
+
     /// The Matrix content URI of the space avatar.
     public let avatarUrl: String?
     
@@ -57,11 +60,22 @@ public class MXSpaceChildInfo: NSObject {
     /// `true` if the room is suggested. `false` otherwise.
     public var suggested: Bool = false
     
+    /// List of space parent IDs
+    public var parentIds: Set<String> = Set()
+    
+    /// List of children IDs
+    public var childrenIds: [String] = []
+    
     /// Gives a list of candidate servers that can be used to join the space.
     public let viaServers: [String]
        
     /// The parent space room id.
     public let parentRoomId: String?
+    
+    /// Display name of the space child
+    public var displayName: String? {
+        return self.name != nil ? self.name : self.canonicalAlias
+    }
     
     // MARK: - Setup
     
@@ -71,6 +85,7 @@ public class MXSpaceChildInfo: NSObject {
                 roomType: MXRoomType,
                 name: String?,
                 topic: String?,
+                canonicalAlias: String?,
                 avatarUrl: String?,
                 order: String?,
                 activeMemberCount: Int,
@@ -83,6 +98,7 @@ public class MXSpaceChildInfo: NSObject {
         self.roomType = roomType
         self.name = name
         self.topic = topic
+        self.canonicalAlias = canonicalAlias
         self.avatarUrl = avatarUrl
         self.order = order
         self.activeMemberCount = activeMemberCount

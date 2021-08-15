@@ -243,10 +243,20 @@ public class MXSpaceService: NSObject {
 
                     let spaceChildrenSummary = MXSpaceChildrenSummary(spaceSummary: spaceSummary, childInfos: childInfos)
                     
+                    var childrenIdsPerChildRoomId: [String: [String]] = [:]
+                    var parentIdsPerChildRoomId: [String:Set<String>] = [:]
                     var spaceChildEventsPerChildRoomId: [String:[String:Any]] = [:]
                     spaceChildrenResponse.events?.forEach({ event in
                         if event.type == kMXEventTypeStringSpaceChild && event.wireContent.count > 0 {
                             spaceChildEventsPerChildRoomId[event.stateKey] = event.wireContent
+                            
+                            var parentIds = parentIdsPerChildRoomId[event.stateKey] ?? Set()
+                            parentIds.insert(event.roomId)
+                            parentIdsPerChildRoomId[event.stateKey] = parentIds
+                            
+                            var childrenIds = childrenIdsPerChildRoomId[event.roomId] ?? []
+                            childrenIds.append(event.stateKey)
+                            childrenIdsPerChildRoomId[event.roomId] = childrenIds
                         }
                     })
                     
@@ -257,6 +267,8 @@ public class MXSpaceService: NSObject {
                         if let autoJoin = spaceChildEventsPerChildRoomId[childInfo.childRoomId]?["auto_join"] as? Bool {
                             childInfo.autoJoin = autoJoin
                         }
+                        childInfo.parentIds = parentIdsPerChildRoomId[childInfo.childRoomId] ?? Set()
+                        childInfo.childrenIds = childrenIdsPerChildRoomId[childInfo.childRoomId] ?? []
                     }
 
                     self.spacesPerId[spaceId]?.lastSpaceChildrenSummary = spaceChildrenSummary
@@ -352,6 +364,7 @@ public class MXSpaceService: NSObject {
                          roomType: roomType,
                          name: spaceChildSummaryResponse.name,
                          topic: spaceChildSummaryResponse.topic,
+                         canonicalAlias: spaceChildSummaryResponse.canonicalAlias,
                          avatarUrl: spaceChildSummaryResponse.avatarUrl,
                          order: spaceChildContent?.order,
                          activeMemberCount: spaceChildSummaryResponse.numJoinedMembers,
