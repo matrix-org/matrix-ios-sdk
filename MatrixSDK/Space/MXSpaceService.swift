@@ -243,8 +243,6 @@ public class MXSpaceService: NSObject {
 
                     let spaceChildrenSummary = MXSpaceChildrenSummary(spaceSummary: spaceSummary, childInfos: childInfos)
                     
-                    self.spacesPerId[spaceId]?.lastSpaceChildrenSummary = spaceChildrenSummary
-
                     self.completionQueue.async {
                         completion(.success(spaceChildrenSummary))
                     }
