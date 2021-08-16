@@ -2755,15 +2755,16 @@ Get the maximum size a media upload can be in bytes.
 
 #pragma mark - Spaces
 
-/// Get the space children of a given space.
+/// Get the space summary of a given space.
 /// @param spaceId The room id of the queried space.
-/// @param parameters Space children request parameters.
+/// @param suggestedOnly If `true`, return only child events and rooms where the `m.space.child` event has `suggested: true`.
+/// @param limit A limit to the maximum number of children to return per space. `-1` for no limit
 /// @param success A block object called when the operation succeeds. It provides a `MXSpaceChildrenResponse` object.
 /// @param failure A block object called when the operation fails.
 /// @return a MXHTTPOperation instance.
 - (MXHTTPOperation*)getSpaceChildrenForSpaceWithId:(NSString*)spaceId
-                                        parameters:(MXSpaceChildrenRequestParameters*)parameters
-                                          success:(void (^)(MXSpaceChildrenResponse *spaceChildrenResponse))success
-                                          failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
-
+                                     suggestedOnly:(BOOL)suggestedOnly
+                                             limit:(NSInteger)limit
+                                           success:(void (^)(MXSpaceChildrenResponse *spaceChildrenResponse))success
+                                           failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 @end

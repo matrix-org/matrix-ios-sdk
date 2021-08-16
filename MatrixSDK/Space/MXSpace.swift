@@ -57,7 +57,7 @@ public class MXSpace: NSObject {
     public private(set) var childRoomIds: [String] = []
     public private(set) var otherMembersId: [String] = []
     public private(set) var membersId: [String] = []
-
+    
     // MARK: - Setup
     
     public init(room: MXRoom) {

@@ -5442,17 +5442,19 @@ MXAuthAction;
 #pragma mark - Spaces
 
 - (MXHTTPOperation*)getSpaceChildrenForSpaceWithId:(NSString*)spaceId
-                                        parameters:(MXSpaceChildrenRequestParameters*)parameters
-                                          success:(void (^)(MXSpaceChildrenResponse *spaceChildrenResponse))success
-                                          failure:(void (^)(NSError *error))failure
+                                     suggestedOnly:(BOOL)suggestedOnly
+                                             limit:(NSInteger)limit
+                                           success:(void (^)(MXSpaceChildrenResponse *spaceChildrenResponse))success
+                                           failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"%@/org.matrix.msc2946/rooms/%@/spaces",
-                             kMXAPIPrefixPathUnstable, spaceId];
+    NSString *maxRoomParameter = limit >= 0 ? [NSString stringWithFormat:@"&max_rooms_per_space=%ld", (long)limit] : @"";
+    NSString *path = [NSString stringWithFormat:@"%@/org.matrix.msc2946/rooms/%@/spaces?suggested_only=%@%@",
+                      kMXAPIPrefixPathUnstable, spaceId, suggestedOnly ? @"true": @"false", maxRoomParameter];
     
     MXWeakify(self);
-    return [httpClient requestWithMethod:@"POST"
-                                    path:path                              
-                              parameters:[parameters jsonDictionary] ?: @{}
+    return [httpClient requestWithMethod:@"GET"
+                                    path:path
+                              parameters:@{}
                                  success:^(NSDictionary *JSONResponse) {
                                      MXStrongifyAndReturnIfNil(self);
 

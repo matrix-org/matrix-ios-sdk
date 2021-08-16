@@ -200,14 +200,16 @@ public class MXSpaceService: NSObject {
     /// Get the space children informations of a given space from the server.
     /// - Parameters:
     ///   - spaceId: The room id of the queried space.
-    ///   - parameters: Space children request parameters.
+    ///   - suggestedOnly: If `true`, return only child events and rooms where the `m.space.child` event has `suggested: true`.
+    ///   - limit: Optional. A limit to the maximum number of children to return per space. `-1` for no limit
     ///   - completion: A closure called when the operation completes.
     /// - Returns: a `MXHTTPOperation` instance.
     @discardableResult
     public func getSpaceChildrenForSpace(withId spaceId: String,
-                                         parameters: MXSpaceChildrenRequestParameters?,
+                                         suggestedOnly: Bool,
+                                         limit: Int?,
                                          completion: @escaping (MXResponse<MXSpaceChildrenSummary>) -> Void) -> MXHTTPOperation {
-        return self.session.matrixRestClient.getSpaceChildrenForSpace(withId: spaceId, parameters: parameters) { (response) in
+        return self.session.matrixRestClient.getSpaceChildrenForSpace(withId: spaceId, suggestedOnly: suggestedOnly, limit: limit) { (response) in
             switch response {
             case .success(let spaceChildrenResponse):
                 self.processingQueue.async { [weak self] in
@@ -240,7 +242,7 @@ public class MXSpaceService: NSObject {
                     let childInfos = self.spaceChildInfos(from: spaceChildrenResponse, excludedSpaceId: spaceId)
 
                     let spaceChildrenSummary = MXSpaceChildrenSummary(spaceSummary: spaceSummary, childInfos: childInfos)
-
+                    
                     self.completionQueue.async {
                         completion(.success(spaceChildrenSummary))
                     }
@@ -393,7 +395,7 @@ extension MXSpaceService {
     ///   - success: A closure called when the operation is complete.
     ///   - failure: A closure called  when the operation fails.
     /// - Returns: a `MXHTTPOperation` instance.
-    public func createSpace(with parameters: MXSpaceCreationParameters, success: @escaping (MXSpace) -> Void, failure: @escaping (Error) -> Void) -> MXHTTPOperation {
+    @objc public func createSpace(with parameters: MXSpaceCreationParameters, success: @escaping (MXSpace) -> Void, failure: @escaping (Error) -> Void) -> MXHTTPOperation {
         return self.createSpace(with: parameters) { (response) in
             uncurryResponse(response, success: success, failure: failure)
         }
@@ -408,7 +410,7 @@ extension MXSpaceService {
     ///   - failure: A closure called  when the operation fails.
     /// - Returns: a `MXHTTPOperation` instance.
     @discardableResult
-    public func createSpace(withName name: String, topic: String?, isPublic: Bool, success: @escaping (MXSpace) -> Void, failure: @escaping (Error) -> Void) -> MXHTTPOperation {
+    @objc public func createSpace(withName name: String, topic: String?, isPublic: Bool, success: @escaping (MXSpace) -> Void, failure: @escaping (Error) -> Void) -> MXHTTPOperation {
         return self.createSpace(withName: name, topic: topic, isPublic: isPublic) { (response) in
             uncurryResponse(response, success: success, failure: failure)
         }
@@ -417,15 +419,14 @@ extension MXSpaceService {
     /// Get the space children informations of a given space from the server.
     /// - Parameters:
     ///   - spaceId: The room id of the queried space.
-    ///   - parameters: Space children request parameters.
+    ///   - suggestedOnly: If `true`, return only child events and rooms where the `m.space.child` event has `suggested: true`.
+    ///   - limit: Optional. A limit to the maximum number of children to return per space. `-1` for no limit
     ///   - success: A closure called when the operation is complete.
     ///   - failure: A closure called  when the operation fails.
     /// - Returns: a `MXHTTPOperation` instance.
     @discardableResult
-    public func getSpaceChildrenForSpace(withId spaceId: String,
-                                         parameters: MXSpaceChildrenRequestParameters?,
-                                         success: @escaping (MXSpaceChildrenSummary) -> Void, failure: @escaping (Error) -> Void) -> MXHTTPOperation {
-        return self.getSpaceChildrenForSpace(withId: spaceId, parameters: parameters) { (response) in
+    @objc public func getSpaceChildrenForSpace(withId spaceId: String, suggestedOnly: Bool, limit: Int, success: @escaping (MXSpaceChildrenSummary) -> Void, failure: @escaping (Error) -> Void) -> MXHTTPOperation {
+        return self.getSpaceChildrenForSpace(withId: spaceId, suggestedOnly: suggestedOnly, limit: limit) { (response) in
             uncurryResponse(response, success: success, failure: failure)
         }
     }
