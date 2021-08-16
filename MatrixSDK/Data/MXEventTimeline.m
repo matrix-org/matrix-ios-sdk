@@ -216,7 +216,6 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 
     // Reset store pagination
     cachedStoreMessagesEnumerator = nil;
-    [self storeMessagesEnumerator:nil];
 }
 
 - (MXHTTPOperation *)resetPaginationAroundInitialEventWithLimit:(NSUInteger)limit success:(void (^)(void))success failure:(void (^)(NSError *))failure
