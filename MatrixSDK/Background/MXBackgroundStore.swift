@@ -156,8 +156,10 @@ class MXBackgroundStore: NSObject, MXStore {
     func storeHasReachedHomeServerPaginationEnd(forRoom roomId: String, andValue value: Bool) {
     }
     
-    func hasReachedHomeServerPaginationEnd(forRoom roomId: String) -> Bool {
-        return true
+    func hasReachedHomeServerPaginationEnd(forRoom roomId: String, completion: @escaping (Bool) -> Void) {
+        DispatchQueue.main.async {
+            completion(true)
+        }
     }
     
     func storeHasLoadedAllRoomMembers(forRoom roomId: String, andValue value: Bool) {

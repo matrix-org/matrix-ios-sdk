@@ -184,7 +184,7 @@
     hasReachedHomeServerPaginations[roomId] = [NSNumber numberWithBool:value];
 }
 
-- (BOOL)hasReachedHomeServerPaginationEndForRoom:(NSString*)roomId
+- (void)hasReachedHomeServerPaginationEndForRoom:(NSString *)roomId completion:(void (^)(BOOL))completion
 {
     BOOL hasReachedHomeServerPaginationEnd = NO;
 
@@ -194,7 +194,9 @@
         hasReachedHomeServerPaginationEnd = [hasReachedHomeServerPaginationEndNumber boolValue];
     }
 
-    return hasReachedHomeServerPaginationEnd;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        completion(hasReachedHomeServerPaginationEnd);
+    });
 }
 
 - (void)storeHasLoadedAllRoomMembersForRoom:(NSString *)roomId andValue:(BOOL)value

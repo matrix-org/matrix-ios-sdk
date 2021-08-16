@@ -126,7 +126,7 @@
     [self getOrCreateRoomStore:roomId
                     completion:^(MXMemoryRoomStore * _Nullable roomStore) {
         completion(roomStore.paginationToken);
-    }]
+    }];
 }
 
 - (void)storeHasReachedHomeServerPaginationEndForRoom:(NSString*)roomId andValue:(BOOL)value
@@ -137,10 +137,12 @@
     }];
 }
 
-- (BOOL)hasReachedHomeServerPaginationEndForRoom:(NSString*)roomId
+- (void)hasReachedHomeServerPaginationEndForRoom:(NSString *)roomId completion:(void (^)(BOOL))completion
 {
-    MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
-    return roomStore.hasReachedHomeServerPaginationEnd;
+    [self getOrCreateRoomStore:roomId
+                    completion:^(MXMemoryRoomStore * _Nullable roomStore) {
+        completion(roomStore.hasReachedHomeServerPaginationEnd);
+    }];
 }
 
 - (void)storeHasLoadedAllRoomMembersForRoom:(NSString *)roomId andValue:(BOOL)value

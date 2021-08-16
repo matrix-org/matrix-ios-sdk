@@ -123,7 +123,7 @@
  */
 // @TODO(summary): Move to MXRoomSummary
 - (void)storeHasReachedHomeServerPaginationEndForRoom:(nonnull NSString*)roomId andValue:(BOOL)value;
-- (BOOL)hasReachedHomeServerPaginationEndForRoom:(nonnull NSString*)roomId;
+- (void)hasReachedHomeServerPaginationEndForRoom:(nonnull NSString*)roomId completion:(nonnull void (^)(BOOL))completion;
 
 /**
  Store/retrieve the flag indicating that the SDK has retrieved all room members
