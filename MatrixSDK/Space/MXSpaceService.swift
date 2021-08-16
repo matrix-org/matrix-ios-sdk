@@ -271,8 +271,6 @@ public class MXSpaceService: NSObject {
                         childInfo.childrenIds = childrenIdsPerChildRoomId[childInfo.childRoomId] ?? []
                     }
 
-                    self.spacesPerId[spaceId]?.lastSpaceChildrenSummary = spaceChildrenSummary
-
                     self.completionQueue.async {
                         completion(.success(spaceChildrenSummary))
                     }
