@@ -165,8 +165,10 @@ class MXBackgroundStore: NSObject, MXStore {
     func storeHasLoadedAllRoomMembers(forRoom roomId: String, andValue value: Bool) {
     }
     
-    func hasLoadedAllRoomMembers(forRoom roomId: String) -> Bool {
-        return false
+    func hasLoadedAllRoomMembers(forRoom roomId: String, completion: @escaping (Bool) -> Void) {
+        DispatchQueue.main.async {
+            completion(false)
+        }
     }
     
     func messagesEnumerator(forRoom roomId: String, success: @escaping (MXEventsEnumerator) -> Void, failure: ((Error) -> Void)? = nil) {

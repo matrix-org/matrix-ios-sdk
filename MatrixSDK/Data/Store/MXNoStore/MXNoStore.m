@@ -204,7 +204,7 @@
     hasLoadedAllRoomMembersForRooms[roomId] = @(value);
 }
 
-- (BOOL)hasLoadedAllRoomMembersForRoom:(NSString *)roomId
+- (void)hasLoadedAllRoomMembersForRoom:(NSString *)roomId completion:(void (^)(BOOL))completion
 {
     BOOL hasLoadedAllRoomMembers = NO;
 
@@ -214,7 +214,9 @@
         hasLoadedAllRoomMembers = [hasLoadedAllRoomMembersNumber boolValue];
     }
 
-    return hasLoadedAllRoomMembers;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        completion(hasLoadedAllRoomMembers);
+    });
 }
 
 

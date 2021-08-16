@@ -153,10 +153,12 @@
     }];
 }
 
-- (BOOL)hasLoadedAllRoomMembersForRoom:(NSString *)roomId
+- (void)hasLoadedAllRoomMembersForRoom:(NSString *)roomId completion:(void (^)(BOOL))completion
 {
-    MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
-    return roomStore.hasLoadedAllRoomMembersForRoom;
+    [self getOrCreateRoomStore:roomId
+                    completion:^(MXMemoryRoomStore * _Nullable roomStore) {
+        completion(roomStore.hasLoadedAllRoomMembersForRoom);
+    }];
 }
 
 - (void)messagesEnumeratorForRoom:(nonnull NSString *)roomId

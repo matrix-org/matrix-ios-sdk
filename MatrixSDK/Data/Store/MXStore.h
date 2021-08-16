@@ -130,7 +130,7 @@
  of a room.
  */
 - (void)storeHasLoadedAllRoomMembersForRoom:(nonnull NSString*)roomId andValue:(BOOL)value;
-- (BOOL)hasLoadedAllRoomMembersForRoom:(nonnull NSString*)roomId;
+- (void)hasLoadedAllRoomMembersForRoom:(nonnull NSString*)roomId completion:(nonnull void (^)(BOOL))completion;
 
 /**
  Get an events enumerator on all messages of a room.

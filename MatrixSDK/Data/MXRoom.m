@@ -227,130 +227,132 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
         MXStrongifyAndReturnIfNil(self);
 
         // Return directly liveTimeline.state.members if we have already all of them
-        if ([self.mxSession.store hasLoadedAllRoomMembersForRoom:self.roomId])
-        {
-            MXLogDebug(@"[MXRoom] members: All members are known. Return %@ joined, %@ invited",
-                  @(liveTimeline.state.membersCount.joined), @(liveTimeline.state.membersCount.invited));
-            success(liveTimeline.state.members);
-        }
-        else
-        {
-            MXLogDebug(@"[MXRoom] members: Currently known members: %@ joined, %@ invited",
-                  @(liveTimeline.state.membersCount.joined), @(liveTimeline.state.membersCount.invited));
-            
-            // Return already lazy-loaded room members if requested
-            if (lazyLoadedMembers)
+        [self.mxSession.store hasLoadedAllRoomMembersForRoom:self.roomId completion:^(BOOL hasLoadedAllRoomMembers) {
+            if (hasLoadedAllRoomMembers)
             {
-                MXLogDebug(@"[MXRoom] members: Call lazyLoadedMembers");
-                lazyLoadedMembers(liveTimeline.state.members);
-            }
-
-            // Queue the requester
-            if (!self->pendingMembersRequesters)
-            {
-                self->pendingMembersRequesters = [NSMutableArray array];
-                self->pendingMembersFailureBlocks = [NSMutableArray array];
-
-                // Else get them from the homeserver
-                NSDictionary *parameters;
-                if (self.mxSession.store.eventStreamToken)
-                {
-                    parameters = @{
-                                   kMXMembersOfRoomParametersAt: self.mxSession.store.eventStreamToken,
-                                   kMXMembersOfRoomParametersNotMembership: kMXMembershipStringLeave
-                                   };
-                }
-                
-                MXLogDebug(@"[MXRoom] members: Call /members with parameters: %@", parameters);
-
-                MXWeakify(self);
-                MXHTTPOperation *operation2 = [self.mxSession.matrixRestClient membersOfRoom:self.roomId
-                                                                              withParameters:parameters
-                                                                                     success:^(NSArray *roomMemberEvents)
-                {
-                    MXStrongifyAndReturnIfNil(self);
-                    
-                    MXLogDebug(@"[MXRoom] members: roomId: %@. /members returned %@ members", self.roomId, @(roomMemberEvents.count));
-
-                    // Manage the possible race condition where we could have received
-                    // update of members from the events stream (/sync) while the /members
-                    // request was pending.
-                    // In that case, the response of /members is not up-to-date. We must not
-                    // use this response as is.
-                    // To fix that:
-                    //    - we consider that all lazy-loaded members are up-to-date
-                    //    - we ignore in the /member response all member events corresponding
-                    //      to these already lazy-loaded members
-                    NSMutableArray *updatedRoomMemberEvents = [NSMutableArray array];
-                    for (MXEvent *roomMemberEvent in roomMemberEvents)
-                    {
-                        if (![liveTimeline.state.members memberWithUserId:roomMemberEvent.stateKey])
-                        {
-                            // User not lazy loaded yet, keep their member event from /members response
-                            [updatedRoomMemberEvents addObject:roomMemberEvent];
-                        }
-                    }
-                    roomMemberEvents = updatedRoomMemberEvents;
-
-                    // Check if the room has not been left while waiting for the response
-                    if ([self.mxSession hasRoomWithRoomId:self.roomId])
-                    {
-                        [liveTimeline handleLazyLoadedStateEvents:roomMemberEvents];
-
-                        [self.mxSession.store storeHasLoadedAllRoomMembersForRoom:self.roomId andValue:YES];
-                        if ([self.mxSession.store respondsToSelector:@selector(commit)])
-                        {
-                            [self.mxSession.store commit];
-                        }
-                    }
-
-                    MXLogDebug(@"[MXRoom] members: roomId: %@. /members succeeded. Pending requesters: %@. Members: %@ joined, %@ invited ",
-                          self.roomId, @(self->pendingMembersRequesters.count),
-                          @(liveTimeline.state.membersCount.joined), @(liveTimeline.state.membersCount.invited));
-                    
-                    // Provide the members to pending requesters
-                    NSArray<void (^)(MXRoomMembers *)> *pendingMembersRequesters = [self->pendingMembersRequesters copy];
-                    self->pendingMembersRequesters = nil;
-                    self->pendingMembersFailureBlocks = nil;
-
-                    for (void (^onRequesterComplete)(MXRoomMembers *) in pendingMembersRequesters)
-                    {
-                        onRequesterComplete(liveTimeline.state.members);
-                    }
-
-                } failure:^(NSError *error) {
-                    MXStrongifyAndReturnIfNil(self);
-                    
-                    MXLogDebug(@"[MXRoom] members: roomId: %@. /members failed. Pending requesters: %@", self.roomId, @(self->pendingMembersFailureBlocks.count));
-                    
-                    // Notify the failure to the pending requesters
-                    NSArray<void (^)(NSError *)> *pendingRequesters = [self->pendingMembersFailureBlocks copy];
-                    self->pendingMembersRequesters = nil;
-                    self->pendingMembersFailureBlocks = nil;
-                    
-                    for (void (^onFailure)(NSError *) in pendingRequesters)
-                    {
-                        onFailure(error);
-                    }
-                }];
-
-                [operation mutateTo:operation2];
+                MXLogDebug(@"[MXRoom] members: All members are known. Return %@ joined, %@ invited",
+                      @(liveTimeline.state.membersCount.joined), @(liveTimeline.state.membersCount.invited));
+                success(liveTimeline.state.members);
             }
             else
             {
-                MXLogDebug(@"[MXRoom] members: Request already pending for %@ requesters", @(self->pendingMembersRequesters.count));
-            }
+                MXLogDebug(@"[MXRoom] members: Currently known members: %@ joined, %@ invited",
+                      @(liveTimeline.state.membersCount.joined), @(liveTimeline.state.membersCount.invited));
+                
+                // Return already lazy-loaded room members if requested
+                if (lazyLoadedMembers)
+                {
+                    MXLogDebug(@"[MXRoom] members: Call lazyLoadedMembers");
+                    lazyLoadedMembers(liveTimeline.state.members);
+                }
 
-            if (success)
-            {
-                [self->pendingMembersRequesters addObject:success];
+                // Queue the requester
+                if (!self->pendingMembersRequesters)
+                {
+                    self->pendingMembersRequesters = [NSMutableArray array];
+                    self->pendingMembersFailureBlocks = [NSMutableArray array];
+
+                    // Else get them from the homeserver
+                    NSDictionary *parameters;
+                    if (self.mxSession.store.eventStreamToken)
+                    {
+                        parameters = @{
+                                       kMXMembersOfRoomParametersAt: self.mxSession.store.eventStreamToken,
+                                       kMXMembersOfRoomParametersNotMembership: kMXMembershipStringLeave
+                                       };
+                    }
+                    
+                    MXLogDebug(@"[MXRoom] members: Call /members with parameters: %@", parameters);
+
+                    MXWeakify(self);
+                    MXHTTPOperation *operation2 = [self.mxSession.matrixRestClient membersOfRoom:self.roomId
+                                                                                  withParameters:parameters
+                                                                                         success:^(NSArray *roomMemberEvents)
+                    {
+                        MXStrongifyAndReturnIfNil(self);
+                        
+                        MXLogDebug(@"[MXRoom] members: roomId: %@. /members returned %@ members", self.roomId, @(roomMemberEvents.count));
+
+                        // Manage the possible race condition where we could have received
+                        // update of members from the events stream (/sync) while the /members
+                        // request was pending.
+                        // In that case, the response of /members is not up-to-date. We must not
+                        // use this response as is.
+                        // To fix that:
+                        //    - we consider that all lazy-loaded members are up-to-date
+                        //    - we ignore in the /member response all member events corresponding
+                        //      to these already lazy-loaded members
+                        NSMutableArray *updatedRoomMemberEvents = [NSMutableArray array];
+                        for (MXEvent *roomMemberEvent in roomMemberEvents)
+                        {
+                            if (![liveTimeline.state.members memberWithUserId:roomMemberEvent.stateKey])
+                            {
+                                // User not lazy loaded yet, keep their member event from /members response
+                                [updatedRoomMemberEvents addObject:roomMemberEvent];
+                            }
+                        }
+                        roomMemberEvents = updatedRoomMemberEvents;
+
+                        // Check if the room has not been left while waiting for the response
+                        if ([self.mxSession hasRoomWithRoomId:self.roomId])
+                        {
+                            [liveTimeline handleLazyLoadedStateEvents:roomMemberEvents];
+
+                            [self.mxSession.store storeHasLoadedAllRoomMembersForRoom:self.roomId andValue:YES];
+                            if ([self.mxSession.store respondsToSelector:@selector(commit)])
+                            {
+                                [self.mxSession.store commit];
+                            }
+                        }
+
+                        MXLogDebug(@"[MXRoom] members: roomId: %@. /members succeeded. Pending requesters: %@. Members: %@ joined, %@ invited ",
+                              self.roomId, @(self->pendingMembersRequesters.count),
+                              @(liveTimeline.state.membersCount.joined), @(liveTimeline.state.membersCount.invited));
+                        
+                        // Provide the members to pending requesters
+                        NSArray<void (^)(MXRoomMembers *)> *pendingMembersRequesters = [self->pendingMembersRequesters copy];
+                        self->pendingMembersRequesters = nil;
+                        self->pendingMembersFailureBlocks = nil;
+
+                        for (void (^onRequesterComplete)(MXRoomMembers *) in pendingMembersRequesters)
+                        {
+                            onRequesterComplete(liveTimeline.state.members);
+                        }
+
+                    } failure:^(NSError *error) {
+                        MXStrongifyAndReturnIfNil(self);
+                        
+                        MXLogDebug(@"[MXRoom] members: roomId: %@. /members failed. Pending requesters: %@", self.roomId, @(self->pendingMembersFailureBlocks.count));
+                        
+                        // Notify the failure to the pending requesters
+                        NSArray<void (^)(NSError *)> *pendingRequesters = [self->pendingMembersFailureBlocks copy];
+                        self->pendingMembersRequesters = nil;
+                        self->pendingMembersFailureBlocks = nil;
+                        
+                        for (void (^onFailure)(NSError *) in pendingRequesters)
+                        {
+                            onFailure(error);
+                        }
+                    }];
+
+                    [operation mutateTo:operation2];
+                }
+                else
+                {
+                    MXLogDebug(@"[MXRoom] members: Request already pending for %@ requesters", @(self->pendingMembersRequesters.count));
+                }
+
+                if (success)
+                {
+                    [self->pendingMembersRequesters addObject:success];
+                }
+                
+                if (failure)
+                {
+                    [self->pendingMembersFailureBlocks addObject:failure];
+                }
             }
-            
-            if (failure)
-            {
-                [self->pendingMembersFailureBlocks addObject:failure];
-            }
-        }
+        }];
     }];
 
     return operation;
