@@ -189,12 +189,12 @@
     }
     else
     {
-        NSArray<MXEvent *> *referenceEvents = [self.mxSession.store relationsForEvent:eventId inRoom:roomId relationType:MXEventRelationTypeReference];
-
-        MXAggregationPaginatedResponse *paginatedResponse = [[MXAggregationPaginatedResponse alloc] initWithOriginalEvent:event
-                                                                                                                    chunk:referenceEvents
-                                                                                                                nextBatch:nil];
-        processPaginatedResponse(paginatedResponse);
+        [self.mxSession.store relationsForEvent:eventId inRoom:roomId relationType:MXEventRelationTypeReference completion:^(NSArray<MXEvent *> * _Nonnull referenceEvents) {
+            MXAggregationPaginatedResponse *paginatedResponse = [[MXAggregationPaginatedResponse alloc] initWithOriginalEvent:event
+                                                                                                                        chunk:referenceEvents
+                                                                                                                    nextBatch:nil];
+            processPaginatedResponse(paginatedResponse);
+        }];
     }
 
     return operation;

@@ -320,10 +320,14 @@
     self->maxUploadSize = maxUploadSize;
 }
 
-- (NSArray<MXEvent*>* _Nonnull)relationsForEvent:(nonnull NSString*)eventId inRoom:(nonnull  NSString*)roomId relationType:(NSString*)relationType
+- (void)relationsForEvent:(NSString *)eventId
+                   inRoom:(NSString *)roomId
+             relationType:(NSString *)relationType
+               completion:(void (^)(NSArray<MXEvent *> * _Nonnull))completion
 {
-    MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
-    return [roomStore relationsForEvent:eventId relationType:relationType];
+    [self getOrCreateRoomStore:roomId completion:^(MXMemoryRoomStore * _Nullable roomStore) {
+        completion([roomStore relationsForEvent:eventId relationType:relationType]);
+    }];
 }
 
 - (BOOL)isPermanent

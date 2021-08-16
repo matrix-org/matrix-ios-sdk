@@ -250,9 +250,14 @@
     });
 }
 
-- (NSArray<MXEvent *> *)relationsForEvent:(NSString *)eventId inRoom:(NSString *)roomId relationType:(NSString *)relationType
+- (void)relationsForEvent:(NSString *)eventId
+                   inRoom:(NSString *)roomId
+             relationType:(NSString *)relationType
+               completion:(void (^)(NSArray<MXEvent *> * _Nonnull))completion
 {
-    return @[];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        completion(@[]);
+    });
 }
 
 #pragma mark - Matrix users

@@ -162,9 +162,12 @@
  @param eventId The event id of the event to find.
  @param roomId The room id.
  @param relationType The related events relation type desired.
- @return An array of events related to the given event id.
+ @param completion Completion block containing an array of events related to the given event id.
  */
-- (NSArray<MXEvent*>* _Nonnull)relationsForEvent:(nonnull NSString*)eventId inRoom:(nonnull NSString*)roomId relationType:(nonnull NSString*)relationType;
+- (void)relationsForEvent:(nonnull NSString*)eventId
+                   inRoom:(nonnull NSString*)roomId
+             relationType:(nonnull NSString*)relationType
+               completion:(nonnull void (^)(NSArray<MXEvent*>* _Nonnull))completion;
 
 
 #pragma mark - Matrix users

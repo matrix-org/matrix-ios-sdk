@@ -183,8 +183,10 @@ class MXBackgroundStore: NSObject, MXStore {
         }
     }
     
-    func relations(forEvent eventId: String, inRoom roomId: String, relationType: String) -> [MXEvent] {
-        return []
+    func relations(forEvent eventId: String, inRoom roomId: String, relationType: String, completion: @escaping ([MXEvent]) -> Void) {
+        DispatchQueue.main.async {
+            completion([])
+        }
     }
     
     func store(_ user: MXUser) {
