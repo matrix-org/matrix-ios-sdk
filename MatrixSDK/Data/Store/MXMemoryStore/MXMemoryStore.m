@@ -60,14 +60,18 @@
 
 - (void)storeEventForRoom:(NSString*)roomId event:(MXEvent*)event direction:(MXTimelineDirection)direction
 {
-    MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
-    [roomStore storeEvent:event direction:direction];
+    [self getOrCreateRoomStore:roomId
+                    completion:^(MXMemoryRoomStore * _Nullable roomStore) {
+        [roomStore storeEvent:event direction:direction];
+    }];
 }
 
 - (void)replaceEvent:(MXEvent *)event inRoom:(NSString *)roomId
 {
-    MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
-    [roomStore replaceEvent:event];
+    [self getOrCreateRoomStore:roomId
+                    completion:^(MXMemoryRoomStore * _Nullable roomStore) {
+        [roomStore replaceEvent:event];
+    }];
 }
 
 - (BOOL)eventExistsWithEventId:(NSString *)eventId inRoom:(NSString *)roomId
@@ -83,10 +87,12 @@
 
 - (void)deleteAllMessagesInRoom:(NSString *)roomId
 {
-    MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
-    [roomStore removeAllMessages];
-    roomStore.paginationToken = nil;
-    roomStore.hasReachedHomeServerPaginationEnd = NO;
+    [self getOrCreateRoomStore:roomId
+                    completion:^(MXMemoryRoomStore * _Nullable roomStore) {
+        [roomStore removeAllMessages];
+        roomStore.paginationToken = nil;
+        roomStore.hasReachedHomeServerPaginationEnd = NO;
+    }];
 }
 
 - (void)deleteRoom:(NSString *)roomId
@@ -109,8 +115,10 @@
 
 - (void)storePaginationTokenOfRoom:(NSString*)roomId andToken:(NSString*)token
 {
-    MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
-    roomStore.paginationToken = token;
+    [self getOrCreateRoomStore:roomId
+                    completion:^(MXMemoryRoomStore * _Nullable roomStore) {
+        roomStore.paginationToken = token;
+    }];
 }
 
 - (NSString*)paginationTokenOfRoom:(NSString*)roomId
@@ -121,8 +129,10 @@
 
 - (void)storeHasReachedHomeServerPaginationEndForRoom:(NSString*)roomId andValue:(BOOL)value
 {
-    MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
-    roomStore.hasReachedHomeServerPaginationEnd = value;
+    [self getOrCreateRoomStore:roomId
+                    completion:^(MXMemoryRoomStore * _Nullable roomStore) {
+        roomStore.hasReachedHomeServerPaginationEnd = value;
+    }];
 }
 
 - (BOOL)hasReachedHomeServerPaginationEndForRoom:(NSString*)roomId
@@ -133,8 +143,10 @@
 
 - (void)storeHasLoadedAllRoomMembersForRoom:(NSString *)roomId andValue:(BOOL)value
 {
-    MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
-    roomStore.hasLoadedAllRoomMembersForRoom = value;
+    [self getOrCreateRoomStore:roomId
+                    completion:^(MXMemoryRoomStore * _Nullable roomStore) {
+        roomStore.hasLoadedAllRoomMembersForRoom = value;
+    }];
 }
 
 - (BOOL)hasLoadedAllRoomMembersForRoom:(NSString *)roomId
@@ -147,10 +159,10 @@
                           success:(nonnull void (^)(id<MXEventsEnumerator> _Nonnull))success
                           failure:(nullable void (^)(NSError * _Nonnull error))failure
 {
-    MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
-    dispatch_async(dispatch_get_main_queue(), ^{
+    [self getOrCreateRoomStore:roomId
+                    completion:^(MXMemoryRoomStore * _Nullable roomStore) {
         success(roomStore.messagesEnumerator);
-    });
+    }];
 }
 
 - (void)messagesEnumeratorForRoom:(nonnull NSString *)roomId
@@ -158,16 +170,18 @@
                          success:(nonnull void (^)(id<MXEventsEnumerator> _Nonnull))success
                          failure:(nullable void (^)(NSError * _Nonnull error))failure
 {
-    MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
-    dispatch_async(dispatch_get_main_queue(), ^{
+    [self getOrCreateRoomStore:roomId
+                    completion:^(MXMemoryRoomStore * _Nullable roomStore) {
         success([roomStore enumeratorForMessagesWithTypeIn:types]);
-    });
+    }];
 }
 
 - (void)storePartialTextMessageForRoom:(NSString *)roomId partialTextMessage:(NSString *)partialTextMessage
 {
-    MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
-    roomStore.partialTextMessage = partialTextMessage;
+    [self getOrCreateRoomStore:roomId
+                    completion:^(MXMemoryRoomStore * _Nullable roomStore) {
+        roomStore.partialTextMessage = partialTextMessage;
+    }];
 }
 
 - (NSString *)partialTextMessageOfRoom:(NSString *)roomId
@@ -365,28 +379,34 @@
 #pragma mark - Outgoing events
 - (void)storeOutgoingMessageForRoom:(NSString*)roomId outgoingMessage:(MXEvent*)outgoingMessage
 {
-    MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
-    [roomStore storeOutgoingMessage:outgoingMessage];
+    [self getOrCreateRoomStore:roomId
+                    completion:^(MXMemoryRoomStore * _Nullable roomStore) {
+        [roomStore storeOutgoingMessage:outgoingMessage];
+    }]
 }
 
 - (void)removeAllOutgoingMessagesFromRoom:(NSString*)roomId
 {
-    MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
-    [roomStore removeAllOutgoingMessages];
+    [self getOrCreateRoomStore:roomId
+                    completion:^(MXMemoryRoomStore * _Nullable roomStore) {
+        [roomStore removeAllOutgoingMessages];
+    }]
 }
 
 - (void)removeOutgoingMessageFromRoom:(NSString*)roomId outgoingMessage:(NSString*)outgoingMessageEventId
 {
-    MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
-    [roomStore removeOutgoingMessage:outgoingMessageEventId];
+    [self getOrCreateRoomStore:roomId
+                    completion:^(MXMemoryRoomStore * _Nullable roomStore) {
+        [roomStore removeOutgoingMessage:outgoingMessageEventId];
+    }]
 }
 
 - (void)outgoingMessagesInRoom:(NSString *)roomId completion:(void (^)(NSArray<MXEvent *> * _Nullable))completion
 {
-    MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
-    dispatch_async(dispatch_get_main_queue(), ^{
+    [self getOrCreateRoomStore:roomId
+                    completion:^(MXMemoryRoomStore * _Nullable roomStore) {
         completion(roomStore.outgoingMessages);
-    });
+    }]
 }
 
 
@@ -440,7 +460,7 @@
 
 
 #pragma mark - Protected operations
-- (MXMemoryRoomStore*)getOrCreateRoomStore:(NSString*)roomId
+- (void)getOrCreateRoomStore:(NSString *)roomId completion:(void (^)(MXMemoryRoomStore * _Nullable))completion
 {
     MXMemoryRoomStore *roomStore = roomStores[roomId];
     if (nil == roomStore)
@@ -448,7 +468,9 @@
         roomStore = [[MXMemoryRoomStore alloc] init];
         roomStores[roomId] = roomStore;
     }
-    return roomStore;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        completion(roomStore);
+    });
 }
 
 @end
