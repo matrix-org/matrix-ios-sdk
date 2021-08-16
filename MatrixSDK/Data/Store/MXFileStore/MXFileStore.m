@@ -822,49 +822,57 @@ static NSUInteger preloadOptions;
 
 
 #pragma mark - Protected operations
-- (MXMemoryRoomStore*)getOrCreateRoomStore:(NSString*)roomId
+- (void)getOrCreateRoomStore:(NSString *)roomId completion:(void (^)(MXMemoryRoomStore * _Nullable))completion
 {
     MXFileRoomStore *roomStore = roomStores[roomId];
-    if (nil == roomStore)
+    if (roomStore)
+    {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            completion(roomStore);
+        });
+    }
+    else
     {
         NSString *roomFile = [self messagesFileForRoom:roomId forBackup:NO];
         
         if ([[NSFileManager defaultManager] fileExistsAtPath:roomFile])
         {
-            MXFileRoomStore *roomStore;
-            @try
-            {
-                NSDate *startDate = [NSDate date];
-                roomStore = [NSKeyedUnarchiver unarchiveObjectWithFile:roomFile];
-                MXLogDebug(@"[MXFileStore] Loaded room messages of room: %@ in %.0fms", roomId, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
-            }
-            @catch (NSException *exception)
-            {
-                MXLogDebug(@"[MXFileStore] Warning: MXFileRoomStore file for room %@ has been corrupted. Exception: %@", roomId, exception);
-            }
-
-            if (roomStore)
-            {
-                //MXLogDebug(@"   - %@: %@", roomId, roomStore);
-                roomStores[roomId] = roomStore;
-            }
-            else
-            {
-                MXLogDebug(@"[MXFileStore] Warning: MXFileStore has been reset due to room file corruption. Room id: %@. File path: %@",
-                      roomId, roomFile);
-                
-                [self logFiles];
-                [self deleteAllData];
-            }
+            dispatch_async(dispatchQueue, ^{
+                @try
+                {
+                    NSDate *startDate = [NSDate date];
+                    MXFileRoomStore *roomStore = [NSKeyedUnarchiver unarchiveObjectWithFile:roomFile];
+                    roomStores[roomId] = roomStore;
+                    MXLogDebug(@"[MXFileStore] Loaded room messages of room: %@ in %.0fms", roomId, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+                    
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        completion(roomStore);
+                    });
+                }
+                @catch (NSException *exception)
+                {
+                    MXLogDebug(@"[MXFileStore] Warning: MXFileRoomStore file for room %@ has been corrupted, file path: %@. Exception: %@", roomId, roomFile, exception);
+                    
+                    [self logFiles];
+                    [self deleteAllData];
+                    
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        completion(nil);
+                    });
+                }
+            });
         }
         else
         {
             //  MXFileStore requires MXFileRoomStore objects
             roomStore = [[MXFileRoomStore alloc] init];
             roomStores[roomId] = roomStore;
+            
+            dispatch_async(dispatch_get_main_queue(), ^{
+                completion(roomStore);
+            });
         }
     }
-    return roomStore;
 }
 
 
@@ -1185,23 +1193,27 @@ static NSUInteger preloadOptions;
             // Save rooms where there was changes
             for (NSString *roomId in roomsToCommit)
             {
-                MXFileRoomStore *roomStore = (MXFileRoomStore *)[self getOrCreateRoomStore:roomId];
-                if (roomStore)
-                {
-                    NSString *file = [self messagesFileForRoom:roomId forBackup:NO];
-                    NSString *backupFile = [self messagesFileForRoom:roomId forBackup:YES];
-
-                    // Backup the file
-                    if (backupFile && [[NSFileManager defaultManager] fileExistsAtPath:file])
+                [self getOrCreateRoomStore:roomId
+                                completion:^(MXMemoryRoomStore * _Nullable roomStore) {
+                    if (roomStore)
                     {
-                        [self checkFolderExistenceForRoom:roomId forBackup:YES];
-                        [[NSFileManager defaultManager] moveItemAtPath:file toPath:backupFile error:nil];
+                        dispatch_async(dispatchQueue, ^(void){
+                            NSString *file = [self messagesFileForRoom:roomId forBackup:NO];
+                            NSString *backupFile = [self messagesFileForRoom:roomId forBackup:YES];
+                            
+                            // Backup the file
+                            if (backupFile && [[NSFileManager defaultManager] fileExistsAtPath:file])
+                            {
+                                [self checkFolderExistenceForRoom:roomId forBackup:YES];
+                                [[NSFileManager defaultManager] moveItemAtPath:file toPath:backupFile error:nil];
+                            }
+                            
+                            // Store new data
+                            [self checkFolderExistenceForRoom:roomId forBackup:NO];
+                            [NSKeyedArchiver archiveRootObject:roomStore toFile:file];
+                        });
                     }
-
-                    // Store new data
-                    [self checkFolderExistenceForRoom:roomId forBackup:NO];
-                    [NSKeyedArchiver archiveRootObject:roomStore toFile:file];
-                }
+                }];
             }
 
 #if DEBUG

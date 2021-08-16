@@ -51,8 +51,9 @@
  Interface to create or retrieve a MXMemoryRoomStore type object.
  
  @param roomId the id for the MXMemoryRoomStore object.
- @return the MXMemoryRoomStore instance.
+ @param completion Completion block containing the MXMemoryRoomStore instance.
  */
-- (MXMemoryRoomStore*)getOrCreateRoomStore:(NSString*)roomId;
+- (void)getOrCreateRoomStore:(NSString * _Nonnull)roomId
+                  completion:(void(^_Nonnull)(MXMemoryRoomStore *_Nullable))completion;
 
 @end
