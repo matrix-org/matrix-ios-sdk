@@ -161,7 +161,10 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     if (cachedStoreMessagesEnumerator)
     {
         dispatch_async(dispatch_get_main_queue(), ^{
-            completion(self->cachedStoreMessagesEnumerator);
+            if (completion)
+            {
+                completion(self->cachedStoreMessagesEnumerator);
+            }
         });
         return;
     }
