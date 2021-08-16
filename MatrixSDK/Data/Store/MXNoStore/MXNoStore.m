@@ -175,7 +175,7 @@
 - (void)paginationTokenOfRoom:(NSString *)roomId completion:(void (^)(NSString * _Nullable))completion
 {
     dispatch_async(dispatch_get_main_queue(), ^{
-        completion(paginationTokens[roomId]);
+        completion(self->paginationTokens[roomId]);
     });
 }
 
@@ -353,9 +353,11 @@
     }
 }
 
-- (NSString *)partialTextMessageOfRoom:(NSString *)roomId
+- (void)partialTextMessageOfRoom:(NSString *)roomId completion:(void (^)(NSString * _Nullable))completion
 {
-    return partialTextMessages[roomId];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        completion(self->partialTextMessages[roomId]);
+    });
 }
 
 - (BOOL)isPermanent

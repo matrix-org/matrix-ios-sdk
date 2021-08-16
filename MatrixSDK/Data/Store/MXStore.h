@@ -230,9 +230,9 @@
  The text message typed by the user but not yet sent.
 
  @param roomId the id of the room.
- @return the text message. Can be nil.
+ @param completion Completion block containing the text message. The partial text message can be nil.
  */
-- (NSString* _Nullable)partialTextMessageOfRoom:(nonnull NSString*)roomId;
+- (void)partialTextMessageOfRoom:(nonnull NSString*)roomId completion:(nonnull void(^)(NSString * _Nullable))completion;
 
 
 /**

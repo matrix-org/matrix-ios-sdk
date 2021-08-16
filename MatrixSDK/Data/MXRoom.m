@@ -368,9 +368,9 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     }
 }
 
-- (NSString *)partialTextMessage
+- (void)partialTextMessageWithCompletion:(void(^)(NSString*))completion
 {
-    return [mxSession.store partialTextMessageOfRoom:self.roomId];
+    [mxSession.store partialTextMessageOfRoom:self.roomId completion:completion];
 }
 
 

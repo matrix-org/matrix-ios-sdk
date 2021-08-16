@@ -157,7 +157,9 @@ FOUNDATION_EXPORT NSInteger const kMXRoomAlreadyJoinedErrorCode;
  when the application restarts.
  */
 // @TODO(summary): Move to MXRoomSummary
-@property (nonatomic) NSString *partialTextMessage;
+- (void)partialTextMessageWithCompletion:(void(^)(NSString*))completion;
+
+- (void)setPartialTextMessage:(NSString *)partialTextMessage;
 
 /**
  The list of ids of users currently typing in this room.

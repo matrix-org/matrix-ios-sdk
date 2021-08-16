@@ -190,10 +190,12 @@
     }];
 }
 
-- (NSString *)partialTextMessageOfRoom:(NSString *)roomId
+- (void)partialTextMessageOfRoom:(NSString *)roomId completion:(void (^)(NSString * _Nullable))completion
 {
-    MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
-    return roomStore.partialTextMessage;
+    [self getOrCreateRoomStore:roomId
+                    completion:^(MXMemoryRoomStore * _Nullable roomStore) {
+        completion(roomStore.partialTextMessage);
+    }];
 }
 
 - (NSArray<MXReceiptData*> *)getEventReceipts:(NSString*)roomId eventId:(NSString*)eventId sorted:(BOOL)sort
@@ -388,7 +390,7 @@
     [self getOrCreateRoomStore:roomId
                     completion:^(MXMemoryRoomStore * _Nullable roomStore) {
         [roomStore storeOutgoingMessage:outgoingMessage];
-    }]
+    }];
 }
 
 - (void)removeAllOutgoingMessagesFromRoom:(NSString*)roomId
@@ -396,7 +398,7 @@
     [self getOrCreateRoomStore:roomId
                     completion:^(MXMemoryRoomStore * _Nullable roomStore) {
         [roomStore removeAllOutgoingMessages];
-    }]
+    }];
 }
 
 - (void)removeOutgoingMessageFromRoom:(NSString*)roomId outgoingMessage:(NSString*)outgoingMessageEventId
@@ -404,7 +406,7 @@
     [self getOrCreateRoomStore:roomId
                     completion:^(MXMemoryRoomStore * _Nullable roomStore) {
         [roomStore removeOutgoingMessage:outgoingMessageEventId];
-    }]
+    }];
 }
 
 - (void)outgoingMessagesInRoom:(NSString *)roomId completion:(void (^)(NSArray<MXEvent *> * _Nullable))completion
@@ -412,7 +414,7 @@
     [self getOrCreateRoomStore:roomId
                     completion:^(MXMemoryRoomStore * _Nullable roomStore) {
         completion(roomStore.outgoingMessages);
-    }]
+    }];
 }
 
 

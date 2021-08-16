@@ -215,8 +215,10 @@ class MXBackgroundStore: NSObject, MXStore {
     func storePartialTextMessage(forRoom roomId: String, partialTextMessage: String) {
     }
     
-    func partialTextMessage(ofRoom roomId: String) -> String? {
-        return nil
+    func partialTextMessage(ofRoom roomId: String, completion: @escaping (String?) -> Void) {
+        DispatchQueue.main.async {
+            completion(nil)
+        }
     }
     
     func getEventReceipts(_ roomId: String, eventId: String, sorted sort: Bool) -> [MXReceiptData]? {
