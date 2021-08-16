@@ -105,10 +105,14 @@
     }
 }
 
-- (BOOL)eventExistsWithEventId:(NSString *)eventId inRoom:(NSString *)roomId
+- (void)eventExistsWithEventId:(NSString *)eventId
+                        inRoom:(NSString *)roomId
+                    completion:(void (^)(BOOL))completion
 {
     // Events are not stored. So, we cannot find it.
-    return NO;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        completion(NO);
+    });
 }
 
 - (MXEvent *)eventWithEventId:(NSString *)eventId inRoom:(NSString *)roomId

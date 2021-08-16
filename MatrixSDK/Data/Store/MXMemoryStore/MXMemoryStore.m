@@ -74,9 +74,9 @@
     }];
 }
 
-- (BOOL)eventExistsWithEventId:(NSString *)eventId inRoom:(NSString *)roomId
+- (void)eventExistsWithEventId:(NSString *)eventId inRoom:(NSString *)roomId completion:(void (^)(BOOL))completion
 {
-    return (nil != [self eventWithEventId:eventId inRoom:roomId]);
+    completion(nil != [self eventWithEventId:eventId inRoom:roomId]);
 }
 
 - (MXEvent *)eventWithEventId:(NSString *)eventId inRoom:(NSString *)roomId

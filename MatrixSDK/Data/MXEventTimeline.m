@@ -725,48 +725,50 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 - (void)addEvent:(MXEvent*)event direction:(MXTimelineDirection)direction fromStore:(BOOL)fromStore isRoomInitialSync:(BOOL)isRoomInitialSync
 {
     // Make sure we have not processed this event yet
-    if (fromStore == NO && [store eventExistsWithEventId:event.eventId inRoom:room.roomId])
-    {
-        return;
-    }
-
-    // State event updates the timeline room state
-    if (event.isState)
-    {
-        [self cloneState:direction];
-
-        [self handleStateEvents:@[event] direction:direction];
-    }
-
-    // Events going forwards on the live timeline come from /sync.
-    // They are assimilated to live events.
-    if (_isLiveTimeline && direction == MXTimelineDirectionForwards)
-    {
-        // Handle here live redaction
-        // There is nothing to manage locally if we are getting the 1st sync for the room
-        // as the homeserver provides sanitised data in this situation
-        if (!isRoomInitialSync && event.eventType == MXEventTypeRoomRedaction)
+    [store eventExistsWithEventId:event.eventId inRoom:room.roomId completion:^(BOOL eventExists) {
+        if (fromStore == NO && eventExists)
         {
-            [self handleRedaction:event];
+            return;
+        }
+        
+        // State event updates the timeline room state
+        if (event.isState)
+        {
+            [self cloneState:direction];
+
+            [self handleStateEvents:@[event] direction:direction];
         }
 
-        // Consider that a message sent by a user has been read by him
-        [room storeLocalReceipt:kMXEventTypeStringRead eventId:event.eventId userId:event.sender ts:event.originServerTs];
-    }
+        // Events going forwards on the live timeline come from /sync.
+        // They are assimilated to live events.
+        if (_isLiveTimeline && direction == MXTimelineDirectionForwards)
+        {
+            // Handle here live redaction
+            // There is nothing to manage locally if we are getting the 1st sync for the room
+            // as the homeserver provides sanitised data in this situation
+            if (!isRoomInitialSync && event.eventType == MXEventTypeRoomRedaction)
+            {
+                [self handleRedaction:event];
+            }
 
-    // Store the event
-    if (!fromStore)
-    {
-        [store storeEventForRoom:_state.roomId event:event direction:direction];
-    }
+            // Consider that a message sent by a user has been read by him
+            [room storeLocalReceipt:kMXEventTypeStringRead eventId:event.eventId userId:event.sender ts:event.originServerTs];
+        }
 
-    // Notify the aggregation manager for every events so that it can store
-    // aggregated data sent by the server
+        // Store the event
+        if (!fromStore)
+        {
+            [store storeEventForRoom:_state.roomId event:event direction:direction];
+        }
 
-    [room.mxSession.aggregations handleOriginalDataOfEvent:event];
+        // Notify the aggregation manager for every events so that it can store
+        // aggregated data sent by the server
 
-    // Notify listeners
-    [self notifyListeners:event direction:direction];
+        [room.mxSession.aggregations handleOriginalDataOfEvent:event];
+
+        // Notify listeners
+        [self notifyListeners:event direction:direction];
+    }];
 }
 
 #pragma mark - Specific events Handling

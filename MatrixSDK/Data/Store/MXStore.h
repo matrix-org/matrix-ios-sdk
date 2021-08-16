@@ -75,10 +75,11 @@
  
  @param eventId the id of the event to retrieve.
  @param roomId the id of the room.
-
- @return YES if the event exists in the store.
+ @param completion Completion block returning YES if the event exists in the store.
  */
-- (BOOL)eventExistsWithEventId:(nonnull NSString*)eventId inRoom:(nonnull NSString*)roomId;
+- (void)eventExistsWithEventId:(nonnull NSString*)eventId
+                        inRoom:(nonnull NSString*)roomId
+                    completion:(nonnull void (^)(BOOL))completion;
 
 /**
  Get an event in a room from the store.

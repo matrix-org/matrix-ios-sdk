@@ -131,8 +131,10 @@ class MXBackgroundStore: NSObject, MXStore {
     func replace(_ event: MXEvent, inRoom roomId: String) {
     }
     
-    func eventExists(withEventId eventId: String, inRoom roomId: String) -> Bool {
-        return false
+    func eventExists(withEventId eventId: String, inRoom roomId: String, completion: @escaping (Bool) -> Void) {
+        DispatchQueue.main.async {
+            completion(false)
+        }
     }
     
     func deleteAllMessages(inRoom roomId: String) {
