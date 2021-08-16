@@ -115,7 +115,7 @@
  */
 // @TODO(summary): Move to MXRoomSummary
 - (void)storePaginationTokenOfRoom:(nonnull NSString*)roomId andToken:(nonnull NSString*)token;
-- (NSString * _Nullable)paginationTokenOfRoom:(nonnull NSString*)roomId;
+- (void)paginationTokenOfRoom:(nonnull NSString*)roomId completion:(nonnull void(^)(NSString * _Nullable))completion;
 
 /**
  Store/retrieve the flag indicating that the SDK has reached the end of pagination

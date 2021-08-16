@@ -172,9 +172,11 @@
 {
     paginationTokens[roomId] = token;
 }
-- (NSString*)paginationTokenOfRoom:(NSString*)roomId
+- (void)paginationTokenOfRoom:(NSString *)roomId completion:(void (^)(NSString * _Nullable))completion
 {
-    return paginationTokens[roomId];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        completion(paginationTokens[roomId]);
+    });
 }
 
 - (void)storeHasReachedHomeServerPaginationEndForRoom:(NSString*)roomId andValue:(BOOL)value

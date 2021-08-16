@@ -147,8 +147,10 @@ class MXBackgroundStore: NSObject, MXStore {
     func storePaginationToken(ofRoom roomId: String, andToken token: String) {
     }
     
-    func paginationToken(ofRoom roomId: String) -> String? {
-        return nil
+    func paginationToken(ofRoom roomId: String, completion: @escaping ((String?) -> Void)) {
+        DispatchQueue.main.async {
+            completion(nil)
+        }
     }
     
     func storeHasReachedHomeServerPaginationEnd(forRoom roomId: String, andValue value: Bool) {

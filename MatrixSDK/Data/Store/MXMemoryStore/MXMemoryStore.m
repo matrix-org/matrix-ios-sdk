@@ -121,10 +121,12 @@
     }];
 }
 
-- (NSString*)paginationTokenOfRoom:(NSString*)roomId
+- (void)paginationTokenOfRoom:(NSString *)roomId completion:(void (^)(NSString * _Nullable))completion
 {
-    MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
-    return roomStore.paginationToken;
+    [self getOrCreateRoomStore:roomId
+                    completion:^(MXMemoryRoomStore * _Nullable roomStore) {
+        completion(roomStore.paginationToken);
+    }]
 }
 
 - (void)storeHasReachedHomeServerPaginationEndForRoom:(NSString*)roomId andValue:(BOOL)value
