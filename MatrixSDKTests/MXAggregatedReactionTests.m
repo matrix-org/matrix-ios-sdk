@@ -232,17 +232,17 @@
             [mxSession start:^{
 
                 // -> Data from aggregations must be right
-                MXAggregatedReactions *reactions = [mxSession.aggregations aggregatedReactionsOnEvent:eventId inRoom:room.roomId];
+                [mxSession.aggregations aggregatedReactionsOnEvent:eventId inRoom:room.roomId completion:^(MXAggregatedReactions * _Nullable reactions) {
+                    XCTAssertNotNil(reactions);
+                    XCTAssertEqual(reactions.reactions.count, 1);
 
-                XCTAssertNotNil(reactions);
-                XCTAssertEqual(reactions.reactions.count, 1);
+                    MXReactionCount *reactionCount = reactions.reactions.firstObject;
+                    XCTAssertEqualObjects(reactionCount.reaction, @"👍");
+                    XCTAssertEqual(reactionCount.count, 1);
+                    XCTAssertTrue(reactionCount.myUserHasReacted);
 
-                MXReactionCount *reactionCount = reactions.reactions.firstObject;
-                XCTAssertEqualObjects(reactionCount.reaction, @"👍");
-                XCTAssertEqual(reactionCount.count, 1);
-                XCTAssertTrue(reactionCount.myUserHasReacted);
-
-                [expectation fulfill];
+                    [expectation fulfill];
+                }];
 
             } failure:^(NSError *error) {
                 XCTFail(@"Cannot set up intial test conditions - error: %@", error);
@@ -264,17 +264,17 @@
     [self createScenario:^(MXSession *mxSession, MXRoom *room, MXSession *otherSession, XCTestExpectation *expectation, NSString *eventId) {
 
         // -> Data from aggregations must be right
-        MXAggregatedReactions *reactions = [mxSession.aggregations aggregatedReactionsOnEvent:eventId inRoom:room.roomId];
+        [mxSession.aggregations aggregatedReactionsOnEvent:eventId inRoom:room.roomId completion:^(MXAggregatedReactions * _Nullable reactions) {
+            XCTAssertNotNil(reactions.reactions);
+            XCTAssertEqual(reactions.reactions.count, 1);
 
-        XCTAssertNotNil(reactions.reactions);
-        XCTAssertEqual(reactions.reactions.count, 1);
+            MXReactionCount *reactionCount = reactions.reactions.firstObject;
+            XCTAssertEqualObjects(reactionCount.reaction, @"👍");
+            XCTAssertEqual(reactionCount.count, 1);
+            XCTAssertTrue(reactionCount.myUserHasReacted);
 
-        MXReactionCount *reactionCount = reactions.reactions.firstObject;
-        XCTAssertEqualObjects(reactionCount.reaction, @"👍");
-        XCTAssertEqual(reactionCount.count, 1);
-        XCTAssertTrue(reactionCount.myUserHasReacted);
-
-        [expectation fulfill];
+            [expectation fulfill];
+        }];
     }];
 }
 
@@ -343,10 +343,11 @@
             // -> Data from aggregations must be right
             if (!change.changeDueToLocalEcho)
             {
-                MXAggregatedReactions *reactions = [mxSession.aggregations aggregatedReactionsOnEvent:eventId inRoom:room.roomId];
-                XCTAssertNil(reactions);
+                [mxSession.aggregations aggregatedReactionsOnEvent:eventId inRoom:room.roomId completion:^(MXAggregatedReactions * _Nullable reactions) {
+                    XCTAssertNil(reactions);
 
-                [expectation fulfill];
+                    [expectation fulfill];
+                }];
             }
         }];
 
@@ -391,9 +392,10 @@
                     // -> Data from aggregations must be right
                     if (!changes.allValues.firstObject.changeDueToLocalEcho)
                     {
-                        MXAggregatedReactions *reactions = [mxSession.aggregations aggregatedReactionsOnEvent:eventId inRoom:room.roomId];
-                        XCTAssertNil(reactions);
-                        [expectation fulfill];
+                        [mxSession.aggregations aggregatedReactionsOnEvent:eventId inRoom:room.roomId completion:^(MXAggregatedReactions * _Nullable reactions) {
+                            XCTAssertNil(reactions);
+                            [expectation fulfill];
+                        }];
                     }
                 }];
 
@@ -489,17 +491,18 @@
             }];
 
             // -> We must have reaction count before the request complete
-            MXAggregatedReactions *reactions = [mxSession.aggregations aggregatedReactionsOnEvent:eventId inRoom:room.roomId];
-            XCTAssertNotNil(reactions);
-            XCTAssertEqual(reactions.reactions.count, 1);
+            [mxSession.aggregations aggregatedReactionsOnEvent:eventId inRoom:room.roomId completion:^(MXAggregatedReactions * _Nullable reactions) {
+                XCTAssertNotNil(reactions);
+                XCTAssertEqual(reactions.reactions.count, 1);
 
-            MXReactionCount *reactionCount = reactions.reactions.firstObject;
-            XCTAssertEqualObjects(reactionCount.reaction, @"👍");
-            XCTAssertEqual(reactionCount.count, 1);
-            XCTAssertTrue(reactionCount.myUserHasReacted);
-            XCTAssertTrue(reactionCount.containsLocalEcho);
+                MXReactionCount *reactionCount = reactions.reactions.firstObject;
+                XCTAssertEqualObjects(reactionCount.reaction, @"👍");
+                XCTAssertEqual(reactionCount.count, 1);
+                XCTAssertTrue(reactionCount.myUserHasReacted);
+                XCTAssertTrue(reactionCount.containsLocalEcho);
 
-            [expectation fulfill];
+                [expectation fulfill];
+            }];
 
         } failure:^(NSError *error) {
             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
@@ -524,18 +527,19 @@
         }];
 
         // -> We must have reaction count before the request complete
-        MXAggregatedReactions *reactions = [mxSession.aggregations aggregatedReactionsOnEvent:eventId inRoom:room.roomId];
+        [mxSession.aggregations aggregatedReactionsOnEvent:eventId inRoom:room.roomId completion:^(MXAggregatedReactions * _Nullable reactions) {
+            XCTAssertNotNil(reactions);
+            XCTAssertEqual(reactions.reactions.count, 1);
 
-        XCTAssertNotNil(reactions);
-        XCTAssertEqual(reactions.reactions.count, 1);
+            MXReactionCount *reactionCount = reactions.reactions.firstObject;
+            XCTAssertEqualObjects(reactionCount.reaction, @"👍");
+            XCTAssertEqual(reactionCount.count, 0);
+            XCTAssertFalse(reactionCount.myUserHasReacted);
+            XCTAssertTrue(reactionCount.containsLocalEcho);
 
-        MXReactionCount *reactionCount = reactions.reactions.firstObject;
-        XCTAssertEqualObjects(reactionCount.reaction, @"👍");
-        XCTAssertEqual(reactionCount.count, 0);
-        XCTAssertFalse(reactionCount.myUserHasReacted);
-        XCTAssertTrue(reactionCount.containsLocalEcho);
+            [expectation fulfill];
+        }];
 
-        [expectation fulfill];
     }];
 }
 
@@ -605,31 +609,33 @@
         }];
 
         // -> We must have right reaction count before the requests complete
-        MXAggregatedReactions *reactions = [mxSession.aggregations aggregatedReactionsOnEvent:eventId inRoom:room.roomId];
+        [mxSession.aggregations aggregatedReactionsOnEvent:eventId inRoom:room.roomId completion:^(MXAggregatedReactions * _Nullable reactions) {
+            XCTAssertNotNil(reactions);
+            XCTAssertEqual(reactions.reactions.count, 1);
 
-        XCTAssertNotNil(reactions);
-        XCTAssertEqual(reactions.reactions.count, 1);
+            MXReactionCount *reactionCount = reactions.reactions.firstObject;
+            XCTAssertEqualObjects(reactionCount.reaction, @"👍");
+            XCTAssertEqual(reactionCount.count, 0);
+            XCTAssertFalse(reactionCount.myUserHasReacted);
+            XCTAssertTrue(reactionCount.containsLocalEcho);
 
-        MXReactionCount *reactionCount = reactions.reactions.firstObject;
-        XCTAssertEqualObjects(reactionCount.reaction, @"👍");
-        XCTAssertEqual(reactionCount.count, 0);
-        XCTAssertFalse(reactionCount.myUserHasReacted);
-        XCTAssertTrue(reactionCount.containsLocalEcho);
+            XCTAssertEqual(reactionCount.localEchoesOperations.count, 1);
 
-        XCTAssertEqual(reactionCount.localEchoesOperations.count, 1);
+            // -> We must have right reaction count at the end (ie, no reactions including no local reaction echoes)
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 2 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
 
-        // -> We must have right reaction count at the end (ie, no reactions including no local reaction echoes)
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 2 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+                [mxSession.aggregations aggregatedReactionsOnEvent:eventId inRoom:room.roomId completion:^(MXAggregatedReactions * _Nullable reactions2) {
+                    XCTAssertNil(reactions2);
 
-            MXAggregatedReactions *reactions = [mxSession.aggregations aggregatedReactionsOnEvent:eventId inRoom:room.roomId];
-            XCTAssertNil(reactions);
+                    // -> Only one event (redaction) should have been sent
+                    XCTAssertEqual(unreactionEventCount, 1);
+                    XCTAssertEqual(reactionEventCount, 0);
 
-            // -> Only one event (redaction) should have been sent
-            XCTAssertEqual(unreactionEventCount, 1);
-            XCTAssertEqual(reactionEventCount, 0);
+                    [expectation fulfill];
+                }];
+            });
+        }];
 
-            [expectation fulfill];
-        });
     }];
 }
 
@@ -670,11 +676,12 @@
         [liveTimeline paginate:100 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
 
             // -> Data from aggregations must be right
-            MXAggregatedReactions *reactions = [mxSession.aggregations aggregatedReactionsOnEvent:eventId inRoom:room.roomId];
-            [self checkGappySyncScenarionReactions:reactions];
+            [mxSession.aggregations aggregatedReactionsOnEvent:eventId inRoom:room.roomId completion:^(MXAggregatedReactions * _Nullable reactions) {
+                [self checkGappySyncScenarionReactions:reactions];
 
-            [expectation fulfill];
-
+                [expectation fulfill];
+            }];
+            
         } failure:^(NSError *error) {
             XCTFail(@"The operation should not fail - NSError: %@", error);
             [expectation fulfill];
@@ -687,12 +694,13 @@
     [self createScenarioWithAGappySync:^(MXSession *mxSession, MXRoom *room, MXSession *otherSession, XCTestExpectation *expectation, NSString *eventId) {
 
         // While we have not yet paginated back, we should see an outdated reaction count
-        MXAggregatedReactions *reactions = [mxSession.aggregations aggregatedReactionsOnEvent:eventId inRoom:room.roomId];
-        XCTAssertNotNil(reactions);
-        XCTAssertEqual(reactions.reactions.count, 1);
-        XCTAssertEqualObjects(reactions.reactions.firstObject.reaction, @"👍");
+        [mxSession.aggregations aggregatedReactionsOnEvent:eventId inRoom:room.roomId completion:^(MXAggregatedReactions * _Nullable reactions) {
+            XCTAssertNotNil(reactions);
+            XCTAssertEqual(reactions.reactions.count, 1);
+            XCTAssertEqualObjects(reactions.reactions.firstObject.reaction, @"👍");
 
-        [self checkReactionsWhenPaginating:mxSession room:room event:eventId expectation:expectation];
+            [self checkReactionsWhenPaginating:mxSession room:room event:eventId expectation:expectation];
+        }];
     }];
 }
 
@@ -716,11 +724,12 @@
         // Random usage to keep a strong reference on timeline
         [timeline resetPagination];
 
-        MXAggregatedReactions *reactions = [mxSession.aggregations aggregatedReactionsOnEvent:eventId inRoom:room.roomId];
-        [self checkGappySyncScenarionReactions:reactions];
+        [mxSession.aggregations aggregatedReactionsOnEvent:eventId inRoom:room.roomId completion:^(MXAggregatedReactions * _Nullable reactions) {
+            [self checkGappySyncScenarionReactions:reactions];
 
-        [expectation fulfill];
-
+            [expectation fulfill];
+        }];
+        
     } failure:^(NSError *error) {
         XCTFail(@"The operation should not fail - NSError: %@", error);
         [expectation fulfill];
@@ -732,12 +741,13 @@
     [self createScenarioWithAGappySync:^(MXSession *mxSession, MXRoom *room, MXSession *otherSession, XCTestExpectation *expectation, NSString *eventId) {
 
         // While we have not yet paginated back, we should see an outdated reaction count
-        MXAggregatedReactions *reactions = [mxSession.aggregations aggregatedReactionsOnEvent:eventId inRoom:room.roomId];
-        XCTAssertNotNil(reactions);
-        XCTAssertEqual(reactions.reactions.count, 1);
-        XCTAssertEqualObjects(reactions.reactions.firstObject.reaction, @"👍");
+        [mxSession.aggregations aggregatedReactionsOnEvent:eventId inRoom:room.roomId completion:^(MXAggregatedReactions * _Nullable reactions) {
+            XCTAssertNotNil(reactions);
+            XCTAssertEqual(reactions.reactions.count, 1);
+            XCTAssertEqualObjects(reactions.reactions.firstObject.reaction, @"👍");
 
-        [self checkReactionsOnPermalink:mxSession room:room event:eventId expectation:expectation];
+            [self checkReactionsOnPermalink:mxSession room:room event:eventId expectation:expectation];
+        }];
     }];
 }
 

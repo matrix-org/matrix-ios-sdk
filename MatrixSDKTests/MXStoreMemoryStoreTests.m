@@ -300,45 +300,58 @@
                     }
                 }];
 
-                XCTAssertTrue([liveTimeline canPaginate:MXTimelineDirectionBackwards], @"There is still at least one event to retrieve from the server");
+                [liveTimeline canPaginate:MXTimelineDirectionBackwards completion:^(BOOL canPaginate) {
+                    XCTAssertTrue(canPaginate, @"There is still at least one event to retrieve from the server");
+                    
+                    // The several paginations
+                    [liveTimeline resetPagination];
+                    [liveTimeline paginate:2 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
 
-                // The several paginations
-                [liveTimeline resetPagination];
-                [liveTimeline paginate:2 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
+                        [liveTimeline paginate:5 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
 
-                    [liveTimeline paginate:5 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
+                            [liveTimeline paginate:100 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
 
-                        [liveTimeline paginate:100 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
+                                // Now, compare the result with the reference
+                                XCTAssertEqual(roomEvents.count, 8);
+                                XCTAssertGreaterThan(room2Events.count, roomEvents.count);
 
-                            // Now, compare the result with the reference
-                            XCTAssertEqual(roomEvents.count, 8);
-                            XCTAssertGreaterThan(room2Events.count, roomEvents.count);
+                                // Compare events one by one
+                                for (NSUInteger i = 0; i < roomEvents.count; i++)
+                                {
+                                    MXEvent *event = roomEvents[i];
+                                    MXEvent *event2 = room2Events[i];
 
-                            // Compare events one by one
-                            for (NSUInteger i = 0; i < roomEvents.count; i++)
-                            {
-                                MXEvent *event = roomEvents[i];
-                                MXEvent *event2 = room2Events[i];
+                                    XCTAssertTrue([event2.eventId isEqualToString:event.eventId], @"Events mismatch: %@ - %@", event, event2);
+                                }
 
-                                XCTAssertTrue([event2.eventId isEqualToString:event.eventId], @"Events mismatch: %@ - %@", event, event2);
-                            }
+                                // Do one more round trip so that SDK detect the limit
+                                [liveTimeline paginate:1 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
 
-                            // Do one more round trip so that SDK detect the limit
-                            [liveTimeline paginate:1 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
+                                    XCTAssertEqual(roomEvents.count, 8, @"We should have not received more events");
 
-                                XCTAssertEqual(roomEvents.count, 8, @"We should have not received more events");
+                                    [liveTimeline canPaginate:MXTimelineDirectionBackwards completion:^(BOOL canPaginate) {
+                                        XCTAssertFalse(canPaginate, @"We reach the beginning of the history");
+                                        
+                                        [liveTimeline resetPagination];
+                                        
+                                        [liveTimeline canPaginate:MXTimelineDirectionBackwards completion:^(BOOL canPaginate) {
+                                            XCTAssertTrue(canPaginate, @"We must be able to paginate again");
+                                            
+                                            [expectation fulfill];
+                                        }];
+                                    }];
 
-                                XCTAssertFalse([liveTimeline canPaginate:MXTimelineDirectionBackwards], @"We reach the beginning of the history");
-
-                                [liveTimeline resetPagination];
-                                XCTAssertTrue([liveTimeline canPaginate:MXTimelineDirectionBackwards], @"We must be able to paginate again");
-
-                                [expectation fulfill];
+                                } failure:^(NSError *error) {
+                                    XCTFail(@"The request should not fail - NSError: %@", error);
+                                    [expectation fulfill];
+                                }];
 
                             } failure:^(NSError *error) {
                                 XCTFail(@"The request should not fail - NSError: %@", error);
                                 [expectation fulfill];
                             }];
+
+                            paginateBackMessagesCallCount++;
 
                         } failure:^(NSError *error) {
                             XCTFail(@"The request should not fail - NSError: %@", error);
@@ -353,13 +366,7 @@
                     }];
 
                     paginateBackMessagesCallCount++;
-
-                } failure:^(NSError *error) {
-                    XCTFail(@"The request should not fail - NSError: %@", error);
-                    [expectation fulfill];
                 }];
-
-                paginateBackMessagesCallCount++;
 
             } failure:^(NSError *error) {
                 XCTFail(@"The request should not fail - NSError: %@", error);

@@ -695,19 +695,21 @@
 
                     }];
 
-                    XCTAssert([liveTimeline canPaginate:MXTimelineDirectionBackwards]);
+                    [liveTimeline canPaginate:MXTimelineDirectionBackwards completion:^(BOOL canPaginate) {
+                        XCTAssert(canPaginate);
 
-                    [liveTimeline paginate:10 direction:MXTimelineDirectionBackwards onlyFromStore:YES complete:^{
+                        [liveTimeline paginate:10 direction:MXTimelineDirectionBackwards onlyFromStore:YES complete:^{
 
-                        XCTAssertEqual(paginatedMessagesCount, 5);
+                            XCTAssertEqual(paginatedMessagesCount, 5);
 
-                        [expectation fulfill];
+                            [expectation fulfill];
 
-                    } failure:^(NSError *error) {
-                        XCTFail(@"Cannot set up intial test conditions - error: %@", error);
-                        [expectation fulfill];
+                        } failure:^(NSError *error) {
+                            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                            [expectation fulfill];
+                        }];
                     }];
-
+                    
                 }];
 
             } failure:^(NSError *error) {
@@ -767,18 +769,21 @@
 
             }];
 
-            XCTAssert([liveTimeline canPaginate:MXTimelineDirectionBackwards]);
+            [liveTimeline canPaginate:MXTimelineDirectionBackwards completion:^(BOOL canPaginate) {
+                XCTAssert(canPaginate);
+                
+                [liveTimeline paginate:10 direction:MXTimelineDirectionBackwards onlyFromStore:YES complete:^{
 
-            [liveTimeline paginate:10 direction:MXTimelineDirectionBackwards onlyFromStore:YES complete:^{
+                    XCTAssertEqual(paginatedMessagesCount, 5);
 
-                XCTAssertEqual(paginatedMessagesCount, 5);
+                    [expectation fulfill];
 
-                [expectation fulfill];
-
-            } failure:^(NSError *error) {
-                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
-                [expectation fulfill];
+                } failure:^(NSError *error) {
+                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                    [expectation fulfill];
+                }];
             }];
+
         }];
 
     }];
@@ -834,19 +839,21 @@
 
         }];
 
-        XCTAssert([timeline canPaginate:MXTimelineDirectionBackwards]);
-
-        [timeline paginate:10 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
-
-            XCTAssertEqual(paginatedMessagesCount, 5);
-
-            [expectation fulfill];
+        [timeline canPaginate:MXTimelineDirectionBackwards completion:^(BOOL canPaginate) {
+            XCTAssert(canPaginate);
             
-        } failure:^(NSError *error) {
-            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
-            [expectation fulfill];
+            [timeline paginate:10 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
+
+                XCTAssertEqual(paginatedMessagesCount, 5);
+
+                [expectation fulfill];
+                
+            } failure:^(NSError *error) {
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
+            }];
         }];
-        
+
     }];
 }
 

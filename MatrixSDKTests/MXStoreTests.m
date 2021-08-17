@@ -218,11 +218,11 @@
 
             [store storeEventForRoom:@"roomId" event:event direction:MXTimelineDirectionForwards];
 
-            BOOL exists = [store eventExistsWithEventId:@"anID" inRoom:@"roomId"];
+            [store eventExistsWithEventId:@"anID" inRoom:@"roomId" completion:^(BOOL exists) {
+                XCTAssertEqual(exists, YES);
 
-            XCTAssertEqual(exists, YES);
-
-            [expectation fulfill];
+                [expectation fulfill];
+            }];
 
         } failure:^(NSError *error) {
             XCTFail(@"The request should not fail - NSError: %@", error);
@@ -247,11 +247,11 @@
 
             [store storeEventForRoom:@"roomId" event:event direction:MXTimelineDirectionForwards];
 
-            MXEvent *storedEvent = [store eventWithEventId:@"anID" inRoom:@"roomId"];
+            [store eventWithEventId:@"anID" inRoom:@"roomId" completion:^(MXEvent * _Nullable storedEvent) {
+                XCTAssertEqualObjects(storedEvent, event);
 
-            XCTAssertEqualObjects(storedEvent, event);
-
-            [expectation fulfill];
+                [expectation fulfill];
+            }];
 
         } failure:^(NSError *error) {
             XCTFail(@"The request should not fail - NSError: %@", error);
@@ -605,25 +605,29 @@
 {
     [room liveTimeline:^(MXEventTimeline *liveTimeline) {
         [liveTimeline resetPagination];
-        XCTAssertTrue([liveTimeline canPaginate:MXTimelineDirectionBackwards], @"We can always paginate at the beginning");
-
-        [liveTimeline paginate:100 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
-
-            // Due to SPEC-319, we need to paginate twice to be sure to hit the limit
+        [liveTimeline canPaginate:MXTimelineDirectionBackwards completion:^(BOOL canPaginate) {
+            XCTAssertTrue(canPaginate, @"We can always paginate at the beginning");
+            
             [liveTimeline paginate:100 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
 
-                XCTAssertFalse([liveTimeline canPaginate:MXTimelineDirectionBackwards], @"We must have reached the end of the pagination");
+                // Due to SPEC-319, we need to paginate twice to be sure to hit the limit
+                [liveTimeline paginate:100 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
 
-                [expectation fulfill];
+                    [liveTimeline canPaginate:MXTimelineDirectionBackwards completion:^(BOOL canPaginate2) {
+                        XCTAssertFalse(canPaginate2, @"We must have reached the end of the pagination");
+
+                        [expectation fulfill];
+                    }];
+                    
+                } failure:^(NSError *error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
 
             } failure:^(NSError *error) {
                 XCTFail(@"The request should not fail - NSError: %@", error);
                 [expectation fulfill];
             }];
-
-        } failure:^(NSError *error) {
-            XCTFail(@"The request should not fail - NSError: %@", error);
-            [expectation fulfill];
         }];
     }];
 }
@@ -633,25 +637,30 @@
     [room liveTimeline:^(MXEventTimeline *liveTimeline) {
 
         [liveTimeline resetPagination];
-        XCTAssertTrue([liveTimeline canPaginate:MXTimelineDirectionBackwards], @"We can always paginate at the beginning");
+        [liveTimeline canPaginate:MXTimelineDirectionBackwards completion:^(BOOL canPaginate) {
+            XCTAssertTrue(canPaginate, @"We can always paginate at the beginning");
+            
+            [liveTimeline paginate:100 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
 
-        [liveTimeline paginate:100 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
+                // Do one more round trip so that SDK detect the limit
+                [liveTimeline paginate:1 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
 
-            // Do one more round trip so that SDK detect the limit
-            [liveTimeline paginate:1 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
+                    [liveTimeline canPaginate:MXTimelineDirectionBackwards completion:^(BOOL canPaginate2) {
+                        
+                        XCTAssertFalse(canPaginate2, @"We must have reached the end of the pagination");
 
-                XCTAssertFalse([liveTimeline canPaginate:MXTimelineDirectionBackwards], @"We must have reached the end of the pagination");
+                        [expectation fulfill];
+                    }];
 
-                [expectation fulfill];
+                } failure:^(NSError *error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
 
             } failure:^(NSError *error) {
                 XCTFail(@"The request should not fail - NSError: %@", error);
                 [expectation fulfill];
             }];
-
-        } failure:^(NSError *error) {
-            XCTFail(@"The request should not fail - NSError: %@", error);
-            [expectation fulfill];
         }];
     }];
 }
@@ -922,21 +931,27 @@
 
                 XCTAssertEqual(eventCount, pagEnd, @"We should get as many messages as requested");
 
-                XCTAssert([liveTimeline canPaginate:MXTimelineDirectionBackwards], @"At this point the SDK cannot know it reaches the beginning of the history");
+                [liveTimeline canPaginate:MXTimelineDirectionBackwards completion:^(BOOL canPaginate) {
+                    XCTAssert(canPaginate, @"At this point the SDK cannot know it reaches the beginning of the history");
 
-                // Try to load more messages
-                eventCount = 0;
-                [liveTimeline paginate:1 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
+                    // Try to load more messages
+                    eventCount = 0;
+                    [liveTimeline paginate:1 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
 
-                    XCTAssertEqual(eventCount, 0, @"There must be no more event");
-                    XCTAssertFalse([liveTimeline canPaginate:MXTimelineDirectionBackwards], @"SDK must now indicate there is no more event to paginate");
+                        XCTAssertEqual(eventCount, 0, @"There must be no more event");
+                        [liveTimeline canPaginate:MXTimelineDirectionBackwards completion:^(BOOL canPaginate2) {
+                            
+                            XCTAssertFalse(canPaginate2, @"SDK must now indicate there is no more event to paginate");
 
-                    [expectation fulfill];
-
-                } failure:^(NSError *error) {
-                    XCTFail(@"The request should not fail - see SYN-162 - NSError: %@", error);
-                    [expectation fulfill];
+                            [expectation fulfill];
+                        }];
+                        
+                    } failure:^(NSError *error) {
+                        XCTFail(@"The request should not fail - see SYN-162 - NSError: %@", error);
+                        [expectation fulfill];
+                    }];
                 }];
+                
 
             } failure:^(NSError *error) {
                 XCTFail(@"Cannot set up intial test conditions - error: %@", error);
@@ -966,31 +981,31 @@
                     messageEventId = event.eventId;
                 }
 
-                MXEvent *notYetRedactedEvent = [mxSession.store eventWithEventId:messageEventId inRoom:room.roomId];
+                [mxSession.store eventWithEventId:messageEventId inRoom:room.roomId completion:^(MXEvent * _Nullable notYetRedactedEvent) {
+                    XCTAssertGreaterThan(notYetRedactedEvent.content.count, 0);
+                    XCTAssertNil(notYetRedactedEvent.redacts);
+                    XCTAssertNil(notYetRedactedEvent.redactedBecause);
 
-                XCTAssertGreaterThan(notYetRedactedEvent.content.count, 0);
-                XCTAssertNil(notYetRedactedEvent.redacts);
-                XCTAssertNil(notYetRedactedEvent.redactedBecause);
+                    // Redact this event
+                    [room redactEvent:messageEventId reason:@"No reason" success:^{
 
-                // Redact this event
-                [room redactEvent:messageEventId reason:@"No reason" success:^{
-
-                } failure:^(NSError *error) {
-                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
-                    [expectation fulfill];
+                    } failure:^(NSError *error) {
+                        XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                        [expectation fulfill];
+                    }];
                 }];
             }
             else if (MXEventTypeRoomRedaction == event.eventType)
             {
-                MXEvent *redactedEvent = [mxSession.store eventWithEventId:messageEventId inRoom:room.roomId];
+                [mxSession.store eventWithEventId:messageEventId inRoom:room.roomId completion:^(MXEvent * _Nullable redactedEvent) {
+                    XCTAssertEqual(redactedEvent.content.count, 0, @"Redacted event content must be now empty");
+                    XCTAssertEqualObjects(event.eventId, redactedEvent.redactedBecause[@"event_id"], @"It must contain the event that redacted it");
 
-                XCTAssertEqual(redactedEvent.content.count, 0, @"Redacted event content must be now empty");
-                XCTAssertEqualObjects(event.eventId, redactedEvent.redactedBecause[@"event_id"], @"It must contain the event that redacted it");
+                    // Tests more related to redaction (could be moved to a dedicated section somewhere else)
+                    XCTAssertEqualObjects(event.redacts, messageEventId, @"");
 
-                // Tests more related to redaction (could be moved to a dedicated section somewhere else)
-                XCTAssertEqualObjects(event.redacts, messageEventId, @"");
-
-                [expectation fulfill];
+                    [expectation fulfill];
+                }];
             }
 
         }];
@@ -1353,19 +1368,22 @@
 
                     [store openWithCredentials:matrixSDKTestsData.bobCredentials onComplete:^{
 
-                        MXEvent *sameEvent = [store eventWithEventId:event.eventId inRoom:roomId];
-                        XCTAssertNotNil(sameEvent);
+                        [store eventWithEventId:event.eventId inRoom:roomId completion:^(MXEvent * _Nullable sameEvent) {
+                            
+                            XCTAssertNotNil(sameEvent);
 
-                        NSUInteger sameEventAge = sameEvent.age;
-                        uint64_t sameEventAgeLocalTs = sameEvent.ageLocalTs;
+                            NSUInteger sameEventAge = sameEvent.age;
+                            uint64_t sameEventAgeLocalTs = sameEvent.ageLocalTs;
 
-                        XCTAssertGreaterThan(sameEventAge, 0, @"MXEvent.age should strictly positive");
-                        XCTAssertLessThanOrEqual(age, sameEventAge, @"MXEvent.age should auto increase");
-                        XCTAssertLessThanOrEqual(sameEventAge - age, 1000, @"sameEventAge and age should be almost the same");
+                            XCTAssertGreaterThan(sameEventAge, 0, @"MXEvent.age should strictly positive");
+                            XCTAssertLessThanOrEqual(age, sameEventAge, @"MXEvent.age should auto increase");
+                            XCTAssertLessThanOrEqual(sameEventAge - age, 1000, @"sameEventAge and age should be almost the same");
 
-                        XCTAssertEqual(ageLocalTs, sameEventAgeLocalTs, @"MXEvent.ageLocalTs must still be the same");
+                            XCTAssertEqual(ageLocalTs, sameEventAgeLocalTs, @"MXEvent.ageLocalTs must still be the same");
 
-                        [expectation fulfill];
+                            [expectation fulfill];
+                            
+                        }];
                     } failure:^(NSError *error) {
                         XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                         [expectation fulfill];
@@ -1408,33 +1426,39 @@
                     [liveTimeline resetPagination];
                     [liveTimeline paginate:10 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
 
-                        NSString *roomPaginationToken = [store paginationTokenOfRoom:roomId];
-                        XCTAssert(roomPaginationToken, @"The room must have a pagination after a pagination");
+                        [store paginationTokenOfRoom:roomId completion:^(NSString * _Nullable roomPaginationToken) {
+                            XCTAssert(roomPaginationToken, @"The room must have a pagination after a pagination");
 
-                        [mxSession close];
-                        mxSession = nil;
+                            [mxSession close];
+                            mxSession = nil;
 
-                        // Reopen a session and check roomPaginationToken
-                        id<MXStore> store2 = [[mxStoreClass alloc] init];
+                            // Reopen a session and check roomPaginationToken
+                            id<MXStore> store2 = [[mxStoreClass alloc] init];
 
-                        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
-                        [mxSession setStore:store2 success:^{
+                            mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+                            [mxSession setStore:store2 success:^{
 
-                            XCTAssertEqualObjects(roomPaginationToken, [store2 paginationTokenOfRoom:roomId], @"The store must keep the pagination token");
+                                [store2 paginationTokenOfRoom:roomId completion:^(NSString * _Nullable roomPaginationToken2) {
+                                    XCTAssertEqualObjects(roomPaginationToken, roomPaginationToken2, @"The store must keep the pagination token");
 
-                            [mxSession start:^{
+                                    [mxSession start:^{
 
-                                XCTAssertEqualObjects(roomPaginationToken, [store2 paginationTokenOfRoom:roomId], @"The store must keep the pagination token even after [MXSession start]");
+                                        [store2 paginationTokenOfRoom:roomId completion:^(NSString * _Nullable roomPaginationToken3) {
+                                            XCTAssertEqualObjects(roomPaginationToken, roomPaginationToken3, @"The store must keep the pagination token even after [MXSession start]");
 
-                                [expectation fulfill];
+                                            [expectation fulfill];
+                                        }];
 
+                                    } failure:^(NSError *error) {
+                                        XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                                        [expectation fulfill];
+                                    }];
+                                }];
+                                
                             } failure:^(NSError *error) {
                                 XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                                 [expectation fulfill];
                             }];
-                        } failure:^(NSError *error) {
-                            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
-                            [expectation fulfill];
                         }];
                     } failure:^(NSError *error) {
                         XCTFail(@"Cannot set up intial test conditions - error: %@", error);

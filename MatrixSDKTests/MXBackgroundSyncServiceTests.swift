@@ -101,23 +101,27 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                             let text = event.content["body"] as? String
                             XCTAssertEqual(text, Constants.messageText, "Event content should match")
 
-                            XCTAssertNil(bobStore.event(withEventId: eventId, inRoom: roomId), "Event should not be in store yet")
+                            bobStore.eventExists(withEventId: eventId, inRoom: roomId) { exists in
+                                XCTAssertFalse(exists, "Event should not be in store yet")
+                                
+                                let syncResponseStore = MXSyncResponseFileStore(withCredentials: bobCredentials)
+                                let syncResponseStoreManager = MXSyncResponseStoreManager(syncResponseStore: syncResponseStore)
+                                XCTAssertNotNil(syncResponseStoreManager.event(withEventId: eventId, inRoom: roomId), "Event should be stored in sync response store")
 
-                            let syncResponseStore = MXSyncResponseFileStore(withCredentials: bobCredentials)
-                            let syncResponseStoreManager = MXSyncResponseStoreManager(syncResponseStore: syncResponseStore)
-                            XCTAssertNotNil(syncResponseStoreManager.event(withEventId: eventId, inRoom: roomId), "Event should be stored in sync response store")
-
-                            // - Bob restarts their MXSession
-                            let newBobSession = MXSession(matrixRestClient: MXRestClient(credentials: bobCredentials, unrecognizedCertificateHandler: nil))
-                            newBobSession?.setStore(bobStore, completion: { (_) in
-                                newBobSession?.start(withSyncFilterId: bobStore.syncFilterId, completion: { (_) in
-                                    
-                                    // -> The message is available from MXSession and no more from MXBackgroundSyncService
-                                    XCTAssertNil(syncResponseStoreManager.event(withEventId: eventId, inRoom: roomId), "Event should not be stored in sync response store anymore")
-                                    XCTAssertNotNil(bobStore.event(withEventId: eventId, inRoom: roomId), "Event should be in session store now")
-                                    expectation?.fulfill()
+                                // - Bob restarts their MXSession
+                                let newBobSession = MXSession(matrixRestClient: MXRestClient(credentials: bobCredentials, unrecognizedCertificateHandler: nil))
+                                newBobSession?.setStore(bobStore, completion: { (_) in
+                                    newBobSession?.start(withSyncFilterId: bobStore.syncFilterId, completion: { (_) in
+                                        
+                                        // -> The message is available from MXSession and no more from MXBackgroundSyncService
+                                        XCTAssertNil(syncResponseStoreManager.event(withEventId: eventId, inRoom: roomId), "Event should not be stored in sync response store anymore")
+                                        bobStore.eventExists(withEventId: eventId, inRoom: roomId) { exists in
+                                            XCTAssertTrue(exists, "Event should be in session store now")
+                                            expectation?.fulfill()
+                                        }
+                                    })
                                 })
-                            })
+                            }
                         case .failure(let error):
                             XCTFail("Cannot fetch the event from background sync service - error: \(error)")
                             expectation?.fulfill()
@@ -190,23 +194,27 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                             let text = event.content["body"] as? String
                             XCTAssertEqual(text, Constants.messageText, "Event content should match")
                             
-                            XCTAssertNil(bobStore.event(withEventId: eventId, inRoom: roomId), "Event should not be in session store yet")
-                            
-                            let syncResponseStore = MXSyncResponseFileStore(withCredentials: bobCredentials)
-                            let syncResponseStoreManager = MXSyncResponseStoreManager(syncResponseStore: syncResponseStore)
-                            XCTAssertNotNil(syncResponseStoreManager.event(withEventId: eventId, inRoom: roomId), "Event should be stored in sync response store")
-                            
-                            // - Bob restarts their MXSession
-                            let newBobSession = MXSession(matrixRestClient: MXRestClient(credentials: bobCredentials, unrecognizedCertificateHandler: nil))
-                            newBobSession?.setStore(bobStore, completion: { (_) in
-                                newBobSession?.start(withSyncFilterId: bobStore.syncFilterId, completion: { (_) in
-                                    
-                                    // -> The message is available from MXSession and no more from MXBackgroundSyncService
-                                    XCTAssertNil(syncResponseStoreManager.event(withEventId: eventId, inRoom: roomId), "Event should not be stored in sync response store anymore")
-                                    XCTAssertNotNil(bobStore.event(withEventId: eventId, inRoom: roomId), "Event should be in session store now")
-                                    expectation?.fulfill()
+                            bobStore.eventExists(withEventId: eventId, inRoom: roomId) { exists in
+                                XCTAssertFalse(exists, "Event should not be in store yet")
+                                
+                                let syncResponseStore = MXSyncResponseFileStore(withCredentials: bobCredentials)
+                                let syncResponseStoreManager = MXSyncResponseStoreManager(syncResponseStore: syncResponseStore)
+                                XCTAssertNotNil(syncResponseStoreManager.event(withEventId: eventId, inRoom: roomId), "Event should be stored in sync response store")
+                                
+                                // - Bob restarts their MXSession
+                                let newBobSession = MXSession(matrixRestClient: MXRestClient(credentials: bobCredentials, unrecognizedCertificateHandler: nil))
+                                newBobSession?.setStore(bobStore, completion: { (_) in
+                                    newBobSession?.start(withSyncFilterId: bobStore.syncFilterId, completion: { (_) in
+                                        
+                                        // -> The message is available from MXSession and no more from MXBackgroundSyncService
+                                        XCTAssertNil(syncResponseStoreManager.event(withEventId: eventId, inRoom: roomId), "Event should not be stored in sync response store anymore")
+                                        bobStore.eventExists(withEventId: eventId, inRoom: roomId) { exists in
+                                            XCTAssertTrue(exists, "Event should be in session store now")
+                                            expectation?.fulfill()
+                                        }
+                                    })
                                 })
-                            })
+                            }
                         case .failure(let error):
                             XCTFail("Cannot fetch the event from background sync service - error: \(error)")
                             expectation?.fulfill()
@@ -290,40 +298,44 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                                         let text = event.content["body"] as? String
                                         XCTAssertEqual(text, Constants.messageText, "Event content should match")
                                         
-                                        XCTAssertNil(bobStore.event(withEventId: eventId, inRoom: roomId), "Event should not be in session store yet")
-                                        
-                                        let syncResponseStore = MXSyncResponseFileStore(withCredentials: bobCredentials)
-                                        let syncResponseStoreManager = MXSyncResponseStoreManager(syncResponseStore: syncResponseStore)
-                                        XCTAssertNotNil(syncResponseStoreManager.event(withEventId: eventId, inRoom: roomId), "Event should be stored in sync response store")
-                                        
-                                        // -> Keys are stored in the intermediate MXBackgroundSyncService crypto store, not in the main crypto store
-                                        let cryptoStore = MXRealmCryptoStore(credentials: bobCredentials)
-                                        let bgSyncServiceCryptoStore = MXRealmCryptoStore(credentials: self.credentialForBgCryptoStore(withCredentials: bobCredentials))
-                                        let sessionId = event.wireContent["session_id"] as! String
-                                        let senderKey = event.wireContent["sender_key"] as! String
-                                        XCTAssertNil(cryptoStore?.inboundGroupSession(withId: sessionId, andSenderKey: senderKey), "Key must not be yet stored in the main MXRealmCryptoStore")
-                                        XCTAssertNotNil(bgSyncServiceCryptoStore?.inboundGroupSession(withId: sessionId, andSenderKey: senderKey), "Key must be stored in the intermediate MXBackgroundService MXRealmCryptoStore")
-                                        
-                                        // - Bob restarts their MXSession
-                                        let newBobSession = MXSession(matrixRestClient: MXRestClient(credentials: bobCredentials, unrecognizedCertificateHandler: nil))
-                                        newBobSession?.setStore(bobStore, completion: { (_) in
-                                            newBobSession?.start(withSyncFilterId: bobStore.syncFilterId, completion: { (_) in
-                                                // -> The message is available from MXSession and no more from MXBackgroundSyncService
-                                                XCTAssertNil(syncResponseStoreManager.event(withEventId: eventId, inRoom: roomId), "Event should not be stored in sync response store anymore")
-                                                XCTAssertNotNil(bobStore.event(withEventId: eventId, inRoom: roomId), "Event should be in session store anymore")
-                                                
-                                                // -> Keys are stored in the main crypto store but no more in the intermediate MXBackgroundSyncService crypto store
-                                                let cryptoStore = MXRealmCryptoStore(credentials: bobCredentials)
-                                                XCTAssertNotNil(cryptoStore?.inboundGroupSession(withId: sessionId, andSenderKey: senderKey), "Key must be now stored in the main MXRealmCryptoStore")
-                                                
-                                                self.bgSyncService?.event(withEventId: eventId, inRoom: roomId) { _ in
-                                                    let bgSyncServiceCryptoStore = MXRealmCryptoStore(credentials: self.credentialForBgCryptoStore(withCredentials: bobCredentials))
-                                                    XCTAssertNil(bgSyncServiceCryptoStore?.inboundGroupSession(withId: sessionId, andSenderKey: senderKey), "Key must be no more stored in the intermediate MXBackgroundService MXRealmCryptoStore")
-                                                    
-                                                    expectation?.fulfill()
-                                                }
+                                        bobStore.eventExists(withEventId: eventId, inRoom: roomId) { exists in
+                                            XCTAssertFalse(exists, "Event should not be in session store yet")
+                                            
+                                            let syncResponseStore = MXSyncResponseFileStore(withCredentials: bobCredentials)
+                                            let syncResponseStoreManager = MXSyncResponseStoreManager(syncResponseStore: syncResponseStore)
+                                            XCTAssertNotNil(syncResponseStoreManager.event(withEventId: eventId, inRoom: roomId), "Event should be stored in sync response store")
+                                            
+                                            // -> Keys are stored in the intermediate MXBackgroundSyncService crypto store, not in the main crypto store
+                                            let cryptoStore = MXRealmCryptoStore(credentials: bobCredentials)
+                                            let bgSyncServiceCryptoStore = MXRealmCryptoStore(credentials: self.credentialForBgCryptoStore(withCredentials: bobCredentials))
+                                            let sessionId = event.wireContent["session_id"] as! String
+                                            let senderKey = event.wireContent["sender_key"] as! String
+                                            XCTAssertNil(cryptoStore?.inboundGroupSession(withId: sessionId, andSenderKey: senderKey), "Key must not be yet stored in the main MXRealmCryptoStore")
+                                            XCTAssertNotNil(bgSyncServiceCryptoStore?.inboundGroupSession(withId: sessionId, andSenderKey: senderKey), "Key must be stored in the intermediate MXBackgroundService MXRealmCryptoStore")
+                                            
+                                            // - Bob restarts their MXSession
+                                            let newBobSession = MXSession(matrixRestClient: MXRestClient(credentials: bobCredentials, unrecognizedCertificateHandler: nil))
+                                            newBobSession?.setStore(bobStore, completion: { (_) in
+                                                newBobSession?.start(withSyncFilterId: bobStore.syncFilterId, completion: { (_) in
+                                                    // -> The message is available from MXSession and no more from MXBackgroundSyncService
+                                                    XCTAssertNil(syncResponseStoreManager.event(withEventId: eventId, inRoom: roomId), "Event should not be stored in sync response store anymore")
+                                                    bobStore.eventExists(withEventId: eventId, inRoom: roomId) { exists in
+                                                        XCTAssertTrue(exists, "Event should be in session store anymore")
+                                                        
+                                                        // -> Keys are stored in the main crypto store but no more in the intermediate MXBackgroundSyncService crypto store
+                                                        let cryptoStore = MXRealmCryptoStore(credentials: bobCredentials)
+                                                        XCTAssertNotNil(cryptoStore?.inboundGroupSession(withId: sessionId, andSenderKey: senderKey), "Key must be now stored in the main MXRealmCryptoStore")
+                                                        
+                                                        self.bgSyncService?.event(withEventId: eventId, inRoom: roomId) { _ in
+                                                            let bgSyncServiceCryptoStore = MXRealmCryptoStore(credentials: self.credentialForBgCryptoStore(withCredentials: bobCredentials))
+                                                            XCTAssertNil(bgSyncServiceCryptoStore?.inboundGroupSession(withId: sessionId, andSenderKey: senderKey), "Key must be no more stored in the intermediate MXBackgroundService MXRealmCryptoStore")
+                                                            
+                                                            expectation?.fulfill()
+                                                        }
+                                                    }
+                                                })
                                             })
-                                        })
+                                        }
                                     case .failure(let error):
                                         XCTFail("Cannot fetch the event from background sync service - error: \(error)")
                                         expectation?.fulfill()
@@ -861,19 +873,24 @@ class MXBackgroundSyncServiceTests: XCTestCase {
             bobSession.resume({
                 // -> Both events should be in the session store
                 // Note: In case of bug, the server will send a gappy sync in this room. The first event will not be available
-                XCTAssertNotNil(bobSession.store.event(withEventId: firstEventId, inRoom: roomId))
-                XCTAssertNotNil(bobSession.store.event(withEventId: lastEventId, inRoom: roomId))
-                
-                // -> Bob session must have the key to decrypt the first message
-                bobSession.event(withEventId: firstEventId, inRoom: roomId) { (event) in
-                    XCTAssertNotNil(event?.clear)
+                bobSession.store.eventExists(withEventId: firstEventId, inRoom: roomId) { firstEventExists in
+                    XCTAssertTrue(firstEventExists)
                     
-                    // -> The background service cache must be reset after session resume
-                    XCTAssertEqual(syncResponseStore.syncResponseIds.count, 0)
-                    expectation.fulfill()
-                } failure: { (error) in
-                    XCTFail("The request should not fail - Error: \(String(describing: error))");
-                    expectation.fulfill()
+                    bobSession.store.eventExists(withEventId: lastEventId, inRoom: roomId) { lastEventExists in
+                        XCTAssertTrue(lastEventExists)
+                        
+                        // -> Bob session must have the key to decrypt the first message
+                        bobSession.event(withEventId: firstEventId, inRoom: roomId) { (event) in
+                            XCTAssertNotNil(event?.clear)
+                            
+                            // -> The background service cache must be reset after session resume
+                            XCTAssertEqual(syncResponseStore.syncResponseIds.count, 0)
+                            expectation.fulfill()
+                        } failure: { (error) in
+                            XCTFail("The request should not fail - Error: \(String(describing: error))");
+                            expectation.fulfill()
+                        }
+                    }
                 }
             })
         }
@@ -932,19 +949,24 @@ class MXBackgroundSyncServiceTests: XCTestCase {
             bobSession.resume({
                 // -> Both events should be in the session store
                 // Note: In case of bug, the server will send a gappy sync in this room. The first event will not be available
-                XCTAssertNotNil(bobSession.store.event(withEventId: firstEventId, inRoom: roomId))
-                XCTAssertNotNil(bobSession.store.event(withEventId: lastEventId, inRoom: roomId))
-                
-                // -> Bob session must have the key to decrypt the first message
-                bobSession.event(withEventId: firstEventId, inRoom: roomId) { (event) in
-                    XCTAssertNotNil(event?.clear)
+                bobSession.store.eventExists(withEventId: firstEventId, inRoom: roomId) { firstEventExists in
+                    XCTAssertTrue(firstEventExists)
                     
-                    // -> The background service cache must be reset after session resume
-                    XCTAssertEqual(syncResponseStore.syncResponseIds.count, 0)
-                    expectation.fulfill()
-                } failure: { (error) in
-                    XCTFail("The request should not fail - Error: \(String(describing: error))");
-                    expectation.fulfill()
+                    bobSession.store.eventExists(withEventId: lastEventId, inRoom: roomId) { lastEventExists in
+                        XCTAssertTrue(lastEventExists)
+                        
+                        // -> Bob session must have the key to decrypt the first message
+                        bobSession.event(withEventId: firstEventId, inRoom: roomId) { (event) in
+                            XCTAssertNotNil(event?.clear)
+                            
+                            // -> The background service cache must be reset after session resume
+                            XCTAssertEqual(syncResponseStore.syncResponseIds.count, 0)
+                            expectation.fulfill()
+                        } failure: { (error) in
+                            XCTFail("The request should not fail - Error: \(String(describing: error))");
+                            expectation.fulfill()
+                        }
+                    }
                 }
             })
         }
@@ -997,19 +1019,24 @@ class MXBackgroundSyncServiceTests: XCTestCase {
             // - Resume Bob session
             bobSession.resume({
                 // -> Only the last event should be in the session store
-                XCTAssertNil(bobSession.store.event(withEventId: firstEventId, inRoom: roomId))
-                XCTAssertNotNil(bobSession.store.event(withEventId: lastEventId, inRoom: roomId))
-                
-                // -> Bob session must have the key to decrypt the first message
-                bobSession.event(withEventId: firstEventId, inRoom: roomId) { (event) in
-                    XCTAssertNotNil(event?.clear)
+                bobSession.store.eventExists(withEventId: firstEventId, inRoom: roomId) { firstEventExists in
+                    XCTAssertFalse(firstEventExists)
                     
-                    // -> The background service cache must be reset after session resume
-                    XCTAssertEqual(syncResponseStore.syncResponseIds.count, 0)
-                    expectation.fulfill()
-                } failure: { (error) in
-                    XCTFail("The request should not fail - Error: \(String(describing: error))");
-                    expectation.fulfill()
+                    bobSession.store.eventExists(withEventId: lastEventId, inRoom: roomId) { lastEventExists in
+                        XCTAssertTrue(lastEventExists)
+                        
+                        // -> Bob session must have the key to decrypt the first message
+                        bobSession.event(withEventId: firstEventId, inRoom: roomId) { (event) in
+                            XCTAssertNotNil(event?.clear)
+                            
+                            // -> The background service cache must be reset after session resume
+                            XCTAssertEqual(syncResponseStore.syncResponseIds.count, 0)
+                            expectation.fulfill()
+                        } failure: { (error) in
+                            XCTFail("The request should not fail - Error: \(String(describing: error))");
+                            expectation.fulfill()
+                        }
+                    }
                 }
             })
         }
@@ -1068,19 +1095,24 @@ class MXBackgroundSyncServiceTests: XCTestCase {
             // - Resume Bob session
             bobSession.resume({
                 // -> Only the last event should be in the session store
-                XCTAssertNil(bobSession.store.event(withEventId: firstEventId, inRoom: roomId))
-                XCTAssertNotNil(bobSession.store.event(withEventId: lastEventId, inRoom: roomId))
-                
-                // -> Bob session must have the key to decrypt the first message
-                bobSession.event(withEventId: firstEventId, inRoom: roomId) { (event) in
-                    XCTAssertNotNil(event?.clear)
+                bobSession.store.eventExists(withEventId: firstEventId, inRoom: roomId) { firstEventExists in
+                    XCTAssertFalse(firstEventExists)
                     
-                    // -> The background service cache must be reset after session resume
-                    XCTAssertEqual(syncResponseStore.syncResponseIds.count, 0)
-                    expectation.fulfill()
-                } failure: { (error) in
-                    XCTFail("The request should not fail - Error: \(String(describing: error))");
-                    expectation.fulfill()
+                    bobSession.store.eventExists(withEventId: lastEventId, inRoom: roomId) { lastEventExists in
+                        XCTAssertTrue(lastEventExists)
+                        
+                        // -> Bob session must have the key to decrypt the first message
+                        bobSession.event(withEventId: firstEventId, inRoom: roomId) { (event) in
+                            XCTAssertNotNil(event?.clear)
+                            
+                            // -> The background service cache must be reset after session resume
+                            XCTAssertEqual(syncResponseStore.syncResponseIds.count, 0)
+                            expectation.fulfill()
+                        } failure: { (error) in
+                            XCTFail("The request should not fail - Error: \(String(describing: error))");
+                            expectation.fulfill()
+                        }
+                    }
                 }
             })
         }

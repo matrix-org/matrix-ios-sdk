@@ -138,20 +138,20 @@ static NSString* const kThreadedMessage1Text = @"Morning!";
 
             [mxSession start:^{
 
-                MXEvent *event = [mxSession.store eventWithEventId:eventId inRoom:room.roomId];
+                [mxSession.store eventWithEventId:eventId inRoom:room.roomId completion:^(MXEvent * _Nullable event) {
+                    // -> Data from aggregations must be right
+                    XCTAssertNotNil(event);
 
-                // -> Data from aggregations must be right
-                XCTAssertNotNil(event);
+                    MXEventReferenceChunk *references = event.unsignedData.relations.reference;
+                    XCTAssertNotNil(references);
+                    XCTAssertEqualObjects(references.chunk.firstObject.eventId, referenceEventId);
 
-                MXEventReferenceChunk *references = event.unsignedData.relations.reference;
-                XCTAssertNotNil(references);
-                XCTAssertEqualObjects(references.chunk.firstObject.eventId, referenceEventId);
+                    XCTAssertEqual(references.count, 1);
+                    XCTAssertFalse(references.limited);
+                    XCTAssertEqualObjects(references.chunk.firstObject.type, kMXEventTypeStringRoomMessage);
 
-                XCTAssertEqual(references.count, 1);
-                XCTAssertFalse(references.limited);
-                XCTAssertEqualObjects(references.chunk.firstObject.type, kMXEventTypeStringRoomMessage);
-
-                [expectation fulfill];
+                    [expectation fulfill];
+                }];
 
             } failure:^(NSError *error) {
                 XCTFail(@"Cannot set up intial test conditions - error: %@", error);
@@ -174,19 +174,19 @@ static NSString* const kThreadedMessage1Text = @"Morning!";
     [self createScenario:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation, NSString *eventId, NSString *referenceEventId) {
 
         // -> Data from aggregations must be right
-        MXEvent *event = [mxSession.store eventWithEventId:eventId inRoom:room.roomId];
+        [mxSession.store eventWithEventId:eventId inRoom:room.roomId completion:^(MXEvent * _Nullable event) {
+            XCTAssertNotNil(event);
 
-        XCTAssertNotNil(event);
+            MXEventReferenceChunk *references = event.unsignedData.relations.reference;
+            XCTAssertNotNil(references);
+            XCTAssertEqualObjects(references.chunk.firstObject.eventId, referenceEventId);
 
-        MXEventReferenceChunk *references = event.unsignedData.relations.reference;
-        XCTAssertNotNil(references);
-        XCTAssertEqualObjects(references.chunk.firstObject.eventId, referenceEventId);
+            XCTAssertEqual(references.count, 1);
+            XCTAssertFalse(references.limited);
+            XCTAssertEqualObjects(references.chunk.firstObject.type, kMXEventTypeStringRoomMessage);
 
-        XCTAssertEqual(references.count, 1);
-        XCTAssertFalse(references.limited);
-        XCTAssertEqualObjects(references.chunk.firstObject.type, kMXEventTypeStringRoomMessage);
-
-        [expectation fulfill];
+            [expectation fulfill];
+        }];
     }];
 }
 

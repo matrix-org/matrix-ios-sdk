@@ -223,24 +223,24 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
     // - Run the initial condition scenario
     [self createScenario:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation, NSString *eventId, NSString *editEventId) {
 
-        MXEvent *localEditedEvent = [mxSession.store eventWithEventId:eventId inRoom:room.roomId];
-        
-        // -> Check data is correctly aggregated when fetching the edited event directly from the homeserver
-        [mxSession.matrixRestClient eventWithEventId:eventId inRoom:room.roomId success:^(MXEvent *event) {
-            
-            XCTAssertNotNil(event);
-            XCTAssertTrue(event.contentHasBeenEdited);
-            XCTAssertEqualObjects(event.unsignedData.relations.replace.eventId, editEventId);
-            XCTAssertEqualObjects(event.content[@"body"], kEditedMessageText);
-            
-            XCTAssertEqualObjects(event.content, localEditedEvent.content);
-            XCTAssertEqualObjects(event.JSONDictionary[@"unsigned"][@"relations"], localEditedEvent.JSONDictionary[@"unsigned"][@"relations"]);
+        [mxSession.store eventWithEventId:eventId inRoom:room.roomId completion:^(MXEvent * _Nullable localEditedEvent) {
+            // -> Check data is correctly aggregated when fetching the edited event directly from the homeserver
+            [mxSession.matrixRestClient eventWithEventId:eventId inRoom:room.roomId success:^(MXEvent *event) {
+                
+                XCTAssertNotNil(event);
+                XCTAssertTrue(event.contentHasBeenEdited);
+                XCTAssertEqualObjects(event.unsignedData.relations.replace.eventId, editEventId);
+                XCTAssertEqualObjects(event.content[@"body"], kEditedMessageText);
+                
+                XCTAssertEqualObjects(event.content, localEditedEvent.content);
+                XCTAssertEqualObjects(event.JSONDictionary[@"unsigned"][@"relations"], localEditedEvent.JSONDictionary[@"unsigned"][@"relations"]);
 
-            [expectation fulfill];
+                [expectation fulfill];
 
-        } failure:^(NSError *error) {
-            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
-            [expectation fulfill];
+            } failure:^(NSError *error) {
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
+            }];
         }];
     }];
 }
@@ -252,25 +252,25 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
     // - Run the initial condition scenario
     [self createScenarioWithFormattedText:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation, NSString *eventId, NSString *editEventId) {
         
-        MXEvent *localEditedEvent = [mxSession.store eventWithEventId:eventId inRoom:room.roomId];
-        
-        // -> Check data is correctly aggregated when fetching the edited event directly from the homeserver
-        [mxSession.matrixRestClient eventWithEventId:eventId inRoom:room.roomId success:^(MXEvent *event) {
-            
-            XCTAssertNotNil(event);
-            XCTAssertTrue(event.contentHasBeenEdited);
-            XCTAssertEqualObjects(event.unsignedData.relations.replace.eventId, editEventId);
-            XCTAssertEqualObjects(event.content[@"body"], kEditedMarkdownMessageText);
-            XCTAssertEqualObjects(event.content[@"formatted_body"], kEditedMarkdownMessageFormattedText);
-            
-            XCTAssertEqualObjects(event.content, localEditedEvent.content);
-            XCTAssertEqualObjects(event.JSONDictionary[@"unsigned"][@"relations"], localEditedEvent.JSONDictionary[@"unsigned"][@"relations"]);
-            
-            [expectation fulfill];
-            
-        } failure:^(NSError *error) {
-            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
-            [expectation fulfill];
+        [mxSession.store eventWithEventId:eventId inRoom:room.roomId completion:^(MXEvent * _Nullable localEditedEvent) {
+            // -> Check data is correctly aggregated when fetching the edited event directly from the homeserver
+            [mxSession.matrixRestClient eventWithEventId:eventId inRoom:room.roomId success:^(MXEvent *event) {
+                
+                XCTAssertNotNil(event);
+                XCTAssertTrue(event.contentHasBeenEdited);
+                XCTAssertEqualObjects(event.unsignedData.relations.replace.eventId, editEventId);
+                XCTAssertEqualObjects(event.content[@"body"], kEditedMarkdownMessageText);
+                XCTAssertEqualObjects(event.content[@"formatted_body"], kEditedMarkdownMessageFormattedText);
+                
+                XCTAssertEqualObjects(event.content, localEditedEvent.content);
+                XCTAssertEqualObjects(event.JSONDictionary[@"unsigned"][@"relations"], localEditedEvent.JSONDictionary[@"unsigned"][@"relations"]);
+                
+                [expectation fulfill];
+                
+            } failure:^(NSError *error) {
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
+            }];
         }];
     }];
 }
@@ -281,43 +281,45 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
 - (void)testEditsFromInitialSync
 {
     // - Run the initial condition scenario
+    __block MXSession *mxSession2 = nil;
     [self createScenario:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation, NSString *eventId, NSString *editEventId) {
         
-        MXEvent *editedEventBeforeSync = [mxSession.store eventWithEventId:eventId inRoom:room.roomId];
+        mxSession2 = mxSession;
+        [mxSession2.store eventWithEventId:eventId inRoom:room.roomId completion:^(MXEvent * _Nullable editedEventBeforeSync) {
+            MXRestClient *restClient = mxSession2.matrixRestClient;
 
-        MXRestClient *restClient = mxSession.matrixRestClient;
+            [mxSession2.aggregations resetData];
+            [mxSession2 close];
+            mxSession2 = nil;
 
-        [mxSession.aggregations resetData];
-        [mxSession close];
-        mxSession = nil;
+            // - Do an initial sync
+            mxSession2 = [[MXSession alloc] initWithMatrixRestClient:restClient];
+            [mxSession2 setStore:[[MXMemoryStore alloc] init] success:^{
 
-        // - Do an initial sync
-        mxSession = [[MXSession alloc] initWithMatrixRestClient:restClient];
-        [mxSession setStore:[[MXMemoryStore alloc] init] success:^{
+                [mxSession2 start:^{
 
-            [mxSession start:^{
+                    [mxSession2.store eventWithEventId:eventId inRoom:room.roomId completion:^(MXEvent * _Nullable editedEvent) {
+                        // -> Data from aggregations must be right
+                        XCTAssertNotNil(editedEvent);
+                        XCTAssertTrue(editedEvent.contentHasBeenEdited);
+                        XCTAssertEqualObjects(editedEvent.unsignedData.relations.replace.eventId, editEventId);
+                        XCTAssertEqualObjects(editedEvent.content[@"body"], kEditedMessageText);
+                        
+                        XCTAssertEqualObjects(editedEvent.content, editedEventBeforeSync.content);
+                        XCTAssertEqualObjects(editedEvent.JSONDictionary[@"unsigned"][@"relations"], editedEventBeforeSync.JSONDictionary[@"unsigned"][@"relations"]);
 
-                MXEvent *editedEvent = [mxSession.store eventWithEventId:eventId inRoom:room.roomId];
-                
-                // -> Data from aggregations must be right
-                XCTAssertNotNil(editedEvent);
-                XCTAssertTrue(editedEvent.contentHasBeenEdited);
-                XCTAssertEqualObjects(editedEvent.unsignedData.relations.replace.eventId, editEventId);
-                XCTAssertEqualObjects(editedEvent.content[@"body"], kEditedMessageText);
-                
-                XCTAssertEqualObjects(editedEvent.content, editedEventBeforeSync.content);
-                XCTAssertEqualObjects(editedEvent.JSONDictionary[@"unsigned"][@"relations"], editedEventBeforeSync.JSONDictionary[@"unsigned"][@"relations"]);
-
-                [expectation fulfill];
+                        [expectation fulfill];
+                    }];
+                    
+                } failure:^(NSError *error) {
+                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                    [expectation fulfill];
+                }];
 
             } failure:^(NSError *error) {
                 XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                 [expectation fulfill];
             }];
-
-        } failure:^(NSError *error) {
-            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
-            [expectation fulfill];
         }];
     }];
 }
@@ -328,45 +330,48 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
 - (void)testFormatedEditsFromInitialSync
 {
     // - Run the initial condition scenario
+    __block MXSession *mxSession2 = nil;
     [self createScenarioWithFormattedText:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation, NSString *eventId, NSString *editEventId) {
         
-        MXEvent *editedEventBeforeSync = [mxSession.store eventWithEventId:eventId inRoom:room.roomId];
-        
-        MXRestClient *restClient = mxSession.matrixRestClient;
-        
-        [mxSession.aggregations resetData];
-        [mxSession close];
-        mxSession = nil;
-        
-        // - Do an initial sync
-        mxSession = [[MXSession alloc] initWithMatrixRestClient:restClient];
-        [mxSession setStore:[[MXMemoryStore alloc] init] success:^{
+        mxSession2 = mxSession;
+        [mxSession2.store eventWithEventId:eventId inRoom:room.roomId completion:^(MXEvent * _Nullable editedEventBeforeSync) {
+            MXRestClient *restClient = mxSession2.matrixRestClient;
             
-            [mxSession start:^{
+            [mxSession2.aggregations resetData];
+            [mxSession2 close];
+            mxSession2 = nil;
+            
+            // - Do an initial sync
+            mxSession2 = [[MXSession alloc] initWithMatrixRestClient:restClient];
+            [mxSession2 setStore:[[MXMemoryStore alloc] init] success:^{
                 
-                MXEvent *editedEvent = [mxSession.store eventWithEventId:eventId inRoom:room.roomId];
-                
-                // -> Data from aggregations must be right
-                XCTAssertNotNil(editedEvent);
-                XCTAssertTrue(editedEvent.contentHasBeenEdited);
-                XCTAssertEqualObjects(editedEvent.unsignedData.relations.replace.eventId, editEventId);
-                XCTAssertEqualObjects(editedEvent.content[@"body"], kEditedMarkdownMessageText);
-                XCTAssertEqualObjects(editedEvent.content[@"formatted_body"], kEditedMarkdownMessageFormattedText);
-                
-                XCTAssertEqualObjects(editedEvent.content, editedEventBeforeSync.content);
-                XCTAssertEqualObjects(editedEvent.JSONDictionary[@"unsigned"][@"relations"], editedEventBeforeSync.JSONDictionary[@"unsigned"][@"relations"]);
-                
-                [expectation fulfill];
+                [mxSession2 start:^{
+                    
+                    [mxSession2.store eventWithEventId:eventId inRoom:room.roomId completion:^(MXEvent * _Nullable editedEvent) {
+                        // -> Data from aggregations must be right
+                        XCTAssertNotNil(editedEvent);
+                        XCTAssertTrue(editedEvent.contentHasBeenEdited);
+                        XCTAssertEqualObjects(editedEvent.unsignedData.relations.replace.eventId, editEventId);
+                        XCTAssertEqualObjects(editedEvent.content[@"body"], kEditedMarkdownMessageText);
+                        XCTAssertEqualObjects(editedEvent.content[@"formatted_body"], kEditedMarkdownMessageFormattedText);
+                        
+                        XCTAssertEqualObjects(editedEvent.content, editedEventBeforeSync.content);
+                        XCTAssertEqualObjects(editedEvent.JSONDictionary[@"unsigned"][@"relations"], editedEventBeforeSync.JSONDictionary[@"unsigned"][@"relations"]);
+                        
+                        [expectation fulfill];
+                    }];
+                    
+                } failure:^(NSError *error) {
+                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                    [expectation fulfill];
+                }];
                 
             } failure:^(NSError *error) {
                 XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                 [expectation fulfill];
             }];
-            
-        } failure:^(NSError *error) {
-            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
-            [expectation fulfill];
         }];
+
     }];
 }
 
@@ -378,14 +383,14 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
     [self createScenario:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation, NSString *eventId, NSString *editEventId) {
         
         // -> Data from aggregations must be right
-        MXEvent *editedEvent = [mxSession.store eventWithEventId:eventId inRoom:room.roomId];
-        
-        XCTAssertNotNil(editedEvent);
-        XCTAssertTrue(editedEvent.contentHasBeenEdited);
-        XCTAssertEqualObjects(editedEvent.unsignedData.relations.replace.eventId, editEventId);
-        XCTAssertEqualObjects(editedEvent.content[@"body"], kEditedMessageText);
-        
-        [expectation fulfill];
+        [mxSession.store eventWithEventId:eventId inRoom:room.roomId completion:^(MXEvent * _Nullable editedEvent) {
+            XCTAssertNotNil(editedEvent);
+            XCTAssertTrue(editedEvent.contentHasBeenEdited);
+            XCTAssertEqualObjects(editedEvent.unsignedData.relations.replace.eventId, editEventId);
+            XCTAssertEqualObjects(editedEvent.content[@"body"], kEditedMessageText);
+            
+            [expectation fulfill];
+        }];
     }];
 }
 
@@ -397,15 +402,15 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
     [self createScenarioWithFormattedText:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation, NSString *eventId, NSString *editEventId) {
         
         // -> Data from aggregations must be right
-        MXEvent *editedEvent = [mxSession.store eventWithEventId:eventId inRoom:room.roomId];
-        
-        XCTAssertNotNil(editedEvent);
-        XCTAssertTrue(editedEvent.contentHasBeenEdited);
-        XCTAssertEqualObjects(editedEvent.unsignedData.relations.replace.eventId, editEventId);
-        XCTAssertEqualObjects(editedEvent.content[@"body"], kEditedMarkdownMessageText);
-        XCTAssertEqualObjects(editedEvent.content[@"formatted_body"], kEditedMarkdownMessageFormattedText);
-        
-        [expectation fulfill];
+        [mxSession.store eventWithEventId:eventId inRoom:room.roomId completion:^(MXEvent * _Nullable editedEvent) {
+            XCTAssertNotNil(editedEvent);
+            XCTAssertTrue(editedEvent.contentHasBeenEdited);
+            XCTAssertEqualObjects(editedEvent.unsignedData.relations.replace.eventId, editEventId);
+            XCTAssertEqualObjects(editedEvent.content[@"body"], kEditedMarkdownMessageText);
+            XCTAssertEqualObjects(editedEvent.content[@"formatted_body"], kEditedMarkdownMessageFormattedText);
+            
+            [expectation fulfill];
+        }];
     }];
 }
 
@@ -422,23 +427,23 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
         // -> We must get notified about the reaction count change
         [mxSession.aggregations listenToEditsUpdateInRoom:room.roomId block:^(MXEvent * _Nonnull replaceEvent) {
             
-            MXEvent *editedEvent = [mxSession.store eventWithEventId:eventId inRoom:room.roomId];
-            
-            XCTAssertNotNil(editedEvent);
-            XCTAssertTrue(editedEvent.contentHasBeenEdited);
-            XCTAssertEqualObjects(editedEvent.unsignedData.relations.replace.eventId, replaceEvent.eventId);
-            XCTAssertEqualObjects(editedEvent.content[@"body"], secondEditionTextMessage);
-            
-            [expectation fulfill];
+            [mxSession.store eventWithEventId:eventId inRoom:room.roomId completion:^(MXEvent * _Nullable editedEvent) {
+                XCTAssertNotNil(editedEvent);
+                XCTAssertTrue(editedEvent.contentHasBeenEdited);
+                XCTAssertEqualObjects(editedEvent.unsignedData.relations.replace.eventId, replaceEvent.eventId);
+                XCTAssertEqualObjects(editedEvent.content[@"body"], secondEditionTextMessage);
+                
+                [expectation fulfill];
+            }];
         }];
         
-        MXEvent *editedEvent = [mxSession.store eventWithEventId:eventId inRoom:room.roomId];
-        
-        [mxSession.aggregations replaceTextMessageEvent:editedEvent withTextMessage:secondEditionTextMessage formattedText:nil localEchoBlock:nil success:^(NSString * _Nonnull eventId) {
-            
-        } failure:^(NSError * _Nonnull error) {
-            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
-            [expectation fulfill];
+        [mxSession.store eventWithEventId:eventId inRoom:room.roomId completion:^(MXEvent * _Nullable editedEvent) {
+            [mxSession.aggregations replaceTextMessageEvent:editedEvent withTextMessage:secondEditionTextMessage formattedText:nil localEchoBlock:nil success:^(NSString * _Nonnull eventId) {
+                
+            } failure:^(NSError * _Nonnull error) {
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
+            }];
         }];
     }];
 }
@@ -533,19 +538,19 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
 
             XCTAssertNotNil(eventId, @"The original event must have been sent before receiving the final edit");
 
-            MXEvent *editedEvent = [mxSession.store eventWithEventId:eventId inRoom:room.roomId];
+            [mxSession.store eventWithEventId:eventId inRoom:room.roomId completion:^(MXEvent * _Nullable editedEvent) {
+                XCTAssertNotNil(editedEvent);
+                XCTAssertTrue(editedEvent.contentHasBeenEdited);
+                XCTAssertEqualObjects(editedEvent.unsignedData.relations.replace.eventId, replaceEvent.eventId);
+                XCTAssertEqualObjects(editedEvent.content[@"body"], kEditedMessageText);
 
-            XCTAssertNotNil(editedEvent);
-            XCTAssertTrue(editedEvent.contentHasBeenEdited);
-            XCTAssertEqualObjects(editedEvent.unsignedData.relations.replace.eventId, replaceEvent.eventId);
-            XCTAssertEqualObjects(editedEvent.content[@"body"], kEditedMessageText);
+                XCTAssertEqualObjects(replaceEvent.relatesTo.eventId, eventId);
 
-            XCTAssertEqualObjects(replaceEvent.relatesTo.eventId, eventId);
+                // -> The local echo block must have been called twice
+                XCTAssertEqual(localEchoBlockCount, 2);
 
-            // -> The local echo block must have been called twice
-            XCTAssertEqual(localEchoBlockCount, 2);
-
-            [expectation fulfill];
+                [expectation fulfill];
+            }];
         }];
     }];
 }
@@ -663,31 +668,31 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
     // - Run the initial condition scenario
     [self createE2EScenario:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation, NSString *eventId, NSString *editEventId) {
 
-        MXEvent *localEditedEvent = [mxSession.store eventWithEventId:eventId inRoom:room.roomId];
+        [mxSession.store eventWithEventId:eventId inRoom:room.roomId completion:^(MXEvent * _Nullable localEditedEvent) {
+            // -> Check data is correctly aggregated when fetching the edited event directly from the homeserver
+            [mxSession.matrixRestClient eventWithEventId:eventId inRoom:room.roomId success:^(MXEvent *event) {
 
-        // -> Check data is correctly aggregated when fetching the edited event directly from the homeserver
-        [mxSession.matrixRestClient eventWithEventId:eventId inRoom:room.roomId success:^(MXEvent *event) {
+                XCTAssertNotNil(event);
 
-            XCTAssertNotNil(event);
+                XCTAssertTrue(event.isEncrypted);
+                [mxSession decryptEvents:@[event] inTimeline:nil onComplete:^(NSArray<MXEvent *> *failedEvents) {
+                    XCTAssertEqual(failedEvents.count, 0, @"Decryption error: %@", event.decryptionError);
+                    
+                    // TODO: Synapse does not support aggregation for e2e rooms yet
+                    XCTAssertTrue(event.contentHasBeenEdited);
+                    XCTAssertEqualObjects(event.unsignedData.relations.replace.eventId, editEventId);
+                    XCTAssertEqualObjects(event.content[@"body"], kEditedMessageText);
+                    
+                    XCTAssertEqualObjects(event.content, localEditedEvent.content);
+                    XCTAssertEqualObjects(event.JSONDictionary[@"unsigned"][@"relations"], localEditedEvent.JSONDictionary[@"unsigned"][@"relations"]);
+                    
+                    [expectation fulfill];
+                }];
 
-            XCTAssertTrue(event.isEncrypted);
-            [mxSession decryptEvents:@[event] inTimeline:nil onComplete:^(NSArray<MXEvent *> *failedEvents) {
-                XCTAssertEqual(failedEvents.count, 0, @"Decryption error: %@", event.decryptionError);
-                
-                // TODO: Synapse does not support aggregation for e2e rooms yet
-                XCTAssertTrue(event.contentHasBeenEdited);
-                XCTAssertEqualObjects(event.unsignedData.relations.replace.eventId, editEventId);
-                XCTAssertEqualObjects(event.content[@"body"], kEditedMessageText);
-                
-                XCTAssertEqualObjects(event.content, localEditedEvent.content);
-                XCTAssertEqualObjects(event.JSONDictionary[@"unsigned"][@"relations"], localEditedEvent.JSONDictionary[@"unsigned"][@"relations"]);
-                
+            } failure:^(NSError *error) {
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                 [expectation fulfill];
             }];
-
-        } failure:^(NSError *error) {
-            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
-            [expectation fulfill];
         }];
     }];
 }
@@ -756,19 +761,20 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
 
             XCTAssertNotNil(eventId, @"The original event must have been sent before receiving the final edit");
 
-            MXEvent *editedEvent = [mxSession.store eventWithEventId:eventId inRoom:room.roomId];
+            [mxSession.store eventWithEventId:eventId inRoom:room.roomId completion:^(MXEvent * _Nullable editedEvent) {
+                XCTAssertNotNil(editedEvent);
+                XCTAssertTrue(editedEvent.contentHasBeenEdited);
+                XCTAssertEqualObjects(editedEvent.unsignedData.relations.replace.eventId, replaceEvent.eventId);
+                XCTAssertEqualObjects(editedEvent.content[@"body"], kEditedMessageText);
 
-            XCTAssertNotNil(editedEvent);
-            XCTAssertTrue(editedEvent.contentHasBeenEdited);
-            XCTAssertEqualObjects(editedEvent.unsignedData.relations.replace.eventId, replaceEvent.eventId);
-            XCTAssertEqualObjects(editedEvent.content[@"body"], kEditedMessageText);
+                XCTAssertEqualObjects(replaceEvent.relatesTo.eventId, eventId);
 
-            XCTAssertEqualObjects(replaceEvent.relatesTo.eventId, eventId);
+                // -> The local echo block must have been called twice
+                XCTAssertEqual(localEchoBlockCount, 2);
 
-            // -> The local echo block must have been called twice
-            XCTAssertEqual(localEchoBlockCount, 2);
+                [expectation fulfill];
+            }];
 
-            [expectation fulfill];
         }];
     }];
 }

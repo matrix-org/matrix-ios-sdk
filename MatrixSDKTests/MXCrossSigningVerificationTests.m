@@ -569,15 +569,16 @@
                     if (doneDone.count == 4)
                     {
                         // Then, test MXKeyVerification
-                        MXEvent *event = [aliceSession.store eventWithEventId:requestId inRoom:roomId];
-                        [aliceSession.crypto.keyVerificationManager keyVerificationFromKeyVerificationEvent:event success:^(MXKeyVerification * _Nonnull verificationFromAlicePOV) {
-                            
-                            XCTAssertEqual(verificationFromAlicePOV.state, MXKeyVerificationStateVerified);
-                            
-                            [expectation fulfill];
-                        } failure:^(NSError * _Nonnull error) {
-                            XCTFail(@"The request should not fail - NSError: %@", error);
-                            [expectation fulfill];
+                        [aliceSession.store eventWithEventId:requestId inRoom:roomId completion:^(MXEvent * _Nullable event) {
+                            [aliceSession.crypto.keyVerificationManager keyVerificationFromKeyVerificationEvent:event success:^(MXKeyVerification * _Nonnull verificationFromAlicePOV) {
+                                
+                                XCTAssertEqual(verificationFromAlicePOV.state, MXKeyVerificationStateVerified);
+                                
+                                [expectation fulfill];
+                            } failure:^(NSError * _Nonnull error) {
+                                XCTFail(@"The request should not fail - NSError: %@", error);
+                                [expectation fulfill];
+                            }];
                         }];
                     }
                 };
@@ -789,15 +790,16 @@
                     if (doneDone.count == 4)
                     {
                         // Then, to test MXKeyVerification
-                        MXEvent *event = [aliceSession.store eventWithEventId:requestId inRoom:roomId];
-                        [aliceSession.crypto.keyVerificationManager keyVerificationFromKeyVerificationEvent:event success:^(MXKeyVerification * _Nonnull verificationFromAlicePOV) {
+                        [aliceSession.store eventWithEventId:requestId inRoom:roomId completion:^(MXEvent * _Nullable event) {
+                            [aliceSession.crypto.keyVerificationManager keyVerificationFromKeyVerificationEvent:event success:^(MXKeyVerification * _Nonnull verificationFromAlicePOV) {
 
-                            XCTAssertEqual(verificationFromAlicePOV.state, MXKeyVerificationStateVerified);
+                                XCTAssertEqual(verificationFromAlicePOV.state, MXKeyVerificationStateVerified);
 
-                            [expectation fulfill];
-                        } failure:^(NSError * _Nonnull error) {
-                            XCTFail(@"The request should not fail - NSError: %@", error);
-                            [expectation fulfill];
+                                [expectation fulfill];
+                            } failure:^(NSError * _Nonnull error) {
+                                XCTFail(@"The request should not fail - NSError: %@", error);
+                                [expectation fulfill];
+                            }];
                         }];
                     }
                 };
