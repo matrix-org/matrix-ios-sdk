@@ -25,6 +25,7 @@
 {
     NSString *eventStreamToken;
     MXWellKnown *homeserverWellknown;
+    NSInteger maxUploadSize;
 }
 @end
 
@@ -42,6 +43,7 @@
         receiptsByRoomId = [NSMutableDictionary dictionary];
         users = [NSMutableDictionary dictionary];
         groups = [NSMutableDictionary dictionary];
+        maxUploadSize = -1;
     }
     return self;
 }
@@ -276,6 +278,16 @@
 - (void)storeHomeserverWellknown:(nonnull MXWellKnown *)wellknown
 {
     homeserverWellknown = wellknown;
+}
+
+- (NSInteger)maxUploadSize
+{
+    return self->maxUploadSize;
+}
+
+- (void)storeMaxUploadSize:(NSInteger)maxUploadSize
+{
+    self->maxUploadSize = maxUploadSize;
 }
 
 - (NSArray<MXEvent*>* _Nonnull)relationsForEvent:(nonnull NSString*)eventId inRoom:(nonnull  NSString*)roomId relationType:(NSString*)relationType

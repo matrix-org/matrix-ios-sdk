@@ -206,6 +206,11 @@ FOUNDATION_EXPORT NSUInteger const MXRoomSummaryPaginationChunkSize;
 @property (nonatomic) BOOL hiddenFromUser;
 
 /**
+ Stored hash for the room summary. Should be compared to `hash` to determine changes on the object.
+ */
+@property (nonatomic, readonly) NSUInteger storedHash;
+
+/**
  Reset data related to room state.
  
  It recomputes every data related to the room state from the current room state.
@@ -277,7 +282,7 @@ FOUNDATION_EXPORT NSUInteger const MXRoomSummaryPaginationChunkSize;
  @discussion: The returned count is relative to the local storage. The actual unread messages
  for a room may be higher than the returned value.
  */
-@property (nonatomic, readonly) NSUInteger localUnreadEventCount;
+@property (nonatomic) NSUInteger localUnreadEventCount;
 
 /**
  The number of unread messages that match the push notification rules.

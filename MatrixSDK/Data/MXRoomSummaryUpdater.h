@@ -88,4 +88,28 @@
 */
 @property (nonatomic) NSArray<NSString *> *showRoomTypeStrings;
 
+/**
+ Update the room summary's display name on received summary update, with additional support for excluding specified user IDs.
+
+ @param summary the room summary.
+ @param session the session the room belongs to.
+ @param serverRoomSummary the homeserver side room summary, or nil if updating from state events.
+ @param roomState the current state of the room.
+ @param excludedUserIDs an array of user IDs to ignore when computing the room name.
+ @return YES if the room summary has changed.
+ */
+- (BOOL)updateSummaryDisplayname:(MXRoomSummary *)summary session:(MXSession *)session withServerRoomSummary:(MXRoomSyncSummary *)serverRoomSummary roomState:(MXRoomState *)roomState excludingUserIDs:(NSArray<NSString *> *)excludedUserIDs;
+
+/**
+ Update the room summary's avatar on received summary update, with additional support for excluding specified user IDs..
+
+ @param summary the room summary.
+ @param session the session the room belongs to.
+ @param serverRoomSummary the homeserver side room summary, or nil if updating from state events.
+ @param roomState the current state of the room.
+ @param excludedUserIDs an array of user IDs to ignore when updating the avatar.
+ @return YES if the room summary has changed.
+ */
+- (BOOL)updateSummaryAvatar:(MXRoomSummary *)summary session:(MXSession *)session withServerRoomSummary:(MXRoomSyncSummary *)serverRoomSummary roomState:(MXRoomState *)roomState excludingUserIDs:(NSArray<NSString *> *)excludedUserIDs;
+
 @end
