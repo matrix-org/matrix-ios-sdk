@@ -218,21 +218,22 @@
     if (parentEventId && reaction)
     {
         // Manage aggregated reactions only for events in timelines we have
-        MXEvent *parentEvent = [self.matrixStore eventWithEventId:parentEventId inRoom:event.roomId];
-        if (parentEvent)
-        {
-            if (direction == MXTimelineDirectionForwards)
+        [self.matrixStore eventWithEventId:parentEventId inRoom:event.roomId completion:^(MXEvent * _Nullable parentEvent) {
+            if (parentEvent)
             {
-                [self updateReactionCountForReaction:reaction forEvent:parentEventId reactionEvent:event];
-            }
+                if (direction == MXTimelineDirectionForwards)
+                {
+                    [self updateReactionCountForReaction:reaction forEvent:parentEventId reactionEvent:event];
+                }
 
-            [self storeRelationForReaction:reaction forEvent:parentEventId reactionEvent:event];
-        }
-        else
-        {
-            // We need to store all received relations even if we do not know the event yet
-            [self storeRelationForReaction:reaction forEvent:parentEventId reactionEvent:event];
-        }
+                [self storeRelationForReaction:reaction forEvent:parentEventId reactionEvent:event];
+            }
+            else
+            {
+                // We need to store all received relations even if we do not know the event yet
+                [self storeRelationForReaction:reaction forEvent:parentEventId reactionEvent:event];
+            }
+        }];
     }
     else
     {
@@ -681,14 +682,16 @@
 
         reactionCount.count++;
 
+        //  TODO: Make this method async
         if (!reactionCount.myUserReactionEventId)
         {
             // Determine if my user has reacted
-            MXEvent *event = [self.matrixStore eventWithEventId:relation.reactionEventId inRoom:roomId];
-            if ([event.sender isEqualToString:self.myUserId])
-            {
-                reactionCount.myUserReactionEventId = relation.reactionEventId;
-            }
+            [self.matrixStore eventWithEventId:relation.reactionEventId inRoom:roomId completion:^(MXEvent * _Nullable event) {
+                if ([event.sender isEqualToString:self.myUserId])
+                {
+                    reactionCount.myUserReactionEventId = relation.reactionEventId;
+                }
+            }];
         }
     }
 

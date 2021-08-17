@@ -76,13 +76,17 @@
 
 - (void)eventExistsWithEventId:(NSString *)eventId inRoom:(NSString *)roomId completion:(void (^)(BOOL))completion
 {
-    completion(nil != [self eventWithEventId:eventId inRoom:roomId]);
+    [self eventWithEventId:eventId inRoom:roomId completion:^(MXEvent * _Nullable event) {
+        completion(nil != event);
+    }];
 }
 
-- (MXEvent *)eventWithEventId:(NSString *)eventId inRoom:(NSString *)roomId
+- (void)eventWithEventId:(NSString *)eventId inRoom:(NSString *)roomId completion:(void (^)(MXEvent * _Nullable))completion
 {
-    MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
-    return [roomStore eventWithEventId:eventId];
+    [self getOrCreateRoomStore:roomId
+                    completion:^(MXMemoryRoomStore * _Nullable roomStore) {
+        completion([roomStore eventWithEventId:eventId]);
+    }];
 }
 
 - (void)deleteAllMessagesInRoom:(NSString *)roomId

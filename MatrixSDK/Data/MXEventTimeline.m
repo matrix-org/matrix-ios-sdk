@@ -188,8 +188,9 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         //  - did we end to paginate from the MXStore?
         //  - did we reach the top of the pagination in our requests to the home server?
         canPaginate = !cachedStoreMessagesEnumerator
-            || (0 < cachedStoreMessagesEnumerator.remaining)
-            || ![store hasReachedHomeServerPaginationEndForRoom:_state.roomId];
+        || (0 < cachedStoreMessagesEnumerator.remaining);
+        //  TODO: Implement below method
+//            || ![store hasReachedHomeServerPaginationEndForRoom:_state.roomId];
     }
     else
     {
@@ -363,6 +364,10 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         }
         
         dispatch_group_notify(dispatchGroupPaginationEnd, dispatch_get_main_queue(), ^{
+            if (shouldReturn)
+            {
+                return;
+            }
             // Do not try to paginate forward if end has been reached
             if (direction == MXTimelineDirectionForwards && YES == self->hasReachedHomeServerForwardsPaginationEnd)
             {
@@ -741,7 +746,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 
         // Events going forwards on the live timeline come from /sync.
         // They are assimilated to live events.
-        if (_isLiveTimeline && direction == MXTimelineDirectionForwards)
+        if (self.isLiveTimeline && direction == MXTimelineDirectionForwards)
         {
             // Handle here live redaction
             // There is nothing to manage locally if we are getting the 1st sync for the room
@@ -752,19 +757,19 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
             }
 
             // Consider that a message sent by a user has been read by him
-            [room storeLocalReceipt:kMXEventTypeStringRead eventId:event.eventId userId:event.sender ts:event.originServerTs];
+            [self->room storeLocalReceipt:kMXEventTypeStringRead eventId:event.eventId userId:event.sender ts:event.originServerTs];
         }
 
         // Store the event
         if (!fromStore)
         {
-            [store storeEventForRoom:_state.roomId event:event direction:direction];
+            [self->store storeEventForRoom:self.state.roomId event:event direction:direction];
         }
 
         // Notify the aggregation manager for every events so that it can store
         // aggregated data sent by the server
 
-        [room.mxSession.aggregations handleOriginalDataOfEvent:event];
+        [self->room.mxSession.aggregations handleOriginalDataOfEvent:event];
 
         // Notify listeners
         [self notifyListeners:event direction:direction];
@@ -777,102 +782,103 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     MXLogDebug(@"[MXEventTimeline] handleRedaction: handle an event redaction");
     
     // Check whether the redacted event is stored in room messages
-    MXEvent *redactedEvent = [store eventWithEventId:redactionEvent.redacts inRoom:_state.roomId];
-    if (redactedEvent)
-    {
-        // Redact the stored event
-        redactedEvent = [redactedEvent prune];
-        redactedEvent.redactedBecause = redactionEvent.JSONDictionary;
-
-        // Store the updated event
-        [store replaceEvent:redactedEvent inRoom:_state.roomId];
-    }
-    
-    // Check whether the current room state depends on this redacted event.
-    if (!redactedEvent || redactedEvent.isState)
-    {
-        NSMutableArray *stateEvents = [NSMutableArray arrayWithArray:_state.stateEvents];
-        
-        for (NSInteger index = 0; index < stateEvents.count; index++)
+    [store eventWithEventId:redactionEvent.redacts inRoom:_state.roomId completion:^(MXEvent * _Nullable redactedEvent) {
+        if (redactedEvent)
         {
-            MXEvent *stateEvent = stateEvents[index];
+            // Redact the stored event
+            redactedEvent = [redactedEvent prune];
+            redactedEvent.redactedBecause = redactionEvent.JSONDictionary;
+
+            // Store the updated event
+            [self->store replaceEvent:redactedEvent inRoom:self.state.roomId];
+        }
+        
+        // Check whether the current room state depends on this redacted event.
+        if (!redactedEvent || redactedEvent.isState)
+        {
+            NSMutableArray *stateEvents = [NSMutableArray arrayWithArray:self.state.stateEvents];
             
-            if ([stateEvent.eventId isEqualToString:redactionEvent.redacts])
+            for (NSInteger index = 0; index < stateEvents.count; index++)
             {
-                MXLogDebug(@"[MXEventTimeline] handleRedaction: the current room state has been modified by the event redaction.");
+                MXEvent *stateEvent = stateEvents[index];
                 
-                // Redact the stored event
-                redactedEvent = [stateEvent prune];
-                redactedEvent.redactedBecause = redactionEvent.JSONDictionary;
-                
-                [stateEvents replaceObjectAtIndex:index withObject:redactedEvent];
-                
-                // Reset the room state.
-                _state = [[MXRoomState alloc] initWithRoomId:room.roomId andMatrixSession:room.mxSession andDirection:YES];
-                [self initialiseState:stateEvents];
-                
-                // Reset the current pagination
-                [self resetPagination];
-                
-                // Notify that room history has been flushed
-                [[NSNotificationCenter defaultCenter] postNotificationName:kMXRoomDidFlushDataNotification
-                                                                    object:room
-                                                                  userInfo:nil];
-                return;
+                if ([stateEvent.eventId isEqualToString:redactionEvent.redacts])
+                {
+                    MXLogDebug(@"[MXEventTimeline] handleRedaction: the current room state has been modified by the event redaction.");
+                    
+                    // Redact the stored event
+                    redactedEvent = [stateEvent prune];
+                    redactedEvent.redactedBecause = redactionEvent.JSONDictionary;
+                    
+                    [stateEvents replaceObjectAtIndex:index withObject:redactedEvent];
+                    
+                    // Reset the room state.
+                    self.state = [[MXRoomState alloc] initWithRoomId:self->room.roomId andMatrixSession:self->room.mxSession andDirection:YES];
+                    [self initialiseState:stateEvents];
+                    
+                    // Reset the current pagination
+                    [self resetPagination];
+                    
+                    // Notify that room history has been flushed
+                    [[NSNotificationCenter defaultCenter] postNotificationName:kMXRoomDidFlushDataNotification
+                                                                        object:self->room
+                                                                      userInfo:nil];
+                    return;
+                }
             }
         }
-    }
 
-    // We need to figure out if this redacted event is a room state in the past.
-    // If yes, we must prune the `prev_content` of the state event that replaced it.
-    // Indeed, redacted information shouldn't spontaneously appear when you backpaginate...
-    // TODO: This is no more implemented (see https://github.com/vector-im/riot-ios/issues/443).
-    // The previous implementation based on a room initial sync was too heavy server side
-    // and has been removed.
-    if (redactedEvent.isState)
-    {
-        // TODO
-        MXLogDebug(@"[MXEventTimeline] handleRedaction: the redacted event is a former state event. TODO: prune prev_content of the current state event");
-    }
-    else if (!redactedEvent)
-    {
-        MXLogDebug(@"[MXEventTimeline] handleRedaction: the redacted event is unknown. Fetch it from the homeserver");
+        // We need to figure out if this redacted event is a room state in the past.
+        // If yes, we must prune the `prev_content` of the state event that replaced it.
+        // Indeed, redacted information shouldn't spontaneously appear when you backpaginate...
+        // TODO: This is no more implemented (see https://github.com/vector-im/riot-ios/issues/443).
+        // The previous implementation based on a room initial sync was too heavy server side
+        // and has been removed.
+        if (redactedEvent.isState)
+        {
+            // TODO
+            MXLogDebug(@"[MXEventTimeline] handleRedaction: the redacted event is a former state event. TODO: prune prev_content of the current state event");
+        }
+        else if (!redactedEvent)
+        {
+            MXLogDebug(@"[MXEventTimeline] handleRedaction: the redacted event is unknown. Fetch it from the homeserver");
 
-        // Retrieve the event from the HS to check whether the redacted event is a state event or not
-        MXWeakify(self);
-        httpOperation = [room.mxSession.matrixRestClient eventWithEventId:redactionEvent.redacts inRoom:room.roomId success:^(MXEvent *event) {
-            MXStrongifyAndReturnIfNil(self);
+            // Retrieve the event from the HS to check whether the redacted event is a state event or not
+            MXWeakify(self);
+            self->httpOperation = [self->room.mxSession.matrixRestClient eventWithEventId:redactionEvent.redacts inRoom:self->room.roomId success:^(MXEvent *event) {
+                MXStrongifyAndReturnIfNil(self);
 
-            if (event.isState)
-            {
-                // TODO
-                MXLogDebug(@"[MXEventTimeline] handleRedaction: the redacted event is a state event in the past. TODO: prune prev_content of the current state event");
-            }
-            else
-            {
-                MXLogDebug(@"[MXEventTimeline] handleRedaction: the redacted event is a not state event -> job is done");
-            }
+                if (event.isState)
+                {
+                    // TODO
+                    MXLogDebug(@"[MXEventTimeline] handleRedaction: the redacted event is a state event in the past. TODO: prune prev_content of the current state event");
+                }
+                else
+                {
+                    MXLogDebug(@"[MXEventTimeline] handleRedaction: the redacted event is a not state event -> job is done");
+                }
 
-            if (!self->httpOperation)
-            {
-                return;
-            }
+                if (!self->httpOperation)
+                {
+                    return;
+                }
 
-            self->httpOperation = nil;
+                self->httpOperation = nil;
 
-        } failure:^(NSError *error) {
-            MXStrongifyAndReturnIfNil(self);
+            } failure:^(NSError *error) {
+                MXStrongifyAndReturnIfNil(self);
 
-            if (!self->httpOperation)
-            {
-                return;
-            }
+                if (!self->httpOperation)
+                {
+                    return;
+                }
 
-            self->httpOperation = nil;
+                self->httpOperation = nil;
 
-            MXLogDebug(@"[MXEventTimeline] handleRedaction: failed to retrieved the redacted event");
-        }];
-    }
+                MXLogDebug(@"[MXEventTimeline] handleRedaction: failed to retrieved the redacted event");
+            }];
+        }
+    }];
 }
 
 #pragma mark - State events handling

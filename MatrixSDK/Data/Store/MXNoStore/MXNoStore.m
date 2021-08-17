@@ -115,12 +115,14 @@
     });
 }
 
-- (MXEvent *)eventWithEventId:(NSString *)eventId inRoom:(NSString *)roomId
+- (void)eventWithEventId:(NSString *)eventId inRoom:(NSString *)roomId completion:(void (^)(MXEvent * _Nullable))completion
 {
     // Events are not stored. So, we cannot find it.
     // The drawback is the app using such MXStore will possibly get duplicated event and
     // it will not be able to do redaction of an event.
-    return nil;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        completion(nil);
+    });
 }
 
 - (void)deleteAllMessagesInRoom:(NSString *)roomId

@@ -48,24 +48,24 @@
     MXEventContentRelatesTo *relation = referenceEvent.relatesTo;
 
     NSString *roomId = referenceEvent.roomId;
-    MXEvent *event = [self.matrixStore eventWithEventId:relation.eventId inRoom:roomId];
-
-    if (event)
-    {
-        MXEvent *newEvent = [event eventWithNewReferenceRelation:referenceEvent];
-
-        if (newEvent)
+    [self.matrixStore eventWithEventId:relation.eventId inRoom:roomId completion:^(MXEvent * _Nullable event) {
+        if (event)
         {
-            [self.matrixStore replaceEvent:newEvent inRoom:roomId];
+            MXEvent *newEvent = [event eventWithNewReferenceRelation:referenceEvent];
 
-            // TODO or not?
-            //[self notifyEventEditsListenersOfRoom:roomId replaceEvent:replaceEvent];
+            if (newEvent)
+            {
+                [self.matrixStore replaceEvent:newEvent inRoom:roomId];
+
+                // TODO or not?
+                //[self notifyEventEditsListenersOfRoom:roomId replaceEvent:replaceEvent];
+            }
         }
-    }
-    else
-    {
-        MXLogDebug(@"[MXAggregations] handleReference: Unknown event id: %@", relation.eventId);
-    }
+        else
+        {
+            MXLogDebug(@"[MXAggregations] handleReference: Unknown event id: %@", relation.eventId);
+        }
+    }];
 }
 
 @end

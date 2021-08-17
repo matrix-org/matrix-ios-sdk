@@ -141,7 +141,7 @@
                                     success:(void (^)(MXAggregationPaginatedResponse *paginatedResponse))success
                                     failure:(void (^)(NSError *error))failure
 {
-    MXHTTPOperation* operation;
+    __block MXHTTPOperation* operation;
     
     void (^processPaginatedResponse)(MXAggregationPaginatedResponse *paginatedResponse) = ^(MXAggregationPaginatedResponse *paginatedResponse) {
         // Decrypt events if required
@@ -179,23 +179,23 @@
         }
     };
     
-    MXEvent *event = [self.mxSession.store eventWithEventId:eventId inRoom:roomId];
-    
-    if (!event)
-    {
-        operation = [self.mxSession.matrixRestClient relationsForEvent:eventId inRoom:roomId relationType:MXEventRelationTypeReference eventType:nil from:from limit:limit success:^(MXAggregationPaginatedResponse *paginatedResponse) {
-            processPaginatedResponse(paginatedResponse);
-        } failure:failure];
-    }
-    else
-    {
-        [self.mxSession.store relationsForEvent:eventId inRoom:roomId relationType:MXEventRelationTypeReference completion:^(NSArray<MXEvent *> * _Nonnull referenceEvents) {
-            MXAggregationPaginatedResponse *paginatedResponse = [[MXAggregationPaginatedResponse alloc] initWithOriginalEvent:event
-                                                                                                                        chunk:referenceEvents
-                                                                                                                    nextBatch:nil];
-            processPaginatedResponse(paginatedResponse);
-        }];
-    }
+    [self.mxSession.store eventWithEventId:eventId inRoom:roomId completion:^(MXEvent * _Nullable event) {
+        if (!event)
+        {
+            operation = [self.mxSession.matrixRestClient relationsForEvent:eventId inRoom:roomId relationType:MXEventRelationTypeReference eventType:nil from:from limit:limit success:^(MXAggregationPaginatedResponse *paginatedResponse) {
+                processPaginatedResponse(paginatedResponse);
+            } failure:failure];
+        }
+        else
+        {
+            [self.mxSession.store relationsForEvent:eventId inRoom:roomId relationType:MXEventRelationTypeReference completion:^(NSArray<MXEvent *> * _Nonnull referenceEvents) {
+                MXAggregationPaginatedResponse *paginatedResponse = [[MXAggregationPaginatedResponse alloc] initWithOriginalEvent:event
+                                                                                                                            chunk:referenceEvents
+                                                                                                                        nextBatch:nil];
+                processPaginatedResponse(paginatedResponse);
+            }];
+        }
+    }];
 
     return operation;
 }

@@ -2833,36 +2833,39 @@ typedef void (^MXOnResumeDone)(void);
     {
         // Try to find it from the store first
         // (this operation requires a roomId for the moment)
-        __block MXEvent *event = [_store eventWithEventId:eventId inRoom:roomId];
-        
-        dispatch_group_t dispatchGroup = dispatch_group_create();
-        //  also search in local event
-        if (!event)
-        {
-            dispatch_group_enter(dispatchGroup);
-            [_store outgoingMessagesInRoom:roomId completion:^(NSArray<MXEvent *> * _Nullable outgoingMessages) {
-                for (MXEvent *localEvent in outgoingMessages)
-                {
-                    if ([localEvent.eventId isEqualToString:eventId])
+        __block MXEvent *event = nil;
+        [_store eventWithEventId:eventId inRoom:roomId completion:^(MXEvent * _Nullable event2) {
+            event = event2;
+            
+            dispatch_group_t dispatchGroup = dispatch_group_create();
+            //  also search in local event
+            if (!event)
+            {
+                dispatch_group_enter(dispatchGroup);
+                [self.store outgoingMessagesInRoom:roomId completion:^(NSArray<MXEvent *> * _Nullable outgoingMessages) {
+                    for (MXEvent *localEvent in outgoingMessages)
                     {
-                        event = localEvent;
-                        break;
+                        if ([localEvent.eventId isEqualToString:eventId])
+                        {
+                            event = localEvent;
+                            break;
+                        }
                     }
-                }
-                dispatch_group_leave(dispatchGroup);
-            }];
-        }
+                    dispatch_group_leave(dispatchGroup);
+                }];
+            }
 
-        dispatch_group_notify(dispatchGroup, dispatch_get_main_queue(), ^{
-            if (event)
-            {
-                decryptIfNeeded(event);
-            }
-            else
-            {
-                operation = [matrixRestClient eventWithEventId:eventId inRoom:roomId success:decryptIfNeeded failure:failure];
-            }
-        });
+            dispatch_group_notify(dispatchGroup, dispatch_get_main_queue(), ^{
+                if (event)
+                {
+                    decryptIfNeeded(event);
+                }
+                else
+                {
+                    operation = [self->matrixRestClient eventWithEventId:eventId inRoom:roomId success:decryptIfNeeded failure:failure];
+                }
+            });
+        }];
     }
     else
     {

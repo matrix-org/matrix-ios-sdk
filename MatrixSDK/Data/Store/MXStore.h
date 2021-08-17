@@ -86,10 +86,11 @@
 
  @param eventId the id of the event to retrieve.
  @param roomId the id of the room.
-
- @return the MXEvent object or nil if not found.
+ @param completion Completion block containing the MXEvent object or nil if not found.
  */
-- (MXEvent* _Nullable)eventWithEventId:(nonnull NSString*)eventId inRoom:(nonnull NSString*)roomId;
+- (void)eventWithEventId:(nonnull NSString*)eventId
+                  inRoom:(nonnull NSString*)roomId
+              completion:(nonnull void (^)(MXEvent * _Nullable))completion;
 
 /**
  Remove all existing messages in a room.

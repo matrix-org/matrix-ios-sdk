@@ -89,15 +89,20 @@ class MXBackgroundStore: NSObject, MXStore {
         }
     }
     
-    func event(withEventId eventId: String, inRoom roomId: String) -> MXEvent? {
+    func event(withEventId eventId: String, inRoom roomId: String, completion: @escaping (MXEvent?) -> Void) {
         guard let roomStore = roomStore(forRoom: roomId) else {
-            return nil
+            DispatchQueue.main.async {
+                completion(nil)
+            }
+            return
         }
         
         let event = roomStore.event(withEventId: eventId)
         
         MXLog.debug("[MXBackgroundStore] eventWithEventId: \(eventId) \(event == nil ? "not " : "" )found")
-        return event
+        DispatchQueue.main.async {
+            completion(event)
+        }
     }
     
     

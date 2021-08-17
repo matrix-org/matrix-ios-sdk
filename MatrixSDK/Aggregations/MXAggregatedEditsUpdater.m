@@ -215,31 +215,31 @@
 - (void)handleReplace:(MXEvent *)replaceEvent
 {
     NSString *roomId = replaceEvent.roomId;
-    MXEvent *event = [self.matrixStore eventWithEventId:replaceEvent.relatesTo.eventId inRoom:roomId];
-
-    if (event)
-    {
-        if (![event.sender isEqualToString:replaceEvent.sender])
+    [self.matrixStore eventWithEventId:replaceEvent.relatesTo.eventId inRoom:roomId completion:^(MXEvent * _Nullable event) {
+        if (event)
         {
-            //  not coming from the original sender, ignore
-            MXLogDebug(@"[MXAggregations] handleReplace: Edit event not coming from the original sender, ignoring.");
-            return;
-        }
-        if (![event.unsignedData.relations.replace.eventId isEqualToString:replaceEvent.eventId])
-        {
-            MXEvent *editedEvent = [event editedEventFromReplacementEvent:replaceEvent];
-
-            if (editedEvent)
+            if (![event.sender isEqualToString:replaceEvent.sender])
             {
-                [self.matrixStore replaceEvent:editedEvent inRoom:roomId];
-                [self notifyEventEditsListenersOfRoom:roomId replaceEvent:replaceEvent];
+                //  not coming from the original sender, ignore
+                MXLogDebug(@"[MXAggregations] handleReplace: Edit event not coming from the original sender, ignoring.");
+                return;
+            }
+            if (![event.unsignedData.relations.replace.eventId isEqualToString:replaceEvent.eventId])
+            {
+                MXEvent *editedEvent = [event editedEventFromReplacementEvent:replaceEvent];
+
+                if (editedEvent)
+                {
+                    [self.matrixStore replaceEvent:editedEvent inRoom:roomId];
+                    [self notifyEventEditsListenersOfRoom:roomId replaceEvent:replaceEvent];
+                }
             }
         }
-    }
-    else
-    {
-        MXLogDebug(@"[MXAggregations] handleReplace: Unknown event id: %@", replaceEvent.relatesTo.eventId);
-    }
+        else
+        {
+            MXLogDebug(@"[MXAggregations] handleReplace: Unknown event id: %@", replaceEvent.relatesTo.eventId);
+        }
+    }];
 }
 
 //- (void)handleRedaction:(MXEvent *)event
