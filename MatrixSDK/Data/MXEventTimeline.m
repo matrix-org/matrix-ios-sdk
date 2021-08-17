@@ -178,22 +178,29 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 }
 
 #pragma mark - Pagination
-- (BOOL)canPaginate:(MXTimelineDirection)direction
+- (void)canPaginate:(MXTimelineDirection)direction
+         completion:(void (^)(BOOL))completion
 {
-    BOOL canPaginate = NO;
-
     if (direction == MXTimelineDirectionBackwards)
     {
         // canPaginate depends on two things:
         //  - did we end to paginate from the MXStore?
         //  - did we reach the top of the pagination in our requests to the home server?
-        canPaginate = !cachedStoreMessagesEnumerator
-        || (0 < cachedStoreMessagesEnumerator.remaining);
-        //  TODO: Implement below method
-//            || ![store hasReachedHomeServerPaginationEndForRoom:_state.roomId];
+        [store hasReachedHomeServerPaginationEndForRoom:_state.roomId completion:^(BOOL hasReachedHomeServerPaginationEnd) {
+            BOOL canPaginate = !self->cachedStoreMessagesEnumerator
+                || (0 < self->cachedStoreMessagesEnumerator.remaining)
+                || !hasReachedHomeServerPaginationEnd;
+            
+            if (completion)
+            {
+                completion(canPaginate);
+            }
+        }];
     }
     else
     {
+        BOOL canPaginate = NO;
+        
         if (_isLiveTimeline)
         {
             // Matrix is not yet able to guess the future
@@ -203,9 +210,14 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         {
             canPaginate = !hasReachedHomeServerForwardsPaginationEnd;
         }
+        
+        if (completion)
+        {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                completion(canPaginate);
+            });
+        }
     }
-
-    return canPaginate;
 }
 
 - (void)resetPagination

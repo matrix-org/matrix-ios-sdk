@@ -144,9 +144,10 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXTimelineDirection direction, MXR
 
  @param direction MXTimelineDirectionBackwards to check if we can paginate backwards.
                   MXTimelineDirectionForwards to check if we can go forwards.
- @return true if we can paginate in the given direction.
+ @param completion Completion block returning true if we can paginate in the given direction.
  */
-- (BOOL)canPaginate:(MXTimelineDirection)direction NS_REFINED_FOR_SWIFT;
+- (void)canPaginate:(MXTimelineDirection)direction
+         completion:(void (^)(BOOL))completion NS_REFINED_FOR_SWIFT;
 
 /**
  Reset the pagination so that future calls to paginate start from the most recent

@@ -42,8 +42,8 @@ public extension MXEventTimeline {
      
      - returns: `true` if we can paginate in the given direction.
      */
-    @nonobjc func canPaginate(_ direction: MXTimelineDirection) -> Bool {
-        return __canPaginate(direction.identifier)
+    @nonobjc func canPaginate(_ direction: MXTimelineDirection, completion: @escaping (Bool) -> Void) {
+        __canPaginate(direction.identifier, completion: completion)
     }
     
     
