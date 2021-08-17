@@ -65,9 +65,11 @@
     [self.aggregatedReactionsUpdater removeReaction:reaction forEvent:eventId inRoom:roomId success:success failure:failure];
 }
 
-- (nullable MXAggregatedReactions *)aggregatedReactionsOnEvent:(NSString*)eventId inRoom:(NSString*)roomId
+- (void)aggregatedReactionsOnEvent:(NSString*)eventId
+                            inRoom:(NSString*)roomId
+                        completion:(nonnull void(^)(MXAggregatedReactions * _Nullable))completion
 {
-    return [self.aggregatedReactionsUpdater aggregatedReactionsOnEvent:eventId inRoom:roomId];
+    [self.aggregatedReactionsUpdater aggregatedReactionsOnEvent:eventId inRoom:roomId completion:completion];
 }
 
 - (id)listenToReactionCountUpdateInRoom:(NSString *)roomId block:(void (^)(NSDictionary<NSString *,MXReactionCountChange *> * _Nonnull))block

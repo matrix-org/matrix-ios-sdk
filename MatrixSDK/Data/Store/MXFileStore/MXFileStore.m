@@ -842,7 +842,7 @@ static NSUInteger preloadOptions;
                 {
                     NSDate *startDate = [NSDate date];
                     MXFileRoomStore *roomStore = [NSKeyedUnarchiver unarchiveObjectWithFile:roomFile];
-                    roomStores[roomId] = roomStore;
+                    self->roomStores[roomId] = roomStore;
                     MXLogDebug(@"[MXFileStore] Loaded room messages of room: %@ in %.0fms", roomId, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
                     
                     dispatch_async(dispatch_get_main_queue(), ^{

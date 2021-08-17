@@ -128,26 +128,38 @@
 
 #pragma mark - Data access
 
-- (nullable MXAggregatedReactions *)aggregatedReactionsOnEvent:(NSString*)eventId inRoom:(NSString*)roomId
+- (void)aggregatedReactionsOnEvent:(NSString*)eventId
+                            inRoom:(NSString*)roomId
+                        completion:(nonnull void(^)(MXAggregatedReactions * _Nullable))completion
 {
-    NSArray<MXReactionCount*> *reactions = [self.store reactionCountsOnEvent:eventId];
+    __block NSArray<MXReactionCount*> *reactions = [self.store reactionCountsOnEvent:eventId];
 
+    dispatch_group_t dispatchGroup = dispatch_group_create();
+    
     if (!reactions)
     {
-        reactions = [self reactionCountsOnEvent:eventId inRoom:roomId];
+        dispatch_group_enter(dispatchGroup);
+        [self reactionCountsOnEvent:eventId
+                             inRoom:roomId
+                         completion:^(NSArray<MXReactionCount *> * _Nullable reactions2) {
+            reactions = reactions2;
+            dispatch_group_leave(dispatchGroup);
+        }];
     }
 
-    // Count local echoes too
-    reactions = [self aggregateLocalEchoesToReactions:reactions onEvent:eventId];
+    dispatch_group_notify(dispatchGroup, dispatch_get_main_queue(), ^{
+        // Count local echoes too
+        reactions = [self aggregateLocalEchoesToReactions:reactions onEvent:eventId];
 
-    MXAggregatedReactions *aggregatedReactions;
-    if (reactions.count)
-    {
-        aggregatedReactions = [MXAggregatedReactions new];
-        aggregatedReactions.reactions = reactions;
-    }
+        MXAggregatedReactions *aggregatedReactions;
+        if (reactions.count)
+        {
+            aggregatedReactions = [MXAggregatedReactions new];
+            aggregatedReactions.reactions = reactions;
+        }
 
-    return aggregatedReactions;
+        completion(aggregatedReactions);
+    });
 }
 
 - (nullable MXReactionCount*)reactionCountForReaction:(NSString*)reaction onEvent:(NSString*)eventId
@@ -643,19 +655,23 @@
 {
     if (![self.store hasReactionCountsOnEvent:eventId])
     {
-        NSArray<MXReactionCount*> *reactions = [self reactionCountsOnEvent:eventId inRoom:roomId];
-        
-        if (reactions)
-        {
-            [self.store setReactionCounts:reactions onEvent:eventId inRoom:roomId];
-        }
+        [self reactionCountsOnEvent:eventId inRoom:roomId completion:^(NSArray<MXReactionCount *> * _Nullable reactions) {
+            if (reactions)
+            {
+                [self.store setReactionCounts:reactions onEvent:eventId inRoom:roomId];
+            }
+        }];
     }
 }
 
 // Compute reactions counts from relations we know
-- (nullable NSArray<MXReactionCount*> *)reactionCountsOnEvent:(NSString*)eventId inRoom:(NSString*)roomId
+- (void)reactionCountsOnEvent:(NSString*)eventId
+                       inRoom:(NSString*)roomId
+                   completion:(nonnull void (^)(NSArray<MXReactionCount*> * _Nullable))completion
 {
     NSMutableDictionary<NSString*, MXReactionCount*> *reactionCountDict;
+    
+    dispatch_group_t dispatchGroup = dispatch_group_create();
 
     NSArray<MXReactionRelation*> *relations = [self.store reactionRelationsOnEvent:eventId];
     for (MXReactionRelation *relation in relations)
@@ -682,20 +698,23 @@
 
         reactionCount.count++;
 
-        //  TODO: Make this method async
         if (!reactionCount.myUserReactionEventId)
         {
+            dispatch_group_enter(dispatchGroup);
             // Determine if my user has reacted
             [self.matrixStore eventWithEventId:relation.reactionEventId inRoom:roomId completion:^(MXEvent * _Nullable event) {
                 if ([event.sender isEqualToString:self.myUserId])
                 {
                     reactionCount.myUserReactionEventId = relation.reactionEventId;
                 }
+                dispatch_group_leave(dispatchGroup);
             }];
         }
     }
-
-    return [self sortReactionCounts:reactionCountDict.allValues];
+    
+    dispatch_group_notify(dispatchGroup, dispatch_get_main_queue(), ^{
+        completion([self sortReactionCounts:reactionCountDict.allValues]);
+    });
 }
 
 - (NSArray<MXReactionCount*>*)sortReactionCounts:(NSArray<MXReactionCount*>*)reactionCounts

@@ -72,9 +72,11 @@ NS_ASSUME_NONNULL_BEGIN
 
  @param eventId the id of the event.
  @param roomId the id of the room.
- @return the top most reactions counts.
+ @param completion Completion block containing the top most reactions counts.
  */
-- (nullable MXAggregatedReactions *)aggregatedReactionsOnEvent:(NSString*)eventId inRoom:(NSString*)roomId;
+- (void)aggregatedReactionsOnEvent:(NSString*)eventId
+                            inRoom:(NSString*)roomId
+                        completion:(nonnull void(^)(MXAggregatedReactions * _Nullable))completion;
 
 
 /**

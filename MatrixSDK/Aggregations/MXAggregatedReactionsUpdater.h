@@ -42,7 +42,9 @@ NS_ASSUME_NONNULL_BEGIN
                failure:(void (^)(NSError *error))failure;
 
 #pragma mark - Data access
-- (nullable MXAggregatedReactions *)aggregatedReactionsOnEvent:(NSString*)eventId inRoom:(NSString*)roomId;
+- (void)aggregatedReactionsOnEvent:(NSString*)eventId
+                            inRoom:(NSString*)roomId
+                        completion:(nonnull void(^)(MXAggregatedReactions * _Nullable))completion;
 - (nullable MXReactionCount*)reactionCountForReaction:(NSString*)reaction onEvent:(NSString*)eventId;
 
 #pragma mark - Data update listener
