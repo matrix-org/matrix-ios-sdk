@@ -480,39 +480,37 @@ typedef void (^MXOnResumeDone)(void);
                 
                 // Sync room
                 dispatch_group_enter(dispatchGroup);
-                [room liveTimeline:^(MXEventTimeline *liveTimeline) {
-                    [room handleJoinedRoomSync:roomSync onComplete:^{
-                        [room.summary handleJoinedRoomSync:roomSync onComplete:^{
-                            
-                            // Make sure the last message has been decrypted
-                            // In case of an initial sync, we save decryptions to save time. Only unread messages are decrypted.
-                            // We need to decrypt already read last message.
-                            if (isInitialSync && room.summary.lastMessage.isEncrypted)
-                            {
-                                [self eventWithEventId:room.summary.lastMessage.eventId
-                                                inRoom:room.roomId
-                                               success:^(MXEvent *event) {
-                                    if (event.eventType == MXEventTypeRoomEncrypted)
-                                    {
-                                        [room.summary resetLastMessage:^{
-                                            dispatch_group_leave(dispatchGroup);
-                                        } failure:^(NSError *error) {
-                                            dispatch_group_leave(dispatchGroup);
-                                        } commit:NO];
-                                    }
-                                    else
-                                    {
+                [room handleJoinedRoomSync:roomSync onComplete:^{
+                    [room.summary handleJoinedRoomSync:roomSync onComplete:^{
+                        
+                        // Make sure the last message has been decrypted
+                        // In case of an initial sync, we save decryptions to save time. Only unread messages are decrypted.
+                        // We need to decrypt already read last message.
+                        if (isInitialSync && room.summary.lastMessage.isEncrypted)
+                        {
+                            [self eventWithEventId:room.summary.lastMessage.eventId
+                                            inRoom:room.roomId
+                                           success:^(MXEvent *event) {
+                                if (event.eventType == MXEventTypeRoomEncrypted)
+                                {
+                                    [room.summary resetLastMessage:^{
                                         dispatch_group_leave(dispatchGroup);
-                                    }
-                                } failure:^(NSError *error) {
+                                    } failure:^(NSError *error) {
+                                        dispatch_group_leave(dispatchGroup);
+                                    } commit:NO];
+                                }
+                                else
+                                {
                                     dispatch_group_leave(dispatchGroup);
-                                }];
-                            }
-                            else
-                            {
+                                }
+                            } failure:^(NSError *error) {
                                 dispatch_group_leave(dispatchGroup);
-                            }
-                        }];
+                            }];
+                        }
+                        else
+                        {
+                            dispatch_group_leave(dispatchGroup);
+                        }
                     }];
                 }];
                 
@@ -545,12 +543,10 @@ typedef void (^MXOnResumeDone)(void);
                 
                 // Prepare invited room
                 dispatch_group_enter(dispatchGroup);
-                [room liveTimeline:^(MXEventTimeline *liveTimeline) {
-                    [room handleInvitedRoomSync:invitedRoomSync onComplete:^{
-                        [room.summary handleInvitedRoomSync:invitedRoomSync];
-                        
-                        dispatch_group_leave(dispatchGroup);
-                    }];
+                [room handleInvitedRoomSync:invitedRoomSync onComplete:^{
+                    [room.summary handleInvitedRoomSync:invitedRoomSync];
+                    
+                    dispatch_group_leave(dispatchGroup);
                 }];
             }
         }
@@ -574,37 +570,35 @@ typedef void (^MXOnResumeDone)(void);
                     // use 'handleJoinedRoomSync' to pass the last events to the room before leaving it.
                     // The room will then able to notify its listeners.
                     dispatch_group_enter(dispatchGroup);
-                    [room liveTimeline:^(MXEventTimeline *liveTimeline) {
-                        [room handleJoinedRoomSync:leftRoomSync onComplete:^{
-                            [room.summary handleJoinedRoomSync:leftRoomSync onComplete:^{
-                                // Look for the last room member event
-                                MXEvent *roomMemberEvent;
-                                NSInteger index = leftRoomSync.timeline.events.count;
-                                while (index--)
-                                {
-                                    MXEvent *event = leftRoomSync.timeline.events[index];
-                                    
-                                    if ([event.type isEqualToString:kMXEventTypeStringRoomMember])
-                                    {
-                                        roomMemberEvent = event;
-                                        break;
-                                    }
-                                }
+                    [room handleJoinedRoomSync:leftRoomSync onComplete:^{
+                        [room.summary handleJoinedRoomSync:leftRoomSync onComplete:^{
+                            // Look for the last room member event
+                            MXEvent *roomMemberEvent;
+                            NSInteger index = leftRoomSync.timeline.events.count;
+                            while (index--)
+                            {
+                                MXEvent *event = leftRoomSync.timeline.events[index];
                                 
-                                // Notify the room is going to disappear
-                                NSMutableDictionary *userInfo = [NSMutableDictionary dictionaryWithObject:room.roomId forKey:kMXSessionNotificationRoomIdKey];
-                                if (roomMemberEvent)
+                                if ([event.type isEqualToString:kMXEventTypeStringRoomMember])
                                 {
-                                    userInfo[kMXSessionNotificationEventKey] = roomMemberEvent;
+                                    roomMemberEvent = event;
+                                    break;
                                 }
-                                [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionWillLeaveRoomNotification
-                                                                                    object:self
-                                                                                  userInfo:userInfo];
-                                // Remove the room from the rooms list
-                                [self removeRoom:room.roomId];
-                                
-                                dispatch_group_leave(dispatchGroup);
-                            }];
+                            }
+                            
+                            // Notify the room is going to disappear
+                            NSMutableDictionary *userInfo = [NSMutableDictionary dictionaryWithObject:room.roomId forKey:kMXSessionNotificationRoomIdKey];
+                            if (roomMemberEvent)
+                            {
+                                userInfo[kMXSessionNotificationEventKey] = roomMemberEvent;
+                            }
+                            [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionWillLeaveRoomNotification
+                                                                                object:self
+                                                                              userInfo:userInfo];
+                            // Remove the room from the rooms list
+                            [self removeRoom:room.roomId];
+                            
+                            dispatch_group_leave(dispatchGroup);
                         }];
                     }];
                 }
@@ -668,9 +662,9 @@ typedef void (^MXOnResumeDone)(void);
                 [self.crypto onSyncCompleted:self.store.eventStreamToken
                                nextSyncToken:syncResponse.nextBatch
                                   catchingUp:self.catchingUp];
-        }
+            }
 
-        // Update live event stream token
+            // Update live event stream token
             MXLogDebug(@"[MXSession] Next sync token: %@", syncResponse.nextBatch);
             self.store.eventStreamToken = syncResponse.nextBatch;
             
@@ -760,13 +754,6 @@ typedef void (^MXOnResumeDone)(void);
 
 - (void)startWithSyncFilterId:(NSString *)syncFilterId onServerSyncDone:(void (^)(void))onServerSyncDone failure:(void (^)(NSError *))failure
 {
-    [self handleBackgroundSyncCacheIfRequiredWithCompletion:^{
-        [self _startWithSyncFilterId:syncFilterId onServerSyncDone:onServerSyncDone failure:failure];
-    }];
-}
-
-- (void)_startWithSyncFilterId:(NSString *)syncFilterId onServerSyncDone:(void (^)(void))onServerSyncDone failure:(void (^)(NSError *))failure
-{
     if (nil == _store)
     {
         // The user did not set a MXStore, use MXNoStore as default
@@ -789,9 +776,7 @@ typedef void (^MXOnResumeDone)(void);
         }];
         return;
     }
-
-    [self setState:MXSessionStateSyncInProgress];
-
+    
     // Check update of the filter used for /sync requests
     if (![_store.syncFilterId isEqualToString:syncFilterId])
     {
@@ -818,6 +803,15 @@ typedef void (^MXOnResumeDone)(void);
             }
         } failure:nil];
     }
+    
+    [self handleBackgroundSyncCacheIfRequiredWithCompletion:^{
+        [self _startWithSyncFilterId:syncFilterId onServerSyncDone:onServerSyncDone failure:failure];
+    }];
+}
+
+- (void)_startWithSyncFilterId:(NSString *)syncFilterId onServerSyncDone:(void (^)(void))onServerSyncDone failure:(void (^)(NSError *))failure
+{
+    [self setState:MXSessionStateSyncInProgress];
 
     // Can we resume from data available in the cache
     if (_store.isPermanent && self.isEventStreamInitialised && 0 < _store.rooms.count)
@@ -825,7 +819,7 @@ typedef void (^MXOnResumeDone)(void);
         // Resume the stream (presence will be retrieved during server sync)
         MXLogDebug(@"[MXSession] Resuming the events stream from %@...", self.store.eventStreamToken);
         NSDate *startDate2 = [NSDate date];
-        [self resume:^{
+        [self _resume:^{
             MXLogDebug(@"[MXSession] Events stream resumed in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate2] * 1000);
 
             onServerSyncDone();
@@ -1889,6 +1883,8 @@ typedef void (^MXOnResumeDone)(void);
 
 - (void)handleBackgroundSyncCacheIfRequiredWithCompletion:(void (^)(void))completion
 {
+    [self setState:MXSessionStateProcessingBackgroundSyncCache];
+    
     MXSyncResponseFileStore *syncResponseStore = [[MXSyncResponseFileStore alloc] initWithCredentials:self.credentials];
     MXSyncResponseStoreManager *syncResponseStoreManager = [[MXSyncResponseStoreManager alloc] initWithSyncResponseStore:syncResponseStore];
     
@@ -1903,7 +1899,7 @@ typedef void (^MXOnResumeDone)(void);
     
     if (![syncResponseStoreSyncToken isEqualToString:eventStreamToken])
     {
-        MXLogDebug(@"[MXSession] handleBackgroundSyncCacheIfRequired: ");
+        MXLogDebug(@"[MXSession] handleBackgroundSyncCacheIfRequired: Mark all outdated");
         [outdatedSyncResponseIds addObjectsFromArray:syncResponseIds];
         syncResponseIds = @[];
     }
@@ -1917,37 +1913,37 @@ typedef void (^MXOnResumeDone)(void);
         return;
     }
     
-    for (NSString *syncResponseId in outdatedSyncResponseIds)
-    {
-        @autoreleasepool {
-            MXCachedSyncResponse *cachedSyncResponse = [syncResponseStore syncResponseWithId:syncResponseId error:nil];
-            if (cachedSyncResponse)
+    [asyncTaskQueue asyncWithExecute:^(void (^ taskCompleted)(void)) {
+        [syncResponseStoreManager mergedSyncResponseFromSyncResponseIds:outdatedSyncResponseIds completion:^(MXCachedSyncResponse * _Nullable outdatedCachedSyncResponse) {
+            if (outdatedCachedSyncResponse)
             {
-                [asyncTaskQueue asyncWithExecute:^(void (^ taskCompleted)(void)) {
-                    [self handleOutdatedSyncResponse:cachedSyncResponse.syncResponse
-                                  completion:^{
-                        taskCompleted();
-                    }];
+                [self handleOutdatedSyncResponse:outdatedCachedSyncResponse.syncResponse
+                                      completion:^{
+                    taskCompleted();
                 }];
             }
-        }
-    }
+            else
+            {
+                taskCompleted();
+            }
+        }];
+    }];
     
-    for (NSString *syncResponseId in syncResponseIds)
-    {
-        @autoreleasepool {
-            MXCachedSyncResponse *cachedSyncResponse = [syncResponseStore syncResponseWithId:syncResponseId error:nil];
+    [asyncTaskQueue asyncWithExecute:^(void (^ taskCompleted)(void)) {
+        [syncResponseStoreManager mergedSyncResponseFromSyncResponseIds:syncResponseIds completion:^(MXCachedSyncResponse * _Nullable cachedSyncResponse) {
             if (cachedSyncResponse)
             {
-                [asyncTaskQueue asyncWithExecute:^(void (^ taskCompleted)(void)) {
-                    [self handleSyncResponse:cachedSyncResponse.syncResponse
-                                  completion:^{
-                        taskCompleted();
-                    } storeCompletion:nil];
-                }];
+                [self handleSyncResponse:cachedSyncResponse.syncResponse
+                              completion:^{
+                    taskCompleted();
+                } storeCompletion:nil];
             }
-        }
-    }
+            else
+            {
+                taskCompleted();
+            }
+        }];
+    }];
     
     [asyncTaskQueue asyncWithExecute:^(void (^ taskCompleted)(void)) {
         [syncResponseStore deleteData];
