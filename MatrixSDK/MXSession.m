@@ -649,6 +649,8 @@ typedef void (^MXOnResumeDone)(void);
                     [self.crypto handleDeviceOneTimeKeysCount:syncResponse.deviceOneTimeKeysCount];
                 }
                 
+                [self.crypto handleDeviceUnusedFallbackKeys:syncResponse.unusedFallbackKeys];
+                
                 // Tell the crypto module to do its processing
                 [self.crypto onSyncCompleted:self.store.eventStreamToken
                                nextSyncToken:syncResponse.nextBatch

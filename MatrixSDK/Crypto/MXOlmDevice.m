@@ -141,6 +141,18 @@
     }];
 }
 
+- (NSDictionary *)fallbackKey
+{
+    return store.account.fallbackKey;
+}
+
+- (void)generateFallbackKey
+{
+    [store performAccountOperationWithBlock:^(OLMAccount *olmAccount) {
+        [olmAccount generateFallbackKey];
+    }];
+}
+
 - (NSString *)createOutboundSession:(NSString *)theirIdentityKey theirOneTimeKey:(NSString *)theirOneTimeKey
 {
     NSError *error;
