@@ -746,12 +746,20 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
                   it again in the store.
  @param isRoomInitialSync YES we are managing the first sync of this room.
  */
-- (void)addEvent:(MXEvent*)event direction:(MXTimelineDirection)direction fromStore:(BOOL)fromStore isRoomInitialSync:(BOOL)isRoomInitialSync
+- (void)addEvent:(MXEvent*)event
+       direction:(MXTimelineDirection)direction
+       fromStore:(BOOL)fromStore
+isRoomInitialSync:(BOOL)isRoomInitialSync
+      completion:(void(^)(void))completion
 {
     // Make sure we have not processed this event yet
     [store eventExistsWithEventId:event.eventId inRoom:room.roomId completion:^(BOOL eventExists) {
         if (fromStore == NO && eventExists)
         {
+            if (completion)
+            {
+                completion();
+            }
             return;
         }
         
@@ -792,6 +800,11 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 
         // Notify listeners
         [self notifyListeners:event direction:direction];
+        
+        if (completion)
+        {
+            completion();
+        }
     }];
 }
 
