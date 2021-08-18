@@ -481,7 +481,8 @@ static NSUInteger preloadOptions;
 
 - (NSArray *)rooms
 {
-    NSArray<NSString *> *roomIDs = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:storeRoomsPath error:nil];
+    NSMutableArray<NSString *> *roomIDs = [NSMutableArray arrayWithArray:[[NSFileManager defaultManager] contentsOfDirectoryAtPath:storeRoomsPath error:nil]];
+    [roomIDs removeObjectsInArray:roomsToCommitForDeletion];
     return roomIDs;
 }
 
