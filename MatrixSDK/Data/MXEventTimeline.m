@@ -186,14 +186,21 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         // canPaginate depends on two things:
         //  - did we end to paginate from the MXStore?
         //  - did we reach the top of the pagination in our requests to the home server?
-        [store hasReachedHomeServerPaginationEndForRoom:_state.roomId completion:^(BOOL hasReachedHomeServerPaginationEnd) {
-            BOOL canPaginate = !self->cachedStoreMessagesEnumerator
-                || (0 < self->cachedStoreMessagesEnumerator.remaining)
-                || !hasReachedHomeServerPaginationEnd;
-            
+        if (!self->cachedStoreMessagesEnumerator
+            || (0 < self->cachedStoreMessagesEnumerator.remaining))
+        {
             if (completion)
             {
-                completion(canPaginate);
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    completion(YES);
+                });
+            }
+            return;
+        }
+        [store hasReachedHomeServerPaginationEndForRoom:_state.roomId completion:^(BOOL hasReachedHomeServerPaginationEnd) {
+            if (completion)
+            {
+                completion(!hasReachedHomeServerPaginationEnd);
             }
         }];
     }
