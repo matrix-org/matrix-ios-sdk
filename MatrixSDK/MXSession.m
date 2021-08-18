@@ -203,6 +203,8 @@ typedef void (^MXOnResumeDone)(void);
 
 @property (nonatomic, strong) id<MXSyncResponseStore> initialSyncResponseCache;
 
+@property (nonatomic, readwrite) BOOL syncWithLazyLoadOfRoomMembers;
+
 @end
 
 @implementation MXSession
@@ -783,7 +785,7 @@ typedef void (^MXOnResumeDone)(void);
             if (filter.room.state.lazyLoadMembers)
             {
                 MXLogDebug(@"[MXSession] Set syncWithLazyLoadOfRoomMembers to YES");
-                self->_syncWithLazyLoadOfRoomMembers = YES;
+                self.syncWithLazyLoadOfRoomMembers = YES;
             }
         } failure:nil];
     }
