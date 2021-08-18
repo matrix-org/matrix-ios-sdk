@@ -137,7 +137,7 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
                      [expectation fulfill];
                  }];
 
-                [room listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+                __block id listener = [room listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                     // -> an edit m.room.message must appear in the timeline
                     XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
@@ -150,6 +150,7 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
                     XCTAssertEqualObjects(event.content[@"m.new_content"][@"body"], kEditedMessageText);
 
                     [expectation fulfill];
+                    [room removeListener:listener];
                 }];
 
             } failure:^(NSError *error) {
@@ -183,7 +184,7 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
                     [expectation fulfill];
                 }];
                 
-                [room listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+                __block id listener = [room listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
                     
                     // -> an edit m.room.message must appear in the timeline
                     XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
@@ -203,6 +204,8 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
                     XCTAssertEqualObjects(event.content[@"m.new_content"][@"formatted_body"], kEditedMarkdownMessageFormattedText);
                     
                     [expectation fulfill];
+                    
+                    [room removeListener:listener];
                 }];
                 
             } failure:^(NSError *error) {
@@ -613,7 +616,7 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
                     [expectation fulfill];
                 }];
 
-                [room listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *editEvent, MXTimelineDirection direction, MXRoomState *roomState) {
+                __block id listener = [room listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *editEvent, MXTimelineDirection direction, MXRoomState *roomState) {
 
                     // -> an edit m.room.message must appear in the timeline
                     XCTAssertEqual(editEvent.eventType, MXEventTypeRoomMessage);
@@ -626,6 +629,8 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
 
                     XCTAssertEqualObjects(editEvent.content[@"m.new_content"][@"msgtype"], kMXMessageTypeText);
                     XCTAssertEqualObjects(editEvent.content[@"m.new_content"][@"body"], kEditedMessageText);
+                    
+                    [room removeListener:listener];
 
                     // -> Check the edited message in the store
                     [aliceSession eventWithEventId:eventId inRoom:room.roomId success:^(MXEvent *localEditedEvent) {
