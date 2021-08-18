@@ -33,6 +33,8 @@
     MatrixSDKTestsData *matrixSDKTestsData;
 
     id observer;
+    
+    MXRoom *room;
 }
 
 @end
@@ -61,6 +63,8 @@
     }
 
     matrixSDKTestsData = nil;
+    
+    room = nil;
 
     [super tearDown];
 }
@@ -410,6 +414,7 @@
 
             // Use another MXRoom instance to do pagination in several times
             MXRoom *room2 = [[MXRoom alloc] initWithRoomId:room.roomId andMatrixSession:mxSession];
+            self->room = room2;
 
             __block NSMutableArray *room2Events = [NSMutableArray array];
 
@@ -440,9 +445,6 @@
                     }
 
                     [room2LiveTimeline paginate:5 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
-
-                        // Log room2 to keep a ref on it up to here
-                        MXLogDebug(@"%@", room2);
 
                         [room2LiveTimeline paginate:100 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
 
