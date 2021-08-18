@@ -1532,7 +1532,7 @@
                           };
 
         // Upload the device keys
-        [bobRestClient uploadKeys:bobDevice.JSONDictionary oneTimeKeys:nil success:^(MXKeysUploadResponse *keysUploadResponse) {
+        [bobRestClient uploadKeys:bobDevice.JSONDictionary oneTimeKeys:nil fallbackKeys:nil success:^(MXKeysUploadResponse *keysUploadResponse) {
 
             XCTAssert(keysUploadResponse.oneTimeKeyCounts);
             
@@ -1579,7 +1579,7 @@
         };
         
         // Upload the device keys
-        [bobRestClient uploadKeys:nil oneTimeKeys:otks success:^(MXKeysUploadResponse *keysUploadResponse) {
+        [bobRestClient uploadKeys:nil oneTimeKeys:otks fallbackKeys:nil success:^(MXKeysUploadResponse *keysUploadResponse) {
             XCTAssert(keysUploadResponse.oneTimeKeyCounts);
             
             XCTAssertEqual(keysUploadResponse.oneTimeKeyCounts[@"curve25519"].unsignedIntValue, 2, @"Key count must be 2 for 'curve25519'");
@@ -1627,7 +1627,7 @@
         };
 
         // Upload the device keys
-        [bobRestClient uploadKeys:nil oneTimeKeys:otks success:^(MXKeysUploadResponse *keysUploadResponse) {
+        [bobRestClient uploadKeys:nil oneTimeKeys:otks fallbackKeys:nil success:^(MXKeysUploadResponse *keysUploadResponse) {
 
             [self.matrixSDKTestsData doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
 
@@ -1660,6 +1660,337 @@
                 }];
             }];
 
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+- (void)testInvalidFallbackKeysMissingParameter
+{
+    [self.matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+        
+        NSDictionary *fallbackKeys = @{
+            @"curve25519:AAAABQ": @"ueuHES/Q0P1MZ4J3IUpC8iQTkgQNX66ZpxVLUaTDuB8",
+            @"curve25519:AAAABA": @"PmyaaB68Any+za9CuZXzFsQZW31s/TW6XbAB9akEpQs"
+        };
+        
+        [bobRestClient uploadKeys:nil oneTimeKeys:nil fallbackKeys:fallbackKeys success:^(MXKeysUploadResponse *keysUploadResponse) {
+            // This should probably fail as there are multiple fallback keys for the same algorithm and no "fallback" boolean
+            [expectation fulfill];
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+- (void)testInvalidFallbackKeys
+{
+    [self.matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+        
+        NSDictionary *fallbackKeys = @{
+            @"AAA": @"123",
+            @"BBB": @(123)
+        };
+        
+        [bobRestClient uploadKeys:nil oneTimeKeys:nil fallbackKeys:fallbackKeys success:^(MXKeysUploadResponse *keysUploadResponse) {
+            XCTFail(@"The request should not succeed");
+            [expectation fulfill];
+        } failure:^(NSError *error) {
+            // Shouldn't probably return an internal server error but should fail nonetheless
+            XCTAssertEqualObjects(error.localizedDescription, @"Internal server error");
+            [expectation fulfill];
+        }];
+    }];
+}
+
+- (void)testOnlyLastFallbackKeySaved
+{
+    [self.matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+        
+        NSDictionary *fallbackKeys = @{
+            @"curve25519:AAAABQ": @{
+                    @"key": @"ueuHES/Q0P1MZ4J3IUpC8iQTkgQNX66ZpxVLUaTDuB8",
+                    @"fallback": @(YES)
+            },
+            @"curve25519:AAAABA": @{
+                    @"key": @"PmyaaB68Any+za9CuZXzFsQZW31s/TW6XbAB9akEpQs",
+                    @"fallback": @(YES)
+            }
+        };
+
+        // Upload the device keys
+        [bobRestClient uploadKeys:nil oneTimeKeys:nil fallbackKeys:fallbackKeys success:^(MXKeysUploadResponse *keysUploadResponse) {
+
+            [self.matrixSDKTestsData doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
+
+                MXUsersDevicesMap<NSString *> *usersDevicesKeyTypesMap = [[MXUsersDevicesMap alloc] init];
+                [usersDevicesKeyTypesMap setObject:@"curve25519" forUser:bobRestClient.credentials.userId andDevice:bobRestClient.credentials.deviceId];
+
+                [aliceRestClient claimOneTimeKeysForUsersDevices:usersDevicesKeyTypesMap success:^(MXKeysClaimResponse *keysClaimResponse) {
+
+                    XCTAssertEqual(keysClaimResponse.oneTimeKeys.map.count, 1);
+                    
+                    MXKey *bobKey = keysClaimResponse.oneTimeKeys.allObjects.firstObject;
+                    
+                    XCTAssertNotNil(fallbackKeys[bobKey.keyFullId], @"Key should match one of the uploaded fallback keys.");
+                    XCTAssertEqualObjects(fallbackKeys[bobKey.keyFullId][@"key"], bobKey.value, @"Key should match one of the uploaded fallback keys.");
+                    XCTAssertEqual(bobKey.signatures.count, 0, "No signatures were sent");
+
+                    [expectation fulfill];
+
+                } failure:^(NSError *error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+            }];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+- (void)testOneTimeKeyUsedInsteadOfFallback
+{
+    [self.matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+        
+        NSDictionary *oneTimeKeys = @{
+            @"curve25519:AAAABA": @{
+                    @"key": @"PmyaaB68Any+za9CuZXzFsQZW31s/TW6XbAB9akEpQs",
+            }
+        };
+        
+        NSDictionary *fallbackKeys = @{
+            @"curve25519:AAAABQ": @{
+                    @"key": @"ueuHES/Q0P1MZ4J3IUpC8iQTkgQNX66ZpxVLUaTDuB8",
+                    @"fallback": @(YES)
+            }
+        };
+
+        // Upload the device keys
+        [bobRestClient uploadKeys:nil oneTimeKeys:oneTimeKeys fallbackKeys:fallbackKeys success:^(MXKeysUploadResponse *keysUploadResponse) {
+
+            [self.matrixSDKTestsData doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
+
+                MXUsersDevicesMap<NSString *> *usersDevicesKeyTypesMap = [[MXUsersDevicesMap alloc] init];
+                [usersDevicesKeyTypesMap setObject:@"curve25519" forUser:bobRestClient.credentials.userId andDevice:bobRestClient.credentials.deviceId];
+
+                [aliceRestClient claimOneTimeKeysForUsersDevices:usersDevicesKeyTypesMap success:^(MXKeysClaimResponse *keysClaimResponse) {
+
+                    XCTAssertEqual(keysClaimResponse.oneTimeKeys.map.count, 1);
+                    
+                    MXKey *bobKey = keysClaimResponse.oneTimeKeys.allObjects.firstObject;
+                    
+                    XCTAssertNotNil(oneTimeKeys[bobKey.keyFullId], @"Key should match the available one time key.");
+                    XCTAssertEqualObjects(oneTimeKeys[bobKey.keyFullId][@"key"], bobKey.value, @"Key should match the available one time key.");
+                    XCTAssertEqual(bobKey.signatures.count, 0, "No signatures were sent");
+
+                    [expectation fulfill];
+
+                } failure:^(NSError *error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+            }];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+- (void)testFallbackKeyUsedAfterRunningOutOfOneTimeOnes
+{
+    [self.matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+        
+        NSDictionary *oneTimeKeys = @{
+            @"curve25519:AAAABA": @{
+                    @"key": @"PmyaaB68Any+za9CuZXzFsQZW31s/TW6XbAB9akEpQs",
+            }
+        };
+        
+        NSDictionary *fallbackKeys = @{
+            @"curve25519:AAAABQ": @{
+                    @"key": @"ueuHES/Q0P1MZ4J3IUpC8iQTkgQNX66ZpxVLUaTDuB8",
+                    @"fallback": @(YES)
+            }
+        };
+        
+        // Upload the device keys
+        [bobRestClient uploadKeys:nil oneTimeKeys:oneTimeKeys fallbackKeys:fallbackKeys success:^(MXKeysUploadResponse *keysUploadResponse) {
+            
+            [self.matrixSDKTestsData doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
+                
+                MXUsersDevicesMap<NSString *> *usersDevicesKeyTypesMap = [[MXUsersDevicesMap alloc] init];
+                [usersDevicesKeyTypesMap setObject:@"curve25519" forUser:bobRestClient.credentials.userId andDevice:bobRestClient.credentials.deviceId];
+                
+                [aliceRestClient claimOneTimeKeysForUsersDevices:usersDevicesKeyTypesMap success:^(MXKeysClaimResponse *keysClaimResponse) {
+                    
+                    XCTAssertEqual(keysClaimResponse.oneTimeKeys.map.count, 1);
+                    
+                    MXKey *bobKey = keysClaimResponse.oneTimeKeys.allObjects.firstObject;
+                    
+                    XCTAssertNotNil(oneTimeKeys[bobKey.keyFullId], @"Key should match the available one time key.");
+                    XCTAssertEqualObjects(oneTimeKeys[bobKey.keyFullId][@"key"], bobKey.value, @"Key should match the available one time key.");
+                    XCTAssertEqual(bobKey.signatures.count, 0, "No signatures were sent");
+                    
+                    [aliceRestClient claimOneTimeKeysForUsersDevices:usersDevicesKeyTypesMap success:^(MXKeysClaimResponse *keysClaimResponse) {
+                        
+                        XCTAssertEqual(keysClaimResponse.oneTimeKeys.map.count, 1);
+                        
+                        MXKey *bobKey = keysClaimResponse.oneTimeKeys.allObjects.firstObject;
+                        
+                        XCTAssertNotNil(fallbackKeys[bobKey.keyFullId], @"Key should match one of the uploaded fallback keys.");
+                        XCTAssertEqualObjects(fallbackKeys[bobKey.keyFullId][@"key"], bobKey.value, @"Key should match one of the uploaded fallback keys.");
+                        XCTAssertEqual(bobKey.signatures.count, 0, "No signatures were sent");
+                        
+                        [expectation fulfill];
+                        
+                    } failure:^(NSError *error) {
+                        XCTFail(@"The request should not fail - NSError: %@", error);
+                        [expectation fulfill];
+                    }];
+                } failure:^(NSError *error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+            }];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+- (void)testFallbackKeyNotDeletedAfterBeingClaimed
+{
+    [self.matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+        
+        NSDictionary *fallbackKeys = @{
+            @"curve25519:AAAABA": @{
+                    @"key": @"PmyaaB68Any+za9CuZXzFsQZW31s/TW6XbAB9akEpQs",
+                    @"fallback": @(YES)
+            }
+        };
+
+        // Upload the device keys
+        [bobRestClient uploadKeys:nil oneTimeKeys:nil fallbackKeys:fallbackKeys success:^(MXKeysUploadResponse *keysUploadResponse) {
+
+            [self.matrixSDKTestsData doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
+
+                MXUsersDevicesMap<NSString *> *usersDevicesKeyTypesMap = [[MXUsersDevicesMap alloc] init];
+                [usersDevicesKeyTypesMap setObject:@"curve25519" forUser:bobRestClient.credentials.userId andDevice:bobRestClient.credentials.deviceId];
+
+                [aliceRestClient claimOneTimeKeysForUsersDevices:usersDevicesKeyTypesMap success:^(MXKeysClaimResponse *keysClaimResponse) {
+
+                    XCTAssertEqual(keysClaimResponse.oneTimeKeys.map.count, 1);
+                    
+                    MXKey *bobKey = keysClaimResponse.oneTimeKeys.allObjects.firstObject;
+                    
+                    XCTAssertNotNil(fallbackKeys[bobKey.keyFullId], @"Key should match one of the uploaded fallback keys.");
+                    XCTAssertEqualObjects(fallbackKeys[bobKey.keyFullId][@"key"], bobKey.value, @"Key should match one of the uploaded fallback keys.");
+                    XCTAssertEqual(bobKey.signatures.count, 0, "No signatures were sent");
+                    
+                    [aliceRestClient claimOneTimeKeysForUsersDevices:usersDevicesKeyTypesMap success:^(MXKeysClaimResponse *keysClaimResponse) {
+
+                        XCTAssertEqual(keysClaimResponse.oneTimeKeys.map.count, 1);
+                        
+                        MXKey *bobKey = keysClaimResponse.oneTimeKeys.allObjects.firstObject;
+                        
+                        XCTAssertNotNil(fallbackKeys[bobKey.keyFullId], @"Key should match one of the uploaded fallback keys.");
+                        XCTAssertEqualObjects(fallbackKeys[bobKey.keyFullId][@"key"], bobKey.value, @"Key should match one of the uploaded fallback keys.");
+                        XCTAssertEqual(bobKey.signatures.count, 0, "No signatures were sent");
+
+                        [expectation fulfill];
+
+                    } failure:^(NSError *error) {
+                        XCTFail(@"The request should not fail - NSError: %@", error);
+                        [expectation fulfill];
+                    }];
+
+                } failure:^(NSError *error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+            }];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+- (void)testUpdateFallbackKey
+{
+    [self.matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+        
+        NSDictionary *initialFallbackKeys = @{
+            @"curve25519:AAAABA": @{
+                    @"key": @"PmyaaB68Any+za9CuZXzFsQZW31s/TW6XbAB9akEpQs",
+                    @"fallback": @(YES)
+            }
+        };
+        
+        NSDictionary *finalFallbackKeys = @{
+            @"curve25519:AAAABA": @{
+                    @"key": @"PmyaaB68Any+za9CuZXzFsQZW31s/TW6XbAB9akEpQs",
+                    @"fallback": @(YES)
+            }
+        };
+        
+        // Upload the device keys
+        [bobRestClient uploadKeys:nil oneTimeKeys:nil fallbackKeys:initialFallbackKeys success:^(MXKeysUploadResponse *keysUploadResponse) {
+            
+            [self.matrixSDKTestsData doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
+                
+                MXUsersDevicesMap<NSString *> *usersDevicesKeyTypesMap = [[MXUsersDevicesMap alloc] init];
+                [usersDevicesKeyTypesMap setObject:@"curve25519" forUser:bobRestClient.credentials.userId andDevice:bobRestClient.credentials.deviceId];
+                
+                [aliceRestClient claimOneTimeKeysForUsersDevices:usersDevicesKeyTypesMap success:^(MXKeysClaimResponse *keysClaimResponse) {
+                    
+                    XCTAssertEqual(keysClaimResponse.oneTimeKeys.map.count, 1);
+                    MXKey *bobKey = keysClaimResponse.oneTimeKeys.allObjects.firstObject;
+                    
+                    XCTAssertNotNil(initialFallbackKeys[bobKey.keyFullId], @"Key should match one of the uploaded fallback keys.");
+                    XCTAssertEqualObjects(initialFallbackKeys[bobKey.keyFullId][@"key"], bobKey.value, @"Key should match one of the uploaded fallback keys.");
+                    XCTAssertEqual(bobKey.signatures.count, 0, "No signatures were sent");
+                    
+                    [bobRestClient uploadKeys:nil oneTimeKeys:nil fallbackKeys:finalFallbackKeys success:^(MXKeysUploadResponse *keysUploadResponse) {
+                        
+                        [aliceRestClient claimOneTimeKeysForUsersDevices:usersDevicesKeyTypesMap success:^(MXKeysClaimResponse *keysClaimResponse) {
+                            
+                            XCTAssertEqual(keysClaimResponse.oneTimeKeys.map.count, 1);
+                            
+                            MXKey *bobKey = keysClaimResponse.oneTimeKeys.allObjects.firstObject;
+                            
+                            XCTAssertNotNil(finalFallbackKeys[bobKey.keyFullId], @"Key should match one of the uploaded fallback keys.");
+                            XCTAssertEqualObjects(finalFallbackKeys[bobKey.keyFullId][@"key"], bobKey.value, @"Key should match one of the uploaded fallback keys.");
+                            XCTAssertEqual(bobKey.signatures.count, 0, "No signatures were sent");
+                            
+                            [expectation fulfill];
+                            
+                        } failure:^(NSError *error) {
+                            XCTFail(@"The request should not fail - NSError: %@", error);
+                            [expectation fulfill];
+                        }];
+                    } failure:^(NSError *error) {
+                        XCTFail(@"The request should not fail - NSError: %@", error);
+                        [expectation fulfill];
+                    }];
+                    
+                } failure:^(NSError *error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+            }];
+            
         } failure:^(NSError *error) {
             XCTFail(@"The request should not fail - NSError: %@", error);
             [expectation fulfill];

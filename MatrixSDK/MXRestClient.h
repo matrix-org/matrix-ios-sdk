@@ -2137,13 +2137,16 @@ Get the maximum size a media upload can be in bytes.
 
  @param deviceKeys the device keys to send.
  @param oneTimeKeys the one-time keys to send.
+ @param fallbackKeys the fallback keys to send.
 
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
 
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)uploadKeys:(NSDictionary*)deviceKeys oneTimeKeys:(NSDictionary*)oneTimeKeys
+- (MXHTTPOperation*)uploadKeys:(NSDictionary*)deviceKeys
+                   oneTimeKeys:(NSDictionary*)oneTimeKeys
+                  fallbackKeys:(NSDictionary *)fallbackKeys
                        success:(void (^)(MXKeysUploadResponse *keysUploadResponse))success
                        failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 

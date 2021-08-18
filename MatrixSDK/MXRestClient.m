@@ -4046,14 +4046,18 @@ MXAuthAction;
 
 
 #pragma mark - Crypto
-- (MXHTTPOperation*)uploadKeys:(NSDictionary*)deviceKeys oneTimeKeys:(NSDictionary*)oneTimeKeys
+- (MXHTTPOperation*)uploadKeys:(NSDictionary*)deviceKeys
+                   oneTimeKeys:(NSDictionary*)oneTimeKeys
+                  fallbackKeys:(NSDictionary *)fallbackKeys
                        success:(void (^)(MXKeysUploadResponse *keysUploadResponse))success
                        failure:(void (^)(NSError *error))failure
 {
-    return [self uploadKeys:deviceKeys oneTimeKeys:oneTimeKeys forDeviceWithId:nil success:success failure:failure];
+    return [self uploadKeys:deviceKeys oneTimeKeys:oneTimeKeys fallbackKeys:fallbackKeys forDeviceWithId:nil success:success failure:failure];
 }
 
-- (MXHTTPOperation*)uploadKeys:(NSDictionary*)deviceKeys oneTimeKeys:(NSDictionary*)oneTimeKeys
+- (MXHTTPOperation*)uploadKeys:(NSDictionary*)deviceKeys
+                   oneTimeKeys:(NSDictionary*)oneTimeKeys
+                  fallbackKeys:(NSDictionary *)fallbackKeys
                forDeviceWithId:(NSString*)deviceId
                        success:(void (^)(MXKeysUploadResponse *keysUploadResponse))success
                        failure:(void (^)(NSError *error))failure
@@ -4068,6 +4072,10 @@ MXAuthAction;
     if (oneTimeKeys)
     {
         parameters[@"one_time_keys"] = oneTimeKeys;
+    }
+    if (fallbackKeys)
+    {
+        parameters[@"org.matrix.msc2732.fallback_keys"] = fallbackKeys;
     }
 
     MXWeakify(self);
