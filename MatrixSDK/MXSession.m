@@ -2915,11 +2915,13 @@ typedef void (^MXOnResumeDone)(void);
 - (void)fixRoomsSummariesLastMessage
 {
     [self fixRoomsSummariesLastMessageWithMaxServerPaginationCount:MXRoomSummaryPaginationChunkSize
-                                                             force:NO];
+                                                             force:NO
+                                                        completion:nil];
 }
 
 - (void)fixRoomsSummariesLastMessageWithMaxServerPaginationCount:(NSUInteger)maxServerPaginationCount
                                                            force:(BOOL)force
+                                                      completion:(void (^)(void))completion
 {
     if (fixingRoomsLastMessages)
     {
@@ -3003,6 +3005,11 @@ typedef void (^MXOnResumeDone)(void);
         if ([self.store respondsToSelector:@selector(commit)])
         {
             [self.store commit];
+        }
+        
+        if (completion)
+        {
+            completion();
         }
     });
 }
