@@ -35,7 +35,10 @@ typedef NS_OPTIONS(NSInteger, MXFileStorePreloadOptions)
     MXFileStorePreloadOptionRoomState = 0x2,
 
     // Preload rooms account data
-    MXFileStorePreloadOptionRoomAccountData = 0x4
+    MXFileStorePreloadOptionRoomAccountData = 0x4,
+    
+    // Preload rooms messages
+    MXFileStorePreloadOptionRoomMessages = 0x8
 };
 
 /**

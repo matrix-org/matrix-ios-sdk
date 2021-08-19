@@ -225,7 +225,10 @@ static NSUInteger preloadOptions;
                 
                 MXLogDebug(@"[MXFileStore] Start data loading from files");
 
-                [self loadRoomsMessages];
+                if (preloadOptions & MXFileStorePreloadOptionRoomMessages)
+                {
+                    [self preloadRoomsMessages];
+                }
                 if (preloadOptions & MXFileStorePreloadOptionRoomState)
                 {
                     [self preloadRoomsStates];
@@ -1088,7 +1091,7 @@ static NSUInteger preloadOptions;
 
 #pragma mark - Rooms messages
 // Load the data store in files
-- (void)loadRoomsMessages
+- (void)preloadRoomsMessages
 {
     NSArray<NSString *> *roomIDs = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:storeRoomsPath error:nil];
 
