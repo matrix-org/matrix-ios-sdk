@@ -421,6 +421,9 @@
 */
 - (MXRoomAccountData* _Nullable)accountDataOfRoom:(nonnull NSString*)roomId;
 
+#pragma mark - Room Messages
+
+- (void)loadRoomMessagesForRoom:(nonnull NSString *)roomId completion:(nonnull void (^)(void))completion;
 
 #pragma mark - Outgoing events
 /**

@@ -2097,4 +2097,17 @@ static NSUInteger preloadOptions;
     return files;
 }
 
+#pragma mark - Room Messages
+
+- (void)loadRoomMessagesForRoom:(NSString *)roomId completion:(void (^)(void))completion
+{
+    dispatch_async(dispatchQueue, ^{
+        MXFileRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
+        
+        dispatch_async(dispatch_get_main_queue(), ^{
+            completion();
+        });
+    });
+}
+
 @end
