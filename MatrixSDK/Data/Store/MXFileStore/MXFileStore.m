@@ -245,7 +245,7 @@ static NSUInteger preloadOptions;
                 [self loadUsers];
                 [self loadGroups];
 
-                taskProfile.units = self->roomStores.count;
+                taskProfile.units = self.rooms.count;
                 [MXSDKOptions.sharedInstance.profiler stopMeasuringTaskWithProfile:taskProfile];
                 MXLogDebug(@"[MXFileStore] Data loaded from files in %.0fms", taskProfile.duration * 1000);
             }
@@ -481,7 +481,9 @@ static NSUInteger preloadOptions;
 
 - (NSArray *)rooms
 {
-    return roomStores.allKeys;
+    NSMutableArray<NSString *> *roomIDs = [NSMutableArray arrayWithArray:[[NSFileManager defaultManager] contentsOfDirectoryAtPath:storeRoomsPath error:nil]];
+    [roomIDs removeObjectsInArray:roomsToCommitForDeletion];
+    return roomIDs;
 }
 
 - (void)storeStateForRoom:(NSString*)roomId stateEvents:(NSArray*)stateEvents
@@ -826,10 +828,31 @@ static NSUInteger preloadOptions;
     MXFileRoomStore *roomStore = roomStores[roomId];
     if (nil == roomStore)
     {
-        // MXFileStore requires MXFileRoomStore objets
-        roomStore = [[MXFileRoomStore alloc] init];
-        roomStores[roomId] = roomStore;
+        NSString *roomFile = [self messagesFileForRoom:roomId forBackup:NO];
+        if ([[NSFileManager defaultManager] fileExistsAtPath:roomFile])
+        {
+            @try
+            {
+                NSDate *startDate = [NSDate date];
+                roomStore = [NSKeyedUnarchiver unarchiveObjectWithFile:roomFile];
+                MXLogDebug(@"[MXFileStore] Loaded room messages of room: %@ in %.0fms, in main thread: %@", roomId, [[NSDate date] timeIntervalSinceDate:startDate] * 1000, [NSThread isMainThread] ? @"YES" : @"NO");
+                self->roomStores[roomId] = roomStore;
+            }
+            @catch (NSException *exception)
+            {
+                MXLogDebug(@"[MXFileStore] Warning: MXFileRoomStore file for room %@ has been corrupted. Exception: %@", roomId, exception);
+                [self logFiles];
+                [self deleteAllData];
+            }
+        }
+        else
+        {
+            // MXFileStore requires MXFileRoomStore objets
+            roomStore = [[MXFileRoomStore alloc] init];
+            self->roomStores[roomId] = roomStore;
+        }
     }
+    
     return roomStore;
 }
 
