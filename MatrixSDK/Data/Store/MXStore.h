@@ -423,7 +423,7 @@
 
 #pragma mark - Room Messages
 
-- (void)loadRoomMessagesForRoom:(nonnull NSString *)roomId completion:(nonnull void (^)(void))completion;
+- (void)loadRoomMessagesForRoom:(nonnull NSString *)roomId completion:(nullable void (^)(void))completion;
 
 #pragma mark - Outgoing events
 /**

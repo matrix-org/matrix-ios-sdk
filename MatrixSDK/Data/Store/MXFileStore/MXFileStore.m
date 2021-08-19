@@ -2104,9 +2104,12 @@ static NSUInteger preloadOptions;
     dispatch_async(dispatchQueue, ^{
         MXFileRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
         
-        dispatch_async(dispatch_get_main_queue(), ^{
-            completion();
-        });
+        if (completion)
+        {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                completion();
+            });
+        }
     });
 }
 

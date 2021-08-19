@@ -446,9 +446,12 @@
 - (void)loadRoomMessagesForRoom:(NSString *)roomId completion:(void (^)(void))completion
 {
     [self getOrCreateRoomStore:roomId];
-    dispatch_async(dispatch_get_main_queue(), ^{
-        completion();
-    });
+    if (completion)
+    {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            completion();
+        });
+    }
 }
 
 @end
