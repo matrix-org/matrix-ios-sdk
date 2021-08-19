@@ -2501,53 +2501,54 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     }
 }
 
-- (NSArray<MXEvent*>*)outgoingMessages
+- (void)outgoingMessagesWithCompletion:(nonnull void (^)(NSArray<MXEvent*>* _Nullable))completion;
 {
-    if ([mxSession.store respondsToSelector:@selector(outgoingMessagesInRoom:)])
+    if ([mxSession.store respondsToSelector:@selector(outgoingMessagesInRoom:completion:)])
     {
-        NSArray<MXEvent*> *outgoingMessages = [mxSession.store outgoingMessagesInRoom:self.roomId];
-        return outgoingMessages;
+        [mxSession.store outgoingMessagesInRoom:self.roomId completion:completion];
     }
     else
     {
-        return nil;
+        dispatch_async(dispatch_get_main_queue(), ^{
+            completion(nil);
+        });
     }
 }
 
 - (void)refreshOutgoingMessages
 {
     // Update the stored outgoing messages, by removing the sent messages and tagging as failed the others.
-    NSArray<MXEvent*>* outgoingMessages = self.outgoingMessages;
-    
-    if (outgoingMessages.count && [mxSession.store respondsToSelector:@selector(commit)])
-    {
-        for (NSInteger index = 0; index < outgoingMessages.count;)
+    [self outgoingMessagesWithCompletion:^(NSArray<MXEvent *> * outgoingMessages) {
+        if (outgoingMessages.count && [self->mxSession.store respondsToSelector:@selector(commit)])
         {
-            MXEvent *outgoingMessage = [outgoingMessages objectAtIndex:index];
-            
-            // Remove successfully sent messages
-            if (outgoingMessage.isLocalEvent == NO)
+            for (NSInteger index = 0; index < outgoingMessages.count;)
             {
-                if ([mxSession.store respondsToSelector:@selector(removeOutgoingMessageFromRoom:outgoingMessage:)])
-                {
-                    [mxSession.store removeOutgoingMessageFromRoom:_roomId outgoingMessage:outgoingMessage.eventId];
-                    continue;
-                }
-            }
-            else
-            {
-                // Here the message sending has failed
-                outgoingMessage.sentState = MXEventSentStateFailed;
+                MXEvent *outgoingMessage = [outgoingMessages objectAtIndex:index];
                 
-                // Erase the timestamp
-                outgoingMessage.originServerTs = kMXUndefinedTimestamp;
+                // Remove successfully sent messages
+                if (outgoingMessage.isLocalEvent == NO)
+                {
+                    if ([self->mxSession.store respondsToSelector:@selector(removeOutgoingMessageFromRoom:outgoingMessage:)])
+                    {
+                        [self->mxSession.store removeOutgoingMessageFromRoom:self.roomId outgoingMessage:outgoingMessage.eventId];
+                        continue;
+                    }
+                }
+                else
+                {
+                    // Here the message sending has failed
+                    outgoingMessage.sentState = MXEventSentStateFailed;
+                    
+                    // Erase the timestamp
+                    outgoingMessage.originServerTs = kMXUndefinedTimestamp;
+                }
+                
+                index++;
             }
             
-            index++;
+            [self->mxSession.store commit];
         }
-        
-        [mxSession.store commit];
-    }
+    }];
 }
 
 #pragma mark - Local echo handling
@@ -2567,77 +2568,87 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     return localEcho;
 }
 
-- (MXEvent*)pendingLocalEchoRelatedToEvent:(MXEvent*)event
+- (void)pendingLocalEchoRelatedToEvent:(MXEvent*)event completion:(void (^)(MXEvent*))completion
 {
     // Note: event is supposed here to be an outgoing event received from the server sync.
-    MXEvent *localEcho = nil;
+    __block MXEvent *localEcho = nil;
 
     NSString *msgtype;
     MXJSONModelSetString(msgtype, event.content[@"msgtype"]);
 
+    dispatch_group_t dispatchGroup = dispatch_group_create();
+    
     if (msgtype)
     {
         // We look first for a pending event with the same event id (This happens when server response is received before server sync).
-        NSArray<MXEvent*>* pendingLocalEchoes = self.outgoingMessages;
-        for (NSInteger index = 0; index < pendingLocalEchoes.count; index++)
-        {
-            localEcho = [pendingLocalEchoes objectAtIndex:index];
-            if ([localEcho.eventId isEqualToString:event.eventId])
+        dispatch_group_enter(dispatchGroup);
+        [self outgoingMessagesWithCompletion:^(NSArray<MXEvent *> * pendingLocalEchoes) {
+            for (MXEvent *localEchoEvent in pendingLocalEchoes)
             {
-                break;
-            }
-            localEcho = nil;
-        }
-
-        // If none, we return the pending event (if any) whose content matches with received event content.
-        if (!localEcho)
-        {
-            for (NSInteger index = 0; index < pendingLocalEchoes.count; index++)
-            {
-                localEcho = [pendingLocalEchoes objectAtIndex:index];
-                NSString *pendingEventType = localEcho.content[@"msgtype"];
-
-                if ([msgtype isEqualToString:pendingEventType])
+                if ([localEchoEvent.eventId isEqualToString:event.eventId])
                 {
-                    if ([msgtype isEqualToString:kMXMessageTypeText] || [msgtype isEqualToString:kMXMessageTypeEmote])
+                    localEcho = localEchoEvent;
+                    break;
+                }
+            }
+
+            // If none, we return the pending event (if any) whose content matches with received event content.
+            if (!localEcho)
+            {
+                for (NSInteger index = 0; index < pendingLocalEchoes.count; index++)
+                {
+                    localEcho = [pendingLocalEchoes objectAtIndex:index];
+                    NSString *pendingEventType = localEcho.content[@"msgtype"];
+
+                    if ([msgtype isEqualToString:pendingEventType])
                     {
-                        // Compare content body
-                        if ([event.content[@"body"] isEqualToString:localEcho.content[@"body"]])
+                        if ([msgtype isEqualToString:kMXMessageTypeText] || [msgtype isEqualToString:kMXMessageTypeEmote])
                         {
-                            break;
-                        }
-                    }
-                    else if ([msgtype isEqualToString:kMXMessageTypeLocation])
-                    {
-                        // Compare geo uri
-                        if ([event.content[@"geo_uri"] isEqualToString:localEcho.content[@"geo_uri"]])
-                        {
-                            break;
-                        }
-                    }
-                    else
-                    {
-                        // Here the type is kMXMessageTypeImage, kMXMessageTypeAudio, kMXMessageTypeVideo or kMXMessageTypeFile
-                        if (event.content[@"file"])
-                        {
-                            // This is an encrypted attachment
-                            if (localEcho.content[@"file"] && [event.content[@"file"][@"url"] isEqualToString:localEcho.content[@"file"][@"url"]])
+                            // Compare content body
+                            if ([event.content[@"body"] isEqualToString:localEcho.content[@"body"]])
                             {
                                 break;
                             }
                         }
-                        else if ([event.content[@"url"] isEqualToString:localEcho.content[@"url"]])
+                        else if ([msgtype isEqualToString:kMXMessageTypeLocation])
                         {
-                            break;
+                            // Compare geo uri
+                            if ([event.content[@"geo_uri"] isEqualToString:localEcho.content[@"geo_uri"]])
+                            {
+                                break;
+                            }
+                        }
+                        else
+                        {
+                            // Here the type is kMXMessageTypeImage, kMXMessageTypeAudio, kMXMessageTypeVideo or kMXMessageTypeFile
+                            if (event.content[@"file"])
+                            {
+                                // This is an encrypted attachment
+                                if (localEcho.content[@"file"] && [event.content[@"file"][@"url"] isEqualToString:localEcho.content[@"file"][@"url"]])
+                                {
+                                    break;
+                                }
+                            }
+                            else if ([event.content[@"url"] isEqualToString:localEcho.content[@"url"]])
+                            {
+                                break;
+                            }
                         }
                     }
+                    localEcho = nil;
                 }
-                localEcho = nil;
             }
-        }
+            
+            dispatch_group_leave(dispatchGroup);
+        }];
     }
 
-    return localEcho;
+    dispatch_group_notify(dispatchGroup, dispatch_get_main_queue(), ^{
+        if (completion)
+        {
+            completion(localEcho);
+        }
+    });
 }
 
 - (void)removePendingLocalEcho:(NSString*)localEchoEventId

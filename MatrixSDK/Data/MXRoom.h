@@ -568,9 +568,9 @@ FOUNDATION_EXPORT NSInteger const kMXRoomAlreadyJoinedErrorCode;
  Determine if an event has a local echo.
  
  @param event the concerned event.
- @return a local echo event corresponding to the event. Nil if there is no match.
+ @param completion Completion block containing a local echo event corresponding to the event. Nil if there is no match.
  */
-- (MXEvent*)pendingLocalEchoRelatedToEvent:(MXEvent*)event;
+- (void)pendingLocalEchoRelatedToEvent:(MXEvent*)event completion:(void (^)(MXEvent*))completion;
 
 /**
  Remove a local echo event from the pending queue.
@@ -1026,8 +1026,10 @@ FOUNDATION_EXPORT NSInteger const kMXRoomAlreadyJoinedErrorCode;
 
 /**
  All outgoing messages pending in the room.
+ 
+ @param completion Completion block containing outgoing messages pending in the room.
  */
-- (NSArray<MXEvent*>*)outgoingMessages;
+- (void)outgoingMessagesWithCompletion:(void(^)(NSArray<MXEvent*>*))completion;
 
 
 #pragma mark - Room tags operations

@@ -933,14 +933,20 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     if (_isLiveTimeline && (direction == MXTimelineDirectionForwards))
     {
         // Check for local echo suppression
-        if (room.outgoingMessages.count && [event.sender isEqualToString:room.mxSession.myUserId])
+        if ([event.sender isEqualToString:room.mxSession.myUserId])
         {
-            MXEvent *localEcho = [room pendingLocalEchoRelatedToEvent:event];
-            if (localEcho)
-            {
-                // Remove the event from the pending local echo list
-                [room removePendingLocalEcho:localEcho.eventId];
-            }
+            [room outgoingMessagesWithCompletion:^(NSArray<MXEvent *> * outgoingMessages) {
+                if (outgoingMessages.count)
+                {
+                    [self->room pendingLocalEchoRelatedToEvent:event completion:^(MXEvent * localEcho) {
+                        if (localEcho)
+                        {
+                            // Remove the event from the pending local echo list
+                            [self->room removePendingLocalEcho:localEcho.eventId];
+                        }
+                    }];
+                }
+            }];
         }
     }
 }
