@@ -124,6 +124,11 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
             _roomEventFilter = [MXRoomEventFilter new];
             _roomEventFilter.lazyLoadMembers = YES;
         }
+        
+        if ([store respondsToSelector:@selector(loadRoomMessagesForRoom:completion:)])
+        {
+            [store loadRoomMessagesForRoom:room.roomId completion:nil];
+        }
     }
     return self;
 }
