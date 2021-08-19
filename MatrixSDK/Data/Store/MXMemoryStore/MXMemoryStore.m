@@ -373,10 +373,12 @@
     [roomStore removeOutgoingMessage:outgoingMessageEventId];
 }
 
-- (NSArray<MXEvent*>*)outgoingMessagesInRoom:(NSString*)roomId
+- (void)outgoingMessagesInRoom:(NSString *)roomId completion:(void (^)(NSArray<MXEvent *> * _Nullable))completion
 {
-    MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
-    return roomStore.outgoingMessages;
+    [self loadRoomMessagesForRoom:roomId completion:^{
+        MXMemoryRoomStore *roomStore = self->roomStores[roomId];
+        completion(roomStore.outgoingMessages);
+    }];
 }
 
 

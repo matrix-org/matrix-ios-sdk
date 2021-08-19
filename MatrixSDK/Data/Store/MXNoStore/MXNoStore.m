@@ -300,9 +300,11 @@
 {
 }
 
-- (NSArray<MXEvent*>*)outgoingMessagesInRoom:(NSString*)roomId
+- (void)outgoingMessagesInRoom:(NSString *)roomId completion:(void (^)(NSArray<MXEvent *> * _Nullable))completion
 {
-    return @[];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        completion(@[]);
+    });
 }
 
 #pragma mark - Matrix filters
