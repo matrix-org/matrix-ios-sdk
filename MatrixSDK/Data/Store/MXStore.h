@@ -453,10 +453,9 @@
  Get all outgoing messages pending in a room.
 
  @param roomId the id of the room.
- @param completion Completion block containing the list of messages that have not been sent yet
+ @return the list of messages that have not been sent yet
  */
-- (void)outgoingMessagesInRoom:(nonnull NSString*)roomId
-                    completion:(nonnull void (^)(NSArray<MXEvent*>* _Nullable))completion;
+- (NSArray<MXEvent*>* _Nullable)outgoingMessagesInRoom:(nonnull NSString*)roomId;
 
 
 #pragma mark - User Account data
