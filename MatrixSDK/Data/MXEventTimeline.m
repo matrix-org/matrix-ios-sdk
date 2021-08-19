@@ -808,6 +808,8 @@ isRoomInitialSync:(BOOL)isRoomInitialSync
 
             [self handleStateEvents:@[event] direction:direction];
         }
+        
+        dispatch_group_t dispatchGroup = dispatch_group_create();
 
         // Events going forwards on the live timeline come from /sync.
         // They are assimilated to live events.
@@ -818,36 +820,41 @@ isRoomInitialSync:(BOOL)isRoomInitialSync
             // as the homeserver provides sanitised data in this situation
             if (!isRoomInitialSync && event.eventType == MXEventTypeRoomRedaction)
             {
-                [self handleRedaction:event];
+                dispatch_group_enter(dispatchGroup);
+                [self handleRedaction:event completion:^{
+                    dispatch_group_leave(dispatchGroup);
+                }];
             }
 
             // Consider that a message sent by a user has been read by him
             [self->room storeLocalReceipt:kMXEventTypeStringRead eventId:event.eventId userId:event.sender ts:event.originServerTs];
         }
-
-        // Store the event
-        if (!fromStore)
-        {
-            [self->store storeEventForRoom:self.state.roomId event:event direction:direction];
-        }
-
-        // Notify the aggregation manager for every events so that it can store
-        // aggregated data sent by the server
-
-        [self->room.mxSession.aggregations handleOriginalDataOfEvent:event];
-
-        // Notify listeners
-        [self notifyListeners:event direction:direction];
         
-        if (completion)
-        {
-            completion();
-        }
+        dispatch_group_notify(dispatchGroup, dispatch_get_main_queue(), ^{
+            // Store the event
+            if (!fromStore)
+            {
+                [self->store storeEventForRoom:self.state.roomId event:event direction:direction];
+            }
+
+            // Notify the aggregation manager for every events so that it can store
+            // aggregated data sent by the server
+
+            [self->room.mxSession.aggregations handleOriginalDataOfEvent:event];
+
+            // Notify listeners
+            [self notifyListeners:event direction:direction];
+            
+            if (completion)
+            {
+                completion();
+            }
+        });
     }];
 }
 
 #pragma mark - Specific events Handling
-- (void)handleRedaction:(MXEvent*)redactionEvent
+- (void)handleRedaction:(MXEvent*)redactionEvent completion:(void (^)(void))completion
 {
     MXLogDebug(@"[MXEventTimeline] handleRedaction: handle an event redaction");
     
@@ -947,6 +954,11 @@ isRoomInitialSync:(BOOL)isRoomInitialSync
 
                 MXLogDebug(@"[MXEventTimeline] handleRedaction: failed to retrieved the redacted event");
             }];
+        }
+        
+        if (completion)
+        {
+            completion();
         }
     }];
 }
