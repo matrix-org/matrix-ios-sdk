@@ -673,11 +673,19 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
                   it again in the store.
  @param isRoomInitialSync YES we are managing the first sync of this room.
  */
-- (void)addEvent:(MXEvent*)event direction:(MXTimelineDirection)direction fromStore:(BOOL)fromStore isRoomInitialSync:(BOOL)isRoomInitialSync
+- (void)addEvent:(MXEvent*)event
+       direction:(MXTimelineDirection)direction
+       fromStore:(BOOL)fromStore
+isRoomInitialSync:(BOOL)isRoomInitialSync
+      completion:(void(^)(void))completion
 {
     // Make sure we have not processed this event yet
     if (fromStore == NO && [store eventExistsWithEventId:event.eventId inRoom:room.roomId])
     {
+        if (completion)
+        {
+            completion();
+        }
         return;
     }
 
@@ -717,7 +725,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     [room.mxSession.aggregations handleOriginalDataOfEvent:event];
 
     // Notify listeners
-    [self notifyListeners:event direction:direction];
+    [self notifyListeners:event direction:direction completion:completion];
 }
 
 #pragma mark - Specific events Handling
@@ -900,7 +908,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     [eventListeners removeAllObjects];
 }
 
-- (void)notifyListeners:(MXEvent*)event direction:(MXTimelineDirection)direction
+- (void)notifyListeners:(MXEvent*)event direction:(MXTimelineDirection)direction completion:(void(^)(void))completion
 {
     MXRoomState * roomState;
 
@@ -948,11 +956,35 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
                         {
                             // Remove the event from the pending local echo list
                             [self->room removePendingLocalEcho:localEcho.eventId];
+                            if (completion)
+                            {
+                                completion();
+                            }
+                        }
+                        else if (completion)
+                        {
+                            completion();
                         }
                     }];
                 }
+                else if (completion)
+                {
+                    completion();
+                }
             }];
         }
+        else if (completion)
+        {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                completion();
+            });
+        }
+    }
+    else if (completion)
+    {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            completion();
+        });
     }
 }
 
