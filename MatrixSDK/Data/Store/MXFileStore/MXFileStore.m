@@ -2102,7 +2102,7 @@ static NSUInteger preloadOptions;
 - (void)loadRoomMessagesForRoom:(NSString *)roomId completion:(void (^)(void))completion
 {
     dispatch_async(dispatchQueue, ^{
-        MXFileRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
+        [self getOrCreateRoomStore:roomId];
         
         if (completion)
         {

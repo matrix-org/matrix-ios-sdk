@@ -2871,7 +2871,7 @@ typedef void (^MXOnResumeDone)(void);
             }
             else
             {
-                MXHTTPOperation *newOperation = [matrixRestClient eventWithEventId:eventId inRoom:roomId success:decryptIfNeeded failure:failure];
+                MXHTTPOperation *newOperation = [self->matrixRestClient eventWithEventId:eventId inRoom:roomId success:decryptIfNeeded failure:failure];
                 [operation mutateTo:newOperation];
             }
         });
