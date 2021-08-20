@@ -1,0 +1,2 @@
+MXStore: `outgoingMessages` method is now async.
+MXEventTimeline: `notifyListeners:direction` method is now async.
