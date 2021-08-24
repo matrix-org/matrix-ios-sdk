@@ -1,0 +1,1 @@
+MXUser.m: Add a property `latestUpdateTS` to update the user's avatar and displayname only when event.originServerTs > latestUpdateTS. Fixes issue - https://github.com/matrix-org/matrix-ios-sdk/issues/1207
