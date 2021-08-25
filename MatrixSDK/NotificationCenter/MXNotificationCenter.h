@@ -238,9 +238,9 @@ extern NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID;
  @param highlight enable/disable highlight option.
  */
 - (void)addContentRuleWithRuleIdMatchingPattern:(NSString *)pattern
-                                            notify:(BOOL)notify
-                                             sound:(NSString *)sound
-                                         highlight:(BOOL)highlight;
+                                         notify:(BOOL)notify
+                                          sound:(NSString *)sound
+                                      highlight:(BOOL)highlight;
 
 /**
  Create a room push rule, see MXNotificationCenter notifications for operation result.
