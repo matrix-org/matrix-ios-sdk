@@ -201,8 +201,24 @@ extern NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID;
 - (void)enableRule:(MXPushRule*)pushRule isEnabled:(BOOL)enable;
 
 /**
- Create a content push rule, see MXNotificationCenter notifications for operation result.
+ Update the actions for an existing push rule.
  
+ @param ruleId the rule identifier.
+ @param kind The kind of rule, ie. 'sender', 'room' or 'content' (see MXPushRuleKind).
+ @param notify enable/disable notification.
+ @param soundName the name of the sound to apply (`ring`, `default`, etc).
+ @param highlight enable/disable highlight option.
+ */
+- (void)updatePushRuleActions:(NSString*)ruleId
+                         kind:(MXPushRuleKind)kind
+                       notify:(BOOL)notify
+                    soundName:(NSString*)soundName
+                    highlight:(BOOL)highlight;
+
+/**
+ Create a content push rule, see MXNotificationCenter notifications for operation result.
+ Generates a ruleID from pattern by restricting characaters to [a-zA-Z123456789_]
+ and adding an integer on the end if there is a clash.
  @param pattern the pattern on which the content rule is based.
  @param notify enable/disable notification on events that match with the pattern.
  @param sound enable/disable sound during notification.
@@ -212,6 +228,19 @@ extern NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID;
                 notify:(BOOL)notify
                  sound:(BOOL)sound
              highlight:(BOOL)highlight;
+
+/**
+ Create a content push rule, see MXNotificationCenter notifications for operation result.
+ Uses pattern as ruleId.
+ @param pattern enable/disable notification.
+ @param notify enable/disable notification on events that match with the pattern.
+ @param sound enable/disable sound during notification.
+ @param highlight enable/disable highlight option.
+ */
+- (void)addContentRuleWithMatchingRuleIdAndPattern:(NSString *)pattern
+                                            notify:(BOOL)notify
+                                             sound:(NSString *)sound
+                                         highlight:(BOOL)highlight;
 
 /**
  Create a room push rule, see MXNotificationCenter notifications for operation result.
@@ -253,7 +282,4 @@ extern NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID;
                        notify:(BOOL)notify
                         sound:(BOOL)sound
                     highlight:(BOOL)highlight;
-
 @end
-
-
