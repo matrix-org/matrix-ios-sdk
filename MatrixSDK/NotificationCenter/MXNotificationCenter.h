@@ -237,7 +237,7 @@ extern NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID;
  @param sound enable/disable sound during notification.
  @param highlight enable/disable highlight option.
  */
-- (void)addContentRuleWithMatchingRuleIdAndPattern:(NSString *)pattern
+- (void)addContentRuleWithRuleIdMatchingPattern:(NSString *)pattern
                                             notify:(BOOL)notify
                                              sound:(NSString *)sound
                                          highlight:(BOOL)highlight;

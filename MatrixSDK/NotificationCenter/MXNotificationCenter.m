@@ -486,10 +486,10 @@ NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID = @".m.rule.mess
     [self addRuleWithId:ruleId kind:MXPushRuleKindContent pattern:pattern conditions:nil notify:notify sound:sound highlight:highlight];
 }
 
-- (void)addContentRuleWithMatchingRuleIdAndPattern:(NSString *)pattern
-                notify:(BOOL)notify
-                 sound:(NSString *)sound
-             highlight:(BOOL)highlight
+- (void)addContentRuleWithRuleIdMatchingPattern:(NSString *)pattern
+                                         notify:(BOOL)notify
+                                          sound:(NSString *)sound
+                                      highlight:(BOOL)highlight
 {
     NSString *ruleId = [MXTools encodeURIComponent:pattern];
     [self addRuleWithId:ruleId kind:MXPushRuleKindContent pattern:pattern conditions:nil notify:notify soundName:sound highlight:highlight];
@@ -528,7 +528,8 @@ NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID = @".m.rule.mess
                 sound:(BOOL)sound
             highlight:(BOOL)highlight
 {
-    [self addRuleWithId:ruleId kind:kind pattern:pattern conditions:conditions notify:notify soundName:@"default" highlight:highlight];
+    NSString *soundName = sound ? @"default" : nil;
+    [self addRuleWithId:ruleId kind:kind pattern:pattern conditions:conditions notify:notify soundName:soundName highlight:highlight];
 }
 
 - (void)addRuleWithId:(NSString*)ruleId
