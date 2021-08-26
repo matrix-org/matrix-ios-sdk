@@ -886,7 +886,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
     
     [realm beginWriteTransaction];
     
-    MXRealmOlmSession *realmOlmSession = [MXRealmOlmSession objectsInRealm:self.realm
+    MXRealmOlmSession *realmOlmSession = [MXRealmOlmSession objectsInRealm:realm
                                                                      where:@"sessionId = %@ AND deviceKey = %@", sessionId, deviceKey].firstObject;
     if (realmOlmSession.olmSessionData)
     {
@@ -951,7 +951,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
         {
             NSString *sessionIdSenderKey = [MXRealmOlmInboundGroupSession primaryKeyWithSessionId:session.session.sessionIdentifier
                                                                                         senderKey:session.senderKey];
-            MXRealmOlmInboundGroupSession *realmSession = [MXRealmOlmInboundGroupSession objectsInRealm:realm where:@"sessionIdSenderKey = %@", sessionIdSenderKey].firstObject;
+            MXRealmOlmInboundGroupSession *realmSession = [MXRealmOlmInboundGroupSession objectInRealm:realm forPrimaryKey:sessionIdSenderKey];
             if (realmSession)
             {
                 // Update the existing one
@@ -984,7 +984,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
     MXOlmInboundGroupSession *session;
     NSString *sessionIdSenderKey = [MXRealmOlmInboundGroupSession primaryKeyWithSessionId:sessionId
                                                                                 senderKey:senderKey];
-    MXRealmOlmInboundGroupSession *realmSession = [MXRealmOlmInboundGroupSession objectsInRealm:self.realm where:@"sessionIdSenderKey = %@", sessionIdSenderKey].firstObject;
+    MXRealmOlmInboundGroupSession *realmSession = [MXRealmOlmInboundGroupSession objectInRealm:self.realm forPrimaryKey:sessionIdSenderKey];
     
     MXLogDebug(@"[MXRealmCryptoStore] inboundGroupSessionWithId: %@ -> %@", sessionId, realmSession ? @"found" : @"not found");
     
@@ -1014,7 +1014,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
     
     NSString *sessionIdSenderKey = [MXRealmOlmInboundGroupSession primaryKeyWithSessionId:sessionId
                                                                                 senderKey:senderKey];
-    MXRealmOlmInboundGroupSession *realmSession = [MXRealmOlmInboundGroupSession objectsInRealm:self.realm where:@"sessionIdSenderKey = %@", sessionIdSenderKey].firstObject;
+    MXRealmOlmInboundGroupSession *realmSession = [MXRealmOlmInboundGroupSession objectInRealm:realm forPrimaryKey:sessionIdSenderKey];
     
     if (realmSession.olmInboundGroupSessionData)
     {
@@ -1030,7 +1030,8 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
         {
             MXLogDebug(@"[MXRealmCryptoStore] performSessionOperationWithGroupSessionWithId. Error: Cannot build MXOlmInboundGroupSession for megolm session %@", sessionId);
             block(nil);
-        }    }
+        }
+    }
     else
     {
         MXLogDebug(@"[MXRealmCryptoStore] performSessionOperationWithGroupSessionWithId. Error: megolm session %@ not found", sessionId);
@@ -1290,7 +1291,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
         {
             NSString *sessionIdSenderKey = [MXRealmOlmInboundGroupSession primaryKeyWithSessionId:session.session.sessionIdentifier
                                                                                         senderKey:session.senderKey];
-            MXRealmOlmInboundGroupSession *realmSession = [MXRealmOlmInboundGroupSession objectsInRealm:realm where:@"sessionIdSenderKey = %@", sessionIdSenderKey].firstObject;
+            MXRealmOlmInboundGroupSession *realmSession = [MXRealmOlmInboundGroupSession objectInRealm:realm forPrimaryKey:sessionIdSenderKey];
             
             if (realmSession)
             {
@@ -1582,7 +1583,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
 {
     RLMRealm *realm = self.realm;
     [realm transactionWithBlock:^{
-        [realm deleteObjects:[MXRealmSecret objectsInRealm:self.realm where:@"secretId = %@", secretId]];
+        [realm deleteObjects:[MXRealmSecret objectsInRealm:realm where:@"secretId = %@", secretId]];
     }];
 }
 
