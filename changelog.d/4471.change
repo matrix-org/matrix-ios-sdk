@@ -1,1 +1,0 @@
-MXSession: Introduce `MXSessionStateProcessingLocalCache` state. Merge local cached sync responses when resuming the session.
