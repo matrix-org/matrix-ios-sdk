@@ -1523,17 +1523,22 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     }
     
     // Prepare the message content for building an echo message
-    NSMutableDictionary *msgContent = [@{
-                                         @"msgtype": msgType,
-                                         @"body": filename,
-                                         @"url": fakeMediaURI,
-                                         @"info": @{
-                                                 @"mimetype": mimeType,
-                                                 @"size": @(fileData.length)
-                                                 }
-                                         } mutableCopy];
+    NSMutableDictionary *msgContent = @{@"msgtype": msgType,
+                                        @"body": filename,
+                                        @"url": fakeMediaURI,
+                                        @"info": @{
+                                                @"mimetype": mimeType,
+                                                @"size": @(fileData.length)
+                                        },
+                                        kMXMessageContentKeyExtensibleText: filename,
+                                        kMXMessageContentKeyExtensibleFile: @{
+                                                kMXMessageContentKeyExtensibleFileSize: @(fileData.length),
+                                                kMXMessageContentKeyExtensibleFileName: filename,
+                                                kMXMessageContentKeyExtensibleFileURL: fakeMediaURI,
+                                                kMXMessageContentKeyExtensibleFileMimeType: mimeType
+                                        }.mutableCopy}.mutableCopy;
     
-    if(additionalTypes.count) 
+    if(additionalTypes.count)
     {
         [msgContent addEntriesFromDictionary:additionalTypes];
     }
@@ -1635,7 +1640,8 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                     return;
                 }
 
-                [msgContent removeObjectForKey:@"url"];
+                msgContent[@"url"] = nil;
+                msgContent[kMXMessageContentKeyExtensibleFile][kMXMessageContentKeyExtensibleFileURL] = nil;
                 msgContent[@"file"] = result.JSONDictionary;
 
                 MXHTTPOperation *operation2 = [self sendMessageWithContent:msgContent localEcho:&event success:onSuccess failure:onFailure];
@@ -1666,6 +1672,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
 
                 // Update the message content with the mxc:// of the media on the homeserver
                 msgContent[@"url"] = url;
+                msgContent[kMXMessageContentKeyExtensibleFile][kMXMessageContentKeyExtensibleFileURL] = url;
 
                 // Make the final request that posts the image event
                 MXHTTPOperation *operation2 = [self sendMessageWithContent:msgContent localEcho:&event success:onSuccess failure:onFailure];
