@@ -238,7 +238,10 @@ static NSUInteger preloadOptions;
                 {
                     [self preloadRoomsAccountData];
                 }
-                [self loadReceipts];
+                if (preloadOptions & MXFileStorePreloadOptionReadReceipts)
+                {
+                    [self preloadReceipts];
+                }
                 [self loadUsers];
                 [self loadGroups];
 
@@ -1847,7 +1850,7 @@ static NSUInteger preloadOptions;
 
 
 // Load the data store in files
-- (void)loadReceipts
+- (void)preloadReceipts
 {
     NSArray<NSString *> *roomIDs = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:storeRoomsPath error:nil];
     
