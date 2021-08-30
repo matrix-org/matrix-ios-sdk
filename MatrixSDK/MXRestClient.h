@@ -2155,6 +2155,7 @@ Get the maximum size a media upload can be in bytes.
 
  @param deviceKeys the device keys to send.
  @param oneTimeKeys the one-time keys to send.
+ @param fallbackKeys the fallback keys to send.
  @param deviceId ID of the device the keys belong to. Nil to upload keys to the device of the current session.
 
  @param success A block object called when the operation succeeds.
@@ -2162,7 +2163,9 @@ Get the maximum size a media upload can be in bytes.
 
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)uploadKeys:(NSDictionary*)deviceKeys oneTimeKeys:(NSDictionary*)oneTimeKeys
+- (MXHTTPOperation*)uploadKeys:(NSDictionary*)deviceKeys
+                   oneTimeKeys:(NSDictionary*)oneTimeKeys
+                  fallbackKeys:(NSDictionary *)fallbackKeys
                forDeviceWithId:(NSString*)deviceId
                        success:(void (^)(MXKeysUploadResponse *keysUploadResponse))success
                        failure:(void (^)(NSError *error))failure;
