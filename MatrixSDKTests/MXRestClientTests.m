@@ -1581,21 +1581,10 @@
         // Upload the device keys
         [bobRestClient uploadKeys:nil oneTimeKeys:otks fallbackKeys:nil success:^(MXKeysUploadResponse *keysUploadResponse) {
             XCTAssert(keysUploadResponse.oneTimeKeyCounts);
-            
             XCTAssertEqual(keysUploadResponse.oneTimeKeyCounts[@"curve25519"].unsignedIntValue, 2, @"Key count must be 2 for 'curve25519'");
             XCTAssertEqual([keysUploadResponse oneTimeKeyCountsForAlgorithm:@"curve25519"], 2, @"Key count must be 2 for 'curve25519'");
-            
-            [keysUploadResponse.oneTimeKeyCounts enumerateKeysAndObjectsUsingBlock:^(NSString *key, NSNumber *obj, BOOL *stop) {
-                if ([key isEqualToString:@"curve25519"]) {
-                    return;
-                }
-                
-                XCTAssertEqual(obj.unsignedIntValue, 0, @"Key count must be 0 for any other algorithm.");
-                XCTAssertEqual([keysUploadResponse oneTimeKeyCountsForAlgorithm:key], 0, @"Key count must be 0 for any other algorithm.");
-            }];
-
+            XCTAssertEqual([keysUploadResponse oneTimeKeyCountsForAlgorithm:@"deded"], 0, @"It must response 0 for any other algo");
             [expectation fulfill];
-
         } failure:^(NSError *error) {
             XCTFail(@"The request should not fail - NSError: %@", error);
             [expectation fulfill];

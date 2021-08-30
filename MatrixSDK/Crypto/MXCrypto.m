@@ -2930,10 +2930,14 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
     
     MXWeakify(self);
     return [_matrixRestClient uploadKeys:nil oneTimeKeys:nil fallbackKeys:fallbackKeyJson success:^(MXKeysUploadResponse *keysUploadResponse) {
-        weakself.uploadFallbackKeyOperation = nil;
+        MXStrongifyAndReturnIfNil(self);
+        
+        self.uploadFallbackKeyOperation = nil;
         MXLogDebug(@"[MXCrypto] generateAndUploadFallbackKey: Finished uploading fallback key.");
     } failure:^(NSError *error) {
-        weakself.uploadFallbackKeyOperation = nil;
+        MXStrongifyAndReturnIfNil(self);
+        
+        self.uploadFallbackKeyOperation = nil;
         MXLogError(@"[MXCrypto] generateAndUploadFallbackKey: Failed uploading fallback key.");
     }];
 }
