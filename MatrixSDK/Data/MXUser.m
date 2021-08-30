@@ -52,7 +52,6 @@
     {
         _userId = [userId copy];
         lastActiveLocalTS = -1;
-        latestUpdateTS = -1;
         updateListeners = [NSMutableArray array];
     }
     return self;
