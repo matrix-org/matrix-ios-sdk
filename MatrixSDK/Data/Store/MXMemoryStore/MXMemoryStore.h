@@ -55,4 +55,12 @@
  */
 - (MXMemoryRoomStore*)getOrCreateRoomStore:(NSString*)roomId;
 
+/**
+ Interface to create or retrieve receipts for a room.
+ 
+ @param roomId the id of the room.
+ @return receipts dictionary by user id.
+ */
+- (NSDictionary<NSString *, MXReceiptData*>*)getOrCreateReceiptsFor:(NSString*)roomId;
+
 @end

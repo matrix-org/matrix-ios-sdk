@@ -833,6 +833,46 @@ static NSUInteger preloadOptions;
     return roomStore;
 }
 
+- (NSDictionary<NSString *,MXReceiptData *> *)getOrCreateReceiptsFor:(NSString *)roomId
+{
+    NSDictionary<NSString *,MXReceiptData *> *receiptsDictionary = receiptsByRoomId[roomId];
+    if (nil == receiptsDictionary)
+    {
+        NSString *roomFile = [self readReceiptsFileForRoom:roomId forBackup:NO];
+        if ([[NSFileManager defaultManager] fileExistsAtPath:roomFile])
+        {
+            @try
+            {
+                NSDate *startDate = [NSDate date];
+                receiptsDictionary = [NSKeyedUnarchiver unarchiveObjectWithFile:roomFile];
+                receiptsByRoomId[roomId] = receiptsDictionary;
+                MXLogDebug(@"[MXFileStore] Loaded read receipts of room: %@ in %.0fms, in main thread: %@", roomId, [[NSDate date] timeIntervalSinceDate:startDate] * 1000, [NSThread isMainThread] ? @"YES" : @"NO");
+            }
+            @catch (NSException *exception)
+            {
+                MXLogDebug(@"[MXFileStore] Warning: loadReceipts file for room %@ has been corrupted. Exception: %@", roomId, exception);
+                
+                // We used to reset the store and force a full initial sync but this makes the app
+                // start very slowly.
+                // So, avoid this reset by considering there is no read receipts for this room which
+                // is not probably true.
+                // TODO: Can we live with that?
+                //[self deleteAllData];
+                
+                receiptsDictionary = [NSMutableDictionary dictionary];
+                receiptsByRoomId[roomId] = receiptsDictionary;
+            }
+        }
+        else
+        {
+            receiptsDictionary = [NSMutableDictionary dictionary];
+            receiptsByRoomId[roomId] = receiptsDictionary;
+        }
+    }
+    
+    return receiptsDictionary;
+}
+
 
 #pragma mark - File paths
 - (void)setUpStoragePaths

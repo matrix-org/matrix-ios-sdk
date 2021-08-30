@@ -441,4 +441,15 @@
     return roomStore;
 }
 
+- (NSDictionary<NSString *,MXReceiptData *> *)getOrCreateReceiptsFor:(NSString *)roomId
+{
+    NSDictionary<NSString *,MXReceiptData *> *result = receiptsByRoomId[roomId];
+    if (nil == result)
+    {
+        result = [NSMutableDictionary new];
+        receiptsByRoomId[roomId] = result;
+    }
+    return result;
+}
+
 @end
