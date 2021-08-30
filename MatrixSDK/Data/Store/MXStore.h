@@ -235,9 +235,12 @@
  @param roomId The room Id.
  @param eventId The event Id.
  @param sort to sort them from the latest to the oldest
- @return the receipts for an event in a dedicated room.
+ @param completion Completion block containing the receipts for an event in a dedicated room.
  */
-- (NSArray<MXReceiptData*> * _Nullable)getEventReceipts:(nonnull NSString*)roomId eventId:(nonnull NSString*)eventId sorted:(BOOL)sort;
+- (void)getEventReceipts:(nonnull NSString*)roomId
+                 eventId:(nonnull NSString*)eventId
+                  sorted:(BOOL)sort
+              completion:(nonnull void (^)(NSArray<MXReceiptData*> * _Nonnull))completion;
 
 /**
  Store the receipt for a user in a room

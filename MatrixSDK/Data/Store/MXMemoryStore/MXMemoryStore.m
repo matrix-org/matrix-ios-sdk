@@ -180,34 +180,35 @@
     }
 }
 
-    if (receiptsByUserId)
-    {
-        @synchronized (receiptsByUserId)
+- (void)getEventReceipts:(NSString *)roomId eventId:(NSString *)eventId sorted:(BOOL)sort completion:(void (^)(NSArray<MXReceiptData *> * _Nonnull))completion
+{
+    [self loadReceiptsForRoom:roomId completion:^{
+        NSDictionary<NSString *, MXReceiptData *> *receiptsByUserId = self->receiptsByRoomId[roomId];
+        
+        if (receiptsByUserId)
         {
-            for (NSString* userId in receiptsByUserId)
+            @synchronized (receiptsByUserId)
             {
-                MXReceiptData* receipt = receiptsByUserId[userId];
-
-                if (receipt && [receipt.eventId isEqualToString:eventId])
+                NSArray<MXReceiptData*> *receipts = [[receiptsByUserId allValues] filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"eventId == %@", eventId]];
+                
+                if (sort)
                 {
-                    [receipts addObject:receipt];
+                    NSArray<MXReceiptData*> *sortedReceipts = [receipts sortedArrayUsingComparator:^NSComparisonResult(MXReceiptData* _Nonnull first, MXReceiptData* _Nonnull second) {
+                        return (first.ts < second.ts) ? NSOrderedDescending : NSOrderedAscending;
+                    }];
+                    completion(sortedReceipts);
+                }
+                else
+                {
+                    completion(receipts);
                 }
             }
         }
-    }
-
-    if (sort)
-    {
-        return [receipts sortedArrayUsingComparator:^NSComparisonResult(id a, id b)
-                                {
-                                    MXReceiptData *first =  (MXReceiptData*)a;
-                                    MXReceiptData *second = (MXReceiptData*)b;
-                                    
-                                    return (first.ts < second.ts) ? NSOrderedDescending : NSOrderedAscending;
-                                }];
-    }
-    
-    return receipts;
+        else
+        {
+            completion(@[]);
+        }
+    }];
 }
 
 - (BOOL)storeReceipt:(MXReceiptData*)receipt inRoom:(NSString*)roomId

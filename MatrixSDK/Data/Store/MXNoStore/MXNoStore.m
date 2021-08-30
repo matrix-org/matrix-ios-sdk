@@ -346,9 +346,11 @@
     return NO;
 }
 
-- (NSArray<MXReceiptData*> *)getEventReceipts:(NSString*)roomId eventId:(NSString*)eventId sorted:(BOOL)sort
+- (void)getEventReceipts:(NSString *)roomId eventId:(NSString *)eventId sorted:(BOOL)sort completion:(void (^)(NSArray<MXReceiptData *> * _Nullable))completion
 {
-    return nil;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        completion(@[]);
+    });
 }
 
 - (BOOL)storeReceipt:(MXReceiptData*)receipt inRoom:(NSString*)roomId

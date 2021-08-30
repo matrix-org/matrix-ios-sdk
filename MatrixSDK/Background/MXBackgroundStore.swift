@@ -209,8 +209,10 @@ class MXBackgroundStore: NSObject, MXStore {
         return nil
     }
     
-    func getEventReceipts(_ roomId: String, eventId: String, sorted sort: Bool) -> [MXReceiptData]? {
-        return nil
+    func getEventReceipts(_ roomId: String, eventId: String, sorted sort: Bool, completion: @escaping ([MXReceiptData]) -> Void) {
+        DispatchQueue.main.async {
+            completion([])
+        }
     }
     
     func storeReceipt(_ receipt: MXReceiptData, inRoom roomId: String) -> Bool {
