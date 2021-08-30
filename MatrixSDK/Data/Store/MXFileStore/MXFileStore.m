@@ -1869,6 +1869,20 @@ static NSUInteger preloadOptions;
 
 #pragma mark - Room receipts
 
+- (void)loadReceiptsForRoom:(NSString *)roomId completion:(void (^)(void))completion
+{
+    dispatch_async(dispatchQueue, ^{
+        [self getOrCreateReceiptsFor:roomId];
+        
+        if (completion)
+        {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                completion();
+            });
+        }
+    });
+}
+
 /**
  * Store the receipt for an user in a room
  * @param receipt The event

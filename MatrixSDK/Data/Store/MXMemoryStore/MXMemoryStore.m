@@ -168,12 +168,18 @@
     return roomStore.partialTextMessage;
 }
 
-- (NSArray<MXReceiptData*> *)getEventReceipts:(NSString*)roomId eventId:(NSString*)eventId sorted:(BOOL)sort
+- (void)loadReceiptsForRoom:(NSString *)roomId completion:(void (^)(void))completion
 {
-    NSMutableArray* receipts = [[NSMutableArray alloc] init];
+    [self getOrCreateReceiptsFor:roomId];
     
-    NSMutableDictionary* receiptsByUserId = receiptsByRoomId[roomId];
-    
+    if (completion)
+    {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            completion();
+        });
+    }
+}
+
     if (receiptsByUserId)
     {
         @synchronized (receiptsByUserId)

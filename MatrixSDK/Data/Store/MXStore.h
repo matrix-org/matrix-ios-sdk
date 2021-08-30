@@ -498,4 +498,14 @@
                   success:(nonnull void (^)(NSString * _Nullable filterId))success
                   failure:(nullable void (^)(NSError * _Nullable error))failure;
 
+#pragma mark - Receipts
+
+/**
+ Load receipts for a room asynchronously.
+ 
+ @param roomId the id of the room
+ @param completion Completion block to be called at the end of the process. Will be called in main thread.
+ */
+- (void)loadReceiptsForRoom:(nonnull NSString *)roomId completion:(nullable void (^)(void))completion;
+
 @end
