@@ -2828,7 +2828,7 @@ typedef void (^MXOnResumeDone)(void);
                              success:(void (^)(MXEvent *event))success
                              failure:(void (^)(NSError *error))failure
 {
-    MXHTTPOperation *operation = [MXHTTPOperation new];
+    MXHTTPOperation *operation;
 
     void (^decryptIfNeeded)(MXEvent *event) = ^(MXEvent *event) {
         [self decryptEvents:@[event] inTimeline:nil onComplete:^(NSArray<MXEvent *> *failedEvents) {
@@ -2843,38 +2843,30 @@ typedef void (^MXOnResumeDone)(void);
     {
         // Try to find it from the store first
         // (this operation requires a roomId for the moment)
-        __block MXEvent *event = [_store eventWithEventId:eventId inRoom:roomId];
-        
-        dispatch_group_t dispatchGroup = dispatch_group_create();
+        MXEvent *event = [_store eventWithEventId:eventId inRoom:roomId];
         
         //  also search in local event
         if (!event)
         {
-            dispatch_group_enter(dispatchGroup);
-            [_store outgoingMessagesInRoom:roomId completion:^(NSArray<MXEvent *> * _Nullable outgoingMessages) {
-                for (MXEvent *localEvent in outgoingMessages)
+            NSArray<MXEvent *> *outgoingMessages = [_store outgoingMessagesInRoom:roomId];
+            for (MXEvent *localEvent in outgoingMessages)
+            {
+                if ([localEvent.eventId isEqualToString:eventId])
                 {
-                    if ([localEvent.eventId isEqualToString:eventId])
-                    {
-                        event = localEvent;
-                        break;
-                    }
+                    event = localEvent;
+                    break;
                 }
-                dispatch_group_leave(dispatchGroup);
-            }];
+            }
         }
 
-        dispatch_group_notify(dispatchGroup, dispatch_get_main_queue(), ^{
-            if (event)
-            {
-                decryptIfNeeded(event);
-            }
-            else
-            {
-                MXHTTPOperation *newOperation = [self->matrixRestClient eventWithEventId:eventId inRoom:roomId success:decryptIfNeeded failure:failure];
-                [operation mutateTo:newOperation];
-            }
-        });
+        if (event)
+        {
+            decryptIfNeeded(event);
+        }
+        else
+        {
+            operation = [matrixRestClient eventWithEventId:eventId inRoom:roomId success:decryptIfNeeded failure:failure];
+        }
     }
     else
     {

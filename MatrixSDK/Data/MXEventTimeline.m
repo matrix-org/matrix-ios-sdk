@@ -987,32 +987,14 @@ isRoomInitialSync:(BOOL)isRoomInitialSync
     if (_isLiveTimeline && (direction == MXTimelineDirectionForwards))
     {
         // Check for local echo suppression
-        if ([event.sender isEqualToString:room.mxSession.myUserId])
+        if (room.outgoingMessages.count && [event.sender isEqualToString:room.mxSession.myUserId])
         {
-            [room outgoingMessagesWithCompletion:^(NSArray<MXEvent *> * outgoingMessages) {
-                if (outgoingMessages.count)
-                {
-                    [self->room pendingLocalEchoRelatedToEvent:event completion:^(MXEvent * localEcho) {
-                        if (localEcho)
-                        {
-                            // Remove the event from the pending local echo list
-                            [self->room removePendingLocalEcho:localEcho.eventId];
-                            if (completion)
-                            {
-                                completion();
-                            }
-                        }
-                        else if (completion)
-                        {
-                            completion();
-                        }
-                    }];
-                }
-                else if (completion)
-                {
-                    completion();
-                }
-            }];
+            MXEvent *localEcho = [room pendingLocalEchoRelatedToEvent:event];
+            if (localEcho)
+            {
+                // Remove the event from the pending local echo list
+                [room removePendingLocalEcho:localEcho.eventId];
+            }
         }
         else if (completion)
         {
