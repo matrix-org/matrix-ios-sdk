@@ -1511,7 +1511,7 @@ static NSUInteger preloadOptions;
         [roomsToCommitForOutgoingMessages removeAllObjects];
 
 #if DEBUG
-        MXLogDebug(@"[MXFileStore commit] queuing saveRoomsMessages for %tu rooms", roomsToCommit.count);
+        MXLogDebug(@"[MXFileStore commit] queuing saveRoomsOutgoingMessages for %tu rooms", roomsToCommit.count);
 #endif
 
         MXWeakify(self);
