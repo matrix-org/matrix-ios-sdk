@@ -836,7 +836,10 @@ static NSUInteger preloadOptions;
             {
                 NSDate *startDate = [NSDate date];
                 roomStore = [NSKeyedUnarchiver unarchiveObjectWithFile:roomFile];
-                MXLogDebug(@"[MXFileStore] Loaded room messages of room: %@ in %.0fms, in main thread: %@", roomId, [[NSDate date] timeIntervalSinceDate:startDate] * 1000, [NSThread isMainThread] ? @"YES" : @"NO");
+                if (![NSThread isMainThread])
+                {
+                    MXLogDebug(@"[MXFileStore] Loaded room messages of room: %@ in %.0fms, in main thread: %@", roomId, [[NSDate date] timeIntervalSinceDate:startDate] * 1000, [NSThread isMainThread] ? @"YES" : @"NO");
+                }
                 self->roomStores[roomId] = roomStore;
             }
             @catch (NSException *exception)
