@@ -826,7 +826,7 @@ static NSUInteger preloadOptions;
 #pragma mark - Protected operations
 - (MXMemoryRoomStore*)getOrCreateRoomStore:(NSString*)roomId
 {
-    MXFileRoomStore *roomStore = roomStores[roomId];
+    MXFileRoomStore *roomStore = (MXFileRoomStore *)roomStores[roomId];
     if (nil == roomStore)
     {
         NSString *roomFile = [self messagesFileForRoom:roomId forBackup:NO];
@@ -1215,7 +1215,7 @@ static NSUInteger preloadOptions;
             // Save rooms where there was changes
             for (NSString *roomId in roomsToCommit)
             {
-                MXFileRoomStore *roomStore = self->roomStores[roomId];
+                MXFileRoomStore *roomStore = (MXFileRoomStore *)self->roomStores[roomId];
                 if (roomStore)
                 {
                     NSString *file = [self messagesFileForRoom:roomId forBackup:NO];
@@ -2143,7 +2143,7 @@ static NSUInteger preloadOptions;
 - (void)loadRoomMessagesForRoom:(NSString *)roomId completion:(void (^)(void))completion
 {
     dispatch_async(dispatchQueue, ^{
-        MXFileRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
+        [self getOrCreateRoomStore:roomId];
         
         if (completion)
         {
