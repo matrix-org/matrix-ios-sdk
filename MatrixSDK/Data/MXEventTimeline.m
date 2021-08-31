@@ -232,36 +232,22 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         [events addObjectsFromArray:eventContext.eventsAfter];
 
         [self decryptEvents:events onComplete:^{
-            
-            dispatch_group_t dispatchGroup = dispatch_group_create();
-            
-            dispatch_group_enter(dispatchGroup);
-            [self addEvent:eventContext.event direction:MXTimelineDirectionForwards fromStore:NO isRoomInitialSync:NO completion:^{
-                dispatch_group_leave(dispatchGroup);
-            }];
+            [self addEvent:eventContext.event direction:MXTimelineDirectionForwards fromStore:NO isRoomInitialSync:NO];
             
             for (MXEvent *event in eventContext.eventsBefore)
             {
-                dispatch_group_enter(dispatchGroup);
-                [self addEvent:event direction:MXTimelineDirectionBackwards fromStore:NO isRoomInitialSync:NO completion:^{
-                    dispatch_group_leave(dispatchGroup);
-                }];
+                [self addEvent:event direction:MXTimelineDirectionBackwards fromStore:NO isRoomInitialSync:NO];
             }
             
             for (MXEvent *event in eventContext.eventsAfter)
             {
-                dispatch_group_enter(dispatchGroup);
-                [self addEvent:event direction:MXTimelineDirectionForwards fromStore:NO isRoomInitialSync:NO completion:^{
-                    dispatch_group_leave(dispatchGroup);
-                }];
+                [self addEvent:event direction:MXTimelineDirectionForwards fromStore:NO isRoomInitialSync:NO];
             }
             
-            dispatch_group_notify(dispatchGroup, dispatch_get_main_queue(), ^{
-                [self->store storePaginationTokenOfRoom:self->room.roomId andToken:eventContext.start];
-                self->forwardsPaginationToken = eventContext.end;
-                
-                success();
-            });
+            [self->store storePaginationTokenOfRoom:self->room.roomId andToken:eventContext.start];
+            self->forwardsPaginationToken = eventContext.end;
+            
+            success();
         }];
 
     } failure:failure];
@@ -307,17 +293,13 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         NSUInteger remainingNumItems = numItems;
         NSUInteger eventsFromStoreCount = eventsFromStore.count;
 
-        dispatch_group_t dispatchGroup = dispatch_group_create();
         if (direction == MXTimelineDirectionBackwards)
         {
             // messagesFromStore are in chronological order
             // Handle events from the most recent
             for (MXEvent *event in eventsFromStore.reverseObjectEnumerator)
             {
-                dispatch_group_enter(dispatchGroup);
-                [self addEvent:event direction:MXTimelineDirectionBackwards fromStore:YES isRoomInitialSync:NO completion:^{
-                    dispatch_group_leave(dispatchGroup);
-                }];
+                [self addEvent:event direction:MXTimelineDirectionBackwards fromStore:YES isRoomInitialSync:NO];
             }
             
             remainingNumItems -= eventsFromStoreCount;
@@ -344,99 +326,100 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
             }
         }
 
-        dispatch_group_notify(dispatchGroup, dispatch_get_main_queue(), ^{
-            // Do not try to paginate forward if end has been reached
-            if (direction == MXTimelineDirectionForwards && YES == self->hasReachedHomeServerForwardsPaginationEnd)
-            {
+        // Do not try to paginate forward if end has been reached
+        if (direction == MXTimelineDirectionForwards && YES == self->hasReachedHomeServerForwardsPaginationEnd)
+        {
+            dispatch_async(dispatch_get_main_queue(), ^{
                 // Nothing more to do
                 MXLogDebug(@"[MXEventTimeline] paginate: is done");
+                complete();
+            });
+
+            return;
+        }
+
+        // Not enough messages: make a pagination request to the home server
+        // from last known token
+        NSString *paginationToken;
+
+        if (direction == MXTimelineDirectionBackwards)
+        {
+            paginationToken = [self->store paginationTokenOfRoom:self.state.roomId];
+            if (nil == paginationToken)
+            {
+                paginationToken = @"END";
+            }
+        }
+        else
+        {
+            paginationToken = self->forwardsPaginationToken;
+        }
+
+        MXLogDebug(@"[MXEventTimeline] paginate : request %tu messages from the server", remainingNumItems);
+
+        MXWeakify(self);
+        MXHTTPOperation *operation2 = [self->room.mxSession.matrixRestClient messagesForRoom:self.state.roomId from:paginationToken direction:direction limit:remainingNumItems filter:self.roomEventFilter success:^(MXPaginationResponse *paginatedResponse) {
+            MXStrongifyAndReturnIfNil(self);
+
+            MXLogDebug(@"[MXEventTimeline] paginate : got %tu messages from the server", paginatedResponse.chunk.count);
+
+            // Check if the room has not been left while waiting for the response
+            if ([self->room.mxSession hasRoomWithRoomId:self->room.roomId]
+                || [self->room.mxSession isPeekingInRoomWithRoomId:self->room.roomId])
+            {
+                [self handlePaginationResponse:paginatedResponse direction:direction onComplete:^{
+                    MXLogDebug(@"[MXEventTimeline] paginate: is done");
+                    
+                    // Inform the method caller
+                    complete();
+                }];
+            }
+            else
+            {
+                MXLogDebug(@"[MXEventTimeline] paginate: is done");
+                // Inform the method caller
+                complete();
+            }
+
+        } failure:^(NSError *error) {
+            MXStrongifyAndReturnIfNil(self);
+
+            // Check whether the pagination end is reached
+            MXError *mxError = [[MXError alloc] initWithNSError:error];
+            if (mxError && [mxError.error isEqualToString:kMXErrorStringInvalidToken])
+            {
+                // Store the fact we run out of items
+                if (direction == MXTimelineDirectionBackwards)
+                {
+                    [self->store storeHasReachedHomeServerPaginationEndForRoom:self->_state.roomId andValue:YES];
+                }
+                else
+                {
+                    self->hasReachedHomeServerForwardsPaginationEnd = YES;
+                }
+
+                MXLogDebug(@"[MXEventTimeline] paginate: pagination end has been reached");
+
+                // Ignore the error
                 complete();
                 return;
             }
 
-            // Not enough messages: make a pagination request to the home server
-            // from last known token
-            NSString *paginationToken;
-
-            if (direction == MXTimelineDirectionBackwards)
+            MXLogDebug(@"[MXEventTimeline] paginate failed");
+            if (failure)
             {
-                paginationToken = [self->store paginationTokenOfRoom:self.state.roomId];
-                if (nil == paginationToken)
-                {
-                    paginationToken = @"END";
-                }
+                failure(error);
             }
-            else
-            {
-                paginationToken = self->forwardsPaginationToken;
-            }
+        }];
 
-            MXLogDebug(@"[MXEventTimeline] paginate : request %tu messages from the server", remainingNumItems);
-
-            MXWeakify(self);
-            MXHTTPOperation *operation2 = [self->room.mxSession.matrixRestClient messagesForRoom:self.state.roomId from:paginationToken direction:direction limit:remainingNumItems filter:self.roomEventFilter success:^(MXPaginationResponse *paginatedResponse) {
-                MXStrongifyAndReturnIfNil(self);
-
-                MXLogDebug(@"[MXEventTimeline] paginate : got %tu messages from the server", paginatedResponse.chunk.count);
-
-                // Check if the room has not been left while waiting for the response
-                if ([self->room.mxSession hasRoomWithRoomId:self->room.roomId]
-                    || [self->room.mxSession isPeekingInRoomWithRoomId:self->room.roomId])
-                {
-                    [self handlePaginationResponse:paginatedResponse direction:direction onComplete:^{
-                        MXLogDebug(@"[MXEventTimeline] paginate: is done");
-                        
-                        // Inform the method caller
-                        complete();
-                    }];
-                }
-                else
-                {
-                    MXLogDebug(@"[MXEventTimeline] paginate: is done");
-                    // Inform the method caller
-                    complete();
-                }
-
-            } failure:^(NSError *error) {
-                MXStrongifyAndReturnIfNil(self);
-
-                // Check whether the pagination end is reached
-                MXError *mxError = [[MXError alloc] initWithNSError:error];
-                if (mxError && [mxError.error isEqualToString:kMXErrorStringInvalidToken])
-                {
-                    // Store the fact we run out of items
-                    if (direction == MXTimelineDirectionBackwards)
-                    {
-                        [self->store storeHasReachedHomeServerPaginationEndForRoom:self->_state.roomId andValue:YES];
-                    }
-                    else
-                    {
-                        self->hasReachedHomeServerForwardsPaginationEnd = YES;
-                    }
-
-                    MXLogDebug(@"[MXEventTimeline] paginate: pagination end has been reached");
-
-                    // Ignore the error
-                    complete();
-                    return;
-                }
-
-                MXLogDebug(@"[MXEventTimeline] paginate failed");
-                if (failure)
-                {
-                    failure(error);
-                }
-            }];
-
-            if (eventsFromStoreCount)
-            {
-                // Disable retry to let the caller handle messages from store without delay.
-                // The caller will trigger a new pagination if need.
-                operation2.maxNumberOfTries = 1;
-            }
-            
-            [operation mutateTo:operation2];
-        });
+        if (eventsFromStoreCount)
+        {
+            // Disable retry to let the caller handle messages from store without delay.
+            // The caller will trigger a new pagination if need.
+            operation2.maxNumberOfTries = 1;
+        }
+        
+        [operation mutateTo:operation2];
     }];
         
     return operation;
@@ -511,18 +494,13 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     [self decryptEvents:roomSync.timeline.events ifNewerThanTimestamp:timestamp onComplete:^{
         MXStrongifyAndReturnIfNil(self);
         
-        dispatch_group_t dispatchGroup = dispatch_group_create();
-        
         // Handle now timeline.events, the room state is updated during this step too (Note: timeline events are in chronological order)
         if (isRoomInitialSync)
         {
             for (MXEvent *event in roomSync.timeline.events)
             {
-                dispatch_group_enter(dispatchGroup);
                 // Add the event to the end of the timeline
-                [self addEvent:event direction:MXTimelineDirectionForwards fromStore:NO isRoomInitialSync:isRoomInitialSync completion:^{
-                    dispatch_group_leave(dispatchGroup);
-                }];
+                [self addEvent:event direction:MXTimelineDirectionForwards fromStore:NO isRoomInitialSync:isRoomInitialSync];
             }
             
             // Check whether we got all history from the home server
@@ -542,43 +520,38 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
             
             for (MXEvent *event in roomSync.timeline.events)
             {
-                dispatch_group_enter(dispatchGroup);
                 // Add the event to the end of the timeline
-                [self addEvent:event direction:MXTimelineDirectionForwards fromStore:NO isRoomInitialSync:isRoomInitialSync completion:^{
-                    dispatch_group_leave(dispatchGroup);
-                }];
+                [self addEvent:event direction:MXTimelineDirectionForwards fromStore:NO isRoomInitialSync:isRoomInitialSync];
             }
         }
         
-        dispatch_group_notify(dispatchGroup, dispatch_get_main_queue(), ^{
-            // In case of limited timeline, update token where to start back pagination
-            if (roomSync.timeline.limited)
-            {
-                [self->store storePaginationTokenOfRoom:self.state.roomId andToken:roomSync.timeline.prevBatch];
-            }
-            
-            // Finalize initial sync
-            if (isRoomInitialSync)
-            {
-                // Notify that room has been sync'ed
-                // Delay it so that MXRoom.summary is computed before sending it
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    
-                    [[NSNotificationCenter defaultCenter] postNotificationName:kMXRoomInitialSyncNotification
-                                                                        object:self->room
-                                                                      userInfo:nil];
-                });
-            }
-            else if (roomSync.timeline.limited)
-            {
-                // The room has been resync with a limited timeline - Post notification
-                [[NSNotificationCenter defaultCenter] postNotificationName:kMXRoomDidFlushDataNotification
+        // In case of limited timeline, update token where to start back pagination
+        if (roomSync.timeline.limited)
+        {
+            [self->store storePaginationTokenOfRoom:self.state.roomId andToken:roomSync.timeline.prevBatch];
+        }
+        
+        // Finalize initial sync
+        if (isRoomInitialSync)
+        {
+            // Notify that room has been sync'ed
+            // Delay it so that MXRoom.summary is computed before sending it
+            dispatch_async(dispatch_get_main_queue(), ^{
+                
+                [[NSNotificationCenter defaultCenter] postNotificationName:kMXRoomInitialSyncNotification
                                                                     object:self->room
                                                                   userInfo:nil];
-            }
-            
-            onComplete();
-        });
+            });
+        }
+        else if (roomSync.timeline.limited)
+        {
+            // The room has been resync with a limited timeline - Post notification
+            [[NSNotificationCenter defaultCenter] postNotificationName:kMXRoomDidFlushDataNotification
+                                                                object:self->room
+                                                              userInfo:nil];
+        }
+        
+        onComplete();
     }];
 }
 
@@ -594,8 +567,6 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     NSArray<MXEvent*> *events = invitedRoomSync.inviteState.events;
     [self fixRoomIdInEvents:events];
     [self decryptEvents:events onComplete:^{
-        dispatch_group_t dispatchGroup = dispatch_group_create();
-        
         // Handle the state events forwardly (the room state will be updated, and the listeners (if any) will be notified).
         for (MXEvent *event in events)
         {
@@ -605,15 +576,10 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
                 event.eventId = [NSString stringWithFormat:@"%@%@", kMXRoomInviteStateEventIdPrefix, [[NSProcessInfo processInfo] globallyUniqueString]];
             }
             
-            dispatch_group_enter(dispatchGroup);
-            [self addEvent:event direction:MXTimelineDirectionForwards fromStore:NO isRoomInitialSync:YES completion:^{
-                dispatch_group_leave(dispatchGroup);
-            }];
+            [self addEvent:event direction:MXTimelineDirectionForwards fromStore:NO isRoomInitialSync:YES];
         }
         
-        dispatch_group_notify(dispatchGroup, dispatch_get_main_queue(), ^{
-            onComplete();
-        });
+        onComplete();
     }];
 }
 
@@ -669,37 +635,30 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     [self decryptEvents:paginatedResponse.chunk onComplete:^{
         MXStrongifyAndReturnIfNil(self);
         
-        dispatch_group_t dispatchGroup = dispatch_group_create();
-        
         // Process received events
         for (MXEvent *event in paginatedResponse.chunk)
         {
-            dispatch_group_enter(dispatchGroup);
             // Make sure we have not processed this event yet
-            [self addEvent:event direction:direction fromStore:NO isRoomInitialSync:NO completion:^{
-                dispatch_group_leave(dispatchGroup);
-            }];
+            [self addEvent:event direction:direction fromStore:NO isRoomInitialSync:NO];
         }
         
-        dispatch_group_notify(dispatchGroup, dispatch_get_main_queue(), ^{
-            // And update pagination tokens
-            if (direction == MXTimelineDirectionBackwards)
-            {
-                [self->store storePaginationTokenOfRoom:self.state.roomId andToken:paginatedResponse.end];
-            }
-            else
-            {
-                self->forwardsPaginationToken = paginatedResponse.end;
-            }
-            
-            // Commit store changes
-            if ([self->store respondsToSelector:@selector(commit)])
-            {
-                [self->store commit];
-            }
-            
-            onComplete();
-        });
+        // And update pagination tokens
+        if (direction == MXTimelineDirectionBackwards)
+        {
+            [self->store storePaginationTokenOfRoom:self.state.roomId andToken:paginatedResponse.end];
+        }
+        else
+        {
+            self->forwardsPaginationToken = paginatedResponse.end;
+        }
+        
+        // Commit store changes
+        if ([self->store respondsToSelector:@selector(commit)])
+        {
+            [self->store commit];
+        }
+        
+        onComplete();
     }];
 }
 

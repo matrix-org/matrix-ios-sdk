@@ -409,7 +409,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
             MXJSONModelSetArray(self->_typingUsers, event.content[@"user_ids"]);
             
             // Notify listeners
-            [liveTimeline notifyListeners:event direction:MXTimelineDirectionForwards completion:nil];
+            [liveTimeline notifyListeners:event direction:MXTimelineDirectionForwards];
         }
         else if (event.eventType == MXEventTypeReceipt)
         {
@@ -480,7 +480,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
         }
 
         // And notify listeners
-        [theLiveTimeline notifyListeners:event direction:direction completion:nil];
+        [theLiveTimeline notifyListeners:event direction:direction];
     }
 }
 
@@ -2808,7 +2808,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     if (managedEvents)
     {
         // Notify listeners
-        [liveTimeline notifyListeners:event direction:direction completion:nil];
+        [liveTimeline notifyListeners:event direction:direction];
     }
     
     return managedEvents;
@@ -3077,7 +3077,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                                    }];
 
         [self liveTimeline:^(MXEventTimeline *theLiveTimeline) {
-            [theLiveTimeline notifyListeners:receiptEvent direction:MXTimelineDirectionForwards completion:nil];
+            [theLiveTimeline notifyListeners:receiptEvent direction:MXTimelineDirectionForwards];
         }];
     }
 

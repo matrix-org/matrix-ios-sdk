@@ -260,8 +260,7 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXTimelineDirection direction, MXR
  
  @param event the event to notify.
  @param direction the event direction.
- @param completion Completion block for the operation.
  */
-- (void)notifyListeners:(MXEvent*)event direction:(MXTimelineDirection)direction completion:(void(^)(void))completion;
+- (void)notifyListeners:(MXEvent*)event direction:(MXTimelineDirection)direction;
 
 @end
