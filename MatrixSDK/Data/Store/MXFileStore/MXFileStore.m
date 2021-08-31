@@ -39,6 +39,7 @@ static NSString *const kMXFileStoreSavingMarker = @"savingMarker";
 
 static NSString *const kMXFileStoreRoomsFolder = @"rooms";
 static NSString *const kMXFileStoreRoomMessagesFile = @"messages";
+static NSString *const kMXFileStoreRoomOutgoingMessagesFile = @"outgoingMessages";
 static NSString *const kMXFileStoreRoomStateFile = @"state";
 static NSString *const kMXFileStoreRoomSummaryFile = @"summary";
 static NSString *const kMXFileStoreRoomAccountDataFile = @"accountData";
@@ -856,6 +857,41 @@ static NSUInteger preloadOptions;
     return roomStore;
 }
 
+- (MXMemoryRoomOutgoingMessagesStore *)getOrCreateRoomOutgoingMessagesStore:(NSString *)roomId
+{
+    MXMemoryRoomOutgoingMessagesStore *store = roomOutgoingMessagesStores[roomId];
+    if (nil == store)
+    {
+        NSString *roomFile = [self outgoingMessagesFileForRoom:roomId forBackup:NO];
+        if ([[NSFileManager defaultManager] fileExistsAtPath:roomFile])
+        {
+            @try
+            {
+                NSDate *startDate = [NSDate date];
+                store = [NSKeyedUnarchiver unarchiveObjectWithFile:roomFile];
+                if (![NSThread isMainThread])
+                {
+                    MXLogDebug(@"[MXFileStore] Loaded outgoing messages of room: %@ in %.0fms, in main thread: %@", roomId, [[NSDate date] timeIntervalSinceDate:startDate] * 1000, [NSThread isMainThread] ? @"YES" : @"NO");
+                }
+                self->roomOutgoingMessagesStores[roomId] = store;
+            }
+            @catch (NSException *exception)
+            {
+                MXLogDebug(@"[MXFileStore] Warning: MXFileRoomOutgoingMessagesStore file for room %@ has been corrupted. Exception: %@", roomId, exception);
+                [self logFiles];
+                [self deleteAllData];
+            }
+        }
+        else
+        {
+            // MXFileStore requires MXMemoryRoomOutgoingMessagesStore objets
+            store = [MXMemoryRoomOutgoingMessagesStore new];
+            self->roomOutgoingMessagesStores[roomId] = store;
+        }
+    }
+    
+    return store;
+}
 
 #pragma mark - File paths
 - (void)setUpStoragePaths
@@ -922,6 +958,11 @@ static NSUInteger preloadOptions;
 - (NSString*)messagesFileForRoom:(NSString*)roomId forBackup:(BOOL)backup
 {
     return [[self folderForRoom:roomId forBackup:backup] stringByAppendingPathComponent:kMXFileStoreRoomMessagesFile];
+}
+
+- (NSString*)outgoingMessagesFileForRoom:(NSString*)roomId forBackup:(BOOL)backup
+{
+    return [[self folderForRoom:roomId forBackup:backup] stringByAppendingPathComponent:kMXFileStoreRoomOutgoingMessagesFile];
 }
 
 - (NSString*)stateFileForRoom:(NSString*)roomId forBackup:(BOOL)backup

@@ -54,12 +54,14 @@ typedef NS_OPTIONS(NSInteger, MXFileStorePreloadOptions)
             + rooms
                 + {roomId1}
                     L messages: The room messages
+                    L outgoingMessages: The room outgoing messages
                     L state: The room state events
                     L summary: The room summary
                     L accountData: The account data for this room
                     L receipts: The read receipts for this room
                 + {roomId2}
                     L messages
+                    L outgoingMessages
                     L state
                     L summary
                     L accountData

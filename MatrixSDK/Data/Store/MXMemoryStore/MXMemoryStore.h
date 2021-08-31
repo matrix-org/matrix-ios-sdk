@@ -17,6 +17,7 @@
 #import "MXStore.h"
 
 #import "MXMemoryRoomStore.h"
+#import "MXMemoryRoomOutgoingMessagesStore.h"
 
 /**
  `MXMemoryStore` is an implementation of the `MXStore` interface that stores events in memory.
@@ -24,7 +25,9 @@
 @interface MXMemoryStore : NSObject <MXStore>
 {
     @protected
-    NSMutableDictionary *roomStores;
+    NSMutableDictionary <NSString*, MXMemoryRoomStore*> *roomStores;
+    
+    NSMutableDictionary <NSString*, MXMemoryRoomOutgoingMessagesStore*> *roomOutgoingMessagesStores;
 
     // All matrix users known by the user
     // The keys are user ids.
@@ -54,5 +57,13 @@
  @return the MXMemoryRoomStore instance.
  */
 - (MXMemoryRoomStore*)getOrCreateRoomStore:(NSString*)roomId;
+
+/**
+ Interface to create or retrieve a MXMemoryRoomOutgoingMessagesStore type object.
+ 
+ @param roomId the id for the MXMemoryRoomOutgoingMessagesStore object.
+ @return the MXMemoryRoomOutgoingMessagesStore instance.
+ */
+- (MXMemoryRoomOutgoingMessagesStore*)getOrCreateRoomOutgoingMessagesStore:(NSString*)roomId;
 
 @end
