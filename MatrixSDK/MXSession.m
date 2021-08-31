@@ -2915,7 +2915,12 @@ typedef void (^MXOnResumeDone)(void);
 
 - (void)fixRoomsSummariesLastMessage
 {
-    [self fixRoomsSummariesLastMessageWithMaxServerPaginationCount:MXRoomSummaryPaginationChunkSize
+    [self fixRoomsSummariesLastMessageWithMaxServerPaginationCount:MXRoomSummaryPaginationChunkSize];
+}
+
+- (void)fixRoomsSummariesLastMessageWithMaxServerPaginationCount:(NSUInteger)maxServerPaginationCount
+{
+    [self fixRoomsSummariesLastMessageWithMaxServerPaginationCount:maxServerPaginationCount
                                                              force:NO
                                                         completion:nil];
 }
