@@ -40,6 +40,7 @@
     if (self)
     {
         roomStores = [NSMutableDictionary dictionary];
+        roomOutgoingMessagesStores = [NSMutableDictionary dictionary];
         receiptsByRoomId = [NSMutableDictionary dictionary];
         users = [NSMutableDictionary dictionary];
         groups = [NSMutableDictionary dictionary];

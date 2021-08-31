@@ -22,6 +22,7 @@
 #import "MXBackgroundModeHandler.h"
 #import "MXEnumConstants.h"
 #import "MXFileRoomStore.h"
+#import "MXFileRoomOutgoingMessagesStore.h"
 #import "MXFileStoreMetaData.h"
 #import "MXSDKOptions.h"
 #import "MXTools.h"
@@ -55,6 +56,8 @@ static NSUInteger preloadOptions;
 
     // List of rooms to save on [MXStore commit]
     NSMutableArray *roomsToCommitForMessages;
+    
+    NSMutableArray *roomsToCommitForOutgoingMessages;
 
     NSMutableDictionary *roomsToCommitForState;
 
@@ -139,6 +142,7 @@ static NSUInteger preloadOptions;
     if (self)
     {
         roomsToCommitForMessages = [NSMutableArray array];
+        roomsToCommitForOutgoingMessages = [NSMutableArray array];
         roomsToCommitForState = [NSMutableDictionary dictionary];
         roomsToCommitForSummary = [NSMutableDictionary dictionary];
         roomsToCommitForAccountData = [NSMutableDictionary dictionary];
@@ -789,6 +793,7 @@ static NSUInteger preloadOptions;
     // Save each component one by one
     [self saveRoomsDeletion];
     [self saveRoomsMessages];
+    [self saveRoomsOutgoingMessages];
     [self saveRoomsState];
     [self saveRoomsSummaries];
     [self saveRoomsAccountData];
@@ -838,7 +843,7 @@ static NSUInteger preloadOptions;
                 roomStore = [NSKeyedUnarchiver unarchiveObjectWithFile:roomFile];
                 if (![NSThread isMainThread])
                 {
-                    MXLogDebug(@"[MXFileStore] Loaded room messages of room: %@ in %.0fms, in main thread: %@", roomId, [[NSDate date] timeIntervalSinceDate:startDate] * 1000, [NSThread isMainThread] ? @"YES" : @"NO");
+                    MXLogDebug(@"[MXFileStore] Loaded room messages of room: %@ in %.0fms", roomId, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
                 }
                 self->roomStores[roomId] = roomStore;
             }
@@ -874,7 +879,7 @@ static NSUInteger preloadOptions;
                 store = [NSKeyedUnarchiver unarchiveObjectWithFile:roomFile];
                 if (![NSThread isMainThread])
                 {
-                    MXLogDebug(@"[MXFileStore] Loaded outgoing messages of room: %@ in %.0fms, in main thread: %@", roomId, [[NSDate date] timeIntervalSinceDate:startDate] * 1000, [NSThread isMainThread] ? @"YES" : @"NO");
+                    MXLogDebug(@"[MXFileStore] Loaded outgoing messages of room: %@ in %.0fms", roomId, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
                 }
                 self->roomOutgoingMessagesStores[roomId] = store;
             }
@@ -887,8 +892,8 @@ static NSUInteger preloadOptions;
         }
         else
         {
-            // MXFileStore requires MXMemoryRoomOutgoingMessagesStore objets
-            store = [MXMemoryRoomOutgoingMessagesStore new];
+            // MXFileStore requires MXFileRoomOutgoingMessagesStore objets
+            store = [MXFileRoomOutgoingMessagesStore new];
             self->roomOutgoingMessagesStores[roomId] = store;
         }
     }
@@ -1472,9 +1477,9 @@ static NSUInteger preloadOptions;
 {
     [super storeOutgoingMessageForRoom:roomId outgoingMessage:outgoingMessage];
 
-    if (NSNotFound == [roomsToCommitForMessages indexOfObject:roomId])
+    if (NSNotFound == [roomsToCommitForOutgoingMessages indexOfObject:roomId])
     {
-        [roomsToCommitForMessages addObject:roomId];
+        [roomsToCommitForOutgoingMessages addObject:roomId];
     }
 }
 
@@ -1482,9 +1487,9 @@ static NSUInteger preloadOptions;
 {
     [super removeAllOutgoingMessagesFromRoom:roomId];
 
-    if (NSNotFound == [roomsToCommitForMessages indexOfObject:roomId])
+    if (NSNotFound == [roomsToCommitForOutgoingMessages indexOfObject:roomId])
     {
-        [roomsToCommitForMessages addObject:roomId];
+        [roomsToCommitForOutgoingMessages addObject:roomId];
     }
 }
 
@@ -1492,12 +1497,58 @@ static NSUInteger preloadOptions;
 {
     [super removeOutgoingMessageFromRoom:roomId outgoingMessage:outgoingMessageEventId];
 
-    if (NSNotFound == [roomsToCommitForMessages indexOfObject:roomId])
+    if (NSNotFound == [roomsToCommitForOutgoingMessages indexOfObject:roomId])
     {
-        [roomsToCommitForMessages addObject:roomId];
+        [roomsToCommitForOutgoingMessages addObject:roomId];
     }
 }
 
+- (void)saveRoomsOutgoingMessages
+{
+    if (roomsToCommitForOutgoingMessages.count)
+    {
+        NSArray *roomsToCommit = [[NSArray alloc] initWithArray:roomsToCommitForOutgoingMessages copyItems:YES];
+        [roomsToCommitForOutgoingMessages removeAllObjects];
+
+#if DEBUG
+        MXLogDebug(@"[MXFileStore commit] queuing saveRoomsMessages for %tu rooms", roomsToCommit.count);
+#endif
+
+        MXWeakify(self);
+        dispatch_async(dispatchQueue, ^(void){
+            MXStrongifyAndReturnIfNil(self);
+
+#if DEBUG
+            NSDate *startDate = [NSDate date];
+#endif
+            // Save rooms where there was changes
+            for (NSString *roomId in roomsToCommit)
+            {
+                MXFileRoomOutgoingMessagesStore *roomStore = (MXFileRoomOutgoingMessagesStore *)self->roomOutgoingMessagesStores[roomId];
+                if (roomStore)
+                {
+                    NSString *file = [self outgoingMessagesFileForRoom:roomId forBackup:NO];
+                    NSString *backupFile = [self outgoingMessagesFileForRoom:roomId forBackup:YES];
+
+                    // Backup the file
+                    if (backupFile && [[NSFileManager defaultManager] fileExistsAtPath:file])
+                    {
+                        [self checkFolderExistenceForRoom:roomId forBackup:YES];
+                        [[NSFileManager defaultManager] moveItemAtPath:file toPath:backupFile error:nil];
+                    }
+
+                    // Store new data
+                    [self checkFolderExistenceForRoom:roomId forBackup:NO];
+                    [NSKeyedArchiver archiveRootObject:roomStore toFile:file];
+                }
+            }
+
+#if DEBUG
+            MXLogDebug(@"[MXFileStore commit] lasted %.0fms for %tu rooms outgoing messages", [[NSDate date] timeIntervalSinceDate:startDate] * 1000, roomsToCommit.count);
+#endif
+        });
+    }
+}
 
 #pragma mark - MXFileStore metadata
 - (void)loadMetaData
