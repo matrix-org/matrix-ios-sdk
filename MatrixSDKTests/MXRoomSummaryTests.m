@@ -496,16 +496,25 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
         
         NSString *avatarURL = @"http://matrix.org/matrix.png";
         
-        [aliceRestClient setAvatarUrl:avatarURL success:^{
-            [room state:^(MXRoomState *roomState) {
-                // Given a room with two users.
-                XCTAssertNotEqualObjects(summary.avatar, nil, @"A room with one other user who has set an avatar should have that same avatar.");
-                
-                // When excluding the other user during an avatar update.
-                [updater updateSummaryAvatar:summary session:bobSession withServerRoomSummary:nil roomState:roomState excludingUserIDs: @[aliceRestClient.credentials.userId]];
-                
-                // Then the room should no longer display that user's avatar.
-                XCTAssertEqualObjects(summary.avatar, nil, @"A room where the only other user is unimportant should not have an avatar");
+        [room setIsDirect:YES withUserId:bobSession.myUserId success:^{
+            [aliceRestClient setAvatarUrl:avatarURL success:^{
+                [room state:^(MXRoomState *roomState) {
+                    
+                    // Recompute avatars for direct message rooms so that it's using Alice's avatar
+                    [updater updateSummaryAvatar:summary session:bobSession withServerRoomSummary:nil roomState:roomState excludingUserIDs: @[]];
+                    
+                    // Given a room with two users.
+                    XCTAssertNotEqualObjects(summary.avatar, nil, @"A room with one other user who has set an avatar should have that same avatar.");
+                    
+                    // When excluding the other user during an avatar update.
+                    [updater updateSummaryAvatar:summary session:bobSession withServerRoomSummary:nil roomState:roomState excludingUserIDs: @[aliceRestClient.credentials.userId]];
+                    
+                    // Then the room should no longer display that user's avatar.
+                    XCTAssertEqualObjects(summary.avatar, nil, @"A room where the only other user is unimportant should not have an avatar");
+                    [expectation fulfill];
+                }];
+            } failure:^(NSError *error) {
+                XCTFail(@"Cannot set up initial test conditions - error: %@", error);
                 [expectation fulfill];
             }];
         } failure:^(NSError *error) {

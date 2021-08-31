@@ -1,3 +1,15 @@
+## Changes in 0.19.8 (2021-08-26)
+
+✨ Features
+
+- MxNotificationCenter: For new account notification settings and keywords support, added updatePushRuleActions and addContentRuleWithMatchingRuleIdAndPattern. Also fixed the url encoding on ruleId. ([#4467](https://github.com/vector-im/element-ios/issues/4467))
+
+🙌 Improvements
+
+- MXSession: Introduce `MXSessionStateProcessingLocalCache` state. Merge local cached sync responses when resuming the session. ([#4471](https://github.com/vector-im/element-ios/issues/4471))
+- MXRoom: Added extensible keys to sent file payloads. ([#4720](https://github.com/vector-im/element-ios/issues/4720))
+
+
 ## Changes in 0.19.7 (2021-08-11)
 
 🙌 Improvements
