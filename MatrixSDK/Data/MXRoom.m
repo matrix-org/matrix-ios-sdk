@@ -164,6 +164,22 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
 
 - (void)liveTimeline:(void (^)(MXEventTimeline *))onComplete
 {
+    if ([mxSession.store respondsToSelector:@selector(loadRoomMessagesForRoom:completion:)])
+    {
+        MXWeakify(self);
+        [mxSession.store loadRoomMessagesForRoom:self.roomId completion:^{
+            MXStrongifyAndReturnIfNil(self);
+            [self _liveTimeline:onComplete];
+        }];
+    }
+    else
+    {
+        [self _liveTimeline:onComplete];
+    }
+}
+
+- (void)_liveTimeline:(void (^)(MXEventTimeline *))onComplete
+{
     // Is timelime ready?
     if (needToLoadLiveTimeline || pendingLiveTimelineRequesters)
     {
