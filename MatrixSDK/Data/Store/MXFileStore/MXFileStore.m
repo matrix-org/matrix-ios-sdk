@@ -846,11 +846,14 @@ static NSUInteger preloadOptions;
                 NSDate *startDate = [NSDate date];
                 receiptsDictionary = [NSKeyedUnarchiver unarchiveObjectWithFile:roomFile];
                 receiptsByRoomId[roomId] = receiptsDictionary;
-                MXLogDebug(@"[MXFileStore] Loaded read receipts of room: %@ in %.0fms, in main thread: %@", roomId, [[NSDate date] timeIntervalSinceDate:startDate] * 1000, [NSThread isMainThread] ? @"YES" : @"NO");
+                if ([NSThread isMainThread])
+                {
+                    MXLogWarning(@"[MXFileStore] Loaded read receipts of room: %@ in %.0fms, in main thread", roomId, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+                }
             }
             @catch (NSException *exception)
             {
-                MXLogDebug(@"[MXFileStore] Warning: loadReceipts file for room %@ has been corrupted. Exception: %@", roomId, exception);
+                MXLogError(@"[MXFileStore] Warning: loadReceipts file for room %@ has been corrupted. Exception: %@", roomId, exception);
                 
                 // We used to reset the store and force a full initial sync but this makes the app
                 // start very slowly.
