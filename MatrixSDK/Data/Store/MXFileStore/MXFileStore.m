@@ -885,7 +885,7 @@ static NSUInteger preloadOptions;
             }
             @catch (NSException *exception)
             {
-                MXLogDebug(@"[MXFileStore] Warning: MXFileRoomOutgoingMessagesStore file for room %@ has been corrupted. Exception: %@", roomId, exception);
+                MXLogError(@"[MXFileStore] Warning: MXFileRoomOutgoingMessagesStore file for room %@ has been corrupted. Exception: %@", roomId, exception);
                 [self logFiles];
                 [self deleteAllData];
             }
