@@ -26,6 +26,9 @@
     NSString *eventStreamToken;
     MXWellKnown *homeserverWellknown;
     NSInteger maxUploadSize;
+    
+    //  Execution queue for computationally expensive operations.
+    dispatch_queue_t executionQueue;
 }
 @end
 
@@ -44,6 +47,7 @@
         users = [NSMutableDictionary dictionary];
         groups = [NSMutableDictionary dictionary];
         maxUploadSize = -1;
+        executionQueue = dispatch_queue_create("MXMemoryStoreExecutionQueue", DISPATCH_QUEUE_SERIAL);
     }
     return self;
 }
@@ -189,19 +193,26 @@
         {
             @synchronized (receiptsByUserId)
             {
-                NSArray<MXReceiptData*> *receipts = [[receiptsByUserId allValues] filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"eventId == %@", eventId]];
-                
-                if (sort)
-                {
-                    NSArray<MXReceiptData*> *sortedReceipts = [receipts sortedArrayUsingComparator:^NSComparisonResult(MXReceiptData* _Nonnull first, MXReceiptData* _Nonnull second) {
-                        return (first.ts < second.ts) ? NSOrderedDescending : NSOrderedAscending;
-                    }];
-                    completion(sortedReceipts);
-                }
-                else
-                {
-                    completion(receipts);
-                }
+                dispatch_async(self->executionQueue, ^{
+                    NSArray<MXReceiptData*> *receipts = [[receiptsByUserId allValues] filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"eventId == %@", eventId]];
+                    
+                    if (sort)
+                    {
+                        NSArray<MXReceiptData*> *sortedReceipts = [receipts sortedArrayUsingComparator:^NSComparisonResult(MXReceiptData* _Nonnull first, MXReceiptData* _Nonnull second) {
+                            return (first.ts < second.ts) ? NSOrderedDescending : NSOrderedAscending;
+                        }];
+                        
+                        dispatch_async(dispatch_get_main_queue(), ^{
+                            completion(sortedReceipts);
+                        });
+                    }
+                    else
+                    {
+                        dispatch_async(dispatch_get_main_queue(), ^{
+                            completion(receipts);
+                        });
+                    }
+                });
             }
         }
         else
