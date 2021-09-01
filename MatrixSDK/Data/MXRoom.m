@@ -164,22 +164,6 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
 
 - (void)liveTimeline:(void (^)(MXEventTimeline *))onComplete
 {
-    if ([mxSession.store respondsToSelector:@selector(loadRoomMessagesForRoom:completion:)])
-    {
-        MXWeakify(self);
-        [mxSession.store loadRoomMessagesForRoom:self.roomId completion:^{
-            MXStrongifyAndReturnIfNil(self);
-            [self _liveTimeline:onComplete];
-        }];
-    }
-    else
-    {
-        [self _liveTimeline:onComplete];
-    }
-}
-
-- (void)_liveTimeline:(void (^)(MXEventTimeline *))onComplete
-{
     // Is timelime ready?
     if (needToLoadLiveTimeline || pendingLiveTimelineRequesters)
     {
@@ -187,22 +171,26 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
         if (!pendingLiveTimelineRequesters)
         {
             pendingLiveTimelineRequesters = [NSMutableArray array];
-
+            
             MXWeakify(self);
-            [MXRoomState loadRoomStateFromStore:self.mxSession.store withRoomId:self.roomId matrixSession:self.mxSession onComplete:^(MXRoomState *roomState) {
+            [mxSession.store loadRoomMessagesForRoom:self.roomId completion:^{
                 MXStrongifyAndReturnIfNil(self);
+                MXWeakify(self);
+                [MXRoomState loadRoomStateFromStore:self.mxSession.store withRoomId:self.roomId matrixSession:self.mxSession onComplete:^(MXRoomState *roomState) {
+                    MXStrongifyAndReturnIfNil(self);
 
-                [self->liveTimeline setState:roomState];
+                    [self->liveTimeline setState:roomState];
 
-                // Provide the timelime to pending requesters
-                NSArray<void (^)(MXEventTimeline *)> *liveTimelineRequesters = [self->pendingLiveTimelineRequesters copy];
-                self->pendingLiveTimelineRequesters = nil;
+                    // Provide the timelime to pending requesters
+                    NSArray<void (^)(MXEventTimeline *)> *liveTimelineRequesters = [self->pendingLiveTimelineRequesters copy];
+                    self->pendingLiveTimelineRequesters = nil;
 
-                for (void (^onRequesterComplete)(MXEventTimeline *) in liveTimelineRequesters)
-                {
-                    onRequesterComplete(self->liveTimeline);
-                }
-                MXLogDebug(@"[MXRoom] liveTimeline loaded. Pending requesters: %@", @(liveTimelineRequesters.count));
+                    for (void (^onRequesterComplete)(MXEventTimeline *) in liveTimelineRequesters)
+                    {
+                        onRequesterComplete(self->liveTimeline);
+                    }
+                    MXLogDebug(@"[MXRoom] liveTimeline loaded. Pending requesters: %@", @(liveTimelineRequesters.count));
+                }];
             }];
         }
 
