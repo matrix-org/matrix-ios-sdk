@@ -26,6 +26,9 @@
     NSString *eventStreamToken;
     MXWellKnown *homeserverWellknown;
     NSInteger maxUploadSize;
+    
+    //  Execution queue for computationally expensive operations.
+    dispatch_queue_t executionQueue;
 }
 @end
 
@@ -45,6 +48,7 @@
         users = [NSMutableDictionary dictionary];
         groups = [NSMutableDictionary dictionary];
         maxUploadSize = -1;
+        executionQueue = dispatch_queue_create("MXMemoryStoreExecutionQueue", DISPATCH_QUEUE_SERIAL);
     }
     return self;
 }
@@ -169,40 +173,54 @@
     return roomStore.partialTextMessage;
 }
 
-- (NSArray<MXReceiptData*> *)getEventReceipts:(NSString*)roomId eventId:(NSString*)eventId sorted:(BOOL)sort
+- (void)loadReceiptsForRoom:(NSString *)roomId completion:(void (^)(void))completion
 {
-    NSMutableArray* receipts = [[NSMutableArray alloc] init];
+    [self getOrCreateReceiptsFor:roomId];
     
-    NSMutableDictionary* receiptsByUserId = receiptsByRoomId[roomId];
-    
-    if (receiptsByUserId)
+    if (completion)
     {
-        @synchronized (receiptsByUserId)
-        {
-            for (NSString* userId in receiptsByUserId)
-            {
-                MXReceiptData* receipt = receiptsByUserId[userId];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            completion();
+        });
+    }
+}
 
-                if (receipt && [receipt.eventId isEqualToString:eventId])
-                {
-                    [receipts addObject:receipt];
-                }
+- (void)getEventReceipts:(NSString *)roomId eventId:(NSString *)eventId sorted:(BOOL)sort completion:(void (^)(NSArray<MXReceiptData *> * _Nonnull))completion
+{
+    [self loadReceiptsForRoom:roomId completion:^{
+        NSDictionary<NSString *, MXReceiptData *> *receiptsByUserId = self->receiptsByRoomId[roomId];
+        
+        if (receiptsByUserId)
+        {
+            @synchronized (receiptsByUserId)
+            {
+                dispatch_async(self->executionQueue, ^{
+                    NSArray<MXReceiptData*> *receipts = [[receiptsByUserId allValues] filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"eventId == %@", eventId]];
+                    
+                    if (sort)
+                    {
+                        NSArray<MXReceiptData*> *sortedReceipts = [receipts sortedArrayUsingComparator:^NSComparisonResult(MXReceiptData* _Nonnull first, MXReceiptData* _Nonnull second) {
+                            return (first.ts < second.ts) ? NSOrderedDescending : NSOrderedAscending;
+                        }];
+                        
+                        dispatch_async(dispatch_get_main_queue(), ^{
+                            completion(sortedReceipts);
+                        });
+                    }
+                    else
+                    {
+                        dispatch_async(dispatch_get_main_queue(), ^{
+                            completion(receipts);
+                        });
+                    }
+                });
             }
         }
-    }
-
-    if (sort)
-    {
-        return [receipts sortedArrayUsingComparator:^NSComparisonResult(id a, id b)
-                                {
-                                    MXReceiptData *first =  (MXReceiptData*)a;
-                                    MXReceiptData *second = (MXReceiptData*)b;
-                                    
-                                    return (first.ts < second.ts) ? NSOrderedDescending : NSOrderedAscending;
-                                }];
-    }
-    
-    return receipts;
+        else
+        {
+            completion(@[]);
+        }
+    }];
 }
 
 - (BOOL)storeReceipt:(MXReceiptData*)receipt inRoom:(NSString*)roomId
@@ -429,6 +447,16 @@
     success(theFilterId);
 }
 
+- (void)loadRoomMessagesForRoom:(NSString *)roomId completion:(void (^)(void))completion
+{
+    [self getOrCreateRoomStore:roomId];
+    if (completion)
+    {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            completion();
+        });
+    }
+}
 
 #pragma mark - Protected operations
 - (MXMemoryRoomStore*)getOrCreateRoomStore:(NSString*)roomId
@@ -453,15 +481,15 @@
     return store;
 }
 
-- (void)loadRoomMessagesForRoom:(NSString *)roomId completion:(void (^)(void))completion
+- (NSDictionary<NSString *,MXReceiptData *> *)getOrCreateReceiptsFor:(NSString *)roomId
 {
-    [self getOrCreateRoomStore:roomId];
-    if (completion)
+    NSDictionary<NSString *,MXReceiptData *> *result = receiptsByRoomId[roomId];
+    if (nil == result)
     {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            completion();
-        });
+        result = [NSMutableDictionary new];
+        receiptsByRoomId[roomId] = result;
     }
+    return result;
 }
 
 @end

@@ -246,7 +246,10 @@ static NSUInteger preloadOptions;
                 {
                     [self preloadRoomsAccountData];
                 }
-                [self loadReceipts];
+                if (preloadOptions & MXFileStorePreloadOptionReadReceipts)
+                {
+                    [self preloadReceipts];
+                }
                 [self loadUsers];
                 [self loadGroups];
 
@@ -899,6 +902,49 @@ static NSUInteger preloadOptions;
     }
     
     return store;
+}
+
+- (NSDictionary<NSString *,MXReceiptData *> *)getOrCreateReceiptsFor:(NSString *)roomId
+{
+    NSDictionary<NSString *,MXReceiptData *> *receiptsDictionary = receiptsByRoomId[roomId];
+    if (nil == receiptsDictionary)
+    {
+        NSString *roomFile = [self readReceiptsFileForRoom:roomId forBackup:NO];
+        if ([[NSFileManager defaultManager] fileExistsAtPath:roomFile])
+        {
+            @try
+            {
+                NSDate *startDate = [NSDate date];
+                receiptsDictionary = [NSKeyedUnarchiver unarchiveObjectWithFile:roomFile];
+                receiptsByRoomId[roomId] = receiptsDictionary;
+                if ([NSThread isMainThread])
+                {
+                    MXLogWarning(@"[MXFileStore] Loaded read receipts of room: %@ in %.0fms, in main thread", roomId, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+                }
+            }
+            @catch (NSException *exception)
+            {
+                MXLogError(@"[MXFileStore] Warning: loadReceipts file for room %@ has been corrupted. Exception: %@", roomId, exception);
+                
+                // We used to reset the store and force a full initial sync but this makes the app
+                // start very slowly.
+                // So, avoid this reset by considering there is no read receipts for this room which
+                // is not probably true.
+                // TODO: Can we live with that?
+                //[self deleteAllData];
+                
+                receiptsDictionary = [NSMutableDictionary dictionary];
+                receiptsByRoomId[roomId] = receiptsDictionary;
+            }
+        }
+        else
+        {
+            receiptsDictionary = [NSMutableDictionary dictionary];
+            receiptsByRoomId[roomId] = receiptsDictionary;
+        }
+    }
+    
+    return receiptsDictionary;
 }
 
 #pragma mark - File paths
@@ -1947,6 +1993,20 @@ static NSUInteger preloadOptions;
 
 #pragma mark - Room receipts
 
+- (void)loadReceiptsForRoom:(NSString *)roomId completion:(void (^)(void))completion
+{
+    dispatch_async(dispatchQueue, ^{
+        [self getOrCreateReceiptsFor:roomId];
+        
+        if (completion)
+        {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                completion();
+            });
+        }
+    });
+}
+
 /**
  * Store the receipt for an user in a room
  * @param receipt The event
@@ -1968,7 +2028,7 @@ static NSUInteger preloadOptions;
 
 
 // Load the data store in files
-- (void)loadReceipts
+- (void)preloadReceipts
 {
     NSArray<NSString *> *roomIDs = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:storeRoomsPath error:nil];
     
