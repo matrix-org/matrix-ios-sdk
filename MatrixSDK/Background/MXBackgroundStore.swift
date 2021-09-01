@@ -223,6 +223,12 @@ class MXBackgroundStore: NSObject, MXStore {
         return nil
     }
     
+    func loadReceipts(forRoom roomId: String, completion: (() -> Void)? = nil) {
+        DispatchQueue.main.async {
+            completion?()
+        }
+    }
+    
     func localUnreadEventCount(_ roomId: String, withTypeIn types: [Any]?) -> UInt {
         return 0
     }
