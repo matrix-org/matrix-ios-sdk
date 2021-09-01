@@ -55,16 +55,16 @@ public class MXSpaceChildInfo: NSObject {
     public let activeMemberCount: Int
     
     /// Allows a space admin to list the sub-spaces and rooms in that space which should be automatically joined by members of that space.
-    public var autoJoin: Bool
+    public let autoJoin: Bool
     
     /// `true` if the room is suggested. `false` otherwise.
-    public var suggested: Bool = false
+    public let suggested: Bool
     
     /// List of space parent IDs
-    public var parentIds: Set<String> = Set()
+    public let parentIds: Set<String>
     
     /// List of children IDs
-    public var childrenIds: [String] = []
+    public let childrenIds: [String]
     
     /// Gives a list of candidate servers that can be used to join the space.
     public let viaServers: [String]
@@ -90,6 +90,9 @@ public class MXSpaceChildInfo: NSObject {
                 order: String?,
                 activeMemberCount: Int,
                 autoJoin: Bool,
+                suggested: Bool,
+                parentIds: Set<String>,
+                childrenIds: [String],
                 viaServers: [String],
                 parentRoomId: String?) {
         self.childRoomId = childRoomId
@@ -103,6 +106,9 @@ public class MXSpaceChildInfo: NSObject {
         self.order = order
         self.activeMemberCount = activeMemberCount
         self.autoJoin = autoJoin
+        self.suggested = suggested
+        self.parentIds = parentIds
+        self.childrenIds = childrenIds
         self.viaServers = viaServers
         self.parentRoomId = parentRoomId
     }
