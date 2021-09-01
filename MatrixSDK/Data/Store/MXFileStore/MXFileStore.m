@@ -841,15 +841,15 @@ static NSUInteger preloadOptions;
             {
                 NSDate *startDate = [NSDate date];
                 roomStore = [NSKeyedUnarchiver unarchiveObjectWithFile:roomFile];
-                if (![NSThread isMainThread])
+                if ([NSThread isMainThread])
                 {
-                    MXLogDebug(@"[MXFileStore] Loaded room messages of room: %@ in %.0fms", roomId, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+                    MXLogWarning(@"[MXFileStore] Loaded room messages of room: %@ in %.0fms, in main thread", roomId, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
                 }
                 self->roomStores[roomId] = roomStore;
             }
             @catch (NSException *exception)
             {
-                MXLogDebug(@"[MXFileStore] Warning: MXFileRoomStore file for room %@ has been corrupted. Exception: %@", roomId, exception);
+                MXLogError(@"[MXFileStore] Warning: MXFileRoomStore file for room %@ has been corrupted. Exception: %@", roomId, exception);
                 [self logFiles];
                 [self deleteAllData];
             }
@@ -877,9 +877,9 @@ static NSUInteger preloadOptions;
             {
                 NSDate *startDate = [NSDate date];
                 store = [NSKeyedUnarchiver unarchiveObjectWithFile:roomFile];
-                if (![NSThread isMainThread])
+                if ([NSThread isMainThread])
                 {
-                    MXLogDebug(@"[MXFileStore] Loaded outgoing messages of room: %@ in %.0fms", roomId, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+                    MXLogWarning(@"[MXFileStore] Loaded outgoing messages of room: %@ in %.0fms, in main thread", roomId, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
                 }
                 self->roomOutgoingMessagesStores[roomId] = store;
             }
