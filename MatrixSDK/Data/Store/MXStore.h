@@ -261,6 +261,14 @@
 - (MXReceiptData * _Nullable)getReceiptInRoom:(nonnull NSString*)roomId forUserId:(nonnull NSString*)userId;
 
 /**
+ Load receipts for a room asynchronously.
+ 
+ @param roomId the id of the room.
+ @param completion Completion block to be called at the end of the process. Will be called in main thread.
+ */
+- (void)loadReceiptsForRoom:(nonnull NSString *)roomId completion:(nullable void (^)(void))completion;
+
+/**
  Count the unread events wrote in the store.
  
  @discussion: The returned count is relative to the local storage. The actual unread messages
@@ -299,15 +307,15 @@
  */
 - (void)storeHomeserverWellknown:(nonnull MXWellKnown*)homeserverWellknown;
 
-#pragma mark - Receipts
+#pragma mark - Room Messages
 
 /**
- Load receipts for a room asynchronously.
+ Load room messages for a room.
  
- @param roomId the id of the room.
- @param completion Completion block to be called at the end of the process. Will be called in main thread.
+ @param roomId The id of the desired room.
+ @param completion Completion block to be called at the end of the process. Will be called on main thread.
  */
-- (void)loadReceiptsForRoom:(nonnull NSString *)roomId completion:(nullable void (^)(void))completion;
+- (void)loadRoomMessagesForRoom:(nonnull NSString *)roomId completion:(nullable void (^)(void))completion;
 
 @optional
 
@@ -432,7 +440,6 @@
  @return the user private data for this room.
 */
 - (MXRoomAccountData* _Nullable)accountDataOfRoom:(nonnull NSString*)roomId;
-
 
 #pragma mark - Outgoing events
 /**

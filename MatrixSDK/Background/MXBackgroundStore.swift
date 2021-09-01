@@ -238,4 +238,10 @@ class MXBackgroundStore: NSObject, MXStore {
     func storeHomeserverWellknown(_ homeserverWellknown: MXWellKnown) {
     }
     
+    func loadRoomMessages(forRoom roomId: String, completion: (() -> Void)? = nil) {
+        DispatchQueue.main.async {
+            completion?()
+        }
+    }
+    
 }

@@ -1,0 +1,1 @@
+MXStore: Introduce loadRoomMessages async method to lazy load room messages.

@@ -240,6 +240,16 @@
     return @[];
 }
 
+- (void)loadRoomMessagesForRoom:(NSString *)roomId completion:(void (^)(void))completion
+{
+    if (completion)
+    {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            completion();
+        });
+    }
+}
+
 #pragma mark - Matrix users
 - (void)storeUser:(MXUser *)user
 {
