@@ -887,7 +887,6 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
 
     result = prime * result + [_lastMessage.eventId hash];
     result = prime * result + [_lastMessage.text hash];
-    result = prime * result + self.room.storedMessagesCount;
 
     return result;
 }

@@ -40,6 +40,7 @@
     if (self)
     {
         roomStores = [NSMutableDictionary dictionary];
+        roomOutgoingMessagesStores = [NSMutableDictionary dictionary];
         receiptsByRoomId = [NSMutableDictionary dictionary];
         users = [NSMutableDictionary dictionary];
         groups = [NSMutableDictionary dictionary];
@@ -357,25 +358,25 @@
 #pragma mark - Outgoing events
 - (void)storeOutgoingMessageForRoom:(NSString*)roomId outgoingMessage:(MXEvent*)outgoingMessage
 {
-    MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
+    MXMemoryRoomOutgoingMessagesStore *roomStore = [self getOrCreateRoomOutgoingMessagesStore:roomId];
     [roomStore storeOutgoingMessage:outgoingMessage];
 }
 
 - (void)removeAllOutgoingMessagesFromRoom:(NSString*)roomId
 {
-    MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
+    MXMemoryRoomOutgoingMessagesStore *roomStore = [self getOrCreateRoomOutgoingMessagesStore:roomId];
     [roomStore removeAllOutgoingMessages];
 }
 
 - (void)removeOutgoingMessageFromRoom:(NSString*)roomId outgoingMessage:(NSString*)outgoingMessageEventId
 {
-    MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
+    MXMemoryRoomOutgoingMessagesStore *roomStore = [self getOrCreateRoomOutgoingMessagesStore:roomId];
     [roomStore removeOutgoingMessage:outgoingMessageEventId];
 }
 
 - (NSArray<MXEvent*>*)outgoingMessagesInRoom:(NSString*)roomId
 {
-    MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
+    MXMemoryRoomOutgoingMessagesStore *roomStore = [self getOrCreateRoomOutgoingMessagesStore:roomId];
     return roomStore.outgoingMessages;
 }
 
@@ -439,6 +440,28 @@
         roomStores[roomId] = roomStore;
     }
     return roomStore;
+}
+
+- (MXMemoryRoomOutgoingMessagesStore *)getOrCreateRoomOutgoingMessagesStore:(NSString *)roomId
+{
+    MXMemoryRoomOutgoingMessagesStore *store = roomOutgoingMessagesStores[roomId];
+    if (nil == store)
+    {
+        store = [MXMemoryRoomOutgoingMessagesStore new];
+        roomOutgoingMessagesStores[roomId] = store;
+    }
+    return store;
+}
+
+- (void)loadRoomMessagesForRoom:(NSString *)roomId completion:(void (^)(void))completion
+{
+    [self getOrCreateRoomStore:roomId];
+    if (completion)
+    {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            completion();
+        });
+    }
 }
 
 @end
