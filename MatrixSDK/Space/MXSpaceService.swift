@@ -45,13 +45,6 @@ extension MXSpaceService {
 @objcMembers
 public class MXSpaceService: NSObject {
 
-    // MARK: - Constants
-
-    private enum Constants {
-        static let autoJoinEventKey: String = "auto_join"
-        static let suggestedEventKey: String = "suggested"
-    }
-
     // MARK: - Properties
     
     private unowned let session: MXSession
@@ -361,8 +354,8 @@ public class MXSpaceService: NSObject {
                          avatarUrl: spaceChildSummaryResponse.avatarUrl,
                          order: spaceChildContent?.order,
                          activeMemberCount: spaceChildSummaryResponse.numJoinedMembers,
-                         autoJoin: childEvents?[Constants.autoJoinEventKey] as? Bool ?? false,
-                         suggested: childEvents?[Constants.suggestedEventKey] as? Bool ?? false,
+                         autoJoin: childEvents?[kMXEventTypeStringAutoJoinKey] as? Bool ?? false,
+                         suggested: childEvents?[kMXEventTypeStringSuggestedKey] as? Bool ?? false,
                          parentIds: parentIds ?? Set(),
                          childrenIds: childrenIds ?? [],
                          viaServers: spaceChildContent?.via ?? [],
