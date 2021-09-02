@@ -1242,9 +1242,10 @@ MXAuthAction;
     
     NSString *enabled = enable ? @"true": @"false";
 
+    NSString* ruleIdEncoded = [MXTools encodeURIComponent:ruleId];
     MXWeakify(self);
     return [httpClient requestWithMethod:@"PUT"
-                                    path:[NSString stringWithFormat:@"%@/pushrules/%@/%@/%@/enabled", apiPathPrefix, scope, kindString, ruleId]
+                                    path:[NSString stringWithFormat:@"%@/pushrules/%@/%@/%@/enabled", apiPathPrefix, scope, kindString, ruleIdEncoded]
                               parameters:nil
                                     data:[enabled dataUsingEncoding:NSUTF8StringEncoding]
                                  headers:headers
@@ -1285,10 +1286,11 @@ MXAuthAction;
             kindString = @"underride";
             break;
     }
-
+    
+    NSString* ruleIdEncoded = [MXTools encodeURIComponent:ruleId];
     MXWeakify(self);
     return [httpClient requestWithMethod:@"DELETE"
-                                    path:[NSString stringWithFormat:@"%@/pushrules/%@/%@/%@", apiPathPrefix, scope, kindString, ruleId]
+                                    path:[NSString stringWithFormat:@"%@/pushrules/%@/%@/%@", apiPathPrefix, scope, kindString, ruleIdEncoded]
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
                                      MXStrongifyAndReturnIfNil(self);
@@ -1383,6 +1385,49 @@ MXAuthAction;
         [self dispatchFailure:error inBlock:failure];
         return nil;
     }
+}
+
+- (MXHTTPOperation *)updateActionsForPushRule:(NSString*)ruleId
+                           scope:(NSString*)scope
+                            kind:(MXPushRuleKind)kind
+                           actions:(NSArray*)actions
+                         success:(void (^)(void))success
+                         failure:(void (^)(NSError *error))failure
+{
+    NSString *kindString = [[self class] kindStringForKind: kind];
+    NSString* ruleIdEncoded = [MXTools encodeURIComponent:ruleId];
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"PUT"
+                                    path:[NSString stringWithFormat:@"%@/pushrules/%@/%@/%@/actions", apiPathPrefix, scope, kindString, ruleIdEncoded]
+                              parameters:@{
+                                  @"actions": actions
+                              }
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchSuccess:success];
+                                 }
+                                 failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
++ (NSString *)kindStringForKind:(MXPushRuleKind)kind
+{
+    switch (kind)
+    {
+        case MXPushRuleKindOverride:
+            return @"override";
+        case MXPushRuleKindContent:
+            return @"content";
+        case MXPushRuleKindRoom:
+            return @"room";
+        case MXPushRuleKindSender:
+            return @"sender";
+        case MXPushRuleKindUnderride:
+            return @"underride";
+    }
+    return nil;
 }
 
 #pragma mark - Room operations

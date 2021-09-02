@@ -738,7 +738,22 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
                          success:(void (^)(void))success
                          failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
+/**
+ Update push rule actions.
 
+ @param ruleId The identifier for the rule (it depends on rule kind: user id for sender rule, room id for room rule...).
+ @param scope Either 'global' or 'device/<profile_tag>' to specify global rules or device rules for the given profile_tag.
+ @param kind The kind of rule, ie. 'sender', 'room' or 'content' (see MXPushRuleKind).
+ @param actions The rule actions: notify, don't notify, set tweak...
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (MXHTTPOperation *)updateActionsForPushRule:(NSString*)ruleId
+                                        scope:(NSString*)scope
+                                         kind:(MXPushRuleKind)kind
+                                      actions:(NSArray*)actions
+                                      success:(void (^)(void))success
+                                      failure:(void (^)(NSError *error))failure;
 #pragma mark - Room operations
 /**
  Send a generic non state event to a room.
