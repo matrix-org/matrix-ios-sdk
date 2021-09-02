@@ -1858,6 +1858,9 @@ typedef void (^MXOnResumeDone)(void);
 
 - (void)handleBackgroundSyncCacheIfRequiredWithCompletion:(void (^)(void))completion
 {
+    //  keep the old state to revert later
+    MXSessionState oldState = self.state;
+    
     [self setState:MXSessionStateProcessingBackgroundSyncCache];
     
     MXSyncResponseFileStore *syncResponseStore = [[MXSyncResponseFileStore alloc] initWithCredentials:self.credentials];
@@ -1881,6 +1884,9 @@ typedef void (^MXOnResumeDone)(void);
     
     if (outdatedSyncResponseIds.count == 0 && syncResponseIds.count == 0)
     {
+        //  revert to old state
+        [self setState:oldState];
+        
         if (completion)
         {
             completion();
@@ -1922,6 +1928,9 @@ typedef void (^MXOnResumeDone)(void);
     
     [asyncTaskQueue asyncWithExecute:^(void (^ taskCompleted)(void)) {
         [syncResponseStore deleteData];
+        
+        //  revert to old state
+        [self setState:oldState];
         
         if (completion)
         {
