@@ -121,28 +121,29 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     if (trustInfo.usable)
     {
         MXLogDebug(@"[MXKeyBackup] checkAndStartWithKeyBackupVersion: Found usable key backup. version: %@", keyBackupVersion.version);
-        
-        MXWeakify(self);
-        [crypto.crossSigning signObject:keyBackupVersion.authData withKeyType:MXCrossSigningKeyType.master success:^(NSDictionary * _Nonnull signedObject) {
 
-            MXStrongifyAndReturnIfNil(self);
-            MXWeakify(self);
+        // Check the version we used at the previous app run
+        NSString *versionInStore = crypto.store.backupVersion;
+        if (versionInStore && ![versionInStore isEqualToString:keyBackupVersion.version])
+        {
+            MXLogDebug(@"[MXKeyBackup] -> clean the previously used version(%@)", versionInStore);
+            [self resetKeyBackupData];
+        }
+        
+        // Check private keys
+        if (self.hasPrivateKeyInCryptoStore)
+        {
+            NSString *pKDecryptionPublicKey = [self pkDecrytionPublicKeyFromCryptoStore];
             
-            MXKeyBackupVersion *newKeybackup = [keyBackupVersion copy];
-            newKeybackup.authData = signedObject;
-            
-            // And send it to the homeserver
-            [self-> crypto.matrixRestClient updateKeyBackupVersion:newKeybackup withPath:kMXAPIPrefixPathUnstable success:^{
-                MXStrongifyAndReturnIfNil(self);
-                [self checkKeyBackupVersionAndEnableBackup:newKeybackup];
-            } failure:^(NSError *error) {
-                MXStrongifyAndReturnIfNil(self);
-                [self checkKeyBackupVersionAndEnableBackup:keyBackupVersion];
-            }];
-        } failure:^(NSError * _Nonnull error) {
-            MXStrongifyAndReturnIfNil(self);
-            [self checkKeyBackupVersionAndEnableBackup:keyBackupVersion];
-        }];
+            if (![self checkPkDecryptionPublicKey:pKDecryptionPublicKey forKeyBackupVersion:keyBackupVersion])
+            {
+                MXLogDebug(@"[MXKeyBackup] -> clean local private key (%@)", pKDecryptionPublicKey);
+                [crypto.store deleteSecretWithSecretId:MXSecretId.keyBackup];
+            }
+        }
+        
+        MXLogDebug(@"[MXKeyBackup]    -> enabling key backups");
+        [self enableKeyBackup:keyBackupVersion];
     }
     else
     {
@@ -156,37 +157,6 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
 
         self.state = MXKeyBackupStateNotTrusted;
     }
-}
-
-/**
- Enable backing up of keys after checking the key backup version.
-
- @param keyBackupVersion backup information object as returned by `[MXKeyBackup version]`.
- */
-- (void)checkKeyBackupVersionAndEnableBackup:(MXKeyBackupVersion*)keyBackupVersion
-{
-    // Check the version we used at the previous app run
-    NSString *versionInStore = crypto.store.backupVersion;
-    if (versionInStore && ![versionInStore isEqualToString:keyBackupVersion.version])
-    {
-        MXLogDebug(@"[MXKeyBackup] -> clean the previously used version(%@)", versionInStore);
-        [self resetKeyBackupData];
-    }
-    
-    // Check private keys
-    if (self.hasPrivateKeyInCryptoStore)
-    {
-        NSString *pKDecryptionPublicKey = [self pkDecrytionPublicKeyFromCryptoStore];
-        
-        if (![self checkPkDecryptionPublicKey:pKDecryptionPublicKey forKeyBackupVersion:keyBackupVersion])
-        {
-            MXLogDebug(@"[MXKeyBackup] -> clean local private key (%@)", pKDecryptionPublicKey);
-            [crypto.store deleteSecretWithSecretId:MXSecretId.keyBackup];
-        }
-    }
-    
-    MXLogDebug(@"[MXKeyBackup]    -> enabling key backups");
-    [self enableKeyBackup:keyBackupVersion];
 }
 
 /**
@@ -511,7 +481,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
         OLMPkDecryption *decryption = [OLMPkDecryption new];
 
         NSError *error;
-        MXMegolmBackupAuthData *authData = [MXMegolmBackupAuthData new];
+        __block MXMegolmBackupAuthData *authData = [MXMegolmBackupAuthData new];
         if (password)
         {
             // Generate a private key from the password
@@ -543,16 +513,32 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
             }
             return;
         }
-        authData.signatures = [self->crypto signObject:authData.signalableJSONDictionary];
+        
+        NSString *myUserId = self->crypto.matrixRestClient.credentials.userId;
+        NSMutableDictionary *signatures = [NSMutableDictionary dictionary];
+        
+        NSDictionary *deviceSignature = [self->crypto signObject:authData.signalableJSONDictionary];
+        [signatures addEntriesFromDictionary:deviceSignature[myUserId]];
+        
+        [self->crypto.crossSigning signObject:authData.signalableJSONDictionary withKeyType:MXCrossSigningKeyType.master success:^(NSDictionary *signedObject) {
+            
+            [signatures addEntriesFromDictionary:signedObject[@"signatures"][myUserId]];
+            
+            authData.signatures = @{myUserId: signatures};
+            
+            MXMegolmBackupCreationInfo *keyBackupCreationInfo = [MXMegolmBackupCreationInfo new];
+            keyBackupCreationInfo.algorithm = kMXCryptoMegolmBackupAlgorithm;
+            keyBackupCreationInfo.authData = authData;
+            keyBackupCreationInfo.recoveryKey = [MXRecoveryKey encode:decryption.privateKey];
 
-        MXMegolmBackupCreationInfo *keyBackupCreationInfo = [MXMegolmBackupCreationInfo new];
-        keyBackupCreationInfo.algorithm = kMXCryptoMegolmBackupAlgorithm;
-        keyBackupCreationInfo.authData = authData;
-        keyBackupCreationInfo.recoveryKey = [MXRecoveryKey encode:decryption.privateKey];
-
-        dispatch_async(dispatch_get_main_queue(), ^{
-            success(keyBackupCreationInfo);
-        });
+            dispatch_async(dispatch_get_main_queue(), ^{
+                success(keyBackupCreationInfo);
+            });
+        } failure:^(NSError * _Nonnull error) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                failure(error);
+            });
+        }];
     });
 }
 
@@ -1127,17 +1113,30 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
                 {
                     keyBackupVersionTrust.usable = YES;
                 }
+                
+                MXKeyBackupVersionTrustSignature *signature = [MXKeyBackupVersionTrustSignature new];
+                signature.deviceId = deviceId;
+                signature.device = device;
+                signature.valid = valid;
+                [signatures addObject:signature];
             }
-            else
+            else // Try interpreting it as the MSK public key
             {
-                MXLogDebug(@"[MXKeyBackup] trustForKeyBackupVersion: Signature from unknown key %@", deviceId);
+                NSError *error;
+                BOOL valid = [crypto.crossSigning.crossSigningTools pkVerifyObject:authData.JSONDictionary userId:myUserId publicKey:deviceId error:&error];
+                
+                if (!valid)
+                {
+                    MXLogDebug(@"[MXKeyBackup] trustForKeyBackupVersion: Signature with unknown key %@", deviceId);
+                }
+                else
+                {
+                    MXKeyBackupVersionTrustSignature *signature = [MXKeyBackupVersionTrustSignature new];
+                    signature.keys = deviceId;
+                    signature.valid = valid;
+                    [signatures addObject:signature];
+                }
             }
-
-            MXKeyBackupVersionTrustSignature *signature = [MXKeyBackupVersionTrustSignature new];
-            signature.deviceId = deviceId;
-            signature.device = device;
-            signature.valid = valid;
-            [signatures addObject:signature];
         }
     }
 
