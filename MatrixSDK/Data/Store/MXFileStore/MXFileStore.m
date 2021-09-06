@@ -874,31 +874,33 @@ static NSUInteger preloadOptions;
     MXMemoryRoomOutgoingMessagesStore *store = roomOutgoingMessagesStores[roomId];
     if (nil == store)
     {
-        NSString *roomFile = [self outgoingMessagesFileForRoom:roomId forBackup:NO];
-        if ([[NSFileManager defaultManager] fileExistsAtPath:roomFile])
-        {
-            @try
+        @synchronized (roomOutgoingMessagesStores) {
+            NSString *roomFile = [self outgoingMessagesFileForRoom:roomId forBackup:NO];
+            if ([[NSFileManager defaultManager] fileExistsAtPath:roomFile])
             {
-                NSDate *startDate = [NSDate date];
-                store = [NSKeyedUnarchiver unarchiveObjectWithFile:roomFile];
-                if ([NSThread isMainThread])
+                @try
                 {
-                    MXLogWarning(@"[MXFileStore] Loaded outgoing messages of room: %@ in %.0fms, in main thread", roomId, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+                    NSDate *startDate = [NSDate date];
+                    store = [NSKeyedUnarchiver unarchiveObjectWithFile:roomFile];
+                    if ([NSThread isMainThread])
+                    {
+                        MXLogWarning(@"[MXFileStore] Loaded outgoing messages of room: %@ in %.0fms, in main thread", roomId, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+                    }
+                    self->roomOutgoingMessagesStores[roomId] = store;
                 }
+                @catch (NSException *exception)
+                {
+                    MXLogError(@"[MXFileStore] Warning: MXFileRoomOutgoingMessagesStore file for room %@ has been corrupted. Exception: %@", roomId, exception);
+                    [self logFiles];
+                    [self deleteAllData];
+                }
+            }
+            else
+            {
+                // MXFileStore requires MXFileRoomOutgoingMessagesStore objets
+                store = [MXFileRoomOutgoingMessagesStore new];
                 self->roomOutgoingMessagesStores[roomId] = store;
             }
-            @catch (NSException *exception)
-            {
-                MXLogError(@"[MXFileStore] Warning: MXFileRoomOutgoingMessagesStore file for room %@ has been corrupted. Exception: %@", roomId, exception);
-                [self logFiles];
-                [self deleteAllData];
-            }
-        }
-        else
-        {
-            // MXFileStore requires MXFileRoomOutgoingMessagesStore objets
-            store = [MXFileRoomOutgoingMessagesStore new];
-            self->roomOutgoingMessagesStores[roomId] = store;
         }
     }
     
