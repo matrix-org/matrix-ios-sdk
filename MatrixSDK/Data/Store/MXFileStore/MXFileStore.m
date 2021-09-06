@@ -837,6 +837,8 @@ static NSUInteger preloadOptions;
     MXFileRoomStore *roomStore = (MXFileRoomStore *)roomStores[roomId];
     if (nil == roomStore)
     {
+        //  This object is global, which means that we will be able to open only one room at a time.
+        //  A per-room lock might be better.
         @synchronized (roomStores) {
             NSString *roomFile = [self messagesFileForRoom:roomId forBackup:NO];
             if ([[NSFileManager defaultManager] fileExistsAtPath:roomFile])
@@ -874,6 +876,8 @@ static NSUInteger preloadOptions;
     MXMemoryRoomOutgoingMessagesStore *store = roomOutgoingMessagesStores[roomId];
     if (nil == store)
     {
+        //  This object is global, which means that we will be able to open only one room at a time.
+        //  A per-room lock might be better.
         @synchronized (roomOutgoingMessagesStores) {
             NSString *roomFile = [self outgoingMessagesFileForRoom:roomId forBackup:NO];
             if ([[NSFileManager defaultManager] fileExistsAtPath:roomFile])
@@ -912,6 +916,8 @@ static NSUInteger preloadOptions;
     NSDictionary<NSString *,MXReceiptData *> *receiptsDictionary = receiptsByRoomId[roomId];
     if (nil == receiptsDictionary)
     {
+        //  This object is global, which means that we will be able to open only one room at a time.
+        //  A per-room lock might be better.
         @synchronized (receiptsByRoomId) {
             NSString *roomFile = [self readReceiptsFileForRoom:roomId forBackup:NO];
             if ([[NSFileManager defaultManager] fileExistsAtPath:roomFile])
