@@ -261,7 +261,6 @@
 - (NSUInteger)localUnreadEventCount:(NSString*)roomId withTypeIn:(NSArray*)types
 {
     // @TODO: This method is only logic which could be moved to MXRoom
-    [self getOrCreateRoomStore:roomId];
     MXMemoryRoomStore* store = [self getOrCreateRoomStore:roomId];
     RoomReceiptsStore *receiptsStore = [self getOrCreateRoomReceiptsStore:roomId];
     NSUInteger count = 0;
