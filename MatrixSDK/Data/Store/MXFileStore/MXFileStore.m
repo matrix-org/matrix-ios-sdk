@@ -926,7 +926,7 @@ static NSUInteger preloadOptions;
                 {
                     NSDate *startDate = [NSDate date];
                     receiptsStore = [NSKeyedUnarchiver unarchiveObjectWithFile:roomFile];
-                    roomReceiptsStores[roomId] = [receiptsStore mutableCopy];
+                    roomReceiptsStores[roomId] = receiptsStore;
                     if ([NSThread isMainThread])
                     {
                         MXLogWarning(@"[MXFileStore] Loaded read receipts of room: %@ in %.0fms, in main thread", roomId, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
@@ -2052,7 +2052,7 @@ static NSUInteger preloadOptions;
         RoomReceiptsStore *receiptsStore;
         @try
         {
-            receiptsStore = [[NSKeyedUnarchiver unarchiveObjectWithFile:roomFile] mutableCopy];
+            receiptsStore = [NSKeyedUnarchiver unarchiveObjectWithFile:roomFile];
         }
         @catch (NSException *exception)
         {
