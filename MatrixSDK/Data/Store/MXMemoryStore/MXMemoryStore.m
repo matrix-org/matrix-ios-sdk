@@ -44,7 +44,7 @@
     {
         roomStores = [NSMutableDictionary dictionary];
         roomOutgoingMessagesStores = [NSMutableDictionary dictionary];
-        receiptsByRoomId = [NSMutableDictionary dictionary];
+        roomReceiptsStores = [NSMutableDictionary dictionary];
         users = [NSMutableDictionary dictionary];
         groups = [NSMutableDictionary dictionary];
         maxUploadSize = -1;
@@ -101,9 +101,9 @@
         [roomStores removeObjectForKey:roomId];
     }
     
-    if (receiptsByRoomId[roomId])
+    if (roomReceiptsStores[roomId])
     {
-        [receiptsByRoomId removeObjectForKey:roomId];
+        [roomReceiptsStores removeObjectForKey:roomId];
     }
 }
 
@@ -175,7 +175,7 @@
 
 - (void)loadReceiptsForRoom:(NSString *)roomId completion:(void (^)(void))completion
 {
-    [self getOrCreateReceiptsFor:roomId];
+    [self getOrCreateRoomReceiptsStore:roomId];
     
     if (completion)
     {
@@ -188,14 +188,14 @@
 - (void)getEventReceipts:(NSString *)roomId eventId:(NSString *)eventId sorted:(BOOL)sort completion:(void (^)(NSArray<MXReceiptData *> * _Nonnull))completion
 {
     [self loadReceiptsForRoom:roomId completion:^{
-        NSDictionary<NSString *, MXReceiptData *> *receiptsByUserId = self->receiptsByRoomId[roomId];
+        RoomReceiptsStore *receiptsStore = self->roomReceiptsStores[roomId];
         
-        if (receiptsByUserId)
+        if (receiptsStore)
         {
-            @synchronized (receiptsByUserId)
+            @synchronized (receiptsStore)
             {
                 dispatch_async(self->executionQueue, ^{
-                    NSArray<MXReceiptData*> *receipts = [[receiptsByUserId allValues] filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"eventId == %@", eventId]];
+                    NSArray<MXReceiptData*> *receipts = [[receiptsStore allValues] filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"eventId == %@", eventId]];
                     
                     if (sort)
                     {
@@ -225,22 +225,16 @@
 
 - (BOOL)storeReceipt:(MXReceiptData*)receipt inRoom:(NSString*)roomId
 {
-    NSMutableDictionary* receiptsByUserId = receiptsByRoomId[roomId];
+    RoomReceiptsStore *receiptsStore = [self getOrCreateRoomReceiptsStore:roomId];
     
-    if (!receiptsByUserId)
-    {
-        receiptsByUserId = [[NSMutableDictionary alloc] init];
-        receiptsByRoomId[roomId] = receiptsByUserId;
-    }
-    
-    MXReceiptData* curReceipt = receiptsByUserId[receipt.userId];
+    MXReceiptData *curReceipt = receiptsStore[receipt.userId];
     
     // not yet defined or a new event
     if (!curReceipt || (![receipt.eventId isEqualToString:curReceipt.eventId] && (receipt.ts > curReceipt.ts)))
     {
-        @synchronized (receiptsByUserId)
+        @synchronized (receiptsStore)
         {
-            receiptsByUserId[receipt.userId] = receipt;
+            receiptsStore[receipt.userId] = receipt;
         }
         return true;
     }
@@ -250,11 +244,11 @@
 
 - (MXReceiptData *)getReceiptInRoom:(NSString*)roomId forUserId:(NSString*)userId
 {
-    NSMutableDictionary* receipsByUserId = receiptsByRoomId[roomId];
+    RoomReceiptsStore *receiptsStore = [self getOrCreateRoomReceiptsStore:roomId];
 
-    if (receipsByUserId)
+    if (receiptsStore)
     {
-        MXReceiptData* data = receipsByUserId[userId];
+        MXReceiptData* data = receiptsStore[userId];
         if (data)
         {
             return [data copy];
@@ -267,13 +261,13 @@
 - (NSUInteger)localUnreadEventCount:(NSString*)roomId withTypeIn:(NSArray*)types
 {
     // @TODO: This method is only logic which could be moved to MXRoom
-    MXMemoryRoomStore* store = [roomStores valueForKey:roomId];
-    NSMutableDictionary* receipsByUserId = [receiptsByRoomId objectForKey:roomId];
+    MXMemoryRoomStore* store = [self getOrCreateRoomStore:roomId];
+    RoomReceiptsStore *receiptsStore = [self getOrCreateRoomReceiptsStore:roomId];
     NSUInteger count = 0;
     
-    if (store && receipsByUserId)
+    if (store && receiptsStore)
     {
-        MXReceiptData* data = [receipsByUserId objectForKey:credentials.userId];
+        MXReceiptData* data = [receiptsStore objectForKey:credentials.userId];
         
         if (data)
         {
@@ -481,15 +475,15 @@
     return store;
 }
 
-- (NSDictionary<NSString *,MXReceiptData *> *)getOrCreateReceiptsFor:(NSString *)roomId
+- (RoomReceiptsStore *)getOrCreateRoomReceiptsStore:(NSString *)roomId
 {
-    NSDictionary<NSString *,MXReceiptData *> *result = receiptsByRoomId[roomId];
-    if (nil == result)
+    RoomReceiptsStore *store = roomReceiptsStores[roomId];
+    if (nil == store)
     {
-        result = [NSMutableDictionary new];
-        receiptsByRoomId[roomId] = result;
+        store = [RoomReceiptsStore new];
+        roomReceiptsStores[roomId] = store;
     }
-    return result;
+    return store;
 }
 
 @end

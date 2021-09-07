@@ -20,6 +20,11 @@
 #import "MXMemoryRoomOutgoingMessagesStore.h"
 
 /**
+ Receipts in a room. Keys are userIds.
+ */
+typedef NSMutableDictionary<NSString*, MXReceiptData*> RoomReceiptsStore;
+
+/**
  `MXMemoryStore` is an implementation of the `MXStore` interface that stores events in memory.
  */
 @interface MXMemoryStore : NSObject <MXStore>
@@ -37,8 +42,9 @@
     // The keys are groups ids.
     NSMutableDictionary <NSString*, MXGroup*> *groups;
 
-    // Dict of dict of MXReceiptData indexed by userId
-    NSMutableDictionary *receiptsByRoomId;
+    // Dict of room receipts stores
+    // The keys are room ids.
+    NSMutableDictionary <NSString*, RoomReceiptsStore*> *roomReceiptsStores;
 
     // Matrix filters
     // FilterId -> Filter JSON string
@@ -72,6 +78,6 @@
  @param roomId the id of the room.
  @return receipts dictionary by user id.
  */
-- (NSDictionary<NSString *, MXReceiptData*>*)getOrCreateReceiptsFor:(NSString*)roomId;
+- (RoomReceiptsStore*)getOrCreateRoomReceiptsStore:(NSString*)roomId;
 
 @end

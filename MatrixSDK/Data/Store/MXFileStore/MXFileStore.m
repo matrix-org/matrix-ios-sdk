@@ -248,7 +248,7 @@ static NSUInteger preloadOptions;
                 }
                 if (preloadOptions & MXFileStorePreloadOptionReadReceipts)
                 {
-                    [self preloadReceipts];
+                    [self preloadRoomReceipts];
                 }
                 [self loadUsers];
                 [self loadGroups];
@@ -911,22 +911,22 @@ static NSUInteger preloadOptions;
     return store;
 }
 
-- (NSDictionary<NSString *,MXReceiptData *> *)getOrCreateReceiptsFor:(NSString *)roomId
+- (RoomReceiptsStore*)getOrCreateRoomReceiptsStore:(NSString *)roomId
 {
-    NSDictionary<NSString *,MXReceiptData *> *receiptsDictionary = receiptsByRoomId[roomId];
-    if (nil == receiptsDictionary)
+    RoomReceiptsStore *receiptsStore = roomReceiptsStores[roomId];
+    if (nil == receiptsStore)
     {
         //  This object is global, which means that we will be able to open only one room at a time.
         //  A per-room lock might be better.
-        @synchronized (receiptsByRoomId) {
+        @synchronized (roomReceiptsStores) {
             NSString *roomFile = [self readReceiptsFileForRoom:roomId forBackup:NO];
             if ([[NSFileManager defaultManager] fileExistsAtPath:roomFile])
             {
                 @try
                 {
                     NSDate *startDate = [NSDate date];
-                    receiptsDictionary = [NSKeyedUnarchiver unarchiveObjectWithFile:roomFile];
-                    receiptsByRoomId[roomId] = receiptsDictionary;
+                    receiptsStore = [NSKeyedUnarchiver unarchiveObjectWithFile:roomFile];
+                    roomReceiptsStores[roomId] = receiptsStore;
                     if ([NSThread isMainThread])
                     {
                         MXLogWarning(@"[MXFileStore] Loaded read receipts of room: %@ in %.0fms, in main thread", roomId, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
@@ -943,19 +943,19 @@ static NSUInteger preloadOptions;
                     // TODO: Can we live with that?
                     //[self deleteAllData];
                     
-                    receiptsDictionary = [NSMutableDictionary dictionary];
-                    receiptsByRoomId[roomId] = receiptsDictionary;
+                    receiptsStore = [RoomReceiptsStore new];
+                    roomReceiptsStores[roomId] = receiptsStore;
                 }
             }
             else
             {
-                receiptsDictionary = [NSMutableDictionary dictionary];
-                receiptsByRoomId[roomId] = receiptsDictionary;
+                receiptsStore = [RoomReceiptsStore new];
+                roomReceiptsStores[roomId] = receiptsStore;
             }
         }
     }
     
-    return receiptsDictionary;
+    return receiptsStore;
 }
 
 #pragma mark - File paths
@@ -2007,7 +2007,7 @@ static NSUInteger preloadOptions;
 - (void)loadReceiptsForRoom:(NSString *)roomId completion:(void (^)(void))completion
 {
     dispatch_async(dispatchQueue, ^{
-        [self getOrCreateReceiptsFor:roomId];
+        [self getOrCreateRoomReceiptsStore:roomId];
         
         if (completion)
         {
@@ -2039,7 +2039,7 @@ static NSUInteger preloadOptions;
 
 
 // Load the data store in files
-- (void)preloadReceipts
+- (void)preloadRoomReceipts
 {
     NSArray<NSString *> *roomIDs = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:storeRoomsPath error:nil];
     
@@ -2049,20 +2049,20 @@ static NSUInteger preloadOptions;
     {
         NSString *roomFile = [self readReceiptsFileForRoom:roomId forBackup:NO];
 
-        NSMutableDictionary *receiptsDict;
+        RoomReceiptsStore *receiptsStore;
         @try
         {
-            receiptsDict =[NSKeyedUnarchiver unarchiveObjectWithFile:roomFile];
+            receiptsStore = [NSKeyedUnarchiver unarchiveObjectWithFile:roomFile];
         }
         @catch (NSException *exception)
         {
             MXLogDebug(@"[MXFileStore] Warning: loadReceipts file for room %@ has been corrupted", roomId);
         }
 
-        if (receiptsDict)
+        if (receiptsStore)
         {
             //MXLogDebug(@"   - %@: %tu", roomId, receiptsDict.count);
-            receiptsByRoomId[roomId] = receiptsDict;
+            roomReceiptsStores[roomId] = receiptsStore;
         }
         else
         {
@@ -2075,11 +2075,11 @@ static NSUInteger preloadOptions;
             // TODO: Can we live with that?
             //[self deleteAllData];
 
-            receiptsByRoomId[roomId] = [NSMutableDictionary dictionary];
+            roomReceiptsStores[roomId] = [RoomReceiptsStore new];
         }
     }
 
-    MXLogDebug(@"[MXFileStore] Loaded read receipts of %tu rooms in %.0fms", receiptsByRoomId.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+    MXLogDebug(@"[MXFileStore] Loaded read receipts of %tu rooms in %.0fms", roomReceiptsStores.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
 
 - (void)saveReceipts
@@ -2102,10 +2102,10 @@ static NSUInteger preloadOptions;
             // Save rooms where there was changes
             for (NSString *roomId in roomsToCommit)
             {
-                NSMutableDictionary* receiptsByUserId = self->receiptsByRoomId[roomId];
-                if (receiptsByUserId)
+                RoomReceiptsStore *receiptsStore = self->roomReceiptsStores[roomId];
+                if (receiptsStore)
                 {
-                    @synchronized (receiptsByUserId)
+                    @synchronized (receiptsStore)
                     {
                         NSString *file = [self readReceiptsFileForRoom:roomId forBackup:NO];
                         NSString *backupFile = [self readReceiptsFileForRoom:roomId forBackup:YES];
@@ -2119,7 +2119,7 @@ static NSUInteger preloadOptions;
 
                         // Store new data
                         [self checkFolderExistenceForRoom:roomId forBackup:NO];
-                        [NSKeyedArchiver archiveRootObject:receiptsByUserId toFile:file];
+                        [NSKeyedArchiver archiveRootObject:receiptsStore toFile:file];
                     }
                 }
             }
