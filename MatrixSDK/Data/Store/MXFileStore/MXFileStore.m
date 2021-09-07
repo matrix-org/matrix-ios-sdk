@@ -837,34 +837,37 @@ static NSUInteger preloadOptions;
     MXFileRoomStore *roomStore = (MXFileRoomStore *)roomStores[roomId];
     if (nil == roomStore)
     {
-        NSString *roomFile = [self messagesFileForRoom:roomId forBackup:NO];
-        if ([[NSFileManager defaultManager] fileExistsAtPath:roomFile])
-        {
-            @try
+        //  This object is global, which means that we will be able to open only one room at a time.
+        //  A per-room lock might be better.
+        @synchronized (roomStores) {
+            NSString *roomFile = [self messagesFileForRoom:roomId forBackup:NO];
+            if ([[NSFileManager defaultManager] fileExistsAtPath:roomFile])
             {
-                NSDate *startDate = [NSDate date];
-                roomStore = [NSKeyedUnarchiver unarchiveObjectWithFile:roomFile];
-                if ([NSThread isMainThread])
+                @try
                 {
-                    MXLogWarning(@"[MXFileStore] Loaded room messages of room: %@ in %.0fms, in main thread", roomId, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+                    NSDate *startDate = [NSDate date];
+                    roomStore = [NSKeyedUnarchiver unarchiveObjectWithFile:roomFile];
+                    if ([NSThread isMainThread])
+                    {
+                        MXLogWarning(@"[MXFileStore] Loaded room messages of room: %@ in %.0fms, in main thread", roomId, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+                    }
+                    self->roomStores[roomId] = roomStore;
                 }
+                @catch (NSException *exception)
+                {
+                    MXLogError(@"[MXFileStore] Warning: MXFileRoomStore file for room %@ has been corrupted. Exception: %@", roomId, exception);
+                    [self logFiles];
+                    [self deleteAllData];
+                }
+            }
+            else
+            {
+                // MXFileStore requires MXFileRoomStore objets
+                roomStore = [[MXFileRoomStore alloc] init];
                 self->roomStores[roomId] = roomStore;
             }
-            @catch (NSException *exception)
-            {
-                MXLogError(@"[MXFileStore] Warning: MXFileRoomStore file for room %@ has been corrupted. Exception: %@", roomId, exception);
-                [self logFiles];
-                [self deleteAllData];
-            }
-        }
-        else
-        {
-            // MXFileStore requires MXFileRoomStore objets
-            roomStore = [[MXFileRoomStore alloc] init];
-            self->roomStores[roomId] = roomStore;
         }
     }
-    
     return roomStore;
 }
 
@@ -873,31 +876,35 @@ static NSUInteger preloadOptions;
     MXMemoryRoomOutgoingMessagesStore *store = roomOutgoingMessagesStores[roomId];
     if (nil == store)
     {
-        NSString *roomFile = [self outgoingMessagesFileForRoom:roomId forBackup:NO];
-        if ([[NSFileManager defaultManager] fileExistsAtPath:roomFile])
-        {
-            @try
+        //  This object is global, which means that we will be able to open only one room at a time.
+        //  A per-room lock might be better.
+        @synchronized (roomOutgoingMessagesStores) {
+            NSString *roomFile = [self outgoingMessagesFileForRoom:roomId forBackup:NO];
+            if ([[NSFileManager defaultManager] fileExistsAtPath:roomFile])
             {
-                NSDate *startDate = [NSDate date];
-                store = [NSKeyedUnarchiver unarchiveObjectWithFile:roomFile];
-                if ([NSThread isMainThread])
+                @try
                 {
-                    MXLogWarning(@"[MXFileStore] Loaded outgoing messages of room: %@ in %.0fms, in main thread", roomId, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+                    NSDate *startDate = [NSDate date];
+                    store = [NSKeyedUnarchiver unarchiveObjectWithFile:roomFile];
+                    if ([NSThread isMainThread])
+                    {
+                        MXLogWarning(@"[MXFileStore] Loaded outgoing messages of room: %@ in %.0fms, in main thread", roomId, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+                    }
+                    self->roomOutgoingMessagesStores[roomId] = store;
                 }
+                @catch (NSException *exception)
+                {
+                    MXLogError(@"[MXFileStore] Warning: MXFileRoomOutgoingMessagesStore file for room %@ has been corrupted. Exception: %@", roomId, exception);
+                    [self logFiles];
+                    [self deleteAllData];
+                }
+            }
+            else
+            {
+                // MXFileStore requires MXFileRoomOutgoingMessagesStore objets
+                store = [MXFileRoomOutgoingMessagesStore new];
                 self->roomOutgoingMessagesStores[roomId] = store;
             }
-            @catch (NSException *exception)
-            {
-                MXLogError(@"[MXFileStore] Warning: MXFileRoomOutgoingMessagesStore file for room %@ has been corrupted. Exception: %@", roomId, exception);
-                [self logFiles];
-                [self deleteAllData];
-            }
-        }
-        else
-        {
-            // MXFileStore requires MXFileRoomOutgoingMessagesStore objets
-            store = [MXFileRoomOutgoingMessagesStore new];
-            self->roomOutgoingMessagesStores[roomId] = store;
         }
     }
     
@@ -909,38 +916,42 @@ static NSUInteger preloadOptions;
     NSDictionary<NSString *,MXReceiptData *> *receiptsDictionary = receiptsByRoomId[roomId];
     if (nil == receiptsDictionary)
     {
-        NSString *roomFile = [self readReceiptsFileForRoom:roomId forBackup:NO];
-        if ([[NSFileManager defaultManager] fileExistsAtPath:roomFile])
-        {
-            @try
+        //  This object is global, which means that we will be able to open only one room at a time.
+        //  A per-room lock might be better.
+        @synchronized (receiptsByRoomId) {
+            NSString *roomFile = [self readReceiptsFileForRoom:roomId forBackup:NO];
+            if ([[NSFileManager defaultManager] fileExistsAtPath:roomFile])
             {
-                NSDate *startDate = [NSDate date];
-                receiptsDictionary = [NSKeyedUnarchiver unarchiveObjectWithFile:roomFile];
-                receiptsByRoomId[roomId] = receiptsDictionary;
-                if ([NSThread isMainThread])
+                @try
                 {
-                    MXLogWarning(@"[MXFileStore] Loaded read receipts of room: %@ in %.0fms, in main thread", roomId, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+                    NSDate *startDate = [NSDate date];
+                    receiptsDictionary = [NSKeyedUnarchiver unarchiveObjectWithFile:roomFile];
+                    receiptsByRoomId[roomId] = receiptsDictionary;
+                    if ([NSThread isMainThread])
+                    {
+                        MXLogWarning(@"[MXFileStore] Loaded read receipts of room: %@ in %.0fms, in main thread", roomId, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+                    }
+                }
+                @catch (NSException *exception)
+                {
+                    MXLogError(@"[MXFileStore] Warning: loadReceipts file for room %@ has been corrupted. Exception: %@", roomId, exception);
+                    
+                    // We used to reset the store and force a full initial sync but this makes the app
+                    // start very slowly.
+                    // So, avoid this reset by considering there is no read receipts for this room which
+                    // is not probably true.
+                    // TODO: Can we live with that?
+                    //[self deleteAllData];
+                    
+                    receiptsDictionary = [NSMutableDictionary dictionary];
+                    receiptsByRoomId[roomId] = receiptsDictionary;
                 }
             }
-            @catch (NSException *exception)
+            else
             {
-                MXLogError(@"[MXFileStore] Warning: loadReceipts file for room %@ has been corrupted. Exception: %@", roomId, exception);
-                
-                // We used to reset the store and force a full initial sync but this makes the app
-                // start very slowly.
-                // So, avoid this reset by considering there is no read receipts for this room which
-                // is not probably true.
-                // TODO: Can we live with that?
-                //[self deleteAllData];
-                
                 receiptsDictionary = [NSMutableDictionary dictionary];
                 receiptsByRoomId[roomId] = receiptsDictionary;
             }
-        }
-        else
-        {
-            receiptsDictionary = [NSMutableDictionary dictionary];
-            receiptsByRoomId[roomId] = receiptsDictionary;
         }
     }
     
