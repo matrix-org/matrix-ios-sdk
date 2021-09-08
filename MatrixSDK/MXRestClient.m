@@ -3718,8 +3718,8 @@ MXAuthAction;
                                  }];
 }
 
-- (MXHTTPOperation*) maxUploadSize:(void (^)(NSInteger maxUploadSize))success
-                           failure:(void (^)(NSError *error))failure
+- (MXHTTPOperation*)maxUploadSize:(void (^)(NSInteger maxUploadSize))success
+                          failure:(void (^)(NSError *error))failure
 {
     MXWeakify(self);
     return [httpClient requestWithMethod:@"GET"

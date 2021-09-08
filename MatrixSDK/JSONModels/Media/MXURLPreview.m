@@ -18,6 +18,15 @@
 
 @implementation MXURLPreview
 
+static NSString * const kSiteNameJSONKey = @"og:site_name";
+static NSString * const kTitleJSONKey = @"og:title";
+static NSString * const kDescriptionJSONKey = @"og:description";
+static NSString * const kImageURLJSONKey = @"og:image";
+static NSString * const kImageTypeJSONKey = @"og:image:type";
+static NSString * const kImageWidthJSONKey = @"og:image:width";
+static NSString * const kImageHeightJSONKey = @"og:image:height";
+static NSString * const kImageFileSizeJSONKey = @"matrix:image:size";
+
 + (instancetype)modelFromJSON:(NSDictionary *)JSONDictionary
 {
     MXURLPreview *urlPreview = [MXURLPreview new];
@@ -25,14 +34,14 @@
     NSString *siteName, *title, *description, *imageURL, *imageType;
     NSNumber *imageWidth, *imageHeight, *imageFileSize;
     
-    MXJSONModelSetString(siteName, JSONDictionary[@"og:site_name"]);
-    MXJSONModelSetString(title, JSONDictionary[@"og:title"]);
-    MXJSONModelSetString(description, JSONDictionary[@"og:description"]);
-    MXJSONModelSetString(imageURL, JSONDictionary[@"og:image"]);
-    MXJSONModelSetString(imageType, JSONDictionary[@"og:image:type"]);
-    MXJSONModelSetNumber(imageWidth, JSONDictionary[@"og:image:width"]);
-    MXJSONModelSetNumber(imageHeight, JSONDictionary[@"og:image:height"]);
-    MXJSONModelSetNumber(imageFileSize, JSONDictionary[@"matrix:image:size"]);
+    MXJSONModelSetString(siteName, JSONDictionary[kSiteNameJSONKey]);
+    MXJSONModelSetString(title, JSONDictionary[kTitleJSONKey]);
+    MXJSONModelSetString(description, JSONDictionary[kDescriptionJSONKey]);
+    MXJSONModelSetString(imageURL, JSONDictionary[kImageURLJSONKey]);
+    MXJSONModelSetString(imageType, JSONDictionary[kImageTypeJSONKey]);
+    MXJSONModelSetNumber(imageWidth, JSONDictionary[kImageWidthJSONKey]);
+    MXJSONModelSetNumber(imageHeight, JSONDictionary[kImageHeightJSONKey]);
+    MXJSONModelSetNumber(imageFileSize, JSONDictionary[kImageFileSizeJSONKey]);
     
     urlPreview->_siteName = siteName;
     urlPreview->_title = title;
@@ -53,35 +62,35 @@
     {
         if (self.siteName)
         {
-            JSONDictionary[@"og:site_name"] = self.siteName;
+            JSONDictionary[kSiteNameJSONKey] = self.siteName;
         }
         if (self.title)
         {
-            JSONDictionary[@"og:title"] = self.title;
+            JSONDictionary[kTitleJSONKey] = self.title;
         }
         if (self.text)
         {
-            JSONDictionary[@"og:description"] = self.text;
+            JSONDictionary[kDescriptionJSONKey] = self.text;
         }
         if (self.imageURL)
         {
-            JSONDictionary[@"og:image"] = self.imageURL;
+            JSONDictionary[kImageURLJSONKey] = self.imageURL;
         }
         if (self.imageType)
         {
-            JSONDictionary[@"og:image:type"] = self.imageType;
+            JSONDictionary[kImageTypeJSONKey] = self.imageType;
         }
         if (self.imageWidth)
         {
-            JSONDictionary[@"og:image:width"] = self.imageWidth;
+            JSONDictionary[kImageWidthJSONKey] = self.imageWidth;
         }
         if (self.imageHeight)
         {
-            JSONDictionary[@"og:image:height"] = self.imageHeight;
+            JSONDictionary[kImageHeightJSONKey] = self.imageHeight;
         }
         if (self.imageFileSize)
         {
-            JSONDictionary[@"matrix:image:size"] = self.imageFileSize;
+            JSONDictionary[kImageFileSizeJSONKey] = self.imageFileSize;
         }
     }
     
@@ -94,28 +103,28 @@
 {
     self = [super init];
     if (self) {
-        _siteName = [coder decodeObjectForKey:@"og:site_name"];
-        _title = [coder decodeObjectForKey:@"og:title"];
-        _text = [coder decodeObjectForKey:@"og:description"];
-        _imageURL = [coder decodeObjectForKey:@"og:image"];
-        _imageType = [coder decodeObjectForKey:@"og:image:type"];
-        _imageWidth = [coder decodeObjectForKey:@"og:image:width"];
-        _imageHeight = [coder decodeObjectForKey:@"og:image:height"];
-        _imageFileSize = [coder decodeObjectForKey:@"matrix:image:size"];
+        _siteName = [coder decodeObjectForKey:kSiteNameJSONKey];
+        _title = [coder decodeObjectForKey:kTitleJSONKey];
+        _text = [coder decodeObjectForKey:kDescriptionJSONKey];
+        _imageURL = [coder decodeObjectForKey:kImageURLJSONKey];
+        _imageType = [coder decodeObjectForKey:kImageTypeJSONKey];
+        _imageWidth = [coder decodeObjectForKey:kImageWidthJSONKey];
+        _imageHeight = [coder decodeObjectForKey:kImageHeightJSONKey];
+        _imageFileSize = [coder decodeObjectForKey:kImageFileSizeJSONKey];
     }
     return self;
 }
 
 - (void)encodeWithCoder:(NSCoder *)coder
 {
-    [coder encodeObject:_siteName forKey:@"og:site_name"];
-    [coder encodeObject:_title forKey:@"og:title"];
-    [coder encodeObject:_text forKey:@"og:description"];
-    [coder encodeObject:_imageURL forKey:@"og:image"];
-    [coder encodeObject:_imageType forKey:@"og:image:type"];
-    [coder encodeObject:_imageWidth forKey:@"og:image:width"];
-    [coder encodeObject:_imageHeight forKey:@"og:image:height"];
-    [coder encodeObject:_imageFileSize forKey:@"matrix:image:size"];
+    [coder encodeObject:_siteName forKey:kSiteNameJSONKey];
+    [coder encodeObject:_title forKey:kTitleJSONKey];
+    [coder encodeObject:_text forKey:kDescriptionJSONKey];
+    [coder encodeObject:_imageURL forKey:kImageURLJSONKey];
+    [coder encodeObject:_imageType forKey:kImageTypeJSONKey];
+    [coder encodeObject:_imageWidth forKey:kImageWidthJSONKey];
+    [coder encodeObject:_imageHeight forKey:kImageHeightJSONKey];
+    [coder encodeObject:_imageFileSize forKey:kImageFileSizeJSONKey];
 }
 
 @end

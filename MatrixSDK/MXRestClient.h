@@ -1949,8 +1949,8 @@ Get the maximum size a media upload can be in bytes.
 
 @return a MXHTTPOperation instance.
 */
-- (MXHTTPOperation*) maxUploadSize:(void (^)(NSInteger maxUploadSize))success
-                           failure:(void (^)(NSError *error))failure;
+- (MXHTTPOperation*)maxUploadSize:(void (^)(NSInteger maxUploadSize))success
+                          failure:(void (^)(NSError *error))failure;
 
 /**
 Get information about a URL for the client that can be used to render a preview.
@@ -1963,9 +1963,9 @@ Note: Clients should consider avoiding this endpoint for URLs posted in encrypte
 
 @return a MXHTTPOperation instance.
 */
-- (MXHTTPOperation*) previewForURL:(NSURL*)url
-                           success:(void (^)(MXURLPreview* urlPreview))success
-                           failure:(void (^)(NSError *error))failure;
+- (MXHTTPOperation*)previewForURL:(NSURL*)url
+                          success:(void (^)(MXURLPreview* urlPreview))success
+                          failure:(void (^)(NSError *error))failure;
 
 
 #pragma mark - Antivirus server API
