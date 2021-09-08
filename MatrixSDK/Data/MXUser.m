@@ -71,23 +71,19 @@
         if (roomMember.displayname && roomMemberEvent.originServerTs > latestUpdateTS)
         {
             self.displayname = [roomMember.displayname copy];
-            if (roomMemberEvent.originServerTs > latestUpdateTS) {
-                latestUpdateTS = roomMemberEvent.originServerTs;
-            }
+            latestUpdateTS = roomMemberEvent.originServerTs;
         }
         if (roomMember.avatarUrl && roomMemberEvent.originServerTs > latestUpdateTS)
         {
             self.avatarUrl = [roomMember.avatarUrl copy];
-            if (roomMemberEvent.originServerTs > latestUpdateTS) {
-                latestUpdateTS = roomMemberEvent.originServerTs;
-            }
+            latestUpdateTS = roomMemberEvent.originServerTs;
         }
-        
         // Handle here the case where the user has no defined avatar.
         if (nil == self.avatarUrl && ![MXSDKOptions sharedInstance].disableIdenticonUseForUserAvatar)
         {
             // Force to use an identicon url
             self.avatarUrl = [mxSession.mediaManager urlOfIdenticon:self.userId];
+            latestUpdateTS = roomMemberEvent.originServerTs;
         }
 
         [self notifyListeners:roomMemberEvent];
@@ -97,21 +93,23 @@
 - (void)updateWithPresenceEvent:(MXEvent*)presenceEvent inMatrixSession:(MXSession *)mxSession
 {
     NSParameterAssert(presenceEvent.eventType == MXEventTypePresence);
-    
+
     MXPresenceEventContent *presenceContent = [MXPresenceEventContent modelFromJSON:presenceEvent.content];
 
     // Displayname and avatar are optional in presence events, update user data with them
     // only if they are provided.
     // Note: It is about to change in a short future in Matrix spec.
     // Displayname and avatar updates will come only through m.room.member events
-    if (presenceContent.displayname && presenceEvent.originServerTs > latestUpdateTS)
+    if (presenceContent.displayname 
+            && NO == [_displayname isEqualToString:presenceContent.displayname]  
+            && presenceEvent.originServerTs > latestUpdateTS)
     {
         self.displayname = [presenceContent.displayname copy];
-        if (presenceEvent.originServerTs > latestUpdateTS) {
-            latestUpdateTS = presenceEvent.originServerTs;
-        }
+        latestUpdateTS = presenceEvent.originServerTs;
     }
-    if (presenceContent.avatarUrl && presenceEvent.originServerTs > latestUpdateTS)
+    if (presenceContent.avatarUrl
+            && NO == [_avatarUrl isEqualToString:presenceContent.avatarUrl]
+            && presenceEvent.originServerTs > latestUpdateTS)
     {
         // We ignore non mxc avatar url
         if ([presenceContent.avatarUrl hasPrefix:kMXContentUriScheme])
@@ -122,21 +120,19 @@
         {
             self.avatarUrl = nil;
         }
-        if (presenceEvent.originServerTs > latestUpdateTS) {
-            latestUpdateTS = presenceEvent.originServerTs;
-        }
+        latestUpdateTS = presenceEvent.originServerTs;
     }
-    
     // Handle here the case where the user has no defined avatar.
     if (nil == self.avatarUrl && ![MXSDKOptions sharedInstance].disableIdenticonUseForUserAvatar)
     {
         // Force to use an identicon url
         self.avatarUrl = [mxSession.mediaManager urlOfIdenticon:self.userId];
+        latestUpdateTS = presenceEvent.originServerTs;
     }
 
     _statusMsg = [presenceContent.statusMsg copy];
     _presence = presenceContent.presenceStatus;
-    
+
     lastActiveLocalTS = [[NSDate date] timeIntervalSince1970] * 1000 - presenceContent.lastActiveAgo;
     _currentlyActive = presenceContent.currentlyActive;
 
