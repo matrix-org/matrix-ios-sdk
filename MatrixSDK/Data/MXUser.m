@@ -71,14 +71,18 @@
         if (roomMember.displayname && roomMemberEvent.originServerTs > latestUpdateTS)
         {
             self.displayname = [roomMember.displayname copy];
+            if (roomMemberEvent.originServerTs > latestUpdateTS) {
+                latestUpdateTS = roomMemberEvent.originServerTs;
+            }
         }
         if (roomMember.avatarUrl && roomMemberEvent.originServerTs > latestUpdateTS)
         {
             self.avatarUrl = [roomMember.avatarUrl copy];
+            if (roomMemberEvent.originServerTs > latestUpdateTS) {
+                latestUpdateTS = roomMemberEvent.originServerTs;
+            }
         }
-        if (roomMemberEvent.originServerTs > latestUpdateTS) {
-            latestUpdateTS = roomMemberEvent.originServerTs;
-        }
+        
         // Handle here the case where the user has no defined avatar.
         if (nil == self.avatarUrl && ![MXSDKOptions sharedInstance].disableIdenticonUseForUserAvatar)
         {
@@ -103,6 +107,9 @@
     if (presenceContent.displayname && presenceEvent.originServerTs > latestUpdateTS)
     {
         self.displayname = [presenceContent.displayname copy];
+        if (presenceEvent.originServerTs > latestUpdateTS) {
+            latestUpdateTS = presenceEvent.originServerTs;
+        }
     }
     if (presenceContent.avatarUrl && presenceEvent.originServerTs > latestUpdateTS)
     {
@@ -115,10 +122,11 @@
         {
             self.avatarUrl = nil;
         }
+        if (presenceEvent.originServerTs > latestUpdateTS) {
+            latestUpdateTS = presenceEvent.originServerTs;
+        }
     }
-    if (presenceEvent.originServerTs > latestUpdateTS) {
-        latestUpdateTS = presenceEvent.originServerTs;
-    }
+    
     // Handle here the case where the user has no defined avatar.
     if (nil == self.avatarUrl && ![MXSDKOptions sharedInstance].disableIdenticonUseForUserAvatar)
     {
