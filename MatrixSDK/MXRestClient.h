@@ -2253,8 +2253,8 @@ Note: Clients should consider avoiding this endpoint for URLs posted in encrypte
 
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)dehydratedDeviceWithSuccess:(void (^)(MXDehydratedDevice *device))success
-                                        failure:(void (^)(NSError *error))failure;
+- (MXHTTPOperation*)getDehydratedDeviceWithSuccess:(void (^)(MXDehydratedDevice *device))success
+                                           failure:(void (^)(NSError *error))failure;
 
 /**
  Set a given device as the dehydrated device of the current account.
