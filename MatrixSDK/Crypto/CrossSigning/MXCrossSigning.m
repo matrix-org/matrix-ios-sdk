@@ -86,7 +86,14 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
         
         [self setupWithAuthParams:authParams success:success failure:failure];
         
-    } failure:failure];
+    } failure:^(NSError *error) {
+        if (failure)
+        {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                failure(error);
+            });
+        }
+    }
 }
 
 - (void)setupWithAuthParams:(NSDictionary*)authParams
