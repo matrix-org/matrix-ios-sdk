@@ -93,7 +93,7 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
                 failure(error);
             });
         }
-    }
+    }];
 }
 
 - (void)setupWithAuthParams:(NSDictionary*)authParams
