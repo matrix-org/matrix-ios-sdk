@@ -567,7 +567,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
             event.sentState = MXEventSentStateFailed;
 
             // Update the stored echo.
-            [self updateOutgoingMessage:event.eventId withOutgoingMessage:event];
+            // [self updateOutgoingMessage:event.eventId withOutgoingMessage:event];
         }
 
         if (failure)

@@ -157,10 +157,14 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 #ifdef MX_CRYPTO
 
     MXLogDebug(@"[MXCrypto] checkCryptoWithMatrixSession for %@", mxSession.matrixRestClient.credentials.userId);
-
+    if (!mxSession.matrixRestClient.credentials.userId) {
+        return;
+    }
     dispatch_queue_t cryptoQueue = [MXCrypto dispatchQueueForUser:mxSession.matrixRestClient.credentials.userId];
     dispatch_async(cryptoQueue, ^{
-
+        if (!mxSession.matrixRestClient || !mxSession.matrixRestClient.credentials || !mxSession.matrixRestClient.credentials.userId) {
+            return;
+        }
         //  clear the read-only store
         [MXCryptoStoreClass deleteReadonlyStoreWithCredentials:mxSession.credentials];
         

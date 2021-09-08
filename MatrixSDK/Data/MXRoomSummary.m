@@ -729,6 +729,10 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
                     self->_notificationCount = 0;
                     self->_highlightCount = 0;
                     updated = YES;
+                }  else {
+                    self->_notificationCount = roomSync.unreadNotifications.notificationCount;
+                    self->_highlightCount = roomSync.unreadNotifications.highlightCount;
+                    updated = YES;
                 }
             }
             else if (self.notificationCount != roomSync.unreadNotifications.notificationCount
