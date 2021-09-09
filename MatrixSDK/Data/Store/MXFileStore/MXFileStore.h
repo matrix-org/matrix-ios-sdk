@@ -29,13 +29,19 @@ NS_ASSUME_NONNULL_BEGIN
 typedef NS_OPTIONS(NSInteger, MXFileStorePreloadOptions)
 {
     // Preload rooms summaries
-    MXFileStorePreloadOptionRoomSummary = 0x1,
+    MXFileStorePreloadOptionRoomSummary = 1 << 0,
 
     // Preload rooms states
-    MXFileStorePreloadOptionRoomState = 0x2,
+    MXFileStorePreloadOptionRoomState = 1 << 1,
 
     // Preload rooms account data
-    MXFileStorePreloadOptionRoomAccountData = 0x4
+    MXFileStorePreloadOptionRoomAccountData = 1 << 2,
+    
+    // Preload rooms messages
+    MXFileStorePreloadOptionRoomMessages = 1 << 3,
+
+    // Preload read receipts
+    MXFileStorePreloadOptionReadReceipts = 1 << 4
 };
 
 /**
@@ -51,12 +57,14 @@ typedef NS_OPTIONS(NSInteger, MXFileStorePreloadOptions)
             + rooms
                 + {roomId1}
                     L messages: The room messages
+                    L outgoingMessages: The room outgoing messages
                     L state: The room state events
                     L summary: The room summary
                     L accountData: The account data for this room
                     L receipts: The read receipts for this room
                 + {roomId2}
                     L messages
+                    L outgoingMessages
                     L state
                     L summary
                     L accountData

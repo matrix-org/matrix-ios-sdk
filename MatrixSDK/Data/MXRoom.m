@@ -171,22 +171,26 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
         if (!pendingLiveTimelineRequesters)
         {
             pendingLiveTimelineRequesters = [NSMutableArray array];
-
+            
             MXWeakify(self);
-            [MXRoomState loadRoomStateFromStore:self.mxSession.store withRoomId:self.roomId matrixSession:self.mxSession onComplete:^(MXRoomState *roomState) {
+            [mxSession.store loadRoomMessagesForRoom:self.roomId completion:^{
                 MXStrongifyAndReturnIfNil(self);
+                MXWeakify(self);
+                [MXRoomState loadRoomStateFromStore:self.mxSession.store withRoomId:self.roomId matrixSession:self.mxSession onComplete:^(MXRoomState *roomState) {
+                    MXStrongifyAndReturnIfNil(self);
 
-                [self->liveTimeline setState:roomState];
+                    [self->liveTimeline setState:roomState];
 
-                // Provide the timelime to pending requesters
-                NSArray<void (^)(MXEventTimeline *)> *liveTimelineRequesters = [self->pendingLiveTimelineRequesters copy];
-                self->pendingLiveTimelineRequesters = nil;
+                    // Provide the timelime to pending requesters
+                    NSArray<void (^)(MXEventTimeline *)> *liveTimelineRequesters = [self->pendingLiveTimelineRequesters copy];
+                    self->pendingLiveTimelineRequesters = nil;
 
-                for (void (^onRequesterComplete)(MXEventTimeline *) in liveTimelineRequesters)
-                {
-                    onRequesterComplete(self->liveTimeline);
-                }
-                MXLogDebug(@"[MXRoom] liveTimeline loaded. Pending requesters: %@", @(liveTimelineRequesters.count));
+                    for (void (^onRequesterComplete)(MXEventTimeline *) in liveTimelineRequesters)
+                    {
+                        onRequesterComplete(self->liveTimeline);
+                    }
+                    MXLogDebug(@"[MXRoom] liveTimeline loaded. Pending requesters: %@", @(liveTimelineRequesters.count));
+                }];
             }];
         }
 
@@ -3007,36 +3011,19 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     }
 }
 
-- (NSArray<MXReceiptData*> *)getEventReceipts:(NSString*)eventId sorted:(BOOL)sort
+- (void)getEventReceipts:(NSString *)eventId sorted:(BOOL)sort completion:(void (^)(NSArray<MXReceiptData *> * _Nonnull))completion
 {
-    NSArray *receipts = [mxSession.store getEventReceipts:self.roomId eventId:eventId sorted:sort];
-    
-    // if some receipts are found
-    if (receipts)
-    {
-        NSString* myUserId = mxSession.myUserId;
-        NSMutableArray* res = [[NSMutableArray alloc] init];
+    [mxSession.store getEventReceipts:self.roomId
+                              eventId:eventId
+                               sorted:sort
+                           completion:^(NSArray<MXReceiptData *> * _Nonnull receipts) {
+        NSString *myUserId = self->mxSession.myUserId;
         
         // Remove the oneself receipts
-        for (MXReceiptData* data in receipts)
-        {
-            if (![data.userId isEqualToString:myUserId])
-            {
-                [res addObject:data];
-            }
-        }
+        NSArray<MXReceiptData *> *receiptsExceptMyUser = [receipts filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"userId != %@", myUserId]];
         
-        if (res.count > 0)
-        {
-            receipts = res;
-        }
-        else
-        {
-            receipts = nil;
-        }
-    }
-    
-    return receipts;
+        completion(receiptsExceptMyUser);
+    }];
 }
 
 - (BOOL)storeLocalReceipt:(NSString *)receiptType eventId:(NSString *)eventId userId:(NSString *)userId ts:(uint64_t)ts
