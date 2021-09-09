@@ -3718,8 +3718,8 @@ MXAuthAction;
                                  }];
 }
 
-- (MXHTTPOperation*) maxUploadSize:(void (^)(NSInteger maxUploadSize))success
-                           failure:(void (^)(NSError *error))failure
+- (MXHTTPOperation*)maxUploadSize:(void (^)(NSInteger maxUploadSize))success
+                          failure:(void (^)(NSError *error))failure
 {
     MXWeakify(self);
     return [httpClient requestWithMethod:@"GET"
@@ -3735,6 +3735,36 @@ MXAuthAction;
                                              MXJSONModelSetInteger(maxUploadSize, JSONResponse[@"m.upload.size"] ?: [NSNumber numberWithInteger:-1]);
                                          } andCompletion:^{
                                              success(maxUploadSize);
+                                         }];
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
+- (MXHTTPOperation *)previewForURL:(NSURL *)url
+                           success:(void (^)(MXURLPreview *))success
+                           failure:(void (^)(NSError *))failure
+{
+    NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
+    parameters[@"url"] = [url absoluteString];
+    
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"GET"
+                                    path:[NSString stringWithFormat:@"%@/preview_url", contentPathPrefix]
+                              parameters:parameters
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
+                                     if (success)
+                                     {
+                                         __block MXURLPreview *urlPreview;
+                                         [self dispatchProcessing:^{
+                                             MXJSONModelSetMXJSONModel(urlPreview, MXURLPreview, JSONResponse);
+                                         } andCompletion:^{
+                                             success(urlPreview);
                                          }];
                                      }
                                  }
