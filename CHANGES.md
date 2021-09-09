@@ -1,3 +1,31 @@
+## Changes in 0.20.0 (2021-09-09)
+
+✨ Features
+
+- MXRestClient: Add previewForURL method which fetches an MXURLPreview. ([#888](https://github.com/vector-im/element-ios/issues/888))
+
+🙌 Improvements
+
+- MXStore: Introduce loadRoomMessages async method to lazy load room messages. ([#4382](https://github.com/vector-im/element-ios/issues/4382))
+- MXStore: Introduce loadReceiptsForRoom async method to lazy load room receipts. ([#4383](https://github.com/vector-im/element-ios/issues/4383))
+- MXTools: Add fileSizeToString function that uses NSByteCountFormatter. ([#4479](https://github.com/vector-im/element-ios/issues/4479))
+- MXFileStore: Synchronize creation of room message, outgoing room messages and room receipts data. ([#4788](https://github.com/vector-im/element-ios/issues/4788))
+
+🐛 Bugfixes
+
+- MXUser.m: Add a property `latestUpdateTS` to update the user's avatar and displayname only when event.originServerTs > latestUpdateTS. Contributed by Anna. ([#1207](https://github.com/vector-im/element-ios/issues/1207))
+- MXSession: Revert state after processing background cache. ([#4021](https://github.com/vector-im/element-ios/issues/4021))
+- Prevent expired verification requests from showing when opening the app. ([#4472](https://github.com/vector-im/element-ios/issues/4472))
+- Don't show personal avatar in rooms when not explicitly set ([#4766](https://github.com/vector-im/element-ios/issues/4766))
+- MXMemoryStore: Fix unexpected room unread count zeroing. ([#4796](https://github.com/vector-im/element-ios/issues/4796))
+- MXCrossSigning.setupWithPassword failure block not called from the main thread. ([#4804](https://github.com/vector-im/element-ios/issues/4804))
+
+⚠️ API Changes
+
+- MXStore: `getEventReceipts` method is now async.
+  MXRoom: `getEventReceipts` method is now async. ([#4383](https://github.com/vector-im/element-ios/issues/4383))
+
+
 ## Changes in 0.19.8 (2021-08-26)
 
 ✨ Features

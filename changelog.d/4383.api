@@ -1,2 +1,0 @@
-MXStore: `getEventReceipts` method is now async.
-MXRoom: `getEventReceipts` method is now async.

@@ -1,1 +1,0 @@
-MXUser.m: Add a property `latestUpdateTS` to update the user's avatar and displayname only when event.originServerTs > latestUpdateTS. Contributed by Anna.

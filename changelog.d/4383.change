@@ -1,1 +1,0 @@
-MXStore: Introduce loadReceiptsForRoom async method to lazy load room receipts.
