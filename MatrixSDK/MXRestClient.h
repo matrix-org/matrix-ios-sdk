@@ -42,6 +42,7 @@
 #import "MXRoomCreationParameters.h"
 #import "MXTurnServerResponse.h"
 #import "MXSpaceChildrenResponse.h"
+#import "MXURLPreview.h"
 
 @class MXThirdpartyProtocolsResponse;
 @class MXThirdPartyUsersResponse;
@@ -1948,8 +1949,23 @@ Get the maximum size a media upload can be in bytes.
 
 @return a MXHTTPOperation instance.
 */
-- (MXHTTPOperation*) maxUploadSize:(void (^)(NSInteger maxUploadSize))success
-                           failure:(void (^)(NSError *error))failure;
+- (MXHTTPOperation*)maxUploadSize:(void (^)(NSInteger maxUploadSize))success
+                          failure:(void (^)(NSError *error))failure;
+
+/**
+Get information about a URL for the client that can be used to render a preview.
+ 
+Note: Clients should consider avoiding this endpoint for URLs posted in encrypted rooms.
+ 
+@param url The URL to get the preview data for.
+@param success A block object called when the operation succeeds. It provides an `MXURLPreview` object for the requested URL.
+@param failure A block object called when the operation fails.
+
+@return a MXHTTPOperation instance.
+*/
+- (MXHTTPOperation*)previewForURL:(NSURL*)url
+                          success:(void (^)(MXURLPreview* urlPreview))success
+                          failure:(void (^)(NSError *error))failure;
 
 
 #pragma mark - Antivirus server API
