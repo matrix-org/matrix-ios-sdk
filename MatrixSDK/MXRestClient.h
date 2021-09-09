@@ -42,6 +42,7 @@
 #import "MXRoomCreationParameters.h"
 #import "MXTurnServerResponse.h"
 #import "MXSpaceChildrenResponse.h"
+#import "MXURLPreview.h"
 
 @class MXThirdpartyProtocolsResponse;
 @class MXThirdPartyUsersResponse;
@@ -737,7 +738,22 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
                          success:(void (^)(void))success
                          failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
+/**
+ Update push rule actions.
 
+ @param ruleId The identifier for the rule (it depends on rule kind: user id for sender rule, room id for room rule...).
+ @param scope Either 'global' or 'device/<profile_tag>' to specify global rules or device rules for the given profile_tag.
+ @param kind The kind of rule, ie. 'sender', 'room' or 'content' (see MXPushRuleKind).
+ @param actions The rule actions: notify, don't notify, set tweak...
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (MXHTTPOperation *)updateActionsForPushRule:(NSString*)ruleId
+                                        scope:(NSString*)scope
+                                         kind:(MXPushRuleKind)kind
+                                      actions:(NSArray*)actions
+                                      success:(void (^)(void))success
+                                      failure:(void (^)(NSError *error))failure;
 #pragma mark - Room operations
 /**
  Send a generic non state event to a room.
@@ -1933,8 +1949,23 @@ Get the maximum size a media upload can be in bytes.
 
 @return a MXHTTPOperation instance.
 */
-- (MXHTTPOperation*) maxUploadSize:(void (^)(NSInteger maxUploadSize))success
-                           failure:(void (^)(NSError *error))failure;
+- (MXHTTPOperation*)maxUploadSize:(void (^)(NSInteger maxUploadSize))success
+                          failure:(void (^)(NSError *error))failure;
+
+/**
+Get information about a URL for the client that can be used to render a preview.
+ 
+Note: Clients should consider avoiding this endpoint for URLs posted in encrypted rooms.
+ 
+@param url The URL to get the preview data for.
+@param success A block object called when the operation succeeds. It provides an `MXURLPreview` object for the requested URL.
+@param failure A block object called when the operation fails.
+
+@return a MXHTTPOperation instance.
+*/
+- (MXHTTPOperation*)previewForURL:(NSURL*)url
+                          success:(void (^)(MXURLPreview* urlPreview))success
+                          failure:(void (^)(NSError *error))failure;
 
 
 #pragma mark - Antivirus server API

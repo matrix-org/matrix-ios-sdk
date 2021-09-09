@@ -552,15 +552,16 @@
 - (BOOL)updateSummaryAvatar:(MXRoomSummary *)summary session:(MXSession *)session withServerRoomSummary:(MXRoomSyncSummary *)serverRoomSummary roomState:(MXRoomState *)roomState excludingUserIDs:(NSArray<NSString *> *)excludedUserIDs
 {
     NSString *avatar;
-
+    
     // If m.room.avatar is set, use that
     if (roomState.avatar)
     {
         avatar = roomState.avatar;
     }
-    // Else, use Matrix room summaries and heroes
-    else
+    // Else, for direct messages only, try using the other member's avatar
+    else if (summary.isDirect)
     {
+        // Use Matrix room summaries and heroes
         NSArray<NSString *> *filteredHeroes = [self filteredHeroesFromServerRoomSummary:serverRoomSummary excludingUserIDs:excludedUserIDs];
         if (filteredHeroes.count == 1)
         {
@@ -572,14 +573,14 @@
         else
         {
             NSArray<MXRoomMember*> *otherMembers = [self sortedOtherMembersInRoomState:roomState withMatrixSession:session];
-            NSArray<MXRoomMember*> *filteredMembers = [self filteredMembersFromMembers:otherMembers excludingUserIDs:excludedUserIDs];
+            NSArray<MXRoomMember *> *filteredMembers = [self filteredMembersFromMembers:otherMembers excludingUserIDs:excludedUserIDs];
             if (filteredMembers.count == 1)
             {
                 avatar = filteredMembers.firstObject.avatarUrl;
             }
         }
     }
-
+    
     if (avatar != summary.avatar || ![avatar isEqualToString:summary.avatar])
     {
         summary.avatar = avatar;

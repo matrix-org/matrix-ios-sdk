@@ -1383,97 +1383,105 @@ typedef void (^MXOnResumeDone)(void);
                                                                        name:kMXAnalyticsStatsRooms];
             }
             
+            dispatch_group_t dispatchGroupLastMessage = dispatch_group_create();
+            
             if (isInitialSync)
             {
+                dispatch_group_enter(dispatchGroupLastMessage);
                 [self fixRoomsSummariesLastMessageWithMaxServerPaginationCount:MXRoomSummaryPaginationChunkSize
-                                                                         force:YES];
+                                                                         force:YES
+                                                                    completion:^{
+                    dispatch_group_leave(dispatchGroupLastMessage);
+                }];
             }
             
-            // Do a loop of /syncs until catching up is done
-            if (nextServerTimeout == 0)
-            {
-                // Pursue live events listening
-                [self serverSyncWithServerTimeout:nextServerTimeout success:success failure:failure clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
-                return;
-            }
-            
-            // there is a pending backgroundSync
-            if (self->onBackgroundSyncDone)
-            {
-                MXLogDebug(@"[MXSession] Events stream background Sync succeeded");
-
-                // Operations on session may occur during this block. For example, [MXSession close] may be triggered.
-                // We run a copy of the block to prevent app from crashing if the block is released by one of these operations.
-                MXOnBackgroundSyncDone onBackgroundSyncDoneCpy = [self->onBackgroundSyncDone copy];
-                onBackgroundSyncDoneCpy();
-                self->onBackgroundSyncDone = nil;
-
-                // check that the application was not resumed while catching up in background
-                if (self.state == MXSessionStateBackgroundSyncInProgress)
+            dispatch_group_notify(dispatchGroupLastMessage, dispatch_get_main_queue(), ^{
+                // Do a loop of /syncs until catching up is done
+                if (nextServerTimeout == 0)
                 {
-                    // Check that none required the session to keep running
-                    if (self.preventPauseCount)
+                    // Pursue live events listening
+                    [self serverSyncWithServerTimeout:nextServerTimeout success:success failure:failure clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
+                    return;
+                }
+                
+                // there is a pending backgroundSync
+                if (self->onBackgroundSyncDone)
+                {
+                    MXLogDebug(@"[MXSession] Events stream background Sync succeeded");
+
+                    // Operations on session may occur during this block. For example, [MXSession close] may be triggered.
+                    // We run a copy of the block to prevent app from crashing if the block is released by one of these operations.
+                    MXOnBackgroundSyncDone onBackgroundSyncDoneCpy = [self->onBackgroundSyncDone copy];
+                    onBackgroundSyncDoneCpy();
+                    self->onBackgroundSyncDone = nil;
+
+                    // check that the application was not resumed while catching up in background
+                    if (self.state == MXSessionStateBackgroundSyncInProgress)
                     {
-                        // Delay the pause by calling the reliable `pause` method.
-                        [self pause];
+                        // Check that none required the session to keep running
+                        if (self.preventPauseCount)
+                        {
+                            // Delay the pause by calling the reliable `pause` method.
+                            [self pause];
+                        }
+                        else
+                        {
+                            MXLogDebug(@"[MXSession] go to paused ");
+                            self->eventStreamRequest = nil;
+                            [self setState:MXSessionStatePaused];
+                            return;
+                        }
                     }
                     else
                     {
-                        MXLogDebug(@"[MXSession] go to paused ");
-                        self->eventStreamRequest = nil;
-                        [self setState:MXSessionStatePaused];
+                        MXLogDebug(@"[MXSession] resume after a background Sync");
+                    }
+                }
+
+                // If we are resuming inform the app that it received the last uptodate data
+                if (self->onResumeDone)
+                {
+                    MXLogDebug(@"[MXSession] Events stream resumed");
+
+                    // Operations on session may occur during this block. For example, [MXSession close] or [MXSession pause] may be triggered.
+                    // We run a copy of the block to prevent app from crashing if the block is released by one of these operations.
+                    MXOnResumeDone onResumeDoneCpy = [self->onResumeDone copy];
+                    onResumeDoneCpy();
+                    self->onResumeDone = nil;
+
+                    // Stop here if [MXSession close] or [MXSession pause] has been triggered during onResumeDone block.
+                    if (nil == self.myUser || self.state == MXSessionStatePaused)
+                    {
                         return;
                     }
                 }
-                else
+
+                if (self.state != MXSessionStatePauseRequested && self.state != MXSessionStatePaused)
                 {
-                    MXLogDebug(@"[MXSession] resume after a background Sync");
+                    // The event stream is running by now
+                    [self setState:MXSessionStateRunning];
                 }
-            }
-
-            // If we are resuming inform the app that it received the last uptodate data
-            if (self->onResumeDone)
-            {
-                MXLogDebug(@"[MXSession] Events stream resumed");
-
-                // Operations on session may occur during this block. For example, [MXSession close] or [MXSession pause] may be triggered.
-                // We run a copy of the block to prevent app from crashing if the block is released by one of these operations.
-                MXOnResumeDone onResumeDoneCpy = [self->onResumeDone copy];
-                onResumeDoneCpy();
-                self->onResumeDone = nil;
-
-                // Stop here if [MXSession close] or [MXSession pause] has been triggered during onResumeDone block.
+                
+                // Check SDK user did not called [MXSession close] or [MXSession pause] during the session state change notification handling.
                 if (nil == self.myUser || self.state == MXSessionStatePaused)
                 {
                     return;
                 }
-            }
-
-            if (self.state != MXSessionStatePauseRequested && self.state != MXSessionStatePaused)
-            {
-                // The event stream is running by now
-                [self setState:MXSessionStateRunning];
-            }
-            
-            // Check SDK user did not called [MXSession close] or [MXSession pause] during the session state change notification handling.
-            if (nil == self.myUser || self.state == MXSessionStatePaused)
-            {
-                return;
-            }
-            
-            // Pursue live events listening
-            [self serverSyncWithServerTimeout:nextServerTimeout success:nil failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
-            
-            //  attempt to join invited rooms if sync succeeds
-            if (MXSDKOptions.sharedInstance.autoAcceptRoomInvites)
-            {
-                [self joinPendingRoomInvites];
-            }
-            
-            if (success)
-            {
-                success();
-            }
+                
+                // Pursue live events listening
+                [self serverSyncWithServerTimeout:nextServerTimeout success:nil failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
+                
+                //  attempt to join invited rooms if sync succeeds
+                if (MXSDKOptions.sharedInstance.autoAcceptRoomInvites)
+                {
+                    [self joinPendingRoomInvites];
+                }
+                
+                if (success)
+                {
+                    success();
+                }
+            });
         } storeCompletion:^{
             //  clear initial sync cache after handling sync response
             [self.initialSyncResponseCache deleteData];
@@ -1883,6 +1891,11 @@ typedef void (^MXOnResumeDone)(void);
 
 - (void)handleBackgroundSyncCacheIfRequiredWithCompletion:(void (^)(void))completion
 {
+    NSParameterAssert(_state == MXSessionStateStoreDataReady || _state == MXSessionStatePaused);
+    
+    //  keep the old state to revert later
+    MXSessionState oldState = self.state;
+    
     [self setState:MXSessionStateProcessingBackgroundSyncCache];
     
     MXSyncResponseFileStore *syncResponseStore = [[MXSyncResponseFileStore alloc] initWithCredentials:self.credentials];
@@ -1906,6 +1919,9 @@ typedef void (^MXOnResumeDone)(void);
     
     if (outdatedSyncResponseIds.count == 0 && syncResponseIds.count == 0)
     {
+        //  revert to old state
+        [self setState:oldState];
+        
         if (completion)
         {
             completion();
@@ -1947,6 +1963,9 @@ typedef void (^MXOnResumeDone)(void);
     
     [asyncTaskQueue asyncWithExecute:^(void (^ taskCompleted)(void)) {
         [syncResponseStore deleteData];
+        
+        //  revert to old state
+        [self setState:oldState];
         
         if (completion)
         {
@@ -1994,7 +2013,9 @@ typedef void (^MXOnResumeDone)(void);
 
             if (success)
             {
-                success();
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    success();
+                });
             }
         }
     }
@@ -2938,15 +2959,26 @@ typedef void (^MXOnResumeDone)(void);
 
 - (void)fixRoomsSummariesLastMessage
 {
-    [self fixRoomsSummariesLastMessageWithMaxServerPaginationCount:MXRoomSummaryPaginationChunkSize
-                                                             force:NO];
+    [self fixRoomsSummariesLastMessageWithMaxServerPaginationCount:MXRoomSummaryPaginationChunkSize];
+}
+
+- (void)fixRoomsSummariesLastMessageWithMaxServerPaginationCount:(NSUInteger)maxServerPaginationCount
+{
+    [self fixRoomsSummariesLastMessageWithMaxServerPaginationCount:maxServerPaginationCount
+                                                             force:NO
+                                                        completion:nil];
 }
 
 - (void)fixRoomsSummariesLastMessageWithMaxServerPaginationCount:(NSUInteger)maxServerPaginationCount
                                                            force:(BOOL)force
+                                                      completion:(void(^)(void))completion
 {
     if (fixingRoomsLastMessages)
     {
+        if (completion)
+        {
+            completion();
+        }
         return;
     }
     fixingRoomsLastMessages = YES;
@@ -3027,6 +3059,11 @@ typedef void (^MXOnResumeDone)(void);
         if ([self.store respondsToSelector:@selector(commit)])
         {
             [self.store commit];
+        }
+        
+        if (completion)
+        {
+            completion();
         }
     });
 }

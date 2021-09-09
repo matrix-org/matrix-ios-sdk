@@ -113,9 +113,18 @@ NSString *const kMXEventIdentifierKey                   = @"kMXEventIdentifierKe
 NSString *const kMXMessageContentKeyVoiceMessageMSC2516     = @"org.matrix.msc2516.voice";
 NSString *const kMXMessageContentKeyVoiceMessageMSC3245     = @"org.matrix.msc3245.voice";
 NSString *const kMXMessageContentKeyVoiceMessage            = @"m.voice";
+
 NSString *const kMXMessageContentKeyExtensibleAudio         = @"org.matrix.msc1767.audio";
 NSString *const kMXMessageContentKeyExtensibleAudioDuration = @"duration";
 NSString *const kMXMessageContentKeyExtensibleAudioWaveform = @"waveform";
+
+NSString *const kMXMessageContentKeyExtensibleText           = @"org.matrix.msc1767.text";
+
+NSString *const kMXMessageContentKeyExtensibleFile           = @"org.matrix.msc1767.file";
+NSString *const kMXMessageContentKeyExtensibleFileSize       = @"size";
+NSString *const kMXMessageContentKeyExtensibleFileName       = @"name";
+NSString *const kMXMessageContentKeyExtensibleFileURL        = @"url";
+NSString *const kMXMessageContentKeyExtensibleFileMimeType   = @"mimetype";
 
 #pragma mark - MXEvent
 @interface MXEvent ()
