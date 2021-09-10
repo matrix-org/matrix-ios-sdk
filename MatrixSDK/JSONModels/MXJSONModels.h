@@ -1392,3 +1392,43 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
 
 @end
 
+#pragma mark - Preview URL
+/**
+ `MXPreview` represents a preview message from website url that user input to get raw data
+ */
+@interface MXPreview : MXJSONModel
+
+    /**
+     A site name of website
+     */
+    @property (nonatomic) NSString *siteName;
+    /**
+     Website got title itself
+     */
+    @property (nonatomic) NSString *title;
+    /**
+     If website explain their desc, we can prag it then
+     */
+    @property (nonatomic) NSString *desc;
+    /**
+     Image height
+     */
+    @property (nonatomic) NSNumber *imageHeight;
+    /**
+     Image width
+    */
+    @property (nonatomic) NSNumber *imageWidth;
+    /**
+     Image width
+    */
+    @property (nonatomic) NSString *image;
+    /**
+     type
+    */
+    @property (nonatomic) NSString *type;
+    /**
+     URL
+    */
+    @property (nonatomic) NSString *url;
+
+@end

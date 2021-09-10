@@ -2095,3 +2095,26 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
 
 @end
 
+#pragma mark - MXPreview
+
+@implementation MXPreview
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXPreview *mxPreview = [[MXPreview alloc] init];
+    if (mxPreview)
+    {
+        MXJSONModelSetString(mxPreview.desc, JSONDictionary[@"og:description"]);
+        MXJSONModelSetString(mxPreview.url, JSONDictionary[@"og:url"]);
+        MXJSONModelSetString(mxPreview.siteName, JSONDictionary[@"og:site_name"]);
+        MXJSONModelSetString(mxPreview.title, JSONDictionary[@"og:title"]);
+        MXJSONModelSetString(mxPreview.type, JSONDictionary[@"og:type"]);
+        MXJSONModelSetNumber(mxPreview.imageWidth, JSONDictionary[@"og:image:width"]);
+        MXJSONModelSetNumber(mxPreview.imageHeight, JSONDictionary[@"og:image:height"]);
+        MXJSONModelSetString(mxPreview.image, JSONDictionary[@"og:image"]);
+        MXJSONModelSetString(mxPreview.type, JSONDictionary[@"og:type"]);
+    }
+    
+    return mxPreview;
+}
+@end
