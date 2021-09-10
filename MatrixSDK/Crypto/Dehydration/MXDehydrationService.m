@@ -145,22 +145,7 @@ NSString *const MXDehydrationServiceErrorDomain = @"org.matrix.sdk.dehydration.s
             failure([NSError errorWithDomain:MXDehydrationServiceErrorDomain code:0 userInfo:@{NSLocalizedDescriptionKey: @"Wrong algorithm for dehydrated device"}]);
             return;
         }
-        
-        NSError *error = nil;
-        MXLogDebug(@"[MXDehydrationService] Unpickling dehydrated device.");
-        OLMAccount *account = [[OLMAccount alloc] initWithSerializedData:device.account key:dehydrationKey error:&error];
-        
-        MXLogDebug(@"[MXDehydrationService] Account %@ deserialized with keys %@", device.deviceId, account.identityKeys);
-
-        if (error)
-        {
-            MXLogError(@"[MXDehydrationService] Failed to unpickling device account with error: %@.", error);
-            failure([NSError errorWithDomain:MXDehydrationServiceErrorDomain code:0 userInfo:@{NSLocalizedDescriptionKey: @"Failed to unpickle device account"}]);
-            return;
-        }
-        
-        MXLogDebug(@"[MXDehydrationService] Device unpickled %@", account);
-        
+                
         [restClient claimDehydratedDeviceWithId:device.deviceId Success:^(BOOL isClaimed) {
             if (!isClaimed)
             {
@@ -181,7 +166,7 @@ NSString *const MXDehydrationServiceErrorDomain = @"org.matrix.sdk.dehydration.s
                 dispatch_async(dispatch_get_main_queue(), ^{
                     if (stored)
                     {
-                        MXLogDebug(@"[MXDehydrationService] Successfully rehydrated device %@ with identity keys %@", device.deviceId, account.identityKeys);
+                        MXLogDebug(@"[MXDehydrationService] Successfully rehydrated device %@", device.deviceId);
                         success(device.deviceId);
                     }
                     else
