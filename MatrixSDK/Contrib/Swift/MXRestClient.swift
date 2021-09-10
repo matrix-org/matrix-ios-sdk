@@ -1872,4 +1872,14 @@ public extension MXRestClient {
     @nonobjc @discardableResult func getSpaceChildrenForSpace(withId spaceId: String, parameters: MXSpaceChildrenRequestParameters?, completion: @escaping (_ response: MXResponse<MXSpaceChildrenResponse>) -> Void) -> MXHTTPOperation {
         return __getSpaceChildrenForSpace(withId: spaceId, parameters: parameters, success: currySuccess(completion), failure: curryFailure(completion))
     }
+    
+    // MARK: - Preview URL
+    /// Get the data of url website
+    /// - Parameters:
+    ///   - url: Website's url
+    ///   - completion: A closure called when the operation completes.
+    /// - Returns: a `MXHTTPOperation` instance.
+   @nonobjc @discardableResult func getPreview(URL url: String!, completion: @escaping (_ response: MXResponse<MXPreview>) -> Void) -> MXHTTPOperation {
+       return __getPreviewURL(url, success: currySuccess(completion), failure: curryFailure(completion))
+   }
 }
