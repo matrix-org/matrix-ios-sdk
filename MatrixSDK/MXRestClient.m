@@ -5404,4 +5404,31 @@ MXAuthAction;
                                  }];
 }
 
+#pragma Preview URL
+- (MXHTTPOperation*) getPreviewURL:(NSString *)url success:(void (^)(MXPreview*))success failure:(void (^)(NSError *))failure {
+    NSString *path = [NSString stringWithFormat:@"%@/preview_url?url=%@&ts=1000",
+                             kMXContentPrefixPath, url];
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"GET"
+                                    path:path
+                              parameters:@{}
+                                 success:^(NSDictionary *JSONResponse) {
+        MXStrongifyAndReturnIfNil(self);
+
+        
+        if (success)
+        {
+            __block NSDictionary *mxPreview;
+            [self dispatchProcessing:^{
+                MXJSONModelSetMXJSONModel(mxPreview, MXPreview, JSONResponse);
+            } andCompletion:^{
+                success(mxPreview);
+            }];
+        }
+    }
+    failure:^(NSError *error) {
+        MXStrongifyAndReturnIfNil(self);
+        [self dispatchFailure:error inBlock:failure];
+    }];
+}
 @end
