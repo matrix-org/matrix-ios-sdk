@@ -93,7 +93,10 @@ NSString *const MXServiceTermsErrorDomain = @"org.matrix.sdk.MXServiceTermsError
         }
         
         MXLogDebug(@"[MXServiceTerms] areAllTermsAgreed: Error");
-        failure(error);
+        if (failure)
+        {
+            failure(error);
+        }
     }];
 }
 

@@ -4232,6 +4232,46 @@ typedef void (^MXOnResumeDone)(void);
     }];
 }
 
+- (void)prepareIdentityServiceForTermsWithDefault:(NSString *)defaultIdentityServerUrlString
+                                          success:(void (^)(MXSession *session, NSString *baseURL, NSString *accessToken))success
+                                          failure:(void (^)(NSError *error))failure
+{
+    MXIdentityService *identityService = self.identityService;
+    
+    if (!identityService)
+    {
+        NSString *baseURL = self.accountDataIdentityServer ?: defaultIdentityServerUrlString;
+        identityService = [[MXIdentityService alloc] initWithIdentityServer:baseURL
+                                                                accessToken:nil
+                                                    andHomeserverRestClient:self.matrixRestClient];
+    }
+
+    // Get the identity service's access token.
+    [identityService accessTokenWithSuccess:^(NSString * _Nullable accessToken) {
+        MXWeakify(self);
+        
+        // Set the identity server in the session and account data as this will be nil if
+        // the terms were previously declined. These will be reverted if declined once more.
+        [self setIdentityServer:identityService.identityServer andAccessToken:accessToken];
+        [self setAccountDataIdentityServer:identityService.identityServer success:^{
+            
+            MXStrongifyAndReturnIfNil(self);
+            
+            // Call the completion with the final details
+            success(self, identityService.identityServer, accessToken);
+            
+        } failure:^(NSError *error) {
+            // Something went wrong setting the account data identity service
+            MXLogError(@"[MXSession] Error preparing identity server terms: %@", error);
+            failure(error);
+        }];
+    } failure:^(NSError * _Nonnull error) {
+        // Something went wrong getting the identity service's access token.
+        MXLogError(@"[MXSession] Error preparing identity server terms: %@", error);
+        failure(error);
+    }];
+}
+
 
 #pragma mark - Homeserver information
 - (MXWellKnown *)homeserverWellknown
