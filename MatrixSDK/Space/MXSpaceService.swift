@@ -44,7 +44,7 @@ extension MXSpaceService {
 /// MXSpaceService enables to handle spaces.
 @objcMembers
 public class MXSpaceService: NSObject {
-    
+
     // MARK: - Properties
     
     private unowned let session: MXSession
@@ -237,12 +237,28 @@ public class MXSpaceService: NSObject {
 
                     // Build the queried space summary
                     let spaceSummary = self.createRoomSummary(with: rootSpaceChildSummaryResponse)
+                    
+                    // Build room hierarchy and events
+                    var childrenIdsPerChildRoomId: [String: [String]] = [:]
+                    var parentIdsPerChildRoomId: [String:Set<String>] = [:]
+                    var spaceChildEventsPerChildRoomId: [String:[String:Any]] = [:]
+                    for event in spaceChildrenResponse.events ?? [] where event.type == kMXEventTypeStringSpaceChild && event.wireContent.count > 0 {
+                        spaceChildEventsPerChildRoomId[event.stateKey] = event.wireContent
 
+                        var parentIds = parentIdsPerChildRoomId[event.stateKey] ?? Set()
+                        parentIds.insert(event.roomId)
+                        parentIdsPerChildRoomId[event.stateKey] = parentIds
+
+                        var childrenIds = childrenIdsPerChildRoomId[event.roomId] ?? []
+                        childrenIds.append(event.stateKey)
+                        childrenIdsPerChildRoomId[event.roomId] = childrenIds
+                    }
+                    
                     // Build the child summaries of the queried space
-                    let childInfos = self.spaceChildInfos(from: spaceChildrenResponse, excludedSpaceId: spaceId)
+                    let childInfos = self.spaceChildInfos(from: spaceChildrenResponse, excludedSpaceId: spaceId, childrenIdsPerChildRoomId: childrenIdsPerChildRoomId, parentIdsPerChildRoomId: parentIdsPerChildRoomId, spaceChildEventsPerChildRoomId: spaceChildEventsPerChildRoomId)
 
                     let spaceChildrenSummary = MXSpaceChildrenSummary(spaceSummary: spaceSummary, childInfos: childInfos)
-                    
+
                     self.completionQueue.async {
                         completion(.success(spaceChildrenSummary))
                     }
@@ -294,7 +310,7 @@ public class MXSpaceService: NSObject {
         return roomSummary
     }
     
-    private func spaceChildInfos(from spaceChildrenResponse: MXSpaceChildrenResponse, excludedSpaceId: String) -> [MXSpaceChildInfo] {
+    private func spaceChildInfos(from spaceChildrenResponse: MXSpaceChildrenResponse, excludedSpaceId: String, childrenIdsPerChildRoomId: [String: [String]], parentIdsPerChildRoomId: [String:Set<String>], spaceChildEventsPerChildRoomId: [String:[String:Any]]) -> [MXSpaceChildInfo] {
         guard let spaceChildSummaries = spaceChildrenResponse.rooms else {
             return []
         }
@@ -311,13 +327,13 @@ public class MXSpaceService: NSObject {
                 return event.stateKey == spaceId && event.eventType == .spaceChild
             })
                         
-            return self.createSpaceChildInfo(with: spaceChildSummaryResponse, and: childStateEvent)
+            return self.createSpaceChildInfo(with: spaceChildSummaryResponse, and: childStateEvent, parentIds: parentIdsPerChildRoomId[spaceId], childrenIds: childrenIdsPerChildRoomId[spaceId], childEvents: spaceChildEventsPerChildRoomId[spaceId])
         }
         
         return childInfos
     }
     
-    private func createSpaceChildInfo(with spaceChildSummaryResponse: MXSpaceChildSummaryResponse, and spaceChildStateEvent: MXEvent?) -> MXSpaceChildInfo {
+    private func createSpaceChildInfo(with spaceChildSummaryResponse: MXSpaceChildSummaryResponse, and spaceChildStateEvent: MXEvent?, parentIds: Set<String>?, childrenIds: [String]?, childEvents: [String:Any]?) -> MXSpaceChildInfo {
         
         var spaceChildContent: MXSpaceChildContent?
         
@@ -334,10 +350,14 @@ public class MXSpaceService: NSObject {
                          roomType: roomType,
                          name: spaceChildSummaryResponse.name,
                          topic: spaceChildSummaryResponse.topic,
+                         canonicalAlias: spaceChildSummaryResponse.canonicalAlias,
                          avatarUrl: spaceChildSummaryResponse.avatarUrl,
                          order: spaceChildContent?.order,
                          activeMemberCount: spaceChildSummaryResponse.numJoinedMembers,
-                         autoJoin: spaceChildContent?.autoJoin ?? false,
+                         autoJoin: childEvents?[kMXEventTypeStringAutoJoinKey] as? Bool ?? false,
+                         suggested: childEvents?[kMXEventTypeStringSuggestedKey] as? Bool ?? false,
+                         parentIds: parentIds ?? Set(),
+                         childrenIds: childrenIds ?? [],
                          viaServers: spaceChildContent?.via ?? [],
                          parentRoomId: spaceChildStateEvent?.roomId)
     }
