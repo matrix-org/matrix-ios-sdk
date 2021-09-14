@@ -317,6 +317,11 @@ FOUNDATION_EXPORT NSUInteger const MXRoomSummaryPaginationChunkSize;
  */
 - (void)markAllAsRead;
 
+/**
+ Mark all messages as read locally. Does not update read markers.
+ */
+- (void)markAllAsReadLocally;
+
 /// Update membership transition state and notify update if needed
 /// @param membershipTransitionState The new membership transition state value
 - (void)updateMembershipTransitionState:(MXMembershipTransitionState)membershipTransitionState;
