@@ -41,10 +41,6 @@
 @property (nonatomic, strong) MatrixSDKTestsData *matrixSDKTestsData;
 @property (nonatomic, strong) MatrixSDKTestsE2EData *matrixSDKTestsE2EData;
 
-@property (nonatomic, strong) MXSession *aliceSessionToClose;
-@property (nonatomic, strong) MXSession *bobSessionToClose;
-@property (nonatomic, strong) NSMutableArray <id> *retainedObjects;
-
 @property (nonatomic, strong) NSData *dehydrationKey;
 
 @property (nonatomic, strong) MXDehydrationService *dehydrationService;
@@ -61,24 +57,14 @@
     _matrixSDKTestsE2EData = [[MatrixSDKTestsE2EData alloc] initWithMatrixSDKTestsData:_matrixSDKTestsData];
     
     _dehydrationKey = [@"6fXK17pQFUrFqOnxt3wrqz8RHkQUT9vQ" dataUsingEncoding:NSUTF8StringEncoding];
-    _retainedObjects = [NSMutableArray new];
     _dehydrationService = [MXDehydrationService new];
 }
 
 - (void)tearDown
 {
-    [_aliceSessionToClose close];
-    _aliceSessionToClose = nil;
-
-    [_bobSessionToClose close];
-    _bobSessionToClose = nil;
-
     _matrixSDKTestsData = nil;
     _matrixSDKTestsE2EData = nil;
-    
     _dehydrationService = nil;
-    
-    [_retainedObjects removeAllObjects];
 
     [super tearDown];
 }
@@ -187,7 +173,7 @@
     // - Bob logs in (no device dehydration)
     [self.matrixSDKTestsData doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
         MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
-        [self retain:mxSession];
+        [self.matrixSDKTestsData retain:mxSession];
 
         // - Bob tries to rehydrate a device
         [self.dehydrationService rehydrateDeviceWithMatrixRestClient:mxSession.matrixRestClient dehydrationKey:self.dehydrationKey success:^(NSString *deviceId) {
@@ -293,7 +279,6 @@
     [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
     [self.matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
         [aliceSession.crypto.crossSigning setupWithPassword:MXTESTS_ALICE_PWD success:^{
-            self.bobSessionToClose = bobSession;
             
             // - Alice creates a dehydrated device
             [self.dehydrationService dehydrateDeviceWithMatrixRestClient:aliceSession.matrixRestClient crypto:aliceSession.crypto dehydrationKey:self.dehydrationKey success:^(NSString *deviceId) {
@@ -306,7 +291,6 @@
                         MXSession *aliceSession3 = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
                         
                         [aliceSession2 close];
-                        self.aliceSessionToClose = aliceSession3;
                         
                         // - Alice rehydrates the new session with the dehydrated device
                         [self.dehydrationService rehydrateDeviceWithMatrixRestClient:aliceSession3.matrixRestClient dehydrationKey:self.dehydrationKey success:^(NSString *rehydratedDeviceId) {
@@ -497,11 +481,6 @@
 }
 
 #pragma mark - Private methods
-
-- (void)retain:(NSObject*)object
-{
-    [self.retainedObjects addObject:object];
-}
 
 - (NSUInteger)checkEncryptedEvent:(MXEvent*)event roomId:(NSString*)roomId clearMessage:(NSString*)clearMessage senderSession:(MXSession*)senderSession
 {
