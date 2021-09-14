@@ -289,7 +289,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
         }
     }
 
-    MXLogDebug(@"[MXKeyBackup] sendKeyBackup: 3 - Finalising data to send roomsKeyBackup = %@", roomsKeyBackup);
+    MXLogDebug(@"[MXKeyBackup] sendKeyBackup: 3 - Finalising data to send");
 
     // Finalise data to send
     NSMutableDictionary<NSString*, MXRoomKeysBackupData*> *rooms = [NSMutableDictionary dictionary];
@@ -309,7 +309,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     MXKeysBackupData *keysBackupData = [MXKeysBackupData new];
     keysBackupData.rooms = rooms;
 
-    MXLogDebug(@"[MXKeyBackup] sendKeyBackup: 4 - Sending request keysBackupData.rooms = %@", keysBackupData.rooms);
+    MXLogDebug(@"[MXKeyBackup] sendKeyBackup: 4 - Sending request");
 
     // Make the request
     MXWeakify(self);

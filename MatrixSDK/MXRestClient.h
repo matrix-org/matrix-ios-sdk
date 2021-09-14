@@ -2315,21 +2315,6 @@ Note: Clients should consider avoiding this endpoint for URLs posted in encrypte
                                    failure:(void (^)(NSError *error))failure;
 
 /**
- Update associated data to a backup version.
-
- @param keyBackupVersion backup information.
- @param path path to be used for the request (e.g. `kMXAPIPrefixPathR0` or `kMXAPIPrefixPathUnstable`)
- @param success A block object called when the operation succeeds.
- @param failure A block object called when the operation fails.
-
- @return a MXHTTPOperation instance.
- */
-- (MXHTTPOperation*)updateKeyBackupVersion:(MXKeyBackupVersion*)keyBackupVersion
-                                  withPath:(NSString*)path
-                                   success:(void (^)(void))success
-                                   failure:(void (^)(NSError *error))failure;
-
-/**
  Delete a backup version.
 
  @param version the backup version to delete.
