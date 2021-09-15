@@ -206,6 +206,11 @@ FOUNDATION_EXPORT NSUInteger const MXRoomSummaryPaginationChunkSize;
 @property (nonatomic) BOOL hiddenFromUser;
 
 /**
+ Stored hash for the room summary. Should be compared to `hash` to determine changes on the object.
+ */
+@property (nonatomic, readonly) NSUInteger storedHash;
+
+/**
  Reset data related to room state.
  
  It recomputes every data related to the room state from the current room state.

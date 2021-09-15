@@ -1242,9 +1242,10 @@ MXAuthAction;
     
     NSString *enabled = enable ? @"true": @"false";
 
+    NSString* ruleIdEncoded = [MXTools encodeURIComponent:ruleId];
     MXWeakify(self);
     return [httpClient requestWithMethod:@"PUT"
-                                    path:[NSString stringWithFormat:@"%@/pushrules/%@/%@/%@/enabled", apiPathPrefix, scope, kindString, ruleId]
+                                    path:[NSString stringWithFormat:@"%@/pushrules/%@/%@/%@/enabled", apiPathPrefix, scope, kindString, ruleIdEncoded]
                               parameters:nil
                                     data:[enabled dataUsingEncoding:NSUTF8StringEncoding]
                                  headers:headers
@@ -1285,10 +1286,11 @@ MXAuthAction;
             kindString = @"underride";
             break;
     }
-
+    
+    NSString* ruleIdEncoded = [MXTools encodeURIComponent:ruleId];
     MXWeakify(self);
     return [httpClient requestWithMethod:@"DELETE"
-                                    path:[NSString stringWithFormat:@"%@/pushrules/%@/%@/%@", apiPathPrefix, scope, kindString, ruleId]
+                                    path:[NSString stringWithFormat:@"%@/pushrules/%@/%@/%@", apiPathPrefix, scope, kindString, ruleIdEncoded]
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
                                      MXStrongifyAndReturnIfNil(self);
@@ -1383,6 +1385,49 @@ MXAuthAction;
         [self dispatchFailure:error inBlock:failure];
         return nil;
     }
+}
+
+- (MXHTTPOperation *)updateActionsForPushRule:(NSString*)ruleId
+                           scope:(NSString*)scope
+                            kind:(MXPushRuleKind)kind
+                           actions:(NSArray*)actions
+                         success:(void (^)(void))success
+                         failure:(void (^)(NSError *error))failure
+{
+    NSString *kindString = [[self class] kindStringForKind: kind];
+    NSString* ruleIdEncoded = [MXTools encodeURIComponent:ruleId];
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"PUT"
+                                    path:[NSString stringWithFormat:@"%@/pushrules/%@/%@/%@/actions", apiPathPrefix, scope, kindString, ruleIdEncoded]
+                              parameters:@{
+                                  @"actions": actions
+                              }
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchSuccess:success];
+                                 }
+                                 failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
++ (NSString *)kindStringForKind:(MXPushRuleKind)kind
+{
+    switch (kind)
+    {
+        case MXPushRuleKindOverride:
+            return @"override";
+        case MXPushRuleKindContent:
+            return @"content";
+        case MXPushRuleKindRoom:
+            return @"room";
+        case MXPushRuleKindSender:
+            return @"sender";
+        case MXPushRuleKindUnderride:
+            return @"underride";
+    }
+    return nil;
 }
 
 #pragma mark - Room operations
@@ -3673,8 +3718,8 @@ MXAuthAction;
                                  }];
 }
 
-- (MXHTTPOperation*) maxUploadSize:(void (^)(NSInteger maxUploadSize))success
-                           failure:(void (^)(NSError *error))failure
+- (MXHTTPOperation*)maxUploadSize:(void (^)(NSInteger maxUploadSize))success
+                          failure:(void (^)(NSError *error))failure
 {
     MXWeakify(self);
     return [httpClient requestWithMethod:@"GET"
@@ -3690,6 +3735,36 @@ MXAuthAction;
                                              MXJSONModelSetInteger(maxUploadSize, JSONResponse[@"m.upload.size"] ?: [NSNumber numberWithInteger:-1]);
                                          } andCompletion:^{
                                              success(maxUploadSize);
+                                         }];
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
+- (MXHTTPOperation *)previewForURL:(NSURL *)url
+                           success:(void (^)(MXURLPreview *))success
+                           failure:(void (^)(NSError *))failure
+{
+    NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
+    parameters[@"url"] = [url absoluteString];
+    
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"GET"
+                                    path:[NSString stringWithFormat:@"%@/preview_url", contentPathPrefix]
+                              parameters:parameters
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
+                                     if (success)
+                                     {
+                                         __block MXURLPreview *urlPreview;
+                                         [self dispatchProcessing:^{
+                                             MXJSONModelSetMXJSONModel(urlPreview, MXURLPreview, JSONResponse);
+                                         } andCompletion:^{
+                                             success(urlPreview);
                                          }];
                                      }
                                  }
@@ -5311,74 +5386,6 @@ MXAuthAction;
 
 
 #pragma mark - Aggregations
-
-- (MXHTTPOperation*)sendRelationToEvent:(NSString*)eventId
-                                 inRoom:(NSString*)roomId
-                           relationType:(NSString*)relationType
-                              eventType:(NSString*)eventType
-                             parameters:(NSDictionary*)parameters
-                                content:(NSDictionary*)content
-                                success:(void (^)(NSString *eventId))success
-                                failure:(void (^)(NSError *error))failure
-{
-    // Create a random transaction id to prevent duplicated events
-    NSString *txnId = [MXTools generateTransactionId];
-
-    // Prepare the path
-    NSMutableString *path = [NSMutableString stringWithFormat:@"%@/rooms/%@/send_relation/%@/%@/%@/%@",
-                             kMXAPIPrefixPathUnstable,    // TODO: use apiPathPrefix
-                             roomId,
-                             [MXTools encodeURIComponent:eventId],
-                             relationType,
-                             eventType,
-                             [MXTools encodeURIComponent:txnId]];
-
-    // Serialise query parameters
-    if (parameters)
-    {
-        NSMutableString *queryParameters;
-        for (NSString *key in parameters)
-        {
-            NSString *value = [MXTools encodeURIComponent:parameters[key]];
-
-            if (!queryParameters)
-            {
-                queryParameters = [NSMutableString stringWithFormat:@"?%@=%@", key, value];
-            }
-            else
-            {
-                [queryParameters appendFormat:@"&%@=%@", key, value];
-            }
-        }
-
-        if (queryParameters)
-        {
-            [path appendString:queryParameters];
-        }
-    }
-
-    MXWeakify(self);
-    return [httpClient requestWithMethod:@"PUT"
-                                    path:path
-                              parameters:content
-                                 success:^(NSDictionary *JSONResponse) {
-                                     MXStrongifyAndReturnIfNil(self);
-
-                                     if (success)
-                                     {
-                                         __block NSString *eventId;
-                                         [self dispatchProcessing:^{
-                                             MXJSONModelSetString(eventId, JSONResponse[@"event_id"]);
-                                         } andCompletion:^{
-                                             success(eventId);
-                                         }];
-                                     }
-                                 }
-                                 failure:^(NSError *error) {
-                                     MXStrongifyAndReturnIfNil(self);
-                                     [self dispatchFailure:error inBlock:failure];
-                                 }];
-}
 
 - (MXHTTPOperation*)relationsForEvent:(NSString*)eventId
                                inRoom:(NSString*)roomId

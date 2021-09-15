@@ -1161,9 +1161,11 @@ Remove a tag applied on an event of the room
 
  @param eventId The event Id.
  @param sort YES to sort them from the latest to the oldest.
- @return the receipts for an event in a dedicated room.
+ @param completion Completion block containing the receipts for an event in a dedicated room.
  */
-- (NSArray<MXReceiptData*> *)getEventReceipts:(NSString*)eventId sorted:(BOOL)sort;
+- (void)getEventReceipts:(nonnull NSString*)eventId
+                  sorted:(BOOL)sort
+              completion:(nonnull void (^)(NSArray<MXReceiptData*> * _Nonnull))completion;
 
 /**
  Store a receipt.

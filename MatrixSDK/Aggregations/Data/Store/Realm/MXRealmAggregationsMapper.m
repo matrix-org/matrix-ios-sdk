@@ -30,7 +30,7 @@
     return reactionCount;
 }
 
-- (MXRealmReactionCount*)realmReactionCountFromReactionCount:(MXReactionCount*)reactionCount onEvent:(NSString*)eventId inRoomd:(NSString*)roomId
+- (MXRealmReactionCount*)realmReactionCountFromReactionCount:(MXReactionCount*)reactionCount onEvent:(NSString*)eventId inRoomId:(NSString*)roomId
 {
     MXRealmReactionCount *realmReactionCount= [MXRealmReactionCount new];
     realmReactionCount.eventId = eventId;
@@ -56,7 +56,7 @@
     return reactionRelation;
 }
 
-- (MXRealmReactionRelation*)realmReactionRelationFromReactionRelation:(MXReactionRelation*)reactionRelation inRoomd:(NSString*)roomId
+- (MXRealmReactionRelation*)realmReactionRelationFromReactionRelation:(MXReactionRelation*)reactionRelation inRoomId:(NSString*)roomId
 {
     MXRealmReactionRelation *realmReactionRelation= [MXRealmReactionRelation new];
     realmReactionRelation.reaction = reactionRelation.reaction;

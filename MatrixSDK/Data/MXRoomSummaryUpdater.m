@@ -339,6 +339,11 @@
 
 - (BOOL)updateSummaryDisplayname:(MXRoomSummary *)summary session:(MXSession *)session withServerRoomSummary:(MXRoomSyncSummary *)serverRoomSummary roomState:(MXRoomState *)roomState
 {
+    return [self updateSummaryDisplayname:summary session:session withServerRoomSummary:serverRoomSummary roomState:roomState excludingUserIDs:@[]];
+}
+
+- (BOOL)updateSummaryDisplayname:(MXRoomSummary *)summary session:(MXSession *)session withServerRoomSummary:(MXRoomSyncSummary *)serverRoomSummary roomState:(MXRoomState *)roomState excludingUserIDs:(NSArray<NSString *> *)excludedUserIDs
+{
     NSString *displayname;
 
     if (!_roomNameStringLocalizations)
@@ -380,6 +385,11 @@
                 memberNames = [NSMutableArray arrayWithCapacity:serverRoomSummary.heroes.count];
                 for (NSString *hero in serverRoomSummary.heroes)
                 {
+                    if ([excludedUserIDs containsObject:hero])
+                    {
+                        continue;
+                    }
+                    
                     NSString *memberName = [roomState.members memberName:hero];
                     if (!memberName)
                     {
@@ -399,6 +409,11 @@
             memberNames = [NSMutableArray arrayWithCapacity:otherMembers.count];
             for (MXRoomMember *member in otherMembers)
             {
+                if ([excludedUserIDs containsObject:member.userId])
+                {
+                    continue;
+                }
+                
                 NSString *memberName = [roomState.members memberName:member.userId];
                 if (memberName)
                 {
@@ -531,27 +546,41 @@
 
 - (BOOL)updateSummaryAvatar:(MXRoomSummary *)summary session:(MXSession *)session withServerRoomSummary:(MXRoomSyncSummary *)serverRoomSummary roomState:(MXRoomState *)roomState
 {
-    NSString *avatar;
+    return [self updateSummaryAvatar:summary session:session withServerRoomSummary:serverRoomSummary roomState:roomState excludingUserIDs:@[]];
+}
 
+- (BOOL)updateSummaryAvatar:(MXRoomSummary *)summary session:(MXSession *)session withServerRoomSummary:(MXRoomSyncSummary *)serverRoomSummary roomState:(MXRoomState *)roomState excludingUserIDs:(NSArray<NSString *> *)excludedUserIDs
+{
+    NSString *avatar;
+    
     // If m.room.avatar is set, use that
     if (roomState.avatar)
     {
         avatar = roomState.avatar;
     }
-    // Else, use Matrix room summaries and heroes
-    else if (serverRoomSummary.heroes.count == 1)
+    // Else, for direct messages only, try using the other member's avatar
+    else if (summary.isDirect)
     {
-        MXRoomMember *otherMember = [roomState.members memberWithUserId:serverRoomSummary.heroes.firstObject];
-        avatar = otherMember.avatarUrl;
+        // Use Matrix room summaries and heroes
+        NSArray<NSString *> *filteredHeroes = [self filteredHeroesFromServerRoomSummary:serverRoomSummary excludingUserIDs:excludedUserIDs];
+        if (filteredHeroes.count == 1)
+        {
+            MXRoomMember *otherMember = [roomState.members memberWithUserId:filteredHeroes.firstObject];
+            avatar = otherMember.avatarUrl;
+        }
+        // Or in case of non lazy loading or no server room summary,
+        // use the full room state
+        else
+        {
+            NSArray<MXRoomMember*> *otherMembers = [self sortedOtherMembersInRoomState:roomState withMatrixSession:session];
+            NSArray<MXRoomMember *> *filteredMembers = [self filteredMembersFromMembers:otherMembers excludingUserIDs:excludedUserIDs];
+            if (filteredMembers.count == 1)
+            {
+                avatar = filteredMembers.firstObject.avatarUrl;
+            }
+        }
     }
-    // Or in case of non lazy loading or no server room summary,
-    // use the full room state
-    else if (roomState.membersCount.members == 2)
-    {
-        NSArray<MXRoomMember*> *otherMembers = [self sortedOtherMembersInRoomState:roomState withMatrixSession:session];
-        avatar = otherMembers.firstObject.avatarUrl;
-    }
-
+    
     if (avatar != summary.avatar || ![avatar isEqualToString:summary.avatar])
     {
         summary.avatar = avatar;
@@ -559,6 +588,45 @@
     }
 
     return NO;
+}
+
+/**
+ Returns the heroes from the serverRoomSummary, excluding any of the specified user IDs.
+ */
+- (NSArray<NSString *> *)filteredHeroesFromServerRoomSummary:(MXRoomSyncSummary *)serverRoomSummary excludingUserIDs:(NSArray<NSString *> *)excludedUserIDs
+{
+    if (serverRoomSummary == nil)
+    {
+        return @[];
+    }
+    
+    NSMutableArray<NSString*> *filteredHeroes = [NSMutableArray arrayWithCapacity:serverRoomSummary.heroes.count];
+    for (NSString *hero in serverRoomSummary.heroes)
+    {
+        if (![excludedUserIDs containsObject:hero])
+        {
+            [filteredHeroes addObject:hero];
+        }
+    }
+    
+    return filteredHeroes;
+}
+
+/**
+ Returns the members array, excluding any members who match one of the specified user IDs.
+ */
+- (NSArray<MXRoomMember *> *)filteredMembersFromMembers:(NSArray<MXRoomMember *> *)members excludingUserIDs:(NSArray<NSString *> *)excludedUserIDs
+{
+    NSMutableArray<MXRoomMember*> *filteredMembers = [NSMutableArray arrayWithCapacity:members.count];
+    for (MXRoomMember *member in members)
+    {
+        if (![excludedUserIDs containsObject:member.userId])
+        {
+            [filteredMembers addObject:member];
+        }
+    }
+    
+    return filteredMembers;
 }
 
 - (BOOL)updateSummaryMemberCount:(MXRoomSummary *)summary session:(MXSession *)session withServerRoomSummary:(MXRoomSyncSummary *)serverRoomSummary roomState:(MXRoomState *)roomState

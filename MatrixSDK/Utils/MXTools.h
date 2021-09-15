@@ -194,6 +194,13 @@ FOUNDATION_EXPORT NSString *const kMXToolsRegexStringForMatrixGroupIdentifier;
 + (long long)roundFileSize:(long long)filesize;
 
 /**
+ Return file size in string format using `NSByteCountFormatter`.
+ 
+ @param fileSize the file size in bytes.
+ */
++ (NSString*)fileSizeToString:(long)fileSize;
+
+/**
  Return file size in string format.
  
  @param fileSize the file size in bytes.

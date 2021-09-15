@@ -1,5 +1,5 @@
 // 
-// Copyright 2020 The Matrix.org Foundation C.I.C
+// Copyright 2021 The Matrix.org Foundation C.I.C
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,23 +14,18 @@
 // limitations under the License.
 //
 
-#import <Foundation/Foundation.h>
-#import "MXJSONModels.h"
-#import "MXLoginSSOIdentityProvider.h"
+#import <MatrixSDK/MatrixSDK.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
-extern NSString *const MXLoginSSOFlowIdentityProvidersKey;
-
 /**
- `MXLoginSSOFlow` represents a SSO login or a register flow supported by the home server (See MSC2858 https://github.com/matrix-org/matrix-doc/pull/2858).
+ `MXFileRoomOutgoingMessagesStore` extends MXMemoryRoomOutgoingMessagesStore to be able to serialise it for storing
+ data into file system.
+ 
+ This serialisation is done in the context of the multi-threading managed by [MXFileStore commit].
+ @see [MXFileRoomOutgoingMessagesStore encodeWithCoder] for more details.
  */
-@interface MXLoginSSOFlow : MXLoginFlow
-
-/**
- List of all SSO Identity Providers supported
- */
-@property (nonatomic, readonly) NSArray<MXLoginSSOIdentityProvider*> *identityProviders;
+@interface MXFileRoomOutgoingMessagesStore : MXMemoryRoomOutgoingMessagesStore <NSCoding>
 
 @end
 

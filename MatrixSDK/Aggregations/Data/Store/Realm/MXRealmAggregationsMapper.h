@@ -32,10 +32,10 @@ NS_ASSUME_NONNULL_BEGIN
 @interface MXRealmAggregationsMapper : NSObject
 
 - (MXReactionCount*)reactionCountFromRealmReactionCount:(MXRealmReactionCount*)realmReactionCount;
-- (MXRealmReactionCount*)realmReactionCountFromReactionCount:(MXReactionCount*)reactionCount onEvent:(NSString*)eventId inRoomd:(NSString*)roomId;
+- (MXRealmReactionCount*)realmReactionCountFromReactionCount:(MXReactionCount*)reactionCount onEvent:(NSString*)eventId inRoomId:(NSString*)roomId;
 
 - (MXReactionRelation*)reactionRelationFromRealmReactionRelation:(MXRealmReactionRelation*)realmReactionRelation;
-- (MXRealmReactionRelation*)realmReactionRelationFromReactionRelation:(MXReactionRelation*)reactionReaction inRoomd:(NSString*)roomId;
+- (MXRealmReactionRelation*)realmReactionRelationFromReactionRelation:(MXReactionRelation*)reactionReaction inRoomId:(NSString*)roomId;
 
 @end
 
