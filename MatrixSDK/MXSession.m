@@ -894,11 +894,18 @@ typedef void (^MXOnResumeDone)(void);
     return _store.syncFilterId;
 }
 
+- (BOOL)isPauseable
+{
+    return _state == MXSessionStateRunning
+        || _state == MXSessionStateBackgroundSyncInProgress
+        || _state == MXSessionStatePauseRequested;
+}
+
 - (void)pause
 {
     MXLogDebug(@"[MXSession] pause the event stream in state %tu", _state);
 
-    if (_state == MXSessionStateRunning || _state == MXSessionStateBackgroundSyncInProgress || _state == MXSessionStatePauseRequested)
+    if (self.isPauseable)
     {
         // Check that none required the session to keep running even if the app goes in
         // background
