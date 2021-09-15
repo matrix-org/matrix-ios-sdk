@@ -1,0 +1,1 @@
+MXSession: Introduce `pauseable` property and pause the session gracefully when sync request cancelled.
