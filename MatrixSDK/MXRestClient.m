@@ -4256,8 +4256,8 @@ MXAuthAction;
 
 #pragma mark - Crypto: Dehydration
 
-- (MXHTTPOperation*)dehydratedDeviceWithSuccess:(void (^)(MXDehydratedDevice *device))success
-                                        failure:(void (^)(NSError *error))failure
+- (MXHTTPOperation*)getDehydratedDeviceWithSuccess:(void (^)(MXDehydratedDevice *device))success
+                                           failure:(void (^)(NSError *error))failure
 {
     MXWeakify(self);
     return [httpClient requestWithMethod:@"GET"
@@ -4356,9 +4356,17 @@ MXAuthAction;
                                    success:(void (^)(void))success
                                    failure:(void (^)(NSError *error))failure
 {
+    return [self updateKeyBackupVersion:keyBackupVersion withPath:kMXAPIPrefixPathR0 success:success failure:failure];
+}
+
+- (MXHTTPOperation*)updateKeyBackupVersion:(MXKeyBackupVersion*)keyBackupVersion
+                                  withPath:(NSString*)path
+                                   success:(void (^)(void))success
+                                   failure:(void (^)(NSError *error))failure
+{
     MXWeakify(self);
     return [httpClient requestWithMethod:@"PUT"
-                                    path:[NSString stringWithFormat:@"%@/room_keys/version/%@", kMXAPIPrefixPathR0, keyBackupVersion.version]
+                                    path:[NSString stringWithFormat:@"%@/room_keys/version/%@", path, keyBackupVersion.version]
                               parameters:keyBackupVersion.JSONDictionary
                                  success:^(NSDictionary *JSONResponse) {
                                      MXStrongifyAndReturnIfNil(self);

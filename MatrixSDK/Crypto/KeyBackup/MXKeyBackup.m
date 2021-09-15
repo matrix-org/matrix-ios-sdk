@@ -26,7 +26,9 @@
 #import "MXTools.h"
 #import "MXBase64Tools.h"
 #import "MXError.h"
-
+#import "MXKeyProvider.h"
+#import "MXRawDataKey.h"
+#import "MXCrossSigning_Private.h"
 
 #pragma mark - Constants definitions
 
@@ -201,6 +203,8 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     if (_state == MXKeyBackupStateReadyToBackUp)
     {
         self.state = MXKeyBackupStateWillBackUp;
+
+        MXLogDebug(@"[MXKeyBackup] maybeSendKeyBackup: ready to send keybackup");
 
         // Wait between 0 and 10 seconds, to avoid backup requests from
         // different clients hitting the server all at the same time when a
@@ -477,7 +481,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
         OLMPkDecryption *decryption = [OLMPkDecryption new];
 
         NSError *error;
-        MXMegolmBackupAuthData *authData = [MXMegolmBackupAuthData new];
+        __block MXMegolmBackupAuthData *authData = [MXMegolmBackupAuthData new];
         if (password)
         {
             // Generate a private key from the password
@@ -509,16 +513,32 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
             }
             return;
         }
-        authData.signatures = [self->crypto signObject:authData.signalableJSONDictionary];
+        
+        NSString *myUserId = self->crypto.matrixRestClient.credentials.userId;
+        NSMutableDictionary *signatures = [NSMutableDictionary dictionary];
+        
+        NSDictionary *deviceSignature = [self->crypto signObject:authData.signalableJSONDictionary];
+        [signatures addEntriesFromDictionary:deviceSignature[myUserId]];
+        
+        [self->crypto.crossSigning signObject:authData.signalableJSONDictionary withKeyType:MXCrossSigningKeyType.master success:^(NSDictionary *signedObject) {
+            
+            [signatures addEntriesFromDictionary:signedObject[@"signatures"][myUserId]];
+            
+            authData.signatures = @{myUserId: signatures};
+            
+            MXMegolmBackupCreationInfo *keyBackupCreationInfo = [MXMegolmBackupCreationInfo new];
+            keyBackupCreationInfo.algorithm = kMXCryptoMegolmBackupAlgorithm;
+            keyBackupCreationInfo.authData = authData;
+            keyBackupCreationInfo.recoveryKey = [MXRecoveryKey encode:decryption.privateKey];
 
-        MXMegolmBackupCreationInfo *keyBackupCreationInfo = [MXMegolmBackupCreationInfo new];
-        keyBackupCreationInfo.algorithm = kMXCryptoMegolmBackupAlgorithm;
-        keyBackupCreationInfo.authData = authData;
-        keyBackupCreationInfo.recoveryKey = [MXRecoveryKey encode:decryption.privateKey];
-
-        dispatch_async(dispatch_get_main_queue(), ^{
-            success(keyBackupCreationInfo);
-        });
+            dispatch_async(dispatch_get_main_queue(), ^{
+                success(keyBackupCreationInfo);
+            });
+        } failure:^(NSError * _Nonnull error) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                failure(error);
+            });
+        }];
     });
 }
 
@@ -1093,17 +1113,30 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
                 {
                     keyBackupVersionTrust.usable = YES;
                 }
+                
+                MXKeyBackupVersionTrustSignature *signature = [MXKeyBackupVersionTrustSignature new];
+                signature.deviceId = deviceId;
+                signature.device = device;
+                signature.valid = valid;
+                [signatures addObject:signature];
             }
-            else
+            else // Try interpreting it as the MSK public key
             {
-                MXLogDebug(@"[MXKeyBackup] trustForKeyBackupVersion: Signature from unknown key %@", deviceId);
+                NSError *error;
+                BOOL valid = [crypto.crossSigning.crossSigningTools pkVerifyObject:authData.JSONDictionary userId:myUserId publicKey:deviceId error:&error];
+                
+                if (!valid)
+                {
+                    MXLogDebug(@"[MXKeyBackup] trustForKeyBackupVersion: Signature with unknown key %@", deviceId);
+                }
+                else
+                {
+                    MXKeyBackupVersionTrustSignature *signature = [MXKeyBackupVersionTrustSignature new];
+                    signature.keys = deviceId;
+                    signature.valid = valid;
+                    [signatures addObject:signature];
+                }
             }
-
-            MXKeyBackupVersionTrustSignature *signature = [MXKeyBackupVersionTrustSignature new];
-            signature.deviceId = deviceId;
-            signature.device = device;
-            signature.valid = valid;
-            [signatures addObject:signature];
         }
     }
 
@@ -1542,14 +1575,6 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
 
 - (MXKeyBackupData*)encryptGroupSession:(MXOlmInboundGroupSession*)session
 {
-    // Gather information for each key
-    MXDeviceInfo *device = [crypto.deviceList deviceWithIdentityKey:session.senderKey andAlgorithm:kMXCryptoMegolmAlgorithm];
-    if (!device)
-    {
-        MXLogDebug(@"[MXKeyBackup] encryptGroupSession: Error: Cannot find device for %@", session.senderKey);
-        return nil;
-    }
-
     // Build the m.megolm_backup.v1.curve25519-aes-sha2 data as defined at
     // https://github.com/uhoreg/matrix-doc/blob/e2e_backup/proposals/1219-storing-megolm-keys-serverside.md#mmegolm_backupv1curve25519-aes-sha2-key-format
     MXMegolmSessionData *sessionData = session.exportSessionData;
@@ -1573,11 +1598,14 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
         return nil;
     }
 
+    // Gather information for each key
+    MXDeviceInfo *device = [crypto.deviceList deviceWithIdentityKey:session.senderKey andAlgorithm:kMXCryptoMegolmAlgorithm];
+
     // Build backup data for that key
     MXKeyBackupData *keyBackupData = [MXKeyBackupData new];
     keyBackupData.firstMessageIndex = session.session.firstKnownIndex;
     keyBackupData.forwardedCount = session.forwardingCurve25519KeyChain.count;
-    keyBackupData.verified = device.trustLevel.isVerified;
+    keyBackupData.verified = device ? device.trustLevel.isVerified : NO;
     keyBackupData.sessionData = @{
                                   @"ciphertext": encryptedSessionBackupData.ciphertext,
                                   @"mac": encryptedSessionBackupData.mac,
