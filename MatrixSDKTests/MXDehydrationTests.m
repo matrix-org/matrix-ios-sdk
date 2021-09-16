@@ -463,6 +463,12 @@
     OLMAccount *account = [[OLMAccount alloc] initNewAccount];
     NSDictionary *e2eKeys = [account identityKeys];
     
+    [account generateOneTimeKeys:50];
+    NSDictionary *oneTimeKeys = [account oneTimeKeys];
+    
+    [account generateFallbackKey];
+    NSDictionary *fallbackKey = [account fallbackKey];
+    
     // - pickle the OLM account
     NSData *key = [@"6fXK17pQFUrFqOnxt3wrqz8RHkQUT9vQ" dataUsingEncoding:NSUTF8StringEncoding];
     NSError *error = nil;
@@ -473,11 +479,16 @@
     // - unpickle the pickled account
     OLMAccount *deserializedAccount = [[OLMAccount alloc] initWithSerializedData:serializedAccount key:key error:&error];
     NSDictionary *deserializedE2eKeys = [deserializedAccount identityKeys];
+    NSDictionary *deserializedOneTimeKeys = [deserializedAccount oneTimeKeys];
+    NSDictionary *deserializedFallbackKey = [deserializedAccount fallbackKey];
 
     // -> identity keys must be the same
     XCTAssertNil(error, "initWithSerializedData failed due to error %@", error);
     XCTAssert([e2eKeys[@"ed25519"] isEqual:deserializedE2eKeys[@"ed25519"]], @"wrong deserialized ed25519 key %@ != %@", e2eKeys[@"ed25519"], deserializedE2eKeys[@"ed25519"]);
     XCTAssert([e2eKeys[@"curve25519"] isEqual:deserializedE2eKeys[@"curve25519"]], @"wrong deserialized curve25519 key %@ != %@", e2eKeys[@"curve25519"], deserializedE2eKeys[@"curve25519"]);
+    
+    XCTAssert([oneTimeKeys isEqualToDictionary:deserializedOneTimeKeys]);
+    XCTAssert([fallbackKey isEqualToDictionary:deserializedFallbackKey]);
 }
 
 #pragma mark - Private methods
