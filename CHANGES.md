@@ -1,3 +1,14 @@
+## Changes in 0.20.1 (2021-09-16)
+
+🙌 Improvements
+
+- MXRoomSummary: Introduce `markAllAsReadLocally` method. ([#4822](https://github.com/vector-im/element-ios/issues/4822))
+
+🐛 Bugfixes
+
+- MXSession: Introduce `pauseable` property and pause the session gracefully when sync request cancelled. ([#4834](https://github.com/vector-im/element-ios/issues/4834))
+
+
 ## Changes in 0.20.0 (2021-09-09)
 
 ✨ Features

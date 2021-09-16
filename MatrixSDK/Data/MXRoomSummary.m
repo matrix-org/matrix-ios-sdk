@@ -592,7 +592,20 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
 
 - (void)markAllAsRead
 {
-    [self.room markAllAsRead];
+    [self markAllAsReadUpdatingReadMarker:YES];
+}
+
+- (void)markAllAsReadLocally
+{
+    [self markAllAsReadUpdatingReadMarker:NO];
+}
+
+- (void)markAllAsReadUpdatingReadMarker:(BOOL)updateReadMarker
+{
+    if (updateReadMarker)
+    {
+        [self.room markAllAsRead];
+    }
     
     _notificationCount = 0;
     _highlightCount = 0;

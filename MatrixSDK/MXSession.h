@@ -492,6 +492,11 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
  */
 @property (nonatomic, readonly) MXSpaceService *spaceService;
 
+/**
+ Flag indicating the session can be paused.
+ */
+@property (nonatomic, readonly, getter=isPauseable) BOOL pauseable;
+
 #pragma mark - Class methods
 
 /**
@@ -550,8 +555,8 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
  Pause the session events stream.
  This action may be delayed by using `retainPreventPause`.
  
- Caution: this action is ignored if the session state is not MXSessionStateRunning
- or MXSessionStateBackgroundSyncInProgress.
+ Caution: this action is ignored if the session is not pauseable.
+ @see pauseable.
  
  No more live events will be received by the listeners.
  */
