@@ -230,7 +230,7 @@ NSString *const MXDehydrationServiceErrorDomain = @"org.matrix.sdk.dehydration.s
     }
     
     MXWeakify(self);
-    [restClient uploadKeys:deviceInfo.JSONDictionary oneTimeKeys:oneTimeJson forDeviceWithId:deviceInfo.deviceId success:^(MXKeysUploadResponse *keysUploadResponse) {
+    [restClient uploadKeys:deviceInfo.JSONDictionary oneTimeKeys:oneTimeJson fallbackKeys:nil forDeviceWithId:deviceInfo.deviceId success:^(MXKeysUploadResponse *keysUploadResponse) {
         [account markOneTimeKeysAsPublished];
         MXLogDebug(@"[MXDehydrationService] uploadDeviceInfo: dehydration done successfully with device ID: %@ ed25519: %@ curve25519: %@", deviceInfo.deviceId, account.identityKeys[kMXKeyEd25519Type], account.identityKeys[kMXKeyCurve25519Type]);
         MXStrongifyAndReturnIfNil(self);

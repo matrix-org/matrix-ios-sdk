@@ -770,9 +770,12 @@
             XCTAssertNil(syncResponse.presence, @"Presence should be nil");
             XCTAssertNil(syncResponse.toDevice, @"To device events should be nil");
             XCTAssertNil(syncResponse.deviceLists, @"Device lists should be nil");
-            XCTAssertNil(syncResponse.deviceOneTimeKeysCount, @"Device one time keys count should be nil");
             XCTAssertNil(syncResponse.rooms, @"Rooms should be nil");
             XCTAssertNil(syncResponse.groups, @"Groups should be nil");
+            XCTAssertEqual(syncResponse.unusedFallbackKeys.count, 0, @"Device shouldn't have any fallback keys");
+            for (NSNumber *numberOfKeys in syncResponse.deviceOneTimeKeysCount.allKeys) {
+                XCTAssertEqual(numberOfKeys.unsignedIntValue, 0, @"Device shouldn't have any one time keys");
+            }
 
             [expectation fulfill];
         }];
