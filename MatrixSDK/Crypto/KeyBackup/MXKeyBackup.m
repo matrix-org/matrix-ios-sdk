@@ -514,30 +514,52 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
             return;
         }
         
+        MXMegolmBackupCreationInfo *keyBackupCreationInfo = [MXMegolmBackupCreationInfo new];
+        keyBackupCreationInfo.algorithm = kMXCryptoMegolmBackupAlgorithm;
+        keyBackupCreationInfo.authData = authData;
+        keyBackupCreationInfo.recoveryKey = [MXRecoveryKey encode:decryption.privateKey];
+        
         NSString *myUserId = self->crypto.matrixRestClient.credentials.userId;
         NSMutableDictionary *signatures = [NSMutableDictionary dictionary];
         
         NSDictionary *deviceSignature = [self->crypto signObject:authData.signalableJSONDictionary];
         [signatures addEntriesFromDictionary:deviceSignature[myUserId]];
         
+        if ([self->crypto.crossSigning canCrossSign] == NO)
+        {
+            authData.signatures = @{myUserId: signatures};
+            keyBackupCreationInfo.authData = authData;
+            
+            if (success)
+            {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    success(keyBackupCreationInfo);
+                });
+            }
+            
+            return;
+        }
+        
         [self->crypto.crossSigning signObject:authData.signalableJSONDictionary withKeyType:MXCrossSigningKeyType.master success:^(NSDictionary *signedObject) {
             
             [signatures addEntriesFromDictionary:signedObject[@"signatures"][myUserId]];
             
             authData.signatures = @{myUserId: signatures};
-            
-            MXMegolmBackupCreationInfo *keyBackupCreationInfo = [MXMegolmBackupCreationInfo new];
-            keyBackupCreationInfo.algorithm = kMXCryptoMegolmBackupAlgorithm;
             keyBackupCreationInfo.authData = authData;
-            keyBackupCreationInfo.recoveryKey = [MXRecoveryKey encode:decryption.privateKey];
-
-            dispatch_async(dispatch_get_main_queue(), ^{
-                success(keyBackupCreationInfo);
-            });
-        } failure:^(NSError * _Nonnull error) {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                failure(error);
-            });
+            
+            if (success)
+            {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    success(keyBackupCreationInfo);
+                });
+            }
+        } failure:^(NSError *error) {
+            if (failure)
+            {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    failure(error);
+                });
+            }
         }];
     });
 }
