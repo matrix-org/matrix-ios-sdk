@@ -22,9 +22,6 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-/// MXKeyProvider identifier for a 32 bytes long key used to pickle / unpickle the account of the dehydrated device.
-FOUNDATION_EXPORT NSString *const MXDehydrationServiceKeyDataType;
-
 /// Error domain for this class.
 FOUNDATION_EXPORT NSString *const MXDehydrationServiceErrorDomain;
 
