@@ -26,7 +26,6 @@
 #import "MXKey.h"
 
 NSString *const MXDehydrationAlgorithm = @"org.matrix.msc2697.v1.olm.libolm_pickle";
-NSString *const MXDehydrationServiceKeyDataType = @"org.matrix.sdk.dehydration.service.key";
 NSString *const MXDehydrationServiceErrorDomain = @"org.matrix.sdk.dehydration.service";
 
 @interface MXDehydrationService ()
@@ -62,8 +61,8 @@ NSString *const MXDehydrationServiceErrorDomain = @"org.matrix.sdk.dehydration.s
 
     NSUInteger maxKeys = [account maxOneTimeKeys];
     [account generateOneTimeKeys:maxKeys / 2];
-
-    // TODO: [account generateFallbackKey];
+    
+    [account generateFallbackKey];
     
     MXLogDebug(@"[MXDehydrationService] dehydrateDevice: Account created %@", account.identityKeys);
     
@@ -210,27 +209,20 @@ NSString *const MXDehydrationServiceErrorDomain = @"org.matrix.sdk.dehydration.s
 {
     MXLogDebug(@"[MXDehydrationService] uploadDeviceInfo: preparing one time keys");
     
-    NSDictionary *oneTimeKeys = account.oneTimeKeys;
-    NSMutableDictionary *oneTimeJson = [NSMutableDictionary dictionary];
+    NSDictionary *oneTimeKeys = [self signKeys:account.oneTimeKeys
+                                   withAccount:account
+                                        userId:restClient.credentials.userId
+                                      deviceId:deviceInfo.deviceId];
     
-    for (NSString *keyId in oneTimeKeys[kMXKeyCurve25519Type])
-    {
-        // Sign each one-time key
-        NSMutableDictionary *key = [NSMutableDictionary dictionary];
-        key[@"key"] = oneTimeKeys[kMXKeyCurve25519Type][keyId];
-        
-        NSString *signature = [account signMessage:[MXCryptoTools canonicalJSONDataForJSON:key]];
-        key[@"signatures"] = @{
-            restClient.credentials.userId: @{
-                    [NSString stringWithFormat:@"%@:%@", kMXKeyEd25519Type, deviceInfo.deviceId]: signature
-            }
-        };
-        
-        oneTimeJson[[NSString stringWithFormat:@"signed_curve25519:%@", keyId]] = key;
-    }
+    MXLogDebug(@"[MXDehydrationService] uploadDeviceInfo: preparing fallback keys");
+    
+    NSDictionary *fallbackKeys = [self signKeys:account.fallbackKey
+                                    withAccount:account
+                                         userId:restClient.credentials.userId
+                                       deviceId:deviceInfo.deviceId];
     
     MXWeakify(self);
-    [restClient uploadKeys:deviceInfo.JSONDictionary oneTimeKeys:oneTimeJson fallbackKeys:nil forDeviceWithId:deviceInfo.deviceId success:^(MXKeysUploadResponse *keysUploadResponse) {
+    [restClient uploadKeys:deviceInfo.JSONDictionary oneTimeKeys:oneTimeKeys fallbackKeys:fallbackKeys forDeviceWithId:deviceInfo.deviceId success:^(MXKeysUploadResponse *keysUploadResponse) {
         [account markOneTimeKeysAsPublished];
         MXLogDebug(@"[MXDehydrationService] uploadDeviceInfo: dehydration done successfully with device ID: %@ ed25519: %@ curve25519: %@", deviceInfo.deviceId, account.identityKeys[kMXKeyEd25519Type], account.identityKeys[kMXKeyCurve25519Type]);
         MXStrongifyAndReturnIfNil(self);
@@ -249,6 +241,32 @@ NSString *const MXDehydrationServiceErrorDomain = @"org.matrix.sdk.dehydration.s
 - (void)stopProgress
 {
     self.inProgress = NO;
+}
+
+- (NSDictionary *)signKeys:(NSDictionary *)keys
+               withAccount:(OLMAccount *)account
+                    userId:(NSString *)userId
+                  deviceId:(NSString *)deviceId
+
+{
+    NSMutableDictionary *signedKeys = [NSMutableDictionary dictionary];
+    
+    for (NSString *keyId in keys[kMXKeyCurve25519Type])
+    {
+        NSMutableDictionary *key = [NSMutableDictionary dictionary];
+        key[@"key"] = keys[kMXKeyCurve25519Type][keyId];
+        
+        NSString *signature = [account signMessage:[MXCryptoTools canonicalJSONDataForJSON:key]];
+        key[@"signatures"] = @{
+            userId: @{
+                    [NSString stringWithFormat:@"%@:%@", kMXKeyEd25519Type, deviceId]: signature
+            }
+        };
+        
+        signedKeys[[NSString stringWithFormat:@"%@:%@", kMXKeySignedCurve25519Type, keyId]] = key;
+    }
+    
+    return signedKeys;
 }
 
 @end
