@@ -837,6 +837,8 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
         
         _hiddenFromUser = [aDecoder decodeBoolForKey:@"hiddenFromUser"];
         _storedHash = [aDecoder decodeIntegerForKey:@"storedHash"];
+        _dataTypes = [aDecoder decodeIntegerForKey:@"dataTypes"];
+        _joinRule = [aDecoder decodeObjectForKey:@"joinRule"];
         
         // Compute the trust if asked to do it automatically
         // or maintain its computation it has been already calcutated
@@ -886,6 +888,8 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     
     [aCoder encodeBool:_hiddenFromUser forKey:@"hiddenFromUser"];
     [aCoder encodeInteger:self.hash forKey:@"storedHash"];
+    [aCoder encodeInteger:self.calculateDataTypes forKey:@"dataTypes"];
+    [aCoder encodeObject:self.joinRule forKey:@"joinRule"];
 }
 
 - (NSString *)description
@@ -895,13 +899,95 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
 
 - (NSUInteger)hash
 {
-    NSUInteger prime = 31;
+    NSUInteger prime = 2;
     NSUInteger result = 1;
 
+    result = prime * result + [_roomId hash];
+    result = prime * result + [_roomTypeString hash];
+    result = prime * result + [_avatar hash];
+    result = prime * result + [_displayname hash];
+    result = prime * result + [_topic hash];
+    result = prime * result + [_creatorUserId hash];
+    result = prime * result + [_aliases hash];
+    result = prime * result + _membership;
+    result = prime * result + _membershipTransitionState;
+    result = prime * result + _isEncrypted;
+    result = prime * result + [_trust hash];
+    result = prime * result + _localUnreadEventCount;
+    result = prime * result + _notificationCount;
+    result = prime * result + _highlightCount;
+    result = prime * result + _dataTypes;
     result = prime * result + [_lastMessage.eventId hash];
     result = prime * result + [_lastMessage.text hash];
 
     return result;
+}
+
+- (MXRoomSummaryDataTypes)calculateDataTypes
+{
+    MXRoomSummaryDataTypes result = 0;
+    
+    if (self.hiddenFromUser)
+    {
+        result |= MXRoomSummaryDataTypesHidden;
+    }
+    if (self.room.accountData.tags[kMXRoomTagServerNotice])
+    {
+        result |= MXRoomSummaryDataTypesServerNotice;
+    }
+    if (self.room.accountData.tags[kMXRoomTagFavourite])
+    {
+        result |= MXRoomSummaryDataTypesFavorited;
+    }
+    if (self.room.accountData.tags[kMXRoomTagLowPriority] )
+    {
+        result |= MXRoomSummaryDataTypesLowPriority;
+    }
+    if (self.membership == MXMembershipInvite)
+    {
+        result |= MXRoomSummaryDataTypesInvited;
+    }
+    if (self.isDirect)
+    {
+        result |= MXRoomSummaryDataTypesDirect;
+    }
+    if (self.roomType == MXRoomTypeSpace)
+    {
+        result |= MXRoomSummaryDataTypesSpace;
+    }
+    if (self.isConferenceUserRoom)
+    {
+        result |= MXRoomSummaryDataTypesConferenceUser;
+    }
+    
+    MXLogDebug(@"[MXRoomSummary] Calculate data types: %tu", result);
+    
+    return result;
+}
+
+- (BOOL)isTyped:(MXRoomSummaryDataTypes)types
+{
+    return (self.dataTypes & types) != 0;
+}
+
+- (BOOL)isEqual:(id)object
+{
+    if (self == object)
+    {
+        return YES;
+    }
+    
+    if (![object isKindOfClass:[MXRoomSummary class]])
+    {
+        return NO;
+    }
+    
+    return [self isEqualToRoomSummary:(MXRoomSummary *)object];
+}
+
+- (BOOL) isEqualToRoomSummary:(MXRoomSummary *)summary
+{
+    return self.hash == summary.hash;
 }
 
 @end

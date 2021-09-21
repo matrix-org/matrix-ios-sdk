@@ -26,6 +26,7 @@
 #import "MXMembershipTransitionState.h"
 #import "MXRoomType.h"
 #import "MXRoomLastMessage.h"
+#import "MXRoomSummaryProtocol.h"
 
 @class MXSession, MXRoom, MXRoomState, MXEvent;
 @class MXRoomSync;
@@ -80,7 +81,7 @@ FOUNDATION_EXPORT NSUInteger const MXRoomSummaryPaginationChunkSize;
      * Other data:
        Other information shared between the sdk and sdk user.
  */
-@interface MXRoomSummary : NSObject <NSCoding>
+@interface MXRoomSummary : NSObject <NSCoding, MXRoomSummaryProtocol>
 
 /**
  The Matrix id of the room.
@@ -120,15 +121,6 @@ FOUNDATION_EXPORT NSUInteger const MXRoomSummaryPaginationChunkSize;
  Dispose any resources and listener.
  */
 - (void)destroy;
-
-/**
- Set the Matrix session.
-
- Must be used for MXRoomSummary instance loaded from the store.
-
- @param mxSession the session to use.
- */
-- (void)setMatrixSession:(MXSession*)mxSession;
 
 /**
  Save room summary data.
@@ -179,9 +171,14 @@ FOUNDATION_EXPORT NSUInteger const MXRoomSummaryPaginationChunkSize;
 @property (nonatomic) NSArray<NSString *> *aliases;
 
 /**
+ Join rule for the room.
+ */
+@property (nonatomic) MXRoomJoinRule joinRule NS_REFINED_FOR_SWIFT;
+
+/**
  The membership state of the logged in user for this room.
  */
-@property (nonatomic) MXMembership membership NS_REFINED_FOR_SWIFT;
+@property (nonatomic) MXMembership membership;
 
 /**
  The membership transition state of the logged in user for this room.
@@ -305,12 +302,17 @@ FOUNDATION_EXPORT NSUInteger const MXRoomSummaryPaginationChunkSize;
  The user identifier for whom this room is tagged as direct (if any).
  nil if the room is not a direct chat.
  */
-@property (nonatomic) NSString *directUserId;
+@property (nonatomic, copy) NSString *directUserId;
 
 /**
  Placeholder to store more information in the room summary.
  */
 @property (nonatomic) NSMutableDictionary<NSString*, id<NSCoding>> *others;
+
+/**
+ Data types for the room.
+ */
+@property (nonatomic, readonly) MXRoomSummaryDataTypes dataTypes;
 
 /**
  Mark all messages as read.
