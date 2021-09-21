@@ -2153,13 +2153,16 @@ Note: Clients should consider avoiding this endpoint for URLs posted in encrypte
 
  @param deviceKeys the device keys to send.
  @param oneTimeKeys the one-time keys to send.
+ @param fallbackKeys the fallback keys to send.
 
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
 
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)uploadKeys:(NSDictionary*)deviceKeys oneTimeKeys:(NSDictionary*)oneTimeKeys
+- (MXHTTPOperation*)uploadKeys:(NSDictionary*)deviceKeys
+                   oneTimeKeys:(NSDictionary*)oneTimeKeys
+                  fallbackKeys:(NSDictionary *)fallbackKeys
                        success:(void (^)(MXKeysUploadResponse *keysUploadResponse))success
                        failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
@@ -2168,6 +2171,7 @@ Note: Clients should consider avoiding this endpoint for URLs posted in encrypte
 
  @param deviceKeys the device keys to send.
  @param oneTimeKeys the one-time keys to send.
+ @param fallbackKeys the fallback keys to send.
  @param deviceId ID of the device the keys belong to. Nil to upload keys to the device of the current session.
 
  @param success A block object called when the operation succeeds.
@@ -2175,7 +2179,9 @@ Note: Clients should consider avoiding this endpoint for URLs posted in encrypte
 
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)uploadKeys:(NSDictionary*)deviceKeys oneTimeKeys:(NSDictionary*)oneTimeKeys
+- (MXHTTPOperation*)uploadKeys:(NSDictionary*)deviceKeys
+                   oneTimeKeys:(NSDictionary*)oneTimeKeys
+                  fallbackKeys:(NSDictionary *)fallbackKeys
                forDeviceWithId:(NSString*)deviceId
                        success:(void (^)(MXKeysUploadResponse *keysUploadResponse))success
                        failure:(void (^)(NSError *error))failure;
@@ -2253,8 +2259,8 @@ Note: Clients should consider avoiding this endpoint for URLs posted in encrypte
 
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)dehydratedDeviceWithSuccess:(void (^)(MXDehydratedDevice *device))success
-                                        failure:(void (^)(NSError *error))failure;
+- (MXHTTPOperation*)getDehydratedDeviceWithSuccess:(void (^)(MXDehydratedDevice *device))success
+                                           failure:(void (^)(NSError *error))failure;
 
 /**
  Set a given device as the dehydrated device of the current account.

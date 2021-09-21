@@ -63,6 +63,12 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @property (nonatomic) BOOL valid;
 
+/**
+ The public part of the key master key. Only set if MSK signed.
+ Device and deviceId should always be nil if this is set.
+ */
+@property (nonatomic) NSString *keys;
+
 @end
 
 NS_ASSUME_NONNULL_END

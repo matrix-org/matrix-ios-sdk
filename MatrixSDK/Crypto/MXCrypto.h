@@ -256,6 +256,13 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
 - (void)handleDeviceOneTimeKeysCount:(NSDictionary<NSString *, NSNumber*>*)deviceOneTimeKeysCount;
 
 /**
+ Handle the unused fallback keys returned in the /sync response.
+
+ @param deviceUnusedFallbackKeys the algorithms for which there are unused fallback keys
+ */
+- (void)handleDeviceUnusedFallbackKeys:(NSArray<NSString *> *)deviceUnusedFallbackKeys;
+
+/**
  Handle a room key event.
  
  @param event the room key event.

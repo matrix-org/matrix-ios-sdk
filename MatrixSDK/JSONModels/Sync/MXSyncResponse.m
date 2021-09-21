@@ -22,6 +22,8 @@
 #import "MXRoomsSyncResponse.h"
 #import "MXGroupsSyncResponse.h"
 
+static NSString * const kMXDeviceUnusedFallbackKeyTypesKey = @"org.matrix.msc2732.device_unused_fallback_key_types";
+
 @implementation MXSyncResponse
 
 + (id)modelFromJSON:(NSDictionary *)JSONDictionary
@@ -35,6 +37,7 @@
         MXJSONModelSetMXJSONModel(syncResponse.toDevice, MXToDeviceSyncResponse, JSONDictionary[@"to_device"]);
         MXJSONModelSetMXJSONModel(syncResponse.deviceLists, MXDeviceListResponse, JSONDictionary[@"device_lists"]);
         MXJSONModelSetDictionary(syncResponse.deviceOneTimeKeysCount, JSONDictionary[@"device_one_time_keys_count"])
+        MXJSONModelSetArray(syncResponse.unusedFallbackKeys, JSONDictionary[kMXDeviceUnusedFallbackKeyTypesKey])
         MXJSONModelSetMXJSONModel(syncResponse.rooms, MXRoomsSyncResponse, JSONDictionary[@"rooms"]);
         MXJSONModelSetMXJSONModel(syncResponse.groups, MXGroupsSyncResponse, JSONDictionary[@"groups"]);
     }
@@ -66,6 +69,10 @@
     if (self.deviceOneTimeKeysCount)
     {
         JSONDictionary[@"device_one_time_keys_count"] = self.deviceOneTimeKeysCount;
+    }
+    if (self.unusedFallbackKeys)
+    {
+        JSONDictionary[kMXDeviceUnusedFallbackKeyTypesKey] = self.unusedFallbackKeys;
     }
     if (self.rooms)
     {
