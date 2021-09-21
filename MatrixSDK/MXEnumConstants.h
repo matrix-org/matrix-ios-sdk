@@ -61,14 +61,14 @@ typedef enum : NSUInteger
 /**
  Membership definitions
  */
-typedef enum : NSUInteger
+typedef NS_ENUM(NSUInteger, MXMembership)
 {
     MXMembershipUnknown,    // The home server did not provide the information
     MXMembershipInvite,
     MXMembershipJoin,
     MXMembershipLeave,
     MXMembershipBan
-} MXMembership NS_REFINED_FOR_SWIFT;
+};
 
 /**
  Membership definitions - String version
