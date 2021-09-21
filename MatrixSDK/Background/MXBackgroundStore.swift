@@ -239,6 +239,22 @@ class MXBackgroundStore: NSObject, MXStore {
         }
     }
     
+    func storeOutgoingMessage(forRoom roomId: String, outgoingMessage: MXEvent) {
+        
+    }
+    
+    func removeAllOutgoingMessages(fromRoom roomId: String) {
+        
+    }
+    
+    func removeOutgoingMessage(fromRoom roomId: String, outgoingMessage outgoingMessageEventId: String) {
+        
+    }
+    
+    func outgoingMessages(inRoom roomId: String) -> [MXEvent]? {
+        return []
+    }
+    
     //  MARK: - MXRoomSummaryStore
     
     var rooms: [String] {

@@ -318,6 +318,38 @@
  */
 - (void)loadRoomMessagesForRoom:(nonnull NSString *)roomId completion:(nullable void (^)(void))completion;
 
+#pragma mark - Outgoing events
+/**
+ Store into the store an outgoing message event being sent in a room.
+ 
+ @param roomId the id of the room.
+ @param outgoingMessage the MXEvent object of the message.
+ */
+- (void)storeOutgoingMessageForRoom:(nonnull NSString*)roomId outgoingMessage:(nonnull MXEvent*)outgoingMessage;
+
+/**
+ Remove all outgoing messages from a room.
+
+ @param roomId the id of the room.
+ */
+- (void)removeAllOutgoingMessagesFromRoom:(nonnull NSString*)roomId;
+
+/**
+ Remove an outgoing message from a room.
+
+ @param roomId the id of the room.
+ @param outgoingMessageEventId the id of the message to remove.
+ */
+- (void)removeOutgoingMessageFromRoom:(nonnull NSString*)roomId outgoingMessage:(nonnull NSString*)outgoingMessageEventId;
+
+/**
+ Get all outgoing messages pending in a room.
+
+ @param roomId the id of the room.
+ @return the list of messages that have not been sent yet
+ */
+- (NSArray<MXEvent*>* _Nullable)outgoingMessagesInRoom:(nonnull NSString*)roomId;
+
 @optional
 
 /**
@@ -408,38 +440,6 @@
  @return the user private data for this room.
 */
 - (MXRoomAccountData* _Nullable)accountDataOfRoom:(nonnull NSString*)roomId;
-
-#pragma mark - Outgoing events
-/**
- Store into the store an outgoing message event being sent in a room.
- 
- @param roomId the id of the room.
- @param outgoingMessage the MXEvent object of the message.
- */
-- (void)storeOutgoingMessageForRoom:(nonnull NSString*)roomId outgoingMessage:(nonnull MXEvent*)outgoingMessage;
-
-/**
- Remove all outgoing messages from a room.
-
- @param roomId the id of the room.
- */
-- (void)removeAllOutgoingMessagesFromRoom:(nonnull NSString*)roomId;
-
-/**
- Remove an outgoing message from a room.
-
- @param roomId the id of the room.
- @param outgoingMessageEventId the id of the message to remove.
- */
-- (void)removeOutgoingMessageFromRoom:(nonnull NSString*)roomId outgoingMessage:(nonnull NSString*)outgoingMessageEventId;
-
-/**
- Get all outgoing messages pending in a room.
-
- @param roomId the id of the room.
- @return the list of messages that have not been sent yet
- */
-- (NSArray<MXEvent*>* _Nullable)outgoingMessagesInRoom:(nonnull NSString*)roomId;
 
 
 #pragma mark - User Account data
