@@ -315,6 +315,11 @@ FOUNDATION_EXPORT NSUInteger const MXRoomSummaryPaginationChunkSize;
 @property (nonatomic, readonly) MXRoomSummaryDataTypes dataTypes;
 
 /**
+ Sent status of the room.
+ */
+@property (nonatomic, readonly) MXRoomSummarySentStatus sentStatus;
+
+/**
  Mark all messages as read.
  */
 - (void)markAllAsRead;

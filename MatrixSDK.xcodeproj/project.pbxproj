@@ -1525,6 +1525,8 @@
 		ECD289A926EBB0FE00F268CF /* MXRoomListDataFetcherDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECD289A726EBB0FE00F268CF /* MXRoomListDataFetcherDelegate.swift */; };
 		ECD289AA26EBB52B00F268CF /* MXBackgroundTask.h in Headers */ = {isa = PBXBuildFile; fileRef = B11976FD236B27220001EC86 /* MXBackgroundTask.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		ECD289AB26EBB52B00F268CF /* MXBackgroundTask.h in Headers */ = {isa = PBXBuildFile; fileRef = B11976FD236B27220001EC86 /* MXBackgroundTask.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		ECD289B426F9F00E00F268CF /* MXRoomSummarySentStatus.h in Headers */ = {isa = PBXBuildFile; fileRef = ECD289B326F9F00E00F268CF /* MXRoomSummarySentStatus.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		ECD289B526F9F00E00F268CF /* MXRoomSummarySentStatus.h in Headers */ = {isa = PBXBuildFile; fileRef = ECD289B326F9F00E00F268CF /* MXRoomSummarySentStatus.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		ECD623FF25D3DCC900DC0A0B /* MXOlmDecryption.h in Headers */ = {isa = PBXBuildFile; fileRef = 327187831DA7D0220071C818 /* MXOlmDecryption.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		ECF29BCC264194AE0053E6D6 /* MXCallAssertedIdentityEventContent.h in Headers */ = {isa = PBXBuildFile; fileRef = ECF29BCB264194AE0053E6D6 /* MXCallAssertedIdentityEventContent.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		ECF29BCD264194AE0053E6D6 /* MXCallAssertedIdentityEventContent.h in Headers */ = {isa = PBXBuildFile; fileRef = ECF29BCB264194AE0053E6D6 /* MXCallAssertedIdentityEventContent.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -2385,6 +2387,7 @@
 		ECD2899D26EB56BC00F268CF /* MXRoomSummaryStore.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXRoomSummaryStore.h; sourceTree = "<group>"; };
 		ECD289A426EB97E800F268CF /* MXRoomSummaryDataTypes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXRoomSummaryDataTypes.h; sourceTree = "<group>"; };
 		ECD289A726EBB0FE00F268CF /* MXRoomListDataFetcherDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXRoomListDataFetcherDelegate.swift; sourceTree = "<group>"; };
+		ECD289B326F9F00E00F268CF /* MXRoomSummarySentStatus.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXRoomSummarySentStatus.h; sourceTree = "<group>"; };
 		ECF29BCB264194AE0053E6D6 /* MXCallAssertedIdentityEventContent.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXCallAssertedIdentityEventContent.h; sourceTree = "<group>"; };
 		ECF29BD2264194BB0053E6D6 /* MXCallAssertedIdentityEventContent.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXCallAssertedIdentityEventContent.m; sourceTree = "<group>"; };
 		ECF29BDD264195320053E6D6 /* MXAssertedIdentityModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXAssertedIdentityModel.h; sourceTree = "<group>"; };
@@ -2545,6 +2548,7 @@
 				32C235711F827F3800E38FC5 /* MXRoomOperation.m */,
 				ECD2899726EB3C7A00F268CF /* MXRoomSummaryProtocol.h */,
 				ECD289A426EB97E800F268CF /* MXRoomSummaryDataTypes.h */,
+				ECD289B326F9F00E00F268CF /* MXRoomSummarySentStatus.h */,
 				321B413D1E09937E009EEEC7 /* MXRoomSummary.h */,
 				321B413E1E09937E009EEEC7 /* MXRoomSummary.m */,
 				EC2EACFB266625170038B61F /* MXRoomLastMessage.h */,
@@ -4320,6 +4324,7 @@
 				325AD43F23BE3E7500FF5277 /* MXCrossSigningInfo.h in Headers */,
 				32AF928F24110ADD0008A0FD /* MXSecretShareManager_Private.h in Headers */,
 				B176B25123EB03E4001879C6 /* MXAggregationPaginatedResponse_Private.h in Headers */,
+				ECD289B426F9F00E00F268CF /* MXRoomSummarySentStatus.h in Headers */,
 				021AFBA62179E91900742B2C /* MXEncryptedContentKey.h in Headers */,
 				327187891DA7DCE50071C818 /* MXOlmEncryption.h in Headers */,
 				32A1514E1DAF897600400192 /* MXOlmSessionResult.h in Headers */,
@@ -4770,6 +4775,7 @@
 				325AD44023BE3E7500FF5277 /* MXCrossSigningInfo.h in Headers */,
 				3A59A52A25A7B1B000DDA1FC /* MXOutboundSessionInfo.h in Headers */,
 				B14EF3162397E90400758AF0 /* MXContentScanResult.h in Headers */,
+				ECD289B526F9F00E00F268CF /* MXRoomSummarySentStatus.h in Headers */,
 				B14EF3172397E90400758AF0 /* MXRoomMembers.h in Headers */,
 				B14EF3192397E90400758AF0 /* MXOutgoingSASTransaction.h in Headers */,
 				EC8A53DD25B1BCC6004E0802 /* MXThirdPartyProtocol.h in Headers */,

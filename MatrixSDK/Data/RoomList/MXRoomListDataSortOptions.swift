@@ -21,6 +21,8 @@ public final class MXRoomListDataSortOptions: NSObject {
     /// Weak reference to the fetch options
     internal weak var fetchOptions: MXRoomListDataFetchOptions?
     
+    /// Flag to sort by sent status
+    public private(set) var sentStatus: Bool
     /// Flag to sort by last event date
     public private(set) var lastEventDate: Bool
     /// Flag to sort by missed notifications count
@@ -30,12 +32,15 @@ public final class MXRoomListDataSortOptions: NSObject {
     
     /// Initializer
     /// - Parameters:
+    ///   - sentStatus: flag to sort by sent status
     ///   - lastEventDate: flag to sort by last event date
     ///   - missedNotificationsFirst: flag to sort by missed notification count
     ///   - unreadMessagesFirst: flag to sort by unread count
-    public init(lastEventDate: Bool = true,
+    public init(sentStatus: Bool = true,
+                lastEventDate: Bool = true,
                 missedNotificationsFirst: Bool,
                 unreadMessagesFirst: Bool) {
+        self.sentStatus = sentStatus
         self.lastEventDate = lastEventDate
         self.missedNotificationsFirst = missedNotificationsFirst
         self.unreadMessagesFirst = unreadMessagesFirst
@@ -71,6 +76,10 @@ public final class MXRoomListDataSortOptions: NSObject {
     /// To be used for CoreData fetch request
     internal var sortDescriptors: [NSSortDescriptor] {
         var result: [NSSortDescriptor] = []
+        
+        if sentStatus {
+            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryProtocol.sentStatus, ascending: false))
+        }
         
         if missedNotificationsFirst {
             result.append(NSSortDescriptor(keyPath: \MXRoomSummaryProtocol.highlightCount, ascending: false))

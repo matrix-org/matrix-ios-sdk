@@ -839,6 +839,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
         _storedHash = [aDecoder decodeIntegerForKey:@"storedHash"];
         _dataTypes = [aDecoder decodeIntegerForKey:@"dataTypes"];
         _joinRule = [aDecoder decodeObjectForKey:@"joinRule"];
+        _sentStatus = (MXRoomSummarySentStatus)[aDecoder decodeIntegerForKey:@"sentStatus"];
         
         // Compute the trust if asked to do it automatically
         // or maintain its computation it has been already calcutated
@@ -889,7 +890,8 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     [aCoder encodeBool:_hiddenFromUser forKey:@"hiddenFromUser"];
     [aCoder encodeInteger:self.hash forKey:@"storedHash"];
     [aCoder encodeInteger:self.calculateDataTypes forKey:@"dataTypes"];
-    [aCoder encodeObject:self.joinRule forKey:@"joinRule"];
+    [aCoder encodeObject:_joinRule forKey:@"joinRule"];
+    [aCoder encodeInteger:self.calculateSentStatus forKey:@"sentStatus"];
 }
 
 - (NSString *)description
@@ -917,6 +919,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     result = prime * result + _notificationCount;
     result = prime * result + _highlightCount;
     result = prime * result + _dataTypes;
+    result = prime * result + _sentStatus;
     result = prime * result + [_lastMessage.eventId hash];
     result = prime * result + [_lastMessage.text hash];
 
@@ -939,7 +942,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     {
         result |= MXRoomSummaryDataTypesFavorited;
     }
-    if (self.room.accountData.tags[kMXRoomTagLowPriority] )
+    if (self.room.accountData.tags[kMXRoomTagLowPriority])
     {
         result |= MXRoomSummaryDataTypesLowPriority;
     }
@@ -968,6 +971,30 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
 - (BOOL)isTyped:(MXRoomSummaryDataTypes)types
 {
     return (self.dataTypes & types) != 0;
+}
+
+ -(MXRoomSummarySentStatus)calculateSentStatus
+{
+    MXRoomSummarySentStatus status = MXRoomSummarySentStatusOk;
+    NSArray<MXEvent*> *outgoingMsgs = self.room.outgoingMessages;
+
+    for (MXEvent *event in outgoingMsgs)
+    {
+        if (event.sentState == MXEventSentStateFailed)
+        {
+            status = MXRoomSummarySentStatusSentFailed;
+
+            // Check if the error is due to unknown devices
+            if ([event.sentError.domain isEqualToString:MXEncryptingErrorDomain]
+                && event.sentError.code == MXEncryptingErrorUnknownDeviceCode)
+            {
+                status = MXRoomSummarySentStatusSentFailedDueToUnknownDevices;
+                break;
+            }
+        }
+    }
+    
+    return status;
 }
 
 - (BOOL)isEqual:(id)object

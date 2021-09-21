@@ -21,6 +21,7 @@
 #import "MXRoomMembersCount.h"
 #import "MXUsersTrustLevelSummary.h"
 #import "MXRoomSummaryDataTypes.h"
+#import "MXRoomSummarySentStatus.h"
 
 @class MXSession;
 
@@ -112,6 +113,9 @@
 /// Helper function to check whether the room has some types
 /// @param types types to check
 - (BOOL)isTyped:(MXRoomSummaryDataTypes)types;
+
+/// Sent status for the room.
+@property (nonatomic, readonly) MXRoomSummarySentStatus sentStatus;
 
 #pragma mark - Optional
 
