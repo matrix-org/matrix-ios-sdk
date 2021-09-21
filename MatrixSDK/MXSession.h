@@ -145,6 +145,7 @@ typedef NS_ENUM(NSUInteger, MXSessionState)
 
 };
 
+@protocol MXRoomListDataManager;
 
 #pragma mark - Notifications
 /**
@@ -460,6 +461,11 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
 @property (nonatomic, readonly) id<MXStore> store;
 
 /**
+ The room list data manager.
+ */
+@property (nonatomic, readonly) id<MXRoomListDataManager> roomListDataManager;
+
+/**
  The module that manages push notifications.
  */
 @property (nonatomic, readonly) MXNotificationCenter *notificationCenter;
@@ -700,6 +706,11 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  */
 - (void)setStore:(id<MXStore>)store success:(void (^)(void))onStoreDataReady
          failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
+/**
+ Sets a room list data manager. Can be only configured once per active session.
+ */
+- (void)setRoomListDataManager:(id<MXRoomListDataManager>)roomListDataManager;
 
 /**
  Set a new identity server.

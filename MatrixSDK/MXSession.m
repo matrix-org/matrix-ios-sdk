@@ -46,6 +46,7 @@
 
 #import "MXAggregations_Private.h"
 #import "MatrixSDKSwiftHeader.h"
+#import "MXRoomSummaryProtocol.h"
 
 #pragma mark - Constants definitions
 NSString *const kMXSessionStateDidChangeNotification = @"kMXSessionStateDidChangeNotification";
@@ -107,7 +108,7 @@ typedef void (^MXOnResumeDone)(void);
      Rooms summaries
      Each key is a room id. Each value, the MXRoomSummary instance.
      */
-    NSMutableDictionary<NSString*, MXRoomSummary*> *roomsSummaries;
+    NSMutableDictionary<NSString*, id<MXRoomSummaryProtocol>> *roomsSummaries;
 
     /**
      The current request of the event stream.
@@ -202,6 +203,8 @@ typedef void (^MXOnResumeDone)(void);
 @property (nonatomic, strong) id<MXBackgroundTask> backgroundTask;
 
 @property (nonatomic, strong) id<MXSyncResponseStore> initialSyncResponseCache;
+
+@property (nonatomic, readwrite) id<MXRoomListDataManager> roomListDataManager;
 
 @end
 
@@ -327,11 +330,11 @@ typedef void (^MXOnResumeDone)(void);
     if (_store.isPermanent)
     {
         // A permanent MXStore must implement these methods:
-        NSParameterAssert([_store respondsToSelector:@selector(rooms)]);
         NSParameterAssert([_store respondsToSelector:@selector(storeStateForRoom:stateEvents:)]);
         NSParameterAssert([_store respondsToSelector:@selector(stateOfRoom:success:failure:)]);
-        NSParameterAssert([_store respondsToSelector:@selector(summaryOfRoom:)]);
     }
+    
+    self.roomListDataManager = [[MXSDKOptions.sharedInstance.roomListDataManagerClass alloc] init];
 
     NSDate *startDate = [NSDate date];
     MXTaskProfile *taskProfile = [MXSDKOptions.sharedInstance.profiler startMeasuringTaskWithName:kMXAnalyticsStartupMountData category:kMXAnalyticsStartupCategory];
@@ -383,9 +386,15 @@ typedef void (^MXOnResumeDone)(void);
                 {
                     @autoreleasepool
                     {
-                        MXRoomSummary *summary = [self.store summaryOfRoom:roomId];
-                        [summary setMatrixSession:self];
-                        self->roomsSummaries[roomId] = summary;
+                        id<MXRoomSummaryProtocol> summary = [self.store summaryOfRoom:roomId];
+                        if (summary)
+                        {
+                            if ([summary respondsToSelector:@selector(setMatrixSession:)])
+                            {
+                                [summary setMatrixSession:self];
+                            }
+                            self->roomsSummaries[roomId] = summary;
+                        }
                     }
                 }
 
@@ -433,6 +442,14 @@ typedef void (^MXOnResumeDone)(void);
             failure(error);
         }
     }];
+}
+
+- (void)setRoomListDataManager:(id<MXRoomListDataManager>)roomListDataManager
+{
+    NSParameterAssert(_roomListDataManager == nil);
+    
+    _roomListDataManager = roomListDataManager;
+    [_roomListDataManager configureWithSession:self];
 }
 
 /// Handle a sync response and decide serverTimeout for the next sync request.
@@ -1086,6 +1103,7 @@ typedef void (^MXOnResumeDone)(void);
     {
         [_store close];
     }
+    _roomListDataManager = nil;
     
     [self removeAllListeners];
 
