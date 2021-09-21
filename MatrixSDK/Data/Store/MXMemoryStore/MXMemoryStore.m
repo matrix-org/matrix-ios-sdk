@@ -314,11 +314,6 @@
     return NO;
 }
 
-- (NSArray *)rooms
-{
-    return roomStores.allKeys;
-}
-
 
 #pragma mark - Matrix users
 - (void)storeUser:(MXUser *)user
@@ -484,6 +479,23 @@
         roomReceiptsStores[roomId] = store;
     }
     return store;
+}
+
+#pragma mark - MXRoomSummaryStore
+
+- (NSArray<NSString *> *)rooms
+{
+    return roomStores.allKeys;
+}
+
+- (void)storeSummaryForRoom:(NSString *)roomId summary:(id<MXRoomSummaryProtocol>)summary
+{
+    
+}
+
+- (id<MXRoomSummaryProtocol>)summaryOfRoom:(NSString *)roomId
+{
+    return nil;
 }
 
 @end

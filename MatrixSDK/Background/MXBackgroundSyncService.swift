@@ -178,8 +178,10 @@ public enum MXBackgroundSyncServiceError: Error {
     /// Fetch the summary for the given room identifier.
     /// - Parameter roomId: The room identifier to fetch.
     /// - Returns: Summary of room.
-    public func roomSummary(forRoomId roomId: String) -> MXRoomSummary? {
-        return syncResponseStoreManager.roomSummary(forRoomId: roomId, using: store.summary?(ofRoom: roomId))
+    public func roomSummary(forRoomId roomId: String) -> MXRoomSummaryProtocol? {
+        // FIXME: Store doesn't have to return a MXRoomSummary
+        let summary = store.summary(ofRoom: roomId) as? MXRoomSummary
+        return syncResponseStoreManager.roomSummary(forRoomId: roomId, using: summary)
     }
     
     /// Fetch push rule matching an event.

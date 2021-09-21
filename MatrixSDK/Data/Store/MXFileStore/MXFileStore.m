@@ -27,7 +27,7 @@
 #import "MXSDKOptions.h"
 #import "MXTools.h"
 
-static NSUInteger const kMXFileVersion = 74;
+static NSUInteger const kMXFileVersion = 75;
 
 static NSString *const kMXFileStoreFolder = @"MXFileStore";
 static NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
@@ -61,7 +61,7 @@ static NSUInteger preloadOptions;
 
     NSMutableDictionary *roomsToCommitForState;
 
-    NSMutableDictionary<NSString*, MXRoomSummary*> *roomsToCommitForSummary;
+    NSMutableDictionary<NSString*, id<MXRoomSummaryProtocol>> *roomsToCommitForSummary;
 
     NSMutableDictionary<NSString*, MXRoomAccountData*> *roomsToCommitForAccountData;
     
@@ -101,7 +101,7 @@ static NSUInteger preloadOptions;
     NSMutableDictionary<NSString*, NSArray*> *preloadedRoomsStates;
 
     // Same kind of cache for room summary and room account data.
-    NSMutableDictionary<NSString*, MXRoomSummary*> *preloadedRoomSummary;
+    NSMutableDictionary<NSString*, id<MXRoomSummaryProtocol>> *preloadedRoomSummary;
     NSMutableDictionary<NSString*, MXRoomAccountData*> *preloadedRoomAccountData;
 
     // File reading and writing operations are dispatched to a separated thread.
@@ -487,13 +487,6 @@ static NSUInteger preloadOptions;
     }
 }
 
-- (NSArray *)rooms
-{
-    NSMutableArray<NSString *> *roomIDs = [NSMutableArray arrayWithArray:[[NSFileManager defaultManager] contentsOfDirectoryAtPath:storeRoomsPath error:nil]];
-    [roomIDs removeObjectsInArray:roomsToCommitForDeletion];
-    return roomIDs;
-}
-
 - (void)storeStateForRoom:(NSString*)roomId stateEvents:(NSArray*)stateEvents
 {
     roomsToCommitForState[roomId] = stateEvents;
@@ -534,36 +527,6 @@ static NSUInteger preloadOptions;
     }
 
     return stateEvents;
-}
-
-- (void)storeSummaryForRoom:(NSString *)roomId summary:(MXRoomSummary *)summary
-{
-    roomsToCommitForSummary[roomId] = summary;
-}
-
-- (MXRoomSummary *)summaryOfRoom:(NSString *)roomId
-{
-    // First, try to get the data from the cache
-    MXRoomSummary *summary = preloadedRoomSummary[roomId];
-
-    if (!summary)
-    {
-        summary =[NSKeyedUnarchiver unarchiveObjectWithFile:[self summaryFileForRoom:roomId forBackup:NO]];
-
-        if (NO == [NSThread isMainThread])
-        {
-            // If this method is called from the `dispatchQueue` thread, it means MXFileStore is preloading
-            // data. So, fill the cache.
-            preloadedRoomSummary[roomId] = summary;
-        }
-    }
-    else
-    {
-        // The cache information is valid only once
-        [preloadedRoomSummary removeObjectForKey:roomId];
-    }
-
-    return summary;
 }
 
 - (void)storeAccountDataForRoom:(NSString *)roomId userData:(MXRoomAccountData *)accountData
@@ -2277,6 +2240,45 @@ static NSUInteger preloadOptions;
             });
         }
     });
+}
+
+#pragma mark - MXRoomSummaryStore
+
+- (NSArray<NSString *> *)rooms
+{
+    NSMutableArray<NSString *> *roomIDs = [NSMutableArray arrayWithArray:[[NSFileManager defaultManager] contentsOfDirectoryAtPath:storeRoomsPath error:nil]];
+    [roomIDs removeObjectsInArray:roomsToCommitForDeletion];
+    return roomIDs;
+}
+
+- (void)storeSummaryForRoom:(NSString *)roomId summary:(id<MXRoomSummaryProtocol>)summary
+{
+    roomsToCommitForSummary[roomId] = summary;
+}
+
+- (id<MXRoomSummaryProtocol>)summaryOfRoom:(NSString *)roomId
+{
+    // First, try to get the data from the cache
+    id<MXRoomSummaryProtocol> summary = preloadedRoomSummary[roomId];
+
+    if (!summary)
+    {
+        summary = [NSKeyedUnarchiver unarchiveObjectWithFile:[self summaryFileForRoom:roomId forBackup:NO]];
+
+        if (NO == [NSThread isMainThread])
+        {
+            // If this method is called from the `dispatchQueue` thread, it means MXFileStore is preloading
+            // data. So, fill the cache.
+            preloadedRoomSummary[roomId] = summary;
+        }
+    }
+    else
+    {
+        // The cache information is valid only once
+        [preloadedRoomSummary removeObjectForKey:roomId];
+    }
+
+    return summary;
 }
 
 @end
