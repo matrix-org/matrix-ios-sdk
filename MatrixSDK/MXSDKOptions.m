@@ -19,6 +19,7 @@
 #import "MXSDKOptions.h"
 
 #import "MXBaseProfiler.h"
+#import "MatrixSDKSwiftHeader.h"
 
 static MXSDKOptions *sharedOnceInstance = nil;
 
@@ -48,9 +49,18 @@ static MXSDKOptions *sharedOnceInstance = nil;
         _HTTPAdditionalHeaders = @{};
         _autoAcceptRoomInvites = NO;
         _callTransferType = MXCallTransferTypeBridged;
+        self.roomListDataManagerClass = [MXStoreRoomListDataManager class];
     }
     
     return self;
+}
+
+- (void)setRoomListDataManagerClass:(Class)roomListDataManagerClass
+{
+    // Sanity check
+    NSAssert([roomListDataManagerClass conformsToProtocol:@protocol(MXRoomListDataManager)], @"MXSDKOptions only manages room list data manager class that conforms to MXRoomListDataManager protocol");
+    
+    _roomListDataManagerClass = roomListDataManagerClass;
 }
 
 @end
