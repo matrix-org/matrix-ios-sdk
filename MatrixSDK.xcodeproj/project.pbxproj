@@ -1654,6 +1654,7 @@
 		322691351E5EFF8700966A6E /* MXDeviceListOperationsPool.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MXDeviceListOperationsPool.m; path = MatrixSDK/Crypto/Data/MXDeviceListOperationsPool.m; sourceTree = SOURCE_ROOT; };
 		3229534F25A5F7220012FCF0 /* MXBackgroundCryptoStore.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXBackgroundCryptoStore.h; sourceTree = "<group>"; };
 		3229535025A5F7220012FCF0 /* MXBackgroundCryptoStore.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXBackgroundCryptoStore.m; sourceTree = "<group>"; };
+		322985CD26FAFC58001890BC /* MatrixSDKTestsSwiftHeader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MatrixSDKTestsSwiftHeader.h; sourceTree = "<group>"; };
 		322A51B41D9AB15900C8536D /* MXCrypto.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXCrypto.h; sourceTree = "<group>"; };
 		322A51B51D9AB15900C8536D /* MXCrypto.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXCrypto.m; sourceTree = "<group>"; };
 		322A51C11D9AC8FE00C8536D /* MXCryptoAlgorithms.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXCryptoAlgorithms.h; sourceTree = "<group>"; };
@@ -1989,7 +1990,7 @@
 		32C6F92D19DD814400EA4E9C /* MatrixSDK.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = MatrixSDK.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		32C6F93119DD814400EA4E9C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		32C6F93219DD814400EA4E9C /* MatrixSDK.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MatrixSDK.h; sourceTree = "<group>"; };
-		32C6F93819DD814400EA4E9C /* MatrixSDKTests-iOS.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "MatrixSDKTests-iOS.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		32C6F93819DD814400EA4E9C /* MatrixSDKTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MatrixSDKTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		32C6F93B19DD814400EA4E9C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		32C78B65256CFC4D008130B1 /* MXCryptoVersion.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXCryptoVersion.h; sourceTree = "<group>"; };
 		32C78B66256CFC4D008130B1 /* MXCryptoMigration.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXCryptoMigration.m; sourceTree = "<group>"; };
@@ -2224,7 +2225,7 @@
 		B1A026FF26162110001AADFF /* MXSpaceChildrenResponse.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXSpaceChildrenResponse.m; sourceTree = "<group>"; };
 		B1C854ED25E7B492005867D0 /* MXRoomType.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXRoomType.h; sourceTree = "<group>"; };
 		B1DDC9D52418098200D208E3 /* MXIncomingSASTransaction_Private.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXIncomingSASTransaction_Private.h; sourceTree = "<group>"; };
-		B1E09A0E2397FA950057C069 /* MatrixSDKTests-macOS.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "MatrixSDKTests-macOS.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		B1E09A0E2397FA950057C069 /* MatrixSDKTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MatrixSDKTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B1F939F426289F2600D0E525 /* MXSpaceChildContentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXSpaceChildContentTests.swift; sourceTree = "<group>"; };
 		B57EF0A39A7649D55CA1208A /* libPods-MatrixSDK-MatrixSDK-iOS.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-MatrixSDK-MatrixSDK-iOS.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		BD0431D223F108AED4C70A42 /* Pods-SDK-MatrixSDK-iOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SDK-MatrixSDK-iOS.debug.xcconfig"; path = "Target Support Files/Pods-SDK-MatrixSDK-iOS/Pods-SDK-MatrixSDK-iOS.debug.xcconfig"; sourceTree = "<group>"; };
@@ -3351,9 +3352,9 @@
 			isa = PBXGroup;
 			children = (
 				32C6F92D19DD814400EA4E9C /* MatrixSDK.framework */,
-				32C6F93819DD814400EA4E9C /* MatrixSDKTests-iOS.xctest */,
+				32C6F93819DD814400EA4E9C /* MatrixSDKTests.xctest */,
 				B14EF36B2397E90400758AF0 /* MatrixSDK.framework */,
-				B1E09A0E2397FA950057C069 /* MatrixSDKTests-macOS.xctest */,
+				B1E09A0E2397FA950057C069 /* MatrixSDKTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -3488,6 +3489,7 @@
 				B1F939F426289F2600D0E525 /* MXSpaceChildContentTests.swift */,
 				3A7B8CFD267FCD9B00D9DD96 /* MXDehydrationTests.m */,
 				ECB6FA8D267CFF4300A941E4 /* MXCredentialsUnitTests.swift */,
+				322985CD26FAFC58001890BC /* MatrixSDKTestsSwiftHeader.h */,
 			);
 			path = MatrixSDKTests;
 			sourceTree = "<group>";
@@ -4853,7 +4855,7 @@
 			);
 			name = "MatrixSDKTests-iOS";
 			productName = MatrixSDKTests;
-			productReference = 32C6F93819DD814400EA4E9C /* MatrixSDKTests-iOS.xctest */;
+			productReference = 32C6F93819DD814400EA4E9C /* MatrixSDKTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 		B14EF1C72397E90400758AF0 /* MatrixSDK-macOS */ = {
@@ -4892,7 +4894,7 @@
 			);
 			name = "MatrixSDKTests-macOS";
 			productName = "MatrixSDKTests-macOS";
-			productReference = B1E09A0E2397FA950057C069 /* MatrixSDKTests-macOS.xctest */;
+			productReference = B1E09A0E2397FA950057C069 /* MatrixSDKTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
@@ -6142,7 +6144,7 @@
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = "org.matrix.$(PRODUCT_NAME:rfc1034identifier)";
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = MatrixSDKTests;
 				SDKROOT = iphoneos;
 				SWIFT_OBJC_BRIDGING_HEADER = "$(SRCROOT)/MatrixSDKTests/MatrixSDKTests-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -6167,7 +6169,7 @@
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = "org.matrix.$(PRODUCT_NAME:rfc1034identifier)";
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = MatrixSDKTests;
 				SDKROOT = iphoneos;
 				SWIFT_OBJC_BRIDGING_HEADER = "$(SRCROOT)/MatrixSDKTests/MatrixSDKTests-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
@@ -6250,7 +6252,7 @@
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = "matrix.org.MatrixSDKTests-macOS";
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = MatrixSDKTests;
 				SDKROOT = macosx;
 				SWIFT_OBJC_BRIDGING_HEADER = "$(SRCROOT)/MatrixSDKTests/MatrixSDKTests-Bridging-Header.h";
 			};
@@ -6279,7 +6281,7 @@
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = "matrix.org.MatrixSDKTests-macOS";
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = MatrixSDKTests;
 				SDKROOT = macosx;
 				SWIFT_OBJC_BRIDGING_HEADER = "$(SRCROOT)/MatrixSDKTests/MatrixSDKTests-Bridging-Header.h";
 			};
