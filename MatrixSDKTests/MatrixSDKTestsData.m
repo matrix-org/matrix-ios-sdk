@@ -21,6 +21,7 @@
 #import "MXRestClient.h"
 #import "MXError.h"
 #import "MXNoStore.h"
+#import "MatrixSDKTestsSwiftHeader.h"
 
 // Do not bother with retain cycles warnings in tests
 #pragma clang diagnostic push
@@ -56,6 +57,12 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
 @end
 
 @implementation MatrixSDKTestsData
+
++ (void)load
+{
+    // Be sure there is no open MXSession instances when ending a test
+    [TestObserver.shared trackMXSessions];
+}
 
 - (id)init
 {

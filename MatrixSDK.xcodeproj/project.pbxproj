@@ -107,6 +107,10 @@
 		3229535225A5F7220012FCF0 /* MXBackgroundCryptoStore.h in Headers */ = {isa = PBXBuildFile; fileRef = 3229534F25A5F7220012FCF0 /* MXBackgroundCryptoStore.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		3229535325A5F7220012FCF0 /* MXBackgroundCryptoStore.m in Sources */ = {isa = PBXBuildFile; fileRef = 3229535025A5F7220012FCF0 /* MXBackgroundCryptoStore.m */; };
 		3229535425A5F7220012FCF0 /* MXBackgroundCryptoStore.m in Sources */ = {isa = PBXBuildFile; fileRef = 3229535025A5F7220012FCF0 /* MXBackgroundCryptoStore.m */; };
+		322985CB26FAF898001890BC /* MXSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 322985CA26FAF898001890BC /* MXSession.swift */; };
+		322985CC26FAF898001890BC /* MXSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 322985CA26FAF898001890BC /* MXSession.swift */; };
+		322985CF26FBAE7B001890BC /* TestObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 322985CE26FBAE7B001890BC /* TestObserver.swift */; };
+		322985D026FBAE7B001890BC /* TestObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 322985CE26FBAE7B001890BC /* TestObserver.swift */; };
 		322A51B61D9AB15900C8536D /* MXCrypto.h in Headers */ = {isa = PBXBuildFile; fileRef = 322A51B41D9AB15900C8536D /* MXCrypto.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		322A51B71D9AB15900C8536D /* MXCrypto.m in Sources */ = {isa = PBXBuildFile; fileRef = 322A51B51D9AB15900C8536D /* MXCrypto.m */; };
 		322A51C31D9AC8FE00C8536D /* MXCryptoAlgorithms.h in Headers */ = {isa = PBXBuildFile; fileRef = 322A51C11D9AC8FE00C8536D /* MXCryptoAlgorithms.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1654,7 +1658,9 @@
 		322691351E5EFF8700966A6E /* MXDeviceListOperationsPool.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MXDeviceListOperationsPool.m; path = MatrixSDK/Crypto/Data/MXDeviceListOperationsPool.m; sourceTree = SOURCE_ROOT; };
 		3229534F25A5F7220012FCF0 /* MXBackgroundCryptoStore.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXBackgroundCryptoStore.h; sourceTree = "<group>"; };
 		3229535025A5F7220012FCF0 /* MXBackgroundCryptoStore.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXBackgroundCryptoStore.m; sourceTree = "<group>"; };
+		322985CA26FAF898001890BC /* MXSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXSession.swift; sourceTree = "<group>"; };
 		322985CD26FAFC58001890BC /* MatrixSDKTestsSwiftHeader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MatrixSDKTestsSwiftHeader.h; sourceTree = "<group>"; };
+		322985CE26FBAE7B001890BC /* TestObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestObserver.swift; sourceTree = "<group>"; };
 		322A51B41D9AB15900C8536D /* MXCrypto.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXCrypto.h; sourceTree = "<group>"; };
 		322A51B51D9AB15900C8536D /* MXCrypto.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXCrypto.m; sourceTree = "<group>"; };
 		322A51C11D9AC8FE00C8536D /* MXCryptoAlgorithms.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXCryptoAlgorithms.h; sourceTree = "<group>"; };
@@ -2636,6 +2642,15 @@
 			path = Trust;
 			sourceTree = "<group>";
 		};
+		322985C526FA66FD001890BC /* Utils */ = {
+			isa = PBXGroup;
+			children = (
+				322985CA26FAF898001890BC /* MXSession.swift */,
+				322985CE26FBAE7B001890BC /* TestObserver.swift */,
+			);
+			path = Utils;
+			sourceTree = "<group>";
+		};
 		322A51B31D9AB13E00C8536D /* Crypto */ = {
 			isa = PBXGroup;
 			children = (
@@ -3410,6 +3425,7 @@
 		32C6F93919DD814400EA4E9C /* MatrixSDKTests */ = {
 			isa = PBXGroup;
 			children = (
+				322985C526FA66FD001890BC /* Utils */,
 				3298ABD42637FA3100E40B06 /* TestPlans */,
 				32B477422638128700EA5800 /* MXAggregatedEditsUnitTests.m */,
 				32B477442638128700EA5800 /* MXAggregatedReferenceUnitTests.m */,
@@ -5431,6 +5447,7 @@
 			files = (
 				329E808F22512DF500A48C3A /* MXCryptoKeyVerificationTests.m in Sources */,
 				32B477822638133C00EA5800 /* MXFilterUnitTests.m in Sources */,
+				322985CF26FBAE7B001890BC /* TestObserver.swift in Sources */,
 				32DC15D71A8DFF0D006F9AD3 /* MXNotificationCenterTests.m in Sources */,
 				329571991B024D2B00ABB3BA /* MXMockCallStack.m in Sources */,
 				3281E8A819E41A2000976E1A /* MatrixSDKTestsData.m in Sources */,
@@ -5491,6 +5508,7 @@
 				32D8CAC219DEE6ED002AF8A0 /* MXRestClientNoAuthAPITests.m in Sources */,
 				32FCAB4D19E578860049C555 /* MXRestClientTests.m in Sources */,
 				32C78BA7256D227D008130B1 /* MXCryptoMigrationTests.m in Sources */,
+				322985CB26FAF898001890BC /* MXSession.swift in Sources */,
 				32EEA83F2603CA140041425B /* MXRestClientExtensionsTests.m in Sources */,
 				32C03CB62123076F00D92712 /* DirectRoomTests.m in Sources */,
 				329FB17C1A0A963700A5E88E /* MXRoomMemberTests.m in Sources */,
@@ -5865,6 +5883,7 @@
 			files = (
 				B1E09A282397FD010057C069 /* MXMockCallStackCall.m in Sources */,
 				B1E09A392397FD7D0057C069 /* MXMyUserTests.m in Sources */,
+				322985D026FBAE7B001890BC /* TestObserver.swift in Sources */,
 				B1E09A202397FCE90057C069 /* MXCryptoBackupTests.m in Sources */,
 				B1E09A3B2397FD820057C069 /* MXStoreNoStoreTests.m in Sources */,
 				32B4778E2638133D00EA5800 /* MXFilterUnitTests.m in Sources */,
@@ -5925,6 +5944,7 @@
 				B1E09A312397FD750057C069 /* MXSessionTests.m in Sources */,
 				32B477902638133D00EA5800 /* MXAggregatedReferenceUnitTests.m in Sources */,
 				B1E09A322397FD750057C069 /* MXRoomTests.m in Sources */,
+				322985CC26FAF898001890BC /* MXSession.swift in Sources */,
 				32C78BA8256D227D008130B1 /* MXCryptoMigrationTests.m in Sources */,
 				B1E09A2F2397FD750057C069 /* MXErrorUnitTests.m in Sources */,
 				B1660F1D260A20B900C3AA12 /* MXSpaceServiceTest.swift in Sources */,
