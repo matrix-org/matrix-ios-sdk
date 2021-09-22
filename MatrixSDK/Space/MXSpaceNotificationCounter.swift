@@ -112,7 +112,7 @@ public class MXSpaceNotificationCounter: NSObject {
             return notificationState
         }
         
-        let notificationCount = summary.notificationCount
+        let notificationCount = self.isRoomMentionsOnly(summary) ? summary.highlightCount : summary.notificationCount
         
         if notificationCount > 0 {
             let tags = room.accountData.tags
@@ -138,5 +138,23 @@ public class MXSpaceNotificationCounter: NSObject {
         
         return notificationState
     }
-
+    
+    private func isRoomMentionsOnly(_ summary: MXRoomSummary) -> Bool {
+        guard let rules = summary.mxSession.notificationCenter.rules.global.room as? [MXPushRule] else {
+            return false
+        }
+        
+        for rule in rules {
+            guard rule.ruleId == summary.roomId, let ruleActions = rule.actions as? [MXPushRuleAction] else {
+                continue
+            }
+            
+            for ruleAction in ruleActions where ruleAction.actionType == MXPushRuleActionTypeDontNotify {
+                return rule.enabled
+            }
+            break
+        }
+        
+        return false
+    }
 }
