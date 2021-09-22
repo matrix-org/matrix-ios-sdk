@@ -1195,8 +1195,22 @@ public extension MXRestClient {
     @nonobjc @discardableResult func context(ofEvent eventId: String, inRoom roomId: String, limit: UInt, filter: MXRoomEventFilter? = nil, completion: @escaping (_ response: MXResponse<MXEventContext>) -> Void) -> MXHTTPOperation {
         return __context(ofEvent: eventId, inRoom: roomId, limit: limit, filter:filter, success: currySuccess(completion), failure: curryFailure(completion))
     }
-    
-    
+
+    /**
+     Get the summary of a room
+     
+     - parameters:
+        - roomIdOrAlias: the id of the room or its alias
+        - via: servers, that should be tried to request a summary from, if it can't be generated locally. These can be from a matrix URI, matrix.to link or a `m.space.child` event for example.
+        - completion: A block object called when the operation completes.
+        - response: Provides the model created from the homeserver JSON response on success.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func roomSummary(with roomIdOrAlias: String, via: [String], completion: @escaping (_ response: MXResponse<MXPublicRoom>) -> Void) -> MXHTTPOperation {
+        return __roomSummary(with: roomIdOrAlias, via: via, success: currySuccess(completion), failure: curryFailure(completion))
+    }
+
     // MARK: - Room tags operations
     
     /**

@@ -50,6 +50,7 @@ static NSString* const kMXLoginFlowTypeKey = @"type";
         MXJSONModelSetBoolean(publicRoom.worldReadable, sanitisedJSONDictionary[@"world_readable"]);
         MXJSONModelSetBoolean(publicRoom.guestCanJoin, sanitisedJSONDictionary[@"guest_can_join"]);
         MXJSONModelSetString(publicRoom.avatarUrl , sanitisedJSONDictionary[@"avatar_url"]);
+        MXJSONModelSetString(publicRoom.roomTypeString , sanitisedJSONDictionary[@"room_type"]);
     }
 
     return publicRoom;
