@@ -108,7 +108,7 @@ typedef void (^MXOnResumeDone)(void);
      Rooms summaries
      Each key is a room id. Each value, the MXRoomSummary instance.
      */
-    NSMutableDictionary<NSString*, id<MXRoomSummaryProtocol>> *roomsSummaries;
+    NSMutableDictionary<NSString*, MXRoomSummary*> *roomsSummaries;
 
     /**
      The current request of the event stream.
@@ -386,13 +386,9 @@ typedef void (^MXOnResumeDone)(void);
                 {
                     @autoreleasepool
                     {
-                        id<MXRoomSummaryProtocol> summary = [self.store summaryOfRoom:roomId];
+                        MXRoomSummary *summary = [[MXRoomSummary alloc] initWithRoomId:roomId andMatrixSession:self];
                         if (summary)
                         {
-                            if ([summary respondsToSelector:@selector(setMatrixSession:)])
-                            {
-                                [summary setMatrixSession:self];
-                            }
                             self->roomsSummaries[roomId] = summary;
                         }
                     }
@@ -2920,7 +2916,7 @@ typedef void (^MXOnResumeDone)(void);
 
     if (roomId)
     {
-        roomSummary =  roomsSummaries[roomId];
+        roomSummary = roomsSummaries[roomId];
     }
 
     return roomSummary;
