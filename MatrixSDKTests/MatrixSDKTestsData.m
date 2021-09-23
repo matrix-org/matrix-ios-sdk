@@ -70,6 +70,7 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
     {
         _startDate = [NSDate date];
         _retainedObjects = [NSMutableArray array];
+        _autoCloseMXSessions = YES;
     }
     
     return self;
@@ -77,7 +78,7 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
 
 - (void)dealloc
 {
-    _retainedObjects = [NSMutableArray array];
+    [self releaseRetainedObjects];
 }
 
 - (void)getBobCredentials:(XCTestCase*)testCase
@@ -1023,6 +1024,27 @@ onUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecogn
 - (void)retain:(NSObject*)object
 {
     [self.retainedObjects addObject:object];
+}
+
+- (void)release:(NSObject*)object
+{
+    [self.retainedObjects addObject:object];
+}
+
+- (void)releaseRetainedObjects
+{
+    if (_autoCloseMXSessions)
+    {
+        for (NSObject *object in _retainedObjects)
+        {
+            if ([object isKindOfClass:MXSession.class])
+            {
+                MXSession *mxSession = (MXSession*)object;
+                [mxSession close];
+            }
+        }
+    }
+    _retainedObjects = nil;
 }
 
 @end
