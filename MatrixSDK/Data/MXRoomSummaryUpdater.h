@@ -43,14 +43,7 @@
  
  Default is nil. All messages types are accepted.
  */
-@property (nonatomic) NSArray<NSString*> *eventsFilterForMessages;
-
-/**
- If YES, ignore profile changes of room members as last message.
- 
- Default is NO.
- */
-@property (nonatomic) BOOL ignoreMemberProfileChanges;
+@property (nonatomic) NSArray<NSString*> *eventsFilterForLastMessage;
 
 /**
  If YES, ignore redacted events as last message.
