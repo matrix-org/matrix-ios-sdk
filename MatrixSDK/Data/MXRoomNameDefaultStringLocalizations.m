@@ -16,16 +16,26 @@
 
 #import "MXRoomNameDefaultStringLocalizations.h"
 
+@interface MXRoomNameDefaultStringLocalizations ()
+
+@property (nonatomic, copy) NSString *emptyRoom;
+@property (nonatomic, copy) NSString *twoMembers;
+@property (nonatomic, copy) NSString *moreThanTwoMembers;
+@property (nonatomic, copy) NSString *allOtherParticipantsLeft;
+
+@end
+
 @implementation MXRoomNameDefaultStringLocalizations
 
 - (instancetype)init
 {
-    self = [super init];
-    if (self)
+    if (self == [super init])
     {
         _emptyRoom = @"Empty room";
         _twoMembers = @"%@ and %@";
         _moreThanTwoMembers = @"%@ & %@ others";
+        _allOtherParticipantsLeft = @"%@ (Left)";
+        
     }
     return self;
 }
