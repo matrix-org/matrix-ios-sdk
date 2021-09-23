@@ -26,9 +26,17 @@ public final class MXRoomListDataFetchOptions: NSObject {
     public static let noPagination: Int = -1
     
     /// Filter options
-    public let filterOptions: MXRoomListDataFilterOptions
+    public var filterOptions: MXRoomListDataFilterOptions {
+        didSet {
+            fetcher?.refresh()
+        }
+    }
     /// Sort options
-    public let sortOptions: MXRoomListDataSortOptions
+    public var sortOptions: MXRoomListDataSortOptions {
+        didSet {
+            fetcher?.refresh()
+        }
+    }
     /// Pagination size for the fetch
     public let pageSize: Int
     /// Flag indicating the fetch should be performed in async

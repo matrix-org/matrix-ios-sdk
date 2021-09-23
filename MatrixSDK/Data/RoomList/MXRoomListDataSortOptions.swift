@@ -21,14 +21,36 @@ public final class MXRoomListDataSortOptions: NSObject {
     /// Weak reference to the fetch options
     internal weak var fetchOptions: MXRoomListDataFetchOptions?
     
+    /// Flag to sort by invite status
+    public var invitesFirst: Bool {
+        didSet {
+            refreshFetcher()
+        }
+    }
     /// Flag to sort by sent status
-    public private(set) var sentStatus: Bool
+    public var sentStatus: Bool {
+        didSet {
+            refreshFetcher()
+        }
+    }
     /// Flag to sort by last event date
-    public private(set) var lastEventDate: Bool
+    public var lastEventDate: Bool {
+        didSet {
+            refreshFetcher()
+        }
+    }
     /// Flag to sort by missed notifications count
-    public private(set) var missedNotificationsFirst: Bool
+    public var missedNotificationsFirst: Bool {
+        didSet {
+            refreshFetcher()
+        }
+    }
     /// Flag to sort by unread count
-    public private(set) var unreadMessagesFirst: Bool
+    public var unreadMessagesFirst: Bool {
+        didSet {
+            refreshFetcher()
+        }
+    }
     
     /// Initializer
     /// - Parameters:
@@ -36,36 +58,17 @@ public final class MXRoomListDataSortOptions: NSObject {
     ///   - lastEventDate: flag to sort by last event date
     ///   - missedNotificationsFirst: flag to sort by missed notification count
     ///   - unreadMessagesFirst: flag to sort by unread count
-    public init(sentStatus: Bool = true,
+    public init(invitesFirst: Bool = true,
+                sentStatus: Bool = true,
                 lastEventDate: Bool = true,
                 missedNotificationsFirst: Bool,
                 unreadMessagesFirst: Bool) {
+        self.invitesFirst = invitesFirst
         self.sentStatus = sentStatus
         self.lastEventDate = lastEventDate
         self.missedNotificationsFirst = missedNotificationsFirst
         self.unreadMessagesFirst = unreadMessagesFirst
         super.init()
-    }
-    
-    /// Updates `lastEventDate` property and refresh the related fetcher.
-    /// - Parameter value: new value
-    public func updateLastEventDate(_ value: Bool) {
-        lastEventDate = value
-        refreshFetcher()
-    }
-    
-    /// Updates `missedNotificationsFirst` property and refresh the related fetcher.
-    /// - Parameter value: new value
-    public func updateMissedNotificationsFirst(_ value: Bool) {
-        missedNotificationsFirst = value
-        refreshFetcher()
-    }
-    
-    /// Updates `unreadMessagesFirst` property and refresh the related fetcher.
-    /// - Parameter value: new value
-    public func updateUnreadMessagesFirst(_ value: Bool) {
-        unreadMessagesFirst = value
-        refreshFetcher()
     }
     
     /// Just to be used for in-memory data
@@ -76,6 +79,10 @@ public final class MXRoomListDataSortOptions: NSObject {
     /// To be used for CoreData fetch request
     internal var sortDescriptors: [NSSortDescriptor] {
         var result: [NSSortDescriptor] = []
+        
+        if invitesFirst {
+            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryProtocol.membership, ascending: true))
+        }
         
         if sentStatus {
             result.append(NSSortDescriptor(keyPath: \MXRoomSummaryProtocol.sentStatus, ascending: false))
@@ -97,6 +104,7 @@ public final class MXRoomListDataSortOptions: NSObject {
         return result
     }
     
+    /// Refresh fetcher after updates
     private func refreshFetcher() {
         guard let fetcher = fetchOptions?.fetcher else {
             return

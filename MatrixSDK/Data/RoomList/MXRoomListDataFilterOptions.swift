@@ -26,11 +26,23 @@ public final class MXRoomListDataFilterOptions: NSObject {
     internal weak var fetchOptions: MXRoomListDataFetchOptions?
     
     /// Data types to fetch
-    public let dataTypes: MXRoomSummaryDataTypes
+    public var dataTypes: MXRoomSummaryDataTypes {
+        didSet {
+            refreshFetcher()
+        }
+    }
     /// Data types not to fetch
-    public let notDataTypes: MXRoomSummaryDataTypes
+    public var notDataTypes: MXRoomSummaryDataTypes {
+        didSet {
+            refreshFetcher()
+        }
+    }
     /// Search query
-    public private(set) var query: String?
+    public var query: String? {
+        didSet {
+            refreshFetcher()
+        }
+    }
     
     /// Initializer
     /// - Parameters:
@@ -44,13 +56,6 @@ public final class MXRoomListDataFilterOptions: NSObject {
         self.notDataTypes = notDataTypes
         self.query = query
         super.init()
-    }
-    
-    /// Update query
-    /// - Parameter query: query
-    public func updateQuery(_ query: String?) {
-        self.query = query
-        refreshFetcher()
     }
     
     /// Just to be used for in-memory data
@@ -99,6 +104,7 @@ public final class MXRoomListDataFilterOptions: NSObject {
         return result
     }
     
+    /// Refresh fetcher after updates
     private func refreshFetcher() {
         guard let fetcher = fetchOptions?.fetcher else {
             return

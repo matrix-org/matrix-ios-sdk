@@ -90,12 +90,16 @@ public class MXStoreRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
     }
     
     public func refresh() {
-        resetPagination()
-        paginate()
+        guard let oldData = data else {
+            paginate()
+            return
+        }
+        data = nil
+        recomputeData(using: oldData)
     }
     
     public func stop() {
-        multicastDelegate.removeAllDelegates()
+        removeAllDelegates()
         removeDataObservers()
         data = nil
     }
@@ -125,15 +129,18 @@ public class MXStoreRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
         data = computeData(upto: numberOfItems)
     }
     
+    /// Load first page again
     private func innerResetPagination() {
         data = computeData(upto: fetchOptions.pageSize)
     }
     
+    /// Recompute data with the same number of rooms of the given `data`
     private func recomputeData(using data: MXRoomListData) {
         let numberOfItems = (data.currentPage + 1) * data.pageSize
         self.data = computeData(upto: numberOfItems)
     }
     
+    /// Compute data up to a numberOfItems
     private func computeData(upto numberOfItems: Int) -> MXRoomListData {
         var rooms = Array(roomSummaries.values)
         rooms = fetchOptions.filterOptions.filterRooms(rooms)
