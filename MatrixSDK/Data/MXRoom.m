@@ -121,7 +121,9 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
         }
         
         // Update the stored outgoing messages, by removing the sent messages and tagging as failed the others.
-        [self refreshOutgoingMessages];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self refreshOutgoingMessages];
+        });
     }
     return self;
 }
