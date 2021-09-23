@@ -2694,6 +2694,35 @@ MXAuthAction;
                            } failure:failure];
 }
 
+- (MXHTTPOperation*)roomSummaryWith:(NSString*)roomIdOrAlias
+                                via:(NSArray<NSString *>*)via
+                            success:(void (^)(MXPublicRoom *room))success
+                            failure:(void (^)(NSError *error))failure
+{
+    NSMutableString *path = [NSMutableString stringWithFormat:@"%@/im.nheko.summary/rooms/%@/summary", kMXAPIPrefixPathUnstable, roomIdOrAlias];
+    for (int i = 0; i < via.count; i++) {
+        [path appendFormat:@"%@via=%@", i == 0 ? @"?" : @"&", via[i]];
+    }
+
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"GET"
+                                    path:path
+                              parameters:nil
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                    __block MXPublicRoom *room;
+                                    [self dispatchProcessing:^{
+                                        MXJSONModelSetMXJSONModel(room, MXPublicRoom, JSONResponse)
+                                    } andCompletion:^{
+                                        success(room);
+                                    }];
+                                 }
+                                 failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
 #pragma mark - Room tags operations
 - (MXHTTPOperation*)tagsOfRoom:(NSString*)roomId
                        success:(void (^)(NSArray<MXRoomTag*> *tags))success
