@@ -24,8 +24,4 @@
 */
 @interface MXRoomNameDefaultStringLocalizations : NSObject<MXRoomNameStringsLocalizable>
 
-@property (copy, readonly, nonnull) NSString *emptyRoom;
-@property (copy, readonly, nonnull) NSString *twoMembers;
-@property (copy, readonly, nonnull) NSString *moreThanTwoMembers;
-
 @end
