@@ -62,7 +62,7 @@ public class MXSpaceNotificationCounter: NSObject {
     
     // MARK: - Properties
     
-    public var homeNotificationState = MXSpaceNotificationState()
+    public private(set) var homeNotificationState = MXSpaceNotificationState()
     private var notificationStatePerSpaceId: [String:MXSpaceNotificationState] = [:]
     
     // MARK: - Public
