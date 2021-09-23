@@ -21,17 +21,17 @@ public class MXMulticastDelegate <T: AnyObject> {
     private let delegates: NSHashTable<T> = NSHashTable.weakObjects()
     private let dispatchQueue: DispatchQueue
     
-    init(dispatchQueue: DispatchQueue = .main) {
+    public init(dispatchQueue: DispatchQueue = .main) {
         self.dispatchQueue = dispatchQueue
     }
     
-    func addDelegate(_ delegate: T) {
+    public func addDelegate(_ delegate: T) {
         synchronizeDelegates {
             delegates.add(delegate)
         }
     }
     
-    func removeDelegate(_ delegate: T) {
+    public func removeDelegate(_ delegate: T) {
         synchronizeDelegates {
             for oneDelegate in delegates.allObjects.reversed() {
                 if oneDelegate === delegate {
@@ -41,13 +41,13 @@ public class MXMulticastDelegate <T: AnyObject> {
         }
     }
     
-    func removeAllDelegates() {
+    public func removeAllDelegates() {
         synchronizeDelegates {
             delegates.removeAllObjects()
         }
     }
     
-    func invoke(invocation: @escaping (T) -> ()) {
+    public func invoke(invocation: @escaping (T) -> ()) {
         synchronizeDelegates {
             for delegate in delegates.allObjects.reversed() {
                 dispatchQueue.async {
