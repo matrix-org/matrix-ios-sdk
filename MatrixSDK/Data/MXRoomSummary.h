@@ -91,7 +91,7 @@ FOUNDATION_EXPORT NSUInteger const MXRoomSummaryPaginationChunkSize;
 /**
  The related matrix session.
  */
-@property (nonatomic, readonly) MXSession *mxSession;
+@property (nonatomic, weak, readonly) MXSession *mxSession;
 
 /**
  Shortcut to the corresponding room.
@@ -116,6 +116,14 @@ FOUNDATION_EXPORT NSUInteger const MXRoomSummaryPaginationChunkSize;
  @return the new instance.
  */
 - (instancetype)initWithRoomId:(NSString *)roomId matrixSession:(MXSession *)mxSession andStore:(id<MXStore>)store;
+
+/**
+ Create a `MXRoomSummary` instance with a summary model.
+ 
+ @param model room summary model object.
+ @return the new instance.
+ */
+- (instancetype)initWithSummaryModel:(id<MXRoomSummaryProtocol>)model;
 
 /**
  Dispose any resources and listener.

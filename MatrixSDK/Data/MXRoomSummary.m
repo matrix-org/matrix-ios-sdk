@@ -102,6 +102,16 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     return self;
 }
 
+- (instancetype)initWithSummaryModel:(id<MXRoomSummaryProtocol>)model
+{
+    if (self = [super init])
+    {
+        _roomId = model.roomId;
+        [self updateWith:model];
+    }
+    return self;
+}
+
 - (void)destroy
 {
     [[NSNotificationCenter defaultCenter] removeObserver:self name:kMXEventDidChangeSentStateNotification object:nil];
@@ -116,6 +126,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     {
         _mxSession = mxSession;
         store = mxSession.store;
+        [self updateWith:[store summaryOfRoom:_roomId]];
 
         // Listen to the event sent state changes
         // This is used to follow evolution of local echo events
@@ -135,14 +146,15 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
         // Listen to event edits within the room
         [self registerEventEditsListener];
     }
- }
+}
 
 - (void)save:(BOOL)commit
 {
-    if ([store respondsToSelector:@selector(storeSummaryForRoom:summary:)])
-    {
-        [store storeSummaryForRoom:_roomId summary:self];
-    }
+    _dataTypes = self.calculateDataTypes;
+    _sentStatus = self.calculateSentStatus;
+    
+    [store storeSummaryForRoom:_roomId summary:self];
+    
     if (commit && [store respondsToSelector:@selector(commit)])
     {
         [store commit];
@@ -167,6 +179,44 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
         MXMembershipTransitionState membershipTransitionState = [MXRoomSummary membershipTransitionStateForMembership:membership];
         
         [self updateMemberhsipTransitionState:membershipTransitionState notifyUpdate:NO];
+    }
+}
+
+- (void)updateWith:(id<MXRoomSummaryProtocol>)summary
+{
+    if (!summary)
+    {
+        return;
+    }
+    
+    _roomTypeString = summary.roomTypeString;
+    _roomType = summary.roomType;
+    _avatar = summary.avatar;
+    _displayname = summary.displayname;
+    _topic = summary.topic;
+    _creatorUserId = summary.creatorUserId;
+    _aliases = summary.aliases;
+    _joinRule = summary.joinRule;
+    _membership = summary.membership;
+    _membershipTransitionState = summary.membershipTransitionState;
+    _membersCount = summary.membersCount;
+    _isConferenceUserRoom = summary.isConferenceUserRoom;
+    _hiddenFromUser = summary.hiddenFromUser;
+    _storedHash = summary.storedHash;
+    _lastMessage = summary.lastMessage;
+    _isEncrypted = summary.isEncrypted;
+    _trust = summary.trust;
+    _localUnreadEventCount = summary.localUnreadEventCount;
+    _notificationCount = summary.notificationCount;
+    _highlightCount = summary.highlightCount;
+    _directUserId = summary.directUserId;
+    _others = [summary.others mutableCopy];
+    _dataTypes = summary.dataTypes;
+    _sentStatus = summary.sentStatus;
+    
+    if (!_others)
+    {
+        _others = [NSMutableDictionary dictionary];
     }
 }
 
@@ -700,6 +750,10 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
         {
             updated |= [self.mxSession.roomSummaryUpdateDelegate session:self.mxSession updateRoomSummary:self withServerRoomSummary:roomSync.summary roomState:roomState];
         }
+        if (roomSync.accountData)
+        {
+            updated = YES;
+        }
 
         // Handle the last message starting by the most recent event.
         // Then, if the delegate refuses it as last message, pass the previous event.
@@ -837,7 +891,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
         
         _hiddenFromUser = [aDecoder decodeBoolForKey:@"hiddenFromUser"];
         _storedHash = [aDecoder decodeIntegerForKey:@"storedHash"];
-        _dataTypes = [aDecoder decodeIntegerForKey:@"dataTypes"];
+        _dataTypes = (MXRoomSummaryDataTypes)[aDecoder decodeIntegerForKey:@"dataTypes"];
         _joinRule = [aDecoder decodeObjectForKey:@"joinRule"];
         _sentStatus = (MXRoomSummarySentStatus)[aDecoder decodeIntegerForKey:@"sentStatus"];
         
@@ -889,9 +943,9 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     
     [aCoder encodeBool:_hiddenFromUser forKey:@"hiddenFromUser"];
     [aCoder encodeInteger:self.hash forKey:@"storedHash"];
-    [aCoder encodeInteger:self.calculateDataTypes forKey:@"dataTypes"];
+    [aCoder encodeInteger:_dataTypes forKey:@"dataTypes"];
     [aCoder encodeObject:_joinRule forKey:@"joinRule"];
-    [aCoder encodeInteger:self.calculateSentStatus forKey:@"sentStatus"];
+    [aCoder encodeInteger:_sentStatus forKey:@"sentStatus"];
 }
 
 - (NSString *)description
