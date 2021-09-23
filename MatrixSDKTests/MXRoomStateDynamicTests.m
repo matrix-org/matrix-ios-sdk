@@ -112,6 +112,7 @@
         [self createScenario1:bobRestClient inRoom:roomId expectation:expectation onComplete:^{
             
             mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+            [matrixSDKTestsData retain:mxSession];
             
             [mxSession start:^{
                 
@@ -198,6 +199,7 @@
     [matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [matrixSDKTestsData retain:mxSession];
         
         [mxSession start:^{
             
@@ -385,6 +387,7 @@
         [self createScenario2:bobRestClient inRoom:roomId expectation:expectation onComplete:^(MXRestClient *aliceRestClient) {
             
             mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+            [matrixSDKTestsData retain:mxSession];
             
             [mxSession start:^{
                 
@@ -565,6 +568,7 @@
     [matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [matrixSDKTestsData retain:mxSession];
         
         [mxSession start:^{
             

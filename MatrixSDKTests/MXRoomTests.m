@@ -212,6 +212,7 @@
         [matrixSDKTestsData doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
 
             mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+            [matrixSDKTestsData retain:mxSession];
 
             [bobRestClient inviteUser:aliceRestClient.credentials.userId toRoom:roomId success:^{
 
@@ -255,6 +256,7 @@
     [matrixSDKTestsData doMXRestClientTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [matrixSDKTestsData retain:mxSession];
         [mxSession start:^{
 
             MXRoom *room = [mxSession roomWithRoomId:roomId];
@@ -287,6 +289,7 @@
     [matrixSDKTestsData doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [matrixSDKTestsData retain:mxSession];
 
         [mxSession startWithSyncFilter:[MXFilterJSONModel syncFilterWithMessageLimit:0] onServerSyncDone:^{
             
@@ -330,6 +333,8 @@
     [matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [matrixSDKTestsData retain:mxSession];
+        
         [mxSession start:^{
 
             MXRoom *room = [mxSession roomWithRoomId:roomId];
@@ -454,6 +459,8 @@
     [matrixSDKTestsData doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for tagged events" onReadyToTest:^(MXRestClient *bobRestClient, NSString *roomId, NSString *new_text_message_eventId, XCTestExpectation *expectation) {
         
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [matrixSDKTestsData retain:mxSession];
+        
         [mxSession start:^{
             
             MXRoom *room = [mxSession roomWithRoomId:roomId];
@@ -495,6 +502,8 @@
     [matrixSDKTestsData doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for tagged events" onReadyToTest:^(MXRestClient *bobRestClient, NSString *roomId, NSString *new_text_message_eventId, XCTestExpectation *expectation) {
         
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [matrixSDKTestsData retain:mxSession];
+        
         [mxSession start:^{
             
             MXRoom *room = [mxSession roomWithRoomId:roomId];
@@ -550,6 +559,8 @@
     [matrixSDKTestsData doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for tagged events" onReadyToTest:^(MXRestClient *bobRestClient, NSString *roomId, NSString *new_text_message_eventId, XCTestExpectation *expectation) {
         
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [matrixSDKTestsData retain:mxSession];
+        
         [mxSession start:^{
             
             MXRoom *room = [mxSession roomWithRoomId:roomId];
@@ -610,6 +621,8 @@
         [bobRestClient setRoomDirectoryVisibility:roomId directoryVisibility:kMXRoomDirectoryVisibilityPublic success:^{
 
             mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
+            [matrixSDKTestsData retain:mxSession];
+            
             [mxSession start:^{
 
                 MXRoom *room = [mxSession roomWithRoomId:roomId];
@@ -646,6 +659,8 @@
         MXRestClient *bobRestClient2 = bobRestClient;
 
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
+        [matrixSDKTestsData retain:mxSession];
+        
         [mxSession start:^{
 
             MXRoom *room = [mxSession roomWithRoomId:roomId];

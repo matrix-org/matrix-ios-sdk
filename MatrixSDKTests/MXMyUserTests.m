@@ -71,6 +71,7 @@
     [matrixSDKTestsData doMXRestClientTestWithAlice:self readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation) {
 
         mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+        [matrixSDKTestsData retain:mxSession];
 
         XCTAssertNil(mxSession.myUser, @"There should be no myUser while initialSync is not done");
 
@@ -108,6 +109,7 @@
     [matrixSDKTestsData doMXRestClientTestWithAlice:self readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation) {
 
         mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+        [matrixSDKTestsData retain:mxSession];
 
         [mxSession start:^{
 
@@ -144,6 +146,7 @@
     [matrixSDKTestsData doMXRestClientTestWithAlice:self readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation) {
 
         mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+        [matrixSDKTestsData retain:mxSession];
 
         [mxSession start:^{
 

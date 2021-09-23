@@ -286,6 +286,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
         [mxSession close];
 
         MXSession *mxSession2 = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [matrixSDKTestsData retain:mxSession2];
         [mxSession2 setStore:[[MXMemoryStore alloc] init] success:^{
 
             // Start a new session by loading no message
@@ -344,6 +345,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
             [mxSession close];
 
             MXSession *mxSession2 = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+            [matrixSDKTestsData retain:mxSession2];
 
             // Configure the updater so that it refuses room messages as last message
             mxSession2.roomSummaryUpdateDelegate = self;
@@ -410,6 +412,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
         [mxSession close];
 
         MXSession *mxSession2 = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [matrixSDKTestsData retain:mxSession2];
         [mxSession2 setStore:[[MXMemoryStore alloc] init] success:^{
 
             // Start a new session by loading no message
@@ -1040,6 +1043,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
                         // Restarting the session with a new MXMemoryStore is equivalent to
                         // clearing the cache of MXFileStore
                         MXSession *mxSession2 = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+                        [matrixSDKTestsData retain:mxSession2];
                         [mxSession2 setStore:[[MXMemoryStore alloc] init] success:^{
 
                             MXRoomSummaryUpdater *defaultUpdater = [MXRoomSummaryUpdater roomSummaryUpdaterForSession:mxSession2];
@@ -1187,6 +1191,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
 
                         // Then reopen a session on this store
                         MXSession *aliceSession2 = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+                        [matrixSDKTestsData retain:aliceSession2];
                         [aliceSession2 setStore:[[MXFileStore alloc] init] success:^{
 
                             [aliceSession2 start:^{
@@ -1270,6 +1275,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
 
                     // Then reopen a session
                     MXSession *aliceSession2 = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+                    [matrixSDKTestsData retain:aliceSession2];
                     [aliceSession2 setStore:[[MXFileStore alloc] init] success:^{
 
                         [aliceSession2 start:^{

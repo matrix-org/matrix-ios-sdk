@@ -59,6 +59,7 @@
     [matrixSDKTestsData doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
 
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [matrixSDKTestsData retain:mxSession];
 
         XCTAssertNotNil(mxSession.notificationCenter);
         XCTAssertNil(mxSession.notificationCenter.rules);
@@ -246,6 +247,8 @@
         mxSession = bobSession;
 
         MXSession *aliceSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+        [matrixSDKTestsData retain:aliceSession];
+        
         [aliceSession start:^{
 
             // Change alice name
@@ -362,6 +365,8 @@
         mxSession = bobSession;
 
         MXSession *aliceSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+        [matrixSDKTestsData retain:aliceSession];
+        
         [aliceSession start:^{
 
             // Change alice name

@@ -221,6 +221,8 @@
             MXFileStore *store = [[MXFileStore alloc] init];
 
             mxSession2 = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+            [matrixSDKTestsData retain:mxSession2];
+            
             [mxSession2 setStore:store success:^{
 
                 XCTAssert(mxSession2.crypto, @"MXSession must recall that it has crypto engaged");
@@ -484,6 +486,7 @@
         aliceSession = nil;
 
         MXSession *aliceSession2 = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+        [matrixSDKTestsData retain:aliceSession2];
 
         aliceSessionToClose = aliceSession2;
 
@@ -646,6 +649,7 @@
         bobSession = nil;
 
         bobSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [matrixSDKTestsData retain:bobSession];
 
         aliceSessionToClose = aliceSession;
         bobSessionToClose = bobSession;
@@ -2034,6 +2038,7 @@
             // This forces her to use a new megolm session for sending message "11"
             // This will move the olm session ratchet to share this new megolm session
             MXSession *aliceSession1 = [[MXSession alloc] initWithMatrixRestClient:aliceSession.matrixRestClient];
+            
             [aliceSession close];
             [aliceSession1 setStore:[[MXFileStore alloc] init] success:^{
                 [aliceSession1 start:^{
@@ -2047,6 +2052,8 @@
                         // - Simulate Alice using a backup of her OS and make her crypto state like after the first message
                         // Relaunch again alice
                         MXSession *aliceSession2 = [[MXSession alloc] initWithMatrixRestClient:aliceSession1.matrixRestClient];
+                        [matrixSDKTestsData retain:aliceSession2];
+                        
                         [aliceSession1 close];
                         [aliceSession2 setStore:[[MXFileStore alloc] init] success:^{
                             [aliceSession2 start:^{
@@ -2507,6 +2514,8 @@
 //                    [aliceSession close];
 //
 //                    aliceSession2 = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+//                    [matrixSDKTestsData retain:aliceSession2];
+//
 //                    [aliceSession2 start:^{
 //
 //                        aliceSession2.crypto.warnOnUnknowDevices = NO;
@@ -2537,6 +2546,8 @@
 //                    [aliceSession2 close];
 //
 //                    aliceSession3 = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+//                    [matrixSDKTestsData retain:aliceSession3];
+//
 //                    [aliceSession3 start:^{
 //
 //                        aliceSession3.crypto.warnOnUnknowDevices = NO;
@@ -3055,6 +3066,8 @@
 
         // - Restart the session
         MXSession *aliceSession2 = [[MXSession alloc] initWithMatrixRestClient:aliceSession.matrixRestClient];
+        [matrixSDKTestsData retain:aliceSession2]
+        ;
         [aliceSession close];
         [aliceSession2 start:^{
             MXOlmOutboundGroupSession *outboundSession = [aliceSession2.crypto.store outboundGroupSessionWithRoomId:roomId];
@@ -3088,6 +3101,8 @@
 
         // - Restart the session
         MXSession *aliceSession2 = [[MXSession alloc] initWithMatrixRestClient:aliceSession.matrixRestClient];
+        [matrixSDKTestsData retain:aliceSession2];
+        
         [aliceSession close];
         [aliceSession2 start:^{
             MXOlmOutboundGroupSession *outboundSession = [aliceSession2.crypto.store outboundGroupSessionWithRoomId:roomId];
