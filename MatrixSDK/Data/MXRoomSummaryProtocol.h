@@ -43,7 +43,7 @@
 @property (nonatomic, readonly) NSString * _Nullable avatar;
 
 /// The computed display name of the room.
-@property (nonatomic, readonly) NSString * _Nonnull displayname;
+@property (nonatomic, readonly) NSString * _Nullable displayname;
 
 /// The topic of the room.
 @property (nonatomic, readonly) NSString * _Nullable topic;
@@ -107,6 +107,9 @@
 /// nil if the room is not a direct chat.
 @property (nonatomic, readonly, copy) NSString * _Nullable directUserId;
 
+/// Other data to store more information in the room summary.
+@property (nonatomic, readonly) NSDictionary<NSString*, id<NSCoding>> * _Nullable others;
+
 /// Data types for the room
 @property (nonatomic, readonly) MXRoomSummaryDataTypes dataTypes;
 
@@ -121,7 +124,7 @@
 
 @optional
 
-@property (nonatomic, readonly) MXSession * _Nullable mxSession;
+@property (nonatomic, weak, readonly) MXSession * _Nullable mxSession;
 
 - (void)setMatrixSession:(MXSession * _Nonnull)mxSession;
 
