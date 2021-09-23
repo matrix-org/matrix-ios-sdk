@@ -73,6 +73,8 @@ public class MXSpaceService: NSObject {
     private var orphanedRooms: [MXRoom] = []
     private var orphanedDirectRooms: [MXRoom] = []
     
+    public let notificationCounter = MXSpaceNotificationCounter()
+    
     public private(set) var rootSpaceSummaries: [MXRoomSummary] = []
     
     // MARK: - Setup
@@ -100,7 +102,7 @@ public class MXSpaceService: NSObject {
     ///   - rooms: the complete list of rooms and spaces
     public func buildGraph(with rooms:[MXRoom]) {
         let startDate = Date()
-        MXLog.debug("[Spaces] buildGraph started from \(Thread.callStackSymbols)")
+        MXLog.debug("[Spaces] buildGraph started")
         prepareData(with: rooms, index: 0, spaces: [], spacesPerId: [:], roomsPerId: [:], directRooms: [:]) { spaces, spacesPerId, roomsPerId, directRooms in
             MXLog.debug("\(spaces), \(spacesPerId), \(roomsPerId), \(directRooms)")
             var parentIdsPerRoomId: [String : Set<String>] = [:]
@@ -138,6 +140,9 @@ public class MXSpaceService: NSObject {
             }
             self.flattenedParentIds = flattenedParentIds
             
+            // TODO improve updateNotificationsCount and call the method to all spaces once subspaces will be supported
+            self.notificationCounter.computeNotificationCount(for: self.rootSpaces, with: rooms, flattenedParentIds: flattenedParentIds)
+
             MXLog.debug("[Spaces] buildGraph ended after \(Date().timeIntervalSince(startDate))s")
             
             DispatchQueue.main.async {
