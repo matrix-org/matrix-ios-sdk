@@ -23,25 +23,26 @@ import XCTest
 class TestObserver: NSObject {
     static let shared = TestObserver()
     
-    var initialised: Bool = false
+    var mxSessionTracker: MXSessionTracker {
+        get {
+            MXSessionTracker.shared
+        }
+    }
     
     /// Launch the tracking on open MXSessions
     /// There will be `fatalError()` if there are still open MXSession at the end of a test
     func trackMXSessions() {
-        if !initialised {
-            MXSession.trackOpenMXSessions()
-            XCTestObservationCenter.shared.addTestObserver(self)
-            initialised = true
-        }
+        mxSessionTracker.trackMXSessions()
+        XCTestObservationCenter.shared.addTestObserver(self)
     }
 }
 
 extension TestObserver: XCTestObservation {
     func testCaseDidFinish(_ testCase: XCTestCase) {
         // Crash in caa
-        let count = MXSession.openMXSessionsCount
+        let count = mxSessionTracker.openMXSessionsCount
         if count > 0 {
-            MXSession.logOpenMXSessions()
+            mxSessionTracker.printOpenMXSessions()
             
             // All MXSessions must be closed at the end of the test
             // Else, they will continue to run in background and affect tests performance

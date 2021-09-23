@@ -16,24 +16,21 @@
 
 import Foundation
 
-// A structure that represents a tracked MXSession
-struct TrackedMXSession {
-    /// A human readable id for the MXSession
-    let userDeviceId: String
-    
-    /// The call stack that instantiated it
-    let callStack: [String]
+
+/// Delegate called on MXSession calls
+protocol MXSessionInitCloseDelegate {
+    func didInit(mxSession: MXSession, callStack: [String])
+    func willClose(mxSession: MXSession)
 }
 
 
-/// An extension to track alive MXSession instances in a static way.
-/// A MXSession is considered alive between its init and close.
+/// An extension for reporting calls to `init(matrixRestClient:)` and `close()` on `MXSession` instances
 extension MXSession {
     
     // MARK: - Public
+    static var initCloseDelegate: MXSessionInitCloseDelegate?
     
     /// Start tracking open MXSession instances.
-    @objc
     class func trackOpenMXSessions() {
         // Swizzle init and close methods to track active MXSessions
         swizzleMethods(orignalSelector: #selector(MXSession.init(matrixRestClient:)),
@@ -42,55 +39,9 @@ extension MXSession {
                        swizzledSelector: #selector(MXSession.trackClose))
     }
     
-    @objc
-    class var openMXSessionsCount: Int {
-        get {
-            trackedMXSessions.count
-        }
-    }
-    
-    /// Reset MXSession instances already tracked.
-    @objc
-    class func resetOpenMXSessions() {
-        trackedMXSessions.removeAll()
-    }
-    
-    /// Print all open MXSession instances.
-    @objc
-    class func logOpenMXSessions() {
-        for (trackId, trackedMXSession) in trackedMXSessions {
-            MXLog.error("MXSession(\(trackId)) for user \(trackedMXSession.userDeviceId) is not closed. It was created from:")
-            trackedMXSession.callStack.forEach { call in
-                MXLog.error("    - \(call)")
-            }
-        }
-    }
-    
     // MARK: - Private
     
-    // MARK: Properties
-    
-    /// All open sessions
-    private static var trackedMXSessions = Dictionary<String, TrackedMXSession>()
-
-    /// Id that identifies the MXSession instance
-    private var trackId: String {
-        // Let's use the MXSession pointer to track it
-        "\(Unmanaged.passUnretained(self).toOpaque())"
-    }
-
-    /// Human readable id
-    private var userDeviceId: String {
-        get {
-            // Manage string properties that are actually optional
-            [myUserId, myDeviceId]
-                .compactMap { $0 }
-                .joined(separator: ":")
-        }
-    }
-    
-    
-    // MARK: - Swizzling
+    // MARK: Swizzling
     
     /// Exchange 2 methods implementations
     /// - Parameters:
@@ -109,20 +60,40 @@ extension MXSession {
     private func trackInit(matrixRestClient: MXRestClient) -> MXSession {
         // Call the original method. Note that implementations are exchanged
         _ = self.trackInit(matrixRestClient: matrixRestClient)
-        
-        // And keep the call stack that created the session
-        let trackedMXSession = TrackedMXSession(userDeviceId: userDeviceId, callStack: Thread.callStackSymbols)
-        MXSession.trackedMXSessions.updateValue(trackedMXSession, forKey: self.trackId)
 
+        if let initCloseDelegate = MXSession.initCloseDelegate {
+            initCloseDelegate.didInit(mxSession: self, callStack: Thread.callStackSymbols)
+        }
         return self
     }
     
     /// Swizzled version of MXSession.close()
     @objc
     private func trackClose() {
+        if let initCloseDelegate = MXSession.initCloseDelegate {
+            initCloseDelegate.willClose(mxSession: self)
+        }
+        
         // Call the original method. Note that implementations are exchanged
         self.trackClose()
-        
-        MXSession.trackedMXSessions.removeValue(forKey:  self.trackId)
+    }
+}
+
+
+extension MXSession {
+    /// Id that identifies the MXSession instance
+    var trackId: String {
+        // Let's use the MXSession pointer to track it
+        "\(Unmanaged.passUnretained(self).toOpaque())"
+    }
+    
+    /// Human readable id
+    var userDeviceId: String {
+        get {
+            // Manage string properties that are actually optional
+            [myUserId, myDeviceId]
+                .compactMap { $0 }
+                .joined(separator: ":")
+        }
     }
 }
