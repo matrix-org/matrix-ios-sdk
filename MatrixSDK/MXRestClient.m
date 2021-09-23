@@ -2699,7 +2699,7 @@ MXAuthAction;
                             success:(void (^)(MXPublicRoom *room))success
                             failure:(void (^)(NSError *error))failure
 {
-    NSMutableString *path = [NSMutableString stringWithFormat:@"%@/im.nheko.summary/rooms/%@/summary", @"_matrix/client/unstable", roomIdOrAlias];
+    NSMutableString *path = [NSMutableString stringWithFormat:@"%@/im.nheko.summary/rooms/%@/summary", kMXAPIPrefixPathUnstable, roomIdOrAlias];
     for (int i = 0; i < via.count; i++) {
         [path appendFormat:@"%@via=%@", i == 0 ? @"?" : @"&", via[i]];
     }
