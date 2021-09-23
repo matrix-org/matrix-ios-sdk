@@ -16,46 +16,6 @@
 
 import Foundation
 
-/// MXSpaceNotificationState stores the categorized number of unread messages
-@objcMembers
-public class MXSpaceNotificationState: NSObject {
-    /// Number of unread messages in favourite rooms
-    public var favouriteMissedDiscussionsCount: UInt = 0
-    /// Number of unread highlight messages in favourite rooms
-    public var favouriteMissedDiscussionsHighlightedCount: UInt = 0
-    /// Number of unread messages in DM rooms
-    public var directMissedDiscussionsCount: UInt = 0
-    /// Number of unread highlight messages in DM rooms
-    public var directMissedDiscussionsHighlightedCount: UInt = 0
-    /// Number of unread messages in rooms other than DMs
-    public var groupMissedDiscussionsCount: UInt = 0
-    /// Number of unread highlight message sin rooms other than DMs
-    public var groupMissedDiscussionsHighlightedCount: UInt = 0
-    /// Number of all unread messages
-    public var allCount: UInt {
-        return favouriteMissedDiscussionsCount + directMissedDiscussionsCount + groupMissedDiscussionsCount
-    }
-    /// Number of all unread highlight messages
-    public var allHighlightCount: UInt {
-        return favouriteMissedDiscussionsHighlightedCount + directMissedDiscussionsHighlightedCount + groupMissedDiscussionsHighlightedCount
-    }
-    
-    static func +(left: MXSpaceNotificationState, right: MXSpaceNotificationState) -> MXSpaceNotificationState {
-        let sum = MXSpaceNotificationState()
-        sum.favouriteMissedDiscussionsCount = left.favouriteMissedDiscussionsCount + right.favouriteMissedDiscussionsCount
-        sum.favouriteMissedDiscussionsHighlightedCount = left.favouriteMissedDiscussionsHighlightedCount + right.favouriteMissedDiscussionsHighlightedCount
-        sum.directMissedDiscussionsCount = left.directMissedDiscussionsCount + right.directMissedDiscussionsCount
-        sum.directMissedDiscussionsHighlightedCount = left.directMissedDiscussionsHighlightedCount + right.directMissedDiscussionsHighlightedCount
-        sum.groupMissedDiscussionsCount = left.groupMissedDiscussionsCount + right.groupMissedDiscussionsCount
-        sum.groupMissedDiscussionsHighlightedCount = left.groupMissedDiscussionsHighlightedCount + right.groupMissedDiscussionsHighlightedCount
-        return sum
-    }
-    
-    static public func +=( left: inout MXSpaceNotificationState, right: MXSpaceNotificationState) {
-        left = left + right
-    }
-}
-
 /// MXSpaceNotificationCounter compute the number of unread messages for each space
 @objcMembers
 public class MXSpaceNotificationCounter: NSObject {
@@ -105,8 +65,8 @@ public class MXSpaceNotificationCounter: NSObject {
     /// - Parameters:
     ///   - spaceId: ID of the space
     /// - Returns: a `MXSpaceNotificationState` instance with the number of notifications for the given space
-    public func notificationState(forSpaceWithId spaceId: String) -> MXSpaceNotificationState {
-        return notificationStatePerSpaceId[spaceId] ?? MXSpaceNotificationState()
+    public func notificationState(forSpaceWithId spaceId: String) -> MXSpaceNotificationState? {
+        return notificationStatePerSpaceId[spaceId]
     }
     
     /// Notification state for a all spaces except for a given space
