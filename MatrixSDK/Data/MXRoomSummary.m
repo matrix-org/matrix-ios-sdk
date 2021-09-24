@@ -152,6 +152,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
 {
     _dataTypes = self.calculateDataTypes;
     _sentStatus = self.calculateSentStatus;
+    _favoriteTagOrder = self.room.accountData.tags[kMXRoomTagFavourite].order;
     
     [store storeSummaryForRoom:_roomId summary:self];
     
@@ -211,6 +212,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     _highlightCount = summary.highlightCount;
     _directUserId = summary.directUserId;
     _others = [summary.others mutableCopy];
+    _favoriteTagOrder = summary.favoriteTagOrder;
     _dataTypes = summary.dataTypes;
     _sentStatus = summary.sentStatus;
     
@@ -894,6 +896,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
         _dataTypes = (MXRoomSummaryDataTypes)[aDecoder decodeIntegerForKey:@"dataTypes"];
         _joinRule = [aDecoder decodeObjectForKey:@"joinRule"];
         _sentStatus = (MXRoomSummarySentStatus)[aDecoder decodeIntegerForKey:@"sentStatus"];
+        _favoriteTagOrder = [aDecoder decodeObjectForKey:@"favoriteTagOrder"];
         
         // Compute the trust if asked to do it automatically
         // or maintain its computation it has been already calcutated
@@ -946,6 +949,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     [aCoder encodeInteger:_dataTypes forKey:@"dataTypes"];
     [aCoder encodeObject:_joinRule forKey:@"joinRule"];
     [aCoder encodeInteger:_sentStatus forKey:@"sentStatus"];
+    [aCoder encodeObject:_favoriteTagOrder forKey:@"favoriteTagOrder"];
 }
 
 - (NSString *)description

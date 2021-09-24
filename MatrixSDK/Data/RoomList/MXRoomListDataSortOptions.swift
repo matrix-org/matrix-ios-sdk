@@ -39,6 +39,12 @@ public final class MXRoomListDataSortOptions: NSObject {
             refreshFetcher()
         }
     }
+    /// Flag to sort by favorite tag order
+    public var favoriteTag: Bool {
+        didSet {
+            refreshFetcher()
+        }
+    }
     /// Flag to sort by missed notifications count
     public var missedNotificationsFirst: Bool {
         didSet {
@@ -61,11 +67,13 @@ public final class MXRoomListDataSortOptions: NSObject {
     public init(invitesFirst: Bool = true,
                 sentStatus: Bool = true,
                 lastEventDate: Bool = true,
+                favoriteTag: Bool = false,
                 missedNotificationsFirst: Bool,
                 unreadMessagesFirst: Bool) {
         self.invitesFirst = invitesFirst
         self.sentStatus = sentStatus
         self.lastEventDate = lastEventDate
+        self.favoriteTag = favoriteTag
         self.missedNotificationsFirst = missedNotificationsFirst
         self.unreadMessagesFirst = unreadMessagesFirst
         super.init()
@@ -99,6 +107,10 @@ public final class MXRoomListDataSortOptions: NSObject {
         
         if lastEventDate {
             result.append(NSSortDescriptor(keyPath: \MXRoomSummaryProtocol.lastMessage?.originServerTs, ascending: false))
+        }
+        
+        if favoriteTag {
+            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryProtocol.favoriteTagOrder, ascending: false))
         }
         
         return result

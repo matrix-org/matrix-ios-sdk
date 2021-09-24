@@ -318,6 +318,11 @@ FOUNDATION_EXPORT NSUInteger const MXRoomSummaryPaginationChunkSize;
 @property (nonatomic) NSMutableDictionary<NSString*, id<NSCoding>> *others;
 
 /**
+ Order information in room favorite tag. Optional even if the room is favorited.
+ */
+@property (nonatomic, readonly) NSString *favoriteTagOrder;
+
+/**
  Data types for the room.
  */
 @property (nonatomic, readonly) MXRoomSummaryDataTypes dataTypes;

@@ -110,6 +110,9 @@
 /// Other data to store more information in the room summary.
 @property (nonatomic, readonly) NSDictionary<NSString*, id<NSCoding>> * _Nullable others;
 
+/// Order information in room favorite tag. Optional even if the room is favorited.
+@property (nonatomic, readonly) NSString * _Nullable favoriteTagOrder;
+
 /// Data types for the room
 @property (nonatomic, readonly) MXRoomSummaryDataTypes dataTypes;
 
