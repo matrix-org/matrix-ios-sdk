@@ -1,3 +1,19 @@
+## Changes in 0.20.2 (2021-09-24)
+
+✨ Features
+
+- Implemented Olm fallback key support. ([#4406](https://github.com/vector-im/element-ios/issues/4406))
+- Added room summary API call ([#4498](https://github.com/vector-im/element-ios/issues/4498))
+- Added support to get suggested rooms ([#4500](https://github.com/vector-im/element-ios/issues/4500))
+- Initial yet naive algortihm for building the graph of rooms ([#4509](https://github.com/vector-im/element-ios/issues/4509))
+- Added support for Explore rooms ([#4571](https://github.com/vector-im/element-ios/issues/4571))
+
+🙌 Improvements
+
+- Add fallback keys to the dehydrated device info and sign it with the MSK. ([#4255](https://github.com/vector-im/element-ios/issues/4255))
+- Cross-signing: Sign the key backup with the MSK. ([#4338](https://github.com/vector-im/element-ios/issues/4338))
+
+
 ## Changes in 0.20.1 (2021-09-16)
 
 🙌 Improvements
