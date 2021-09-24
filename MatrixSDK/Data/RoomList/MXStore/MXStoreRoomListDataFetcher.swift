@@ -91,7 +91,6 @@ public class MXStoreRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
     
     public func refresh() {
         guard let oldData = data else {
-            paginate()
             return
         }
         data = nil
@@ -111,7 +110,7 @@ public class MXStoreRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
         
         if let data = data {
             //  some data loaded before
-            if data.numberOfRooms == data.totalRoomsCount {
+            if data.counts.numberOfRooms == data.counts.totalRoomsCount {
                 //  there is no more rooms to paginate
                 return
             }
@@ -152,8 +151,8 @@ public class MXStoreRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
         }
         
         return MXRoomListData(rooms: rooms,
-                              pageSize: fetchOptions.pageSize,
-                              totalRoomsCount: totalRoomsCount)
+                              counts: MXStoreRoomListDataCounts(withRooms: rooms, totalRoomsCount: totalRoomsCount),
+                              pageSize: fetchOptions.pageSize)
     }
     
     private func notifyDataChange() {

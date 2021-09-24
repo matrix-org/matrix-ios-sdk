@@ -1528,6 +1528,10 @@
 		ECD289B426F9F00E00F268CF /* MXRoomSummarySentStatus.h in Headers */ = {isa = PBXBuildFile; fileRef = ECD289B326F9F00E00F268CF /* MXRoomSummarySentStatus.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		ECD289B526F9F00E00F268CF /* MXRoomSummarySentStatus.h in Headers */ = {isa = PBXBuildFile; fileRef = ECD289B326F9F00E00F268CF /* MXRoomSummarySentStatus.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		ECD289BA26FCD25600F268CF /* MXPushGatewayRestClient.h in Headers */ = {isa = PBXBuildFile; fileRef = EC619D9124DD834B00663A80 /* MXPushGatewayRestClient.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		ECD289BC26FDE4E300F268CF /* MXRoomListDataCounts.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECD289BB26FDE4E300F268CF /* MXRoomListDataCounts.swift */; };
+		ECD289BD26FDE4E300F268CF /* MXRoomListDataCounts.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECD289BB26FDE4E300F268CF /* MXRoomListDataCounts.swift */; };
+		ECD289BF26FDE5F700F268CF /* MXStoreRoomListDataCounts.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECD289BE26FDE5F700F268CF /* MXStoreRoomListDataCounts.swift */; };
+		ECD289C026FDE5F700F268CF /* MXStoreRoomListDataCounts.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECD289BE26FDE5F700F268CF /* MXStoreRoomListDataCounts.swift */; };
 		ECD623FF25D3DCC900DC0A0B /* MXOlmDecryption.h in Headers */ = {isa = PBXBuildFile; fileRef = 327187831DA7D0220071C818 /* MXOlmDecryption.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		ECF29BCC264194AE0053E6D6 /* MXCallAssertedIdentityEventContent.h in Headers */ = {isa = PBXBuildFile; fileRef = ECF29BCB264194AE0053E6D6 /* MXCallAssertedIdentityEventContent.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		ECF29BCD264194AE0053E6D6 /* MXCallAssertedIdentityEventContent.h in Headers */ = {isa = PBXBuildFile; fileRef = ECF29BCB264194AE0053E6D6 /* MXCallAssertedIdentityEventContent.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -2389,6 +2393,8 @@
 		ECD289A426EB97E800F268CF /* MXRoomSummaryDataTypes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXRoomSummaryDataTypes.h; sourceTree = "<group>"; };
 		ECD289A726EBB0FE00F268CF /* MXRoomListDataFetcherDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXRoomListDataFetcherDelegate.swift; sourceTree = "<group>"; };
 		ECD289B326F9F00E00F268CF /* MXRoomSummarySentStatus.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXRoomSummarySentStatus.h; sourceTree = "<group>"; };
+		ECD289BB26FDE4E300F268CF /* MXRoomListDataCounts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXRoomListDataCounts.swift; sourceTree = "<group>"; };
+		ECD289BE26FDE5F700F268CF /* MXStoreRoomListDataCounts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXStoreRoomListDataCounts.swift; sourceTree = "<group>"; };
 		ECF29BCB264194AE0053E6D6 /* MXCallAssertedIdentityEventContent.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXCallAssertedIdentityEventContent.h; sourceTree = "<group>"; };
 		ECF29BD2264194BB0053E6D6 /* MXCallAssertedIdentityEventContent.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXCallAssertedIdentityEventContent.m; sourceTree = "<group>"; };
 		ECF29BDD264195320053E6D6 /* MXAssertedIdentityModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXAssertedIdentityModel.h; sourceTree = "<group>"; };
@@ -4151,6 +4157,7 @@
 				ECD2898626EA10B600F268CF /* MXRoomListDataFilterOptions.swift */,
 				ECD2897826E8EE9300F268CF /* MXRoomListDataSortOptions.swift */,
 				ECD2898026E8F18600F268CF /* MXRoomListData.swift */,
+				ECD289BB26FDE4E300F268CF /* MXRoomListDataCounts.swift */,
 				ECD2897E26E8F0F500F268CF /* MXRoomListDataFetcher.swift */,
 				ECD289A726EBB0FE00F268CF /* MXRoomListDataFetcherDelegate.swift */,
 				ECD2898226E8F2DA00F268CF /* MXStore */,
@@ -4165,6 +4172,7 @@
 			children = (
 				ECD2898426E8F76B00F268CF /* MXStoreRoomListDataManager.swift */,
 				ECD2897C26E8F06F00F268CF /* MXStoreRoomListDataFetcher.swift */,
+				ECD289BE26FDE5F700F268CF /* MXStoreRoomListDataCounts.swift */,
 			);
 			path = MXStore;
 			sourceTree = "<group>";
@@ -5162,6 +5170,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				ECD289BC26FDE4E300F268CF /* MXRoomListDataCounts.swift in Sources */,
 				32A1513F1DAF768D00400192 /* MXOlmInboundGroupSession.m in Sources */,
 				3259CFE626026A6F00C365DB /* MXRestClient+Extensions.swift in Sources */,
 				EC60ED91265CFD3B00B39A4E /* MXRoomSync.m in Sources */,
@@ -5444,6 +5453,7 @@
 				B1136964230AC9D900E2B2FA /* MXIdentityServerRestClient.m in Sources */,
 				F0C34CBB1C18C93700C36F09 /* MXSDKOptions.m in Sources */,
 				B16F35A225F916A00029AE98 /* MXRoomTypeMapper.swift in Sources */,
+				ECD289BF26FDE5F700F268CF /* MXStoreRoomListDataCounts.swift in Sources */,
 				320BBF441D6C81550079890E /* MXEventsEnumeratorOnArray.m in Sources */,
 				32618E7220ED2DF500E1D2EA /* MXFilterJSONModel.m in Sources */,
 				3259D02526037A7200C365DB /* NSDictionary.swift in Sources */,
@@ -5604,6 +5614,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				ECD289BD26FDE4E300F268CF /* MXRoomListDataCounts.swift in Sources */,
 				B19EC8A3260E134A00543BEC /* MXRoomInitialStateEventBuilder.swift in Sources */,
 				B14EF1CA2397E90400758AF0 /* MXOlmInboundGroupSession.m in Sources */,
 				B14EF1CB2397E90400758AF0 /* MXRoomAccountData.m in Sources */,
@@ -5886,6 +5897,7 @@
 				3A108AA525810FE5005EEBE9 /* MXRawDataKey.m in Sources */,
 				324DD29C246AD2B500377005 /* MXSecretStorage.m in Sources */,
 				EC60EDC9265CFEA800B39A4E /* MXRoomSyncUnreadNotifications.m in Sources */,
+				ECD289C026FDE5F700F268CF /* MXStoreRoomListDataCounts.swift in Sources */,
 				B14EF26F2397E90400758AF0 /* MXUser.m in Sources */,
 				324AAC772399140D00380A66 /* MXKeyVerificationDone.m in Sources */,
 				B14EF2702397E90400758AF0 /* MXIdentityServerRestClient.swift in Sources */,

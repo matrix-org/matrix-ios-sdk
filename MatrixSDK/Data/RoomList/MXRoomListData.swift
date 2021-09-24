@@ -22,55 +22,20 @@ public final class MXRoomListData: NSObject {
     public let rooms: [MXRoomSummaryProtocol]
     /// Pagination size
     public let pageSize: Int
-    /// Total number of rooms. Can be different from `numberOfRooms` if pagination enabled
-    public let totalRoomsCount: Int
+    /// Counts on the data
+    public let counts: MXRoomListDataCounts
     
     /// Current page. 0 if pagination disabled
     public var currentPage: Int {
-        if numberOfRooms == 0 || pageSize < 0 {
+        if counts.numberOfRooms == 0 || pageSize < 0 {
             return 0
         }
-        return numberOfRooms / pageSize - (numberOfRooms % pageSize == 0 ? 1 : 0)
+        return counts.numberOfRooms / pageSize - (counts.numberOfRooms % pageSize == 0 ? 1 : 0)
     }
     
     /// Flag to indicate whether more rooms exist in next pages
     public var hasMoreRooms: Bool {
-        return numberOfRooms < totalRoomsCount
-    }
-    
-    /// Number of rooms handled by this class
-    public var numberOfRooms: Int {
-        return rooms.count
-    }
-    
-    /// Number of rooms having unsent message(s)
-    public var numberOfUnsentRooms: Int {
-        return rooms.filter({ $0.sentStatus != .ok }).count
-    }
-    
-    /// Number of rooms being notified
-    public var numberOfNotifiedRooms: Int {
-        return rooms.filter({ $0.notificationCount > 0 }).count + numberOfInvitedRooms
-    }
-    
-    /// Number of room being highlighted
-    public var numberOfHighlightedRooms: Int {
-        return rooms.filter({ $0.highlightCount > 0 }).count
-    }
-    
-    /// Total notification count for handled rooms
-    public var totalNotificationCount: UInt {
-        return rooms.reduce(0, { $0 + $1.notificationCount })
-    }
-    
-    /// Total highlight count for handled rooms
-    public var totalHighlightCount: UInt {
-        return rooms.reduce(0, { $0 + $1.highlightCount })
-    }
-    
-    /// Number of invited rooms
-    private var numberOfInvitedRooms: Int {
-        return rooms.filter({ $0.isTyped(.invited) }).count
+        return counts.numberOfRooms < counts.totalRoomsCount
     }
     
     /// Get room at index
@@ -85,11 +50,11 @@ public final class MXRoomListData: NSObject {
     
     /// Initializer
     internal init(rooms: [MXRoomSummaryProtocol],
-                  pageSize: Int,
-                  totalRoomsCount: Int) {
+                  counts: MXRoomListDataCounts,
+                  pageSize: Int) {
         self.rooms = rooms
+        self.counts = counts
         self.pageSize = pageSize
-        self.totalRoomsCount = totalRoomsCount
         super.init()
     }
     
@@ -107,7 +72,7 @@ public final class MXRoomListData: NSObject {
         let roomsHash = rooms.reduce(1, { $0 ^ $1.hash }).hashValue
         result = prime * result + Int64(roomsHash)
         result = prime * result + Int64(pageSize)
-        result = prime * result + Int64(totalRoomsCount)
+        result = prime * result + Int64(counts.totalRoomsCount)
         
         return String(result).hash
     }
