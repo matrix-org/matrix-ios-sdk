@@ -79,6 +79,8 @@ public class MXSpaceService: NSObject {
     
     public private(set) var rootSpaceSummaries: [MXRoomSummary] = []
     
+    public private(set) var needsUpdate: Bool = false
+    
     // MARK: - Setup
     
     public init(session: MXSession) {
@@ -105,10 +107,12 @@ public class MXSpaceService: NSObject {
     public func buildGraph(with rooms:[MXRoom]) {
         guard !self.isGraphBuilding else {
             MXLog.debug("[Spaces] buildGraph aborted: graph is building")
+            self.needsUpdate = true
             return
         }
         
         self.isGraphBuilding = true
+        self.needsUpdate = false
         
         self.processingQueue.async {
             let startDate = Date()
