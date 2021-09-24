@@ -61,6 +61,11 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, nullable) NSDictionary<NSString *, NSNumber*> *deviceOneTimeKeysCount;
 
 /**
+ List of algorithms for which the server has unused fallback keys
+ */
+@property (nonatomic, nullable) NSArray<NSString*> *unusedFallbackKeys;
+
+/**
  List of rooms.
  */
 @property (nonatomic, nullable) MXRoomsSyncResponse *rooms;
