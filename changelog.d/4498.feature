@@ -1,1 +1,0 @@
-Added room summary API call

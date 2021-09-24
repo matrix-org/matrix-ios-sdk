@@ -1,1 +1,0 @@
-Initial yet naive algortihm for building the graph of rooms
