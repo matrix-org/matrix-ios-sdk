@@ -28,19 +28,25 @@ public final class MXRoomListDataFilterOptions: NSObject {
     /// Data types to fetch
     public var dataTypes: MXRoomSummaryDataTypes {
         didSet {
-            refreshFetcher()
+            if dataTypes != oldValue {
+                refreshFetcher()
+            }
         }
     }
     /// Data types not to fetch
     public var notDataTypes: MXRoomSummaryDataTypes {
         didSet {
-            refreshFetcher()
+            if notDataTypes != oldValue {
+                refreshFetcher()
+            }
         }
     }
     /// Search query
     public var query: String? {
         didSet {
-            refreshFetcher()
+            if query != oldValue {
+                refreshFetcher()
+            }
         }
     }
     

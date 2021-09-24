@@ -24,37 +24,49 @@ public final class MXRoomListDataSortOptions: NSObject {
     /// Flag to sort by invite status
     public var invitesFirst: Bool {
         didSet {
-            refreshFetcher()
+            if invitesFirst != oldValue {
+                refreshFetcher()
+            }
         }
     }
     /// Flag to sort by sent status
     public var sentStatus: Bool {
         didSet {
-            refreshFetcher()
+            if sentStatus != oldValue {
+                refreshFetcher()
+            }
         }
     }
     /// Flag to sort by last event date
     public var lastEventDate: Bool {
         didSet {
-            refreshFetcher()
+            if lastEventDate != oldValue {
+                refreshFetcher()
+            }
         }
     }
     /// Flag to sort by favorite tag order
     public var favoriteTag: Bool {
         didSet {
-            refreshFetcher()
+            if favoriteTag != oldValue {
+                refreshFetcher()
+            }
         }
     }
     /// Flag to sort by missed notifications count
     public var missedNotificationsFirst: Bool {
         didSet {
-            refreshFetcher()
+            if missedNotificationsFirst != oldValue {
+                refreshFetcher()
+            }
         }
     }
     /// Flag to sort by unread count
     public var unreadMessagesFirst: Bool {
         didSet {
-            refreshFetcher()
+            if unreadMessagesFirst != oldValue {
+                refreshFetcher()
+            }
         }
     }
     
