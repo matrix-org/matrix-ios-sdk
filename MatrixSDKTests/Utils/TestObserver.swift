@@ -39,13 +39,12 @@ class TestObserver: NSObject {
 
 extension TestObserver: XCTestObservation {
     func testCaseDidFinish(_ testCase: XCTestCase) {
-        // Crash in caa
         let count = mxSessionTracker.openMXSessionsCount
         if count > 0 {
             mxSessionTracker.printOpenMXSessions()
             
             // All MXSessions must be closed at the end of the test
-            // Else, they will continue to run in background and affect tests performance
+            // Else, they will continue to run in background and affect tests execution performance
             fatalError("Test \(testCase.name) did not close \(count) MXSession instances")
         }
     }
