@@ -7,7 +7,7 @@ abstract_target 'MatrixSDK' do
 
     pod 'SwiftyBeaver', '1.9.5'
     
-    pod 'OLMKit', '~> 3.2.4', :inhibit_warnings => true
+    pod 'OLMKit', '~> 3.2.5', :inhibit_warnings => true
     #pod 'OLMKit', :path => '../olm/OLMKit.podspec'
     
     pod 'Realm', '10.7.6'

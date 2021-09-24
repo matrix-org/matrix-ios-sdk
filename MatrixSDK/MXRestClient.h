@@ -1484,6 +1484,21 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
                                 success:(void (^)(NSArray<NSString *>* relatedGroups))success
                                 failure:(void (^)(NSError *error))failure;
 
+/**
+ Get the room summary of a room
+ 
+ @param roomIdOrAlias the id of the room or its alias
+ @param via servers, that should be tried to request a summary from, if it can't be generated locally. These can be from a matrix URI, matrix.to link or a `m.space.child` event for example.
+ @param success A block object called when the operation succeeds. It provides the public room data.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)roomSummaryWith:(NSString*)roomIdOrAlias
+                                via:(NSArray<NSString *>*)via
+                            success:(void (^)(MXPublicRoom *room))success
+                            failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
 #pragma mark - Room tags operations
 /**
  List the tags of a room.
@@ -2153,13 +2168,16 @@ Note: Clients should consider avoiding this endpoint for URLs posted in encrypte
 
  @param deviceKeys the device keys to send.
  @param oneTimeKeys the one-time keys to send.
+ @param fallbackKeys the fallback keys to send.
 
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
 
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)uploadKeys:(NSDictionary*)deviceKeys oneTimeKeys:(NSDictionary*)oneTimeKeys
+- (MXHTTPOperation*)uploadKeys:(NSDictionary*)deviceKeys
+                   oneTimeKeys:(NSDictionary*)oneTimeKeys
+                  fallbackKeys:(NSDictionary *)fallbackKeys
                        success:(void (^)(MXKeysUploadResponse *keysUploadResponse))success
                        failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
@@ -2168,6 +2186,7 @@ Note: Clients should consider avoiding this endpoint for URLs posted in encrypte
 
  @param deviceKeys the device keys to send.
  @param oneTimeKeys the one-time keys to send.
+ @param fallbackKeys the fallback keys to send.
  @param deviceId ID of the device the keys belong to. Nil to upload keys to the device of the current session.
 
  @param success A block object called when the operation succeeds.
@@ -2175,7 +2194,9 @@ Note: Clients should consider avoiding this endpoint for URLs posted in encrypte
 
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)uploadKeys:(NSDictionary*)deviceKeys oneTimeKeys:(NSDictionary*)oneTimeKeys
+- (MXHTTPOperation*)uploadKeys:(NSDictionary*)deviceKeys
+                   oneTimeKeys:(NSDictionary*)oneTimeKeys
+                  fallbackKeys:(NSDictionary *)fallbackKeys
                forDeviceWithId:(NSString*)deviceId
                        success:(void (^)(MXKeysUploadResponse *keysUploadResponse))success
                        failure:(void (^)(NSError *error))failure;
@@ -2253,8 +2274,8 @@ Note: Clients should consider avoiding this endpoint for URLs posted in encrypte
 
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)dehydratedDeviceWithSuccess:(void (^)(MXDehydratedDevice *device))success
-                                        failure:(void (^)(NSError *error))failure;
+- (MXHTTPOperation*)getDehydratedDeviceWithSuccess:(void (^)(MXDehydratedDevice *device))success
+                                           failure:(void (^)(NSError *error))failure;
 
 /**
  Set a given device as the dehydrated device of the current account.
@@ -2761,15 +2782,16 @@ Note: Clients should consider avoiding this endpoint for URLs posted in encrypte
 
 #pragma mark - Spaces
 
-/// Get the space children of a given space.
+/// Get the space summary of a given space.
 /// @param spaceId The room id of the queried space.
-/// @param parameters Space children request parameters.
+/// @param suggestedOnly If `true`, return only child events and rooms where the `m.space.child` event has `suggested: true`.
+/// @param limit A limit to the maximum number of children to return per space. `-1` for no limit
 /// @param success A block object called when the operation succeeds. It provides a `MXSpaceChildrenResponse` object.
 /// @param failure A block object called when the operation fails.
 /// @return a MXHTTPOperation instance.
 - (MXHTTPOperation*)getSpaceChildrenForSpaceWithId:(NSString*)spaceId
-                                        parameters:(MXSpaceChildrenRequestParameters*)parameters
-                                          success:(void (^)(MXSpaceChildrenResponse *spaceChildrenResponse))success
-                                          failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
-
+                                     suggestedOnly:(BOOL)suggestedOnly
+                                             limit:(NSInteger)limit
+                                           success:(void (^)(MXSpaceChildrenResponse *spaceChildrenResponse))success
+                                           failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 @end

@@ -2694,6 +2694,35 @@ MXAuthAction;
                            } failure:failure];
 }
 
+- (MXHTTPOperation*)roomSummaryWith:(NSString*)roomIdOrAlias
+                                via:(NSArray<NSString *>*)via
+                            success:(void (^)(MXPublicRoom *room))success
+                            failure:(void (^)(NSError *error))failure
+{
+    NSMutableString *path = [NSMutableString stringWithFormat:@"%@/im.nheko.summary/rooms/%@/summary", kMXAPIPrefixPathUnstable, roomIdOrAlias];
+    for (int i = 0; i < via.count; i++) {
+        [path appendFormat:@"%@via=%@", i == 0 ? @"?" : @"&", via[i]];
+    }
+
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"GET"
+                                    path:path
+                              parameters:nil
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                    __block MXPublicRoom *room;
+                                    [self dispatchProcessing:^{
+                                        MXJSONModelSetMXJSONModel(room, MXPublicRoom, JSONResponse)
+                                    } andCompletion:^{
+                                        success(room);
+                                    }];
+                                 }
+                                 failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
 #pragma mark - Room tags operations
 - (MXHTTPOperation*)tagsOfRoom:(NSString*)roomId
                        success:(void (^)(NSArray<MXRoomTag*> *tags))success
@@ -4076,14 +4105,18 @@ MXAuthAction;
 
 
 #pragma mark - Crypto
-- (MXHTTPOperation*)uploadKeys:(NSDictionary*)deviceKeys oneTimeKeys:(NSDictionary*)oneTimeKeys
+- (MXHTTPOperation*)uploadKeys:(NSDictionary*)deviceKeys
+                   oneTimeKeys:(NSDictionary*)oneTimeKeys
+                  fallbackKeys:(NSDictionary *)fallbackKeys
                        success:(void (^)(MXKeysUploadResponse *keysUploadResponse))success
                        failure:(void (^)(NSError *error))failure
 {
-    return [self uploadKeys:deviceKeys oneTimeKeys:oneTimeKeys forDeviceWithId:nil success:success failure:failure];
+    return [self uploadKeys:deviceKeys oneTimeKeys:oneTimeKeys fallbackKeys:fallbackKeys forDeviceWithId:nil success:success failure:failure];
 }
 
-- (MXHTTPOperation*)uploadKeys:(NSDictionary*)deviceKeys oneTimeKeys:(NSDictionary*)oneTimeKeys
+- (MXHTTPOperation*)uploadKeys:(NSDictionary*)deviceKeys
+                   oneTimeKeys:(NSDictionary*)oneTimeKeys
+                  fallbackKeys:(NSDictionary *)fallbackKeys
                forDeviceWithId:(NSString*)deviceId
                        success:(void (^)(MXKeysUploadResponse *keysUploadResponse))success
                        failure:(void (^)(NSError *error))failure
@@ -4098,6 +4131,10 @@ MXAuthAction;
     if (oneTimeKeys)
     {
         parameters[@"one_time_keys"] = oneTimeKeys;
+    }
+    if (fallbackKeys)
+    {
+        parameters[@"org.matrix.msc2732.fallback_keys"] = fallbackKeys;
     }
 
     MXWeakify(self);
@@ -4256,8 +4293,8 @@ MXAuthAction;
 
 #pragma mark - Crypto: Dehydration
 
-- (MXHTTPOperation*)dehydratedDeviceWithSuccess:(void (^)(MXDehydratedDevice *device))success
-                                        failure:(void (^)(NSError *error))failure
+- (MXHTTPOperation*)getDehydratedDeviceWithSuccess:(void (^)(MXDehydratedDevice *device))success
+                                           failure:(void (^)(NSError *error))failure
 {
     MXWeakify(self);
     return [httpClient requestWithMethod:@"GET"
@@ -4356,9 +4393,17 @@ MXAuthAction;
                                    success:(void (^)(void))success
                                    failure:(void (^)(NSError *error))failure
 {
+    return [self updateKeyBackupVersion:keyBackupVersion withPath:kMXAPIPrefixPathR0 success:success failure:failure];
+}
+
+- (MXHTTPOperation*)updateKeyBackupVersion:(MXKeyBackupVersion*)keyBackupVersion
+                                  withPath:(NSString*)path
+                                   success:(void (^)(void))success
+                                   failure:(void (^)(NSError *error))failure
+{
     MXWeakify(self);
     return [httpClient requestWithMethod:@"PUT"
-                                    path:[NSString stringWithFormat:@"%@/room_keys/version/%@", kMXAPIPrefixPathR0, keyBackupVersion.version]
+                                    path:[NSString stringWithFormat:@"%@/room_keys/version/%@", path, keyBackupVersion.version]
                               parameters:keyBackupVersion.JSONDictionary
                                  success:^(NSDictionary *JSONResponse) {
                                      MXStrongifyAndReturnIfNil(self);
@@ -5449,17 +5494,19 @@ MXAuthAction;
 #pragma mark - Spaces
 
 - (MXHTTPOperation*)getSpaceChildrenForSpaceWithId:(NSString*)spaceId
-                                        parameters:(MXSpaceChildrenRequestParameters*)parameters
-                                          success:(void (^)(MXSpaceChildrenResponse *spaceChildrenResponse))success
-                                          failure:(void (^)(NSError *error))failure
+                                     suggestedOnly:(BOOL)suggestedOnly
+                                             limit:(NSInteger)limit
+                                           success:(void (^)(MXSpaceChildrenResponse *spaceChildrenResponse))success
+                                           failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"%@/org.matrix.msc2946/rooms/%@/spaces",
-                             kMXAPIPrefixPathUnstable, spaceId];
+    NSString *maxRoomParameter = limit >= 0 ? [NSString stringWithFormat:@"&max_rooms_per_space=%ld", (long)limit] : @"";
+    NSString *path = [NSString stringWithFormat:@"%@/org.matrix.msc2946/rooms/%@/spaces?suggested_only=%@%@",
+                      kMXAPIPrefixPathUnstable, spaceId, suggestedOnly ? @"true": @"false", maxRoomParameter];
     
     MXWeakify(self);
-    return [httpClient requestWithMethod:@"POST"
-                                    path:path                              
-                              parameters:[parameters jsonDictionary] ?: @{}
+    return [httpClient requestWithMethod:@"GET"
+                                    path:path
+                              parameters:@{}
                                  success:^(NSDictionary *JSONResponse) {
                                      MXStrongifyAndReturnIfNil(self);
 
