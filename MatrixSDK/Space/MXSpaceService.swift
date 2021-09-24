@@ -73,9 +73,13 @@ public class MXSpaceService: NSObject {
     private var orphanedRooms: [MXRoom] = []
     private var orphanedDirectRooms: [MXRoom] = []
     
+    private var isGraphBuilding = false;
+    
     public let notificationCounter = MXSpaceNotificationCounter()
     
     public private(set) var rootSpaceSummaries: [MXRoomSummary] = []
+    
+    public private(set) var needsUpdate: Bool = false
     
     // MARK: - Setup
     
@@ -101,52 +105,65 @@ public class MXSpaceService: NSObject {
     /// - Parameters:
     ///   - rooms: the complete list of rooms and spaces
     public func buildGraph(with rooms:[MXRoom]) {
-        let startDate = Date()
-        MXLog.debug("[Spaces] buildGraph started")
-        prepareData(with: rooms, index: 0, spaces: [], spacesPerId: [:], roomsPerId: [:], directRooms: [:]) { spaces, spacesPerId, roomsPerId, directRooms in
-            MXLog.debug("\(spaces), \(spacesPerId), \(roomsPerId), \(directRooms)")
-            var parentIdsPerRoomId: [String : Set<String>] = [:]
-            spaces.forEach { space in
-                space.updateChildSpaces(with: spacesPerId)
-                space.updateChildDirectRooms(with: directRooms)
-                space.childRoomIds.forEach { roomId in
-                    var parentIds = parentIdsPerRoomId[roomId] ?? Set<String>()
-                    parentIds.insert(space.spaceId)
-                    parentIdsPerRoomId[roomId] = parentIds
-                }
-                space.childSpaces.forEach { childSpace in
-                    var parentIds = parentIdsPerRoomId[childSpace.spaceId] ?? Set<String>()
-                    parentIds.insert(space.spaceId)
-                    parentIdsPerRoomId[childSpace.spaceId] = parentIds
-                }
-            }
-            
-            self.spaces = spaces
-            self.spacesPerId = spacesPerId
-            self.parentIdsPerRoomId = parentIdsPerRoomId
-            self.rootSpaces = spaces.filter { space in
-                return parentIdsPerRoomId[space.spaceId] == nil
-            }
-            self.orphanedRooms = self.session.rooms.filter { room in
-                return !room.isDirect && parentIdsPerRoomId[room.roomId] == nil
-            }
-            self.orphanedDirectRooms = self.session.rooms.filter { room in
-                return room.isDirect && parentIdsPerRoomId[room.roomId] == nil
-            }
-            
-            var flattenedParentIds: [String: Set<String>] = [:]
-            self.rootSpaces.forEach { space in
-                self.buildFlattenedParentIdList(with: space, visitedSpaceIds: [], flattenedParentIds: &flattenedParentIds)
-            }
-            self.flattenedParentIds = flattenedParentIds
-            
-            // TODO improve updateNotificationsCount and call the method to all spaces once subspaces will be supported
-            self.notificationCounter.computeNotificationCount(for: self.rootSpaces, with: rooms, flattenedParentIds: flattenedParentIds)
+        guard !self.isGraphBuilding else {
+            MXLog.debug("[Spaces] buildGraph aborted: graph is building")
+            self.needsUpdate = true
+            return
+        }
+        
+        self.isGraphBuilding = true
+        self.needsUpdate = false
+        
+        self.processingQueue.async {
+            let startDate = Date()
+            MXLog.debug("[Spaces] buildGraph started")
 
-            MXLog.debug("[Spaces] buildGraph ended after \(Date().timeIntervalSince(startDate))s")
-            
-            DispatchQueue.main.async {
-                NotificationCenter.default.post(name: MXSpaceService.didBuildSpaceGraph, object: self)
+            self.prepareData(with: rooms, index: 0, spaces: [], spacesPerId: [:], roomsPerId: [:], directRooms: [:]) { spaces, spacesPerId, roomsPerId, directRooms in
+                MXLog.debug("\(spaces), \(spacesPerId), \(roomsPerId), \(directRooms)")
+                var parentIdsPerRoomId: [String : Set<String>] = [:]
+                spaces.forEach { space in
+                    space.updateChildSpaces(with: spacesPerId)
+                    space.updateChildDirectRooms(with: directRooms)
+                    space.childRoomIds.forEach { roomId in
+                        var parentIds = parentIdsPerRoomId[roomId] ?? Set<String>()
+                        parentIds.insert(space.spaceId)
+                        parentIdsPerRoomId[roomId] = parentIds
+                    }
+                    space.childSpaces.forEach { childSpace in
+                        var parentIds = parentIdsPerRoomId[childSpace.spaceId] ?? Set<String>()
+                        parentIds.insert(space.spaceId)
+                        parentIdsPerRoomId[childSpace.spaceId] = parentIds
+                    }
+                }
+                
+                self.spaces = spaces
+                self.spacesPerId = spacesPerId
+                self.parentIdsPerRoomId = parentIdsPerRoomId
+                self.rootSpaces = spaces.filter { space in
+                    return parentIdsPerRoomId[space.spaceId] == nil
+                }
+                self.orphanedRooms = self.session.rooms.filter { room in
+                    return !room.isDirect && parentIdsPerRoomId[room.roomId] == nil
+                }
+                self.orphanedDirectRooms = self.session.rooms.filter { room in
+                    return room.isDirect && parentIdsPerRoomId[room.roomId] == nil
+                }
+                
+                var flattenedParentIds: [String: Set<String>] = [:]
+                self.rootSpaces.forEach { space in
+                    self.buildFlattenedParentIdList(with: space, visitedSpaceIds: [], flattenedParentIds: &flattenedParentIds)
+                }
+                self.flattenedParentIds = flattenedParentIds
+                
+                // TODO improve updateNotificationsCount and call the method to all spaces once subspaces will be supported
+                self.notificationCounter.computeNotificationCount(for: self.rootSpaces, with: rooms, flattenedParentIds: flattenedParentIds)
+
+                MXLog.debug("[Spaces] buildGraph ended after \(Date().timeIntervalSince(startDate))s")
+                
+                self.completionQueue.async {
+                    self.isGraphBuilding = false
+                    NotificationCenter.default.post(name: MXSpaceService.didBuildSpaceGraph, object: self)
+                }
             }
         }
     }
