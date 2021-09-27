@@ -301,7 +301,7 @@ typedef void (^MXOnResumeDone)(void);
 {
     if (_state != state)
     {
-        MXLogDebug(@"[MXSession] setState: %@ (was %@)", @(state), @(_state));
+        MXLogDebug(@"[MXSession] setState: %@ (was %@)", [MXTools readableSessionState:state], [MXTools readableSessionState:_state]);
         
         _state = state;
 
@@ -912,7 +912,7 @@ typedef void (^MXOnResumeDone)(void);
 
 - (void)pause
 {
-    MXLogDebug(@"[MXSession] pause the event stream in state %tu", _state);
+    MXLogDebug(@"[MXSession] pause the event stream in state %@", [MXTools readableSessionState:_state]);
 
     if (self.isPauseable)
     {
@@ -972,7 +972,7 @@ typedef void (^MXOnResumeDone)(void);
 
 - (void)_resume:(void (^)(void))resumeDone
 {
-    MXLogDebug(@"[MXSession] _resume: resume the event stream from state %tu", _state);
+    MXLogDebug(@"[MXSession] _resume: resume the event stream from state %@", [MXTools readableSessionState:_state]);
     
     if (self.backgroundTask.isRunning)
     {
@@ -1021,7 +1021,7 @@ typedef void (^MXOnResumeDone)(void);
     {
         if (!ignoreSessionState && MXSessionStatePaused != _state)
         {
-            MXLogDebug(@"[MXSession] background Sync cannot be done in the current state %tu", _state);
+            MXLogDebug(@"[MXSession] background Sync cannot be done in the current state: %@", [MXTools readableSessionState:_state]);
             dispatch_async(dispatch_get_main_queue(), ^{
                 backgroundSyncfails(nil);
             });
@@ -1246,7 +1246,7 @@ typedef void (^MXOnResumeDone)(void);
 {
     _preventPauseCount = preventPauseCount;
 
-    MXLogDebug(@"[MXSession] setPreventPauseCount: %tu. MXSession state: %tu", _preventPauseCount, _state);
+    MXLogDebug(@"[MXSession] setPreventPauseCount: %tu. MXSession state: %@", _preventPauseCount, [MXTools readableSessionState:_state]);
 
     if (_preventPauseCount == 0)
     {
@@ -1552,7 +1552,7 @@ typedef void (^MXOnResumeDone)(void);
         if ([error.domain isEqualToString:NSURLErrorDomain]
             && code == kCFURLErrorCancelled)
         {
-            MXLogDebug(@"[MXSession] The connection has been cancelled in state %@", @(_state));
+            MXLogDebug(@"[MXSession] The connection has been cancelled in state: %@", [MXTools readableSessionState:_state]);
 
             if (self.isPauseable)
             {
@@ -1990,7 +1990,7 @@ typedef void (^MXOnResumeDone)(void);
         }
         else
         {
-            MXLogDebug(@"[MXSesion] enableCrypto: crypto module will be start later (MXSession.state: %@)", @(_state));
+            MXLogDebug(@"[MXSesion] enableCrypto: crypto module will be start later (MXSession.state: %@)", [MXTools readableSessionState:_state]);
 
             if (success)
             {
