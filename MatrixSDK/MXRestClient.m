@@ -2694,6 +2694,35 @@ MXAuthAction;
                            } failure:failure];
 }
 
+- (MXHTTPOperation*)roomSummaryWith:(NSString*)roomIdOrAlias
+                                via:(NSArray<NSString *>*)via
+                            success:(void (^)(MXPublicRoom *room))success
+                            failure:(void (^)(NSError *error))failure
+{
+    NSMutableString *path = [NSMutableString stringWithFormat:@"%@/im.nheko.summary/rooms/%@/summary", kMXAPIPrefixPathUnstable, roomIdOrAlias];
+    for (int i = 0; i < via.count; i++) {
+        [path appendFormat:@"%@via=%@", i == 0 ? @"?" : @"&", via[i]];
+    }
+
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"GET"
+                                    path:path
+                              parameters:nil
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                    __block MXPublicRoom *room;
+                                    [self dispatchProcessing:^{
+                                        MXJSONModelSetMXJSONModel(room, MXPublicRoom, JSONResponse)
+                                    } andCompletion:^{
+                                        success(room);
+                                    }];
+                                 }
+                                 failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
 #pragma mark - Room tags operations
 - (MXHTTPOperation*)tagsOfRoom:(NSString*)roomId
                        success:(void (^)(NSArray<MXRoomTag*> *tags))success
@@ -5465,17 +5494,19 @@ MXAuthAction;
 #pragma mark - Spaces
 
 - (MXHTTPOperation*)getSpaceChildrenForSpaceWithId:(NSString*)spaceId
-                                        parameters:(MXSpaceChildrenRequestParameters*)parameters
-                                          success:(void (^)(MXSpaceChildrenResponse *spaceChildrenResponse))success
-                                          failure:(void (^)(NSError *error))failure
+                                     suggestedOnly:(BOOL)suggestedOnly
+                                             limit:(NSInteger)limit
+                                           success:(void (^)(MXSpaceChildrenResponse *spaceChildrenResponse))success
+                                           failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"%@/org.matrix.msc2946/rooms/%@/spaces",
-                             kMXAPIPrefixPathUnstable, spaceId];
+    NSString *maxRoomParameter = limit >= 0 ? [NSString stringWithFormat:@"&max_rooms_per_space=%ld", (long)limit] : @"";
+    NSString *path = [NSString stringWithFormat:@"%@/org.matrix.msc2946/rooms/%@/spaces?suggested_only=%@%@",
+                      kMXAPIPrefixPathUnstable, spaceId, suggestedOnly ? @"true": @"false", maxRoomParameter];
     
     MXWeakify(self);
-    return [httpClient requestWithMethod:@"POST"
-                                    path:path                              
-                              parameters:[parameters jsonDictionary] ?: @{}
+    return [httpClient requestWithMethod:@"GET"
+                                    path:path
+                              parameters:@{}
                                  success:^(NSDictionary *JSONResponse) {
                                      MXStrongifyAndReturnIfNil(self);
 

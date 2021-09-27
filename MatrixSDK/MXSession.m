@@ -407,6 +407,8 @@ typedef void (^MXOnResumeDone)(void);
                 
                 [self setState:MXSessionStateStoreDataReady];
                 
+                [self.spaceService buildGraphWith:self.rooms];
+
                 // The SDK client can use this data
                 onStoreDataReady();
             }
@@ -660,6 +662,11 @@ typedef void (^MXOnResumeDone)(void);
             // Update live event stream token
             MXLogDebug(@"[MXSession] Next sync token: %@", syncResponse.nextBatch);
             self.store.eventStreamToken = syncResponse.nextBatch;
+            
+            if (self.spaceService.needsUpdate || syncResponse.rooms.join.count || syncResponse.rooms.invite.count || syncResponse.rooms.leave.count || syncResponse.toDevice.events.count)
+            {
+                [self.spaceService buildGraphWith:self.rooms];
+            }
             
             if (completion)
             {
