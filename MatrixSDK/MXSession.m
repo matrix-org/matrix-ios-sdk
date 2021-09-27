@@ -203,6 +203,8 @@ typedef void (^MXOnResumeDone)(void);
 
 @property (nonatomic, strong) id<MXSyncResponseStore> initialSyncResponseCache;
 
+@property (atomic, copy, readwrite) NSDictionary<NSString*, NSArray<NSString*>*> *directRooms;
+
 @end
 
 @implementation MXSession
@@ -1718,14 +1720,14 @@ typedef void (^MXOnResumeDone)(void);
                 NSDictionary<NSString*, NSArray<NSString*>*> *directRooms;
                 MXJSONModelSetDictionary(directRooms, event[@"content"]);
 
-                if (directRooms != _directRooms
-                    && ![directRooms isEqualToDictionary:_directRooms])
+                if (directRooms != self.directRooms
+                    && ![directRooms isEqualToDictionary:self.directRooms])
                 {
                     // Collect previous direct rooms ids
                     NSMutableSet<NSString*> *directRoomIds = [NSMutableSet set];
                     [directRoomIds unionSet:[self directRoomIds]];
 
-                    _directRooms = directRooms;
+                    self.directRooms = directRooms;
 
                     // And collect current ones
                     [directRoomIds unionSet:[self directRoomIds]];
@@ -2536,7 +2538,7 @@ typedef void (^MXOnResumeDone)(void);
 - (NSSet<NSString*> *)directRoomIds
 {
     NSMutableSet<NSString*> *roomIds = [NSMutableSet set];
-    for (NSArray *array in _directRooms.allValues)
+    for (NSArray *array in self.directRooms.allValues)
     {
         [roomIds addObjectsFromArray:array];
     }
@@ -2546,16 +2548,16 @@ typedef void (^MXOnResumeDone)(void);
 
 - (NSString *)directUserIdInRoom:(NSString*)roomId
 {
-    NSString *directUserId;
+    __block NSString *directUserId;
 
-    for (NSString *userId in _directRooms)
+    [self.directRooms enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull userId, NSArray<NSString *> * _Nonnull roomIds, BOOL * _Nonnull stop)
     {
-        if ([_directRooms[userId] containsObject:roomId])
+        if ([roomIds containsObject:roomId])
         {
             directUserId = userId;
-            break;
+            *stop = YES;
         }
-    }
+    }];
 
     return directUserId;
 }
@@ -2635,9 +2637,9 @@ typedef void (^MXOnResumeDone)(void);
                                                failure:(void (^)(NSError *))failure
 {
     // If there is no change, do nothing
-    if (_directRooms == directRooms
-        || [_directRooms isEqualToDictionary:directRooms]
-        || (_directRooms == nil && directRooms.count == 0))
+    if (self.directRooms == directRooms
+        || [self.directRooms isEqualToDictionary:directRooms]
+        || (self.directRooms == nil && directRooms.count == 0))
     {
         if (success)
         {
