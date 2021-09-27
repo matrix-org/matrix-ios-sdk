@@ -119,7 +119,7 @@ public class MXSpaceNotificationCounter: NSObject {
     }
     
     private func isRoomMentionsOnly(_ summary: MXRoomSummary) -> Bool {
-        guard let rules = summary.mxSession.notificationCenter.rules.global.room as? [MXPushRule] else {
+        guard let rules = summary.mxSession?.notificationCenter?.rules?.global?.room as? [MXPushRule] else {
             return false
         }
         
