@@ -103,7 +103,9 @@ public class MXSpaceService: NSObject {
         self.rootSpaceSummaries = []
         self.notificationCounter.close()
         self.isGraphBuilding = false
-        NotificationCenter.default.post(name: MXSpaceService.didBuildSpaceGraph, object: self)
+        self.completionQueue.sync {
+            NotificationCenter.default.post(name: MXSpaceService.didBuildSpaceGraph, object: self)
+        }
     }
     
     /// Allows to know if a given room is a descendant of a given space
@@ -192,9 +194,13 @@ public class MXSpaceService: NSObject {
             switch response {
             case .success(let room):
                 let space: MXSpace = MXSpace(room: room)
-                completion(.success(space))
+                self.completionQueue.async {
+                    completion(.success(space))
+                }
             case .failure(let error):
-                completion(.failure(error))
+                self.completionQueue.async {
+                    completion(.failure(error))
+                }
             }
         }
     }
@@ -299,7 +305,9 @@ public class MXSpaceService: NSObject {
                     }
                 }
             case .failure(let error):
-                completion(.failure(error))
+                self.completionQueue.async {
+                    completion(.failure(error))
+                }
             }
         }
     }
