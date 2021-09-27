@@ -216,7 +216,7 @@ extension MXSessionState: CustomStringConvertible {
         case .softLogout:
             return "softLogout"
         @unknown default:
-            return "\(self)"
+            return "\(self.rawValue)"
         }
     }
     
