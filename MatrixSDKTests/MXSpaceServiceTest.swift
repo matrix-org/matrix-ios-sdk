@@ -358,8 +358,7 @@ class MXSpaceServiceTest: XCTestCase {
                     dispatchGroup.notify(queue: .main) {
                                                                         
                         // Get space children of B node
-                        spaceService.getSpaceChildrenForSpace(withId: spaceB.spaceId, parameters: nil) { (response) in
-                            
+                        spaceService.getSpaceChildrenForSpace(withId: spaceB.spaceId, suggestedOnly: false, limit: nil) { response in
                             XCTAssertTrue(Thread.isMainThread)
                             
                             switch response {

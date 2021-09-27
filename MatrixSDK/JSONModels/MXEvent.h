@@ -165,6 +165,8 @@ FOUNDATION_EXPORT NSString *const kMXEventTypeStringSecretSend;
 // Secret Storage
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringSecretStorageDefaultKey;
 
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringAutoJoinKey;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringSuggestedKey;
 
 /**
  Types of room messages
