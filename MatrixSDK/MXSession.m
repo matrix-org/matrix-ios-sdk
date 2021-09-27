@@ -1145,6 +1145,9 @@ typedef void (^MXOnResumeDone)(void);
         [self.backgroundTask stop];
         self.backgroundTask = nil;
     }
+    
+    // Clear spaces
+    [self.spaceService close];
 
     _myUser = nil;
     mediaManager = nil;

@@ -92,6 +92,20 @@ public class MXSpaceService: NSObject {
     
     // MARK: - Public
     
+    public func close() {
+        self.isGraphBuilding = true
+        self.spaces = []
+        self.spacesPerId = [:]
+        self.parentIdsPerRoomId = [:]
+        self.flattenedParentIds = [:]
+        self.orphanedRooms = []
+        self.orphanedDirectRooms = []
+        self.rootSpaceSummaries = []
+        self.notificationCounter.close()
+        self.isGraphBuilding = false
+        NotificationCenter.default.post(name: MXSpaceService.didBuildSpaceGraph, object: self)
+    }
+    
     /// Allows to know if a given room is a descendant of a given space
     /// - Parameters:
     ///   - roomId: ID of the room
@@ -119,7 +133,6 @@ public class MXSpaceService: NSObject {
             MXLog.debug("[Spaces] buildGraph started")
 
             self.prepareData(with: rooms, index: 0, spaces: [], spacesPerId: [:], roomsPerId: [:], directRooms: [:]) { spaces, spacesPerId, roomsPerId, directRooms in
-                MXLog.debug("\(spaces), \(spacesPerId), \(roomsPerId), \(directRooms)")
                 var parentIdsPerRoomId: [String : Set<String>] = [:]
                 spaces.forEach { space in
                     space.updateChildSpaces(with: spacesPerId)
