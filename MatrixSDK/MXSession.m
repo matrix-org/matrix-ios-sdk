@@ -905,7 +905,8 @@ typedef void (^MXOnResumeDone)(void);
 
 - (BOOL)isPauseable
 {
-    return _state == MXSessionStateRunning
+    return _state == MXSessionStateSyncInProgress
+        || _state == MXSessionStateRunning
         || _state == MXSessionStateBackgroundSyncInProgress
         || _state == MXSessionStatePauseRequested;
 }
