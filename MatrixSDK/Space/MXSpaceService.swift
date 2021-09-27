@@ -478,7 +478,7 @@ extension MXSpaceService {
 extension MXRoom {
     
     func toSpace() -> MXSpace? {
-        guard self.summary.roomType == .space else {
+        guard let summary = self.summary, summary.roomType == .space else {
             return nil
         }
         return MXSpace(room: self)
