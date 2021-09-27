@@ -1720,8 +1720,10 @@ typedef void (^MXOnResumeDone)(void);
                 NSDictionary<NSString*, NSArray<NSString*>*> *directRooms;
                 MXJSONModelSetDictionary(directRooms, event[@"content"]);
 
-                if (directRooms != self.directRooms
-                    && ![directRooms isEqualToDictionary:self.directRooms])
+                NSDictionary<NSString*, NSArray<NSString*>*> *tmpDirectRooms = self.directRooms;
+                
+                if (directRooms != tmpDirectRooms
+                    && ![directRooms isEqualToDictionary:tmpDirectRooms])
                 {
                     // Collect previous direct rooms ids
                     NSMutableSet<NSString*> *directRoomIds = [NSMutableSet set];
@@ -2636,10 +2638,12 @@ typedef void (^MXOnResumeDone)(void);
                                                success:(void (^)(void))success
                                                failure:(void (^)(NSError *))failure
 {
+    NSDictionary<NSString*, NSArray<NSString*>*> *tmpDirectRooms = self.directRooms;
+
     // If there is no change, do nothing
-    if (self.directRooms == directRooms
-        || [self.directRooms isEqualToDictionary:directRooms]
-        || (self.directRooms == nil && directRooms.count == 0))
+    if (tmpDirectRooms == directRooms
+        || [tmpDirectRooms isEqualToDictionary:directRooms]
+        || (tmpDirectRooms == nil && directRooms.count == 0))
     {
         if (success)
         {
