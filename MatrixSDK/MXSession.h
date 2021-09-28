@@ -497,11 +497,6 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
  */
 @property (nonatomic, readonly, getter=isPauseable) BOOL pauseable;
 
-/**
- Flag that indicates if the session should build the graph of spaces after each sync. YES by default.
- */
-@property (nonatomic) BOOL updateSpaces;
-
 #pragma mark - Class methods
 
 /**

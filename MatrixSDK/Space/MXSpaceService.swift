@@ -81,6 +81,8 @@ public class MXSpaceService: NSObject {
     
     public private(set) var needsUpdate: Bool = true
     
+    public var graphUpdateEnabled = true
+    
     // MARK: - Setup
     
     public init(session: MXSession) {
@@ -121,8 +123,8 @@ public class MXSpaceService: NSObject {
     /// - Parameters:
     ///   - rooms: the complete list of rooms and spaces
     public func buildGraph(with rooms:[MXRoom]) {
-        guard !self.isGraphBuilding else {
-            MXLog.debug("[Spaces] buildGraph aborted: graph is building")
+        guard !self.isGraphBuilding && self.graphUpdateEnabled else {
+            MXLog.debug("[Spaces] buildGraph aborted: graph is building or disabled")
             self.needsUpdate = true
             return
         }

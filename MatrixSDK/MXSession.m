@@ -232,7 +232,6 @@ typedef void (^MXOnResumeDone)(void);
         nativeToVirtualRoomIds = [NSMutableDictionary dictionary];
         asyncTaskQueue = [[MXAsyncTaskQueue alloc] initWithDispatchQueue:dispatch_get_main_queue() label:@"MXAsyncTaskQueue-MXSession"];
         _spaceService = [[MXSpaceService alloc] initWithSession:self];
-        _updateSpaces = YES;
         
         [self setIdentityServer:mxRestClient.identityServer andAccessToken:mxRestClient.credentials.identityServerAccessToken];
         
@@ -664,7 +663,7 @@ typedef void (^MXOnResumeDone)(void);
             MXLogDebug(@"[MXSession] Next sync token: %@", syncResponse.nextBatch);
             self.store.eventStreamToken = syncResponse.nextBatch;
             
-            if (self.updateSpaces && (self.spaceService.needsUpdate || syncResponse.rooms.join.count || syncResponse.rooms.invite.count || syncResponse.rooms.leave.count || syncResponse.toDevice.events.count))
+            if (self.spaceService.needsUpdate || syncResponse.rooms.join.count || syncResponse.rooms.invite.count || syncResponse.rooms.leave.count || syncResponse.toDevice.events.count)
             {
                 [self.spaceService buildGraphWith:self.rooms];
             }
