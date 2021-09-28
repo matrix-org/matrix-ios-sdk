@@ -29,7 +29,7 @@
 
 #import "MXMediaManager.h"
 #import "MXRoomOperation.h"
-#import "MXSendReplyEventDefaultStringLocalizations.h"
+#import "MXSendReplyEventDefaultStringLocalizer.h"
 
 #import "MXError.h"
 
@@ -1899,7 +1899,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
 - (MXHTTPOperation*)sendReplyToEvent:(MXEvent*)eventToReply
                      withTextMessage:(NSString*)textMessage
                 formattedTextMessage:(NSString*)formattedTextMessage
-                 stringLocalizations:(id<MXSendReplyEventStringsLocalizable>)stringLocalizations
+                     stringLocalizer:(id<MXSendReplyEventStringLocalizerProtocol>)stringLocalizer
                            localEcho:(MXEvent**)localEcho
                              success:(void (^)(NSString *eventId))success
                              failure:(void (^)(NSError *error))failure
@@ -1910,15 +1910,15 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
         return nil;
     }
     
-    id<MXSendReplyEventStringsLocalizable> finalStringLocalizations;
+    id<MXSendReplyEventStringLocalizerProtocol> finalStringLocalizer;
     
-    if (stringLocalizations)
+    if (stringLocalizer)
     {
-        finalStringLocalizations = stringLocalizations;
+        finalStringLocalizer = stringLocalizer;
     }
     else
     {
-        finalStringLocalizations = [MXSendReplyEventDefaultStringLocalizations new];
+        finalStringLocalizer = [MXSendReplyEventDefaultStringLocalizer new];
     }
     
     MXHTTPOperation* operation = nil;
@@ -1931,7 +1931,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                            formattedTextMessage:formattedTextMessage
                                replyContentBody:&replyToBody
                       replyContentFormattedBody:&replyToFormattedBody
-                            stringLocalizations:finalStringLocalizations];
+                                stringLocalizer:finalStringLocalizer];
     
     if (replyToBody && replyToFormattedBody)
     {
@@ -1972,7 +1972,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
  @param formattedTextMessage the optional HTML formatted string of the text to send.
  @param replyContentBody reply string of the text to send.
  @param replyContentFormattedBody reply HTML formatted string of the text to send.
- @param stringLocalizations string localizations used when building reply content bodies.
+ @param stringLocalizer string localizations used when building reply content bodies.
  
  */
 - (void)getReplyContentBodiesWithEventToReply:(MXEvent*)eventToReply
@@ -1980,7 +1980,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                          formattedTextMessage:(NSString*)formattedTextMessage
                              replyContentBody:(NSString**)replyContentBody
                     replyContentFormattedBody:(NSString**)replyContentFormattedBody
-                          stringLocalizations:(id<MXSendReplyEventStringsLocalizable>)stringLocalizations
+                              stringLocalizer:(id<MXSendReplyEventStringLocalizerProtocol>)stringLocalizer
 {
     NSString *msgtype;
     MXJSONModelSetString(msgtype, eventToReply.content[@"msgtype"]);
@@ -2014,27 +2014,27 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     }
     else if ([msgtype isEqualToString:kMXMessageTypeImage])
     {
-        senderMessageBody = stringLocalizations.senderSentAnImage;
+        senderMessageBody = stringLocalizer.senderSentAnImage;
         senderMessageFormattedBody = senderMessageBody;
     }
     else if ([msgtype isEqualToString:kMXMessageTypeVideo])
     {
-        senderMessageBody = stringLocalizations.senderSentAVideo;
+        senderMessageBody = stringLocalizer.senderSentAVideo;
         senderMessageFormattedBody = senderMessageBody;
     }
     else if (eventToReply.isVoiceMessage)
     {
-        senderMessageBody = stringLocalizations.senderSentAVoiceMessage;
+        senderMessageBody = stringLocalizer.senderSentAVoiceMessage;
         senderMessageFormattedBody = senderMessageBody;
     }
     else if ([msgtype isEqualToString:kMXMessageTypeAudio])
     {
-        senderMessageBody = stringLocalizations.senderSentAnAudioFile;
+        senderMessageBody = stringLocalizer.senderSentAnAudioFile;
         senderMessageFormattedBody = senderMessageBody;
     }
     else if ([msgtype isEqualToString:kMXMessageTypeFile])
     {
-        senderMessageBody = stringLocalizations.senderSentAFile;
+        senderMessageBody = stringLocalizer.senderSentAFile;
         senderMessageFormattedBody = senderMessageBody;
     }
     else
@@ -2058,7 +2058,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                                                           senderMessageFormattedBody:senderMessageFormattedBody
                                                               isSenderMessageAnEmote:isSenderMessageAnEmote
                                                                replyFormattedMessage:finalFormattedTextMessage
-                                                                 stringLocalizations:stringLocalizations];
+                                                                     stringLocalizer:stringLocalizer];
     }
 }
 
@@ -2148,7 +2148,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
  @param senderMessageFormattedBody The message body of the sender.
  @param isSenderMessageAnEmote Indicate if the sender message is an emote (/me).
  @param replyFormattedMessage The response for the sender message. HTML formatted string if any otherwise non formatted string as reply formatted body is mandatory.
- @param stringLocalizations string localizations used when building formatted body.
+ @param stringLocalizer string localizations used when building formatted body.
  
  @return reply message body.
  */
@@ -2156,7 +2156,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                             senderMessageFormattedBody:(NSString*)senderMessageFormattedBody
                                 isSenderMessageAnEmote:(BOOL)isSenderMessageAnEmote
                                  replyFormattedMessage:(NSString*)replyFormattedMessage
-                                   stringLocalizations:(id<MXSendReplyEventStringsLocalizable>)stringLocalizations
+                                       stringLocalizer:(id<MXSendReplyEventStringLocalizerProtocol>)stringLocalizer
 {
     NSString *eventId = eventToReply.eventId;
     NSString *roomId = eventToReply.roomId;
@@ -2202,7 +2202,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     [replyMessageFormattedBody appendString:@"<mx-reply><blockquote>"];
     
     // Add event link
-    [replyMessageFormattedBody appendFormat:@"<a href=\"%@\">%@</a> ", eventPermalink, stringLocalizations.messageToReplyToPrefix];
+    [replyMessageFormattedBody appendFormat:@"<a href=\"%@\">%@</a> ", eventPermalink, stringLocalizer.messageToReplyToPrefix];
     
     if (isSenderMessageAnEmote)
     {
