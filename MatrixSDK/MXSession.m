@@ -409,8 +409,6 @@ typedef void (^MXOnResumeDone)(void);
                 
                 [self setState:MXSessionStateStoreDataReady];
                 
-                [self.spaceService buildGraphWith:self.rooms];
-
                 // The SDK client can use this data
                 onStoreDataReady();
             }

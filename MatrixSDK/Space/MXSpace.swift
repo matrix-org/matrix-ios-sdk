@@ -71,7 +71,9 @@ public class MXSpace: NSObject {
     /// - Parameters:
     ///   - completion: A closure called when the operation completes.
     public func readChildRoomsAndMembers(completion: @escaping () -> Void) {
-        let myUserId = room.mxSession.myUserId
+        guard let myUserId = room.mxSession.myUserId else {
+            return
+        }
 
         room.state { [weak self] roomState in
             roomState?.stateEvents.forEach({ event in
@@ -87,7 +89,7 @@ public class MXSpace: NSObject {
 
                 var otherMembersId: [String] = []
                 var membersId: [String] = []
-                members.members.forEach { roomMember in
+                members.members?.forEach { roomMember in
                     membersId.append(roomMember.userId)
                     if roomMember.userId != myUserId {
                         otherMembersId.append(roomMember.userId)
