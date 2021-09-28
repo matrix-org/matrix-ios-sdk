@@ -183,3 +183,49 @@ public enum MXTimelineDirection: Equatable, Hashable {
     }
 }
 
+extension MXSessionState: CustomStringConvertible {
+    
+    public var description: String {
+        switch self {
+        case .closed:
+            return "closed"
+        case .initialised:
+            return "initialized"
+        case .storeDataReady:
+            return "storeDataReady"
+        case .processingBackgroundSyncCache:
+            return "processingBackgroundSyncCache"
+        case .syncInProgress:
+            return "syncInProgress"
+        case .backgroundSyncInProgress:
+            return "backgroundSyncInProgress"
+        case .running:
+            return "running"
+        case .homeserverNotReachable:
+            return "homeserverNotReachable"
+        case .syncError:
+            return "syncError"
+        case .paused:
+            return "paused"
+        case .pauseRequested:
+            return "pauseRequested"
+        case .initialSyncFailed:
+            return "initialSyncFailed"
+        case .unknownToken:
+            return "unknownToken"
+        case .softLogout:
+            return "softLogout"
+        @unknown default:
+            return "\(self.rawValue)"
+        }
+    }
+    
+}
+
+extension MXSessionState: CustomDebugStringConvertible {
+    
+    public var debugDescription: String {
+        return description
+    }
+    
+}

@@ -24,11 +24,10 @@
  */
 @protocol MXRoomNameStringsLocalizable <NSObject>
 
-@required
-
 @property (copy, readonly, nonnull) NSString *emptyRoom;
 @property (copy, readonly, nonnull) NSString *twoMembers;
 @property (copy, readonly, nonnull) NSString *moreThanTwoMembers;
+@property (copy, readonly, nonnull) NSString *allOtherParticipantsLeft;
 
 @end
 
