@@ -1,3 +1,20 @@
+## Changes in 0.20.3 (2021-09-28)
+
+🙌 Improvements
+
+- Renaming DM rooms to [User Name](Left) after the only other participant leaves. ([#4717](https://github.com/vector-im/element-ios/issues/4717))
+
+🐛 Bugfixes
+
+- MXSpaceService: fixed crash in MXSpaceService.prepareData ([#4910](https://github.com/vector-im/element-ios/issues/4910))
+- MXSession: Make `directRooms` property atomic and copying. ([#4911](https://github.com/vector-im/element-ios/issues/4911))
+- MXSpaceNotificationCounter: fixed crash in MXSpaceNotificationCounter.isRoomMentionsOnly. ([#4912](https://github.com/vector-im/element-ios/issues/4912))
+- MXRoom: fixed crash in MXRoom.toSpace() ([#4913](https://github.com/vector-im/element-ios/issues/4913))
+- MXSession: Allow pausing on syncInProgress state. ([#4915](https://github.com/vector-im/element-ios/issues/4915))
+- fixed Spaces still visible after logging in with another account ([#4916](https://github.com/vector-im/element-ios/issues/4916))
+- MXSpaceService: fixed App may not start in 1.6.0 ([#4919](https://github.com/vector-im/element-ios/issues/4919))
+
+
 ## Changes in 0.20.2 (2021-09-24)
 
 ✨ Features
