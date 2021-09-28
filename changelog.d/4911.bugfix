@@ -1,1 +1,0 @@
-MXSession: Make `directRooms` property atomic and copying.
