@@ -204,6 +204,8 @@ typedef void (^MXOnResumeDone)(void);
 
 @property (nonatomic, strong) id<MXSyncResponseStore> initialSyncResponseCache;
 
+@property (atomic, copy, readwrite) NSDictionary<NSString*, NSArray<NSString*>*> *directRooms;
+
 @property (nonatomic, readwrite) id<MXRoomListDataManager> roomListDataManager;
 
 @end
@@ -304,7 +306,7 @@ typedef void (^MXOnResumeDone)(void);
 {
     if (_state != state)
     {
-        MXLogDebug(@"[MXSession] setState: %@ (was %@)", @(state), @(_state));
+        MXLogDebug(@"[MXSession] setState: %@ (was %@)", [MXTools readableSessionState:state], [MXTools readableSessionState:_state]);
         
         _state = state;
 
@@ -918,14 +920,15 @@ typedef void (^MXOnResumeDone)(void);
 
 - (BOOL)isPauseable
 {
-    return _state == MXSessionStateRunning
+    return _state == MXSessionStateSyncInProgress
+        || _state == MXSessionStateRunning
         || _state == MXSessionStateBackgroundSyncInProgress
         || _state == MXSessionStatePauseRequested;
 }
 
 - (void)pause
 {
-    MXLogDebug(@"[MXSession] pause the event stream in state %tu", _state);
+    MXLogDebug(@"[MXSession] pause the event stream in state %@", [MXTools readableSessionState:_state]);
 
     if (self.isPauseable)
     {
@@ -985,7 +988,7 @@ typedef void (^MXOnResumeDone)(void);
 
 - (void)_resume:(void (^)(void))resumeDone
 {
-    MXLogDebug(@"[MXSession] _resume: resume the event stream from state %tu", _state);
+    MXLogDebug(@"[MXSession] _resume: resume the event stream from state %@", [MXTools readableSessionState:_state]);
     
     if (self.backgroundTask.isRunning)
     {
@@ -1034,7 +1037,7 @@ typedef void (^MXOnResumeDone)(void);
     {
         if (!ignoreSessionState && MXSessionStatePaused != _state)
         {
-            MXLogDebug(@"[MXSession] background Sync cannot be done in the current state %tu", _state);
+            MXLogDebug(@"[MXSession] background Sync cannot be done in the current state: %@", [MXTools readableSessionState:_state]);
             dispatch_async(dispatch_get_main_queue(), ^{
                 backgroundSyncfails(nil);
             });
@@ -1159,6 +1162,9 @@ typedef void (^MXOnResumeDone)(void);
         [self.backgroundTask stop];
         self.backgroundTask = nil;
     }
+    
+    // Clear spaces
+    [self.spaceService close];
 
     _myUser = nil;
     mediaManager = nil;
@@ -1260,7 +1266,7 @@ typedef void (^MXOnResumeDone)(void);
 {
     _preventPauseCount = preventPauseCount;
 
-    MXLogDebug(@"[MXSession] setPreventPauseCount: %tu. MXSession state: %tu", _preventPauseCount, _state);
+    MXLogDebug(@"[MXSession] setPreventPauseCount: %tu. MXSession state: %@", _preventPauseCount, [MXTools readableSessionState:_state]);
 
     if (_preventPauseCount == 0)
     {
@@ -1566,16 +1572,13 @@ typedef void (^MXOnResumeDone)(void);
         if ([error.domain isEqualToString:NSURLErrorDomain]
             && code == kCFURLErrorCancelled)
         {
-            MXLogDebug(@"[MXSession] The connection has been cancelled in state %@", @(_state));
+            MXLogDebug(@"[MXSession] The connection has been cancelled in state: %@", [MXTools readableSessionState:_state]);
 
-            if (self.isPauseable)
-            {
-                // This happens when the SDK cannot make any more requests because the app is in background
-                // and the background task is expired or going to expire.
-                // The app should have paused the SDK before but it did not. So, pause the SDK ourselves.
-                MXLogDebug(@"[MXSession] -> Go to pause");
-                [self pause];
-            }
+            // This happens when the SDK cannot make any more requests because the app is in background
+            // and the background task is expired or going to expire.
+            // The app should have paused the SDK before but it did not. So, pause the SDK ourselves.
+            MXLogDebug(@"[MXSession] -> Go to pause");
+            [self pause];
         }
         else if ([error.domain isEqualToString:NSURLErrorDomain]
                  && code == kCFURLErrorTimedOut && serverTimeout == 0)
@@ -1731,14 +1734,16 @@ typedef void (^MXOnResumeDone)(void);
                 NSDictionary<NSString*, NSArray<NSString*>*> *directRooms;
                 MXJSONModelSetDictionary(directRooms, event[@"content"]);
 
-                if (directRooms != _directRooms
-                    && ![directRooms isEqualToDictionary:_directRooms])
+                NSDictionary<NSString*, NSArray<NSString*>*> *tmpDirectRooms = self.directRooms;
+                
+                if (directRooms != tmpDirectRooms
+                    && ![directRooms isEqualToDictionary:tmpDirectRooms])
                 {
                     // Collect previous direct rooms ids
                     NSMutableSet<NSString*> *directRoomIds = [NSMutableSet set];
                     [directRoomIds unionSet:[self directRoomIds]];
 
-                    _directRooms = directRooms;
+                    self.directRooms = directRooms;
 
                     // And collect current ones
                     [directRoomIds unionSet:[self directRoomIds]];
@@ -2004,7 +2009,7 @@ typedef void (^MXOnResumeDone)(void);
         }
         else
         {
-            MXLogDebug(@"[MXSesion] enableCrypto: crypto module will be start later (MXSession.state: %@)", @(_state));
+            MXLogDebug(@"[MXSesion] enableCrypto: crypto module will be start later (MXSession.state: %@)", [MXTools readableSessionState:_state]);
 
             if (success)
             {
@@ -2549,7 +2554,7 @@ typedef void (^MXOnResumeDone)(void);
 - (NSSet<NSString*> *)directRoomIds
 {
     NSMutableSet<NSString*> *roomIds = [NSMutableSet set];
-    for (NSArray *array in _directRooms.allValues)
+    for (NSArray *array in self.directRooms.allValues)
     {
         [roomIds addObjectsFromArray:array];
     }
@@ -2559,16 +2564,16 @@ typedef void (^MXOnResumeDone)(void);
 
 - (NSString *)directUserIdInRoom:(NSString*)roomId
 {
-    NSString *directUserId;
+    __block NSString *directUserId;
 
-    for (NSString *userId in _directRooms)
+    [self.directRooms enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull userId, NSArray<NSString *> * _Nonnull roomIds, BOOL * _Nonnull stop)
     {
-        if ([_directRooms[userId] containsObject:roomId])
+        if ([roomIds containsObject:roomId])
         {
             directUserId = userId;
-            break;
+            *stop = YES;
         }
-    }
+    }];
 
     return directUserId;
 }
@@ -2647,10 +2652,12 @@ typedef void (^MXOnResumeDone)(void);
                                                success:(void (^)(void))success
                                                failure:(void (^)(NSError *))failure
 {
+    NSDictionary<NSString*, NSArray<NSString*>*> *tmpDirectRooms = self.directRooms;
+
     // If there is no change, do nothing
-    if (_directRooms == directRooms
-        || [_directRooms isEqualToDictionary:directRooms]
-        || (_directRooms == nil && directRooms.count == 0))
+    if (tmpDirectRooms == directRooms
+        || [tmpDirectRooms isEqualToDictionary:directRooms]
+        || (tmpDirectRooms == nil && directRooms.count == 0))
     {
         if (success)
         {

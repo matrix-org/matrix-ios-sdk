@@ -933,7 +933,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  
  A dictionary where the keys are the user IDs and values are lists of room ID strings.
  */
-@property (nonatomic, readonly) NSDictionary<NSString*, NSArray<NSString*>*> *directRooms;
+@property (atomic, copy, readonly) NSDictionary<NSString*, NSArray<NSString*>*> *directRooms;
 
 /**
  Return the first joined direct chat listed in account data for this user.

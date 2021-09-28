@@ -27,6 +27,11 @@ public class MXSpaceNotificationCounter: NSObject {
     
     // MARK: - Public
     
+    public func close() {
+        self.homeNotificationState = MXSpaceNotificationState()
+        self.notificationStatePerSpaceId = [:]
+    }
+    
     /// Compute the notification count for every spaces
     /// - Parameters:
     ///   - spaces: list of spaces of the current sessiom
@@ -119,7 +124,7 @@ public class MXSpaceNotificationCounter: NSObject {
     }
     
     private func isRoomMentionsOnly(_ summary: MXRoomSummary) -> Bool {
-        guard let rules = summary.mxSession.notificationCenter.rules.global.room as? [MXPushRule] else {
+        guard let rules = summary.mxSession?.notificationCenter?.rules?.global?.room as? [MXPushRule] else {
             return false
         }
         

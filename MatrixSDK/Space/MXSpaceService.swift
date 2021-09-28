@@ -92,6 +92,22 @@ public class MXSpaceService: NSObject {
     
     // MARK: - Public
     
+    public func close() {
+        self.isGraphBuilding = true
+        self.spaces = []
+        self.spacesPerId = [:]
+        self.parentIdsPerRoomId = [:]
+        self.flattenedParentIds = [:]
+        self.orphanedRooms = []
+        self.orphanedDirectRooms = []
+        self.rootSpaceSummaries = []
+        self.notificationCounter.close()
+        self.isGraphBuilding = false
+        self.completionQueue.sync {
+            NotificationCenter.default.post(name: MXSpaceService.didBuildSpaceGraph, object: self)
+        }
+    }
+    
     /// Allows to know if a given room is a descendant of a given space
     /// - Parameters:
     ///   - roomId: ID of the room
@@ -119,7 +135,6 @@ public class MXSpaceService: NSObject {
             MXLog.debug("[Spaces] buildGraph started")
 
             self.prepareData(with: rooms, index: 0, spaces: [], spacesPerId: [:], roomsPerId: [:], directRooms: [:]) { spaces, spacesPerId, roomsPerId, directRooms in
-                MXLog.debug("\(spaces), \(spacesPerId), \(roomsPerId), \(directRooms)")
                 var parentIdsPerRoomId: [String : Set<String>] = [:]
                 spaces.forEach { space in
                     space.updateChildSpaces(with: spacesPerId)
@@ -179,9 +194,13 @@ public class MXSpaceService: NSObject {
             switch response {
             case .success(let room):
                 let space: MXSpace = MXSpace(room: room)
-                completion(.success(space))
+                self.completionQueue.async {
+                    completion(.success(space))
+                }
             case .failure(let error):
-                completion(.failure(error))
+                self.completionQueue.async {
+                    completion(.failure(error))
+                }
             }
         }
     }
@@ -286,7 +305,9 @@ public class MXSpaceService: NSObject {
                     }
                 }
             case .failure(let error):
-                completion(.failure(error))
+                self.completionQueue.async {
+                    completion(.failure(error))
+                }
             }
         }
     }
@@ -478,7 +499,7 @@ extension MXSpaceService {
 extension MXRoom {
     
     func toSpace() -> MXSpace? {
-        guard self.summary.roomType == .space else {
+        guard let summary = self.summary, summary.roomType == .space else {
             return nil
         }
         return MXSpace(room: self)
