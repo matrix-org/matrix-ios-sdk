@@ -604,9 +604,21 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 /**
  Handles sync response retrieved by the background sync service, if the cache is valid. Clears the cache after processing.
  
+ @note the sync will automatically update the graph of spaces. For optimisation purpose, please consider calling [handleBackgroundSyncCacheIfRequiredAndShouldUpdateSpaces:(BOOL)updateSpaces
+ completion:(void (^)(void))completion] with updateSapaces set to NO instead.
+ 
  @param completion Completion block called when the session has been processed the cache, or when no valid cache exists.
  */
 - (void)handleBackgroundSyncCacheIfRequiredWithCompletion:(void (^)(void))completion;
+
+/**
+ Handles sync response retrieved by the background sync service, if the cache is valid. Clears the cache after processing.
+ 
+ @param updateSpaces Indicates if space graph should be built
+ @param completion Completion block called when the session has been processed the cache, or when no valid cache exists.
+ */
+- (void)handleBackgroundSyncCacheIfRequiredAndShouldUpdateSpaces:(BOOL)updateSpaces
+                                                      completion:(void (^)(void))completion;
 
 /**
  Restart the session events stream.
