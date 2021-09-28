@@ -232,6 +232,7 @@ typedef void (^MXOnResumeDone)(void);
         nativeToVirtualRoomIds = [NSMutableDictionary dictionary];
         asyncTaskQueue = [[MXAsyncTaskQueue alloc] initWithDispatchQueue:dispatch_get_main_queue() label:@"MXAsyncTaskQueue-MXSession"];
         _spaceService = [[MXSpaceService alloc] initWithSession:self];
+        _updateSpaces = YES;
         
         [self setIdentityServer:mxRestClient.identityServer andAccessToken:mxRestClient.credentials.identityServerAccessToken];
         
@@ -439,11 +440,9 @@ typedef void (^MXOnResumeDone)(void);
 
 /// Handle a sync response and decide serverTimeout for the next sync request.
 /// @param syncResponse The sync response object
-/// @param updateSpaces indicates if the graph of spaces shold be built
 /// @param completion Completion block to be called at the end of the process. Will be called on the caller thread.
 /// @param storeCompletion Completion block to be called when the process completed at store level, i.e sync response is stored. Will be called on main thread.
 - (void)handleSyncResponse:(MXSyncResponse *)syncResponse
-              updateSpaces:(BOOL)updateSpaces
                 completion:(void (^)(void))completion
            storeCompletion:(void (^)(void))storeCompletion
 {
@@ -665,7 +664,7 @@ typedef void (^MXOnResumeDone)(void);
             MXLogDebug(@"[MXSession] Next sync token: %@", syncResponse.nextBatch);
             self.store.eventStreamToken = syncResponse.nextBatch;
             
-            if (updateSpaces && (self.spaceService.needsUpdate || syncResponse.rooms.join.count || syncResponse.rooms.invite.count || syncResponse.rooms.leave.count || syncResponse.toDevice.events.count))
+            if (self.updateSpaces && (self.spaceService.needsUpdate || syncResponse.rooms.join.count || syncResponse.rooms.invite.count || syncResponse.rooms.leave.count || syncResponse.toDevice.events.count))
             {
                 [self.spaceService buildGraphWith:self.rooms];
             }
@@ -799,7 +798,7 @@ typedef void (^MXOnResumeDone)(void);
         } failure:nil];
     }
     
-    [self handleBackgroundSyncCacheIfRequiredAndShouldUpdateSpaces:YES completion:^{
+    [self handleBackgroundSyncCacheIfRequiredWithCompletion:^{
         [self _startWithSyncFilterId:syncFilterId onServerSyncDone:onServerSyncDone failure:failure];
     }];
 }
@@ -968,7 +967,7 @@ typedef void (^MXOnResumeDone)(void);
 
 - (void)resume:(void (^)(void))resumeDone
 {
-    [self handleBackgroundSyncCacheIfRequiredAndShouldUpdateSpaces:YES completion:^{
+    [self handleBackgroundSyncCacheIfRequiredWithCompletion:^{
         [self _resume:resumeDone];
     }];
 }
@@ -1380,7 +1379,7 @@ typedef void (^MXOnResumeDone)(void);
             nextServerTimeout = 0;
         }
         
-        [self handleSyncResponse:syncResponse updateSpaces:YES completion:^{
+        [self handleSyncResponse:syncResponse completion:^{
             
             if (wasfirstSync)
             {
@@ -1877,12 +1876,6 @@ typedef void (^MXOnResumeDone)(void);
 
 - (void)handleBackgroundSyncCacheIfRequiredWithCompletion:(void (^)(void))completion
 {
-    [self handleBackgroundSyncCacheIfRequiredAndShouldUpdateSpaces:YES completion:completion];
-}
-
-- (void)handleBackgroundSyncCacheIfRequiredAndShouldUpdateSpaces:(BOOL)updateSpaces
-                                                      completion:(void (^)(void))completion
-{
     NSParameterAssert(_state == MXSessionStateStoreDataReady || _state == MXSessionStatePaused);
     
     //  keep the old state to revert later
@@ -1942,7 +1935,6 @@ typedef void (^MXOnResumeDone)(void);
             if (cachedSyncResponse)
             {
                 [self handleSyncResponse:cachedSyncResponse.syncResponse
-                          updateSpaces:updateSpaces
                               completion:^{
                     taskCompleted();
                 } storeCompletion:nil];
