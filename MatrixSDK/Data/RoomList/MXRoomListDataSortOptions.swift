@@ -70,6 +70,9 @@ public final class MXRoomListDataSortOptions: NSObject {
         }
     }
     
+    //  TODO: Add sorting for spaceChildInfo, non-existents will be first
+    //  Only valid for home
+    
     /// Initializer
     /// - Parameters:
     ///   - sentStatus: flag to sort by sent status

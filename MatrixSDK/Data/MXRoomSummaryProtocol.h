@@ -24,6 +24,7 @@
 #import "MXRoomSummarySentStatus.h"
 
 @class MXSession;
+@class MXSpaceChildInfo;
 
 #ifndef MXRoomSummaryProtocol_h
 #define MXRoomSummaryProtocol_h
@@ -122,6 +123,9 @@
 
 /// Sent status for the room.
 @property (nonatomic, readonly) MXRoomSummarySentStatus sentStatus;
+
+/// In case of suggested rooms we store the `MXSpaceChildInfo` instance for the room
+@property (nonatomic, readonly) MXSpaceChildInfo * _Nullable spaceChildInfo;
 
 #pragma mark - Optional
 

@@ -50,17 +50,27 @@ public final class MXRoomListDataFilterOptions: NSObject {
         }
     }
     
+    public var space: MXSpace? {
+        didSet {
+            if space != oldValue {
+                refreshFetcher()
+            }
+        }
+    }
+    
     /// Initializer
     /// - Parameters:
     ///   - dataTypes: data types to fetch. Pass `MXRoomListDataFilterOptions.emptyDataTypes` not to specify any.
     ///   - notDataTypes: data types not to fetch. Pass `MXRoomListDataFilterOptions.emptyDataTypes` not to specify any.
     ///   - query: search query
     public init(dataTypes: MXRoomSummaryDataTypes = MXRoomListDataFilterOptions.emptyDataTypes,
-                notDataTypes: MXRoomSummaryDataTypes = [.hidden, .conferenceUser],
-                query: String? = nil) {
+                notDataTypes: MXRoomSummaryDataTypes = [.hidden, .conferenceUser, .space],
+                query: String? = nil,
+                space: MXSpace? = nil) {
         self.dataTypes = dataTypes
         self.notDataTypes = notDataTypes
         self.query = query
+        self.space = space
         super.init()
     }
     
