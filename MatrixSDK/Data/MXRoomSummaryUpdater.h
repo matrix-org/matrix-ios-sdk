@@ -39,11 +39,11 @@
 #pragma mark - Configuration
 
 /**
- The type of events allowed as last message.
+ An allow list of event types that should be used as the last message.
  
  Default is nil. All messages types are accepted.
  */
-@property (nonatomic) NSArray<NSString*> *eventsFilterForLastMessage;
+@property (nonatomic) NSArray<NSString*> *lastMessageEventTypesAllowList;
 
 /**
  If YES, ignore redacted events as last message.

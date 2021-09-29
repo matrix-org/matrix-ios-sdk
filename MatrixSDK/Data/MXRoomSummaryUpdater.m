@@ -111,7 +111,7 @@
     BOOL updated = NO;
 
     // Accept event which type is in the filter list
-    if (event.eventId && (!_eventsFilterForLastMessage || (NSNotFound != [_eventsFilterForLastMessage indexOfObject:event.type])))
+    if (event.eventId && (_lastMessageEventTypesAllowList == nil || [_lastMessageEventTypesAllowList containsObject:event.type]))
     {
         [summary updateLastMessage:[[MXRoomLastMessage alloc] initWithEvent:event]];
         updated = YES;
