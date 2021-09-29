@@ -132,58 +132,56 @@ public class MXSpaceService: NSObject {
         self.isGraphBuilding = true
         self.needsUpdate = false
         
-        self.processingQueue.async {
-            let startDate = Date()
-            MXLog.debug("[Spaces] buildGraph started")
-
-            let output = PrepareDataResult()
-            MXLog.debug("[Spaces] preparing data for \(rooms.count) rooms")
-            self.prepareData(with: rooms, index: 0, output: output) { result in
-                MXLog.debug("[Spaces] data prepared")
-                var parentIdsPerRoomId: [String : Set<String>] = [:]
-                output.spaces.forEach { space in
-                    space.updateChildSpaces(with: output.spacesPerId)
-                    space.updateChildDirectRooms(with: output.directRooms)
-                    space.childRoomIds.forEach { roomId in
-                        var parentIds = parentIdsPerRoomId[roomId] ?? Set<String>()
-                        parentIds.insert(space.spaceId)
-                        parentIdsPerRoomId[roomId] = parentIds
-                    }
-                    space.childSpaces.forEach { childSpace in
-                        var parentIds = parentIdsPerRoomId[childSpace.spaceId] ?? Set<String>()
-                        parentIds.insert(space.spaceId)
-                        parentIdsPerRoomId[childSpace.spaceId] = parentIds
-                    }
+        let startDate = Date()
+        MXLog.debug("[Spaces] buildGraph started")
+        
+        let output = PrepareDataResult()
+        MXLog.debug("[Spaces] preparing data for \(rooms.count) rooms")
+        self.prepareData(with: rooms, index: 0, output: output) { result in
+            MXLog.debug("[Spaces] data prepared")
+            var parentIdsPerRoomId: [String : Set<String>] = [:]
+            output.spaces.forEach { space in
+                space.updateChildSpaces(with: output.spacesPerId)
+                space.updateChildDirectRooms(with: output.directRooms)
+                space.childRoomIds.forEach { roomId in
+                    var parentIds = parentIdsPerRoomId[roomId] ?? Set<String>()
+                    parentIds.insert(space.spaceId)
+                    parentIdsPerRoomId[roomId] = parentIds
                 }
-                
-                self.spaces = output.spaces
-                self.spacesPerId = output.spacesPerId
-                self.parentIdsPerRoomId = parentIdsPerRoomId
-                self.rootSpaces = output.spaces.filter { space in
-                    return parentIdsPerRoomId[space.spaceId] == nil
+                space.childSpaces.forEach { childSpace in
+                    var parentIds = parentIdsPerRoomId[childSpace.spaceId] ?? Set<String>()
+                    parentIds.insert(space.spaceId)
+                    parentIdsPerRoomId[childSpace.spaceId] = parentIds
                 }
-                self.orphanedRooms = self.session.rooms.filter { room in
-                    return !room.isDirect && parentIdsPerRoomId[room.roomId] == nil
-                }
-                self.orphanedDirectRooms = self.session.rooms.filter { room in
-                    return room.isDirect && parentIdsPerRoomId[room.roomId] == nil
-                }
-                
-                var flattenedParentIds: [String: Set<String>] = [:]
-                self.rootSpaces.forEach { space in
-                    self.buildFlattenedParentIdList(with: space, visitedSpaceIds: [], flattenedParentIds: &flattenedParentIds)
-                }
-                self.flattenedParentIds = flattenedParentIds
-                
-                // TODO improve updateNotificationsCount and call the method to all spaces once subspaces will be supported
-                self.notificationCounter.computeNotificationCount(for: self.rootSpaces, with: rooms, flattenedParentIds: flattenedParentIds)
-
-                MXLog.debug("[Spaces] buildGraph ended after \(Date().timeIntervalSince(startDate))s")
-                
-                self.completionQueue.async {
-                    self.isGraphBuilding = false
-                    NotificationCenter.default.post(name: MXSpaceService.didBuildSpaceGraph, object: self)
-                }
+            }
+            
+            self.spaces = output.spaces
+            self.spacesPerId = output.spacesPerId
+            self.parentIdsPerRoomId = parentIdsPerRoomId
+            self.rootSpaces = output.spaces.filter { space in
+                return parentIdsPerRoomId[space.spaceId] == nil
+            }
+            self.orphanedRooms = self.session.rooms.filter { room in
+                return !room.isDirect && parentIdsPerRoomId[room.roomId] == nil
+            }
+            self.orphanedDirectRooms = self.session.rooms.filter { room in
+                return room.isDirect && parentIdsPerRoomId[room.roomId] == nil
+            }
+            
+            var flattenedParentIds: [String: Set<String>] = [:]
+            self.rootSpaces.forEach { space in
+                self.buildFlattenedParentIdList(with: space, visitedSpaceIds: [], flattenedParentIds: &flattenedParentIds)
+            }
+            self.flattenedParentIds = flattenedParentIds
+            
+            // TODO improve updateNotificationsCount and call the method to all spaces once subspaces will be supported
+            self.notificationCounter.computeNotificationCount(for: self.rootSpaces, with: rooms, flattenedParentIds: flattenedParentIds)
+            
+            MXLog.debug("[Spaces] buildGraph ended after \(Date().timeIntervalSince(startDate))s")
+            
+            self.completionQueue.async {
+                self.isGraphBuilding = false
+                NotificationCenter.default.post(name: MXSpaceService.didBuildSpaceGraph, object: self)
             }
         }
     }
@@ -418,40 +416,42 @@ public class MXSpaceService: NSObject {
     }
     
     private func prepareData(with rooms:[MXRoom], index: Int, output: PrepareDataResult, completion: @escaping (_ result: PrepareDataResult) -> Void) {
-        guard index < rooms.count else {
-            completion(output)
-            return
-        }
-        
-        let room = rooms[index]
-        if let space = room.toSpace() {
-            space.readChildRoomsAndMembers {
-                output.spaces.append(space)
-                output.spacesPerId[space.spaceId] = space
-
-                self.prepareData(with: rooms, index: index+1, output: output, completion: completion)
+        self.processingQueue.async {
+            guard index < rooms.count else {
+                completion(output)
+                return
             }
-        } else if room.isDirect {
-            room.members { response in
-                guard let members = response.value as? MXRoomMembers else {
+            
+            let room = rooms[index]
+            if let space = room.toSpace() {
+                space.readChildRoomsAndMembers {
+                    output.spaces.append(space)
+                    output.spacesPerId[space.spaceId] = space
+                    
                     self.prepareData(with: rooms, index: index+1, output: output, completion: completion)
-                    return
                 }
-
-                let membersId = members.members?.compactMap({ roomMember in
-                    return roomMember.userId != self.session.myUserId ? roomMember.userId : nil
-                }) ?? []
-
-                membersId.forEach { memberId in
-                    var rooms = output.directRooms[memberId] ?? []
-                    rooms.append(room)
-                    output.directRooms[memberId] = rooms
+            } else if room.isDirect {
+                room.members { response in
+                    guard let members = response.value as? MXRoomMembers else {
+                        self.prepareData(with: rooms, index: index+1, output: output, completion: completion)
+                        return
+                    }
+                    
+                    let membersId = members.members?.compactMap({ roomMember in
+                        return roomMember.userId != self.session.myUserId ? roomMember.userId : nil
+                    }) ?? []
+                    
+                    membersId.forEach { memberId in
+                        var rooms = output.directRooms[memberId] ?? []
+                        rooms.append(room)
+                        output.directRooms[memberId] = rooms
+                    }
+                    self.prepareData(with: rooms, index: index+1, output: output, completion: completion)
                 }
+            } else {
+                output.roomsPerId[room.roomId] = room
                 self.prepareData(with: rooms, index: index+1, output: output, completion: completion)
             }
-        } else {
-            output.roomsPerId[room.roomId] = room
-            self.prepareData(with: rooms, index: index+1, output: output, completion: completion)
         }
     }
 }
