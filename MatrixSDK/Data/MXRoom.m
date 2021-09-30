@@ -790,15 +790,25 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                             success:(void (^)(NSString *eventId))success
                             failure:(void (^)(NSError *error))failure
 {
+    return [self sendTextMessage:text formattedText:formattedText location:nil localEcho:localEcho success:success failure:failure];
+}
+
+- (MXHTTPOperation*)sendTextMessage:(NSString*)text
+                      formattedText:(NSString*)formattedText
+                           location:(NSDictionary*)location
+                          localEcho:(MXEvent**)localEcho
+                            success:(void (^)(NSString *eventId))success
+                            failure:(void (^)(NSError *error))failure
+{
     // Prepare the message content
-    NSDictionary *msgContent;
+    NSMutableDictionary *msgContent;
     if (!formattedText)
     {
         // This is a simple text message
         msgContent = @{
                        @"msgtype": kMXMessageTypeText,
                        @"body": text
-                       };
+                       }.mutableCopy;
     }
     else
     {
@@ -808,7 +818,11 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                        @"body": text,
                        @"formatted_body": formattedText,
                        @"format": kMXRoomMessageFormatHTML
-                       };
+                       }.mutableCopy;
+    }
+
+    if (location) {
+        msgContent[@"location"] = location;
     }
     
     return [self sendMessageWithContent:msgContent
@@ -821,7 +835,15 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                              success:(void (^)(NSString *))success
                              failure:(void (^)(NSError *))failure
 {
-    return [self sendTextMessage:text formattedText:nil localEcho:nil success:success failure:failure];
+    return [self sendTextMessage:text formattedText:nil location:nil localEcho:nil success:success failure:failure];
+}
+
+- (MXHTTPOperation *)sendTextMessage:(NSString *)text
+                            location:(NSDictionary*)location
+                             success:(void (^)(NSString *))success
+                             failure:(void (^)(NSError *))failure
+{
+    return [self sendTextMessage:text formattedText:nil location:location localEcho:nil success:success failure:failure];
 }
 
 - (MXHTTPOperation*)sendEmote:(NSString*)emoteBody
@@ -874,6 +896,8 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                   mimeType:mimetype
               andThumbnail:thumbnail
                   blurHash:nil
+                   caption:nil
+                  location:nil
                  localEcho:localEcho
                    success:success
                    failure:failure];
@@ -888,6 +912,8 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                  andThumbnail:(NSImage*)thumbnail
 #endif
                      blurHash:(NSString*)blurhash
+                      caption:(NSString*)caption
+                     location:(NSDictionary*)location
                     localEcho:(MXEvent**)localEcho
                       success:(void (^)(NSString *eventId))success
                       failure:(void (^)(NSError *error))failure
@@ -934,6 +960,14 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     if (blurhash)
     {
         msgContent[@"info"][@"blurhash"] = blurhash;
+    }
+
+    if (caption) {
+        msgContent[@"info"][@"caption"] = caption;
+    }
+
+    if (location) {
+        msgContent[@"location"] = location;
     }
     
     __block MXEvent *event;
@@ -1121,12 +1155,14 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
 #elif TARGET_OS_OSX
                 withThumbnail:(NSImage*)videoThumbnail
 #endif
+                      caption:(NSString*)caption
+                     location:(NSDictionary*)location
                     localEcho:(MXEvent**)localEcho
                       success:(void (^)(NSString *eventId))success
                       failure:(void (^)(NSError *error))failure
 {
     AVURLAsset *videoAsset = [AVURLAsset assetWithURL:videoLocalURL];
-    return [self sendVideoAsset:videoAsset withThumbnail:videoThumbnail localEcho:localEcho success:success failure:failure];
+    return [self sendVideoAsset:videoAsset withThumbnail:videoThumbnail caption:caption location:location localEcho:localEcho success:success failure:failure];
 }
 
 - (MXHTTPOperation*)sendVideoAsset:(AVAsset*)videoAsset
@@ -1135,6 +1171,8 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
 #elif TARGET_OS_OSX
                      withThumbnail:(NSImage*)videoThumbnail
 #endif
+                           caption:(NSString*)caption
+                          location:(NSDictionary*)location
                          localEcho:(MXEvent**)localEcho
                            success:(void (^)(NSString *eventId))success
                            failure:(void (^)(NSError *error))failure
@@ -1175,7 +1213,15 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                                                              }
                                                      } mutableCopy]
                                          } mutableCopy];
-    
+
+    if (caption) {
+        msgContent[@"info"][@"caption"] = caption;
+    }
+
+    if (location) {
+        msgContent[@"location"] = location;
+    }
+
     __block MXEvent *event;
     __block id uploaderObserver;
 
@@ -1402,37 +1448,44 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
 
 - (MXHTTPOperation*)sendFile:(NSURL*)fileLocalURL
                     mimeType:(NSString*)mimeType
+                     caption:(NSString*)caption
+                    location:(NSDictionary*)location
                    localEcho:(MXEvent**)localEcho
                      success:(void (^)(NSString *eventId))success
                      failure:(void (^)(NSError *error))failure
 {
-    return [self sendFile:fileLocalURL mimeType:mimeType localEcho:localEcho success:success failure:failure keepActualFilename:YES];
+    return [self sendFile:fileLocalURL mimeType:mimeType caption:caption location:location localEcho:localEcho success:success failure:failure keepActualFilename:YES];
 }
 
 - (MXHTTPOperation*)sendFile:(NSURL*)fileLocalURL
                     mimeType:(NSString*)mimeType
+                     caption:(NSString*)caption
+                    location:(NSDictionary*)location
                    localEcho:(MXEvent**)localEcho
                      success:(void (^)(NSString *eventId))success
                      failure:(void (^)(NSError *error))failure
           keepActualFilename:(BOOL)keepActualName
 {
-    return [self sendFile:fileLocalURL msgType:kMXMessageTypeFile mimeType:mimeType localEcho:localEcho success:success failure:failure keepActualFilename:keepActualName];
+    return [self sendFile:fileLocalURL msgType:kMXMessageTypeFile mimeType:mimeType caption:caption location:location localEcho:localEcho success:success failure:failure keepActualFilename:keepActualName];
 }
 
 - (MXHTTPOperation*)sendAudioFile:(NSURL*)fileLocalURL
                          mimeType:(NSString*)mimeType
+                          caption:(NSString*)caption
+                         location:(NSDictionary*)location
                         localEcho:(MXEvent**)localEcho
                           success:(void (^)(NSString *eventId))success
                           failure:(void (^)(NSError *error))failure
                keepActualFilename:(BOOL)keepActualName
 {
-    return [self sendFile:fileLocalURL msgType:kMXMessageTypeAudio mimeType:mimeType localEcho:localEcho success:success failure:failure keepActualFilename:keepActualName];
+    return [self sendFile:fileLocalURL msgType:kMXMessageTypeAudio mimeType:mimeType caption:caption location:location localEcho:localEcho success:success failure:failure keepActualFilename:keepActualName];
 }
 
 - (MXHTTPOperation*)sendVoiceMessage:(NSURL*)fileLocalURL
                             mimeType:(NSString*)mimeType
                             duration:(NSUInteger)duration
                              samples:(NSArray<NSNumber *> *)samples
+                            location:(NSDictionary*)location
                            localEcho:(MXEvent**)localEcho
                              success:(void (^)(NSString *eventId))success
                              failure:(void (^)(NSError *error))failure
@@ -1460,6 +1513,8 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
            additionalTypes:@{kMXMessageContentKeyVoiceMessageMSC3245 : @{},
                              kMXMessageContentKeyExtensibleAudio: extensibleAudioContent}
                   mimeType:(mimeType ?: @"audio/ogg")
+                   caption:nil
+                  location:location
                  localEcho:localEcho
                    success:success
                    failure:failure
@@ -1469,6 +1524,8 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
 - (MXHTTPOperation*)sendFile:(NSURL*)fileLocalURL
                      msgType:(NSString*)msgType
                     mimeType:(NSString*)mimeType
+                     caption:(NSString*)caption
+                    location:(NSDictionary*)location
                    localEcho:(MXEvent**)localEcho
                      success:(void (^)(NSString *eventId))success
                      failure:(void (^)(NSError *error))failure
@@ -1478,6 +1535,8 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                    msgType:msgType
            additionalTypes:nil
                   mimeType:mimeType
+                   caption:caption
+                  location:location
                  localEcho:localEcho
                    success:success
                    failure:failure
@@ -1488,6 +1547,8 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                       msgType:(NSString*)msgType
               additionalTypes:(NSDictionary *)additionalTypes
                      mimeType:(NSString*)mimeType
+                      caption:(NSString*)caption
+                     location:(NSDictionary*)location
                     localEcho:(MXEvent**)localEcho
                       success:(void (^)(NSString *eventId))success
                       failure:(void (^)(NSError *error))failure
@@ -1545,6 +1606,14 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     if(additionalTypes.count)
     {
         [msgContent addEntriesFromDictionary:additionalTypes];
+    }
+
+    if (caption) {
+        msgContent[@"info"][@"caption"] = caption;
+    }
+
+    if (location) {
+        msgContent[@"location"] = location;
     }
     
     __block MXEvent *event;

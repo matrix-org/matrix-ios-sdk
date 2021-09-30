@@ -125,6 +125,7 @@ public extension MXRoom {
      - parameters:
         - text: the text to send.
         - formattedText: the optional HTML formatted string of the text to send.
+        - location: the current location of sender.
         - localEcho: a pointer to a MXEvent object.
      
             This pointer is set to an actual MXEvent object
@@ -142,8 +143,8 @@ public extension MXRoom {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func sendTextMessage(_ text: String, formattedText: String? = nil, localEcho: inout MXEvent?, completion: @escaping (_ response: MXResponse<String?>) -> Void) -> MXHTTPOperation {
-        return __sendTextMessage(text, formattedText: formattedText, localEcho: &localEcho, success: currySuccess(completion), failure: curryFailure(completion))
+    @nonobjc @discardableResult func sendTextMessage(_ text: String, formattedText: String? = nil, location: [AnyHashable:Any]? = nil, localEcho: inout MXEvent?, completion: @escaping (_ response: MXResponse<String?>) -> Void) -> MXHTTPOperation {
+        return __sendTextMessage(text, formattedText: formattedText, location: location, localEcho: &localEcho, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
     
@@ -187,6 +188,8 @@ public extension MXRoom {
         - mimeType:  the image mimetype.
         - thumbnail: optional thumbnail image (may be nil).
         - blurhash: optional BlurHash (may be nil).
+        - caption: the caption String for the image.
+        - location: the current location of sender.
         - localEcho: a pointer to a MXEvent object.
      
              This pointer is set to an actual MXEvent object
@@ -205,8 +208,8 @@ public extension MXRoom {
      - returns: a `MXHTTPOperation` instance.
      */
 
-    @nonobjc @discardableResult func sendImage(data imageData: Data, size: CGSize, mimeType: String, thumbnail: MXImage?, blurhash: String?, localEcho: inout MXEvent?, completion: @escaping (_ response: MXResponse<String?>) -> Void) -> MXHTTPOperation {
-        return __sendImage(imageData, withImageSize: size, mimeType: mimeType, andThumbnail: thumbnail, blurHash: blurhash, localEcho: &localEcho, success: currySuccess(completion), failure: curryFailure(completion))
+    @nonobjc @discardableResult func sendImage(data imageData: Data, size: CGSize, mimeType: String, thumbnail: MXImage?, blurhash: String?, caption: String?, location: [AnyHashable:Any]?, localEcho: inout MXEvent?, completion: @escaping (_ response: MXResponse<String?>) -> Void) -> MXHTTPOperation {
+        return __sendImage(imageData, withImageSize: size, mimeType: mimeType, andThumbnail: thumbnail, blurHash: blurhash, caption: caption, location: location, localEcho: &localEcho, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
     
@@ -218,6 +221,8 @@ public extension MXRoom {
      - parameters:
         - localURL: the local filesystem path of the video to send.
         - thumbnail: the UIImage hosting a video thumbnail.
+        - caption: the caption String for the video.
+        - location: the current location of sender.
         - localEcho: a pointer to a MXEvent object.
      
              This pointer is set to an actual MXEvent object
@@ -235,8 +240,8 @@ public extension MXRoom {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func sendVideo(localURL: URL, thumbnail: MXImage?, localEcho: inout MXEvent?, completion: @escaping (_ response: MXResponse<String?>) -> Void) -> MXHTTPOperation {
-        return __sendVideo(localURL, withThumbnail: thumbnail, localEcho: &localEcho, success: currySuccess(completion), failure: curryFailure(completion))
+    @nonobjc @discardableResult func sendVideo(localURL: URL, thumbnail: MXImage?, caption: String?, location: [AnyHashable:Any]?, localEcho: inout MXEvent?, completion: @escaping (_ response: MXResponse<String?>) -> Void) -> MXHTTPOperation {
+        return __sendVideo(localURL, withThumbnail: thumbnail, caption: caption, location: location, localEcho: &localEcho, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
     
@@ -246,6 +251,8 @@ public extension MXRoom {
      - parameters:
         - videoAsset: an AVAsset that represents the video to send.
         - thumbnail: the UIImage hosting a video thumbnail.
+        - caption: the caption String for the video.
+        - location: the current location of sender.
         - localEcho: a pointer to a MXEvent object.
      
              This pointer is set to an actual MXEvent object
@@ -263,8 +270,8 @@ public extension MXRoom {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func sendVideo(asset: AVAsset, thumbnail: MXImage?, localEcho: inout MXEvent?, completion: @escaping (_ response: MXResponse<String?>) -> Void) -> MXHTTPOperation {
-        return __sendVideoAsset(asset, withThumbnail: thumbnail, localEcho: &localEcho, success: currySuccess(completion), failure: curryFailure(completion))
+    @nonobjc @discardableResult func sendVideo(asset: AVAsset, thumbnail: MXImage?, caption: String?, location: [AnyHashable:Any]?, localEcho: inout MXEvent?, completion: @escaping (_ response: MXResponse<String?>) -> Void) -> MXHTTPOperation {
+        return __sendVideoAsset(asset, withThumbnail: thumbnail, caption: caption, location: location, localEcho: &localEcho, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
     
@@ -274,6 +281,8 @@ public extension MXRoom {
      - parameters:
         - localURL: the local filesystem path of the file to send.
         - mimeType: the mime type of the file.
+        - caption: the caption String for the video.
+        - location: the current location of sender.
         - localEcho: a pointer to a MXEvent object.
      
              This pointer is set to an actual MXEvent object
@@ -292,8 +301,8 @@ public extension MXRoom {
      - returns: a `MXHTTPOperation` instance.
      */
     
-    @nonobjc @discardableResult func sendFile(localURL: URL, mimeType: String, localEcho: inout MXEvent?, completion: @escaping (_ response: MXResponse<String?>) -> Void) -> MXHTTPOperation {
-        return __sendFile(localURL, mimeType: mimeType, localEcho: &localEcho, success: currySuccess(completion), failure: curryFailure(completion))
+    @nonobjc @discardableResult func sendFile(localURL: URL, mimeType: String, caption: String?, location: [AnyHashable:Any]?, localEcho: inout MXEvent?, completion: @escaping (_ response: MXResponse<String?>) -> Void) -> MXHTTPOperation {
+        return __sendFile(localURL, mimeType: mimeType, caption: caption, location: location, localEcho: &localEcho, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
     /**
@@ -302,6 +311,8 @@ public extension MXRoom {
      - parameters:
      - localURL: the local filesystem path of the file to send.
      - mimeType: the mime type of the file.
+     - caption: the caption String for the video.
+     - location: the current location of sender.
      - localEcho: a pointer to a MXEvent object.
      
      This pointer is set to an actual MXEvent object
@@ -320,8 +331,8 @@ public extension MXRoom {
      - returns: a `MXHTTPOperation` instance.
      */
     
-    @nonobjc @discardableResult func sendAudioFile(localURL: URL, mimeType: String, localEcho: inout MXEvent?, completion: @escaping (_ response: MXResponse<String?>) -> Void) -> MXHTTPOperation {
-        return __sendAudioFile(localURL, mimeType: mimeType, localEcho: &localEcho, success: currySuccess(completion), failure: curryFailure(completion), keepActualFilename: false)
+    @nonobjc @discardableResult func sendAudioFile(localURL: URL, mimeType: String, caption: String?, location: [AnyHashable:Any]?, localEcho: inout MXEvent?, completion: @escaping (_ response: MXResponse<String?>) -> Void) -> MXHTTPOperation {
+        return __sendAudioFile(localURL, mimeType: mimeType, caption: caption, location: location, localEcho: &localEcho, success: currySuccess(completion), failure: curryFailure(completion), keepActualFilename: false)
     }
     
     /**
@@ -332,6 +343,7 @@ public extension MXRoom {
      - mimeType: (optional) the mime type of the file. Defaults to `audio/ogg`.
      - duration: the length of the voice message in milliseconds
      - samples: an array of floating point values normalized to [0, 1]
+     - location: the current location of sender.
      - localEcho: a pointer to a MXEvent object.
      
      This pointer is set to an actual MXEvent object
@@ -350,9 +362,9 @@ public extension MXRoom {
      - returns: a `MXHTTPOperation` instance.
      */
     
-    @nonobjc @discardableResult func sendVoiceMessage(localURL: URL, mimeType: String?, duration: UInt, samples: [Float]?, localEcho: inout MXEvent?, completion: @escaping (_ response: MXResponse<String?>) -> Void) -> MXHTTPOperation {
+    @nonobjc @discardableResult func sendVoiceMessage(localURL: URL, mimeType: String?, duration: UInt, samples: [Float]?, location: [AnyHashable:Any]?, localEcho: inout MXEvent?, completion: @escaping (_ response: MXResponse<String?>) -> Void) -> MXHTTPOperation {
         let boxedSamples = samples?.compactMap { NSNumber(value: $0) }
-        return __sendVoiceMessage(localURL, mimeType: mimeType, duration: duration, samples: boxedSamples, localEcho: &localEcho, success: currySuccess(completion), failure: curryFailure(completion), keepActualFilename: false)
+        return __sendVoiceMessage(localURL, mimeType: mimeType, duration: duration, samples: boxedSamples, location: location, localEcho: &localEcho, success: currySuccess(completion), failure: curryFailure(completion), keepActualFilename: false)
     }
     
     /**
