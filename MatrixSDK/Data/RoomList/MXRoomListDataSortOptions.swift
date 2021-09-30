@@ -21,7 +21,15 @@ public final class MXRoomListDataSortOptions: NSObject {
     /// Weak reference to the fetch options
     internal weak var fetchOptions: MXRoomListDataFetchOptions?
     
-    /// Flag to sort by invite status
+    /// Flag to sort by suggested room flag: suggested rooms will come later
+    public var suggested: Bool {
+        didSet {
+            if suggested != oldValue {
+                refreshFetcher()
+            }
+        }
+    }
+    /// Flag to sort by invite status: invited rooms will come first
     public var invitesFirst: Bool {
         didSet {
             if invitesFirst != oldValue {
@@ -29,7 +37,7 @@ public final class MXRoomListDataSortOptions: NSObject {
             }
         }
     }
-    /// Flag to sort by sent status
+    /// Flag to sort by sent status: rooms having unsent messages will come first
     public var sentStatus: Bool {
         didSet {
             if sentStatus != oldValue {
@@ -37,7 +45,7 @@ public final class MXRoomListDataSortOptions: NSObject {
             }
         }
     }
-    /// Flag to sort by last event date
+    /// Flag to sort by last event date: most recent rooms will come first
     public var lastEventDate: Bool {
         didSet {
             if lastEventDate != oldValue {
@@ -45,7 +53,7 @@ public final class MXRoomListDataSortOptions: NSObject {
             }
         }
     }
-    /// Flag to sort by favorite tag order
+    /// Flag to sort by favorite tag order: rooms having "bigger" tags will come first
     public var favoriteTag: Bool {
         didSet {
             if favoriteTag != oldValue {
@@ -53,7 +61,7 @@ public final class MXRoomListDataSortOptions: NSObject {
             }
         }
     }
-    /// Flag to sort by missed notifications count
+    /// Flag to sort by missed notifications count: rooms having more missed notification count will come first
     public var missedNotificationsFirst: Bool {
         didSet {
             if missedNotificationsFirst != oldValue {
@@ -61,7 +69,7 @@ public final class MXRoomListDataSortOptions: NSObject {
             }
         }
     }
-    /// Flag to sort by unread count
+    /// Flag to sort by unread count: rooms having unread messages will come first
     public var unreadMessagesFirst: Bool {
         didSet {
             if unreadMessagesFirst != oldValue {
@@ -69,9 +77,6 @@ public final class MXRoomListDataSortOptions: NSObject {
             }
         }
     }
-    
-    //  TODO: Add sorting for spaceChildInfo, non-existents will be first
-    //  Only valid for home
     
     /// Initializer
     /// - Parameters:
@@ -83,12 +88,14 @@ public final class MXRoomListDataSortOptions: NSObject {
                 sentStatus: Bool = true,
                 lastEventDate: Bool = true,
                 favoriteTag: Bool = false,
+                suggested: Bool,
                 missedNotificationsFirst: Bool,
                 unreadMessagesFirst: Bool) {
         self.invitesFirst = invitesFirst
         self.sentStatus = sentStatus
         self.lastEventDate = lastEventDate
         self.favoriteTag = favoriteTag
+        self.suggested = suggested
         self.missedNotificationsFirst = missedNotificationsFirst
         self.unreadMessagesFirst = unreadMessagesFirst
         super.init()
@@ -102,6 +109,10 @@ public final class MXRoomListDataSortOptions: NSObject {
     /// To be used for CoreData fetch request
     internal var sortDescriptors: [NSSortDescriptor] {
         var result: [NSSortDescriptor] = []
+        
+        if suggested {
+            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryProtocol.spaceChildInfo?.order, ascending: false))
+        }
         
         if invitesFirst {
             result.append(NSSortDescriptor(keyPath: \MXRoomSummaryProtocol.membership, ascending: true))
