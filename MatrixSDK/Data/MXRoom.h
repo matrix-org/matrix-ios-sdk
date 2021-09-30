@@ -351,6 +351,24 @@ FOUNDATION_EXPORT NSInteger const kMXRoomAlreadyJoinedErrorCode;
                             failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
+@param text the text to send.
+@param formattedText the optional HTML formatted string of the text to send.
+@param location the optional location of the sender.
+@param localEcho a pointer to a MXEvent object (@see sendMessageWithContent: for details).
+@param success A block object called when the operation succeeds. It returns
+               the event id of the event generated on the home server
+@param failure A block object called when the operation fails.
+
+@return a MXHTTPOperation instance.
+*/
+- (MXHTTPOperation*)sendTextMessage:(NSString*)text
+                      formattedText:(NSString*)formattedText
+                           location:(NSDictionary*)location
+                          localEcho:(MXEvent**)localEcho
+                            success:(void (^)(NSString *eventId))success
+                            failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
+/**
  Send a text message to the room.
 
  @param text the text to send.
@@ -361,6 +379,20 @@ FOUNDATION_EXPORT NSInteger const kMXRoomAlreadyJoinedErrorCode;
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)sendTextMessage:(NSString*)text
+                            success:(void (^)(NSString *eventId))success
+                            failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
+/**
+@param text the text to send.
+@param success A block object called when the operation succeeds. It returns
+the event id of the event generated on the home server
+@param location the optional location of the sender.
+@param failure A block object called when the operation fails.
+
+@return a MXHTTPOperation instance.
+*/
+- (MXHTTPOperation*)sendTextMessage:(NSString*)text
+                           location:(NSDictionary*)location
                             success:(void (^)(NSString *eventId))success
                             failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
@@ -416,6 +448,8 @@ FOUNDATION_EXPORT NSInteger const kMXRoomAlreadyJoinedErrorCode;
  @param mimetype  the image mimetype.
  @param thumbnail optional thumbnail image (may be nil).
  @param blurhash optional BlurHash (may be nil).
+ @param caption the caption NSString of the image.
+ @param location the optional location of the sender.
  @param localEcho a pointer to a MXEvent object (@see sendMessageWithContent: for details).
  @param success A block object called when the operation succeeds. It returns
                 the event id of the event generated on the home server
@@ -432,6 +466,8 @@ FOUNDATION_EXPORT NSInteger const kMXRoomAlreadyJoinedErrorCode;
                  andThumbnail:(NSImage*)thumbnail
 #endif
                      blurHash:(NSString*)blurhash
+                      caption:(NSString*)caption
+                     location:(NSDictionary*)location
                     localEcho:(MXEvent**)localEcho
                       success:(void (^)(NSString *eventId))success
                       failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
@@ -441,6 +477,8 @@ FOUNDATION_EXPORT NSInteger const kMXRoomAlreadyJoinedErrorCode;
  
  @param videoLocalURL the local filesystem path of the video to send.
  @param videoThumbnail the UIImage hosting a video thumbnail.
+ @param caption the caption NSString of the video.
+ @param location the optional location of the sender.
  @param localEcho a pointer to a MXEvent object (@see sendMessageWithContent: for details).
  @param success A block object called when the operation succeeds. It returns
                 the event id of the event generated on the home server
@@ -454,6 +492,8 @@ FOUNDATION_EXPORT NSInteger const kMXRoomAlreadyJoinedErrorCode;
 #elif TARGET_OS_OSX
                 withThumbnail:(NSImage*)videoThumbnail
 #endif
+                      caption:(NSString*)caption
+                     location:(NSDictionary*)location
                     localEcho:(MXEvent**)localEcho
                       success:(void (^)(NSString *eventId))success
                       failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
@@ -463,6 +503,8 @@ FOUNDATION_EXPORT NSInteger const kMXRoomAlreadyJoinedErrorCode;
  
  @param videoAsset an AVAsset that represents the video to send.
  @param videoThumbnail the UIImage hosting a video thumbnail.
+ @param caption the caption NSString of the video.
+ @param location the optional location of the sender.
  @param localEcho a pointer to a MXEvent object (@see sendMessageWithContent: for details).
  @param success A block object called when the operation succeeds. It returns
                 the event id of the event generated on the home server
@@ -476,6 +518,8 @@ FOUNDATION_EXPORT NSInteger const kMXRoomAlreadyJoinedErrorCode;
 #elif TARGET_OS_OSX
                      withThumbnail:(NSImage*)videoThumbnail
 #endif
+                           caption:(NSString*)caption
+                          location:(NSDictionary*)location
                          localEcho:(MXEvent**)localEcho
                            success:(void (^)(NSString *eventId))success
                            failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
@@ -485,6 +529,8 @@ FOUNDATION_EXPORT NSInteger const kMXRoomAlreadyJoinedErrorCode;
  
  @param fileLocalURL the local filesystem path of the file to send.
  @param mimeType the mime type of the file.
+ @param caption the caption NSString of the file.
+ @param location the optional location of the sender.
  @param localEcho a pointer to a MXEvent object (@see sendMessageWithContent: for details).
  @param success A block object called when the operation succeeds. It returns
                 the event id of the event generated on the home server
@@ -495,6 +541,8 @@ FOUNDATION_EXPORT NSInteger const kMXRoomAlreadyJoinedErrorCode;
  */
 - (MXHTTPOperation*)sendFile:(NSURL*)fileLocalURL
                     mimeType:(NSString*)mimeType
+                     caption:(NSString*)caption
+                    location:(NSDictionary*)location
                    localEcho:(MXEvent**)localEcho
                      success:(void (^)(NSString *eventId))success
                      failure:(void (^)(NSError *error))failure
@@ -505,6 +553,8 @@ FOUNDATION_EXPORT NSInteger const kMXRoomAlreadyJoinedErrorCode;
  */
 - (MXHTTPOperation*)sendFile:(NSURL*)fileLocalURL
                     mimeType:(NSString*)mimeType
+                     caption:(NSString*)caption
+                    location:(NSDictionary*)location
                    localEcho:(MXEvent**)localEcho
                      success:(void (^)(NSString *eventId))success
                      failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
@@ -514,6 +564,8 @@ FOUNDATION_EXPORT NSInteger const kMXRoomAlreadyJoinedErrorCode;
  
  @param fileLocalURL the local filesystem path of the file to send.
  @param mimeType the mime type of the file.
+ @param caption the caption NSString of the audio file.
+ @param location the optional location of the sender.
  @param localEcho a pointer to a MXEvent object (@see sendMessageWithContent: for details).
  @param success A block object called when the operation succeeds. It returns
  the event id of the event generated on the home server
@@ -524,6 +576,8 @@ FOUNDATION_EXPORT NSInteger const kMXRoomAlreadyJoinedErrorCode;
  */
 - (MXHTTPOperation*)sendAudioFile:(NSURL*)fileLocalURL
                     mimeType:(NSString*)mimeType
+                     caption:(NSString*)caption
+                    location:(NSDictionary*)location
                    localEcho:(MXEvent**)localEcho
                      success:(void (^)(NSString *eventId))success
                      failure:(void (^)(NSError *error))failure
@@ -536,6 +590,7 @@ FOUNDATION_EXPORT NSInteger const kMXRoomAlreadyJoinedErrorCode;
  @param mimeType (optional) the mime type of the file. Defaults to `audio/ogg`
  @param duration the length of the voice message in milliseconds
  @param samples an array of floating point values normalized to [0, 1], boxed within NSNumbers
+ @param location the optional location of the sender.
  @param localEcho a pointer to a MXEvent object (@see sendMessageWithContent: for details).
  @param success A block object called when the operation succeeds. It returns
  the event id of the event generated on the home server
@@ -548,6 +603,7 @@ FOUNDATION_EXPORT NSInteger const kMXRoomAlreadyJoinedErrorCode;
                             mimeType:(NSString*)mimeType
                             duration:(NSUInteger)duration
                              samples:(NSArray<NSNumber *> *)samples
+                            location:(NSDictionary*)location
                            localEcho:(MXEvent**)localEcho
                              success:(void (^)(NSString *eventId))success
                              failure:(void (^)(NSError *error))failure
