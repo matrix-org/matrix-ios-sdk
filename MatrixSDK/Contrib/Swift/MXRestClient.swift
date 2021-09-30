@@ -1195,8 +1195,22 @@ public extension MXRestClient {
     @nonobjc @discardableResult func context(ofEvent eventId: String, inRoom roomId: String, limit: UInt, filter: MXRoomEventFilter? = nil, completion: @escaping (_ response: MXResponse<MXEventContext>) -> Void) -> MXHTTPOperation {
         return __context(ofEvent: eventId, inRoom: roomId, limit: limit, filter:filter, success: currySuccess(completion), failure: curryFailure(completion))
     }
-    
-    
+
+    /**
+     Get the summary of a room
+     
+     - parameters:
+        - roomIdOrAlias: the id of the room or its alias
+        - via: servers, that should be tried to request a summary from, if it can't be generated locally. These can be from a matrix URI, matrix.to link or a `m.space.child` event for example.
+        - completion: A block object called when the operation completes.
+        - response: Provides the model created from the homeserver JSON response on success.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func roomSummary(with roomIdOrAlias: String, via: [String], completion: @escaping (_ response: MXResponse<MXPublicRoom>) -> Void) -> MXHTTPOperation {
+        return __roomSummary(with: roomIdOrAlias, via: via, success: currySuccess(completion), failure: curryFailure(completion))
+    }
+
     // MARK: - Room tags operations
     
     /**
@@ -1727,13 +1741,14 @@ public extension MXRestClient {
      - parameters:
         - deviceKeys: the device keys to send.
         - oneTimeKeys: the one-time keys to send.
+        - fallbackKeys: the fallback keys to send
         - completion: A block object called when the operation completes.
         - response: Provides information about the keys on success.
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func uploadKeys(_ deviceKeys: [String: Any], oneTimeKeys: [String: Any], forDevice deviceId: String? = nil, completion: @escaping (_ response: MXResponse<MXKeysUploadResponse>) -> Void) -> MXHTTPOperation {
-        return __uploadKeys(deviceKeys, oneTimeKeys: oneTimeKeys, success: currySuccess(completion), failure: curryFailure(completion))
+    @nonobjc @discardableResult func uploadKeys(_ deviceKeys: [String: Any]?, oneTimeKeys: [String: Any]?, fallbackKeys: [String: Any]?, forDevice deviceId: String? = nil, completion: @escaping (_ response: MXResponse<MXKeysUploadResponse>) -> Void) -> MXHTTPOperation {
+        return __uploadKeys(deviceKeys, oneTimeKeys: oneTimeKeys, fallbackKeys: fallbackKeys, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
     /**
@@ -1866,10 +1881,12 @@ public extension MXRestClient {
     /// Get the space children of a given space.
     /// - Parameters:
     ///   - spaceId: The room id of the queried space.
+    ///   - suggestedOnly: If `true`, return only child events and rooms where the `m.space.child` event has `suggested: true`.
+    ///   - limit: Optional. A limit to the maximum number of children to return per space. `-1` for no limit
     ///   - parameters: Space children request parameters.
     ///   - completion: A closure called when the operation completes.
     /// - Returns: a `MXHTTPOperation` instance.
-    @nonobjc @discardableResult func getSpaceChildrenForSpace(withId spaceId: String, parameters: MXSpaceChildrenRequestParameters?, completion: @escaping (_ response: MXResponse<MXSpaceChildrenResponse>) -> Void) -> MXHTTPOperation {
-        return __getSpaceChildrenForSpace(withId: spaceId, parameters: parameters, success: currySuccess(completion), failure: curryFailure(completion))
+    @nonobjc @discardableResult func getSpaceChildrenForSpace(withId spaceId: String, suggestedOnly: Bool, limit: Int?, completion: @escaping (_ response: MXResponse<MXSpaceChildrenResponse>) -> Void) -> MXHTTPOperation {
+        return __getSpaceChildrenForSpace(withId: spaceId, suggestedOnly: suggestedOnly, limit: limit ?? -1, success: currySuccess(completion), failure: curryFailure(completion))
     }
 }

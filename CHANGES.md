@@ -1,3 +1,47 @@
+## Changes in 0.20.3 (2021-09-28)
+
+🙌 Improvements
+
+- Renaming DM rooms to [User Name](Left) after the only other participant leaves. ([#4717](https://github.com/vector-im/element-ios/issues/4717))
+
+🐛 Bugfixes
+
+- MXSpaceService: fixed crash in MXSpaceService.prepareData ([#4910](https://github.com/vector-im/element-ios/issues/4910))
+- MXSession: Make `directRooms` property atomic and copying. ([#4911](https://github.com/vector-im/element-ios/issues/4911))
+- MXSpaceNotificationCounter: fixed crash in MXSpaceNotificationCounter.isRoomMentionsOnly. ([#4912](https://github.com/vector-im/element-ios/issues/4912))
+- MXRoom: fixed crash in MXRoom.toSpace() ([#4913](https://github.com/vector-im/element-ios/issues/4913))
+- MXSession: Allow pausing on syncInProgress state. ([#4915](https://github.com/vector-im/element-ios/issues/4915))
+- fixed Spaces still visible after logging in with another account ([#4916](https://github.com/vector-im/element-ios/issues/4916))
+- MXSpaceService: fixed App may not start in 1.6.0 ([#4919](https://github.com/vector-im/element-ios/issues/4919))
+
+
+## Changes in 0.20.2 (2021-09-24)
+
+✨ Features
+
+- Implemented Olm fallback key support. ([#4406](https://github.com/vector-im/element-ios/issues/4406))
+- Added room summary API call ([#4498](https://github.com/vector-im/element-ios/issues/4498))
+- Added support to get suggested rooms ([#4500](https://github.com/vector-im/element-ios/issues/4500))
+- Initial yet naive algortihm for building the graph of rooms ([#4509](https://github.com/vector-im/element-ios/issues/4509))
+- Added support for Explore rooms ([#4571](https://github.com/vector-im/element-ios/issues/4571))
+
+🙌 Improvements
+
+- Add fallback keys to the dehydrated device info and sign it with the MSK. ([#4255](https://github.com/vector-im/element-ios/issues/4255))
+- Cross-signing: Sign the key backup with the MSK. ([#4338](https://github.com/vector-im/element-ios/issues/4338))
+
+
+## Changes in 0.20.1 (2021-09-16)
+
+🙌 Improvements
+
+- MXRoomSummary: Introduce `markAllAsReadLocally` method. ([#4822](https://github.com/vector-im/element-ios/issues/4822))
+
+🐛 Bugfixes
+
+- MXSession: Introduce `pauseable` property and pause the session gracefully when sync request cancelled. ([#4834](https://github.com/vector-im/element-ios/issues/4834))
+
+
 ## Changes in 0.20.0 (2021-09-09)
 
 ✨ Features

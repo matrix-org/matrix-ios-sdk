@@ -492,6 +492,11 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
  */
 @property (nonatomic, readonly) MXSpaceService *spaceService;
 
+/**
+ Flag indicating the session can be paused.
+ */
+@property (nonatomic, readonly, getter=isPauseable) BOOL pauseable;
+
 #pragma mark - Class methods
 
 /**
@@ -550,8 +555,8 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
  Pause the session events stream.
  This action may be delayed by using `retainPreventPause`.
  
- Caution: this action is ignored if the session state is not MXSessionStateRunning
- or MXSessionStateBackgroundSyncInProgress.
+ Caution: this action is ignored if the session is not pauseable.
+ @see pauseable.
  
  No more live events will be received by the listeners.
  */
@@ -917,7 +922,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  
  A dictionary where the keys are the user IDs and values are lists of room ID strings.
  */
-@property (nonatomic, readonly) NSDictionary<NSString*, NSArray<NSString*>*> *directRooms;
+@property (atomic, copy, readonly) NSDictionary<NSString*, NSArray<NSString*>*> *directRooms;
 
 /**
  Return the first joined direct chat listed in account data for this user.

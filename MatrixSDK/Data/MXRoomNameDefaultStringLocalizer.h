@@ -14,20 +14,14 @@
  limitations under the License.
  */
 
-#import "MXRoomNameDefaultStringLocalizations.h"
+@import Foundation;
 
-@implementation MXRoomNameDefaultStringLocalizations
+#import "MXRoomNameStringLocalizerProtocol.h"
 
-- (instancetype)init
-{
-    self = [super init];
-    if (self)
-    {
-        _emptyRoom = @"Empty room";
-        _twoMembers = @"%@ and %@";
-        _moreThanTwoMembers = @"%@ & %@ others";
-    }
-    return self;
-}
+/**
+ The `MXRoomNameDefaultStringLocalizer` implements default English localization
+ strings for `MXRoomNameStringLocalizerProtocol`.
+*/
+@interface MXRoomNameDefaultStringLocalizer : NSObject<MXRoomNameStringLocalizerProtocol>
 
 @end

@@ -99,6 +99,20 @@
 - (void)generateOneTimeKeys:(NSUInteger)numKeys;
 
 /**
+ The current fallback key for this account.
+
+ @return a dictionary with one key which is "curve25519".
+         Its value is a dictionary where keys are keys ids
+         and values, the Curve25519 keys.
+ */
+@property (nonatomic, readonly) NSDictionary *fallbackKey;
+
+/**
+ Generate a new fallback key
+ */
+- (void)generateFallbackKey;
+
+/**
  Generate a new outbound session.
  
  The new session will be stored in the MXStore.
