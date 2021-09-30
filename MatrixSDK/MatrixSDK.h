@@ -136,7 +136,6 @@ FOUNDATION_EXPORT NSString *MatrixSDKVersion;
 #import "MXPushGatewayRestClient.h"
 #import "MXEncryptedAttachments.h"
 #import "MXLoginSSOIdentityProviderBrand.h"
-#import "MXSendReplyEventDefaultStringLocalizations.h"
 #import "MXUIKitBackgroundTask.h"
 
 //  Bridging to Swift
