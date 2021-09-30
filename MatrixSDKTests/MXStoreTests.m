@@ -728,7 +728,7 @@
     
 }
 
-- (void)checkLastMessageIgnoreProfileChange:(MXRoom*)room
+- (void)checkLastMessageEventTypesAllowList:(MXRoom*)room
 {
     [room.mxSession eventWithEventId:room.summary.lastMessage.eventId
                               inRoom:room.roomId
@@ -736,9 +736,9 @@
         
         XCTAssertEqual(lastMessage.eventType, MXEventTypeRoomMessage);
 
-        // Ignore profile change
+        // Only allow message events to become the last message.
         MXRoomSummaryUpdater *updater = [MXRoomSummaryUpdater roomSummaryUpdaterForSession:room.mxSession];
-        updater.ignoreMemberProfileChanges = YES;
+        updater.lastMessageEventTypesAllowList = @[kMXEventTypeStringRoomMessage];
 
         [room liveTimeline:^(MXEventTimeline *liveTimeline) {
             [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
