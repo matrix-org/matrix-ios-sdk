@@ -79,7 +79,9 @@ public class MXSpaceService: NSObject {
     
     public private(set) var rootSpaceSummaries: [MXRoomSummary] = []
     
-    public private(set) var needsUpdate: Bool = false
+    public private(set) var needsUpdate: Bool = true
+    
+    public var graphUpdateEnabled = true
     
     // MARK: - Setup
     
@@ -91,6 +93,22 @@ public class MXSpaceService: NSObject {
     }
     
     // MARK: - Public
+    
+    public func close() {
+        self.isGraphBuilding = true
+        self.spaces = []
+        self.spacesPerId = [:]
+        self.parentIdsPerRoomId = [:]
+        self.flattenedParentIds = [:]
+        self.orphanedRooms = []
+        self.orphanedDirectRooms = []
+        self.rootSpaceSummaries = []
+        self.notificationCounter.close()
+        self.isGraphBuilding = false
+        self.completionQueue.async {
+            NotificationCenter.default.post(name: MXSpaceService.didBuildSpaceGraph, object: self)
+        }
+    }
     
     /// Allows to know if a given room is a descendant of a given space
     /// - Parameters:
@@ -105,8 +123,8 @@ public class MXSpaceService: NSObject {
     /// - Parameters:
     ///   - rooms: the complete list of rooms and spaces
     public func buildGraph(with rooms:[MXRoom]) {
-        guard !self.isGraphBuilding else {
-            MXLog.debug("[Spaces] buildGraph aborted: graph is building")
+        guard !self.isGraphBuilding && self.graphUpdateEnabled else {
+            MXLog.debug("[Spaces] buildGraph aborted: graph is building or disabled")
             self.needsUpdate = true
             return
         }
@@ -118,12 +136,14 @@ public class MXSpaceService: NSObject {
             let startDate = Date()
             MXLog.debug("[Spaces] buildGraph started")
 
-            self.prepareData(with: rooms, index: 0, spaces: [], spacesPerId: [:], roomsPerId: [:], directRooms: [:]) { spaces, spacesPerId, roomsPerId, directRooms in
-                MXLog.debug("\(spaces), \(spacesPerId), \(roomsPerId), \(directRooms)")
+            let output = PrepareDataResult()
+            MXLog.debug("[Spaces] preparing data for \(rooms.count) rooms")
+            self.prepareData(with: rooms, index: 0, output: output) { result in
+                MXLog.debug("[Spaces] data prepared")
                 var parentIdsPerRoomId: [String : Set<String>] = [:]
-                spaces.forEach { space in
-                    space.updateChildSpaces(with: spacesPerId)
-                    space.updateChildDirectRooms(with: directRooms)
+                output.spaces.forEach { space in
+                    space.updateChildSpaces(with: output.spacesPerId)
+                    space.updateChildDirectRooms(with: output.directRooms)
                     space.childRoomIds.forEach { roomId in
                         var parentIds = parentIdsPerRoomId[roomId] ?? Set<String>()
                         parentIds.insert(space.spaceId)
@@ -136,10 +156,10 @@ public class MXSpaceService: NSObject {
                     }
                 }
                 
-                self.spaces = spaces
-                self.spacesPerId = spacesPerId
+                self.spaces = output.spaces
+                self.spacesPerId = output.spacesPerId
                 self.parentIdsPerRoomId = parentIdsPerRoomId
-                self.rootSpaces = spaces.filter { space in
+                self.rootSpaces = output.spaces.filter { space in
                     return parentIdsPerRoomId[space.spaceId] == nil
                 }
                 self.orphanedRooms = self.session.rooms.filter { room in
@@ -179,9 +199,13 @@ public class MXSpaceService: NSObject {
             switch response {
             case .success(let room):
                 let space: MXSpace = MXSpace(room: room)
-                completion(.success(space))
+                self.completionQueue.async {
+                    completion(.success(space))
+                }
             case .failure(let error):
-                completion(.failure(error))
+                self.completionQueue.async {
+                    completion(.failure(error))
+                }
             }
         }
     }
@@ -286,7 +310,9 @@ public class MXSpaceService: NSObject {
                     }
                 }
             case .failure(let error):
-                completion(.failure(error))
+                self.completionQueue.async {
+                    completion(.failure(error))
+                }
             }
         }
     }
@@ -384,46 +410,48 @@ public class MXSpaceService: NSObject {
                          parentRoomId: spaceChildStateEvent?.roomId)
     }
     
-    private func prepareData(with rooms:[MXRoom], index: Int, spaces: [MXSpace], spacesPerId: [String : MXSpace], roomsPerId: [String : MXRoom], directRooms: [String: [MXRoom]], completion: @escaping (_ spaces: [MXSpace], _ spacesPerId: [String : MXSpace], _ roomsPerId: [String : MXRoom], _ directRooms: [String: [MXRoom]]) -> Void) {
-        
+    private class PrepareDataResult {
+        var spaces: [MXSpace] = []
+        var spacesPerId: [String : MXSpace] = [:]
+        var roomsPerId: [String : MXRoom] = [:]
+        var directRooms: [String: [MXRoom]] = [:]
+    }
+    
+    private func prepareData(with rooms:[MXRoom], index: Int, output: PrepareDataResult, completion: @escaping (_ result: PrepareDataResult) -> Void) {
         guard index < rooms.count else {
-            completion(spaces, spacesPerId, roomsPerId, directRooms)
+            completion(output)
             return
         }
         
         let room = rooms[index]
         if let space = room.toSpace() {
             space.readChildRoomsAndMembers {
-                var spaces = spaces
-                spaces.append(space)
-                var spacesPerId = spacesPerId
-                spacesPerId[space.spaceId] = space
-                
-                self.prepareData(with: rooms, index: index+1, spaces: spaces, spacesPerId: spacesPerId, roomsPerId: roomsPerId, directRooms: directRooms, completion: completion)
+                output.spaces.append(space)
+                output.spacesPerId[space.spaceId] = space
+
+                self.prepareData(with: rooms, index: index+1, output: output, completion: completion)
             }
         } else if room.isDirect {
             room.members { response in
                 guard let members = response.value as? MXRoomMembers else {
-                    self.prepareData(with: rooms, index: index+1, spaces: spaces, spacesPerId: spacesPerId, roomsPerId: roomsPerId, directRooms: directRooms, completion: completion)
+                    self.prepareData(with: rooms, index: index+1, output: output, completion: completion)
                     return
                 }
-                
-                let membersId = members.members.compactMap({ roomMember in
+
+                let membersId = members.members?.compactMap({ roomMember in
                     return roomMember.userId != self.session.myUserId ? roomMember.userId : nil
-                })
-                
-                var directRooms = directRooms
+                }) ?? []
+
                 membersId.forEach { memberId in
-                    var rooms = directRooms[memberId] ?? []
+                    var rooms = output.directRooms[memberId] ?? []
                     rooms.append(room)
-                    directRooms[memberId] = rooms
+                    output.directRooms[memberId] = rooms
                 }
-                self.prepareData(with: rooms, index: index+1, spaces: spaces, spacesPerId: spacesPerId, roomsPerId: roomsPerId, directRooms: directRooms, completion: completion)
+                self.prepareData(with: rooms, index: index+1, output: output, completion: completion)
             }
         } else {
-            var roomsPerId = roomsPerId
-            roomsPerId[room.roomId] = room
-            prepareData(with: rooms, index: index+1, spaces: spaces, spacesPerId: spacesPerId, roomsPerId: roomsPerId, directRooms: directRooms, completion: completion)
+            output.roomsPerId[room.roomId] = room
+            self.prepareData(with: rooms, index: index+1, output: output, completion: completion)
         }
     }
 }

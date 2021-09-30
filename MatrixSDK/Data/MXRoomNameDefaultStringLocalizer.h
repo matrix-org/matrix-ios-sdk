@@ -16,12 +16,12 @@
 
 @import Foundation;
 
-#import "MXRoomNameStringsLocalizable.h"
+#import "MXRoomNameStringLocalizerProtocol.h"
 
 /**
- The `MXRoomNameDefaultStringLocalizations` implements default English localization
- strings for `MXRoomNameStringsLocalizable`.
+ The `MXRoomNameDefaultStringLocalizer` implements default English localization
+ strings for `MXRoomNameStringLocalizerProtocol`.
 */
-@interface MXRoomNameDefaultStringLocalizations : NSObject<MXRoomNameStringsLocalizable>
+@interface MXRoomNameDefaultStringLocalizer : NSObject<MXRoomNameStringLocalizerProtocol>
 
 @end

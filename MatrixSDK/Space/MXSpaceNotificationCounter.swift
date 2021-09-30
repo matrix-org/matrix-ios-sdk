@@ -27,6 +27,11 @@ public class MXSpaceNotificationCounter: NSObject {
     
     // MARK: - Public
     
+    public func close() {
+        self.homeNotificationState = MXSpaceNotificationState()
+        self.notificationStatePerSpaceId = [:]
+    }
+    
     /// Compute the notification count for every spaces
     /// - Parameters:
     ///   - spaces: list of spaces of the current sessiom

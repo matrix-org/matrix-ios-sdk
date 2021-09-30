@@ -28,7 +28,7 @@
 
 #import "MXSDKOptions.h"
 #import "MXTools.h"
-#import "MXSendReplyEventDefaultStringLocalizations.h"
+#import "MXSendReplyEventDefaultStringLocalizer.h"
 #import "MXOutboundSessionInfo.h"
 #import <OLMKit/OLMKit.h>
 
@@ -1473,7 +1473,7 @@
     NSString *expectedThirdEventBodyStringFormat = @"> <%@> **Reply to first message**\n\n**Reply to second message**";
     NSString *expectedThirdEventFormattedBodyStringFormat = @"<mx-reply><blockquote><a href=\"%@\">In reply to</a> <a href=\"%@\">%@</a><br><p><strong>Reply to first message</strong></p></blockquote></mx-reply><p><strong>Reply to second message</strong></p>";
     
-    MXSendReplyEventDefaultStringLocalizations *defaultStringLocalizations = [MXSendReplyEventDefaultStringLocalizations new];
+    MXSendReplyEventDefaultStringLocalizer *defaultStringLocalizer = [MXSendReplyEventDefaultStringLocalizer new];
     
     __block NSUInteger successFullfillCount = 0;
     NSUInteger expectedSuccessFulfillCount = 2; // Bob and Alice have finished their tests
@@ -1503,7 +1503,7 @@
                 __block MXEvent *localEchoEvent = nil;
                 
                 // Reply to first message
-                [roomFromBobPOV sendReplyToEvent:event withTextMessage:secondMessageReplyToFirst formattedTextMessage:secondMessageFormattedReplyToFirst stringLocalizations:defaultStringLocalizations localEcho:&localEchoEvent success:^(NSString *eventId) {
+                [roomFromBobPOV sendReplyToEvent:event withTextMessage:secondMessageReplyToFirst formattedTextMessage:secondMessageFormattedReplyToFirst stringLocalizer:defaultStringLocalizer localEcho:&localEchoEvent success:^(NSString *eventId) {
                     MXLogDebug(@"Send reply to first message with success");
                 } failure:^(NSError *error) {
                     XCTFail(@"The request should not fail - NSError: %@", error);
@@ -1536,7 +1536,7 @@
                 __block MXEvent *localEchoEvent = nil;
                 
                 // Reply to second message, which was also a reply
-                [roomFromBobPOV sendReplyToEvent:event withTextMessage:thirdMessageReplyToSecond formattedTextMessage:thirdMessageFormattedReplyToSecond stringLocalizations:defaultStringLocalizations localEcho:&localEchoEvent success:^(NSString *eventId) {
+                [roomFromBobPOV sendReplyToEvent:event withTextMessage:thirdMessageReplyToSecond formattedTextMessage:thirdMessageFormattedReplyToSecond stringLocalizer:defaultStringLocalizer localEcho:&localEchoEvent success:^(NSString *eventId) {
                     MXLogDebug(@"Send reply to second message with success");
                 } failure:^(NSError *error) {
                     XCTFail(@"The request should not fail - NSError: %@", error);
