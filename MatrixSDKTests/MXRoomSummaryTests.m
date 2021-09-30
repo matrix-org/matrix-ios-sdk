@@ -650,13 +650,14 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
     }];
 }
 
-- (void)testIgnoreMemberProfileChanges
+- (void)testLastMessageEventTypesAllowList
 {
     // Need a store for this test
     [matrixSDKTestsData doMXSessionTestWithBobAndARoom:self andStore:[[MXMemoryStore alloc] init] readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
 
+        // Retrieve the summary updater and only allow message events to become the last message.
         MXRoomSummaryUpdater *defaultUpdater = [MXRoomSummaryUpdater roomSummaryUpdaterForSession:mxSession];
-        defaultUpdater.ignoreMemberProfileChanges = YES;
+        defaultUpdater.lastMessageEventTypesAllowList = @[kMXEventTypeStringRoomMessage];
 
         MXRoomSummary *summary = room.summary;
 
@@ -664,7 +665,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
 
         observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
-            XCTFail(@"The last message should not change if ignoreMemberProfileChanges == YES");
+            XCTFail(@"The last message should not change when eventTypesFilterForLastMessage == @[kMXEventTypeStringRoomMessage]");
             [expectation fulfill];
         }];
 

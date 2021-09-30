@@ -111,14 +111,10 @@
     BOOL updated = NO;
 
     // Accept event which type is in the filter list
-    if (event.eventId && (!_eventsFilterForMessages || (NSNotFound != [_eventsFilterForMessages indexOfObject:event.type])))
+    if (event.eventId && (_lastMessageEventTypesAllowList == nil || [_lastMessageEventTypesAllowList containsObject:event.type]))
     {
-        // Accept event related to profile change only if the flag is NO
-        if (!_ignoreMemberProfileChanges || !event.isUserProfileChange)
-        {
-            [summary updateLastMessage:[[MXRoomLastMessage alloc] initWithEvent:event]];
-            updated = YES;
-        }
+        [summary updateLastMessage:[[MXRoomLastMessage alloc] initWithEvent:event]];
+        updated = YES;
     }
     else if ([event.type isEqualToString:kRoomIsVirtualJSONKey])
     {
