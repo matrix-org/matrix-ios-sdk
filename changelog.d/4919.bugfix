@@ -1,0 +1,1 @@
+MXSpaceService: Fix a crash due to recursion depth limit
