@@ -26,9 +26,17 @@ public class MXStoreRoomListDataManager: NSObject, MXRoomListDataManager {
     }
     
     public func fetcher(withOptions options: MXRoomListDataFetchOptions) -> MXRoomListDataFetcher {
+        if options.filterOptions.onlySuggested {
+            guard let spaceService = session?.spaceService else {
+                fatalError("Session has no spaceService")
+            }
+            return MXSuggestedRoomListDataFetcher(fetchOptions: options,
+                                                  spaceService: spaceService)
+        }
         guard let store = session?.store else {
             fatalError("Session has no store")
         }
-        return MXStoreRoomListDataFetcher(fetchOptions: options, store: store)
+        return MXStoreRoomListDataFetcher(fetchOptions: options,
+                                          store: store)
     }
 }
