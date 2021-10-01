@@ -28,6 +28,10 @@ public final class MXRoomListDataFilterOptions: NSObject {
     /// Data types to fetch
     public var dataTypes: MXRoomSummaryDataTypes {
         didSet {
+            if onlySuggested {
+                //  only suggested rooms are filtered, data types are not valid
+                return
+            }
             if dataTypes != oldValue {
                 refreshFetcher()
             }
@@ -36,6 +40,10 @@ public final class MXRoomListDataFilterOptions: NSObject {
     /// Data types not to fetch
     public var notDataTypes: MXRoomSummaryDataTypes {
         didSet {
+            if onlySuggested {
+                //  only suggested rooms are filtered, not data types are not valid
+                return
+            }
             if notDataTypes != oldValue {
                 refreshFetcher()
             }
@@ -49,7 +57,7 @@ public final class MXRoomListDataFilterOptions: NSObject {
             }
         }
     }
-    
+    /// Space for room list data
     public var space: MXSpace? {
         didSet {
             if space != oldValue {
@@ -57,6 +65,8 @@ public final class MXRoomListDataFilterOptions: NSObject {
             }
         }
     }
+    /// Flag to filter only suggested rooms, if set to `true`, `dataTypes` and `notDataTypes` are not valid.
+    public let onlySuggested: Bool
     
     /// Initializer
     /// - Parameters:
@@ -65,10 +75,12 @@ public final class MXRoomListDataFilterOptions: NSObject {
     ///   - query: search query
     public init(dataTypes: MXRoomSummaryDataTypes = MXRoomListDataFilterOptions.emptyDataTypes,
                 notDataTypes: MXRoomSummaryDataTypes = [.hidden, .conferenceUser, .space],
+                onlySuggested: Bool = false,
                 query: String? = nil,
                 space: MXSpace? = nil) {
         self.dataTypes = dataTypes
         self.notDataTypes = notDataTypes
+        self.onlySuggested = onlySuggested
         self.query = query
         self.space = space
         super.init()
@@ -99,21 +111,26 @@ public final class MXRoomListDataFilterOptions: NSObject {
         }
         
         if let query = query, !query.isEmpty {
-            let subpredicate = NSPredicate(format: "%K CONTAINS[cd] %@",
-                                           #keyPath(MXRoomSummaryProtocol.displayname), query)
+            let subpredicate1 = NSPredicate(format: "%K CONTAINS[cd] %@",
+                                            #keyPath(MXRoomSummaryProtocol.displayname), query)
+            let subpredicate2 = NSPredicate(format: "%K CONTAINS[cd] %@",
+                                            #keyPath(MXRoomSummaryProtocol.spaceChildInfo.displayName), query)
+            let subpredicate = NSCompoundPredicate(orPredicateWithSubpredicates: [subpredicate1, subpredicate2])
             subpredicates.append(subpredicate)
         }
         
-        if !dataTypes.isEmpty {
-            let subpredicate = NSPredicate(format: "(%K & %d) != 0",
-                                           #keyPath(MXRoomSummaryProtocol.dataTypes), dataTypes.rawValue)
-            subpredicates.append(subpredicate)
-        }
-        
-        if !notDataTypes.isEmpty {
-            let subpredicate = NSPredicate(format: "(%K & %d) == 0",
-                                           #keyPath(MXRoomSummaryProtocol.dataTypes), notDataTypes.rawValue)
-            subpredicates.append(subpredicate)
+        if !onlySuggested {
+            if !dataTypes.isEmpty {
+                let subpredicate = NSPredicate(format: "(%K & %d) != 0",
+                                               #keyPath(MXRoomSummaryProtocol.dataTypes), dataTypes.rawValue)
+                subpredicates.append(subpredicate)
+            }
+            
+            if !notDataTypes.isEmpty {
+                let subpredicate = NSPredicate(format: "(%K & %d) == 0",
+                                               #keyPath(MXRoomSummaryProtocol.dataTypes), notDataTypes.rawValue)
+                subpredicates.append(subpredicate)
+            }
         }
         
         guard !subpredicates.isEmpty else {
