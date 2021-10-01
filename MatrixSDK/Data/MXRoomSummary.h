@@ -126,6 +126,14 @@ FOUNDATION_EXPORT NSUInteger const MXRoomSummaryPaginationChunkSize;
 - (instancetype)initWithSummaryModel:(id<MXRoomSummaryProtocol>)model;
 
 /**
+ Create a `MXRoomSummary` instance with a space child info.
+ 
+ @param spaceChildInfo space child info object.
+ @return the new instance.
+ */
+- (instancetype)initWithSpaceChildInfo:(MXSpaceChildInfo *)spaceChildInfo;
+
+/**
  Dispose any resources and listener.
  */
 - (void)destroy;

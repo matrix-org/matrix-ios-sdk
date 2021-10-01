@@ -66,6 +66,8 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     MXRoomSummaryNextTrustComputation nextTrustComputation;
 }
 
+@property (nonatomic, readwrite) MXSpaceChildInfo *spaceChildInfo;
+
 @end
 
 @implementation MXRoomSummary
@@ -108,6 +110,16 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     {
         _roomId = model.roomId;
         [self updateWith:model];
+    }
+    return self;
+}
+
+- (instancetype)initWithSpaceChildInfo:(MXSpaceChildInfo *)spaceChildInfo
+{
+    if (self = [super init])
+    {
+        _roomId = spaceChildInfo.childRoomId;
+        _spaceChildInfo = spaceChildInfo;
     }
     return self;
 }
