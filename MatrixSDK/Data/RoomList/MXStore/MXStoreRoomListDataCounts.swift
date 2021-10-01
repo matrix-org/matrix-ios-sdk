@@ -17,19 +17,19 @@
 import Foundation
 
 @objcMembers
-public class MXStoreRoomListDataCounts: NSObject, MXRoomListDataCounts {
+internal class MXStoreRoomListDataCounts: NSObject, MXRoomListDataCounts {
     
-    public let numberOfRooms: Int
-    public let totalRoomsCount: Int
-    public let numberOfUnsentRooms: Int
-    public let numberOfNotifiedRooms: Int
-    public let numberOfHighlightedRooms: Int
-    public let totalNotificationCount: UInt
-    public let totalHighlightCount: UInt
-    public let numberOfInvitedRooms: Int
+    internal let numberOfRooms: Int
+    internal let totalRoomsCount: Int
+    internal let numberOfUnsentRooms: Int
+    internal let numberOfNotifiedRooms: Int
+    internal let numberOfHighlightedRooms: Int
+    internal let totalNotificationCount: UInt
+    internal let totalHighlightCount: UInt
+    internal let numberOfInvitedRooms: Int
     
-    public init(withRooms rooms: [MXRoomSummaryProtocol],
-                totalRoomsCount: Int) {
+    internal init(withRooms rooms: [MXRoomSummaryProtocol],
+                  totalRoomsCount: Int) {
         numberOfRooms = rooms.count
         self.totalRoomsCount = totalRoomsCount
         numberOfInvitedRooms = rooms.filter({ $0.isTyped(.invited) }).count
