@@ -21,16 +21,16 @@ public final class MXRoomListData: NSObject {
     /// Array of rooms
     public let rooms: [MXRoomSummaryProtocol]
     /// Pagination size
-    public let pageSize: Int
+    public let paginationOptions: MXRoomListDataPaginationOptions
     /// Counts on the data
     public let counts: MXRoomListDataCounts
     
     /// Current page. 0 if pagination disabled
     public var currentPage: Int {
-        if counts.numberOfRooms == 0 || pageSize < 0 {
+        if counts.numberOfRooms == 0 || paginationOptions == .none {
             return 0
         }
-        return counts.numberOfRooms / pageSize - (counts.numberOfRooms % pageSize == 0 ? 1 : 0)
+        return counts.numberOfRooms / paginationOptions.rawValue - (counts.numberOfRooms % paginationOptions.rawValue == 0 ? 1 : 0)
     }
     
     /// Flag to indicate whether more rooms exist in next pages
@@ -51,10 +51,10 @@ public final class MXRoomListData: NSObject {
     /// Initializer
     internal init(rooms: [MXRoomSummaryProtocol],
                   counts: MXRoomListDataCounts,
-                  pageSize: Int) {
+                  paginationOptions: MXRoomListDataPaginationOptions) {
         self.rooms = rooms
         self.counts = counts
-        self.pageSize = pageSize
+        self.paginationOptions = paginationOptions
         super.init()
     }
     
@@ -71,7 +71,7 @@ public final class MXRoomListData: NSObject {
         
         let roomsHash = rooms.reduce(1, { $0 ^ $1.hash }).hashValue
         result = prime * result + Int64(roomsHash)
-        result = prime * result + Int64(pageSize)
+        result = prime * result + Int64(paginationOptions.rawValue)
         result = prime * result + Int64(counts.totalRoomsCount)
         
         return String(result).hash

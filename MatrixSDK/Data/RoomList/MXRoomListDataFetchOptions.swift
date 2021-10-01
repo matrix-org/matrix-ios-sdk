@@ -22,9 +22,6 @@ public final class MXRoomListDataFetchOptions: NSObject {
     /// Weak reference to the fetcher
     internal weak var fetcher: MXRoomListDataFetcher?
     
-    /// Value to pass in initializer to disable pagination
-    public static let noPagination: Int = -1
-    
     /// Filter options
     public var filterOptions: MXRoomListDataFilterOptions {
         didSet {
@@ -37,8 +34,8 @@ public final class MXRoomListDataFetchOptions: NSObject {
             fetcher?.refresh()
         }
     }
-    /// Pagination size for the fetch
-    public let pageSize: Int
+    /// Pagination options
+    public let paginationOptions: MXRoomListDataPaginationOptions
     /// Flag indicating the fetch should be performed in async
     public let async: Bool
     
@@ -46,15 +43,15 @@ public final class MXRoomListDataFetchOptions: NSObject {
     /// - Parameters:
     ///   - filterOptions: filter options
     ///   - sortOptions: sort options
-    ///   - pageSize: pagination size for the fetch. Pass `MXRoomListDataFetchOptions.noPagination` to disable pagination
+    ///   - paginationOptions: pagination options for the fetch. Pass `.none` to disable pagination
     ///   - async: flag indicating the fetch should be performed in async
     public init(filterOptions: MXRoomListDataFilterOptions,
                 sortOptions: MXRoomListDataSortOptions,
-                pageSize: Int = MXRoomListDataFetchOptions.noPagination,
+                paginationOptions: MXRoomListDataPaginationOptions = .none,
                 async: Bool = true) {
         self.filterOptions = filterOptions
         self.sortOptions = sortOptions
-        self.pageSize = pageSize
+        self.paginationOptions = paginationOptions
         self.async = async
         super.init()
         self.filterOptions.fetchOptions = self

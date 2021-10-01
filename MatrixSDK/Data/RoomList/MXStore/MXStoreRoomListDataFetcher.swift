@@ -17,7 +17,7 @@
 import Foundation
 
 @objcMembers
-public class MXStoreRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
+internal class MXStoreRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
     public private(set) var data: MXRoomListData? {
         didSet {
             guard let data = data else {
@@ -109,20 +109,20 @@ public class MXStoreRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
         let numberOfItems: Int
         
         if let data = data {
-            //  some data loaded before
+            //  load next page
             if data.counts.numberOfRooms == data.counts.totalRoomsCount {
                 //  there is no more rooms to paginate
                 return
             }
-            numberOfItems = (data.currentPage + 2) * data.pageSize
+            numberOfItems = (data.currentPage + 2) * data.paginationOptions.rawValue
         } else {
-            //  load rooms for the first time
+            //  load first page
             for roomId in store.rooms {
                 if let summary = store.summary(ofRoom: roomId) {
                     self.roomSummaries[roomId] = summary
                 }
             }
-            numberOfItems = fetchOptions.pageSize
+            numberOfItems = fetchOptions.paginationOptions.rawValue
         }
         
         data = computeData(upto: numberOfItems)
@@ -130,12 +130,12 @@ public class MXStoreRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
     
     /// Load first page again
     private func innerResetPagination() {
-        data = computeData(upto: fetchOptions.pageSize)
+        data = computeData(upto: fetchOptions.paginationOptions.rawValue)
     }
     
     /// Recompute data with the same number of rooms of the given `data`
     private func recomputeData(using data: MXRoomListData) {
-        let numberOfItems = (data.currentPage + 1) * data.pageSize
+        let numberOfItems = (data.currentPage + 1) * data.paginationOptions.rawValue
         self.data = computeData(upto: numberOfItems)
     }
     
@@ -152,7 +152,7 @@ public class MXStoreRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
         
         return MXRoomListData(rooms: rooms,
                               counts: MXStoreRoomListDataCounts(withRooms: rooms, totalRoomsCount: totalRoomsCount),
-                              pageSize: fetchOptions.pageSize)
+                              paginationOptions: fetchOptions.paginationOptions)
     }
     
     private func notifyDataChange() {
