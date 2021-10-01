@@ -88,7 +88,7 @@ public final class MXRoomListDataSortOptions: NSObject {
                 sentStatus: Bool = true,
                 lastEventDate: Bool = true,
                 favoriteTag: Bool = false,
-                suggested: Bool,
+                suggested: Bool = true,
                 missedNotificationsFirst: Bool,
                 unreadMessagesFirst: Bool) {
         self.invitesFirst = invitesFirst
