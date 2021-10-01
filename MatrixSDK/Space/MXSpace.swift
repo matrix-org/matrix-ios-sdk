@@ -186,6 +186,17 @@ public class MXSpace: NSObject {
             }))
         }
     }
+    
+    public override func isEqual(_ object: Any?) -> Bool {
+        guard let otherSpace = object as? MXSpace else {
+            return false
+        }
+        return hash == otherSpace.hash
+    }
+    
+    public override var hash: Int {
+        return spaceId.hash
+    }
 }
 
 // MARK: - Objective-C
