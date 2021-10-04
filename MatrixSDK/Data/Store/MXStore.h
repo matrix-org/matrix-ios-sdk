@@ -29,6 +29,8 @@
 
 #import "MXEventsEnumerator.h"
 
+@class MXSpaceGraphData;
+
 /**
  The `MXStore` protocol defines an interface that must be implemented in order to store
  Matrix data handled during a `MXSession`.
@@ -516,5 +518,23 @@
 - (void)filterIdForFilter:(nonnull MXFilterJSONModel*)filter
                   success:(nonnull void (^)(NSString * _Nullable filterId))success
                   failure:(nullable void (^)(NSError * _Nullable error))failure;
+
+#pragma mark - Space graph data
+/**
+ Stores the graph of space
+ 
+ @param graph the data of the space graph
+ 
+ @return YES if the data has been succesflly stored.
+ */
+- (BOOL)storeSpaceGraphData:(nonnull MXSpaceGraphData*)graph;
+
+/**
+ Loads the graph of space from the store
+ 
+ @return an instance of `MXSpaceGraphData` if the data has been loaded succesfully. Nil otherwise.
+ */
+- (MXSpaceGraphData* _Nullable)loadSpaceGraphData;
+
 
 @end

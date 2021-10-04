@@ -897,7 +897,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 
  @return the MXRoom instance.
  */
-- (MXRoom *)roomWithRoomId:(NSString*)roomId;
+- (MXRoom  * _Nullable)roomWithRoomId:(NSString* _Nonnull)roomId;
 
 /**
  Get the MXRoom instance of the room that owns the passed room alias.

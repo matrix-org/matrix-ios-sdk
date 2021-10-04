@@ -36,8 +36,8 @@ public class MXSpaceNotificationCounter: NSObject {
     /// - Parameters:
     ///   - spaces: list of spaces of the current sessiom
     ///   - rooms: list of rooms of the current session
-    ///   - flattenedParentIds: the flattened aprent ID for all rooms
-    public func computeNotificationCount(for spaces:[MXSpace], with rooms:[MXRoom], flattenedParentIds: [String: Set<String>]) {
+    ///   - ancestorsPerRoomId: List of IDs of the ancestors (recursive parents) for each room ID
+    public func computeNotificationCount(for spaces:[MXSpace], with rooms:[MXRoom], ancestorsPerRoomId: [String: Set<String>]) {
         let startDate = Date()
         MXLog.debug("[Spaces] computeNotificationCount started")
 
@@ -53,7 +53,7 @@ public class MXSpaceNotificationCounter: NSObject {
             
             homeNotificationState += notificationState
             for space in spaces {
-                if flattenedParentIds[room.roomId]?.contains(space.spaceId) ?? false {
+                if ancestorsPerRoomId[room.roomId]?.contains(space.spaceId) ?? false {
                     let storedState = notificationStatePerSpaceId[space.spaceId] ?? MXSpaceNotificationState()
                     notificationStatePerSpaceId[space.spaceId] = storedState + notificationState
                 }
