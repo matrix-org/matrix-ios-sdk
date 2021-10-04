@@ -30,7 +30,11 @@ internal class MXSuggestedRoomListDataCache {
         get {
             return cache[key]
         } set {
-            cache[key] = newValue
+            if let newValue = newValue {
+                cache[key] = newValue
+            } else {
+                cache.removeValue(forKey: key)
+            }
         }
     }
     

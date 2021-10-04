@@ -82,6 +82,10 @@ internal class MXSuggestedRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
     private func addDataObservers(for space: MXSpace?) {
         spaceEventsListener = space?.room.listen(toEvents: { [weak self] event, direction, roomState in
             guard let self = self else { return }
+            if let space = self.space {
+                //  clear cache for this space
+                self.cache[space] = nil
+            }
             self.refresh()
         })
     }
