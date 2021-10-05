@@ -25,8 +25,6 @@
 @interface MXVoIPTests : XCTestCase
 {
     MatrixSDKTestsData *matrixSDKTestsData;
-
-    MXSession *mxSession;
 }
 
 @end
@@ -42,12 +40,6 @@
 
 - (void)tearDown
 {
-    if (mxSession)
-    {
-        [mxSession close];
-        mxSession = nil;
-    }
-
     matrixSDKTestsData = nil;
     
     [super tearDown];
@@ -57,9 +49,8 @@
 #pragma mark - Tests with no call stack
 - (void)testNoVoIPStackMXRoomCall
 {
-    [matrixSDKTestsData doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXSession *bobSession, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXSession *mxSession, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
-        mxSession = bobSession;
         MXRoom *room = [mxSession roomWithRoomId:roomId];
 
         // Make sure there is no VoIP stack
@@ -79,9 +70,7 @@
 
 - (void)testNoVoIPStackOnCallInvite
 {
-    [matrixSDKTestsData doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXSession *bobSession, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
-
-        mxSession = bobSession;
+    [matrixSDKTestsData doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXSession *mxSession, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
         // Make sure there is no VoIP stack
         mxSession.callManager.callStack = nil;
@@ -98,8 +87,8 @@
                                           },
                                   @"version": kMXCallVersion,
                                   @"lifetime": @(30 * 1000),
-                                  @"invitee": bobSession.myUserId,
-                                  @"party_id": bobSession.myDeviceId
+                                  @"invitee": mxSession.myUserId,
+                                  @"party_id": mxSession.myDeviceId
                                   };
 
 
