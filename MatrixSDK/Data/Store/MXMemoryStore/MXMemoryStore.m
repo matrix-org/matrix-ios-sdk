@@ -29,6 +29,7 @@
     
     //  Execution queue for computationally expensive operations.
     dispatch_queue_t executionQueue;
+    NSMutableDictionary<NSString *, id<MXRoomSummaryProtocol>> *roomSummaries;
 }
 @end
 
@@ -47,6 +48,7 @@
         roomReceiptsStores = [NSMutableDictionary dictionary];
         users = [NSMutableDictionary dictionary];
         groups = [NSMutableDictionary dictionary];
+        roomSummaries = [NSMutableDictionary dictionary];
         maxUploadSize = -1;
         executionQueue = dispatch_queue_create("MXMemoryStoreExecutionQueue", DISPATCH_QUEUE_SERIAL);
     }
@@ -490,12 +492,16 @@
 
 - (void)storeSummaryForRoom:(NSString *)roomId summary:(id<MXRoomSummaryProtocol>)summary
 {
-    
+    roomSummaries[roomId] = summary;
+    if (roomStores[roomId] == nil)
+    {
+        roomStores[roomId] = [[MXMemoryRoomStore alloc] init];
+    }
 }
 
 - (id<MXRoomSummaryProtocol>)summaryOfRoom:(NSString *)roomId
 {
-    return nil;
+    return roomSummaries[roomId];
 }
 
 @end
