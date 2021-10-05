@@ -153,16 +153,33 @@ internal class MXSuggestedRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
         guard let space = space else {
             return
         }
-        if let summary = cache[space] {
-            //  cache exists
-            if summary.childInfos.count >= numberOfItems {
-                //  there are desired number of items in the cache
+        guard let summary = cache[space] else {
+            //  no cache
+            fetchSpaceChildren(upto: numberOfItems, space: space)
+            return
+        }
+        
+        //  cache exists
+        if summary.childInfos.count >= numberOfItems {
+            //  there are enough number of items in the cache
+            computeData(from: summary.childInfos)
+        } else {
+            switch fetchOptions.paginationOptions {
+            case .none:
+                //  pagination disabled, so all rooms should be fetched in the first request
                 computeData(from: summary.childInfos)
-                return
-            } else {
-                
+            default:
+                guard summary.childInfos.count % fetchOptions.paginationOptions.rawValue == 0 else {
+                    //  no more data to fetch, compute data as it is
+                    computeData(from: summary.childInfos)
+                    return
+                }
+                fetchSpaceChildren(upto: numberOfItems, space: space)
             }
         }
+    }
+    
+    private func fetchSpaceChildren(upto numberOfItems: Int, space: MXSpace) {
         //  do the request
         //  limit should be -1 for no limit
         let limit: Int = numberOfItems < 0 ? -1 : numberOfItems
@@ -172,13 +189,14 @@ internal class MXSuggestedRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
             guard let self = self else { return }
             switch response {
             case .success(let summary):
+                //  cache the data
                 self.cache[space] = summary
                 //  if we're still on the same space, advertise the data
                 if self.space == space {
                     self.computeData(from: summary.childInfos)
                 }
             case .failure(let error):
-                MXLog.error("[MXSuggestedRoomListDataFetcher] computeData failed: \(error)")
+                MXLog.error("[MXSuggestedRoomListDataFetcher] fetchSpaceChildren failed: \(error)")
             }
         }
     }
