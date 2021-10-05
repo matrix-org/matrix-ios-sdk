@@ -47,7 +47,7 @@ extension MXSession {
     /// - Parameters:
     ///   - orignalSelector: the original method
     ///   - swizzledSelector: the replacing method
-    private class func swizzleMethods(orignalSelector: Selector, swizzledSelector: Selector) {
+    private class func swizzleMethods(originalSelector: Selector, swizzledSelector: Selector) {
         guard
             let originalMethod = class_getInstanceMethod(MXSession.self, orignalSelector),
             let swizzledMethod = class_getInstanceMethod(MXSession.self, swizzledSelector)
