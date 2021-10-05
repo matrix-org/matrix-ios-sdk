@@ -53,6 +53,7 @@
         "MXQRCodeDataUnitTests",
         "MXReplyEventParserUnitTests",
         "MXResponseUnitTests",
+        "MXRoomListDataManagerUnitTests",
         "MXSyncResponseUnitTests",
         "MXToolsUnitTests"
       ],
