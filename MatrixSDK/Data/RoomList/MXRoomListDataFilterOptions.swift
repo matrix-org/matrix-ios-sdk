@@ -17,6 +17,7 @@
 import Foundation
 
 @objcMembers
+/// Filter options to be used with fetch options. See `MXRoomListDataFetchOptions`.
 public final class MXRoomListDataFilterOptions: NSObject {
     
     /// Value to be used not to specify any type for initializer
@@ -25,7 +26,7 @@ public final class MXRoomListDataFilterOptions: NSObject {
     /// Weak reference to the fetch options
     internal weak var fetchOptions: MXRoomListDataFetchOptions?
     
-    /// Data types to fetch
+    /// Data types to fetch. Related fetcher will be refreshed automatically when updated.
     public var dataTypes: MXRoomSummaryDataTypes {
         didSet {
             if onlySuggested {
@@ -37,7 +38,7 @@ public final class MXRoomListDataFilterOptions: NSObject {
             }
         }
     }
-    /// Data types not to fetch
+    /// Data types not to fetch. Related fetcher will be refreshed automatically when updated.
     public var notDataTypes: MXRoomSummaryDataTypes {
         didSet {
             if onlySuggested {
@@ -49,7 +50,7 @@ public final class MXRoomListDataFilterOptions: NSObject {
             }
         }
     }
-    /// Search query
+    /// Search query. Related fetcher will be refreshed automatically when updated.
     public var query: String? {
         didSet {
             if query != oldValue {
@@ -57,7 +58,7 @@ public final class MXRoomListDataFilterOptions: NSObject {
             }
         }
     }
-    /// Space for room list data
+    /// Space for room list data. Related fetcher will be refreshed automatically when updated.
     public var space: MXSpace? {
         didSet {
             if space != oldValue {

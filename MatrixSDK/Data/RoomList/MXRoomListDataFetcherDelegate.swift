@@ -17,6 +17,7 @@
 import Foundation
 
 @objc
+/// Delegate for room list data fetcher.
 public protocol MXRoomListDataFetcherDelegate: AnyObject {
     
     /// Delegate method to be called when fetched data updated

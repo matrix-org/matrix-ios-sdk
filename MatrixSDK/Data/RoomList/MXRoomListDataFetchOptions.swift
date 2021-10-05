@@ -17,18 +17,19 @@
 import Foundation
 
 @objcMembers
+/// Fetch options to be used with room list data manager. See `MXRoomListDataManager`.
 public final class MXRoomListDataFetchOptions: NSObject {
     
     /// Weak reference to the fetcher
     internal weak var fetcher: MXRoomListDataFetcher?
     
-    /// Filter options
+    /// Filter options. Related fetcher will be refreshed automatically when updated.
     public var filterOptions: MXRoomListDataFilterOptions {
         didSet {
             fetcher?.refresh()
         }
     }
-    /// Sort options
+    /// Sort options. Related fetcher will be refreshed automatically when updated.
     public var sortOptions: MXRoomListDataSortOptions {
         didSet {
             fetcher?.refresh()

@@ -17,11 +17,13 @@
 import Foundation
 
 @objcMembers
+/// Sort options to be used with fetch options. See `MXRoomListDataFetchOptions`.
 public final class MXRoomListDataSortOptions: NSObject {
     /// Weak reference to the fetch options
     internal weak var fetchOptions: MXRoomListDataFetchOptions?
     
     /// Flag to sort by suggested room flag: suggested rooms will come later
+    /// Related fetcher will be refreshed automatically when updated.
     public var suggested: Bool {
         didSet {
             if suggested != oldValue {
@@ -30,6 +32,7 @@ public final class MXRoomListDataSortOptions: NSObject {
         }
     }
     /// Flag to sort by invite status: invited rooms will come first
+    /// Related fetcher will be refreshed automatically when updated.
     public var invitesFirst: Bool {
         didSet {
             if invitesFirst != oldValue {
@@ -38,6 +41,7 @@ public final class MXRoomListDataSortOptions: NSObject {
         }
     }
     /// Flag to sort by sent status: rooms having unsent messages will come first
+    /// Related fetcher will be refreshed automatically when updated.
     public var sentStatus: Bool {
         didSet {
             if sentStatus != oldValue {
@@ -46,6 +50,7 @@ public final class MXRoomListDataSortOptions: NSObject {
         }
     }
     /// Flag to sort by last event date: most recent rooms will come first
+    /// Related fetcher will be refreshed automatically when updated.
     public var lastEventDate: Bool {
         didSet {
             if lastEventDate != oldValue {
@@ -54,6 +59,7 @@ public final class MXRoomListDataSortOptions: NSObject {
         }
     }
     /// Flag to sort by favorite tag order: rooms having "bigger" tags will come first
+    /// Related fetcher will be refreshed automatically when updated.
     public var favoriteTag: Bool {
         didSet {
             if favoriteTag != oldValue {
@@ -62,6 +68,7 @@ public final class MXRoomListDataSortOptions: NSObject {
         }
     }
     /// Flag to sort by missed notifications count: rooms having more missed notification count will come first
+    /// Related fetcher will be refreshed automatically when updated.
     public var missedNotificationsFirst: Bool {
         didSet {
             if missedNotificationsFirst != oldValue {
@@ -70,6 +77,7 @@ public final class MXRoomListDataSortOptions: NSObject {
         }
     }
     /// Flag to sort by unread count: rooms having unread messages will come first
+    /// Related fetcher will be refreshed automatically when updated.
     public var unreadMessagesFirst: Bool {
         didSet {
             if unreadMessagesFirst != oldValue {

@@ -17,6 +17,7 @@
 import Foundation
 
 @objc
+/// Room list data fetcher. Can be instantiated via a room list data manager. See `MXRoomListDataManager`
 public protocol MXRoomListDataFetcher: AnyObject {
     
     //  MARK: - Properties

@@ -17,9 +17,10 @@
 import Foundation
 
 @objc
+/// Most popular counts used by recents
 public protocol MXRoomListDataCounts {
     
-    /// Number of rooms handled by this class
+    /// Number of rooms handled by this instance
     var numberOfRooms: Int { get }
     
     /// Total number of rooms. Can be different from `numberOfRooms` if pagination enabled

@@ -16,11 +16,12 @@
 
 import Foundation
 
+/// Pagination options to be used with fetch options. See `MXRoomListDataFetchOptions`.
 public enum MXRoomListDataPaginationOptions {
     public typealias RawValue = Int
     
-    private static let NoneValue: RawValue = -1
-    private static let DefaultValue: RawValue = 10
+    internal static let NoneValue: RawValue = -1
+    internal static let DefaultValue: RawValue = 10
     
     public init(rawValue: RawValue) {
         switch rawValue {
@@ -44,13 +45,18 @@ public enum MXRoomListDataPaginationOptions {
         }
     }
     
+    /// disabled pagination.
     case none
+    /// enabled pagination with a default value, which is `10`;
     case `default`
+    /// enabled pagination with a custom value.
     case custom(_ value: Int)
 }
 
 extension MXRoomListDataPaginationOptions: Equatable {
+    
     public static func ==(lhs: MXRoomListDataPaginationOptions, rhs: MXRoomListDataPaginationOptions) -> Bool {
         return lhs.rawValue == rhs.rawValue
     }
+    
 }

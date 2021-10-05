@@ -17,6 +17,7 @@
 import Foundation
 
 @objc
+/// Room list data manager interface
 public protocol MXRoomListDataManager {
     
     /// Configured session

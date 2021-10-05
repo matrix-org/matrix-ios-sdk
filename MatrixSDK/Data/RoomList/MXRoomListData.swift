@@ -17,6 +17,7 @@
 import Foundation
 
 @objcMembers
+/// Room list data class. Subclassable.
 open class MXRoomListData: NSObject {
     /// Array of rooms
     public let rooms: [MXRoomSummaryProtocol]
@@ -48,7 +49,11 @@ open class MXRoomListData: NSObject {
         return rooms[index]
     }
     
-    /// Initializer
+    /// Initializer to be used when mocking data
+    /// - Parameters:
+    ///   - rooms: rooms
+    ///   - counts: room counts instance
+    ///   - paginationOptions: pagination options
     public init(rooms: [MXRoomSummaryProtocol],
                 counts: MXRoomListDataCounts,
                 paginationOptions: MXRoomListDataPaginationOptions) {
