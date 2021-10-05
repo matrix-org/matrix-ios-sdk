@@ -1239,6 +1239,7 @@
             
             // - Stop Alice first device
             MXSession *aliceSession2 = [[MXSession alloc] initWithMatrixRestClient:aliceSession.matrixRestClient];
+            [matrixSDKTestsData retain:aliceSession2];
             [aliceSession close];
             
             // - Reset XS on this new device

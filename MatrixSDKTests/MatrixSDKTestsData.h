@@ -173,7 +173,14 @@ onUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecogn
 
 
 #pragma mark Reference keeping
+
+/// Close automatically MXSession instances created by MatrixSDKTestsData.
+/// True by default.
+/// Those instances are closed on MatrixSDKTestsData.deinit()
+@property (nonatomic) BOOL autoCloseMXSessions;
+
 // Retain an object for the life of this MatrixSDKTestsData instance
 - (void)retain:(NSObject*)object;
+- (void)release:(NSObject*)object;
 
 @end

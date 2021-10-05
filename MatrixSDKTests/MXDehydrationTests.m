@@ -289,6 +289,7 @@
                         MXRestClient *aliceRestClient = aliceSession2.matrixRestClient;
                         
                         MXSession *aliceSession3 = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+                        [self.matrixSDKTestsData retain:aliceSession3];
                         
                         [aliceSession2 close];
                         
