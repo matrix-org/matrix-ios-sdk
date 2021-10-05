@@ -2953,8 +2953,8 @@
 
         // - Restart the session
         MXSession *aliceSession2 = [[MXSession alloc] initWithMatrixRestClient:aliceSession.matrixRestClient];
-        [matrixSDKTestsData retain:aliceSession2]
-        ;
+        [matrixSDKTestsData retain:aliceSession2];
+        
         [aliceSession close];
         [aliceSession2 start:^{
             MXOlmOutboundGroupSession *outboundSession = [aliceSession2.crypto.store outboundGroupSessionWithRoomId:roomId];
