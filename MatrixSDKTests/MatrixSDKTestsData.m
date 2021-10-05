@@ -1028,7 +1028,7 @@ onUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecogn
 
 - (void)release:(NSObject*)object
 {
-    [self.retainedObjects addObject:object];
+    [self.retainedObjects removeObject:object];
 }
 
 - (void)releaseRetainedObjects

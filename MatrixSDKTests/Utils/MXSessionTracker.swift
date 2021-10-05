@@ -60,7 +60,7 @@ class MXSessionTracker {
     // MARK: - Private
     
     /// All open sessions
-    private var trackedMXSessions = Dictionary<String, TrackedMXSession>()
+    private var trackedMXSessions = [String: TrackedMXSession]()
     
     func trackMXSession(mxSession: MXSession, callStack: [String]) {
         let trackedMXSession = TrackedMXSession(userDeviceId: mxSession.userDeviceId, callStack: callStack)

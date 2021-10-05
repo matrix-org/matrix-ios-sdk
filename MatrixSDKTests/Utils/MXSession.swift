@@ -33,9 +33,9 @@ extension MXSession {
     /// Start tracking open MXSession instances.
     class func trackOpenMXSessions() {
         // Swizzle init and close methods to track active MXSessions
-        swizzleMethods(orignalSelector: #selector(MXSession.init(matrixRestClient:)),
+        swizzleMethods(originalSelector: #selector(MXSession.init(matrixRestClient:)),
                        swizzledSelector: #selector(MXSession.trackInit(matrixRestClient:)))
-        swizzleMethods(orignalSelector: #selector(MXSession.close),
+        swizzleMethods(originalSelector: #selector(MXSession.close),
                        swizzledSelector: #selector(MXSession.trackClose))
     }
     
@@ -49,7 +49,7 @@ extension MXSession {
     ///   - swizzledSelector: the replacing method
     private class func swizzleMethods(originalSelector: Selector, swizzledSelector: Selector) {
         guard
-            let originalMethod = class_getInstanceMethod(MXSession.self, orignalSelector),
+            let originalMethod = class_getInstanceMethod(MXSession.self, originalSelector),
             let swizzledMethod = class_getInstanceMethod(MXSession.self, swizzledSelector)
         else { return }
         method_exchangeImplementations(originalMethod, swizzledMethod)
