@@ -17,7 +17,7 @@
 import Foundation
 
 @objcMembers
-public final class MXRoomListData: NSObject {
+open class MXRoomListData: NSObject {
     /// Array of rooms
     public let rooms: [MXRoomSummaryProtocol]
     /// Pagination size
@@ -49,9 +49,9 @@ public final class MXRoomListData: NSObject {
     }
     
     /// Initializer
-    internal init(rooms: [MXRoomSummaryProtocol],
-                  counts: MXRoomListDataCounts,
-                  paginationOptions: MXRoomListDataPaginationOptions) {
+    public init(rooms: [MXRoomSummaryProtocol],
+                counts: MXRoomListDataCounts,
+                paginationOptions: MXRoomListDataPaginationOptions) {
         self.rooms = rooms
         self.counts = counts
         self.paginationOptions = paginationOptions
