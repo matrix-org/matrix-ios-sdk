@@ -16,21 +16,29 @@
 
 import Foundation
 
+/// Util class to handle multiple delegates
 public class MXMulticastDelegate <T: AnyObject> {
     
+    /// Weakly referenced delegates
     private let delegates: NSHashTable<T> = NSHashTable.weakObjects()
     private let dispatchQueue: DispatchQueue
     
+    /// Initializer
+    /// - Parameter dispatchQueue: Queue to invoke delegate methods
     public init(dispatchQueue: DispatchQueue = .main) {
         self.dispatchQueue = dispatchQueue
     }
     
+    /// Add a delegate instance.
+    /// - Parameter delegate: new delegate
     public func addDelegate(_ delegate: T) {
         synchronizeDelegates {
             delegates.add(delegate)
         }
     }
     
+    /// Remove a delegate instance
+    /// - Parameter delegate: delegate to be removed
     public func removeDelegate(_ delegate: T) {
         synchronizeDelegates {
             for oneDelegate in delegates.allObjects.reversed() {
@@ -41,13 +49,16 @@ public class MXMulticastDelegate <T: AnyObject> {
         }
     }
     
+    /// Remove all delegates
     public func removeAllDelegates() {
         synchronizeDelegates {
             delegates.removeAllObjects()
         }
     }
     
-    public func invoke(invocation: @escaping (T) -> ()) {
+    /// Invoke a delegate method
+    /// - Parameter invocation: Block in which delegate objects are traversed
+    public func invoke(_ invocation: @escaping (T) -> ()) {
         synchronizeDelegates {
             for delegate in delegates.allObjects.reversed() {
                 dispatchQueue.async {
@@ -57,6 +68,7 @@ public class MXMulticastDelegate <T: AnyObject> {
         }
     }
     
+    /// Thread safe access to delegates array
     private func synchronizeDelegates(_ block: () -> Void) {
         objc_sync_enter(delegates)
         block()
