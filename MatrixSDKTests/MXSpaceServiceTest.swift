@@ -140,7 +140,12 @@ class MXSpaceServiceTest: XCTestCase {
                     XCTAssert(summary.membersCount.members == 1, "Bob must be the only one")
                     
                     // Check if room state match space creation parameters
-                    space.room.state { (roomState) in
+                    guard let room = space.room else {
+                        XCTFail("Space should have a room")
+                        return
+                    }
+                    
+                    room.state { (roomState) in
                         guard let roomState = roomState else {
                             XCTFail("Room should have a room state")
                             return
@@ -177,7 +182,7 @@ class MXSpaceServiceTest: XCTestCase {
                 case .success(let space):
                     
                     // Wait topic update
-                    self.waitRoomSummaryUpdate(for: space.room.roomId) { _ in
+                    self.waitRoomSummaryUpdate(for: space.spaceId) { _ in
                         guard let summary = space.summary else {
                             XCTFail("Space summary cannot be nil")
                             return
@@ -188,8 +193,13 @@ class MXSpaceServiceTest: XCTestCase {
                         XCTAssertTrue(summary.displayname == expectedSpaceName)
                         XCTAssertTrue(summary.topic == expectedSpaceTopic)
                                             
+                        guard let room = space.room else {
+                            XCTFail("Space should have a room")
+                            return
+                        }
+                        
                         // Check if room state match space creation parameters
-                        space.room.state { (roomState) in
+                        room.state { (roomState) in
                             guard let roomState = roomState else {
                                 XCTFail("Room should have a room state")
                                 return
@@ -251,8 +261,13 @@ class MXSpaceServiceTest: XCTestCase {
                                         return
                                     }
                                     
+                                    guard let room = foundRootSpace.room else {
+                                        XCTFail("Space should have a room")
+                                        return
+                                    }
+                                    
                                     // Check if space A contains the space child state event for space B
-                                    foundRootSpace.room.state({ (roomState) in
+                                    room.state({ (roomState) in
                                         
                                         let stateEvent = roomState?.stateEvents(with: .spaceChild)?.first
                                         

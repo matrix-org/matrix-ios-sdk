@@ -45,7 +45,6 @@ static NSString *const kMXFileStoreRoomStateFile = @"state";
 static NSString *const kMXFileStoreRoomSummaryFile = @"summary";
 static NSString *const kMXFileStoreRoomAccountDataFile = @"accountData";
 static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
-static NSString *const kMXFileStoreSpaceGraphFile = @"spaceGraph";
 
 static NSUInteger preloadOptions;
 
@@ -1049,11 +1048,6 @@ static NSUInteger preloadOptions;
 - (NSString*)readReceiptsFileForRoom:(NSString*)roomId forBackup:(BOOL)backup
 {
     return [[self folderForRoom:roomId forBackup:backup] stringByAppendingPathComponent:kMXFileStoreRoomReadReceiptsFile];
-}
-
-- (NSString*)spaceGraphFileForBackup:(BOOL)backup
-{
-    return [(backup ? storeBackupPath : storePath) stringByAppendingPathComponent:kMXFileStoreSpaceGraphFile];
 }
 
 - (NSString*)metaDataFileForBackup:(BOOL)backup
@@ -2135,42 +2129,6 @@ static NSUInteger preloadOptions;
 #endif
         });
     }
-}
-
-#pragma mark - Spaces graph
-
-- (BOOL)storeSpaceGraphData:(nonnull MXSpaceGraphData*)graph
-{
-    NSString *file = [self spaceGraphFileForBackup:NO];
-    NSString *backupFile = [self spaceGraphFileForBackup:YES];
-
-    // Backup the file
-    if (backupFile && [[NSFileManager defaultManager] fileExistsAtPath:file])
-    {
-        [[NSFileManager defaultManager] moveItemAtPath:file toPath:backupFile error:nil];
-    }
-    
-    NSError *error = nil;
-    NSData * data = [NSKeyedArchiver archivedDataWithRootObject:graph requiringSecureCoding:NO error:&error];
-
-    // Store new data
-    return [NSKeyedArchiver archiveRootObject:graph toFile:file];
-}
-
-- (MXSpaceGraphData* _Nullable)loadSpaceGraphData
-{
-    MXSpaceGraphData *graph = nil;
-    NSString *file = [self spaceGraphFileForBackup:NO];
-    @try
-    {
-        graph = [NSKeyedUnarchiver unarchiveObjectWithFile:file];
-    }
-    @catch (NSException *exception)
-    {
-        MXLogDebug(@"[MXFileStore] Warning: spaceGraph file has been corrupted");
-    }
-    
-    return graph;
 }
 
 #pragma mark - Async API

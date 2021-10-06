@@ -651,6 +651,8 @@
 		3A7509BC26FC61DF00B85773 /* MXSpaceNotificationCounter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A7509BA26FC61DF00B85773 /* MXSpaceNotificationCounter.swift */; };
 		3A7B8D0E267FCF7200D9DD96 /* MXDehydrationTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 3A7B8CFD267FCD9B00D9DD96 /* MXDehydrationTests.m */; };
 		3A7B8D13267FCF7300D9DD96 /* MXDehydrationTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 3A7B8CFD267FCD9B00D9DD96 /* MXDehydrationTests.m */; };
+		3AB5EBB4270B332B0058703A /* MXSpaceStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AB5EBB3270B332B0058703A /* MXSpaceStore.swift */; };
+		3AB5EBB5270B332B0058703A /* MXSpaceStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AB5EBB3270B332B0058703A /* MXSpaceStore.swift */; };
 		3AC135D92640335100EE1E74 /* MXDehydrationService.h in Headers */ = {isa = PBXBuildFile; fileRef = 3AC135D72640335100EE1E74 /* MXDehydrationService.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		3AC135DA2640335100EE1E74 /* MXDehydrationService.h in Headers */ = {isa = PBXBuildFile; fileRef = 3AC135D72640335100EE1E74 /* MXDehydrationService.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		3AC135DB2640335100EE1E74 /* MXDehydrationService.m in Sources */ = {isa = PBXBuildFile; fileRef = 3AC135D82640335100EE1E74 /* MXDehydrationService.m */; };
@@ -2089,6 +2091,7 @@
 		3A59A52825A7B1B000DDA1FC /* MXOutboundSessionInfo.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXOutboundSessionInfo.m; sourceTree = "<group>"; };
 		3A7509BA26FC61DF00B85773 /* MXSpaceNotificationCounter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MXSpaceNotificationCounter.swift; sourceTree = "<group>"; };
 		3A7B8CFD267FCD9B00D9DD96 /* MXDehydrationTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXDehydrationTests.m; sourceTree = "<group>"; };
+		3AB5EBB3270B332B0058703A /* MXSpaceStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXSpaceStore.swift; sourceTree = "<group>"; };
 		3AC135D72640335100EE1E74 /* MXDehydrationService.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXDehydrationService.h; sourceTree = "<group>"; };
 		3AC135D82640335100EE1E74 /* MXDehydrationService.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXDehydrationService.m; sourceTree = "<group>"; };
 		3AC13800264482A100EE1E74 /* MXExportedOlmDevice.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXExportedOlmDevice.h; sourceTree = "<group>"; };
@@ -3875,6 +3878,7 @@
 				B105CDD5261F54C8006EB204 /* MXSpaceChildContent.m */,
 				3AF85F9126FC7AE800A9E67B /* MXSpaceNotificationState.swift */,
 				3A0AF06A2705A11400679D1A /* MXSpaceGraphData.swift */,
+				3AB5EBB3270B332B0058703A /* MXSpaceStore.swift */,
 			);
 			path = Space;
 			sourceTree = "<group>";
@@ -5093,6 +5097,7 @@
 				32A1513F1DAF768D00400192 /* MXOlmInboundGroupSession.m in Sources */,
 				3259CFE626026A6F00C365DB /* MXRestClient+Extensions.swift in Sources */,
 				EC60ED91265CFD3B00B39A4E /* MXRoomSync.m in Sources */,
+				3AB5EBB4270B332B0058703A /* MXSpaceStore.swift in Sources */,
 				EC8A53A125B1BC77004E0802 /* MXCallSelectAnswerEventContent.m in Sources */,
 				B14EECE72577F76100448735 /* MXLoginSSOFlow.m in Sources */,
 				32481A851C03572900782AD3 /* MXRoomAccountData.m in Sources */,
@@ -5531,6 +5536,7 @@
 				B19EC8A3260E134A00543BEC /* MXRoomInitialStateEventBuilder.swift in Sources */,
 				B14EF1CA2397E90400758AF0 /* MXOlmInboundGroupSession.m in Sources */,
 				B14EF1CB2397E90400758AF0 /* MXRoomAccountData.m in Sources */,
+				3AB5EBB5270B332B0058703A /* MXSpaceStore.swift in Sources */,
 				B14EF1CC2397E90400758AF0 /* MXEventAnnotationChunk.m in Sources */,
 				B14EF1CD2397E90400758AF0 /* MXRealmEventScanStore.m in Sources */,
 				181FD5D72660C791008EC084 /* MXLogObjcWrapper.m in Sources */,
