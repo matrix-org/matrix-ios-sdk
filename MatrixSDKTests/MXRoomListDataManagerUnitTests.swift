@@ -26,6 +26,14 @@ class MXRoomListDataManagerUnitTests: XCTestCase {
                                                               accessToken: "some_access_token")
         static let messageText: String = "Hello there!"
     }
+    
+    override class func setUp() {
+        MXRealmCryptoStore.delete(with: Constants.credentials)
+    }
+    
+    override class func tearDown() {
+        MXRealmCryptoStore.delete(with: Constants.credentials)
+    }
 
     private var basicFetchOptions: MXRoomListDataFetchOptions {
         let filterOptions = MXRoomListDataFilterOptions()
