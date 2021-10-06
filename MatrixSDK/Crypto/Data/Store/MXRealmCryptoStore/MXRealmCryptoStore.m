@@ -1633,7 +1633,14 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
  */
 + (nullable RLMRealm*)realmForUser:(NSString*)userId andDevice:(NSString*)deviceId readOnly:(BOOL)readOnly
 {
-    if (readOnly)
+    // Each user has its own db file.
+    // Else, it can lead to issue with primary keys.
+    // Ex: if 2 users are is the same encrypted room, [self storeAlgorithmForRoom]
+    // will be called twice for the same room id which breaks the uniqueness of the
+    // primary key (roomId) for this table.
+    NSURL *realmFileURL = [self realmFileURLForUserWithUserId:userId andDevice:deviceId];
+    
+    if (readOnly && [[NSFileManager defaultManager] fileExistsAtPath:realmFileURL.path])
     {
         //  just open Realm once in writable mode to trigger migrations
         static dispatch_once_t onceToken;
@@ -1645,13 +1652,6 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
     }
     
     RLMRealmConfiguration *config = [RLMRealmConfiguration defaultConfiguration];
-    
-    // Each user has its own db file.
-    // Else, it can lead to issue with primary keys.
-    // Ex: if 2 users are is the same encrypted room, [self storeAlgorithmForRoom]
-    // will be called twice for the same room id which breaks the uniqueness of the
-    // primary key (roomId) for this table.
-    NSURL *realmFileURL = [self realmFileURLForUserWithUserId:userId andDevice:deviceId];
     [self ensurePathExistenceForFileAtFileURL:realmFileURL];
     config.fileURL = realmFileURL;
     
