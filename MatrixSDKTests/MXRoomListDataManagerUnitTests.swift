@@ -31,10 +31,6 @@ class MXRoomListDataManagerUnitTests: XCTestCase {
         MXRealmCryptoStore.delete(with: Constants.credentials)
     }
     
-    override class func tearDown() {
-        MXRealmCryptoStore.delete(with: Constants.credentials)
-    }
-
     private var basicFetchOptions: MXRoomListDataFetchOptions {
         let filterOptions = MXRoomListDataFilterOptions()
         let sortOptions = MXRoomListDataSortOptions(missedNotificationsFirst: false, unreadMessagesFirst: false)
