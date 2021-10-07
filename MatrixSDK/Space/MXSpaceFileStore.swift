@@ -30,12 +30,14 @@ class MXSpaceFileStore: MXSpaceStore {
     // MARK: - Properties
 
     private let userId: String
+    private let deviceId: String
     private var storeUrl: URL?
 
     // MARK - Setup
     
-    init(userId: String) {
+    init(userId: String, deviceId: String) {
         self.userId = userId
+        self.deviceId = deviceId
         self.setUpStoragePaths()
     }
     
@@ -107,7 +109,7 @@ class MXSpaceFileStore: MXSpaceStore {
             return
         }
         
-        let storeUrl = cacheUrl.appendingPathComponent(Constants.fileStoreFolder).appendingPathComponent(self.userId)
+        let storeUrl = cacheUrl.appendingPathComponent(Constants.fileStoreFolder).appendingPathComponent(self.userId).appendingPathComponent(self.deviceId)
         
         var isDirectory: ObjCBool = false
         if !FileManager.default.fileExists(atPath: storeUrl.path, isDirectory: &isDirectory) {

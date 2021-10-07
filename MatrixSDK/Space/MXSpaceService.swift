@@ -138,7 +138,7 @@ public class MXSpaceService: NSObject {
     /// Loads graph from the given store
     public func loadData() {
         self.processingQueue.async {
-            let store = MXSpaceFileStore(userId: self.session.myUserId)
+            let store = MXSpaceFileStore(userId: self.session.myUserId, deviceId: self.session.myDeviceId)
             if let loadedGraph = store.loadSpaceGraphData() {
                 self.graph = loadedGraph
 
@@ -168,7 +168,7 @@ public class MXSpaceService: NSObject {
         return self.graph.orphanedRoomIds.contains(roomId) || self.graph.orphanedDirectRoomIds.contains(roomId)
     }
     
-    /// Handle a sync response and decide serverTimeout for the next sync request.
+    /// Handle a sync response
     /// - Parameters:
     ///   - syncResponse: The sync response object
     public func handleSyncResponse(_ syncResponse: MXSyncResponse) {
@@ -370,7 +370,7 @@ public class MXSpaceService: NSObject {
                 NotificationCenter.default.post(name: MXSpaceService.didBuildSpaceGraph, object: self)
 
                 self.processingQueue.async {
-                    let store = MXSpaceFileStore(userId: self.session.myUserId)
+                    let store = MXSpaceFileStore(userId: self.session.myUserId, deviceId: self.session.myDeviceId)
                     if !store.store(spaceGraphData: self.graph) {
                         MXLog.error("[MXSpaceService] buildGraph: failed to store space graph")
                     }
