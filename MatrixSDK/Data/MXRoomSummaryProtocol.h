@@ -29,10 +29,12 @@
 #ifndef MXRoomSummaryProtocol_h
 #define MXRoomSummaryProtocol_h
 
+NS_ASSUME_NONNULL_BEGIN
+
 @protocol MXRoomSummaryProtocol <NSObject>
 
 /// Room identifier
-@property (nonatomic, readonly) NSString * _Nonnull roomId;
+@property (nonatomic, readonly) NSString *roomId;
 
 /// The room type string value as provided by the server. Can be nil.
 @property (nonatomic, readonly) NSString * _Nullable roomTypeString;
@@ -50,10 +52,10 @@
 @property (nonatomic, readonly) NSString * _Nullable topic;
 
 /// The room creator user id.
-@property (nonatomic, readonly) NSString * _Nonnull creatorUserId;
+@property (nonatomic, readonly) NSString *creatorUserId;
 
 /// The aliases of this room.
-@property (nonatomic, readonly) NSArray<NSString *> * _Nonnull aliases;
+@property (nonatomic, readonly) NSArray<NSString *> *aliases;
 
 /// Join rule for the room.
 @property (nonatomic, readonly) MXRoomJoinRule _Nullable joinRule;
@@ -65,7 +67,7 @@
 @property (nonatomic, readonly) MXMembershipTransitionState membershipTransitionState;
 
 /// Room members counts.
-@property (nonatomic, readonly) MXRoomMembersCount * _Nonnull membersCount;
+@property (nonatomic, readonly) MXRoomMembersCount *membersCount;
 
 /// Flag indicating if the room is a 1:1 room with a call conference user.
 /// In this case, the room is used as a call signaling room and does not need to be
@@ -133,8 +135,10 @@
 
 @property (nonatomic, weak, readonly) MXSession * _Nullable mxSession;
 
-- (void)setMatrixSession:(MXSession * _Nonnull)mxSession;
+- (void)setMatrixSession:(MXSession *)mxSession;
 
 @end
+
+NS_ASSUME_NONNULL_END
 
 #endif /* MXRoomSummaryProtocol_h */
