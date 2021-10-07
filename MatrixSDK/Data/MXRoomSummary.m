@@ -1033,8 +1033,6 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
         result |= MXRoomSummaryDataTypesConferenceUser;
     }
     
-    MXLogDebug(@"[MXRoomSummary] Calculate data types: %tu", result);
-    
     return result;
 }
 
