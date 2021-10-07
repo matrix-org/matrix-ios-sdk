@@ -45,7 +45,7 @@ class MXSpaceFileStore: MXSpaceStore {
     /// - Returns: `true` if the data has been stored properly.`false` otherwise
     func store(spaceGraphData: MXSpaceGraphData) -> Bool {
         guard let storeUrl = self.storeUrl else {
-            MXLog.error("[MXSpaceStore] storeSpaceGraphData failed: storeUrl not defined")
+            MXLog.error("[MXSpaceFileStore] store: storeSpaceGraphData failed: storeUrl not defined")
             return false
         }
         
@@ -59,7 +59,7 @@ class MXSpaceFileStore: MXSpaceStore {
                 }
                 try FileManager.default.moveItem(at: fileUrl, to: backupUrl)
             } catch {
-                MXLog.error("[MXSpaceStore] storeSpaceGraphData failed to move graph to backup: \(error)")
+                MXLog.error("[MXSpaceFileStore] store: storeSpaceGraphData failed to move graph to backup: \(error)")
             }
         }
         
@@ -70,7 +70,7 @@ class MXSpaceFileStore: MXSpaceStore {
     /// - Returns:an instance of `MXSpaceGraphData` if the data has been restored succesfully. `nil` otherwise
     func loadSpaceGraphData() -> MXSpaceGraphData? {
         guard let storeUrl = self.storeUrl else {
-            MXLog.error("[MXSpaceStore] loadSpaceGraphData failed: storeUrl not defined")
+            MXLog.error("[MXSpaceStore] loadSpaceGraphData: failed: storeUrl not defined")
             return nil
         }
         
@@ -78,13 +78,13 @@ class MXSpaceFileStore: MXSpaceStore {
         
         do {
             guard let graph = try? NSKeyedUnarchiver.unarchiveObject(withFile: fileUrl.path) as? MXSpaceGraphData else {
-                MXLog.warning("[MXSpaceStore] loadSpaceGraphData found no archived graph")
+                MXLog.warning("[MXSpaceStore] loadSpaceGraphData: found no archived graph")
                 return nil
             }
             
             return graph
         } catch {
-            MXLog.warning("[MXSpaceStore] loadSpaceGraphData failed with error: \(error)")
+            MXLog.warning("[MXSpaceStore] loadSpaceGraphData: failed with error: \(error)")
         }
         
         return nil
@@ -93,16 +93,16 @@ class MXSpaceFileStore: MXSpaceStore {
     // MARK - Private
     
     private func setUpStoragePaths() {
-        var cacheUrl: URL?
+        var _cacheUrl: URL?
         
         if let applicationGroupIdentifier = MXSDKOptions.sharedInstance().applicationGroupIdentifier {
-            cacheUrl = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: applicationGroupIdentifier)
+            _cacheUrl = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: applicationGroupIdentifier)
         } else {
             let cacheDirList = NSSearchPathForDirectoriesInDomains(.cachesDirectory, .userDomainMask, true)
-            cacheUrl = URL(fileURLWithPath: cacheDirList[0])
+            _cacheUrl = URL(fileURLWithPath: cacheDirList[0])
         }
         
-        guard let cacheUrl = cacheUrl else {
+        guard let cacheUrl = _cacheUrl else {
             MXLog.error("[MXSpaceStore] setUpStoragePaths was unable to define cache URL")
             return
         }
