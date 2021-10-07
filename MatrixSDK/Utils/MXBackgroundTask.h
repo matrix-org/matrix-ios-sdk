@@ -28,11 +28,20 @@ typedef void (^MXBackgroundTaskExpirationHandler)(void);
  */
 @protocol MXBackgroundTask <NSObject>
 
-// Name of the background task for debug.
-@property (nonatomic, strong, readonly) NSString *name;
+/**
+ Name of the background task for debug.
+ */
+@property (nonatomic, copy, readonly) NSString *name;
 
-// Yes if the background task is currently running.
-@property (nonatomic, readonly) BOOL isRunning;
+/**
+ YES if the background task is currently running.
+ */
+@property (nonatomic, readonly, getter=isRunning) BOOL running;
+
+/**
+ Flag indicating the background task is reusable. If reusable, `name` is the key to distinguish background tasks.
+ */
+@property (nonatomic, readonly, getter=isReusable) BOOL reusable;
 
 /**
  Stop the background task. Cannot be started anymore.

@@ -35,6 +35,11 @@ static const NSTimeInterval BackgroundTimeRemainingThresholdToStartTasks = 5.0;
 @interface MXUIKitBackgroundModeHandler ()
 {
     MXUIKitApplicationStateService *applicationStateService;
+    
+    /**
+     Cache to store reusable background tasks.
+     */
+    NSMapTable<NSString *, id<MXBackgroundTask>> *reusableTasks;
 }
 @end
 
@@ -47,6 +52,7 @@ static const NSTimeInterval BackgroundTimeRemainingThresholdToStartTasks = 5.0;
     if (self)
     {
         applicationStateService = [MXUIKitApplicationStateService new];
+        reusableTasks = [NSMapTable weakToWeakObjectsMapTable];
     }
     return self;
 }
@@ -55,7 +61,20 @@ static const NSTimeInterval BackgroundTimeRemainingThresholdToStartTasks = 5.0;
 #pragma mark - MXBackgroundModeHandler
 
 - (nullable id<MXBackgroundTask>)startBackgroundTaskWithName:(NSString *)name
+{
+    return [self startBackgroundTaskWithName:name expirationHandler:nil];
+}
+
+- (nullable id<MXBackgroundTask>)startBackgroundTaskWithName:(NSString *)name
                                            expirationHandler:(nullable MXBackgroundTaskExpirationHandler)expirationHandler
+{
+    return [self startBackgroundTaskWithName:name reusable:NO expirationHandler:expirationHandler];
+}
+
+- (nullable id<MXBackgroundTask>)startBackgroundTaskWithName:(NSString *)name
+                                                    reusable:(BOOL)reusable
+                                           expirationHandler:(nullable MXBackgroundTaskExpirationHandler)expirationHandler
+                                                    
 {
     //  application is in background and not enough time to start this task
     if (applicationStateService.applicationState == UIApplicationStateBackground &&
@@ -71,14 +90,55 @@ static const NSTimeInterval BackgroundTimeRemainingThresholdToStartTasks = 5.0;
         return nil;
     }
     
-    id<MXBackgroundTask> backgroundTask = [[MXUIKitBackgroundTask alloc] initAndStartWithName:name expirationHandler:expirationHandler];
+    BOOL created = NO;
+    
+    __block id<MXBackgroundTask> backgroundTask;
+    if (reusable)
+    {
+        //  reusable
+        
+        //  first look in the cache
+        backgroundTask = [reusableTasks objectForKey:name];
+        
+        //  create if not found or not running
+        //  According to the documentation, a weak-values map table doesn't have to remove objects immediately when they are released, so also check the running state of the task.
+        if (backgroundTask == nil || !backgroundTask.isRunning)
+        {
+            backgroundTask = [[MXUIKitBackgroundTask alloc] initAndStartWithName:name
+                                                                        reusable:reusable
+                                                               expirationHandler:^{
+                //  remove when expired
+                [self->reusableTasks removeObjectForKey:backgroundTask.name];
+                
+                if (expirationHandler)
+                {
+                    expirationHandler();
+                }
+            }];
+            created = YES;
+            
+            //  cache the task if successfully created
+            if (backgroundTask)
+            {
+                [reusableTasks setObject:backgroundTask forKey:name];
+            }
+        }
+    }
+    else
+    {
+        //  not reusable, just create one and continue. Do not store non-reusable tasks in the cache
+        backgroundTask = [[MXUIKitBackgroundTask alloc] initAndStartWithName:name
+                                                                    reusable:reusable
+                                                           expirationHandler:expirationHandler];
+        created = YES;
+    }
     
     if (backgroundTask)
     {
         NSString *readableAppState = [MXUIKitApplicationStateService readableApplicationState:applicationStateService.applicationState];
         NSString *readableBackgroundTimeRemaining = [MXUIKitApplicationStateService readableEstimatedBackgroundTimeRemaining:applicationStateService.backgroundTimeRemaining];
         
-        MXLogDebug(@"[MXBackgroundTask] Background task %@ started with app state: %@ and estimated background time remaining: %@", backgroundTask.name, readableAppState, readableBackgroundTimeRemaining);
+        MXLogDebug(@"[MXBackgroundTask] Background task %@ %@ with app state: %@ and estimated background time remaining: %@", backgroundTask.name, (created ? @"started" : @"reused"), readableAppState, readableBackgroundTimeRemaining);
     }
 
     return backgroundTask;

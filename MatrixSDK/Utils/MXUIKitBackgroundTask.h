@@ -27,6 +27,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface MXUIKitBackgroundTask : NSObject<MXBackgroundTask>
 
 - (nullable instancetype)initAndStartWithName:(NSString*)name
+                                     reusable:(BOOL)reusable
                             expirationHandler:(nullable MXBackgroundTaskExpirationHandler)expirationHandler;
 
 @end

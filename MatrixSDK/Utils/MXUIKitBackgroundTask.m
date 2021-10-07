@@ -25,8 +25,9 @@
 @interface MXUIKitBackgroundTask ()
 
 @property (nonatomic) UIBackgroundTaskIdentifier identifier;
-@property (nonatomic, strong) NSString *name;
+@property (nonatomic, copy) NSString *name;
 @property (nonatomic, copy, nullable) MXBackgroundTaskExpirationHandler expirationHandler;
+@property (nonatomic, assign) BOOL reusable;
 @property (nonatomic, strong, nullable) NSDate *startDate;
     
 @end
@@ -36,6 +37,7 @@
 #pragma Setup
 
 - (instancetype)initWithName:(NSString*)name
+                    reusable:(BOOL)reusable
            expirationHandler:(MXBackgroundTaskExpirationHandler)expirationHandler
 {
     self = [super init];
@@ -43,15 +45,17 @@
     {
         self.identifier = UIBackgroundTaskInvalid;
         self.name = name;
+        self.reusable = reusable;
         self.expirationHandler = expirationHandler;
     }
     return self;
 }
 
 - (nullable instancetype)initAndStartWithName:(NSString*)name
-                            expirationHandler:(MXBackgroundTaskExpirationHandler)expirationHandler
+                                     reusable:(BOOL)reusable
+                            expirationHandler:(nullable MXBackgroundTaskExpirationHandler)expirationHandler
 {
-    self = [self initWithName:name expirationHandler:expirationHandler];
+    self = [self initWithName:name reusable:reusable expirationHandler:expirationHandler];
     if (self)
     {
         UIApplication *sharedApplication = [self sharedApplication];
