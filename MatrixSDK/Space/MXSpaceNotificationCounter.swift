@@ -80,7 +80,7 @@ public class MXSpaceNotificationCounter: NSObject {
     /// Compute the notification count for every spaces
     public func computeNotificationCount() {
         let startDate = Date()
-        MXLog.debug("[Spaces] computeNotificationCount started")
+        MXLog.debug("[MXSpaceNotificationCounter] computeNotificationCount: started")
         
         self.sdkProcessingQueue.async {
             let roomsIds: [String] = self.session.rooms.compactMap { room in
@@ -96,7 +96,7 @@ public class MXSpaceNotificationCounter: NSObject {
                 self.homeNotificationState = result.homeNotificationState
                 self.notificationStatePerSpaceId = result.notificationStatePerSpaceId
                 
-                MXLog.debug("[Spaces] computeNotificationCount ended after \(Date().timeIntervalSince(startDate))s")
+                MXLog.debug("[MXSpaceNotificationCounter] computeNotificationCount: ended after \(Date().timeIntervalSince(startDate))s")
                 
                 self.completionQueue.async {
                     NotificationCenter.default.post(name: MXSpaceNotificationCounter.didUpdateNotificationCount, object: self)

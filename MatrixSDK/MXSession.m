@@ -663,6 +663,9 @@ typedef void (^MXOnResumeDone)(void);
             MXLogDebug(@"[MXSession] Next sync token: %@", syncResponse.nextBatch);
             self.store.eventStreamToken = syncResponse.nextBatch;
             
+            // Propagate sync response to the associated space service
+            [self.spaceService handleSyncResponse:syncResponse];
+            
             if (completion)
             {
                 completion();

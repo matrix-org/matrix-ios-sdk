@@ -88,7 +88,6 @@ public class MXSpaceService: NSObject {
     public var graphUpdateEnabled = true
     
     private var sessionStateDidChangeObserver: Any?
-    private var sessionDidSyncObserver: Any?
     
     public var ancestorsPerRoomId: [String:Set<String>] {
         return graph.ancestorsPerRoomId
@@ -139,7 +138,7 @@ public class MXSpaceService: NSObject {
     /// Loads graph from the given store
     public func loadData() {
         self.processingQueue.async {
-            let store = MXSpaceStore(session: self.session)
+            let store = MXSpaceFileStore(userId: self.session.myUserId)
             if let loadedGraph = store.loadSpaceGraphData() {
                 self.graph = loadedGraph
 
@@ -169,58 +168,16 @@ public class MXSpaceService: NSObject {
         return self.graph.orphanedRoomIds.contains(roomId) || self.graph.orphanedDirectRoomIds.contains(roomId)
     }
     
-    /// Build the graph of rooms
-    public func buildGraph() {
-        guard !self.isGraphBuilding && self.graphUpdateEnabled else {
-            MXLog.debug("[Spaces] buildGraph aborted: graph is building or disabled")
-            self.needsUpdate = true
+    /// Handle a sync response and decide serverTimeout for the next sync request.
+    /// - Parameters:
+    ///   - syncResponse: The sync response object
+    public func handleSyncResponse(_ syncResponse: MXSyncResponse) {
+        guard self.needsUpdate || !(syncResponse.rooms?.join?.isEmpty ?? true) || !(syncResponse.rooms?.invite?.isEmpty ?? true) || !(syncResponse.rooms?.leave?.isEmpty ?? true) || !(syncResponse.toDevice?.events.isEmpty ?? true) else
+        {
             return
         }
         
-        self.isGraphBuilding = true
-        self.needsUpdate = false
-        
-        let startDate = Date()
-        MXLog.debug("[Spaces] buildGraph started")
-        
-        var directRoomIds = Set<String>()
-        let roomIds: [String] = self.session.rooms.compactMap { room in
-            if room.isDirect {
-                directRoomIds.insert(room.roomId)
-            }
-            return room.roomId
-        }
-        
-        let output = PrepareDataResult()
-        MXLog.debug("[Spaces] preparing data for \(roomIds.count) rooms")
-        self.prepareData(with: roomIds, index: 0, output: output) { result in
-            while !output.computingSpaces.isEmpty {
-                sleep(1)
-            }
-            
-            MXLog.debug("[Spaces] data prepared in \(Date().timeIntervalSince(startDate))")
-            
-            self.computSpaceGraph(with: result, roomIds: roomIds, directRoomIds: directRoomIds) { graph in
-                self.graph = graph
-                
-                MXLog.debug("[Spaces] buildGraph ended after \(Date().timeIntervalSince(startDate))s")
-                
-                self.isGraphBuilding = false
-                self.isInitialised = true
-                
-                NotificationCenter.default.post(name: MXSpaceService.didBuildSpaceGraph, object: self)
-
-                self.processingQueue.async {
-                    let store = MXSpaceStore(session: self.session)
-                    if !store.store(spaceGraphData: self.graph) {
-                        MXLog.error("[Spaces] buildGraph: failed to store space graph")
-                    }
-
-                    // TODO improve updateNotificationsCount and call the method to all spaces once subspaces will be supported
-                    self.notificationCounter.computeNotificationCount()
-                }
-            }
-        }
+        self.buildGraph()
     }
     
     /// Create a space.
@@ -357,134 +314,7 @@ public class MXSpaceService: NSObject {
         }
     }
     
-    // MARK: - Private
-    
-    private func registerNotificationObservers() {
-        self.sessionStateDidChangeObserver = NotificationCenter.default.addObserver(forName: NSNotification.Name.mxSessionStateDidChange, object: session, queue: nil) { [weak self] notification in
-            guard let session = self?.session, session.state == .storeDataReady else {
-                return
-            }
-            
-            self?.loadData()
-        }
-        
-        self.sessionDidSyncObserver = NotificationCenter.default.addObserver(forName: NSNotification.Name.mxSessionDidSync, object: session, queue: nil) { [weak self] notification in
-            guard let self = self, let syncResponse = notification.userInfo?[kMXSessionNotificationSyncResponseKey] as? MXSyncResponse else {
-                return
-            }
-            
-            guard self.needsUpdate || !(syncResponse.rooms?.join?.isEmpty ?? true) || !(syncResponse.rooms?.invite?.isEmpty ?? true) || !(syncResponse.rooms?.leave?.isEmpty ?? true) || !(syncResponse.toDevice?.events.isEmpty ?? true) else
-            {
-                return
-            }
-            
-            self.buildGraph()
-        }
-    }
-    
-    private func unregisterNotificationObservers() {
-        if let observer = self.sessionStateDidChangeObserver {
-            NotificationCenter.default.removeObserver(observer)
-        }
-        if let observer = self.sessionDidSyncObserver {
-            NotificationCenter.default.removeObserver(observer)
-        }
-    }
-    
-    private func buildRoomHierarchy(with space: MXSpace, visitedSpaceIds: [String], ancestorsPerRoomId: inout [String: Set<String>], descendantsPerRoomId: inout [String: Set<String>]) {
-        var visitedSpaceIds = visitedSpaceIds
-        visitedSpaceIds.append(space.spaceId)
-        space.childRoomIds.forEach { roomId in
-            var parentIds = ancestorsPerRoomId[roomId] ?? Set<String>()
-            visitedSpaceIds.forEach { spaceId in
-                parentIds.insert(spaceId)
-                
-                var descendantIds = descendantsPerRoomId[spaceId] ?? Set<String>()
-                descendantIds.insert(roomId)
-                descendantsPerRoomId[spaceId] = descendantIds
-            }
-            ancestorsPerRoomId[roomId] = parentIds
-        }
-        space.childSpaces.forEach { childSpace in
-            buildRoomHierarchy(with: childSpace, visitedSpaceIds: visitedSpaceIds, ancestorsPerRoomId: &ancestorsPerRoomId, descendantsPerRoomId: &descendantsPerRoomId)
-        }
-    }
-    
-    private func createRoomSummary(with spaceChildSummaryResponse: MXSpaceChildSummaryResponse) -> MXRoomSummary {
-        
-        let roomId = spaceChildSummaryResponse.roomId
-        let roomTypeString = spaceChildSummaryResponse.roomType
-                
-        let roomSummary: MXRoomSummary = MXRoomSummary(roomId: roomId, andMatrixSession: nil)
-        roomSummary.roomTypeString = roomTypeString
-        roomSummary.roomType = self.roomTypeMapper.roomType(from: roomTypeString)
-        
-        let joinedMembersCount = UInt(spaceChildSummaryResponse.numJoinedMembers)
-        
-        let membersCount = MXRoomMembersCount()
-        membersCount.joined = joinedMembersCount
-        membersCount.members = joinedMembersCount
-        
-        roomSummary.membersCount = membersCount
-        roomSummary.displayname = spaceChildSummaryResponse.name
-        roomSummary.topic = spaceChildSummaryResponse.topic
-        roomSummary.avatar = spaceChildSummaryResponse.avatarUrl
-        roomSummary.isEncrypted = false
-                                
-        return roomSummary
-    }
-    
-    private func spaceChildInfos(from spaceChildrenResponse: MXSpaceChildrenResponse, excludedSpaceId: String, childrenIdsPerChildRoomId: [String: [String]], parentIdsPerChildRoomId: [String:Set<String>], spaceChildEventsPerChildRoomId: [String:[String:Any]]) -> [MXSpaceChildInfo] {
-        guard let spaceChildSummaries = spaceChildrenResponse.rooms else {
-            return []
-        }
-        
-        let childInfos: [MXSpaceChildInfo] = spaceChildSummaries.compactMap { (spaceChildSummaryResponse) -> MXSpaceChildInfo? in
-            
-            let spaceId = spaceChildSummaryResponse.roomId
-            
-            guard spaceId != excludedSpaceId else {
-                return nil
-            }
-            
-            let childStateEvent = spaceChildrenResponse.events?.first(where: { (event) -> Bool in
-                return event.stateKey == spaceId && event.eventType == .spaceChild
-            })
-                        
-            return self.createSpaceChildInfo(with: spaceChildSummaryResponse, and: childStateEvent, parentIds: parentIdsPerChildRoomId[spaceId], childrenIds: childrenIdsPerChildRoomId[spaceId], childEvents: spaceChildEventsPerChildRoomId[spaceId])
-        }
-        
-        return childInfos
-    }
-    
-    private func createSpaceChildInfo(with spaceChildSummaryResponse: MXSpaceChildSummaryResponse, and spaceChildStateEvent: MXEvent?, parentIds: Set<String>?, childrenIds: [String]?, childEvents: [String:Any]?) -> MXSpaceChildInfo {
-        
-        var spaceChildContent: MXSpaceChildContent?
-        
-        if let stateEventContent = spaceChildStateEvent?.content {
-            spaceChildContent = MXSpaceChildContent(fromJSON: stateEventContent)
-        }
-        
-        let roomTypeString = spaceChildSummaryResponse.roomType
-        let roomType = self.roomTypeMapper.roomType(from: roomTypeString)
-        
-        return MXSpaceChildInfo(childRoomId: spaceChildSummaryResponse.roomId,
-                         isKnown: true,
-                         roomTypeString: roomTypeString,
-                         roomType: roomType,
-                         name: spaceChildSummaryResponse.name,
-                         topic: spaceChildSummaryResponse.topic,
-                         canonicalAlias: spaceChildSummaryResponse.canonicalAlias,
-                         avatarUrl: spaceChildSummaryResponse.avatarUrl,
-                         order: spaceChildContent?.order,
-                         activeMemberCount: spaceChildSummaryResponse.numJoinedMembers,
-                         autoJoin: childEvents?[kMXEventTypeStringAutoJoinKey] as? Bool ?? false,
-                         suggested: childEvents?[kMXEventTypeStringSuggestedKey] as? Bool ?? false,
-                         parentIds: parentIds ?? Set(),
-                         childrenIds: childrenIds ?? [],
-                         viaServers: spaceChildContent?.via ?? [],
-                         parentRoomId: spaceChildStateEvent?.roomId)
-    }
+    // MARK: - Space graph computation
     
     private class PrepareDataResult {
         var isPreparingData = true
@@ -498,6 +328,60 @@ public class MXSpaceService: NSObject {
         }
     }
     
+    /// Build the graph of rooms
+    private func buildGraph() {
+        guard !self.isGraphBuilding && self.graphUpdateEnabled else {
+            MXLog.debug("[MXSpaceService] buildGraph: aborted: graph is building or disabled")
+            self.needsUpdate = true
+            return
+        }
+        
+        self.isGraphBuilding = true
+        self.needsUpdate = false
+        
+        let startDate = Date()
+        MXLog.debug("[MXSpaceService] buildGraph: started")
+        
+        var directRoomIds = Set<String>()
+        let roomIds: [String] = self.session.rooms.compactMap { room in
+            if room.isDirect {
+                directRoomIds.insert(room.roomId)
+            }
+            return room.roomId
+        }
+        
+        let output = PrepareDataResult()
+        MXLog.debug("[MXSpaceService] buildGraph: preparing data for \(roomIds.count) rooms")
+        self.prepareData(with: roomIds, index: 0, output: output) { result in
+            while !output.computingSpaces.isEmpty {
+                sleep(1)
+            }
+            
+            MXLog.debug("[MXSpaceService] buildGraph: data prepared in \(Date().timeIntervalSince(startDate))")
+            
+            self.computSpaceGraph(with: result, roomIds: roomIds, directRoomIds: directRoomIds) { graph in
+                self.graph = graph
+                
+                MXLog.debug("[MXSpaceService] buildGraph: ended after \(Date().timeIntervalSince(startDate))s")
+                
+                self.isGraphBuilding = false
+                self.isInitialised = true
+                
+                NotificationCenter.default.post(name: MXSpaceService.didBuildSpaceGraph, object: self)
+
+                self.processingQueue.async {
+                    let store = MXSpaceFileStore(userId: self.session.myUserId)
+                    if !store.store(spaceGraphData: self.graph) {
+                        MXLog.error("[MXSpaceService] buildGraph: failed to store space graph")
+                    }
+
+                    // TODO improve updateNotificationsCount and call the method to all spaces once subspaces will be supported
+                    self.notificationCounter.computeNotificationCount()
+                }
+            }
+        }
+    }
+
     private func prepareData(with roomIds:[String], index: Int, output: PrepareDataResult, completion: @escaping (_ result: PrepareDataResult) -> Void) {
         self.processingQueue.async {
             guard index < roomIds.count else {
@@ -588,7 +472,7 @@ public class MXSpaceService: NSObject {
     
     private func computSpaceGraph(with result: PrepareDataResult, roomIds: [String], directRoomIds: Set<String>, completion: @escaping (_ graph: MXSpaceGraphData) -> Void) {
         let startDate = Date()
-        MXLog.debug("[Spaces] started computSpaceGraph")
+        MXLog.debug("[MXSpaceService] computSpaceGraph: started")
         
         self.processingQueue.async {
             var parentIdsPerRoomId: [String : Set<String>] = [:]
@@ -641,13 +525,129 @@ public class MXSpaceService: NSObject {
                 orphanedRoomIds: orphanedRoomIds,
                 orphanedDirectRoomIds: orphanedDirectRoomIds)
             
-            MXLog.debug("[Spaces] space graph computed in \(Date().timeIntervalSince(startDate))s")
+            MXLog.debug("[MXSpaceService] computSpaceGraph: space graph computed in \(Date().timeIntervalSince(startDate))s")
 
             self.completionQueue.async {
                 completion(graph)
             }
         }
     }
+
+    private func buildRoomHierarchy(with space: MXSpace, visitedSpaceIds: [String], ancestorsPerRoomId: inout [String: Set<String>], descendantsPerRoomId: inout [String: Set<String>]) {
+        var visitedSpaceIds = visitedSpaceIds
+        visitedSpaceIds.append(space.spaceId)
+        space.childRoomIds.forEach { roomId in
+            var parentIds = ancestorsPerRoomId[roomId] ?? Set<String>()
+            visitedSpaceIds.forEach { spaceId in
+                parentIds.insert(spaceId)
+                
+                var descendantIds = descendantsPerRoomId[spaceId] ?? Set<String>()
+                descendantIds.insert(roomId)
+                descendantsPerRoomId[spaceId] = descendantIds
+            }
+            ancestorsPerRoomId[roomId] = parentIds
+        }
+        space.childSpaces.forEach { childSpace in
+            buildRoomHierarchy(with: childSpace, visitedSpaceIds: visitedSpaceIds, ancestorsPerRoomId: &ancestorsPerRoomId, descendantsPerRoomId: &descendantsPerRoomId)
+        }
+    }
+    
+    // MARK: - Notification handling
+    
+    private func registerNotificationObservers() {
+        self.sessionStateDidChangeObserver = NotificationCenter.default.addObserver(forName: NSNotification.Name.mxSessionStateDidChange, object: session, queue: nil) { [weak self] notification in
+            guard let session = self?.session, session.state == .storeDataReady else {
+                return
+            }
+            
+            self?.loadData()
+        }
+    }
+    
+    private func unregisterNotificationObservers() {
+        if let observer = self.sessionStateDidChangeObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
+    }
+    
+    // MARK: - Private
+    
+    private func createRoomSummary(with spaceChildSummaryResponse: MXSpaceChildSummaryResponse) -> MXRoomSummary {
+        
+        let roomId = spaceChildSummaryResponse.roomId
+        let roomTypeString = spaceChildSummaryResponse.roomType
+                
+        let roomSummary: MXRoomSummary = MXRoomSummary(roomId: roomId, andMatrixSession: nil)
+        roomSummary.roomTypeString = roomTypeString
+        roomSummary.roomType = self.roomTypeMapper.roomType(from: roomTypeString)
+        
+        let joinedMembersCount = UInt(spaceChildSummaryResponse.numJoinedMembers)
+        
+        let membersCount = MXRoomMembersCount()
+        membersCount.joined = joinedMembersCount
+        membersCount.members = joinedMembersCount
+        
+        roomSummary.membersCount = membersCount
+        roomSummary.displayname = spaceChildSummaryResponse.name
+        roomSummary.topic = spaceChildSummaryResponse.topic
+        roomSummary.avatar = spaceChildSummaryResponse.avatarUrl
+        roomSummary.isEncrypted = false
+                                
+        return roomSummary
+    }
+    
+    private func spaceChildInfos(from spaceChildrenResponse: MXSpaceChildrenResponse, excludedSpaceId: String, childrenIdsPerChildRoomId: [String: [String]], parentIdsPerChildRoomId: [String:Set<String>], spaceChildEventsPerChildRoomId: [String:[String:Any]]) -> [MXSpaceChildInfo] {
+        guard let spaceChildSummaries = spaceChildrenResponse.rooms else {
+            return []
+        }
+        
+        let childInfos: [MXSpaceChildInfo] = spaceChildSummaries.compactMap { (spaceChildSummaryResponse) -> MXSpaceChildInfo? in
+            
+            let spaceId = spaceChildSummaryResponse.roomId
+            
+            guard spaceId != excludedSpaceId else {
+                return nil
+            }
+            
+            let childStateEvent = spaceChildrenResponse.events?.first(where: { (event) -> Bool in
+                return event.stateKey == spaceId && event.eventType == .spaceChild
+            })
+                        
+            return self.createSpaceChildInfo(with: spaceChildSummaryResponse, and: childStateEvent, parentIds: parentIdsPerChildRoomId[spaceId], childrenIds: childrenIdsPerChildRoomId[spaceId], childEvents: spaceChildEventsPerChildRoomId[spaceId])
+        }
+        
+        return childInfos
+    }
+    
+    private func createSpaceChildInfo(with spaceChildSummaryResponse: MXSpaceChildSummaryResponse, and spaceChildStateEvent: MXEvent?, parentIds: Set<String>?, childrenIds: [String]?, childEvents: [String:Any]?) -> MXSpaceChildInfo {
+        
+        var spaceChildContent: MXSpaceChildContent?
+        
+        if let stateEventContent = spaceChildStateEvent?.content {
+            spaceChildContent = MXSpaceChildContent(fromJSON: stateEventContent)
+        }
+        
+        let roomTypeString = spaceChildSummaryResponse.roomType
+        let roomType = self.roomTypeMapper.roomType(from: roomTypeString)
+        
+        return MXSpaceChildInfo(childRoomId: spaceChildSummaryResponse.roomId,
+                         isKnown: true,
+                         roomTypeString: roomTypeString,
+                         roomType: roomType,
+                         name: spaceChildSummaryResponse.name,
+                         topic: spaceChildSummaryResponse.topic,
+                         canonicalAlias: spaceChildSummaryResponse.canonicalAlias,
+                         avatarUrl: spaceChildSummaryResponse.avatarUrl,
+                         order: spaceChildContent?.order,
+                         activeMemberCount: spaceChildSummaryResponse.numJoinedMembers,
+                         autoJoin: childEvents?[kMXEventTypeStringAutoJoinKey] as? Bool ?? false,
+                         suggested: childEvents?[kMXEventTypeStringSuggestedKey] as? Bool ?? false,
+                         parentIds: parentIds ?? Set(),
+                         childrenIds: childrenIds ?? [],
+                         viaServers: spaceChildContent?.via ?? [],
+                         parentRoomId: spaceChildStateEvent?.roomId)
+    }
+    
 }
 
 // MARK: - Objective-C interface
