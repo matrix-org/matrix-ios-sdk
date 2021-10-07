@@ -75,8 +75,8 @@ static const NSTimeInterval BackgroundTimeRemainingThresholdToStartTasks = 5.0;
     
     if (backgroundTask)
     {
-        NSString *readableAppState = [MXUIKitApplicationStateService readableApplicationStateWithApplicationState:applicationStateService.applicationState];
-        NSString *readableBackgroundTimeRemaining = [MXUIKitApplicationStateService readableEstimatedBackgroundTimeRemainingWithBackgroundTimeRemaining:applicationStateService.backgroundTimeRemaining];
+        NSString *readableAppState = [MXUIKitApplicationStateService readableApplicationState:applicationStateService.applicationState];
+        NSString *readableBackgroundTimeRemaining = [MXUIKitApplicationStateService readableEstimatedBackgroundTimeRemaining:applicationStateService.backgroundTimeRemaining];
         
         MXLogDebug(@"[MXBackgroundTask] Background task %@ started with app state: %@ and estimated background time remaining: %@", backgroundTask.name, readableAppState, readableBackgroundTimeRemaining);
     }
