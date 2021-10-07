@@ -14,7 +14,7 @@
 // limitations under the License.
 //
 
-#import "RLMRealm.h"
+#import <Realm/RLMRealm.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
