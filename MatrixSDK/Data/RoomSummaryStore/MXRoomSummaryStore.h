@@ -20,12 +20,14 @@
 #ifndef MXRoomSummaryStore_h
 #define MXRoomSummaryStore_h
 
+NS_ASSUME_NONNULL_BEGIN
+
 @protocol MXRoomSummaryStore <NSObject>
 
 /**
  The identifiers of the rooms currently stored.
  */
-@property (nonatomic, readonly) NSArray<NSString *> * _Nonnull rooms;
+@property (nonatomic, readonly) NSArray<NSString *> *rooms;
 
 /**
  Store the summary for a room.
@@ -33,7 +35,7 @@
  @param roomId the id of the room.
  @param summary the room summary.
  */
-- (void)storeSummaryForRoom:(nonnull NSString*)roomId summary:(nonnull id<MXRoomSummaryProtocol>)summary;
+- (void)storeSummaryForRoom:(NSString*)roomId summary:(id<MXRoomSummaryProtocol>)summary;
 
 /**
  Get the summary a room.
@@ -41,8 +43,10 @@
  @param roomId the id of the room.
  @return the user private data for this room.
  */
-- (id<MXRoomSummaryProtocol> _Nullable)summaryOfRoom:(nonnull NSString*)roomId;
+- (id<MXRoomSummaryProtocol> _Nullable)summaryOfRoom:(NSString*)roomId;
 
 @end
+
+NS_ASSUME_NONNULL_END
 
 #endif /* MXRoomSummaryStore_h */
