@@ -206,9 +206,11 @@ internal class MXStoreRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
             guard let roomId = notification.userInfo?[kMXSessionNotificationRoomIdKey] as? String else {
                 return
             }
-            if let summary = self.store.summary(ofRoom: roomId) {
-                self.roomSummaries[roomId] = summary
+            guard let summary = self.store.summary(ofRoom: roomId) else {
+                MXLog.error("[MXStoreRoomListDataManager] roomAdded: room with id: \(roomId) not found in the store")
+                return
             }
+            self.roomSummaries[roomId] = summary
             self.recomputeData(using: data)
         }
     }
