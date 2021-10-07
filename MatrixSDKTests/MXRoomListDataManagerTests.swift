@@ -77,7 +77,7 @@ class MXRoomListDataManagerTests: XCTestCase {
         }
     }
     
-    /// Test: Expect room is removed from fetcher's data when leaved
+    /// Test: Expect room is removed from fetcher's data when left
     /// - Create a Bob session with a room
     /// - Create a basic fetcher
     /// - Leave room
