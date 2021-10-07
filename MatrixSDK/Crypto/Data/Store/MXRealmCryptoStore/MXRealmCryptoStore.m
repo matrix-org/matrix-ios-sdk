@@ -516,7 +516,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
     // Make sure write operations complete in background to avoid to keep the realm internal lock until the app resumes.
     // Thus, other components (Notification Extension Service, Share Extension, ...) will not be blocked by this lock.
     id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
-    id<MXBackgroundTask> backgroundTask = [handler startBackgroundTaskWithName:@"[MXRealmCryptoStore] performAccountOperationWithBlock" expirationHandler:nil];
+    id<MXBackgroundTask> backgroundTask = [handler startBackgroundTaskWithName:@"[MXRealmCryptoStore] performAccountOperationWithBlock"];
                                            
     MXRealmOlmAccount *account = self.accountInCurrentThread;
     if (account.olmAccountData)
@@ -880,7 +880,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
     // Make sure write operations complete in background to avoid to keep the realm internal lock until the app resumes.
     // Thus, other components (Notification Extension Service, Share Extension, ...) will not be blocked by this lock.
     id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
-    id<MXBackgroundTask> backgroundTask = [handler startBackgroundTaskWithName:@"[MXRealmCryptoStore] performSessionOperationWithDevice" expirationHandler:nil];
+    id<MXBackgroundTask> backgroundTask = [handler startBackgroundTaskWithName:@"[MXRealmCryptoStore] performSessionOperationWithDevice"];
     
     RLMRealm *realm = self.realm;
     
@@ -1006,7 +1006,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
     // Make sure write operations complete in background to avoid to keep the realm internal lock until the app resumes.
     // Thus, other components (Notification Extension Service, Share Extension, ...) will not be blocked by this lock.
     id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
-    id<MXBackgroundTask> backgroundTask = [handler startBackgroundTaskWithName:@"[MXRealmCryptoStore] performSessionOperationWithGroupSessionWithId" expirationHandler:nil];
+    id<MXBackgroundTask> backgroundTask = [handler startBackgroundTaskWithName:@"[MXRealmCryptoStore] performSessionOperationWithGroupSessionWithId"];
     
     RLMRealm *realm = self.realm;
     
