@@ -394,26 +394,26 @@ public class MXSpaceService: NSObject {
                 return
             }
             
-            var room: MXRoom?
-            var space: MXSpace?
+            var _room: MXRoom?
+            var _space: MXSpace?
             var isRoomDirect = false
-            var directUserId: String?
+            var _directUserId: String?
             self.sdkProcessingQueue.sync {
-                room = self.session.room(withRoomId: roomIds[index])
+                _room = self.session.room(withRoomId: roomIds[index])
                 
-                if let room = room {
-                    space = self.spacesPerId[room.roomId] ?? room.toSpace()
+                if let room = _room {
+                    _space = self.spacesPerId[room.roomId] ?? room.toSpace()
                     isRoomDirect = room.isDirect
-                    directUserId = room.directUserId
+                    _directUserId = room.directUserId
                 }
             }
             
-            guard let room = room else {
+            guard let room = _room else {
                 self.prepareData(with: roomIds, index: index+1, output: output, completion: completion)
                 return
             }
             
-            if let space = space {
+            if let space = _space {
                 output.computingSpaces.insert(space.spaceId)
                 space.readChildRoomsAndMembers {
                     output.computingSpaces.remove(space.spaceId)
@@ -426,7 +426,7 @@ public class MXSpaceService: NSObject {
 
                 self.prepareData(with: roomIds, index: index+1, output: output, completion: completion)
             } else if isRoomDirect {
-                if let directUserId = directUserId {
+                if let directUserId = _directUserId {
                     var rooms = output.directRoomIdsPerMemberId[directUserId] ?? []
                     rooms.append(room.roomId)
                     output.directRoomIdsPerMemberId[directUserId] = rooms

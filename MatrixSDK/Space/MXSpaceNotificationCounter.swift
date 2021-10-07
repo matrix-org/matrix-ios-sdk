@@ -145,17 +145,17 @@ public class MXSpaceNotificationCounter: NSObject {
         self.processingQueue.async {
             
             let roomId = roomIds[index]
-            var roomInfo: RoomInfo?
+            var _roomInfo: RoomInfo?
 
             self.sdkProcessingQueue.sync {
                 guard let room = self.session.room(withRoomId: roomId), let summary = room.summary, summary.roomType != .space else {
                     return
                 }
                 
-                roomInfo = RoomInfo(with: room)
+                _roomInfo = RoomInfo(with: room)
             }
             
-            guard let roomInfo = roomInfo else {
+            guard let roomInfo = _roomInfo else {
                 self.computeNotificationCount(for: spaceIds, with: roomIds, at: index + 1, output: output, ancestorsPerRoomId: ancestorsPerRoomId, completion: completion)
                 return
             }
