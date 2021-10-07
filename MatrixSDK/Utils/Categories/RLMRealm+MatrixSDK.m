@@ -29,7 +29,7 @@
 - (BOOL)transactionWithName:(NSString *)name block:(void (^)(void))block error:(NSError * _Nullable __autoreleasing *)outError
 {
     id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
-    id<MXBackgroundTask> backgroundTask = [handler startBackgroundTaskWithName:name expirationHandler:nil];
+    id<MXBackgroundTask> backgroundTask = [handler startBackgroundTaskWithName:name reusable:YES expirationHandler:nil];
     BOOL result = [self transactionWithBlock:block error:outError];
     [backgroundTask stop];
     return result;
