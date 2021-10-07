@@ -2307,11 +2307,6 @@ static NSUInteger preloadOptions;
             }
         }
     }
-    else
-    {
-        // The cache information is valid only once
-        //        [roomSummaries removeObjectForKey:roomId];
-    }
     return summary;
 }
 
