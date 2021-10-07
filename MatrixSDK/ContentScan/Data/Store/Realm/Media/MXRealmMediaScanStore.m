@@ -22,6 +22,7 @@
 #import "MXTools.h"
 #import "MXScanRealmProvider.h"
 #import "MXRealmMediaScanMapper.h"
+#import "RLMRealm+MatrixSDK.h"
 
 @interface MXRealmMediaScanStore()
 
@@ -126,7 +127,7 @@
 {
     RLMRealm *realm = self.realm;
     
-    [realm transactionWithBlock:^{
+    [realm transactionWithName:@"[MXRealmMediaScanStore] resetAllAntivirusScanStatusInProgressToUnknown" block:^{
         RLMResults *mediaScansInProgress = [MXRealmMediaScan objectsInRealm:realm where:@"%K = %d", MXRealmMediaScanAttributes.antivirusScanStatusRawValue, MXAntivirusScanStatusInProgress];
         for (MXRealmMediaScan *mediaScan in mediaScansInProgress)
         {
@@ -157,7 +158,7 @@
     
     __block NSArray *deletedMediaScans;
     
-    [realm transactionWithBlock:^{
+    [realm transactionWithName:@"[MXRealmMediaScanStore] deleteAll" block:^{
         RLMResults *realmMediaScansToDelete = [MXRealmMediaScan objectsInRealm:realm withPredicate:nil];
         deletedMediaScans = [self mediaScansFromResults:realmMediaScansToDelete];
         [realm deleteObjects:realmMediaScansToDelete];
@@ -195,7 +196,7 @@
     
     if (useTransaction)
     {
-        [realm transactionWithBlock:^{
+        [realm transactionWithName:@"[MXRealmMediaScanStore] findOrCreateRealmMediaScanWithURL" block:^{
             realmOperations();
         }];
     }
@@ -218,7 +219,7 @@
     
     RLMRealm *realm = self.realm;
     
-    [realm transactionWithBlock:^{
+    [realm transactionWithName:@"[MXRealmMediaScanStore] updateRealmMediaScanWithURL" block:^{
         
         MXRealmMediaScan *realmMediaScan = [self findRealmMediaScanWithURL:url inRealm:realm];
         
