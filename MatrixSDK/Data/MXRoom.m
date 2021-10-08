@@ -120,7 +120,11 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
             liveTimeline = [[MXEventTimeline alloc] initWithRoom:self andInitialEventId:nil];
         }
         
-        // Update the stored outgoing messages, by removing the sent messages and tagging as failed the others.
+        //  Update the stored outgoing messages, by removing the sent messages and tagging as failed the others.
+        //  Delay refreshing outgoing messages to the next run loop.
+        //  Added to avoid the race in MXRoom initialization.
+        //  When initializing the room instance it's not stored in the session yet until init finishes.
+        //  This causes a failure in summary.sentStatus calculation, so MXRoomSummary.room would be nil.
         dispatch_async(dispatch_get_main_queue(), ^{
             [self refreshOutgoingMessages];
         });
