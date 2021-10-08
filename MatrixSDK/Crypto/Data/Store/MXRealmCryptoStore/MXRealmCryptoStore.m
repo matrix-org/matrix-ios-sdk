@@ -30,7 +30,7 @@
 #import "MatrixSDKSwiftHeader.h"
 #import "MXRealmHelper.h"
 #import "MXBackgroundModeHandler.h"
-
+#import "RLMRealm+MatrixSDK.h"
 
 NSUInteger const kMXRealmCryptoStoreVersion = 17;
 
@@ -413,7 +413,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
             if (!error)
             {
                 MXLogDebug(@"[MXRealmCryptoStore] deleteStore: Delete at least its content");
-                [realm transactionWithBlock:^{
+                [realm transactionWithName:@"[MXRealmCryptoStore] deleteStore" block:^{
                     [realm deleteAllObjects];
                 }];
             }
@@ -476,7 +476,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
 {
     MXRealmOlmAccount *account = self.accountInCurrentThread;
     
-    [account.realm transactionWithBlock:^{
+    [account.realm transactionWithName:@"[MXRealmCryptoStore] storeDeviceId" block:^{
         account.deviceId = deviceId;
     }];
 }
@@ -494,7 +494,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
     
     MXRealmOlmAccount *account = self.accountInCurrentThread;
     
-    [account.realm transactionWithBlock:^{
+    [account.realm transactionWithName:@"[MXRealmCryptoStore] setAccount" block:^{
         account.olmAccountData = [NSKeyedArchiver archivedDataWithRootObject:olmAccount];
     }];
     
@@ -516,7 +516,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
     // Make sure write operations complete in background to avoid to keep the realm internal lock until the app resumes.
     // Thus, other components (Notification Extension Service, Share Extension, ...) will not be blocked by this lock.
     id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
-    id<MXBackgroundTask> backgroundTask = [handler startBackgroundTaskWithName:@"[MXRealmCryptoStore] performAccountOperationWithBlock" expirationHandler:nil];
+    id<MXBackgroundTask> backgroundTask = [handler startBackgroundTaskWithName:@"[MXRealmCryptoStore] performAccountOperationWithBlock"];
                                            
     MXRealmOlmAccount *account = self.accountInCurrentThread;
     if (account.olmAccountData)
@@ -551,7 +551,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
 - (void)storeDeviceSyncToken:(NSString*)deviceSyncToken
 {
     MXRealmOlmAccount *account = self.accountInCurrentThread;
-    [account.realm transactionWithBlock:^{
+    [account.realm transactionWithName:@"[MXRealmCryptoStore] storeDeviceSyncToken" block:^{
         account.deviceSyncToken = deviceSyncToken;
     }];
 }
@@ -568,7 +568,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
     
     RLMRealm *realm = self.realm;
     
-    [realm transactionWithBlock:^{
+    [realm transactionWithName:@"[MXRealmCryptoStore] storeDeviceForUser" block:^{
         
         MXRealmUser *realmUser = [MXRealmUser objectsInRealm:realm where:@"userId = %@", userID].firstObject;
         if (!realmUser)
@@ -630,7 +630,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
     
     RLMRealm *realm = self.realm;
     
-    [realm transactionWithBlock:^{
+    [realm transactionWithName:@"[MXRealmCryptoStore] storeDevicesForUser" block:^{
         
         MXRealmUser *realmUser = [MXRealmUser objectsInRealm:realm where:@"userId = %@", userID].firstObject;
         if (!realmUser)
@@ -688,7 +688,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
 - (void)storeDeviceTrackingStatus:(NSDictionary<NSString*, NSNumber*>*)statusMap
 {
     MXRealmOlmAccount *account = self.accountInCurrentThread;
-    [account.realm transactionWithBlock:^{
+    [account.realm transactionWithName:@"[MXRealmCryptoStore] storeDeviceTrackingStatus" block:^{
         
         account.deviceTrackingStatusData = [NSKeyedArchiver archivedDataWithRootObject:statusMap];
     }];
@@ -701,7 +701,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
 {
     RLMRealm *realm = self.realm;
     
-    [realm transactionWithBlock:^{
+    [realm transactionWithName:@"[MXRealmCryptoStore] storeCrossSigningKeys" block:^{
         
         MXRealmUser *realmUser = [MXRealmUser objectsInRealm:realm where:@"userId = %@", crossSigningInfo.userId].firstObject;
         if (!realmUser)
@@ -760,7 +760,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
     NSDate *startDate = [NSDate date];
     
     RLMRealm *realm = self.realm;
-    [realm transactionWithBlock:^{
+    [realm transactionWithName:@"[MXRealmCryptoStore] storeAlgorithmForRoom" block:^{
         
         MXRealmRoomAlgorithm *roomAlgorithm = [self realmRoomAlgorithmForRoom:roomId inRealm:realm];
         if (roomAlgorithm)
@@ -793,7 +793,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
     NSDate *startDate = [NSDate date];
     
     RLMRealm *realm = self.realm;
-    [realm transactionWithBlock:^{
+    [realm transactionWithName:@"[MXRealmCryptoStore] storeBlacklistUnverifiedDevicesInRoom" block:^{
         
         MXRealmRoomAlgorithm *roomAlgorithm = [self realmRoomAlgorithmForRoom:roomId inRealm:realm];
         if (roomAlgorithm)
@@ -832,7 +832,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
     NSDate *startDate = [NSDate date];
     
     RLMRealm *realm = self.realm;
-    [realm transactionWithBlock:^{
+    [realm transactionWithName:@"[MXRealmCryptoStore] storeSession" block:^{
         
         MXRealmOlmSession *realmOlmSession = [MXRealmOlmSession objectsInRealm:realm where:@"sessionId = %@ AND deviceKey = %@", session.session.sessionIdentifier, deviceKey].firstObject;
         if (realmOlmSession)
@@ -880,7 +880,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
     // Make sure write operations complete in background to avoid to keep the realm internal lock until the app resumes.
     // Thus, other components (Notification Extension Service, Share Extension, ...) will not be blocked by this lock.
     id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
-    id<MXBackgroundTask> backgroundTask = [handler startBackgroundTaskWithName:@"[MXRealmCryptoStore] performSessionOperationWithDevice" expirationHandler:nil];
+    id<MXBackgroundTask> backgroundTask = [handler startBackgroundTaskWithName:@"[MXRealmCryptoStore] performSessionOperationWithDevice"];
     
     RLMRealm *realm = self.realm;
     
@@ -945,7 +945,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
     NSDate *startDate = [NSDate date];
     
     RLMRealm *realm = self.realm;
-    [realm transactionWithBlock:^{
+    [realm transactionWithName:@"[MXRealmCryptoStore] storeInboundGroupSessions" block:^{
         
         for (MXOlmInboundGroupSession *session in sessions)
         {
@@ -1006,7 +1006,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
     // Make sure write operations complete in background to avoid to keep the realm internal lock until the app resumes.
     // Thus, other components (Notification Extension Service, Share Extension, ...) will not be blocked by this lock.
     id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
-    id<MXBackgroundTask> backgroundTask = [handler startBackgroundTaskWithName:@"[MXRealmCryptoStore] performSessionOperationWithGroupSessionWithId" expirationHandler:nil];
+    id<MXBackgroundTask> backgroundTask = [handler startBackgroundTaskWithName:@"[MXRealmCryptoStore] performSessionOperationWithGroupSessionWithId"];
     
     RLMRealm *realm = self.realm;
     
@@ -1057,7 +1057,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
 - (void)removeInboundGroupSessionWithId:(NSString*)sessionId andSenderKey:(NSString*)senderKey
 {
     RLMRealm *realm = self.realm;
-    [realm transactionWithBlock:^{
+    [realm transactionWithName:@"[MXRealmCryptoStore] removeInboundGroupSessionWithId" block:^{
         
         RLMResults<MXRealmOlmInboundGroupSession *> *realmSessions = [MXRealmOlmInboundGroupSession objectsInRealm:realm where:@"sessionId = %@ AND senderKey = %@", sessionId, senderKey];
         
@@ -1076,7 +1076,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
     __block MXOlmOutboundGroupSession *storedSession = nil;
     
     RLMRealm *realm = self.realm;
-    [realm transactionWithBlock:^{
+    [realm transactionWithName:@"[MXRealmCryptoStore] storeOutboundGroupSession" block:^{
         
         MXRealmOlmOutboundGroupSession *realmSession = [MXRealmOlmOutboundGroupSession objectsInRealm:realm where:@"roomId = %@", roomId].firstObject;
         if (realmSession && [realmSession.sessionId isEqual:session.sessionIdentifier])
@@ -1157,7 +1157,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
 - (void)removeOutboundGroupSessionWithRoomId:(NSString*)roomId
 {
     RLMRealm *realm = self.realm;
-    [realm transactionWithBlock:^{
+    [realm transactionWithName:@"[MXRealmCryptoStore] removeOutboundGroupSessionWithRoomId" block:^{
         RLMResults<MXRealmOlmOutboundGroupSession *> *realmSessions = [MXRealmOlmOutboundGroupSession objectsInRealm:realm where:@"roomId = %@", roomId];
         
         [realm deleteObjects:realmSessions];
@@ -1171,7 +1171,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
     
     RLMRealm *realm = self.realm;
     
-    [realm transactionWithBlock:^{
+    [realm transactionWithName:@"[MXRealmCryptoStore] storeSharedDevices" block:^{
         
         for (NSString *userId in [devices userIds])
         {
@@ -1255,7 +1255,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
 - (void)setBackupVersion:(NSString *)backupVersion
 {
     MXRealmOlmAccount *account = self.accountInCurrentThread;
-    [account.realm transactionWithBlock:^{
+    [account.realm transactionWithName:@"[MXRealmCryptoStore] setBackupVersion" block:^{
         account.backupVersion = backupVersion;
     }];
 }
@@ -1269,7 +1269,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
 - (void)resetBackupMarkers
 {
     RLMRealm *realm = self.realm;
-    [realm transactionWithBlock:^{
+    [realm transactionWithName:@"[MXRealmCryptoStore] resetBackupMarkers" block:^{
         
         RLMResults<MXRealmOlmInboundGroupSession *> *realmSessions = [MXRealmOlmInboundGroupSession allObjectsInRealm:realm];
         
@@ -1285,7 +1285,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
 - (void)markBackupDoneForInboundGroupSessions:(NSArray<MXOlmInboundGroupSession *>*)sessions
 {
     RLMRealm *realm = self.realm;
-    [realm transactionWithBlock:^{
+    [realm transactionWithName:@"[MXRealmCryptoStore] markBackupDoneForInboundGroupSessions" block:^{
         
         for (MXOlmInboundGroupSession *session in sessions)
         {
@@ -1387,7 +1387,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
 - (void)storeOutgoingRoomKeyRequest:(MXOutgoingRoomKeyRequest*)request
 {
     RLMRealm *realm = self.realm;
-    [realm transactionWithBlock:^{
+    [realm transactionWithName:@"[MXRealmCryptoStore] storeOutgoingRoomKeyRequest" block:^{
         
         NSString *requestBodyString = [MXTools serialiseJSONObject:request.requestBody];
         NSString *requestBodyHash = [MXCryptoTools canonicalJSONStringForJSON:request.requestBody];
@@ -1410,7 +1410,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
 - (void)updateOutgoingRoomKeyRequest:(MXOutgoingRoomKeyRequest*)request
 {
     RLMRealm *realm = self.realm;
-    [realm transactionWithBlock:^{
+    [realm transactionWithName:@"[MXRealmCryptoStore] updateOutgoingRoomKeyRequest" block:^{
         
         MXRealmOutgoingRoomKeyRequest *realmOutgoingRoomKeyRequest = [MXRealmOutgoingRoomKeyRequest objectsInRealm:realm where:@"requestId = %@", request.requestId].firstObject;
         
@@ -1427,7 +1427,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
 - (void)deleteOutgoingRoomKeyRequestWithRequestId:(NSString*)requestId
 {
     RLMRealm *realm = self.realm;
-    [realm transactionWithBlock:^{
+    [realm transactionWithName:@"[MXRealmCryptoStore] deleteOutgoingRoomKeyRequestWithRequestId" block:^{
         
         RLMResults<MXRealmOutgoingRoomKeyRequest *> *realmOutgoingRoomKeyRequests = [MXRealmOutgoingRoomKeyRequest objectsInRealm:realm where:@"requestId = %@", requestId];
         
@@ -1441,7 +1441,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
 - (void)storeIncomingRoomKeyRequest:(MXIncomingRoomKeyRequest*)request
 {
     RLMRealm *realm = self.realm;
-    [realm transactionWithBlock:^{
+    [realm transactionWithName:@"[MXRealmCryptoStore] storeIncomingRoomKeyRequest" block:^{
         
         MXRealmIncomingRoomKeyRequest *realmIncomingRoomKeyRequest =
         [[MXRealmIncomingRoomKeyRequest alloc] initWithValue:@{
@@ -1457,7 +1457,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
 - (void)deleteIncomingRoomKeyRequest:(NSString*)requestId fromUser:(NSString*)userId andDevice:(NSString*)deviceId
 {
     RLMRealm *realm = self.realm;
-    [realm transactionWithBlock:^{
+    [realm transactionWithName:@"[MXRealmCryptoStore] deleteIncomingRoomKeyRequest" block:^{
         
         RLMResults<MXRealmIncomingRoomKeyRequest *> *realmIncomingRoomKeyRequests = [MXRealmIncomingRoomKeyRequest objectsInRealm:realm where:@"requestId = %@ AND userId = %@ AND deviceId = %@", requestId, userId, deviceId];
         
@@ -1504,7 +1504,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
 - (void)storeSecret:(NSString*)secret withSecretId:(NSString*)secretId
 {
     RLMRealm *realm = self.realm;
-    [realm transactionWithBlock:^{
+    [realm transactionWithName:@"[MXRealmCryptoStore] storeSecret" block:^{
         
         MXRealmSecret *realmSecret;
         
@@ -1582,7 +1582,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
 - (void)deleteSecretWithSecretId:(NSString*)secretId
 {
     RLMRealm *realm = self.realm;
-    [realm transactionWithBlock:^{
+    [realm transactionWithName:@"[MXRealmCryptoStore] deleteSecretWithSecretId" block:^{
         [realm deleteObjects:[MXRealmSecret objectsInRealm:realm where:@"secretId = %@", secretId]];
     }];
 }
@@ -1599,7 +1599,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
 - (void)setGlobalBlacklistUnverifiedDevices:(BOOL)globalBlacklistUnverifiedDevices
 {
     MXRealmOlmAccount *account = self.accountInCurrentThread;
-    [account.realm transactionWithBlock:^{
+    [account.realm transactionWithName:@"[MXRealmCryptoStore] setGlobalBlacklistUnverifiedDevices" block:^{
         account.globalBlacklistUnverifiedDevices = globalBlacklistUnverifiedDevices;
     }];
 }
@@ -1616,7 +1616,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
 -(void)setCryptoVersion:(MXCryptoVersion)cryptoVersion
 {
     MXRealmOlmAccount *account = self.accountInCurrentThread;
-    [account.realm transactionWithBlock:^{
+    [account.realm transactionWithName:@"[MXRealmCryptoStore] setCryptoVersion" block:^{
         account.cryptoVersion = cryptoVersion;
     }];
 }
@@ -2194,7 +2194,7 @@ static BOOL shouldCompactOnLaunch = YES;
  */
 + (void)cleanDuplicatedDevicesInRealm:(RLMRealm*)realm
 {
-    [realm transactionWithBlock:^{
+    [realm transactionWithName:@"[MXRealmCryptoStore] cleanDuplicatedDevicesInRealm" block:^{
         
         // Due to a bug (https://github.com/vector-im/riot-ios/issues/2132), there were
         // duplicated devices living in the database without no more relationship with

@@ -132,11 +132,12 @@ FOUNDATION_EXPORT NSString *MatrixSDKVersion;
 
 #import "MXSpaceChildContent.h"
 #import "MXRoomLastMessage.h"
+#import "MXUIKitBackgroundTask.h"
+#import "MXUIKitBackgroundModeHandler.h"
 #import "MXRoomAccountDataUpdater.h"
 #import "MXPushGatewayRestClient.h"
 #import "MXEncryptedAttachments.h"
 #import "MXLoginSSOIdentityProviderBrand.h"
-#import "MXUIKitBackgroundTask.h"
 
 //  Bridging to Swift
 #import "MXCryptoStore.h"

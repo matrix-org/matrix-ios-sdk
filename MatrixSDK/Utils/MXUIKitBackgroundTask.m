@@ -17,17 +17,22 @@
 #import "MXUIKitBackgroundTask.h"
 
 #if TARGET_OS_IPHONE
-
 #import <UIKit/UIKit.h>
+#else
+static const UIBackgroundTaskIdentifier UIBackgroundTaskInvalid = -1;
+#endif
 #import "MXTools.h"
 
 
 @interface MXUIKitBackgroundTask ()
 
 @property (nonatomic) UIBackgroundTaskIdentifier identifier;
-@property (nonatomic, strong) NSString *name;
+@property (nonatomic, copy) NSString *name;
 @property (nonatomic, copy, nullable) MXBackgroundTaskExpirationHandler expirationHandler;
+@property (nonatomic, assign, getter=isReusable) BOOL reusable;
 @property (nonatomic, strong, nullable) NSDate *startDate;
+@property (nonatomic, assign) NSInteger useCounter;
+@property (nonatomic, copy) MXApplicationGetterBlock applicationBlock;
     
 @end
 
@@ -36,33 +41,43 @@
 #pragma Setup
 
 - (instancetype)initWithName:(NSString*)name
+                    reusable:(BOOL)reusable
            expirationHandler:(MXBackgroundTaskExpirationHandler)expirationHandler
+            applicationBlock:(MXApplicationGetterBlock)applicationBlock
 {
     self = [super init];
     if (self)
     {
         self.identifier = UIBackgroundTaskInvalid;
         self.name = name;
+        self.reusable = reusable;
         self.expirationHandler = expirationHandler;
+        @synchronized (self)
+        {
+            self.useCounter = 0;
+        }
+        self.applicationBlock = applicationBlock;
     }
     return self;
 }
 
 - (nullable instancetype)initAndStartWithName:(NSString*)name
-                            expirationHandler:(MXBackgroundTaskExpirationHandler)expirationHandler
+                                     reusable:(BOOL)reusable
+                            expirationHandler:(nullable MXBackgroundTaskExpirationHandler)expirationHandler
+                             applicationBlock:(MXApplicationGetterBlock)applicationBlock
 {
-    self = [self initWithName:name expirationHandler:expirationHandler];
+    self = [self initWithName:name reusable:reusable expirationHandler:expirationHandler applicationBlock:applicationBlock];
     if (self)
     {
-        UIApplication *sharedApplication = [self sharedApplication];
-        if (sharedApplication)
+        id<MXApplicationProtocol> application = self.applicationBlock();
+        if (application)
         {
             //  we assume this task can start now
             self.startDate = [NSDate date];
             
             MXWeakify(self);
             
-            self.identifier = [sharedApplication beginBackgroundTaskWithName:self.name expirationHandler:^{
+            self.identifier = [application beginBackgroundTaskWithName:self.name expirationHandler:^{
                 
                 MXStrongifyAndReturnIfNil(self);
                 
@@ -75,7 +90,7 @@
                 }
                 
                 //  be sure to call endBackgroundTask
-                [self stop];
+                [self endTask];
             }];
             
             //  our assumption is wrong, OS declined it
@@ -90,12 +105,17 @@
                 }
                 return nil;
             }
+            else if (self.isReusable)
+            {
+                //  creation itself is a use
+                [self reuse];
+            }
             
             MXLogDebug(@"[MXBackgroundTask] Start background task #%lu - %@", (unsigned long)self.identifier, self.name);
         }
         else
         {
-            MXLogDebug(@"[MXBackgroundTask] Background task creation failed. UIApplication.shared is nil");
+            MXLogDebug(@"[MXBackgroundTask] Background task creation failed. Application is nil");
             
             //  we're probably in an app extension here.
             //  Do not call expiration handler as it'll cause some network requests to be cancelled,
@@ -112,12 +132,7 @@
 
 - (void)dealloc
 {
-    [self stop];
-}
-
-- (BOOL)isRunning
-{
-    return self.identifier != UIBackgroundTaskInvalid;
+    [self endTask];
 }
 
 - (NSString *)description
@@ -126,23 +141,66 @@
 }
 
 #pragma Public
+
+- (BOOL)isRunning
+{
+    return self.identifier != UIBackgroundTaskInvalid;
+}
+
+- (void)reuse
+{
+    //  only valid for reusable tasks
+    NSParameterAssert(self.isReusable);
+    
+    //  increment reuse counter safely
+    @synchronized (self)
+    {
+        self.useCounter++;
+    }
+}
      
 - (void)stop
 {
-    if (self.identifier != UIBackgroundTaskInvalid)
+    if (self.isReusable)
     {
-        UIApplication *sharedApplication = [self sharedApplication];
-        if (sharedApplication)
+        //  decrement reuse counter safely and decide to really end the task
+        BOOL endTask = NO;
+        @synchronized (self)
         {
-            MXLogDebug(@"[MXBackgroundTask] Stop background task #%lu - %@ after %.3fms", (unsigned long)self.identifier, self.name, self.elapsedTime);
-            
-            [sharedApplication endBackgroundTask:self.identifier];
-            self.identifier = UIBackgroundTaskInvalid;
+            self.useCounter--;
+            if (self.useCounter <= 0)
+            {
+                endTask = YES;
+            }
         }
+        
+        if (endTask)
+        {
+            [self endTask];
+        }
+    }
+    else
+    {
+        [self endTask];
     }
 }
 
 #pragma Private
+
+- (void)endTask
+{
+    if (self.identifier != UIBackgroundTaskInvalid)
+    {
+        id<MXApplicationProtocol> application = self.applicationBlock();
+        if (application)
+        {
+            MXLogDebug(@"[MXBackgroundTask] End background task #%lu - %@ after %.3fms", (unsigned long)self.identifier, self.name, self.elapsedTime);
+            
+            [application endBackgroundTask:self.identifier];
+            self.identifier = UIBackgroundTaskInvalid;
+        }
+    }
+}
 
 - (NSTimeInterval)elapsedTime
 {
@@ -156,11 +214,4 @@
     return elapasedTime;
 }
 
-- (UIApplication*)sharedApplication
-{
-    return [UIApplication performSelector:@selector(sharedApplication)];
-}
-
 @end
-
-#endif
