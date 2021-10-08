@@ -21,6 +21,7 @@
 #import "MXRestClient.h"
 #import "MXError.h"
 #import "MXNoStore.h"
+#import "MatrixSDKTestsSwiftHeader.h"
 
 // Do not bother with retain cycles warnings in tests
 #pragma clang diagnostic push
@@ -57,12 +58,19 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
 
 @implementation MatrixSDKTestsData
 
++ (void)load
+{
+    // Be sure there is no open MXSession instances when ending a test
+    [TestObserver.shared trackMXSessions];
+}
+
 - (id)init
 {
     if (self = [super init])
     {
         _startDate = [NSDate date];
         _retainedObjects = [NSMutableArray array];
+        _autoCloseMXSessions = YES;
     }
     
     return self;
@@ -70,7 +78,7 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
 
 - (void)dealloc
 {
-    _retainedObjects = [NSMutableArray array];
+    [self releaseRetainedObjects];
 }
 
 - (void)getBobCredentials:(XCTestCase*)testCase
@@ -1016,6 +1024,27 @@ onUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecogn
 - (void)retain:(NSObject*)object
 {
     [self.retainedObjects addObject:object];
+}
+
+- (void)release:(NSObject*)object
+{
+    [self.retainedObjects removeObject:object];
+}
+
+- (void)releaseRetainedObjects
+{
+    if (_autoCloseMXSessions)
+    {
+        for (NSObject *object in _retainedObjects)
+        {
+            if ([object isKindOfClass:MXSession.class])
+            {
+                MXSession *mxSession = (MXSession*)object;
+                [mxSession close];
+            }
+        }
+    }
+    _retainedObjects = nil;
 }
 
 @end

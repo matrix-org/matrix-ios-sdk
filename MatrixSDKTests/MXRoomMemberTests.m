@@ -23,8 +23,6 @@
 @interface MXRoomMemberTests : XCTestCase
 {
     MatrixSDKTestsData *matrixSDKTestsData;
-    
-    MXSession *mxSession;
 }
 @end
 
@@ -39,12 +37,6 @@
 
 - (void)tearDown
 {
-    if (mxSession)
-    {
-        [mxSession close];
-        mxSession = nil;
-    }
-    
     matrixSDKTestsData = nil;
     
     [super tearDown];

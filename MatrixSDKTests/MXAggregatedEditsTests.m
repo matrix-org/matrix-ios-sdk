@@ -293,6 +293,7 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
 
         // - Do an initial sync
         mxSession = [[MXSession alloc] initWithMatrixRestClient:restClient];
+        [matrixSDKTestsData retain:mxSession];
         [mxSession setStore:[[MXMemoryStore alloc] init] success:^{
 
             [mxSession start:^{
@@ -340,6 +341,7 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
         
         // - Do an initial sync
         mxSession = [[MXSession alloc] initWithMatrixRestClient:restClient];
+        [matrixSDKTestsData retain:mxSession];
         [mxSession setStore:[[MXMemoryStore alloc] init] success:^{
             
             [mxSession start:^{

@@ -16,19 +16,21 @@
 
 @import Foundation;
 
+NS_ASSUME_NONNULL_BEGIN
+
 /**
- The `MXSendReplyEventStringsLocalizable` protocol defines an interface that must be implemented
+ The `MXSendReplyEventStringLocalizerProtocol` protocol defines an interface that must be implemented
  to provide string localizations when send reply event to a message in a room.
  */
-@protocol MXSendReplyEventStringsLocalizable <NSObject>
+@protocol MXSendReplyEventStringLocalizerProtocol <NSObject>
 
-@required
-
-@property (copy, readonly, nonnull) NSString *senderSentAnImage;
-@property (copy, readonly, nonnull) NSString *senderSentAVideo;
-@property (copy, readonly, nonnull) NSString *senderSentAnAudioFile;
-@property (copy, readonly, nonnull) NSString *senderSentAVoiceMessage;
-@property (copy, readonly, nonnull) NSString *senderSentAFile;
-@property (copy, readonly, nonnull) NSString *messageToReplyToPrefix;
+- (NSString *)senderSentAnImage;
+- (NSString *)senderSentAVideo;
+- (NSString *)senderSentAnAudioFile;
+- (NSString *)senderSentAVoiceMessage;
+- (NSString *)senderSentAFile;
+- (NSString *)messageToReplyToPrefix;
 
 @end
+
+NS_ASSUME_NONNULL_END

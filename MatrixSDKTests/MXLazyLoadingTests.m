@@ -884,6 +884,7 @@ Common initial conditions:
 
         MXFileStore *store = [[MXFileStore alloc] init];
         __block MXSession *aliceSession2 = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+        [matrixSDKTestsData retain:aliceSession2];
         [aliceSession2 setStore:store success:^{
             [aliceSession2 start:^{
 
@@ -948,6 +949,7 @@ Common initial conditions:
 
                             MXFileStore *store = [[MXFileStore alloc] init];
                             MXSession *aliceSession3 = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+                            [matrixSDKTestsData retain:aliceSession3];
                             [aliceSession3 setStore:store success:^{
                                 [aliceSession3 start:^{
 

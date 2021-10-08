@@ -23,6 +23,7 @@
 #import "MXRealmEventScanMapper.h"
 #import "MXRealmMediaScanStore.h"
 #import "MXTools.h"
+#import "RLMRealm+MatrixSDK.h"
 
 @interface MXRealmEventScanStore()
 
@@ -87,7 +88,7 @@
     
     __block MXRealmEventScan *realmEventScan;
     
-    [realm transactionWithBlock:^{
+    [realm transactionWithName:@"[MXRealmEventScanStore] createOrUpdateWithId" block:^{
         
         MXRealmEventScan *foundRealmEventScan = [self findRealmEventScanWithId:eventId inRealm:realm];
         
@@ -131,7 +132,7 @@
     
     RLMRealm *realm = self.realm;
     
-    [realm transactionWithBlock:^{
+    [realm transactionWithName:@"[MXRealmEventScanStore] updateAntivirusScanStatus" block:^{
         MXRealmEventScan *realmEventScan = [self findRealmEventScanWithId:eventId inRealm:realm];
         
         if (realmEventScan)
@@ -155,7 +156,7 @@
     
     RLMRealm *realm = self.realm;
     
-    [realm transactionWithBlock:^{
+    [realm transactionWithName:@"[MXRealmEventScanStore] updateAntivirusScanStatusFromMediaScansAntivirusScanStatusesAndAntivirusScanDate" block:^{
         MXRealmEventScan *realmEventScan = [self findRealmEventScanWithId:eventId inRealm:realm];
         
         if (realmEventScan)
@@ -180,7 +181,7 @@
 {
     RLMRealm *realm = self.realm;
     
-    [realm transactionWithBlock:^{
+    [realm transactionWithName:@"[MXRealmEventScanStore] resetAllAntivirusScanStatusInProgressToUnknown" block:^{
         RLMResults *eventScansInProgress = [MXRealmEventScan objectsInRealm:realm where:@"%K = %d", MXRealmEventScanAttributes.antivirusScanStatusRawValue, MXAntivirusScanStatusInProgress];
         for (MXRealmEventScan *eventScan in eventScansInProgress)
         {
@@ -195,7 +196,7 @@
     
     __block NSArray *deletedEventScans;
     
-    [realm transactionWithBlock:^{
+    [realm transactionWithName:@"[MXRealmEventScanStore] deleteAll" block:^{
         RLMResults *realmEventScansToDelete = [MXRealmEventScan objectsInRealm:realm withPredicate:nil];
         deletedEventScans = [self eventScansFromResults:realmEventScansToDelete];
         [realm deleteObjects:realmEventScansToDelete];

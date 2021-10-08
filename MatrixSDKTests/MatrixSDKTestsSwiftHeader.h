@@ -1,5 +1,5 @@
 // 
-// Copyright 2020 The Matrix.org Foundation C.I.C
+// Copyright 2021 The Matrix.org Foundation C.I.C
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,14 +14,15 @@
 // limitations under the License.
 //
 
-#ifndef MatrixSDKTests_Bridging_Header_h
-#define MatrixSDKTests_Bridging_Header_h
+#ifndef MatrixSDKTestsSwiftHeader_h
+#define MatrixSDKTestsSwiftHeader_h
 
-#import "MatrixSDKTestsData.h"
-#import "MatrixSDKTestsE2EData.h"
-#import "MXDeviceListOperationsPool.h"
-#import "MXBackgroundTask.h"
-#import "MXUIKitBackgroundModeHandler.h"
-#import "MXApplicationProtocol.h"
 
-#endif /* MatrixSDKTests_Bridging_Header_h */
+#if __has_include(<MatrixSDKTests/MatrixSDKTests-Swift.h>)
+#import <MatrixSDKTests/MatrixSDKTests-Swift.h>
+#elif __has_include("MatrixSDKTests-Swift.h")
+#import "MatrixSDKTests-Swift.h"
+#else
+#endif
+
+#endif /* MatrixSDKTestsSwiftHeader_h */

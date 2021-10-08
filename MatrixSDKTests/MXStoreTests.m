@@ -83,6 +83,8 @@
         }
 
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [matrixSDKTestsData retain:mxSession];
+        
         [mxSession setStore:store success:^{
 
             [mxSession start:^{
@@ -123,6 +125,7 @@
             }
 
             mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+            [matrixSDKTestsData retain:mxSession];
 
             [mxSession setStore:store success:^{
                 [mxSession start:^{
@@ -163,6 +166,7 @@
         }
 
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [matrixSDKTestsData retain:mxSession];
 
         [mxSession setStore:store success:^{
 
@@ -728,7 +732,7 @@
     
 }
 
-- (void)checkLastMessageIgnoreProfileChange:(MXRoom*)room
+- (void)checkLastMessageEventTypesAllowList:(MXRoom*)room
 {
     [room.mxSession eventWithEventId:room.summary.lastMessage.eventId
                               inRoom:room.roomId
@@ -736,9 +740,9 @@
         
         XCTAssertEqual(lastMessage.eventType, MXEventTypeRoomMessage);
 
-        // Ignore profile change
+        // Only allow message events to become the last message.
         MXRoomSummaryUpdater *updater = [MXRoomSummaryUpdater roomSummaryUpdaterForSession:room.mxSession];
-        updater.ignoreMemberProfileChanges = YES;
+        updater.lastMessageEventTypesAllowList = @[kMXEventTypeStringRoomMessage];
 
         [room liveTimeline:^(MXEventTimeline *liveTimeline) {
             [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
@@ -1022,6 +1026,7 @@
 
             // Let's (and verify) MXSession start update the store with user information
             mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+            [matrixSDKTestsData retain:mxSession];
 
             [mxSession setStore:store success:^{
 
@@ -1093,6 +1098,7 @@
 
             // Let's (and verify) MXSession start update the store with user information
             mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+            [matrixSDKTestsData retain:mxSession];
 
             [mxSession setStore:store success:^{
 
@@ -1181,6 +1187,8 @@
 
             // Do a 1st [mxSession start] to fill the store
             mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+            [matrixSDKTestsData retain:mxSession];
+            
             [mxSession setStore:store success:^{
 
                 [mxSession start:^{
@@ -1202,6 +1210,7 @@
                             __block BOOL onStoreDataReadyCalled;
 
                             MXSession *mxSession2 = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+                            [matrixSDKTestsData retain:mxSession2];
 
                             [mxSession2 setStore:store2 success:^{
                                 onStoreDataReadyCalled = YES;
@@ -1268,6 +1277,8 @@
         id<MXStore> store = [[mxStoreClass alloc] init];
 
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [matrixSDKTestsData retain:mxSession];
+        
         [mxSession setStore:store success:^{
 
             [mxSession start:^{
@@ -1326,6 +1337,8 @@
         id<MXStore> store = [[mxStoreClass alloc] init];
 
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [matrixSDKTestsData retain:mxSession];
+        
         [mxSession setStore:store success:^{
             [mxSession start:^{
 
@@ -1391,6 +1404,8 @@
 
         // Do a 1st [mxSession start] to fill the store
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [matrixSDKTestsData retain:mxSession];
+        
         [mxSession setStore:store success:^{
             [mxSession startWithSyncFilter:[MXFilterJSONModel syncFilterWithMessageLimit:5] onServerSyncDone:^{
 
@@ -1410,6 +1425,7 @@
                         id<MXStore> store2 = [[mxStoreClass alloc] init];
 
                         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+                        [matrixSDKTestsData retain:mxSession];
                         [mxSession setStore:store2 success:^{
 
                             XCTAssertEqualObjects(roomPaginationToken, [store2 paginationTokenOfRoom:roomId], @"The store must keep the pagination token");
@@ -1454,6 +1470,8 @@
         id<MXStore> bobStore1 = [[mxStoreClass alloc] init];
 
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [matrixSDKTestsData retain:mxSession];
+        
         [mxSession setStore:bobStore1 success:^{
             [mxSession start:^{
 
@@ -1545,6 +1563,8 @@
 
                                     // Do a 1st [mxSession start] to fill the store
                                     mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+                                    [matrixSDKTestsData retain:mxSession];
+                                    
                                     [mxSession setStore:store success:^{
                                         [mxSession start:^{
 
@@ -1555,6 +1575,8 @@
                                             id<MXStore> store2 = [[mxStoreClass alloc] init];
 
                                             mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+                                            [matrixSDKTestsData retain:mxSession];
+                                            
                                             [mxSession setStore:store2 success:^{
 
                                                 NSArray<MXRoom*> *roomsWithTagTag1 = [mxSession roomsWithTag:tag1];
@@ -1643,6 +1665,8 @@
 
                 // Do a 1st [mxSession start] to fill the store
                 mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+                [matrixSDKTestsData retain:mxSession];
+                
                 [mxSession setStore:store success:^{
                     [mxSession start:^{
 

@@ -944,6 +944,7 @@
 
                 // - Restart alice session
                 MXSession *aliceSession2 = [[MXSession alloc] initWithMatrixRestClient:aliceSession.matrixRestClient];
+                [matrixSDKTestsData retain:aliceSession2];
                 [aliceSession close];
                 [aliceSession2 start:nil failure:^(NSError * _Nonnull error) {
                     XCTFail(@"The request should not fail - NSError: %@", error);
@@ -1445,6 +1446,7 @@
                     
                     // - Restart the session
                     MXSession *aliceSession2 = [[MXSession alloc] initWithMatrixRestClient:aliceSession.matrixRestClient];
+                    [matrixSDKTestsData retain:aliceSession2];
                     [aliceSession close];
                     [aliceSession2 start:^{
                         XCTAssertTrue(aliceSession2.crypto.backup.hasPrivateKeyInCryptoStore);

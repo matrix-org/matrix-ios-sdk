@@ -20,7 +20,7 @@
 
 #import "MXSession.h"
 #import "MXTools.h"
-#import "MXSendReplyEventDefaultStringLocalizations.h"
+#import "MXSendReplyEventDefaultStringLocalizer.h"
 
 // Do not bother with retain cycles warnings in tests
 #pragma clang diagnostic push
@@ -29,8 +29,6 @@
 @interface MXRoomTests : XCTestCase
 {
     MatrixSDKTestsData *matrixSDKTestsData;
-
-    MXSession *mxSession;
 }
 
 @end
@@ -46,12 +44,6 @@
 
 - (void)tearDown
 {
-    if (mxSession)
-    {
-        [mxSession close];
-        mxSession = nil;
-    }
-
     matrixSDKTestsData = nil;
     
     [super tearDown];
@@ -60,9 +52,7 @@
 
 - (void)testListenerForAllLiveEvents
 {
-    [matrixSDKTestsData doMXSessionTestWithBobAndThePublicRoom:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
-        
-        mxSession = mxSession2;
+    [matrixSDKTestsData doMXSessionTestWithBobAndThePublicRoom:self readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
 
         __block NSString *sentMessageEventID;
         __block NSString *receivedMessageEventID;
@@ -117,9 +107,7 @@
 
 - (void)testListenerForRoomMessageLiveEvents
 {
-    [matrixSDKTestsData doMXSessionTestWithBobAndThePublicRoom:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
-        
-        mxSession = mxSession2;
+    [matrixSDKTestsData doMXSessionTestWithBobAndThePublicRoom:self readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
 
         __block NSString *sentMessageEventID;
         __block NSString *receivedMessageEventID;
@@ -174,9 +162,7 @@
 
 - (void)testLeave
 {
-    [matrixSDKTestsData doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
-        
-        mxSession = mxSession2;
+    [matrixSDKTestsData doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
         
         NSString *roomId = room.roomId;
 
@@ -211,7 +197,8 @@
 
         [matrixSDKTestsData doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
 
-            mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+            MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+            [matrixSDKTestsData retain:mxSession];
 
             [bobRestClient inviteUser:aliceRestClient.credentials.userId toRoom:roomId success:^{
 
@@ -254,7 +241,8 @@
 {
     [matrixSDKTestsData doMXRestClientTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
-        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [matrixSDKTestsData retain:mxSession];
         [mxSession start:^{
 
             MXRoom *room = [mxSession roomWithRoomId:roomId];
@@ -286,7 +274,8 @@
 {
     [matrixSDKTestsData doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
-        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [matrixSDKTestsData retain:mxSession];
 
         [mxSession startWithSyncFilter:[MXFilterJSONModel syncFilterWithMessageLimit:0] onServerSyncDone:^{
             
@@ -329,7 +318,9 @@
 {
     [matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
-        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [matrixSDKTestsData retain:mxSession];
+        
         [mxSession start:^{
 
             MXRoom *room = [mxSession roomWithRoomId:roomId];
@@ -362,8 +353,7 @@
 
 - (void)testAddAndRemoveTag
 {
-    [matrixSDKTestsData doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
-        mxSession = mxSession2;
+    [matrixSDKTestsData doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
 
         NSString *tag = @"aTag";
         NSString *order = @"0.5";
@@ -410,8 +400,7 @@
 
 - (void)testReplaceTag
 {
-    [matrixSDKTestsData doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
-        mxSession = mxSession2;
+    [matrixSDKTestsData doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
 
         NSString *tag = @"aTag";
         NSString *order = @"0.5";
@@ -453,7 +442,9 @@
 {
     [matrixSDKTestsData doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for tagged events" onReadyToTest:^(MXRestClient *bobRestClient, NSString *roomId, NSString *new_text_message_eventId, XCTestExpectation *expectation) {
         
-        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [matrixSDKTestsData retain:mxSession];
+        
         [mxSession start:^{
             
             MXRoom *room = [mxSession roomWithRoomId:roomId];
@@ -494,7 +485,9 @@
 {
     [matrixSDKTestsData doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for tagged events" onReadyToTest:^(MXRestClient *bobRestClient, NSString *roomId, NSString *new_text_message_eventId, XCTestExpectation *expectation) {
         
-        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [matrixSDKTestsData retain:mxSession];
+        
         [mxSession start:^{
             
             MXRoom *room = [mxSession roomWithRoomId:roomId];
@@ -549,7 +542,9 @@
 {
     [matrixSDKTestsData doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for tagged events" onReadyToTest:^(MXRestClient *bobRestClient, NSString *roomId, NSString *new_text_message_eventId, XCTestExpectation *expectation) {
         
-        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [matrixSDKTestsData retain:mxSession];
+        
         [mxSession start:^{
             
             MXRoom *room = [mxSession roomWithRoomId:roomId];
@@ -609,7 +604,9 @@
 
         [bobRestClient setRoomDirectoryVisibility:roomId directoryVisibility:kMXRoomDirectoryVisibilityPublic success:^{
 
-            mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
+            MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
+            [matrixSDKTestsData retain:mxSession];
+            
             [mxSession start:^{
 
                 MXRoom *room = [mxSession roomWithRoomId:roomId];
@@ -645,7 +642,9 @@
 
         MXRestClient *bobRestClient2 = bobRestClient;
 
-        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
+        MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
+        [matrixSDKTestsData retain:mxSession];
+        
         [mxSession start:^{
 
             MXRoom *room = [mxSession roomWithRoomId:roomId];
@@ -706,7 +705,7 @@
     NSString *expectedThirdEventBodyStringFormat = @"> <%@> **Reply to first message**\n\n**Reply to second message**";
     NSString *expectedThirdEventFormattedBodyStringFormat = @"<mx-reply><blockquote><a href=\"%@\">In reply to</a> <a href=\"%@\">%@</a><br><p><strong>Reply to first message</strong></p></blockquote></mx-reply><p><strong>Reply to second message</strong></p>";
     
-    MXSendReplyEventDefaultStringLocalizations *defaultStringLocalizations = [MXSendReplyEventDefaultStringLocalizations new];
+    MXSendReplyEventDefaultStringLocalizer *defaultStringLocalizer = [MXSendReplyEventDefaultStringLocalizer new];
     
     [matrixSDKTestsData doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
         
@@ -721,7 +720,7 @@
                 __block MXEvent *localEchoEvent = nil;
                 
                 // Reply to first message
-                [room sendReplyToEvent:event withTextMessage:secondMessageReplyToFirst formattedTextMessage:secondMessageFormattedReplyToFirst stringLocalizations:defaultStringLocalizations localEcho:&localEchoEvent success:^(NSString *eventId) {
+                [room sendReplyToEvent:event withTextMessage:secondMessageReplyToFirst formattedTextMessage:secondMessageFormattedReplyToFirst stringLocalizer:defaultStringLocalizer localEcho:&localEchoEvent success:^(NSString *eventId) {
                     MXLogDebug(@"Send reply to first message with success");
                 } failure:^(NSError *error) {
                     XCTFail(@"The request should not fail - NSError: %@", error);
@@ -753,7 +752,7 @@
                 __block MXEvent *localEchoEvent = nil;
                 
                 // Reply to second message, which was also a reply
-                [room sendReplyToEvent:event withTextMessage:thirdMessageReplyToSecond formattedTextMessage:thirdMessageFormattedReplyToSecond stringLocalizations:defaultStringLocalizations localEcho:&localEchoEvent success:^(NSString *eventId) {
+                [room sendReplyToEvent:event withTextMessage:thirdMessageReplyToSecond formattedTextMessage:thirdMessageFormattedReplyToSecond stringLocalizer:defaultStringLocalizer localEcho:&localEchoEvent success:^(NSString *eventId) {
                     MXLogDebug(@"Send reply to second message with success");
                 } failure:^(NSError *error) {
                     XCTFail(@"The request should not fail - NSError: %@", error);

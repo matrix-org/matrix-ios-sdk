@@ -1,3 +1,26 @@
+## Changes in 0.20.5 (2021-10-08)
+
+🙌 Improvements
+
+- Tests: Improve tests suites execution time by fixing leaked MXSession instances that continued to run in background. ([#4875](https://github.com/vector-im/element-ios/issues/4875))
+- Added dynamism and compile time safety to room name and send reply event localizable strings. ([#4899](https://github.com/vector-im/element-ios/issues/4899))
+- Pods: Update JitsiMeetSDK and Realm. ([#4939](https://github.com/vector-im/element-ios/issues/4939))
+- Start a background task for every Realm transaction. ([#4964](https://github.com/vector-im/element-ios/issues/4964))
+
+🐛 Bugfixes
+
+- Apply threading model for Spaces and cache space graph ([#4898](https://github.com/vector-im/element-ios/issues/4898))
+
+⚠️ API Changes
+
+- MXRoomSummaryUpdater: Combine ignoreMemberProfileChanges and eventsFilterForMessages into a single property called allowedLastMessageEventTypes. ([#4451](https://github.com/vector-im/element-ios/issues/4451))
+- `MXSendReplyEventStringsLocalizable` is now `MXSendReplyEventStringLocalizerProtocol` and `MXRoomNameStringsLocalizable` is now `MXRoomNameStringLocalizerProtocol` ([#4899](https://github.com/vector-im/element-ios/issues/4899))
+
+🧱 Build
+
+- Bundler: Update CocoaPods and fastlane. ([#4951](https://github.com/vector-im/element-ios/issues/4951))
+
+
 ## Changes in 0.20.4 (2021-09-30)
 
 🐛 Bugfixes
