@@ -21,9 +21,13 @@ import XCTest
 class MXRoomListDataManagerUnitTests: XCTestCase {
     
     private enum Constants {
-        static let credentials: MXCredentials = MXCredentials(homeServer: "localhost",
-                                                              userId: "@some_user_id:some_domain.com",
-                                                              accessToken: "some_access_token")
+        static var credentials: MXCredentials {
+            let result = MXCredentials(homeServer: "localhost",
+                                       userId: "@some_user_id:some_domain.com",
+                                       accessToken: "some_access_token")
+            result.deviceId = "some_device_id"
+            return result
+        }
         static let messageText: String = "Hello there!"
     }
     
