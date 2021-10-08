@@ -159,7 +159,7 @@ fileprivate class MockApplication: MXApplicationProtocol {
     
     private static var bgTaskIdentifier: Int = 0
     
-    var bgTasks: [UIBackgroundTaskIdentifier: Bool] = [:]
+    private var bgTasks: [UIBackgroundTaskIdentifier: Bool] = [:]
     
     func beginBackgroundTask(expirationHandler handler: (() -> Void)? = nil) -> UIBackgroundTaskIdentifier {
         return beginBackgroundTask(withName: nil, expirationHandler: handler)
