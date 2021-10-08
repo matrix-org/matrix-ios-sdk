@@ -44,7 +44,12 @@ typedef void (^MXBackgroundTaskExpirationHandler)(void);
 @property (nonatomic, readonly, getter=isReusable) BOOL reusable;
 
 /**
- Stop the background task. Cannot be started anymore.
+ Method to be called when a task reused one more time. Should only be valid for reusable tasks.
+ */
+- (void)reuse;
+
+/**
+ Stop the background task. Cannot be started anymore. For reusable tasks, should be called same number of times `reuse` called.
  */
 - (void)stop;
 
