@@ -1,3 +1,10 @@
+## Changes in 0.20.4 (2021-09-30)
+
+🐛 Bugfixes
+
+- MXSpaceService: Fix a crash due to recursion depth limit ([#4919](https://github.com/vector-im/element-ios/issues/4919))
+
+
 ## Changes in 0.20.3 (2021-09-28)
 
 🙌 Improvements

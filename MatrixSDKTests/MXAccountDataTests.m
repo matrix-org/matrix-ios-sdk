@@ -81,6 +81,7 @@
     [matrixSDKTestsData doMXRestClientTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
         MXSession *bobSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [matrixSDKTestsData retain:bobSession];
 
         MXFileStore *store = [[MXFileStore alloc] init];
         [bobSession setStore:store success:^{
@@ -100,6 +101,7 @@
 
                                 // Check the information have been permanently stored
                                 MXSession *bobSession2 = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+                                [matrixSDKTestsData retain:bobSession2];
                                 MXFileStore *store2 = [[MXFileStore alloc] init];
                                 [bobSession2 setStore:store2 success:^{
 
@@ -144,6 +146,7 @@
     [matrixSDKTestsData doMXRestClientTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
         MXSession *bobSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [matrixSDKTestsData retain:bobSession];
 
         MXFileStore *store = [[MXFileStore alloc] init];
         [bobSession setStore:store success:^{
@@ -165,6 +168,7 @@
 
                                 // Check the information have been permanently stored
                                 MXSession *bobSession2 = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+                                [matrixSDKTestsData retain:bobSession2];
                                 MXFileStore *store2 = [[MXFileStore alloc] init];
                                 [bobSession2 setStore:store2 success:^{
 

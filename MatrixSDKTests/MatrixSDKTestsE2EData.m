@@ -26,14 +26,13 @@
 #import "MXNoStore.h"
 
 @interface MatrixSDKTestsE2EData ()
-{
-    MatrixSDKTestsData *matrixSDKTestsData;
-}
+
+@property (nonatomic, weak) MatrixSDKTestsData *matrixSDKTestsData;
 
 @end
 
 @implementation MatrixSDKTestsE2EData
-@synthesize messagesFromAlice, messagesFromBob;
+@synthesize matrixSDKTestsData, messagesFromAlice, messagesFromBob;
 
 - (instancetype)initWithMatrixSDKTestsData:(MatrixSDKTestsData *)theMatrixSDKTestsData
 {

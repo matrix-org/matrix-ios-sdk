@@ -1,0 +1,1 @@
+Tests: Improve tests suites execution time by fixing leaked MXSession instances that continued to run in background.
