@@ -1,1 +1,0 @@
-MXRoomSummaryUpdater: Combine ignoreMemberProfileChanges and eventsFilterForMessages into a single property called allowedLastMessageEventTypes.
