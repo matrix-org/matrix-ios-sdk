@@ -23,25 +23,25 @@ public protocol MXRoomListDataCounts {
     /// Number of rooms handled by this instance
     var numberOfRooms: Int { get }
     
-    /// Total number of rooms. Can be different from `numberOfRooms` if pagination enabled
-    var totalRoomsCount: Int { get }
-    
-    /// Number of rooms having unsent message(s)
+    /// Number of handled rooms having unsent message(s)
     var numberOfUnsentRooms: Int { get }
     
-    /// Number of rooms being notified
+    /// Number of handled rooms being notified
     var numberOfNotifiedRooms: Int { get }
     
-    /// Number of room being highlighted
+    /// Number of handled rooms being highlighted
     var numberOfHighlightedRooms: Int { get }
     
-    /// Total notification count for handled rooms
-    var totalNotificationCount: UInt { get }
+    /// Sum of notification counts for handled rooms
+    var numberOfNotifications: UInt { get }
     
-    /// Total highlight count for handled rooms
-    var totalHighlightCount: UInt { get }
+    /// Sum of highlight counts for handled rooms
+    var numberOfHighlights: UInt { get }
     
-    /// Number of invited rooms
+    /// Number of invited rooms for handled rooms
     var numberOfInvitedRooms: Int { get }
+    
+    /// Total number of rooms. Can be different from `numberOfRooms` if pagination enabled
+    var totalRoomsCount: Int { get }
     
 }

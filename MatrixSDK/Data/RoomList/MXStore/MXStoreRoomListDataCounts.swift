@@ -20,24 +20,24 @@ import Foundation
 public class MXStoreRoomListDataCounts: NSObject, MXRoomListDataCounts {
     
     public let numberOfRooms: Int
-    public let totalRoomsCount: Int
     public let numberOfUnsentRooms: Int
     public let numberOfNotifiedRooms: Int
     public let numberOfHighlightedRooms: Int
-    public let totalNotificationCount: UInt
-    public let totalHighlightCount: UInt
+    public let numberOfNotifications: UInt
+    public let numberOfHighlights: UInt
     public let numberOfInvitedRooms: Int
+    public let totalRoomsCount: Int
     
     public init(withRooms rooms: [MXRoomSummaryProtocol],
                 totalRoomsCount: Int) {
         numberOfRooms = rooms.count
-        self.totalRoomsCount = totalRoomsCount
         numberOfInvitedRooms = rooms.filter({ $0.isTyped(.invited) }).count
         numberOfUnsentRooms = rooms.filter({ $0.sentStatus != .ok }).count
         numberOfNotifiedRooms = rooms.filter({ $0.notificationCount > 0 }).count + numberOfInvitedRooms
         numberOfHighlightedRooms = rooms.filter({ $0.highlightCount > 0 }).count
-        totalNotificationCount = rooms.reduce(0, { $0 + $1.notificationCount })
-        totalHighlightCount = rooms.reduce(0, { $0 + $1.highlightCount })
+        numberOfNotifications = rooms.reduce(0, { $0 + $1.notificationCount })
+        numberOfHighlights = rooms.reduce(0, { $0 + $1.highlightCount })
+        self.totalRoomsCount = totalRoomsCount
         super.init()
     }
 
