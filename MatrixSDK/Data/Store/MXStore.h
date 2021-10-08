@@ -30,6 +30,8 @@
 #import "MXEventsEnumerator.h"
 #import "MXRoomSummaryStore.h"
 
+@class MXSpaceGraphData;
+
 /**
  The `MXStore` protocol defines an interface that must be implemented in order to store
  Matrix data handled during a `MXSession`.
@@ -484,5 +486,6 @@
 - (void)filterIdForFilter:(nonnull MXFilterJSONModel*)filter
                   success:(nonnull void (^)(NSString * _Nullable filterId))success
                   failure:(nullable void (^)(NSError * _Nullable error))failure;
+
 
 @end
