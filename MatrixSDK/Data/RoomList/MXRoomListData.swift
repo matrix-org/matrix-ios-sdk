@@ -26,7 +26,7 @@ open class MXRoomListData: NSObject {
     /// Counts on the data
     public let counts: MXRoomListDataCounts
     
-    /// Current page. 0 if pagination disabled
+    /// Current page. Zero-based. 0 if pagination disabled
     public var currentPage: Int {
         if counts.numberOfRooms == 0 || paginationOptions == .none {
             return 0
