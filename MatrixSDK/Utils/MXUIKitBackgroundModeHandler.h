@@ -17,11 +17,24 @@
 #import <Foundation/Foundation.h>
 
 #import "MXBackgroundModeHandler.h"
+#import "MXUIKitBackgroundTask.h"
 
-#if TARGET_OS_IPHONE
+NS_ASSUME_NONNULL_BEGIN
 
 @interface MXUIKitBackgroundModeHandler : NSObject <MXBackgroundModeHandler>
 
+/**
+ Default initializer. Application will be got via `-[UIApplication sharedApplication]` for TARGET_OS_IPHONE, otherwise will be nil.
+ */
+- (instancetype)init;
+
+/**
+ Initializer with custom application getter block
+ 
+ @param applicationBlock block will be used when an application is required.
+ */
+- (instancetype)initWithApplicationBlock:(MXApplicationGetterBlock)applicationBlock;
+
 @end
 
-#endif
+NS_ASSUME_NONNULL_END

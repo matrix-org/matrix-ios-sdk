@@ -41,27 +41,39 @@ public class MXSpace: NSObject {
     // MARK: - Properties
     
     /// The underlying room
-    public let room: MXRoom
+    public let session: MXSession
     
-    /// Shortcut to the room roomId
-    public var spaceId: String {
-        return self.room.roomId
+    /// ID of the space (e.g. ID of the underlying room)
+    public let spaceId: String
+    
+    /// Underlynig room of the space
+    public var room: MXRoom? {
+        return self.session.room(withRoomId: self.spaceId)
     }
     
     /// Shortcut to the room summary
     public var summary: MXRoomSummary? {
-        return self.room.summary
+        return self.session.roomSummary(withRoomId: self.spaceId)
     }
     
     public private(set) var childSpaces: [MXSpace] = []
     public private(set) var childRoomIds: [String] = []
     public private(set) var otherMembersId: [String] = []
-    public private(set) var membersId: [String] = []
     
+    private let processingQueue: DispatchQueue
+    private let sdkProcessingQueue: DispatchQueue
+    private let completionQueue: DispatchQueue
+
     // MARK: - Setup
     
-    public init(room: MXRoom) {
-        self.room = room
+    public init(roomId: String, session: MXSession) {
+        self.session = session
+        self.spaceId = roomId
+        
+        self.processingQueue = DispatchQueue(label: "org.matrix.sdk.MXSpace.processingQueue", attributes: .concurrent)
+        self.sdkProcessingQueue = DispatchQueue.main
+        self.completionQueue = DispatchQueue.main
+
         super.init()
     }
     
@@ -71,34 +83,47 @@ public class MXSpace: NSObject {
     /// - Parameters:
     ///   - completion: A closure called when the operation completes.
     public func readChildRoomsAndMembers(completion: @escaping () -> Void) {
-        guard let myUserId = room.mxSession.myUserId else {
+        guard let room = self.room, let myUserId = room.mxSession.myUserId else {
             return
         }
 
-        room.state { [weak self] roomState in
-            roomState?.stateEvents.forEach({ event in
-                if event.eventType == .spaceChild {
-                    self?.childRoomIds.append(event.stateKey)
-                }
-            })
-            
-            self?.room.members { [weak self] response in
-                guard let members = response.value as? MXRoomMembers else {
+        self.sdkProcessingQueue.async {
+            room.state { [weak self] roomState in
+                guard let self = self else {
                     return
                 }
+                
+                self.processingQueue.async {
+                    roomState?.stateEvents.forEach({ event in
+                        if event.eventType == .spaceChild {
+                            self.childRoomIds.append(event.stateKey)
+                        }
+                    })
+                    
+                    self.sdkProcessingQueue.async {
+                        room.members { [weak self] response in
+                            guard let self = self, let members = response.value as? MXRoomMembers else {
+                                return
+                            }
 
-                var otherMembersId: [String] = []
-                var membersId: [String] = []
-                members.members?.forEach { roomMember in
-                    membersId.append(roomMember.userId)
-                    if roomMember.userId != myUserId {
-                        otherMembersId.append(roomMember.userId)
+                            self.processingQueue.async {
+                                var otherMembersId: [String] = []
+                                var membersId: [String] = []
+                                members.members?.forEach { roomMember in
+                                    membersId.append(roomMember.userId)
+                                    if roomMember.userId != myUserId {
+                                        otherMembersId.append(roomMember.userId)
+                                    }
+                                }
+                                self.otherMembersId = otherMembersId
+                                
+                                self.completionQueue.async {
+                                    completion()
+                                }
+                            }
+                        }
                     }
                 }
-                self?.otherMembersId = otherMembersId
-                self?.membersId = membersId
-                
-                completion()
             }
         }
     }
@@ -127,7 +152,7 @@ public class MXSpace: NSObject {
             finalViaServers = viaServers
         } else {
             // If viaServers is nil use the current homeserver as via server
-            guard let homeserverName = self.room.mxSession.credentials.homeServerName() else {
+            guard let homeserverName = self.session.credentials.homeServerName() else {
                 completion(.failure(MXSpaceError.homeserverNameNotFound))
                 return nil
             }
@@ -144,10 +169,7 @@ public class MXSpace: NSObject {
             fatalError("[MXSpace] MXSpaceChildContent dictionary cannot be nil")
         }
         
-        return self.room.sendStateEvent(.spaceChild,
-                                 content: stateEventContent,
-                                 stateKey: roomId,
-                                 completion: completion)
+        return self.room?.sendStateEvent(.spaceChild, content: stateEventContent, stateKey: roomId, completion: completion)
     }
     
     /// Update child spaces using the list of spaces
@@ -164,7 +186,7 @@ public class MXSpace: NSObject {
     /// Update child rooms using the list of direct rooms
     /// - Parameters:
     ///   - directRoomsPerMember: complete list of direct rooms by member ID
-    public func updateChildDirectRooms(with directRoomsPerMember: [String : [MXRoom]]) {
+    public func updateChildDirectRooms(with directRoomsPerMember: [String : [String]]) {
         self.updateChildRooms(from: self, with: directRoomsPerMember)
     }
     
@@ -178,12 +200,9 @@ public class MXSpace: NSObject {
     
     // MARK: - Private
     
-    private func updateChildRooms(from space: MXSpace, with directRoomsPerMember: [String : [MXRoom]]) {
+    private func updateChildRooms(from space: MXSpace, with directRoomsPerMember: [String : [String]]) {
         space.otherMembersId.forEach { memberId in
-            let rooms = directRoomsPerMember[memberId] ?? []
-            self.childRoomIds.append(contentsOf: rooms.compactMap({ room in
-                return room.roomId
-            }))
+            self.childRoomIds.append(contentsOf: directRoomsPerMember[memberId] ?? [])
         }
     }
 }

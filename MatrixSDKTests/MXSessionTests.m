@@ -36,8 +36,6 @@
 {
     MatrixSDKTestsData *matrixSDKTestsData;
 
-    MXSession *mxSession;
-
     id observer;
 }
 @end
@@ -53,12 +51,6 @@
 
 - (void)tearDown
 {
-    if (mxSession)
-    {
-        [mxSession close];
-        mxSession = nil;
-    }
-
     if (observer)
     {
         [[NSNotificationCenter defaultCenter] removeObserver:observer];
@@ -114,7 +106,7 @@
 
         MXCredentials *credentials = [MXCredentials initialSyncCacheCredentialsFrom:matrixSDKTestsData.bobCredentials];
         id<MXSyncResponseStore> cache = [[MXSyncResponseFileStore alloc] initWithCredentials:credentials];
-        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        __block MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
         
         //  listen for session state change notification
         __block id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionStateDidChangeNotification object:nil queue:nil usingBlock:^(NSNotification * _Nonnull note) {
@@ -126,7 +118,6 @@
                 
                 //  2. simulate an unexpected session close (like a crash)
                 [mxSession close];
-                mxSession = nil;
                 
                 XCTAssertGreaterThan(cache.syncResponseIds.count,
                                      0,
@@ -134,6 +125,7 @@
                 
                 //  3. recreate the session
                 mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+                [matrixSDKTestsData retain:mxSession];
 
                 [mxSession setStore:store success:^{
                     [mxSession start:^{
@@ -185,7 +177,8 @@
         // Room with a tag with "oranges" order
         [bobRestClient createRoom:nil visibility:kMXRoomDirectoryVisibilityPrivate roomAlias:alias topic:nil success:^(MXCreateRoomResponse *response) {
 
-            mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+            MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+            [matrixSDKTestsData retain:mxSession];
             [mxSession start:^{
 
                 MXRoom *room = [mxSession roomWithRoomId:response.roomId];
@@ -225,7 +218,8 @@
 {
     [matrixSDKTestsData doMXRestClientTestWihBobAndSeveralRoomsAndMessages:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
         
-        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [matrixSDKTestsData retain:mxSession];
         
         // The listener must catch at least these events
         __block NSMutableArray *expectedEvents =
@@ -301,7 +295,8 @@
 {
     [matrixSDKTestsData doMXRestClientTestWihBobAndSeveralRoomsAndMessages:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
         
-        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [matrixSDKTestsData retain:mxSession];
         
         // Listen to m.room.message only
         // We should not see events coming before (m.room.create, and all state events)
@@ -342,7 +337,8 @@
     // Make sure Alice and Bob have activities
     [matrixSDKTestsData doMXRestClientTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
-        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [matrixSDKTestsData retain:mxSession];
         
         __block MXSession *mxSession2 = mxSession;
         __block NSUInteger lastAliceActivity = -1;
@@ -400,7 +396,8 @@
     // Make sure Alice and Bob have activities
     [matrixSDKTestsData doMXRestClientTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
-        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [matrixSDKTestsData retain:mxSession];
 
         [mxSession start:^{
 
@@ -461,7 +458,8 @@
 
         MXMemoryStore *store = [[MXMemoryStore alloc] init];
 
-        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [matrixSDKTestsData retain:mxSession];
 
         [mxSession setStore:store success:^{
 
@@ -472,7 +470,6 @@
                 XCTAssertGreaterThan(storeRoomsCount, 0);
 
                 [mxSession close];
-                mxSession = nil;
 
                 // Create another random room to create more data server side
                 [bobRestClient createRoom:nil visibility:kMXRoomDirectoryVisibilityPrivate roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
@@ -505,7 +502,8 @@
     // Make sure Alice and Bob have activities
     [matrixSDKTestsData doMXRestClientTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
-        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [matrixSDKTestsData retain:mxSession];
 
         [mxSession start:^{
 
@@ -576,7 +574,8 @@
     // Make sure Alice and Bob have activities
     [matrixSDKTestsData doMXRestClientTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
-        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [matrixSDKTestsData retain:mxSession];
 
         [mxSession start:^{
 
@@ -641,6 +640,7 @@
 {
     [matrixSDKTestsData doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for recents" onReadyToTest:^(MXRestClient *bobRestClient, NSString *roomId, NSString *new_text_message_eventId, XCTestExpectation *expectation) {
 
+        MXSession *mxSession;
         __block MXSessionState previousSessionState = MXSessionStateInitialised;
         [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionStateDidChangeNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
@@ -653,6 +653,7 @@
         }];
 
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [matrixSDKTestsData retain:mxSession];
         XCTAssertEqual(MXSessionStateInitialised, mxSession.state);
 
         [mxSession start:^{
@@ -672,7 +673,6 @@
                     [mxSession close];
                     XCTAssertEqual(MXSessionStateClosed, mxSession.state);
 
-                    mxSession = nil;
                     [expectation fulfill];
                 });
 
@@ -694,9 +694,7 @@
 
 - (void)testCreateRoom
 {
-    [matrixSDKTestsData doMXSessionTestWithBob:self readyToTest:^(MXSession *mxSession2, XCTestExpectation *expectation) {
-
-        mxSession = mxSession2;
+    [matrixSDKTestsData doMXSessionTestWithBob:self readyToTest:^(MXSession *mxSession, XCTestExpectation *expectation) {
 
         // Create a random room with no params
         [mxSession createRoom:nil visibility:nil roomAlias:nil topic:nil success:^(MXRoom *room) {
@@ -719,9 +717,7 @@
 
 - (void)testDidSyncNotification
 {
-    [matrixSDKTestsData doMXSessionTestWithBobAndARoom:self andStore:[[MXMemoryStore alloc] init] readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
-
-        mxSession = mxSession2;
+    [matrixSDKTestsData doMXSessionTestWithBobAndARoom:self andStore:[[MXMemoryStore alloc] init] readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
 
         observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionDidSyncNotification object:mxSession queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
 
@@ -749,8 +745,7 @@
 // -> Check latter sync response does not contain anything but the event stream token
 - (void)testEmptySyncResponse
 {
-    [matrixSDKTestsData doMXSessionTestWithBob:self readyToTest:^(MXSession *mxSession2, XCTestExpectation *expectation) {
-        mxSession = mxSession2;
+    [matrixSDKTestsData doMXSessionTestWithBob:self readyToTest:^(MXSession *mxSession, XCTestExpectation *expectation) {
         
         __block BOOL isFirst = YES;
 
@@ -784,11 +779,9 @@
 
 - (void)testCreateRoomWithInvite
 {
-    [matrixSDKTestsData doMXSessionTestWithBob:self readyToTest:^(MXSession *mxSession2, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXSessionTestWithBob:self readyToTest:^(MXSession *mxSession, XCTestExpectation *expectation) {
         
         [matrixSDKTestsData doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
-            
-            mxSession = mxSession2;
             
             // Create a random room with no params
             MXRoomCreationParameters *parameters = [MXRoomCreationParameters new];
@@ -839,11 +832,9 @@
 
 - (void)testCreateDirectRoom
 {
-    [matrixSDKTestsData doMXSessionTestWithBob:self readyToTest:^(MXSession *mxSession2, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXSessionTestWithBob:self readyToTest:^(MXSession *mxSession, XCTestExpectation *expectation) {
         
         [matrixSDKTestsData doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
-            
-            mxSession = mxSession2;
             
             // Create a random room with no params
             MXRoomCreationParameters *parameters = [MXRoomCreationParameters parametersForDirectRoomWithUser:matrixSDKTestsData.aliceCredentials.userId];
@@ -874,6 +865,7 @@
                     XCTAssertTrue(succeed);
                     
                     // Force sync to get direct rooms list
+                    // CRASH
                     [mxSession startWithSyncFilter:[MXFilterJSONModel syncFilterWithMessageLimit:0]
                                   onServerSyncDone:^{
                         
@@ -914,9 +906,7 @@
 
 - (void)testPrivateDirectRoomWithUserId
 {
-    [matrixSDKTestsData doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXSession *bobSession, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
-        
-        mxSession = bobSession;
+    [matrixSDKTestsData doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXSession *mxSession, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
         MXRoom *room = [mxSession roomWithRoomId:roomId];
         [room setIsDirect:YES withUserId:aliceRestClient.credentials.userId success:^{
@@ -953,7 +943,8 @@
 
         [matrixSDKTestsData doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
 
-            mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+            MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+            [matrixSDKTestsData retain:mxSession];
             [mxSession start:^{
 
                 // Listen to Alice's MXSessionNewRoomNotification event
@@ -979,7 +970,8 @@
 {
     [matrixSDKTestsData doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
 
-        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [matrixSDKTestsData retain:mxSession];
         [mxSession start:^{
 
             observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionNewRoomNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
@@ -1014,7 +1006,8 @@
 
         [matrixSDKTestsData doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
 
-            mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+            MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+            [matrixSDKTestsData retain:mxSession];
             [mxSession start:^{
 
                 // Listen to Alice's MXSessionNewRoomNotification event
@@ -1050,7 +1043,8 @@
 
         [matrixSDKTestsData doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
 
-            mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+            MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+            [matrixSDKTestsData retain:mxSession];
             [mxSession start:^{
 
                 // Listen to Alice's kMXRoomInitialSyncNotification event
@@ -1105,7 +1099,8 @@
 
 
                                 // Do the test
-                                mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+                                MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+                                [matrixSDKTestsData retain:mxSession];
                                 [mxSession start:^{
 
                                     NSDictionary<NSString*, NSArray<MXRoom*>*> *roomByTags = [mxSession roomsByTags];
@@ -1196,7 +1191,8 @@
                     [bobRestClient addTag:tag withOrder:@"0.2" toRoom:response.roomId success:^{
 
                         // Do the tests
-                        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+                        MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+                        [matrixSDKTestsData retain:mxSession];
                         [mxSession start:^{
 
                             NSArray<MXRoom*> *roomsWithTag = [mxSession roomsWithTag:tag];
@@ -1243,7 +1239,8 @@
                 [bobRestClient createRoom:nil visibility:kMXRoomDirectoryVisibilityPrivate roomAlias:nil topic:@"Not tagged" success:^(MXCreateRoomResponse *response) {
 
                     // Do the test
-                    mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+                    MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+                    [matrixSDKTestsData retain:mxSession];
                     [mxSession start:^{
 
                         NSDictionary<NSString*, NSArray<MXRoom*>*> *roomByTags = [mxSession roomsByTags];
@@ -1302,7 +1299,8 @@
                             [bobRestClient addTag:tag withOrder:@"0.3" toRoom:response.roomId success:^{
 
                                 // Do the tests
-                                mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+                                MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+                                [matrixSDKTestsData retain:mxSession];
                                 [mxSession start:^{
 
                                     NSString *orderForFirstPosition = [mxSession tagOrderToBeAtIndex:0 from:NSNotFound withTag:tag];
@@ -1366,9 +1364,7 @@
 
 - (void)testInvitedRooms
 {
-    [matrixSDKTestsData doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXSession *bobSession, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
-
-        mxSession = bobSession;
+    [matrixSDKTestsData doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXSession *mxSession, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
         NSUInteger prevInviteCount = mxSession.invitedRooms.count;
 
@@ -1419,7 +1415,7 @@
 
             testRoomId = response.roomId;
 
-            [aliceRestClient inviteUser:bobSession.matrixRestClient.credentials.userId toRoom:testRoomId success:^{
+            [aliceRestClient inviteUser:mxSession.matrixRestClient.credentials.userId toRoom:testRoomId success:^{
 
             } failure:^(NSError *error) {
                 XCTFail(@"Cannot set up intial test conditions - error: %@", error);
@@ -1435,9 +1431,7 @@
 
 - (void)testToDeviceEvents
 {
-    [matrixSDKTestsData doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXSession *bobSession, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
-
-        mxSession = bobSession;
+    [matrixSDKTestsData doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXSession *mxSession, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
         observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionOnToDeviceEventNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
 

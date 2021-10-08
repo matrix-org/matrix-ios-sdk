@@ -134,6 +134,7 @@ static NSString* const kThreadedMessage1Text = @"Morning!";
 
         // - Do an initial sync
         mxSession = [[MXSession alloc] initWithMatrixRestClient:restClient];
+        [matrixSDKTestsData retain:mxSession];
         [mxSession setStore:[[MXMemoryStore alloc] init] success:^{
 
             [mxSession start:^{

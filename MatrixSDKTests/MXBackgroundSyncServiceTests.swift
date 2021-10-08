@@ -109,6 +109,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
 
                             // - Bob restarts their MXSession
                             let newBobSession = MXSession(matrixRestClient: MXRestClient(credentials: bobCredentials, unrecognizedCertificateHandler: nil))
+                            self.testData.retain(newBobSession)
                             newBobSession?.setStore(bobStore, completion: { (_) in
                                 newBobSession?.start(withSyncFilterId: bobStore.syncFilterId, completion: { (_) in
                                     
@@ -198,6 +199,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                             
                             // - Bob restarts their MXSession
                             let newBobSession = MXSession(matrixRestClient: MXRestClient(credentials: bobCredentials, unrecognizedCertificateHandler: nil))
+                            self.testData.retain(newBobSession)
                             newBobSession?.setStore(bobStore, completion: { (_) in
                                 newBobSession?.start(withSyncFilterId: bobStore.syncFilterId, completion: { (_) in
                                     
@@ -306,6 +308,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                                         
                                         // - Bob restarts their MXSession
                                         let newBobSession = MXSession(matrixRestClient: MXRestClient(credentials: bobCredentials, unrecognizedCertificateHandler: nil))
+                                        self.testData.retain(newBobSession)
                                         newBobSession?.setStore(bobStore, completion: { (_) in
                                             newBobSession?.start(withSyncFilterId: bobStore.syncFilterId, completion: { (_) in
                                                 // -> The message is available from MXSession and no more from MXBackgroundSyncService
@@ -1315,6 +1318,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                     expectation.fulfill()
                     return
                 }
+                self.testData.retain(bobSession2)
                 bobSession2.setStore(MXFileStore(), completion: { _ in
                     bobSession2.start(completion: { (_) in
                         

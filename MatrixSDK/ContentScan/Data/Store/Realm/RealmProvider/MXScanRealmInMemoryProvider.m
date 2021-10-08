@@ -20,6 +20,7 @@
 #import "MXRealmMediaScan.h"
 
 #import "MXLog.h"
+#import "RLMRealm+MatrixSDK.h"
 
 @interface MXScanRealmInMemoryProvider()
 
@@ -62,7 +63,7 @@
 {
     RLMRealm *realm = [self realm];
     
-    [realm transactionWithBlock:^{
+    [realm transactionWithName:@"[MXScanRealmInMemoryProvider] deleteAllObjects" block:^{
         [realm deleteAllObjects];
     }];
 }
