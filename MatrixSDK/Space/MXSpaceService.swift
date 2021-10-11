@@ -317,30 +317,56 @@ public class MXSpaceService: NSObject {
     // MARK: - Space graph computation
     
     private class PrepareDataResult {
-        var isPreparingData = true
-        private(set) var spaces: [MXSpace] = []
-        private(set) var spacesPerId: [String : MXSpace] = [:]
-        private(set) var directRoomIdsPerMemberId: [String: [String]] = [:]
+        private var _spaces: [MXSpace] = []
+        private var _spacesPerId: [String : MXSpace] = [:]
+        private var _directRoomIdsPerMemberId: [String: [String]] = [:]
         private var computingSpaces: Set<String> = Set()
         private var computingDirectRooms: Set<String> = Set()
+        
+        var spaces: [MXSpace] {
+            var result: [MXSpace] = []
+            self.serialQueue.sync {
+                result = self._spaces
+            }
+            return result
+        }
+        var spacesPerId: [String : MXSpace] {
+            var result: [String : MXSpace] = [:]
+            self.serialQueue.sync {
+                result = self._spacesPerId
+            }
+            return result
+        }
+        var directRoomIdsPerMemberId: [String: [String]] {
+            var result: [String: [String]] = [:]
+            self.serialQueue.sync {
+                result = self._directRoomIdsPerMemberId
+            }
+            return result
+        }
+        var isPreparingData = true
         var isComputing: Bool {
-            return !self.computingSpaces.isEmpty || !self.computingDirectRooms.isEmpty
+            var isComputing = false
+            self.serialQueue.sync {
+                isComputing = !self.computingSpaces.isEmpty || !self.computingDirectRooms.isEmpty
+            }
+            return isComputing
         }
         
         private let serialQueue = DispatchQueue(label: "org.matrix.sdk.MXSpaceService.PrepareDataResult.serialQueue")
         
         func add(space: MXSpace) {
             self.serialQueue.sync {
-                self.spaces.append(space)
-                self.spacesPerId[space.spaceId] = space
+                self._spaces.append(space)
+                self._spacesPerId[space.spaceId] = space
             }
         }
         
         func add(directRoom: MXRoom, toUserWithId userId: String) {
             self.serialQueue.sync {
-                var rooms = self.directRoomIdsPerMemberId[userId] ?? []
+                var rooms = self._directRoomIdsPerMemberId[userId] ?? []
                 rooms.append(directRoom.roomId)
-                self.directRoomIdsPerMemberId[userId] = rooms
+                self._directRoomIdsPerMemberId[userId] = rooms
             }
         }
         
