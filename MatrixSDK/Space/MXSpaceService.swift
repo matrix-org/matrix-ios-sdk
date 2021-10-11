@@ -345,18 +345,22 @@ public class MXSpaceService: NSObject {
         }
         
         func setComputing(_ isComputing: Bool, forSpace space: MXSpace) {
-            if isComputing {
-                computingSpaces.insert(space.spaceId)
-            } else {
-                computingSpaces.remove(space.spaceId)
+            self.serialQueue.sync {
+                if isComputing {
+                    computingSpaces.insert(space.spaceId)
+                } else {
+                    computingSpaces.remove(space.spaceId)
+                }
             }
         }
         
         func setComputing(_ isComputing: Bool, forDirectRoom room: MXRoom) {
-            if isComputing {
-                computingDirectRooms.insert(room.roomId)
-            } else {
-                computingDirectRooms.remove(room.roomId)
+            self.serialQueue.sync {
+                if isComputing {
+                    computingDirectRooms.insert(room.roomId)
+                } else {
+                    computingDirectRooms.remove(room.roomId)
+                }
             }
         }
     }
