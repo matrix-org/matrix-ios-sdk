@@ -346,11 +346,16 @@ public class MXSpaceService: NSObject {
         }
         var isPreparingData = true
         var isComputing: Bool {
-            var isComputing = false
+            var result = false
             self.serialQueue.sync {
-                isComputing = !self.computingSpaces.isEmpty || !self.computingDirectRooms.isEmpty
+                result = _isComputing
             }
-            return isComputing
+            return result
+        }
+        
+        //  Must be called in `serialQueue`
+        private var _isComputing: Bool {
+            return !self.computingSpaces.isEmpty || !self.computingDirectRooms.isEmpty
         }
         
         private let serialQueue = DispatchQueue(label: "org.matrix.sdk.MXSpaceService.PrepareDataResult.serialQueue")
@@ -372,7 +377,7 @@ public class MXSpaceService: NSObject {
         
         func setComputing(_ isComputing: Bool, forSpace space: MXSpace) {
             self.serialQueue.sync {
-                if isComputing {
+                if _isComputing {
                     computingSpaces.insert(space.spaceId)
                 } else {
                     computingSpaces.remove(space.spaceId)
@@ -382,7 +387,7 @@ public class MXSpaceService: NSObject {
         
         func setComputing(_ isComputing: Bool, forDirectRoom room: MXRoom) {
             self.serialQueue.sync {
-                if isComputing {
+                if _isComputing {
                     computingDirectRooms.insert(room.roomId)
                 } else {
                     computingDirectRooms.remove(room.roomId)
