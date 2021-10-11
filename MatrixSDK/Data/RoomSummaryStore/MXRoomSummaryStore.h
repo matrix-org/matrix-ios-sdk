@@ -22,6 +22,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+/// Room summary store definition. Implementations must be thread safe.
 @protocol MXRoomSummaryStore <NSObject>
 
 /**
