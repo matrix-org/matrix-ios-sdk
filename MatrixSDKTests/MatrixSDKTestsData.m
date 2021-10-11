@@ -1045,6 +1045,14 @@ onUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecogn
         }
     }
     _retainedObjects = nil;
+    if (_bobCredentials)
+    {
+        [MXRealmCryptoStore deleteStoreWithCredentials:_bobCredentials];
+    }
+    if (_aliceCredentials)
+    {
+        [MXRealmCryptoStore deleteStoreWithCredentials:_aliceCredentials];
+    }
 }
 
 @end
