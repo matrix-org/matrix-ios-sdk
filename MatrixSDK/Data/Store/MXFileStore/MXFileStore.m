@@ -637,6 +637,20 @@ static NSUInteger preloadOptions;
     return metaData.userAccountData;
 }
 
+- (void)setAreAllIdentityServerTermsAgreed:(BOOL)areAllIdentityServerTermsAgreed
+{
+    if (metaData)
+    {
+        metaData.areAllIdentityServerTermsAgreed = areAllIdentityServerTermsAgreed;
+        metaDataHasChanged = YES;
+    }
+}
+
+- (BOOL)areAllIdentityServerTermsAgreed
+{
+    return metaData.areAllIdentityServerTermsAgreed;
+}
+
 #pragma mark - Matrix filters
 - (void)setSyncFilterId:(NSString *)syncFilterId
 {
