@@ -1367,7 +1367,9 @@ static NSUInteger preloadOptions;
 #if DEBUG
         MXLogDebug(@"[MXFileStore commit] queuing saveRoomsSummaries for %tu rooms", roomsToCommit.count);
 #endif
+        MXWeakify(self);
         dispatch_async(dispatchQueue, ^(void){
+            MXStrongifyAndReturnIfNil(self);
 #if DEBUG
             NSDate *startDate = [NSDate date];
 #endif
