@@ -114,6 +114,10 @@ internal class MXStoreRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
                 //  there is no more rooms to paginate
                 return
             }
+            //  MXStore implementation does not provide any pagination options.
+            //  We'll try to change total number of items we fetched when paginating further.
+            //  Case: we've loaded our nth page of data with pagination size P.
+            //  To further paginate, we'll try to fetch (n+2)*P items in total.
             numberOfItems = (data.currentPage + 2) * data.paginationOptions.rawValue
         } else {
             //  load first page
