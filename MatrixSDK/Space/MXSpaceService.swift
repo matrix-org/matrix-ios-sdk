@@ -319,14 +319,77 @@ public class MXSpaceService: NSObject {
     // MARK: - Space graph computation
     
     private class PrepareDataResult {
+        private var _spaces: [MXSpace] = []
+        private var _spacesPerId: [String : MXSpace] = [:]
+        private var _directRoomIdsPerMemberId: [String: [String]] = [:]
+        private var computingSpaces: Set<String> = Set()
+        private var computingDirectRooms: Set<String> = Set()
+        
+        var spaces: [MXSpace] {
+            var result: [MXSpace] = []
+            self.serialQueue.sync {
+                result = self._spaces
+            }
+            return result
+        }
+        var spacesPerId: [String : MXSpace] {
+            var result: [String : MXSpace] = [:]
+            self.serialQueue.sync {
+                result = self._spacesPerId
+            }
+            return result
+        }
+        var directRoomIdsPerMemberId: [String: [String]] {
+            var result: [String: [String]] = [:]
+            self.serialQueue.sync {
+                result = self._directRoomIdsPerMemberId
+            }
+            return result
+        }
         var isPreparingData = true
-        var spaces: [MXSpace] = []
-        var spacesPerId: [String : MXSpace] = [:]
-        var directRoomIdsPerMemberId: [String: [String]] = [:]
-        var computingSpaces: Set<String> = Set()
-        var computingDirectRooms: Set<String> = Set()
         var isComputing: Bool {
-            return !self.computingSpaces.isEmpty || !self.computingDirectRooms.isEmpty
+            var isComputing = false
+            self.serialQueue.sync {
+                isComputing = !self.computingSpaces.isEmpty || !self.computingDirectRooms.isEmpty
+            }
+            return isComputing
+        }
+        
+        private let serialQueue = DispatchQueue(label: "org.matrix.sdk.MXSpaceService.PrepareDataResult.serialQueue")
+        
+        func add(space: MXSpace) {
+            self.serialQueue.sync {
+                self._spaces.append(space)
+                self._spacesPerId[space.spaceId] = space
+            }
+        }
+        
+        func add(directRoom: MXRoom, toUserWithId userId: String) {
+            self.serialQueue.sync {
+                var rooms = self._directRoomIdsPerMemberId[userId] ?? []
+                rooms.append(directRoom.roomId)
+                self._directRoomIdsPerMemberId[userId] = rooms
+            }
+        }
+        
+        func setComputing(_ isComputing: Bool, forSpace space: MXSpace) {
+            self.serialQueue.sync {
+                if isComputing {
+                    computingSpaces.insert(space.spaceId)
+                } else {
+                    computingSpaces.remove(space.spaceId)
+                }
+            }
+        }
+        
+        func setComputing(_ isComputing: Bool, forDirectRoom room: MXRoom) {
+            self.serialQueue.sync {
+                if isComputing {
+                    computingDirectRooms.insert(room.roomId)
+                } else {
+                    computingDirectRooms.remove(room.roomId)
+                }
+            }
         }
     }
     
@@ -355,7 +418,6 @@ public class MXSpaceService: NSObject {
         let output = PrepareDataResult()
         MXLog.debug("[MXSpaceService] buildGraph: preparing data for \(roomIds.count) rooms")
         self.prepareData(with: roomIds, index: 0, output: output) { result in
-
             MXLog.debug("[MXSpaceService] buildGraph: data prepared in \(Date().timeIntervalSince(startDate))")
             
             self.computSpaceGraph(with: result, roomIds: roomIds, directRoomIds: directRoomIds) { graph in
@@ -413,26 +475,23 @@ public class MXSpaceService: NSObject {
             }
             
             if let space = _space {
-                output.computingSpaces.insert(space.spaceId)
+                output.setComputing(true, forSpace: space)
                 space.readChildRoomsAndMembers {
-                    output.computingSpaces.remove(space.spaceId)
+                    output.setComputing(false, forSpace: space)
                     if !output.isPreparingData && !output.isComputing {
                         completion(output)
                     }
                 }
-                output.spaces.append(space)
-                output.spacesPerId[space.spaceId] = space
+                output.add(space: space)
 
                 self.prepareData(with: roomIds, index: index+1, output: output, completion: completion)
             } else if isRoomDirect {
                 if let directUserId = _directUserId {
-                    var rooms = output.directRoomIdsPerMemberId[directUserId] ?? []
-                    rooms.append(room.roomId)
-                    output.directRoomIdsPerMemberId[directUserId] = rooms
+                    output.add(directRoom: room, toUserWithId: directUserId)
                     self.prepareData(with: roomIds, index: index+1, output: output, completion: completion)
                 } else {
                     self.sdkProcessingQueue.async {
-                        output.computingDirectRooms.insert(room.roomId)
+                        output.setComputing(true, forDirectRoom: room)
                         
                         room.members { response in
                             guard let members = response.value as? MXRoomMembers else {
@@ -448,12 +507,10 @@ public class MXSpaceService: NSObject {
 
                             self.processingQueue.async {
                                 membersId.forEach { memberId in
-                                    var rooms = output.directRoomIdsPerMemberId[memberId] ?? []
-                                    rooms.append(room.roomId)
-                                    output.directRoomIdsPerMemberId[memberId] = rooms
+                                    output.add(directRoom: room, toUserWithId: memberId)
                                 }
                                 
-                                output.computingDirectRooms.remove(room.roomId)
+                                output.setComputing(false, forDirectRoom: room)
                                 if !output.isPreparingData && !output.isComputing {
                                     completion(output)
                                 }

@@ -1,3 +1,10 @@
+## Changes in 0.20.6 (2021-10-12)
+
+🐛 Bugfixes
+
+- fixed crash in `MXSpaceService.prepareData()` ([#4979](https://github.com/vector-im/element-ios/issues/4979))
+
+
 ## Changes in 0.20.5 (2021-10-08)
 
 🙌 Improvements
