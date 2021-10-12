@@ -251,6 +251,16 @@
     return @[];
 }
 
+- (void)loadRoomMessagesForRoom:(NSString *)roomId completion:(void (^)(void))completion
+{
+    if (completion)
+    {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            completion();
+        });
+    }
+}
+
 #pragma mark - Matrix users
 - (void)storeUser:(MXUser *)user
 {
@@ -357,9 +367,11 @@
     return NO;
 }
 
-- (NSArray<MXReceiptData*> *)getEventReceipts:(NSString*)roomId eventId:(NSString*)eventId sorted:(BOOL)sort
+- (void)getEventReceipts:(NSString *)roomId eventId:(NSString *)eventId sorted:(BOOL)sort completion:(void (^)(NSArray<MXReceiptData *> * _Nullable))completion
 {
-    return nil;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        completion(@[]);
+    });
 }
 
 - (BOOL)storeReceipt:(MXReceiptData*)receipt inRoom:(NSString*)roomId
@@ -370,6 +382,16 @@
 - (MXReceiptData *)getReceiptInRoom:(NSString*)roomId forUserId:(NSString*)userId
 {
     return nil;
+}
+
+- (void)loadReceiptsForRoom:(NSString *)roomId completion:(void (^)(void))completion
+{
+    if (completion)
+    {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            completion();
+        });
+    }
 }
 
 - (NSUInteger)localUnreadEventCount:(NSString*)roomId withTypeIn:(NSArray*)types

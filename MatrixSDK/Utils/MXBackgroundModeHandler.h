@@ -31,7 +31,37 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @protocol MXBackgroundModeHandler <NSObject>
 
+/**
+ Create a background task with a name.
+ 
+ @param name name of the background task
+ 
+ @return background task
+ */
+- (nullable id<MXBackgroundTask>)startBackgroundTaskWithName:(NSString *)name;
+
+/**
+ Create a background task with a name and expirationHandler.
+ 
+ @param name name of the background task
+ @param expirationHandler a block to be called when the background task is about to expire
+ 
+ @return background task
+ */
 - (nullable id<MXBackgroundTask>)startBackgroundTaskWithName:(NSString *)name
+                                           expirationHandler:(nullable MXBackgroundTaskExpirationHandler)expirationHandler;
+
+/**
+ Create a background task with a name and expirationHandler.
+ 
+ @param name name of the background task
+ @param reusable flag indicating the background task will be reusable
+ @param expirationHandler a block to be called when the background task is about to expire
+ 
+ @return background task
+ */
+- (nullable id<MXBackgroundTask>)startBackgroundTaskWithName:(NSString *)name
+                                                    reusable:(BOOL)reusable
                                            expirationHandler:(nullable MXBackgroundTaskExpirationHandler)expirationHandler;
 
 @end

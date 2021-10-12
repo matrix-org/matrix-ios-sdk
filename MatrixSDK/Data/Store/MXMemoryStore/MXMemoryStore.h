@@ -17,6 +17,12 @@
 #import "MXStore.h"
 
 #import "MXMemoryRoomStore.h"
+#import "MXMemoryRoomOutgoingMessagesStore.h"
+
+/**
+ Receipts in a room. Keys are userIds.
+ */
+typedef NSMutableDictionary<NSString*, MXReceiptData*> RoomReceiptsStore;
 
 /**
  `MXMemoryStore` is an implementation of the `MXStore` interface that stores events in memory.
@@ -24,7 +30,9 @@
 @interface MXMemoryStore : NSObject <MXStore>
 {
     @protected
-    NSMutableDictionary *roomStores;
+    NSMutableDictionary <NSString*, MXMemoryRoomStore*> *roomStores;
+    
+    NSMutableDictionary <NSString*, MXMemoryRoomOutgoingMessagesStore*> *roomOutgoingMessagesStores;
 
     // All matrix users known by the user
     // The keys are user ids.
@@ -34,8 +42,9 @@
     // The keys are groups ids.
     NSMutableDictionary <NSString*, MXGroup*> *groups;
 
-    // Dict of dict of MXReceiptData indexed by userId
-    NSMutableDictionary *receiptsByRoomId;
+    // Dict of room receipts stores
+    // The keys are room ids.
+    NSMutableDictionary <NSString*, RoomReceiptsStore*> *roomReceiptsStores;
 
     // Matrix filters
     // FilterId -> Filter JSON string
@@ -54,5 +63,21 @@
  @return the MXMemoryRoomStore instance.
  */
 - (MXMemoryRoomStore*)getOrCreateRoomStore:(NSString*)roomId;
+
+/**
+ Interface to create or retrieve a MXMemoryRoomOutgoingMessagesStore type object.
+ 
+ @param roomId the id for the MXMemoryRoomOutgoingMessagesStore object.
+ @return the MXMemoryRoomOutgoingMessagesStore instance.
+ */
+- (MXMemoryRoomOutgoingMessagesStore*)getOrCreateRoomOutgoingMessagesStore:(NSString*)roomId;
+
+/**
+ Interface to create or retrieve receipts for a room.
+ 
+ @param roomId the id of the room.
+ @return receipts dictionary by user id.
+ */
+- (RoomReceiptsStore*)getOrCreateRoomReceiptsStore:(NSString*)roomId;
 
 @end

@@ -22,6 +22,7 @@
 #import "MXRealmMediaScan.h"
 
 #import "MXLog.h"
+#import "RLMRealm+MatrixSDK.h"
 
 @interface MXScanRealmFileProvider()
 
@@ -64,7 +65,7 @@
 {
     RLMRealm *realm = [self realm];
     
-    [realm transactionWithBlock:^{
+    [realm transactionWithName:@"[MXScanRealmFileProvider] deleteAllObjects" block:^{
         [realm deleteAllObjects];
     }];
 }

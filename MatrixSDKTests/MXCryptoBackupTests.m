@@ -24,6 +24,7 @@
 #import "MXRecoveryKey.h"
 #import "MXKeybackupPassword.h"
 #import "MXOutboundSessionInfo.h"
+#import "MXCrossSigning_Private.h"
 
 @interface MXKeyBackup (Testing)
 
@@ -511,6 +512,65 @@
     }];
 }
 
+// - Alice and Bob have messages in a room
+// - Alice has cross-signing enabled
+// - Alice creates a backup
+// - Check the returned MXKeyBackupVersion is trusted
+// -> It must be trusted by 2 entities
+// -> Trusted by her device
+// -> Trusted by her MSK
+- (void)testCrossSigningMSKTrustForKeyBackupVersion
+{
+    // - Alice and Bob have messages in a room
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+        
+        // - Alice has cross-signing enabled
+        [aliceSession.crypto.crossSigning setupWithPassword:MXTESTS_ALICE_PWD success:^{
+            
+            // - Alice creates a backup
+            [aliceSession.crypto.backup prepareKeyBackupVersionWithPassword:nil success:^(MXMegolmBackupCreationInfo *keyBackupCreationInfo) {
+                [aliceSession.crypto.backup createKeyBackupVersion:keyBackupCreationInfo success:^(MXKeyBackupVersion *keyBackupVersion) {
+                    
+                    // - Check the returned MXKeyBackupVersion is trusted
+                    [aliceSession.crypto.backup trustForKeyBackupVersion:keyBackupVersion onComplete:^(MXKeyBackupVersionTrust *keyBackupVersionTrust) {
+                        
+                        // -> It must be trusted by 2 entities
+                        XCTAssertNotNil(keyBackupVersionTrust);
+                        XCTAssertTrue(keyBackupVersionTrust.usable);
+                        XCTAssertEqual(keyBackupVersionTrust.signatures.count, 2);
+                        
+                        [keyBackupVersionTrust.signatures enumerateObjectsUsingBlock:^(MXKeyBackupVersionTrustSignature *signature, NSUInteger idx, BOOL *stop) {
+                            if (signature.keys) {
+                                // Check if valid MSK signature
+                                XCTAssertTrue(signature.valid);
+                                XCTAssertEqualObjects(signature.keys, aliceSession.crypto.crossSigning.myUserCrossSigningKeys.masterKeys.keys);
+                            } else {
+                                // Check if valid device signature
+                                XCTAssertTrue(signature.valid);
+                                XCTAssertEqualObjects(signature.deviceId, aliceSession.matrixRestClient.credentials.deviceId);
+                                XCTAssertEqualObjects(signature.device.deviceId, aliceSession.matrixRestClient.credentials.deviceId);
+                            }
+                        }];
+                        
+                        [expectation fulfill];
+                    }];
+                    
+                } failure:^(NSError * _Nonnull error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+            } failure:^(NSError * _Nonnull error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+            
+        } failure:^(NSError * _Nonnull error) {
+            XCTFail(@"Cannot set up initial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
 /**
  Check that `[MXKeyBackup backupAllGroupSessions]` returns valid data
  */
@@ -884,6 +944,7 @@
 
                 // - Restart alice session
                 MXSession *aliceSession2 = [[MXSession alloc] initWithMatrixRestClient:aliceSession.matrixRestClient];
+                [matrixSDKTestsData retain:aliceSession2];
                 [aliceSession close];
                 [aliceSession2 start:nil failure:^(NSError * _Nonnull error) {
                     XCTFail(@"The request should not fail - NSError: %@", error);
@@ -1385,6 +1446,7 @@
                     
                     // - Restart the session
                     MXSession *aliceSession2 = [[MXSession alloc] initWithMatrixRestClient:aliceSession.matrixRestClient];
+                    [matrixSDKTestsData retain:aliceSession2];
                     [aliceSession close];
                     [aliceSession2 start:^{
                         XCTAssertTrue(aliceSession2.crypto.backup.hasPrivateKeyInCryptoStore);

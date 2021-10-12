@@ -637,6 +637,17 @@ NSCharacterSet *uriComponentCharset;
     return roundedFileSize;
 }
 
++ (NSString*)fileSizeToString:(long)fileSize
+{
+    if (fileSize < 0)
+    {
+        return @"";
+    }
+    
+    NSByteCountFormatter *formatter = [NSByteCountFormatter new];
+    return [formatter stringFromByteCount:fileSize];
+}
+
 + (NSString*)fileSizeToString:(long)fileSize round:(BOOL)round
 {
     if (fileSize < 0)

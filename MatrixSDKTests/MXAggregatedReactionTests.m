@@ -126,6 +126,7 @@
 
         // - Do an initial sync
         MXSession *mxSession2 = [[MXSession alloc] initWithMatrixRestClient:restClient];
+        [matrixSDKTestsData retain:mxSession2];
         [mxSession2 setStore:[[MXMemoryStore alloc] init] success:^{
 
             [mxSession2 start:^{
@@ -227,6 +228,7 @@
 
         // - Do an initial sync
         mxSession = [[MXSession alloc] initWithMatrixRestClient:restClient];
+        [matrixSDKTestsData retain:mxSession];
         [mxSession setStore:[[MXMemoryStore alloc] init] success:^{
 
             [mxSession start:^{
@@ -377,6 +379,7 @@
 
         // - Do an initial sync
         mxSession = [[MXSession alloc] initWithMatrixRestClient:restClient];
+        [matrixSDKTestsData retain:mxSession];
         [mxSession setStore:[[MXMemoryStore alloc] init] success:^{
 
             [mxSession start:^{

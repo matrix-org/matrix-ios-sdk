@@ -30,8 +30,6 @@
 @interface MXRoomStateTests : XCTestCase
 {
     MatrixSDKTestsData *matrixSDKTestsData;
-
-    MXSession *mxSession;
 }
 @end
 
@@ -46,12 +44,6 @@
 
 - (void)tearDown
 {
-    if (mxSession)
-    {
-        [mxSession close];
-        mxSession = nil;
-    }
-    
     matrixSDKTestsData = nil;
     
     [super tearDown];
@@ -59,9 +51,7 @@
 
 - (void)testIsJoinRulePublic
 {
-    [matrixSDKTestsData doMXSessionTestWithBobAndThePublicRoom:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
-
-        mxSession = mxSession2;
+    [matrixSDKTestsData doMXSessionTestWithBobAndThePublicRoom:self readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
 
         [room state:^(MXRoomState *roomState) {
 
@@ -74,9 +64,7 @@
 
 - (void)testIsJoinRulePublicForAPrivateRoom
 {
-    [matrixSDKTestsData doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
-        
-        mxSession = mxSession2;
+    [matrixSDKTestsData doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
 
         [room state:^(MXRoomState *roomState) {
             XCTAssertFalse(roomState.isJoinRulePublic, @"This room join rule must be private");
@@ -94,7 +82,9 @@
         
         [bobRestClient setRoomTopic:roomId topic:@"My topic" success:^{
             
-            mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
+            MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
+            [matrixSDKTestsData retain:mxSession];
+            
             [mxSession start:^{
                 
                 MXRoom *room = [mxSession roomWithRoomId:roomId];
@@ -125,7 +115,9 @@
         
         MXRestClient *bobRestClient2 = bobRestClient;
         
-        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
+        MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
+        [matrixSDKTestsData retain:mxSession];
+        
         [mxSession start:^{
             
             MXRoom *room = [mxSession roomWithRoomId:roomId];
@@ -173,7 +165,9 @@
 
         [bobRestClient setRoomAvatar:roomId avatar:@"http://matrix.org/matrix.png" success:^{
 
-            mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
+            MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
+            [matrixSDKTestsData retain:mxSession];
+            
             [mxSession start:^{
 
                 MXRoom *room = [mxSession roomWithRoomId:roomId];
@@ -204,7 +198,9 @@
 
         MXRestClient *bobRestClient2 = bobRestClient;
 
-        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
+        MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
+        [matrixSDKTestsData retain:mxSession];
+        
         [mxSession start:^{
 
             MXRoom *room = [mxSession roomWithRoomId:roomId];
@@ -250,7 +246,9 @@
         
         [bobRestClient setRoomName:roomId name:@"My room name" success:^{
             
-            mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
+            MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
+            [matrixSDKTestsData retain:mxSession];
+            
             [mxSession start:^{
                 
                 MXRoom *room = [mxSession roomWithRoomId:roomId];
@@ -282,7 +280,9 @@
         
         MXRestClient *bobRestClient2 = bobRestClient;
         
-        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
+        MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
+        [matrixSDKTestsData retain:mxSession];
+        
         [mxSession start:^{
             
             MXRoom *room = [mxSession roomWithRoomId:roomId];
@@ -328,7 +328,9 @@
 
         [bobRestClient setRoomHistoryVisibility:roomId historyVisibility:kMXRoomHistoryVisibilityWorldReadable success:^{
 
-            mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
+            MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
+            [matrixSDKTestsData retain:mxSession];
+            
             [mxSession start:^{
 
                 MXRoom *room = [mxSession roomWithRoomId:roomId];
@@ -360,7 +362,9 @@
 
         MXRestClient *bobRestClient2 = bobRestClient;
 
-        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
+        MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
+        [matrixSDKTestsData retain:mxSession];
+        
         [mxSession start:^{
 
             MXRoom *room = [mxSession roomWithRoomId:roomId];
@@ -407,7 +411,9 @@
 
         [bobRestClient setRoomJoinRule:roomId joinRule:kMXRoomJoinRulePublic success:^{
 
-            mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
+            MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
+            [matrixSDKTestsData retain:mxSession];
+            
             [mxSession start:^{
 
                 MXRoom *room = [mxSession roomWithRoomId:roomId];
@@ -438,7 +444,9 @@
 
         MXRestClient *bobRestClient2 = bobRestClient;
 
-        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
+        MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
+        [matrixSDKTestsData retain:mxSession];
+        
         [mxSession start:^{
 
             MXRoom *room = [mxSession roomWithRoomId:roomId];
@@ -485,7 +493,9 @@
 
         [bobRestClient setRoomGuestAccess:roomId guestAccess:kMXRoomGuestAccessCanJoin success:^{
 
-            mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
+            MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
+            [matrixSDKTestsData retain:mxSession];
+            
             [mxSession start:^{
 
                 MXRoom *room = [mxSession roomWithRoomId:roomId];
@@ -516,7 +526,9 @@
 
         MXRestClient *bobRestClient2 = bobRestClient;
 
-        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
+        MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
+        [matrixSDKTestsData retain:mxSession];
+        
         [mxSession start:^{
 
             MXRoom *room = [mxSession roomWithRoomId:roomId];
@@ -568,7 +580,9 @@
             // Use this alias as the canonical alias
             [bobRestClient2 setRoomCanonicalAlias:roomId canonicalAlias:roomAlias success:^{
                 
-                mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
+                MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
+                [matrixSDKTestsData retain:mxSession];
+                
                 [mxSession start:^{
                     
                     MXRoom *room = [mxSession roomWithRoomId:roomId];
@@ -610,7 +624,9 @@
         
         MXRestClient *bobRestClient2 = bobRestClient;
         
-        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
+        MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
+        [matrixSDKTestsData retain:mxSession];
+        
         [mxSession start:^{
             
             MXRoom *room = [mxSession roomWithRoomId:roomId];
@@ -675,7 +691,9 @@
 {
     [matrixSDKTestsData doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for recents" onReadyToTest:^(MXRestClient *bobRestClient, NSString *roomId, NSString *new_text_message_eventId, XCTestExpectation *expectation) {
         
-        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [matrixSDKTestsData retain:mxSession];
+        
         [mxSession start:^{
             
             MXRoom *room = [mxSession roomWithRoomId:roomId];
@@ -711,9 +729,7 @@
 
 - (void)testMemberName
 {
-    [matrixSDKTestsData doMXSessionTestWithBobAndThePublicRoom:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
-        
-        mxSession = mxSession2;
+    [matrixSDKTestsData doMXSessionTestWithBobAndThePublicRoom:self readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
 
         NSString *bobUserId = matrixSDKTestsData.bobCredentials.userId;
 
@@ -736,9 +752,7 @@
 
 - (void)testStateEvents
 {
-    [matrixSDKTestsData doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
-        
-        mxSession = mxSession2;
+    [matrixSDKTestsData doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
 
         [room state:^(MXRoomState *roomState) {
             XCTAssertNotNil(roomState.stateEvents);
@@ -751,9 +765,7 @@
 
 - (void)testAliases
 {
-    [matrixSDKTestsData doMXSessionTestWithBobAndThePublicRoom:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
-        
-        mxSession = mxSession2;
+    [matrixSDKTestsData doMXSessionTestWithBobAndThePublicRoom:self readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
 
         [room state:^(MXRoomState *roomState) {
             XCTAssertNotNil(roomState.aliases);
@@ -838,9 +850,7 @@
         
         [self createInviteByUserScenario:bobRestClient inRoom:roomId inviteAlice:YES expectation:expectation onComplete:^{
             
-            [matrixSDKTestsData doMXSessionTestWithAlice:nil andStore:[MXMemoryStore new] readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation2) {
-                
-                mxSession = aliceSession;
+            [matrixSDKTestsData doMXSessionTestWithAlice:nil andStore:[MXMemoryStore new] readyToTest:^(MXSession *mxSession, XCTestExpectation *expectation2) {
                 
                 MXRoom *newRoom = [mxSession roomWithRoomId:roomId];
                 
@@ -853,7 +863,7 @@
 
                 [newRoom members:^(MXRoomMembers *roomMembers) {
 
-                    MXRoomMember *alice = [roomMembers memberWithUserId:aliceSession.myUserId];
+                    MXRoomMember *alice = [roomMembers memberWithUserId:mxSession.myUserId];
                     XCTAssertNotNil(alice);
                     XCTAssertEqual(alice.membership, MXMembershipInvite);
                     XCTAssert([alice.originUserId isEqualToString:bobRestClient.credentials.userId], @"Wrong inviter: %@", alice.originUserId);
@@ -888,9 +898,7 @@
 {
     [matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
-        [matrixSDKTestsData doMXSessionTestWithAlice:nil andStore:[MXMemoryStore new] readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation2) {
-            
-            mxSession = aliceSession;
+        [matrixSDKTestsData doMXSessionTestWithAlice:nil andStore:[MXMemoryStore new] readyToTest:^(MXSession *mxSession, XCTestExpectation *expectation2) {
             
             __block MXRoom *newRoom;
             __block id listener;
@@ -913,7 +921,7 @@
                         
                         [newRoom members:^(MXRoomMembers *roomMembers) {
                             
-                            MXRoomMember *alice = [roomMembers memberWithUserId:aliceSession.myUserId];
+                            MXRoomMember *alice = [roomMembers memberWithUserId:mxSession.myUserId];
                             XCTAssertNotNil(alice);
                             XCTAssertEqual(alice.membership, MXMembershipInvite);
                             XCTAssert([alice.originUserId isEqualToString:bobRestClient.credentials.userId], @"Wrong inviter: %@", alice.originUserId);
@@ -968,7 +976,8 @@
             
             [matrixSDKTestsData doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
                 
-                mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+                MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+                [matrixSDKTestsData retain:mxSession];
                 
                 [mxSession start:^{
                     
@@ -1049,7 +1058,8 @@
             
             [matrixSDKTestsData doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
                 
-                mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+                MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+                [matrixSDKTestsData retain:mxSession];
                 
                 [mxSession start:^{
                     
@@ -1110,7 +1120,8 @@
 {
     [matrixSDKTestsData doMXRestClientTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
-        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [matrixSDKTestsData retain:mxSession];
 
         [mxSession start:^{
 
@@ -1174,7 +1185,9 @@
 {
     [matrixSDKTestsData doMXRestClientTestWithAlice:self readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation) {
 
-        mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+        MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+        [matrixSDKTestsData retain:mxSession];
+        
         [mxSession start:^{
 
             __block NSString *newRoomId;
@@ -1228,7 +1241,9 @@
 - (void)testRoomStateWhenARoomHasBeenJoinedOnAnotherMatrixClientAndNotifications {
     [matrixSDKTestsData doMXRestClientTestWithAlice:self readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation) {
 
-        mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+        MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+        [matrixSDKTestsData retain:mxSession];
+        
         [mxSession start:^{
 
             __block NSString *newRoomId;
@@ -1277,22 +1292,20 @@
 - (void)testDeallocation
 {
     __weak __block MXRoomState *weakState;
-    [matrixSDKTestsData doMXSessionTestWithBobAndThePublicRoom:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
-        mxSession = mxSession2;
+    [matrixSDKTestsData doMXSessionTestWithBobAndThePublicRoom:self readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
         [room state:^(MXRoomState *roomState) {
             weakState = roomState;
             XCTAssertNotNil(weakState);
             [expectation fulfill];
         }];
-        [mxSession2 close]; // Force room deallocation
     }];
     XCTAssertNil(weakState);
 }
 
 - (void)testCopying
 {
-    [matrixSDKTestsData doMXSessionTestWithBobAndThePublicRoom:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
-        mxSession = mxSession2;
+    [matrixSDKTestsData doMXSessionTestWithBobAndThePublicRoom:self readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
+
         [room state:^(MXRoomState *roomState) {
             MXRoomState *roomStateCopy = [roomState copy];
             XCTAssertEqual(roomStateCopy.members.members.count, roomState.members.members.count);

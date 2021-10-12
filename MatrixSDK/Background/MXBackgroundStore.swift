@@ -213,8 +213,10 @@ class MXBackgroundStore: NSObject, MXStore {
         return nil
     }
     
-    func getEventReceipts(_ roomId: String, eventId: String, sorted sort: Bool) -> [MXReceiptData]? {
-        return nil
+    func getEventReceipts(_ roomId: String, eventId: String, sorted sort: Bool, completion: @escaping ([MXReceiptData]) -> Void) {
+        DispatchQueue.main.async {
+            completion([])
+        }
     }
     
     func storeReceipt(_ receipt: MXReceiptData, inRoom roomId: String) -> Bool {
@@ -225,6 +227,12 @@ class MXBackgroundStore: NSObject, MXStore {
         return nil
     }
     
+    func loadReceipts(forRoom roomId: String, completion: (() -> Void)? = nil) {
+        DispatchQueue.main.async {
+            completion?()
+        }
+    }
+    
     func localUnreadEventCount(_ roomId: String, withTypeIn types: [Any]?) -> UInt {
         return 0
     }
@@ -232,6 +240,12 @@ class MXBackgroundStore: NSObject, MXStore {
     var homeserverWellknown: MXWellKnown?
     
     func storeHomeserverWellknown(_ homeserverWellknown: MXWellKnown) {
+    }
+    
+    func loadRoomMessages(forRoom roomId: String, completion: (() -> Void)? = nil) {
+        DispatchQueue.main.async {
+            completion?()
+        }
     }
     
 }

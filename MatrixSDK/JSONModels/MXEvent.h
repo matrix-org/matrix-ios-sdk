@@ -167,6 +167,8 @@ FOUNDATION_EXPORT NSString *const kMXEventTypeStringSecretSend;
 // Secret Storage
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringSecretStorageDefaultKey;
 
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringAutoJoinKey;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringSuggestedKey;
 
 /**
  Types of room messages
@@ -202,6 +204,14 @@ FOUNDATION_EXPORT NSString *const kMXMessageContentKeyVoiceMessageMSC3245;
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleAudio;
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleAudioDuration;
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleAudioWaveform;
+
+FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleText;
+
+FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleFile;
+FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleFileSize;
+FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleFileName;
+FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleFileURL;
+FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleFileMimeType;
 
 /**
  The internal event state used to handle the different steps of the event sending.

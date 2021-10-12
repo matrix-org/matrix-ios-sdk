@@ -21,6 +21,7 @@
 #import "MXRestClient.h"
 #import "MXError.h"
 #import "MXNoStore.h"
+#import "MatrixSDKTestsSwiftHeader.h"
 
 // Do not bother with retain cycles warnings in tests
 #pragma clang diagnostic push
@@ -42,29 +43,42 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
 
 
 @interface MatrixSDKTestsData ()
-{
-    NSDate *startDate;
 
-    NSMutableArray <NSObject*> *retainedObjects;
-}
+@property (nonatomic, strong, readonly)NSDate *startDate;
+
+@property (nonatomic, strong, readonly) NSMutableArray <NSObject*> *retainedObjects;
+
+@property (nonatomic, strong) MXCredentials *aliceCredentials;
+@property (nonatomic, strong) MXCredentials *bobCredentials;
+
+@property (nonatomic, strong) NSString *thePublicRoomId;
+@property (nonatomic, strong) NSString *thePublicRoomAlias;
+
 @end
 
 @implementation MatrixSDKTestsData
 
++ (void)load
+{
+    // Be sure there is no open MXSession instances when ending a test
+    [TestObserver.shared trackMXSessions];
+}
+
 - (id)init
 {
-    self = [super init];
-    if (self)
+    if (self = [super init])
     {
-        startDate = [NSDate date];
-        retainedObjects = [NSMutableArray array];
+        _startDate = [NSDate date];
+        _retainedObjects = [NSMutableArray array];
+        _autoCloseMXSessions = YES;
     }
+    
     return self;
 }
 
 - (void)dealloc
 {
-    retainedObjects = [NSMutableArray array];
+    [self releaseRetainedObjects];
 }
 
 - (void)getBobCredentials:(XCTestCase*)testCase
@@ -87,7 +101,7 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
         // First, try register the user
         MXHTTPOperation *operation = [mxRestClient registerWithLoginType:kMXLoginFlowTypeDummy username:bobUniqueUser password:MXTESTS_BOB_PWD success:^(MXCredentials *credentials) {
 
-            _bobCredentials = credentials;
+            self.bobCredentials = credentials;
             readyToTest();
             
         } failure:^(NSError *error) {
@@ -98,7 +112,7 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
                 // Log Bob in to get his keys
                 [mxRestClient loginWithLoginType:kMXLoginFlowTypeDummy username:bobUniqueUser password:MXTESTS_BOB_PWD success:^(MXCredentials *credentials) {
                     
-                    _bobCredentials = credentials;
+                    self.bobCredentials = credentials;
                     readyToTest();
                     
                 } failure:^(NSError *error) {
@@ -193,22 +207,22 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
 {
     [self doMXRestClientTestWithBob:testCase readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
 
-        if (_thePublicRoomId)
+        if (self.thePublicRoomId)
         {
-            readyToTest(bobRestClient, _thePublicRoomId, expectation);
+            readyToTest(bobRestClient, self.thePublicRoomId, expectation);
         }
         else
         {
             // Create a public room starting with #mxPublic
-            _thePublicRoomAlias = [NSString stringWithFormat:@"mxPublic-%@", [[NSUUID UUID] UUIDString]];
+            self.thePublicRoomAlias = [NSString stringWithFormat:@"mxPublic-%@", [[NSUUID UUID] UUIDString]];
 
             [bobRestClient createRoom:@"MX Public Room test"
                            visibility:kMXRoomDirectoryVisibilityPublic
-                            roomAlias:_thePublicRoomAlias
+                            roomAlias:self.thePublicRoomAlias
                                 topic:@"The public room used by SDK tests"
                               success:^(MXCreateRoomResponse *response) {
 
-                                  _thePublicRoomId = response.roomId;
+                                  self.thePublicRoomId = response.roomId;
                                   readyToTest(bobRestClient, response.roomId, expectation);
 
                               } failure:^(NSError *error) {
@@ -303,7 +317,7 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
     }
     else
     {
-        [mxRestClient2 sendTextMessageToRoom:roomId text:[NSString stringWithFormat:@"Fake message sent at %.0f ms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000]
+        [mxRestClient2 sendTextMessageToRoom:roomId text:[NSString stringWithFormat:@"Fake message sent at %.0f ms", [[NSDate date] timeIntervalSinceDate:self.startDate] * 1000]
                            success:^(NSString *eventId) {
 
             // Send the next message
@@ -471,7 +485,7 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
         // First, try register the user
         MXHTTPOperation *operation = [mxRestClient registerWithLoginType:kMXLoginFlowTypeDummy username:aliceUniqueUser password:MXTESTS_ALICE_PWD success:^(MXCredentials *credentials) {
             
-            _aliceCredentials = credentials;
+            self.aliceCredentials = credentials;
             readyToTest();
             
         } failure:^(NSError *error) {
@@ -482,7 +496,7 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
                 // Log Alice in to get his keys
                 [mxRestClient loginWithLoginType:kMXLoginFlowTypeDummy username:aliceUniqueUser password:MXTESTS_ALICE_PWD success:^(MXCredentials *credentials) {
 
-                    _aliceCredentials = credentials;
+                    self.aliceCredentials = credentials;
                     readyToTest();
                     
                 } failure:^(NSError *error) {
@@ -757,7 +771,7 @@ onUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecogn
         // First, try register the user
         MXHTTPOperation *operation = [mxRestClient registerWithLoginType:kMXLoginFlowTypeDummy username:bobUniqueUser password:MXTESTS_BOB_PWD success:^(MXCredentials *credentials) {
 
-            _bobCredentials = credentials;
+            self.bobCredentials = credentials;
             readyToTest();
 
         } failure:^(NSError *error) {
@@ -768,7 +782,7 @@ onUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecogn
                 // Log Bob in to get his keys
                 [mxRestClient loginWithLoginType:kMXLoginFlowTypeDummy username:bobUniqueUser password:MXTESTS_BOB_PWD success:^(MXCredentials *credentials) {
 
-                    _bobCredentials = credentials;
+                    self.bobCredentials = credentials;
                     readyToTest();
 
                 } failure:^(NSError *error) {
@@ -1009,7 +1023,28 @@ onUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecogn
 #pragma mark Reference keeping
 - (void)retain:(NSObject*)object
 {
-    [retainedObjects addObject:object];
+    [self.retainedObjects addObject:object];
+}
+
+- (void)release:(NSObject*)object
+{
+    [self.retainedObjects removeObject:object];
+}
+
+- (void)releaseRetainedObjects
+{
+    if (_autoCloseMXSessions)
+    {
+        for (NSObject *object in _retainedObjects)
+        {
+            if ([object isKindOfClass:MXSession.class])
+            {
+                MXSession *mxSession = (MXSession*)object;
+                [mxSession close];
+            }
+        }
+    }
+    _retainedObjects = nil;
 }
 
 @end
