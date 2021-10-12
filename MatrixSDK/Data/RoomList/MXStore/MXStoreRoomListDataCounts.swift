@@ -30,13 +30,37 @@ public class MXStoreRoomListDataCounts: NSObject, MXRoomListDataCounts {
     
     public init(withRooms rooms: [MXRoomSummaryProtocol],
                 totalRoomsCount: Int) {
-        numberOfRooms = rooms.count
-        numberOfInvitedRooms = rooms.filter({ $0.isTyped(.invited) }).count
-        numberOfUnsentRooms = rooms.filter({ $0.sentStatus != .ok }).count
-        numberOfNotifiedRooms = rooms.filter({ $0.notificationCount > 0 }).count + numberOfInvitedRooms
-        numberOfHighlightedRooms = rooms.filter({ $0.highlightCount > 0 }).count
-        numberOfNotifications = rooms.reduce(0, { $0 + $1.notificationCount })
-        numberOfHighlights = rooms.reduce(0, { $0 + $1.highlightCount })
+        var numberOfInvitedRooms: Int = 0
+        var numberOfUnsentRooms: Int = 0
+        var numberOfNotifiedRooms: Int = 0
+        var numberOfHighlightedRooms: Int = 0
+        var numberOfNotifications: UInt = 0
+        var numberOfHighlights: UInt = 0
+        
+        rooms.forEach { summary in
+            if summary.isTyped(.invited) {
+                numberOfInvitedRooms += 1
+            }
+            if summary.sentStatus != .ok {
+                numberOfUnsentRooms += 1
+            }
+            if summary.notificationCount > 0 {
+                numberOfNotifiedRooms += 1
+                numberOfNotifications += summary.notificationCount
+            }
+            if summary.highlightCount > 0 {
+                numberOfHighlightedRooms += 1
+                numberOfHighlights += summary.highlightCount
+            }
+        }
+        
+        self.numberOfRooms = rooms.count
+        self.numberOfInvitedRooms = numberOfInvitedRooms
+        self.numberOfUnsentRooms = numberOfUnsentRooms
+        self.numberOfNotifiedRooms = numberOfNotifiedRooms + numberOfInvitedRooms
+        self.numberOfHighlightedRooms = numberOfHighlightedRooms
+        self.numberOfNotifications = numberOfNotifications
+        self.numberOfHighlights = numberOfHighlights
         self.totalRoomsCount = totalRoomsCount
         super.init()
     }
