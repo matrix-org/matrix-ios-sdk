@@ -64,11 +64,13 @@ public class MXSpaceService: NSObject {
     
     private var graph: MXSpaceGraphData = MXSpaceGraphData() {
         didSet {
+            var spacesPerId: [String:MXSpace] = [:]
             self.graph.spaceRoomIds.forEach { spaceId in
                 if let space = self.getSpace(withId: spaceId) {
-                    self.spacesPerId[spaceId] = space
+                    spacesPerId[spaceId] = space
                 }
             }
+            self.spacesPerId = spacesPerId
         }
     }
     private var spacesPerId: [String:MXSpace] = [:]
@@ -353,10 +355,7 @@ public class MXSpaceService: NSObject {
         let output = PrepareDataResult()
         MXLog.debug("[MXSpaceService] buildGraph: preparing data for \(roomIds.count) rooms")
         self.prepareData(with: roomIds, index: 0, output: output) { result in
-            while !output.computingSpaces.isEmpty {
-                sleep(1)
-            }
-            
+
             MXLog.debug("[MXSpaceService] buildGraph: data prepared in \(Date().timeIntervalSince(startDate))")
             
             self.computSpaceGraph(with: result, roomIds: roomIds, directRoomIds: directRoomIds) { graph in

@@ -50,6 +50,7 @@
         groups = [NSMutableDictionary dictionary];
         roomSummaries = [NSMutableDictionary dictionary];
         maxUploadSize = -1;
+        self.areAllIdentityServerTermsAgreed = NO;
         executionQueue = dispatch_queue_create("MXMemoryStoreExecutionQueue", DISPATCH_QUEUE_SERIAL);
     }
     return self;

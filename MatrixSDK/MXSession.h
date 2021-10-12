@@ -1440,6 +1440,19 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  */
 - (NSString*)accountDataIdentityServer;
 
+/**
+ Prepares `identityService` ready to accept its service terms:
+ - If it is missing, a new one will be created, first checking the user's account data, falling back on the supplied default.
+ - Registers a new accessToken if necessary so the server is ready to use.
+ 
+ @param defaultIdentityServerUrlString The identity server URL to fallback to when the user's account data has no value
+ @param success The block called when the operation completes. The provides the `MXSession`, identity server's URL and it's access token.
+ @param failure The block called the the operation fails. This provides the error that occurred.
+ */
+- (void)prepareIdentityServiceForTermsWithDefault:(NSString *)defaultIdentityServerUrlString
+                                          success:(void (^)(MXSession *session, NSString *baseURL, NSString *accessToken))success
+                                          failure:(void (^)(NSError *error))failure;
+
 
 #pragma mark - Homeserver information
 

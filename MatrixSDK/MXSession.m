@@ -378,9 +378,18 @@ typedef void (^MXOnResumeDone)(void);
                 // My user is a MXMyUser object
                 self->_myUser = (MXMyUser*)myUser;
                 self->_myUser.mxSession = self;
+                
+                // Use the cached agreement to identity server terms.
+                if (self.identityService)
+                {
+                    self.identityService.areAllTermsAgreed = self.store.areAllIdentityServerTermsAgreed;
+                }
 
                 // Load user account data
                 [self handleAccountData:self.store.userAccountData];
+                
+                // Refresh identity server terms with complete account data
+                [self refreshIdentityServerServiceTerms];
 
                 // Load MXRoomSummaries from the store
                 NSDate *startDate2 = [NSDate date];
@@ -709,6 +718,13 @@ typedef void (^MXOnResumeDone)(void);
     if (identityServer)
     {
         _identityService = [[MXIdentityService alloc] initWithIdentityServer:identityServer accessToken:accessToken andHomeserverRestClient:matrixRestClient];
+        
+        // Only refresh the terms after the first sync to
+        // avoid multiple requests from -setStore:success:failure:
+        if (firstSyncDone)
+        {
+            [self refreshIdentityServerServiceTerms];
+        }
     }
     else
     {
@@ -1764,6 +1780,13 @@ typedef void (^MXOnResumeDone)(void);
                     && ![identityServer isEqualToString:self.identityService.identityServer])
                 {
                     MXLogDebug(@"[MXSession] handleAccountData: Update identity server: %@ -> %@", self.identityService.identityServer, identityServer);
+                    
+                    // Reset the cached agreement to the identity server's terms.
+                    // This will be refreshed once the new identity server is set.
+                    if (self.store.areAllIdentityServerTermsAgreed)
+                    {
+                        self.store.areAllIdentityServerTermsAgreed = NO;
+                    }
 
                     // Use the IS from the account data
                     [self setIdentityServer:identityServer andAccessToken:nil];
@@ -1771,6 +1794,16 @@ typedef void (^MXOnResumeDone)(void);
                     [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionAccountDataDidChangeIdentityServerNotification
                                                                         object:self
                                                                       userInfo:nil];
+                }
+            }
+            
+            if([event[@"type"] isEqualToString:kMXAccountDataTypeAcceptedTerms])
+            {
+                // Only refresh the terms after the first sync to
+                // avoid multiple requests from -setStore:success:failure:
+                if (firstSyncDone)
+                {
+                    [self refreshIdentityServerServiceTerms];
                 }
             }
         }
@@ -4188,6 +4221,86 @@ typedef void (^MXOnResumeDone)(void);
     MXJSONModelSetString(accountDataIdentityServer, content[kMXAccountDataKeyIdentityServer]);
 
     return accountDataIdentityServer;
+}
+
+- (void)refreshIdentityServerServiceTerms
+{
+    if (!self.identityService)
+    {
+        MXLogDebug(@"[MXSession] No identity service available to check terms for.")
+        return;
+    }
+    
+    NSString *baseURL = self.identityService.identityServer;
+    
+    // Get the access token for the identity service
+    [self.identityService accessTokenWithSuccess:^(NSString * _Nullable accessToken) {
+        // Create the service terms and use this to update the identity service.
+        MXServiceTerms *serviceTerms = [[MXServiceTerms alloc] initWithBaseUrl:baseURL
+                                                                   serviceType:MXServiceTypeIdentityService
+                                                                 matrixSession:self
+                                                                   accessToken:accessToken];
+        
+        [serviceTerms areAllTermsAgreed:^(NSProgress * _Nonnull agreedTermsProgress) {
+            // Ensure the identity server hasn't changed during the requests
+            if (self.identityService.identityServer != baseURL)
+            {
+                return;
+            }
+            
+            // Set the value in the identity service.
+            BOOL areAllTermsAgreed = agreedTermsProgress.finished;
+            self.identityService.areAllTermsAgreed = areAllTermsAgreed;
+            
+            // And update the store if necessary.
+            if (self.store.areAllIdentityServerTermsAgreed != areAllTermsAgreed)
+            {
+                self.store.areAllIdentityServerTermsAgreed = areAllTermsAgreed;
+            }
+        } failure:nil];
+    } failure:^(NSError * _Nonnull error) {
+        MXLogDebug(@"[MXSession] Unable to check identity server terms due to missing token.")
+    }];
+}
+
+- (void)prepareIdentityServiceForTermsWithDefault:(NSString *)defaultIdentityServerUrlString
+                                          success:(void (^)(MXSession *session, NSString *baseURL, NSString *accessToken))success
+                                          failure:(void (^)(NSError *error))failure
+{
+    MXIdentityService *identityService = self.identityService;
+    
+    if (!identityService)
+    {
+        NSString *baseURL = self.accountDataIdentityServer ?: defaultIdentityServerUrlString;
+        identityService = [[MXIdentityService alloc] initWithIdentityServer:baseURL
+                                                                accessToken:nil
+                                                    andHomeserverRestClient:self.matrixRestClient];
+    }
+
+    // Get the identity service's access token.
+    [identityService accessTokenWithSuccess:^(NSString * _Nullable accessToken) {
+        MXWeakify(self);
+        
+        // Set the identity server in the session and account data as this will be nil if
+        // the terms were previously declined. These will be reverted if declined once more.
+        [self setIdentityServer:identityService.identityServer andAccessToken:accessToken];
+        [self setAccountDataIdentityServer:identityService.identityServer success:^{
+            
+            MXStrongifyAndReturnIfNil(self);
+            
+            // Call the completion with the final details
+            success(self, identityService.identityServer, accessToken);
+            
+        } failure:^(NSError *error) {
+            // Something went wrong setting the account data identity service
+            MXLogError(@"[MXSession] Error preparing identity server terms: %@", error);
+            failure(error);
+        }];
+    } failure:^(NSError * _Nonnull error) {
+        // Something went wrong getting the identity service's access token.
+        MXLogError(@"[MXSession] Error preparing identity server terms: %@", error);
+        failure(error);
+    }];
 }
 
 
