@@ -454,24 +454,31 @@ public class MXSpaceService: NSObject {
             }
             
             var _room: MXRoom?
-            var _space: MXSpace?
+            var space: MXSpace?
             var isRoomDirect = false
-            var _directUserId: String?
-            self.sdkProcessingQueue.sync {
+            var directUserId: String?
+            self.sdkProcessingQueue.async {
                 _room = self.session.room(withRoomId: roomIds[index])
                 
                 if let room = _room {
-                    _space = self.spacesPerId[room.roomId] ?? room.toSpace()
+                    space = self.spacesPerId[room.roomId] ?? room.toSpace()
                     isRoomDirect = room.isDirect
-                    _directUserId = room.directUserId
+                    directUserId = room.directUserId
                 }
+                
+                guard let room = _room else {
+                    self.prepareData(with: roomIds, index: index+1, output: output, completion: completion)
+                    return
+                }
+                
+                self.prepareData(with: roomIds, index: index, output: output, room: room, space: space, isRoomDirect: isRoomDirect, directUserId: directUserId, completion: completion)
             }
-            
-            guard let room = _room else {
-                self.prepareData(with: roomIds, index: index+1, output: output, completion: completion)
-                return
-            }
-            
+        }
+    }
+    
+    private func prepareData(with roomIds:[String], index: Int, output: PrepareDataResult, room: MXRoom, space _space: MXSpace?, isRoomDirect:Bool, directUserId _directUserId: String?, completion: @escaping (_ result: PrepareDataResult) -> Void) {
+        
+        self.processingQueue.async {
             if let space = _space {
                 output.setComputing(true, forSpace: space)
                 space.readChildRoomsAndMembers {
