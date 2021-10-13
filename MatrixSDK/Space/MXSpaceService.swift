@@ -440,7 +440,7 @@ public class MXSpaceService: NSObject {
             }
         }
     }
-
+    
     private func prepareData(with roomIds:[String], index: Int, output: PrepareDataResult, completion: @escaping (_ result: PrepareDataResult) -> Void) {
         self.processingQueue.async {
             guard index < roomIds.count else {
@@ -453,25 +453,15 @@ public class MXSpaceService: NSObject {
                 return
             }
             
-            var _room: MXRoom?
-            var space: MXSpace?
-            var isRoomDirect = false
-            var directUserId: String?
             self.sdkProcessingQueue.async {
-                _room = self.session.room(withRoomId: roomIds[index])
-                
-                if let room = _room {
-                    space = self.spacesPerId[room.roomId] ?? room.toSpace()
-                    isRoomDirect = room.isDirect
-                    directUserId = room.directUserId
-                }
-                
-                guard let room = _room else {
+                guard let room = self.session.room(withRoomId: roomIds[index]) else {
                     self.prepareData(with: roomIds, index: index+1, output: output, completion: completion)
                     return
                 }
                 
-                self.prepareData(with: roomIds, index: index, output: output, room: room, space: space, isRoomDirect: isRoomDirect, directUserId: directUserId, completion: completion)
+                let space = self.spacesPerId[room.roomId] ?? room.toSpace()
+                
+                self.prepareData(with: roomIds, index: index, output: output, room: room, space: space, isRoomDirect: room.isDirect, directUserId: room.directUserId, completion: completion)
             }
         }
     }
@@ -507,8 +497,6 @@ public class MXSpaceService: NSObject {
                             let membersId = members.members?.compactMap({ roomMember in
                                 return roomMember.userId != self.session.myUserId ? roomMember.userId : nil
                             }) ?? []
-
-                            assert(membersId.count == 1)
 
                             self.processingQueue.async {
                                 membersId.forEach { memberId in
