@@ -440,7 +440,7 @@ public class MXSpaceService: NSObject {
             }
         }
     }
-
+    
     private func prepareData(with roomIds:[String], index: Int, output: PrepareDataResult, completion: @escaping (_ result: PrepareDataResult) -> Void) {
         self.processingQueue.async {
             guard index < roomIds.count else {
@@ -453,25 +453,22 @@ public class MXSpaceService: NSObject {
                 return
             }
             
-            var _room: MXRoom?
-            var _space: MXSpace?
-            var isRoomDirect = false
-            var _directUserId: String?
-            self.sdkProcessingQueue.sync {
-                _room = self.session.room(withRoomId: roomIds[index])
-                
-                if let room = _room {
-                    _space = self.spacesPerId[room.roomId] ?? room.toSpace()
-                    isRoomDirect = room.isDirect
-                    _directUserId = room.directUserId
+            self.sdkProcessingQueue.async {
+                guard let room = self.session.room(withRoomId: roomIds[index]) else {
+                    self.prepareData(with: roomIds, index: index+1, output: output, completion: completion)
+                    return
                 }
+                
+                let space = self.spacesPerId[room.roomId] ?? room.toSpace()
+                
+                self.prepareData(with: roomIds, index: index, output: output, room: room, space: space, isRoomDirect: room.isDirect, directUserId: room.directUserId, completion: completion)
             }
-            
-            guard let room = _room else {
-                self.prepareData(with: roomIds, index: index+1, output: output, completion: completion)
-                return
-            }
-            
+        }
+    }
+    
+    private func prepareData(with roomIds:[String], index: Int, output: PrepareDataResult, room: MXRoom, space _space: MXSpace?, isRoomDirect:Bool, directUserId _directUserId: String?, completion: @escaping (_ result: PrepareDataResult) -> Void) {
+        
+        self.processingQueue.async {
             if let space = _space {
                 output.setComputing(true, forSpace: space)
                 space.readChildRoomsAndMembers {
@@ -500,8 +497,6 @@ public class MXSpaceService: NSObject {
                             let membersId = members.members?.compactMap({ roomMember in
                                 return roomMember.userId != self.session.myUserId ? roomMember.userId : nil
                             }) ?? []
-
-                            assert(membersId.count == 1)
 
                             self.processingQueue.async {
                                 membersId.forEach { memberId in
