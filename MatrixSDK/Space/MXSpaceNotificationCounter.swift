@@ -145,22 +145,31 @@ public class MXSpaceNotificationCounter: NSObject {
         self.processingQueue.async {
             
             let roomId = roomIds[index]
-            var _roomInfo: RoomInfo?
 
-            self.sdkProcessingQueue.sync {
-                guard let room = self.session.room(withRoomId: roomId), let summary = room.summary, summary.roomType != .space else {
-                    return
+            self.sdkProcessingQueue.async {
+                var _roomInfo: RoomInfo?
+                var isMentionOnly: Bool = false
+
+                if let room = self.session.room(withRoomId: roomId), let summary = room.summary, summary.roomType != .space {
+                    let roomInto = RoomInfo(with: room)
+                    _roomInfo = roomInto
+                    isMentionOnly = self.isRoomMentionsOnly(roomInto)
                 }
                 
-                _roomInfo = RoomInfo(with: room)
+                self.computeNotificationCount(for: spaceIds, with: roomIds, at: index, output: output, ancestorsPerRoomId: ancestorsPerRoomId, roomInfo: _roomInfo, isMentionOnly: isMentionOnly, completion: completion)
             }
-            
+        }
+    }
+    
+    private func computeNotificationCount(for spaceIds:[String], with roomIds:[String], at index: Int, output: ComputeDataResult, ancestorsPerRoomId: [String: Set<String>], roomInfo _roomInfo: RoomInfo?, isMentionOnly: Bool, completion: @escaping (_ result: ComputeDataResult) -> Void) {
+        
+        self.processingQueue.async {
             guard let roomInfo = _roomInfo else {
                 self.computeNotificationCount(for: spaceIds, with: roomIds, at: index + 1, output: output, ancestorsPerRoomId: ancestorsPerRoomId, completion: completion)
                 return
             }
             
-            let notificationState = self.notificationState(for: roomInfo)
+            let notificationState = self.notificationState(for: roomInfo, isMentionOnly: isMentionOnly)
 
             output.homeNotificationState += notificationState
             for spaceId in spaceIds {
@@ -174,14 +183,8 @@ public class MXSpaceNotificationCounter: NSObject {
         }
     }
 
-    private func notificationState(for roomInfo: RoomInfo) -> MXSpaceNotificationState {
+    private func notificationState(for roomInfo: RoomInfo, isMentionOnly: Bool) -> MXSpaceNotificationState {
         let notificationState = MXSpaceNotificationState()
-        
-        var isMentionOnly: Bool = false
-        
-        self.sdkProcessingQueue.sync {
-            isMentionOnly = self.isRoomMentionsOnly(roomInfo)
-        }
         
         let notificationCount = isMentionOnly ? roomInfo.highlightCount : roomInfo.notificationCount
         
