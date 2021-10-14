@@ -18,7 +18,7 @@ import Foundation
 
 @objcMembers
 internal class MXStoreRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
-    public private(set) var data: MXRoomListData? {
+    internal private(set) var data: MXRoomListData? {
         didSet {
             guard let data = data else {
                 //  do not notify when stopped
@@ -29,7 +29,7 @@ internal class MXStoreRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
             }
         }
     }
-    public let fetchOptions: MXRoomListDataFetchOptions
+    internal let fetchOptions: MXRoomListDataFetchOptions
     private let store: MXRoomSummaryStore
     
     private let multicastDelegate: MXMulticastDelegate<MXRoomListDataFetcherDelegate> = MXMulticastDelegate()
@@ -47,21 +47,21 @@ internal class MXStoreRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
     
     //  MARK: - Delegate
     
-    public func addDelegate(_ delegate: MXRoomListDataFetcherDelegate) {
+    internal func addDelegate(_ delegate: MXRoomListDataFetcherDelegate) {
         multicastDelegate.addDelegate(delegate)
     }
     
-    public func removeDelegate(_ delegate: MXRoomListDataFetcherDelegate) {
+    internal func removeDelegate(_ delegate: MXRoomListDataFetcherDelegate) {
         multicastDelegate.removeDelegate(delegate)
     }
     
-    public func removeAllDelegates() {
+    internal func removeAllDelegates() {
         multicastDelegate.removeAllDelegates()
     }
     
     //  MARK: - Data
     
-    public func paginate() {
+    internal func paginate() {
         if fetchOptions.async {
             executionQueue.async { [weak self] in
                 guard let self = self else { return }
@@ -75,7 +75,7 @@ internal class MXStoreRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
         }
     }
     
-    public func resetPagination() {
+    internal func resetPagination() {
         if fetchOptions.async {
             executionQueue.async { [weak self] in
                 guard let self = self else { return }
@@ -89,7 +89,7 @@ internal class MXStoreRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
         }
     }
     
-    public func refresh() {
+    internal func refresh() {
         guard let oldData = data else {
             return
         }
@@ -97,7 +97,7 @@ internal class MXStoreRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
         recomputeData(using: oldData)
     }
     
-    public func stop() {
+    internal func stop() {
         removeAllDelegates()
         removeDataObservers()
         data = nil
@@ -146,8 +146,8 @@ internal class MXStoreRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
     /// Compute data up to a numberOfItems
     private func computeData(upto numberOfItems: Int) -> MXRoomListData {
         var rooms = Array(roomSummaries.values)
-        rooms = fetchOptions.filterOptions.filterRooms(rooms)
-        rooms = fetchOptions.sortOptions.sortRooms(rooms)
+        rooms = filterRooms(rooms)
+        rooms = sortRooms(rooms)
         
         let totalRoomsCount = rooms.count
         if numberOfItems > 0 && rooms.count > numberOfItems {
@@ -265,6 +265,26 @@ internal class MXStoreRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
     
     deinit {
         stop()
+    }
+    
+}
+
+//  MARK: MXRoomListDataSortable
+
+extension MXStoreRoomListDataFetcher: MXRoomListDataSortable {
+    
+    var sortOptions: MXRoomListDataSortOptions {
+        return fetchOptions.sortOptions
+    }
+    
+}
+
+//  MARK: MXRoomListDataFilterable
+
+extension MXStoreRoomListDataFetcher: MXRoomListDataFilterable {
+    
+    var filterOptions: MXRoomListDataFilterOptions {
+        return fetchOptions.filterOptions
     }
     
 }

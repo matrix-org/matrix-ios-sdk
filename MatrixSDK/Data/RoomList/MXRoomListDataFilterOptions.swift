@@ -87,64 +87,6 @@ public final class MXRoomListDataFilterOptions: NSObject {
         super.init()
     }
     
-    /// Just to be used for in-memory data
-    internal func filterRooms(_ rooms: [MXRoomSummaryProtocol]) -> [MXRoomSummaryProtocol] {
-        guard let predicate = predicate else {
-            return rooms
-        }
-        
-        return (rooms as NSArray).filtered(using: predicate) as! [MXRoomSummaryProtocol]
-    }
-    
-    /// To be used for CoreData fetch request
-    internal var predicate: NSPredicate? {
-        var subpredicates: [NSPredicate] = []
-        
-        if let space = space {
-            //  TODO: Block based predicates won't work for CoreData, find another way when time comes.
-            let subpredicate = NSPredicate { object, bindings in
-                guard let summary = object as? MXRoomSummaryProtocol else {
-                    return false
-                }
-                return space.isRoomAChild(roomId: summary.roomId)
-            }
-            subpredicates.append(subpredicate)
-        }
-        
-        if let query = query, !query.isEmpty {
-            let subpredicate1 = NSPredicate(format: "%K CONTAINS[cd] %@",
-                                            #keyPath(MXRoomSummaryProtocol.displayname), query)
-            let subpredicate2 = NSPredicate(format: "%K CONTAINS[cd] %@",
-                                            #keyPath(MXRoomSummaryProtocol.spaceChildInfo.displayName), query)
-            let subpredicate = NSCompoundPredicate(orPredicateWithSubpredicates: [subpredicate1, subpredicate2])
-            subpredicates.append(subpredicate)
-        }
-        
-        if !onlySuggested {
-            if !dataTypes.isEmpty {
-                let subpredicate = NSPredicate(format: "(%K & %d) != 0",
-                                               #keyPath(MXRoomSummaryProtocol.dataTypes), dataTypes.rawValue)
-                subpredicates.append(subpredicate)
-            }
-            
-            if !notDataTypes.isEmpty {
-                let subpredicate = NSPredicate(format: "(%K & %d) == 0",
-                                               #keyPath(MXRoomSummaryProtocol.dataTypes), notDataTypes.rawValue)
-                subpredicates.append(subpredicate)
-            }
-        }
-        
-        guard !subpredicates.isEmpty else {
-            return nil
-        }
-        
-        if subpredicates.count == 1 {
-            return subpredicates.first
-        }
-        return NSCompoundPredicate(type: .and,
-                                   subpredicates: subpredicates)
-    }
-    
     /// Refresh fetcher after updates
     private func refreshFetcher() {
         guard let fetcher = fetchOptions?.fetcher else {

@@ -19,7 +19,7 @@ import Foundation
 @objcMembers
 internal class MXSuggestedRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
     
-    public let fetchOptions: MXRoomListDataFetchOptions
+    internal let fetchOptions: MXRoomListDataFetchOptions
     private let spaceService: MXSpaceService
     private let cache: MXSuggestedRoomListDataCache
     
@@ -35,7 +35,7 @@ internal class MXSuggestedRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
     private var spaceEventsListener: Any?
     private var currentHttpOperation: MXHTTPOperation?
     
-    public private(set) var data: MXRoomListData? {
+    internal private(set) var data: MXRoomListData? {
         didSet {
             guard let data = data else {
                 //  do not notify when stopped
@@ -61,19 +61,19 @@ internal class MXSuggestedRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
     
     //  MARK: - Delegate
     
-    public func addDelegate(_ delegate: MXRoomListDataFetcherDelegate) {
+    internal func addDelegate(_ delegate: MXRoomListDataFetcherDelegate) {
         multicastDelegate.addDelegate(delegate)
     }
     
-    public func removeDelegate(_ delegate: MXRoomListDataFetcherDelegate) {
+    internal func removeDelegate(_ delegate: MXRoomListDataFetcherDelegate) {
         multicastDelegate.removeDelegate(delegate)
     }
     
-    public func removeAllDelegates() {
+    internal func removeAllDelegates() {
         multicastDelegate.removeAllDelegates()
     }
     
-    private func notifyDataChange() {
+    internal func notifyDataChange() {
         multicastDelegate.invoke({ $0.fetcherDidChangeData(self) })
     }
     
@@ -94,7 +94,7 @@ internal class MXSuggestedRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
         space?.room?.removeListener(spaceEventsListener)
     }
     
-    func paginate() {
+    internal func paginate() {
         let numberOfItems: Int
         
         if let data = data {
@@ -118,11 +118,11 @@ internal class MXSuggestedRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
         computeData(upto: numberOfItems)
     }
     
-    func resetPagination() {
+    internal func resetPagination() {
         computeData(upto: fetchOptions.paginationOptions.rawValue)
     }
     
-    func refresh() {
+    internal func refresh() {
         //  cancel current request
         currentHttpOperation?.cancel()
         currentHttpOperation = nil
@@ -135,7 +135,7 @@ internal class MXSuggestedRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
         }
     }
     
-    func stop() {
+    internal func stop() {
         removeAllDelegates()
         removeDataObservers(for: space)
         data = nil
@@ -204,13 +204,33 @@ internal class MXSuggestedRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
     private func computeData(from childInfos: [MXSpaceChildInfo]) {
         //  create room summary objects
         var rooms: [MXRoomSummaryProtocol] = childInfos.map({ MXRoomSummary(spaceChildInfo: $0) })
-        rooms = fetchOptions.filterOptions.filterRooms(rooms)
-        rooms = fetchOptions.sortOptions.sortRooms(rooms)
+        rooms = filterRooms(rooms)
+        rooms = sortRooms(rooms)
         //  we don't know total rooms count, passing as current number of rooms
         self.data = MXRoomListData(rooms: rooms,
                                    counts: MXStoreRoomListDataCounts(withRooms: rooms,
                                                                      totalRoomsCount: rooms.count),
                                    paginationOptions: fetchOptions.paginationOptions)
+    }
+    
+}
+
+//  MARK: MXRoomListDataSortable
+
+extension MXSuggestedRoomListDataFetcher: MXRoomListDataSortable {
+    
+    var sortOptions: MXRoomListDataSortOptions {
+        return fetchOptions.sortOptions
+    }
+    
+}
+
+//  MARK: MXRoomListDataFilterable
+
+extension MXSuggestedRoomListDataFetcher: MXRoomListDataFilterable {
+    
+    var filterOptions: MXRoomListDataFilterOptions {
+        return fetchOptions.filterOptions
     }
     
 }

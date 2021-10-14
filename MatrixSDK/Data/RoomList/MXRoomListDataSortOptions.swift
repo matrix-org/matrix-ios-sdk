@@ -109,47 +109,6 @@ public final class MXRoomListDataSortOptions: NSObject {
         super.init()
     }
     
-    /// Just to be used for in-memory data
-    internal func sortRooms(_ rooms: [MXRoomSummaryProtocol]) -> [MXRoomSummaryProtocol] {
-        return (rooms as NSArray).sortedArray(using: sortDescriptors) as! [MXRoomSummaryProtocol]
-    }
-    
-    /// To be used for CoreData fetch request
-    internal var sortDescriptors: [NSSortDescriptor] {
-        var result: [NSSortDescriptor] = []
-        
-        if suggested {
-            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryProtocol.spaceChildInfo?.order, ascending: false))
-        }
-        
-        if invitesFirst {
-            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryProtocol.membership, ascending: true))
-        }
-        
-        if sentStatus {
-            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryProtocol.sentStatus, ascending: false))
-        }
-        
-        if missedNotificationsFirst {
-            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryProtocol.highlightCount, ascending: false))
-            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryProtocol.notificationCount, ascending: false))
-        }
-        
-        if unreadMessagesFirst {
-            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryProtocol.localUnreadEventCount, ascending: false))
-        }
-        
-        if lastEventDate {
-            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryProtocol.lastMessage?.originServerTs, ascending: false))
-        }
-        
-        if favoriteTag {
-            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryProtocol.favoriteTagOrder, ascending: false))
-        }
-        
-        return result
-    }
-    
     /// Refresh fetcher after updates
     private func refreshFetcher() {
         guard let fetcher = fetchOptions?.fetcher else {
