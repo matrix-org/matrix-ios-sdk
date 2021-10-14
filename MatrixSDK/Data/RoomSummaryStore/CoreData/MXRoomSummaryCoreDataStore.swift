@@ -82,9 +82,19 @@ public class MXRoomSummaryCoreDataStore: NSObject {
     }
     
     private func fetchRoomIds() -> [String] {
+        let propertyName = "s_identifier"
+        
+        guard let property = MXRoomSummaryModel.entity().propertiesByName[propertyName] else {
+            fatalError("[MXRoomSummaryCoreDataStore] Couldn't find \(propertyName) on entity \(String(describing: MXRoomSummaryModel.self)), probably property name changed")
+        }
         let request = MXRoomSummaryModel.typedFetchRequest()
+        request.returnsDistinctResults = true
+        request.includesSubentities = false
+        //  only fetch room identifiers
+        request.propertiesToFetch = [property]
         do {
             let results = try readerMoc.fetch(request)
+            //  do not attempt to access other properties from the results
             return results.map({ $0.s_identifier })
         } catch {
             MXLog.error("[MXRoomSummaryCoreDataStore] fetchRoomIds failed: \(error)")

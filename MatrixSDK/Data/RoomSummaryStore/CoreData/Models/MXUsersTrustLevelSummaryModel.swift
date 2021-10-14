@@ -20,12 +20,8 @@ import CoreData
 @objc(MXUsersTrustLevelSummaryModel)
 public class MXUsersTrustLevelSummaryModel: NSManagedObject {
 
-    private enum Constants {
-        static let entityName: String = "MXUsersTrustLevelSummaryModel"
-    }
-    
     internal static func typedFetchRequest() -> NSFetchRequest<MXUsersTrustLevelSummaryModel> {
-        return NSFetchRequest<MXUsersTrustLevelSummaryModel>(entityName: Constants.entityName)
+        return NSFetchRequest<MXUsersTrustLevelSummaryModel>(entityName: entityName)
     }
 
     @NSManaged public var s_usersCount: Int16
@@ -36,10 +32,7 @@ public class MXUsersTrustLevelSummaryModel: NSManagedObject {
     @discardableResult
     internal static func insert(roomUsersTrustLevelSummary usersTrustLevelSummary: MXUsersTrustLevelSummary,
                                 into moc: NSManagedObjectContext) -> MXUsersTrustLevelSummaryModel {
-        guard let model = NSEntityDescription.insertNewObject(forEntityName: Constants.entityName,
-                                                              into: moc) as? MXUsersTrustLevelSummaryModel else {
-            fatalError("[MXUsersTrustLevelSummaryModel] insert: could not initialize new model")
-        }
+        let model = MXUsersTrustLevelSummaryModel(context: moc)
         
         model.s_usersCount = Int16(usersTrustLevelSummary.trustedUsersProgress.totalUnitCount)
         model.s_trustedUsersCount = Int16(usersTrustLevelSummary.trustedUsersProgress.completedUnitCount)

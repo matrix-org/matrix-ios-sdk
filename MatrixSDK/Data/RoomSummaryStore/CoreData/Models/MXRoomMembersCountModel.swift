@@ -20,12 +20,8 @@ import CoreData
 @objc(MXRoomMembersCountModel)
 public class MXRoomMembersCountModel: NSManagedObject {
     
-    private enum Constants {
-        static let entityName: String = "MXRoomMembersCountModel"
-    }
-
     internal static func typedFetchRequest() -> NSFetchRequest<MXRoomMembersCountModel> {
-        return NSFetchRequest<MXRoomMembersCountModel>(entityName: Constants.entityName)
+        return NSFetchRequest<MXRoomMembersCountModel>(entityName: entityName)
     }
 
     @NSManaged public var s_members: Int16
@@ -35,10 +31,7 @@ public class MXRoomMembersCountModel: NSManagedObject {
     @discardableResult
     internal static func insert(roomMembersCount membersCount: MXRoomMembersCount,
                                 into moc: NSManagedObjectContext) -> MXRoomMembersCountModel {
-        guard let model = NSEntityDescription.insertNewObject(forEntityName: Constants.entityName,
-                                                              into: moc) as? MXRoomMembersCountModel else {
-            fatalError("[MXRoomMembersCountModel] insert: could not initialize new model")
-        }
+        let model = MXRoomMembersCountModel(context: moc)
         
         model.s_members = Int16(membersCount.members)
         model.s_joined = Int16(membersCount.joined)

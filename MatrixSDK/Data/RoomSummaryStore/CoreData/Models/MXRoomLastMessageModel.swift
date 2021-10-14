@@ -19,13 +19,9 @@ import CoreData
 
 @objc(MXRoomLastMessageModel)
 public class MXRoomLastMessageModel: NSManagedObject {
-    
-    private enum Constants {
-        static let entityName: String = "MXRoomLastMessageModel"
-    }
 
     internal static func typedFetchRequest() -> NSFetchRequest<MXRoomLastMessageModel> {
-        return NSFetchRequest<MXRoomLastMessageModel>(entityName: Constants.entityName)
+        return NSFetchRequest<MXRoomLastMessageModel>(entityName: entityName)
     }
 
     @NSManaged public var s_eventId: String
@@ -39,10 +35,7 @@ public class MXRoomLastMessageModel: NSManagedObject {
     @discardableResult
     internal static func insert(roomLastMessage lastMessage: MXRoomLastMessage,
                                 into moc: NSManagedObjectContext) -> MXRoomLastMessageModel {
-        guard let model = NSEntityDescription.insertNewObject(forEntityName: Constants.entityName,
-                                                              into: moc) as? MXRoomLastMessageModel else {
-            fatalError("[MXRoomLastMessageModel] insert: could not initialize new model")
-        }
+        let model = MXRoomLastMessageModel(context: moc)
         
         model.s_eventId = lastMessage.eventId
         model.s_originServerTs = lastMessage.originServerTs

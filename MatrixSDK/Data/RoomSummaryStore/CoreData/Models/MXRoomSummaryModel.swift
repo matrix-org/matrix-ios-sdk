@@ -20,12 +20,8 @@ import CoreData
 @objc(MXRoomSummaryModel)
 public class MXRoomSummaryModel: NSManagedObject {
     
-    private enum Constants {
-        static let entityName: String = "MXRoomSummaryModel"
-    }
-    
     internal static func typedFetchRequest() -> NSFetchRequest<MXRoomSummaryModel> {
-        return NSFetchRequest<MXRoomSummaryModel>(entityName: Constants.entityName)
+        return NSFetchRequest<MXRoomSummaryModel>(entityName: entityName)
     }
 
     @NSManaged public var s_identifier: String
@@ -58,10 +54,7 @@ public class MXRoomSummaryModel: NSManagedObject {
     @discardableResult
     internal static func insert(roomSummary summary: MXRoomSummaryProtocol,
                                 into moc: NSManagedObjectContext) -> MXRoomSummaryModel {
-        guard let model = NSEntityDescription.insertNewObject(forEntityName: Constants.entityName,
-                                                              into: moc) as? MXRoomSummaryModel else {
-            fatalError("[MXRoomSummaryModel] insert: could not initialize new model")
-        }
+        let model = MXRoomSummaryModel(context: moc)
         
         model.update(withRoomSummary: summary, in: moc)
         

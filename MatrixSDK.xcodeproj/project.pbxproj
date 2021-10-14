@@ -1338,6 +1338,8 @@
 		EC0B941627184E8A00B4D440 /* MXRoomSummaryCoreDataStore.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = EC0B940B27184E8A00B4D440 /* MXRoomSummaryCoreDataStore.xcdatamodeld */; };
 		EC0B9418271855CA00B4D440 /* MXRoomSummaryCoreDataStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC0B9417271855C900B4D440 /* MXRoomSummaryCoreDataStore.swift */; };
 		EC0B9419271855CA00B4D440 /* MXRoomSummaryCoreDataStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC0B9417271855C900B4D440 /* MXRoomSummaryCoreDataStore.swift */; };
+		EC0B941B2718654B00B4D440 /* NSManagedObject+MatrixSDK.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC0B941A2718654B00B4D440 /* NSManagedObject+MatrixSDK.swift */; };
+		EC0B941C2718654B00B4D440 /* NSManagedObject+MatrixSDK.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC0B941A2718654B00B4D440 /* NSManagedObject+MatrixSDK.swift */; };
 		EC0C51752559388C00F2CC66 /* MXStopwatch.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECB5D98B2552C9B4000AD89C /* MXStopwatch.swift */; };
 		EC11658D270F3ABF0089FA56 /* RLMRealm+MatrixSDK.h in Headers */ = {isa = PBXBuildFile; fileRef = EC11658B270F3ABF0089FA56 /* RLMRealm+MatrixSDK.h */; };
 		EC11658E270F3ABF0089FA56 /* RLMRealm+MatrixSDK.h in Headers */ = {isa = PBXBuildFile; fileRef = EC11658B270F3ABF0089FA56 /* RLMRealm+MatrixSDK.h */; };
@@ -2346,6 +2348,7 @@
 		EC0B940A27184E8A00B4D440 /* MXRoomMembersCountModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MXRoomMembersCountModel.swift; sourceTree = "<group>"; };
 		EC0B940C27184E8A00B4D440 /* MXRoomSummaryCoreDataStore.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = MXRoomSummaryCoreDataStore.xcdatamodel; sourceTree = "<group>"; };
 		EC0B9417271855C900B4D440 /* MXRoomSummaryCoreDataStore.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MXRoomSummaryCoreDataStore.swift; sourceTree = "<group>"; };
+		EC0B941A2718654B00B4D440 /* NSManagedObject+MatrixSDK.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSManagedObject+MatrixSDK.swift"; sourceTree = "<group>"; };
 		EC11658B270F3ABF0089FA56 /* RLMRealm+MatrixSDK.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "RLMRealm+MatrixSDK.h"; sourceTree = "<group>"; };
 		EC11658C270F3ABF0089FA56 /* RLMRealm+MatrixSDK.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "RLMRealm+MatrixSDK.m"; sourceTree = "<group>"; };
 		EC116591270FB6890089FA56 /* MXBackgroundTaskUnitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXBackgroundTaskUnitTests.swift; sourceTree = "<group>"; };
@@ -4093,8 +4096,9 @@
 			isa = PBXGroup;
 			children = (
 				EC0B9417271855C900B4D440 /* MXRoomSummaryCoreDataStore.swift */,
-				EC0B940627184E8A00B4D440 /* Models */,
 				EC0B940B27184E8A00B4D440 /* MXRoomSummaryCoreDataStore.xcdatamodeld */,
+				EC0B941A2718654B00B4D440 /* NSManagedObject+MatrixSDK.swift */,
+				EC0B940627184E8A00B4D440 /* Models */,
 			);
 			path = CoreData;
 			sourceTree = "<group>";
@@ -5454,6 +5458,7 @@
 				324DD2B8246C21C700377005 /* MXSecretStorageKeyCreationInfo.m in Sources */,
 				EC1165C027107E330089FA56 /* MXSuggestedRoomListDataCache.swift in Sources */,
 				ECD2897726E8ED0900F268CF /* MXRoomListDataFetchOptions.swift in Sources */,
+				EC0B941B2718654B00B4D440 /* NSManagedObject+MatrixSDK.swift in Sources */,
 				327E9AE82285A8C400A98BC1 /* MXAggregationPaginatedResponse.m in Sources */,
 				B10AFB4422A970060092E6AF /* MXEventReplace.m in Sources */,
 				EC383BB62540E15E002FBBE6 /* MXBackgroundPushRulesManager.swift in Sources */,
@@ -5921,6 +5926,7 @@
 				32F00ABE2488E1CD00131741 /* MXRecoveryService.m in Sources */,
 				B14EF1FB2397E90400758AF0 /* MXEnumConstants.swift in Sources */,
 				B14EF1FC2397E90400758AF0 /* MXEventRelations.m in Sources */,
+				EC0B941C2718654B00B4D440 /* NSManagedObject+MatrixSDK.swift in Sources */,
 				EC8A53E325B1BCC6004E0802 /* MXThirdPartyUserInstance.m in Sources */,
 				EC383BB12540688B002FBBE6 /* MXBackgroundSyncService.swift in Sources */,
 				322AB587260CD5690017E964 /* MXCachedSyncResponse.m in Sources */,
