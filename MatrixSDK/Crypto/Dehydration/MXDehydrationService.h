@@ -22,17 +22,12 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-/// ID of the algorithm used for the dehydration
-FOUNDATION_EXPORT NSString *const MXDehydrationAlgorithm;
-
-/// MXKeyProvider identifier for a 32 bytes long key used to pickle / unpickle the account of the dehydrated device.
-FOUNDATION_EXPORT NSString *const MXDehydrationServiceKeyDataType;
-
 /// Error domain for this class.
 FOUNDATION_EXPORT NSString *const MXDehydrationServiceErrorDomain;
+
 typedef NS_ENUM(NSInteger, MXDehydrationServiceErrorCode)
 {
-    MXDehydrationServiceAlreadyRuninngErrorCode,
+    MXDehydrationServiceAlreadyRuningErrorCode,
     MXDehydrationServiceNothingToRehydrateErrorCode,
     MXDehydrationServiceAlreadyClaimedErrorCode,
 };
@@ -43,8 +38,6 @@ typedef NS_ENUM(NSInteger, MXDehydrationServiceErrorCode)
  @see https://github.com/uhoreg/matrix-doc/blob/dehydration/proposals/2697-device-dehydration.md for more details
  */
 @interface MXDehydrationService : NSObject
-
-@property (nonatomic, readonly) BOOL inProgress;
 
 /**
  Dehydrate a new device for the current account

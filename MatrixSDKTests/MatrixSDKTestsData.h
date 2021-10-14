@@ -41,7 +41,7 @@ FOUNDATION_EXPORT NSString * const kMXTestsAliceAvatarURL;
 
 #pragma mark - mxBob
 // Credentials for the user mxBob on the home server located at kMXTestsHomeServerURL
-@property (nonatomic, readonly) MXCredentials *bobCredentials;
+@property (nonatomic, strong, readonly) MXCredentials *bobCredentials;
 
 // Get credentials asynchronously
 // The user will be created if needed
@@ -91,7 +91,7 @@ FOUNDATION_EXPORT NSString * const kMXTestsAliceAvatarURL;
 
 
 #pragma mark - mxAlice
-@property (nonatomic, readonly) MXCredentials *aliceCredentials;
+@property (nonatomic, strong, readonly) MXCredentials *aliceCredentials;
 
 - (void)doMXRestClientTestWithAlice:(XCTestCase*)testCase
                         readyToTest:(void (^)(MXRestClient *aliceRestClient, XCTestExpectation *expectation))readyToTest;
@@ -104,8 +104,8 @@ FOUNDATION_EXPORT NSString * const kMXTestsAliceAvatarURL;
 
 #pragma mark - both
 // The id and alias used for the public room created with *ThePublicRoom* methods
-@property (nonatomic,readonly) NSString *thePublicRoomId;
-@property (nonatomic,readonly) NSString *thePublicRoomAlias;
+@property (nonatomic, strong, readonly) NSString *thePublicRoomId;
+@property (nonatomic, strong, readonly) NSString *thePublicRoomAlias;
 
 - (void)doMXRestClientTestWithBobAndAliceInARoom:(XCTestCase*)testCase
                                      readyToTest:(void (^)(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString* roomId, XCTestExpectation *expectation))readyToTest;
@@ -173,7 +173,14 @@ onUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecogn
 
 
 #pragma mark Reference keeping
+
+/// Close automatically MXSession instances created by MatrixSDKTestsData.
+/// True by default.
+/// Those instances are closed on MatrixSDKTestsData.deinit()
+@property (nonatomic) BOOL autoCloseMXSessions;
+
 // Retain an object for the life of this MatrixSDKTestsData instance
 - (void)retain:(NSObject*)object;
+- (void)release:(NSObject*)object;
 
 @end

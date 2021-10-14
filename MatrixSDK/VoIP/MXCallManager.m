@@ -239,6 +239,7 @@ NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
         {
             void (^initCall)(NSString *) = ^(NSString *callSignalingRoomId){
                 // Do a peer to peer, one to one call
+                MXLogDebug(@"[MXCallManager] placeCallInRoom: Creating call in %@", callSignalingRoomId);
                 MXCall *call = [[MXCall alloc] initWithRoomId:roomId callSignalingRoomId:callSignalingRoomId andCallManager:self];
                 if (call)
                 {
@@ -328,6 +329,7 @@ NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
                     MXStrongifyAndReturnIfNil(self);
 
                     // The call can now be created
+                    MXLogDebug(@"[MXCallManager] placeCallInRoom: Creating conference call in %@", conferenceUserRoom.roomId);
                     MXCall *call = [[MXCall alloc] initWithRoomId:roomId callSignalingRoomId:conferenceUserRoom.roomId andCallManager:self];
                     if (call)
                     {
@@ -476,6 +478,7 @@ NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
             {
                 nativeRoomId = room.accountData.virtualRoomInfo.nativeRoomId;
             }
+            MXLogDebug(@"[MXCallManager] handleCallInvite: Creating call in %@", event.roomId);
             call = [[MXCall alloc] initWithRoomId:nativeRoomId callSignalingRoomId:event.roomId andCallManager:self];
             if (call)
             {
@@ -1152,7 +1155,7 @@ NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
                     if ([event.sender isEqualToString:userId])
                     {
                         MXRoomMemberEventContent *content = [MXRoomMemberEventContent modelFromJSON:event.content];
-                        if (content.membership == kMXMembershipStringJoin)
+                        if ([MXTools membership:content.membership] == MXMembershipJoin)
                         {
                             joined = YES;
                             [room removeListener:listener];
@@ -1659,7 +1662,7 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
                     if ([event.sender isEqualToString:userId])
                     {
                         MXRoomMemberEventContent *content = [MXRoomMemberEventContent modelFromJSON:event.content];
-                        if (content.membership == kMXMembershipStringJoin)
+                        if ([MXTools membership:content.membership] == MXMembershipJoin)
                         {
                             joined = YES;
                             [room removeListener:listener];

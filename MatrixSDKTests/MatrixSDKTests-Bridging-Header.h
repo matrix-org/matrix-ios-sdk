@@ -20,5 +20,8 @@
 #import "MatrixSDKTestsData.h"
 #import "MatrixSDKTestsE2EData.h"
 #import "MXDeviceListOperationsPool.h"
+#import "MXBackgroundTask.h"
+#import "MXUIKitBackgroundModeHandler.h"
+#import "MXApplicationProtocol.h"
 
 #endif /* MatrixSDKTests_Bridging_Header_h */

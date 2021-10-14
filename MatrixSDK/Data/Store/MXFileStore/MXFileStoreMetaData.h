@@ -52,6 +52,11 @@
 @property (nonatomic) NSDictionary *userAccountData;
 
 /**
+ State of agreement to the identity server's terms of service.
+ */
+@property (nonatomic) BOOL areAllIdentityServerTermsAgreed;
+
+/**
  The homeserver .well-known.
  */
 @property (nonatomic) MXWellKnown *homeserverWellknown;

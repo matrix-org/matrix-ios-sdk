@@ -24,8 +24,6 @@
 @interface MXEventTimelineTests : XCTestCase
 {
     MatrixSDKTestsData *matrixSDKTestsData;
-
-    MXSession *mxSession;
 }
 @end
 
@@ -42,12 +40,6 @@ NSString *theInitialEventMessage = @"The initial timelime event";
 
 - (void)tearDown
 {
-    if (mxSession)
-    {
-        [mxSession close];
-        mxSession = nil;
-    }
-
     matrixSDKTestsData = nil;
 
     [super tearDown];
@@ -55,8 +47,7 @@ NSString *theInitialEventMessage = @"The initial timelime event";
 
 - (void)doTestWithARoomOf41Messages:(XCTestCase*)testCase readyToTest:(void (^)(MXRoom *room, XCTestExpectation *expectation, NSString *initialEventId))readyToTest
 {
-    [matrixSDKTestsData doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
-        mxSession = mxSession2;
+    [matrixSDKTestsData doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
 
         // Add 20 messages to the room
         [matrixSDKTestsData for:mxSession.matrixRestClient andRoom:room.roomId sendMessages:20 testCase:testCase success:^{

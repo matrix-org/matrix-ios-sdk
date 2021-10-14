@@ -892,6 +892,11 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
         return;
     }
     
+    if (![self isRequestStillValid:keyVerificationRequest])
+    {
+        return;
+    }
+
     [self addPendingRequest:keyVerificationRequest notify:YES];
 }
 
@@ -1710,9 +1715,8 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
     NSDate *oldestRequestDate = [self oldestRequestDate];
     if (oldestRequestDate)
     {
-        MXLogDebug(@"[MXKeyVerificationRequest] scheduleTimeoutTimer: Create timer");
-
         NSDate *timeoutDate = [oldestRequestDate dateByAddingTimeInterval:self.requestTimeout];
+        MXLogDebug(@"[MXKeyVerificationRequest] scheduleTimeoutTimer: Create timer");
         requestTimeoutTimer = [[NSTimer alloc] initWithFireDate:timeoutDate
                                                       interval:0
                                                         target:self

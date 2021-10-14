@@ -141,6 +141,18 @@
     }];
 }
 
+- (NSDictionary *)fallbackKey
+{
+    return store.account.fallbackKey;
+}
+
+- (void)generateFallbackKey
+{
+    [store performAccountOperationWithBlock:^(OLMAccount *olmAccount) {
+        [olmAccount generateFallbackKey];
+    }];
+}
+
 - (NSString *)createOutboundSession:(NSString *)theirIdentityKey theirOneTimeKey:(NSString *)theirOneTimeKey
 {
     NSError *error;
@@ -221,7 +233,10 @@
     NSMutableArray *sessionIds = [NSMutableArray arrayWithCapacity:sessions.count];
     for (MXOlmSession *session in sessions)
     {
-        [sessionIds addObject:session.session.sessionIdentifier];
+        if (session.session.sessionIdentifier)
+        {
+            [sessionIds addObject:session.session.sessionIdentifier];
+        }
     }
 
     return sessionIds;

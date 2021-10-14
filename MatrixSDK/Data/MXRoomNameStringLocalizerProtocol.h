@@ -16,19 +16,24 @@
 
 @import Foundation;
 
+NS_ASSUME_NONNULL_BEGIN
+
 /**
- The `MXRoomNameStringsLocalizable` protocol defines an interface that must be implemented
+ The `MXRoomNameStringLocalizerProtocol` protocol defines an interface that must be implemented
  to provide string localizations for computing room name according to Matrix
  room summaries (https://github.com/matrix-org/matrix-doc/issues/688).
  This interface is used by `MXRoomSummaryUpdater`.
  */
-@protocol MXRoomNameStringsLocalizable <NSObject>
+@protocol MXRoomNameStringLocalizerProtocol <NSObject>
 
-@required
+- (NSString *)emptyRoom;
 
-@property (copy, readonly, nonnull) NSString *emptyRoom;
-@property (copy, readonly, nonnull) NSString *twoMembers;
-@property (copy, readonly, nonnull) NSString *moreThanTwoMembers;
+- (NSString *)twoMembers:(NSString *)firstMember second:(NSString *)secondMember;
+
+- (NSString *)moreThanTwoMembers:(NSString *)firstMember count:(NSNumber *)memberCount;
+
+- (NSString *)allOtherMembersLeft:(NSString *)member;
 
 @end
 
+NS_ASSUME_NONNULL_END

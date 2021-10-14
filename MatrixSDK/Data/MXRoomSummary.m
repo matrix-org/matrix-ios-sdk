@@ -592,7 +592,20 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
 
 - (void)markAllAsRead
 {
-    [self.room markAllAsRead];
+    [self markAllAsReadUpdatingReadMarker:YES];
+}
+
+- (void)markAllAsReadLocally
+{
+    [self markAllAsReadUpdatingReadMarker:NO];
+}
+
+- (void)markAllAsReadUpdatingReadMarker:(BOOL)updateReadMarker
+{
+    if (updateReadMarker)
+    {
+        [self.room markAllAsRead];
+    }
     
     _notificationCount = 0;
     _highlightCount = 0;
@@ -823,6 +836,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
         _lastMessage = [aDecoder decodeObjectForKey:@"lastMessage"];
         
         _hiddenFromUser = [aDecoder decodeBoolForKey:@"hiddenFromUser"];
+        _storedHash = [aDecoder decodeIntegerForKey:@"storedHash"];
         
         // Compute the trust if asked to do it automatically
         // or maintain its computation it has been already calcutated
@@ -871,11 +885,23 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     }
     
     [aCoder encodeBool:_hiddenFromUser forKey:@"hiddenFromUser"];
+    [aCoder encodeInteger:self.hash forKey:@"storedHash"];
 }
 
 - (NSString *)description
 {
     return [NSString stringWithFormat:@"%@ %@: %@ - %@", super.description, _roomId, _displayname, _lastMessage.eventId];
+}
+
+- (NSUInteger)hash
+{
+    NSUInteger prime = 31;
+    NSUInteger result = 1;
+
+    result = prime * result + [_lastMessage.eventId hash];
+    result = prime * result + [_lastMessage.text hash];
+
+    return result;
 }
 
 @end

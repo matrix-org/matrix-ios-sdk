@@ -29,6 +29,9 @@
         _eventStreamToken = dict[@"eventStreamToken"];
         _syncFilterId = dict[@"syncFilterId"];
         _userAccountData = dict[@"userAccountData"];
+        
+        NSNumber *areAllTermsAgreed = dict[@"areAllIdentityServerTermsAgreed"];
+        _areAllIdentityServerTermsAgreed = [areAllTermsAgreed boolValue];
 
         NSNumber *version = dict[@"version"];
         _version = [version unsignedIntegerValue];
@@ -50,6 +53,7 @@
                                   @"userId": _userId,
                                   @"version": @(_version),
                                   @"maxUploadSize": @(_maxUploadSize),
+                                  @"areAllIdentityServerTermsAgreed": [NSNumber numberWithBool:_areAllIdentityServerTermsAgreed]
                                   }];
 
     // Nullable properties
@@ -82,6 +86,7 @@
     metaData->_version = _version;
     metaData->_eventStreamToken = [_eventStreamToken copyWithZone:zone];
     metaData->_userAccountData = [_userAccountData copyWithZone:zone];
+    metaData->_areAllIdentityServerTermsAgreed = _areAllIdentityServerTermsAgreed;
     metaData->_maxUploadSize = _maxUploadSize;
  
     return metaData;

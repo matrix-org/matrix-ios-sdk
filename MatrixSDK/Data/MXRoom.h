@@ -39,7 +39,7 @@
 #import "MXEventTimeline.h"
 #import "MXEventsEnumerator.h"
 #import "MXCryptoConstants.h"
-#import "MXSendReplyEventStringsLocalizable.h"
+#import "MXSendReplyEventStringLocalizerProtocol.h"
 
 @class MXRoom;
 @class MXSession;
@@ -915,7 +915,7 @@ FOUNDATION_EXPORT NSInteger const kMXRoomAlreadyJoinedErrorCode;
  @param eventToReply The event to reply.
  @param textMessage the text to send.
  @param formattedTextMessage the optional HTML formatted string of the text to send.
- @param stringLocalizations string localizations used when building reply message.
+ @param stringLocalizer string localizations used when building reply message.
  @param localEcho a pointer to a MXEvent object (@see sendMessageWithContent: for details).
  @param success A block object called when the operation succeeds. It returns
  the event id of the event generated on the home server
@@ -926,7 +926,7 @@ FOUNDATION_EXPORT NSInteger const kMXRoomAlreadyJoinedErrorCode;
 - (MXHTTPOperation*)sendReplyToEvent:(MXEvent*)eventToReply
                      withTextMessage:(NSString*)textMessage
                 formattedTextMessage:(NSString*)formattedTextMessage
-                 stringLocalizations:(id<MXSendReplyEventStringsLocalizable>)stringLocalizations
+                     stringLocalizer:(id<MXSendReplyEventStringLocalizerProtocol>)stringLocalizer
                            localEcho:(MXEvent**)localEcho
                              success:(void (^)(NSString *eventId))success
                              failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
@@ -1161,9 +1161,11 @@ Remove a tag applied on an event of the room
 
  @param eventId The event Id.
  @param sort YES to sort them from the latest to the oldest.
- @return the receipts for an event in a dedicated room.
+ @param completion Completion block containing the receipts for an event in a dedicated room.
  */
-- (NSArray<MXReceiptData*> *)getEventReceipts:(NSString*)eventId sorted:(BOOL)sort;
+- (void)getEventReceipts:(nonnull NSString*)eventId
+                  sorted:(BOOL)sort
+              completion:(nonnull void (^)(NSArray<MXReceiptData*> * _Nonnull))completion;
 
 /**
  Store a receipt.

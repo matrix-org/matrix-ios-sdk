@@ -37,7 +37,7 @@ public class MXUIKitApplicationStateService: NSObject {
     
     //  MARK: - Static Method
     
-    static public func readableApplicationState(applicationState: UIApplication.State) -> NSString {
+    static public func readableApplicationState(_ applicationState: UIApplication.State) -> NSString {
         switch applicationState {
             case .active:
                 return "active"
@@ -50,7 +50,7 @@ public class MXUIKitApplicationStateService: NSObject {
         }
     }
     
-    static public func readableEstimatedBackgroundTimeRemaining(backgroundTimeRemaining: TimeInterval) -> NSString {
+    static public func readableEstimatedBackgroundTimeRemaining(_ backgroundTimeRemaining: TimeInterval) -> NSString {
         if backgroundTimeRemaining == .greatestFiniteMagnitude {
             return "undetermined"
         }
@@ -90,8 +90,8 @@ public class MXUIKitApplicationStateService: NSObject {
         let newApplicationState = self.sharedApplicationState
         
         if newApplicationState != applicationState {
-            let applicationStateString = MXUIKitApplicationStateService.readableApplicationState(applicationState: applicationState)
-            let newApplicationStateString = MXUIKitApplicationStateService.readableApplicationState(applicationState: newApplicationState)
+            let applicationStateString = MXUIKitApplicationStateService.readableApplicationState(applicationState)
+            let newApplicationStateString = MXUIKitApplicationStateService.readableApplicationState(newApplicationState)
             MXLog.debug("[MXUIKitApplicationStateService] applicationStateDidChange: from \(applicationStateString) to \(newApplicationStateString)")
             
             applicationState = newApplicationState

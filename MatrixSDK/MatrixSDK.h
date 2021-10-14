@@ -135,6 +135,9 @@ FOUNDATION_EXPORT NSString *MatrixSDKVersion;
 
 #import "MXSpaceChildContent.h"
 #import "MXRoomLastMessage.h"
+#import "MXBackgroundModeHandler.h"
+#import "MXUIKitBackgroundTask.h"
+#import "MXUIKitBackgroundModeHandler.h"
 
 #import "MXUIKitBackgroundTask.h"
 

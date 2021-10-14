@@ -26,6 +26,9 @@
     NSString *eventStreamToken;
     MXWellKnown *homeserverWellknown;
     NSInteger maxUploadSize;
+    
+    //  Execution queue for computationally expensive operations.
+    dispatch_queue_t executionQueue;
 }
 @end
 
@@ -40,10 +43,13 @@
     if (self)
     {
         roomStores = [NSMutableDictionary dictionary];
-        receiptsByRoomId = [NSMutableDictionary dictionary];
+        roomOutgoingMessagesStores = [NSMutableDictionary dictionary];
+        roomReceiptsStores = [NSMutableDictionary dictionary];
         users = [NSMutableDictionary dictionary];
         groups = [NSMutableDictionary dictionary];
         maxUploadSize = -1;
+        self.areAllIdentityServerTermsAgreed = NO;
+        executionQueue = dispatch_queue_create("MXMemoryStoreExecutionQueue", DISPATCH_QUEUE_SERIAL);
     }
     return self;
 }
@@ -96,9 +102,9 @@
         [roomStores removeObjectForKey:roomId];
     }
     
-    if (receiptsByRoomId[roomId])
+    if (roomReceiptsStores[roomId])
     {
-        [receiptsByRoomId removeObjectForKey:roomId];
+        [roomReceiptsStores removeObjectForKey:roomId];
     }
 }
 
@@ -168,60 +174,68 @@
     return roomStore.partialTextMessage;
 }
 
-- (NSArray<MXReceiptData*> *)getEventReceipts:(NSString*)roomId eventId:(NSString*)eventId sorted:(BOOL)sort
+- (void)loadReceiptsForRoom:(NSString *)roomId completion:(void (^)(void))completion
 {
-    NSMutableArray* receipts = [[NSMutableArray alloc] init];
+    [self getOrCreateRoomReceiptsStore:roomId];
     
-    NSMutableDictionary* receiptsByUserId = receiptsByRoomId[roomId];
-    
-    if (receiptsByUserId)
+    if (completion)
     {
-        @synchronized (receiptsByUserId)
-        {
-            for (NSString* userId in receiptsByUserId)
-            {
-                MXReceiptData* receipt = receiptsByUserId[userId];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            completion();
+        });
+    }
+}
 
-                if (receipt && [receipt.eventId isEqualToString:eventId])
-                {
-                    [receipts addObject:receipt];
-                }
+- (void)getEventReceipts:(NSString *)roomId eventId:(NSString *)eventId sorted:(BOOL)sort completion:(void (^)(NSArray<MXReceiptData *> * _Nonnull))completion
+{
+    [self loadReceiptsForRoom:roomId completion:^{
+        RoomReceiptsStore *receiptsStore = self->roomReceiptsStores[roomId];
+        
+        if (receiptsStore)
+        {
+            @synchronized (receiptsStore)
+            {
+                dispatch_async(self->executionQueue, ^{
+                    NSArray<MXReceiptData*> *receipts = [[receiptsStore allValues] filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"eventId == %@", eventId]];
+                    
+                    if (sort)
+                    {
+                        NSArray<MXReceiptData*> *sortedReceipts = [receipts sortedArrayUsingComparator:^NSComparisonResult(MXReceiptData* _Nonnull first, MXReceiptData* _Nonnull second) {
+                            return (first.ts < second.ts) ? NSOrderedDescending : NSOrderedAscending;
+                        }];
+                        
+                        dispatch_async(dispatch_get_main_queue(), ^{
+                            completion(sortedReceipts);
+                        });
+                    }
+                    else
+                    {
+                        dispatch_async(dispatch_get_main_queue(), ^{
+                            completion(receipts);
+                        });
+                    }
+                });
             }
         }
-    }
-
-    if (sort)
-    {
-        return [receipts sortedArrayUsingComparator:^NSComparisonResult(id a, id b)
-                                {
-                                    MXReceiptData *first =  (MXReceiptData*)a;
-                                    MXReceiptData *second = (MXReceiptData*)b;
-                                    
-                                    return (first.ts < second.ts) ? NSOrderedDescending : NSOrderedAscending;
-                                }];
-    }
-    
-    return receipts;
+        else
+        {
+            completion(@[]);
+        }
+    }];
 }
 
 - (BOOL)storeReceipt:(MXReceiptData*)receipt inRoom:(NSString*)roomId
 {
-    NSMutableDictionary* receiptsByUserId = receiptsByRoomId[roomId];
+    RoomReceiptsStore *receiptsStore = [self getOrCreateRoomReceiptsStore:roomId];
     
-    if (!receiptsByUserId)
-    {
-        receiptsByUserId = [[NSMutableDictionary alloc] init];
-        receiptsByRoomId[roomId] = receiptsByUserId;
-    }
-    
-    MXReceiptData* curReceipt = receiptsByUserId[receipt.userId];
+    MXReceiptData *curReceipt = receiptsStore[receipt.userId];
     
     // not yet defined or a new event
     if (!curReceipt || (![receipt.eventId isEqualToString:curReceipt.eventId] && (receipt.ts > curReceipt.ts)))
     {
-        @synchronized (receiptsByUserId)
+        @synchronized (receiptsStore)
         {
-            receiptsByUserId[receipt.userId] = receipt;
+            receiptsStore[receipt.userId] = receipt;
         }
         return true;
     }
@@ -231,11 +245,11 @@
 
 - (MXReceiptData *)getReceiptInRoom:(NSString*)roomId forUserId:(NSString*)userId
 {
-    NSMutableDictionary* receipsByUserId = receiptsByRoomId[roomId];
+    RoomReceiptsStore *receiptsStore = [self getOrCreateRoomReceiptsStore:roomId];
 
-    if (receipsByUserId)
+    if (receiptsStore)
     {
-        MXReceiptData* data = receipsByUserId[userId];
+        MXReceiptData* data = receiptsStore[userId];
         if (data)
         {
             return [data copy];
@@ -248,13 +262,13 @@
 - (NSUInteger)localUnreadEventCount:(NSString*)roomId withTypeIn:(NSArray*)types
 {
     // @TODO: This method is only logic which could be moved to MXRoom
-    MXMemoryRoomStore* store = [roomStores valueForKey:roomId];
-    NSMutableDictionary* receipsByUserId = [receiptsByRoomId objectForKey:roomId];
+    MXMemoryRoomStore* store = [self getOrCreateRoomStore:roomId];
+    RoomReceiptsStore *receiptsStore = [self getOrCreateRoomReceiptsStore:roomId];
     NSUInteger count = 0;
     
-    if (store && receipsByUserId)
+    if (store && receiptsStore)
     {
-        MXReceiptData* data = [receipsByUserId objectForKey:credentials.userId];
+        MXReceiptData* data = [receiptsStore objectForKey:credentials.userId];
         
         if (data)
         {
@@ -357,25 +371,25 @@
 #pragma mark - Outgoing events
 - (void)storeOutgoingMessageForRoom:(NSString*)roomId outgoingMessage:(MXEvent*)outgoingMessage
 {
-    MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
+    MXMemoryRoomOutgoingMessagesStore *roomStore = [self getOrCreateRoomOutgoingMessagesStore:roomId];
     [roomStore storeOutgoingMessage:outgoingMessage];
 }
 
 - (void)removeAllOutgoingMessagesFromRoom:(NSString*)roomId
 {
-    MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
+    MXMemoryRoomOutgoingMessagesStore *roomStore = [self getOrCreateRoomOutgoingMessagesStore:roomId];
     [roomStore removeAllOutgoingMessages];
 }
 
 - (void)removeOutgoingMessageFromRoom:(NSString*)roomId outgoingMessage:(NSString*)outgoingMessageEventId
 {
-    MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
+    MXMemoryRoomOutgoingMessagesStore *roomStore = [self getOrCreateRoomOutgoingMessagesStore:roomId];
     [roomStore removeOutgoingMessage:outgoingMessageEventId];
 }
 
 - (NSArray<MXEvent*>*)outgoingMessagesInRoom:(NSString*)roomId
 {
-    MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
+    MXMemoryRoomOutgoingMessagesStore *roomStore = [self getOrCreateRoomOutgoingMessagesStore:roomId];
     return roomStore.outgoingMessages;
 }
 
@@ -428,6 +442,16 @@
     success(theFilterId);
 }
 
+- (void)loadRoomMessagesForRoom:(NSString *)roomId completion:(void (^)(void))completion
+{
+    [self getOrCreateRoomStore:roomId];
+    if (completion)
+    {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            completion();
+        });
+    }
+}
 
 #pragma mark - Protected operations
 - (MXMemoryRoomStore*)getOrCreateRoomStore:(NSString*)roomId
@@ -439,6 +463,28 @@
         roomStores[roomId] = roomStore;
     }
     return roomStore;
+}
+
+- (MXMemoryRoomOutgoingMessagesStore *)getOrCreateRoomOutgoingMessagesStore:(NSString *)roomId
+{
+    MXMemoryRoomOutgoingMessagesStore *store = roomOutgoingMessagesStores[roomId];
+    if (nil == store)
+    {
+        store = [MXMemoryRoomOutgoingMessagesStore new];
+        roomOutgoingMessagesStores[roomId] = store;
+    }
+    return store;
+}
+
+- (RoomReceiptsStore *)getOrCreateRoomReceiptsStore:(NSString *)roomId
+{
+    RoomReceiptsStore *store = roomReceiptsStores[roomId];
+    if (nil == store)
+    {
+        store = [RoomReceiptsStore new];
+        roomReceiptsStores[roomId] = store;
+    }
+    return store;
 }
 
 @end

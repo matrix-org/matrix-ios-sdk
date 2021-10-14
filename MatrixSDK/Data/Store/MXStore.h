@@ -29,6 +29,8 @@
 
 #import "MXEventsEnumerator.h"
 
+@class MXSpaceGraphData;
+
 /**
  The `MXStore` protocol defines an interface that must be implemented in order to store
  Matrix data handled during a `MXSession`.
@@ -235,9 +237,12 @@
  @param roomId The room Id.
  @param eventId The event Id.
  @param sort to sort them from the latest to the oldest
- @return the receipts for an event in a dedicated room.
+ @param completion Completion block containing the receipts for an event in a dedicated room.
  */
-- (NSArray<MXReceiptData*> * _Nullable)getEventReceipts:(nonnull NSString*)roomId eventId:(nonnull NSString*)eventId sorted:(BOOL)sort;
+- (void)getEventReceipts:(nonnull NSString*)roomId
+                 eventId:(nonnull NSString*)eventId
+                  sorted:(BOOL)sort
+              completion:(nonnull void (^)(NSArray<MXReceiptData*> * _Nonnull))completion;
 
 /**
  Store the receipt for a user in a room
@@ -256,6 +261,14 @@
  @return the current stored receipt (nil by default).
  */
 - (MXReceiptData * _Nullable)getReceiptInRoom:(nonnull NSString*)roomId forUserId:(nonnull NSString*)userId;
+
+/**
+ Load receipts for a room asynchronously.
+ 
+ @param roomId the id of the room.
+ @param completion Completion block to be called at the end of the process. Will be called in main thread.
+ */
+- (void)loadReceiptsForRoom:(nonnull NSString *)roomId completion:(nullable void (^)(void))completion;
 
 /**
  Count the unread events wrote in the store.
@@ -296,6 +309,15 @@
  */
 - (void)storeHomeserverWellknown:(nonnull MXWellKnown*)homeserverWellknown;
 
+#pragma mark - Room Messages
+
+/**
+ Load room messages for a room.
+ 
+ @param roomId The id of the desired room.
+ @param completion Completion block to be called at the end of the process. Will be called on main thread.
+ */
+- (void)loadRoomMessagesForRoom:(nonnull NSString *)roomId completion:(nullable void (^)(void))completion;
 
 @optional
 
@@ -421,7 +443,6 @@
 */
 - (MXRoomAccountData* _Nullable)accountDataOfRoom:(nonnull NSString*)roomId;
 
-
 #pragma mark - Outgoing events
 /**
  Store into the store an outgoing message event being sent in a room.
@@ -461,6 +482,10 @@
  */
 @property (nonatomic) NSDictionary * _Nullable userAccountData;
 
+/**
+ Store/retrieve the state of agreement to the identity server's terms of service.
+ */
+@property (nonatomic) BOOL areAllIdentityServerTermsAgreed;
 
 #pragma mark - Matrix filters
 /**
@@ -497,5 +522,6 @@
 - (void)filterIdForFilter:(nonnull MXFilterJSONModel*)filter
                   success:(nonnull void (^)(NSString * _Nullable filterId))success
                   failure:(nullable void (^)(NSError * _Nullable error))failure;
+
 
 @end

@@ -44,10 +44,8 @@
         "MXAggregatedReferenceUnitTests",
         "MXAsyncTaskQueueUnitTests",
         "MXAuthenticationSessionUnitTests",
-        "MXCredentialsUnitTests\/testEqualHashes()",
-        "MXCredentialsUnitTests\/testEquality()",
-        "MXCredentialsUnitTests\/testNotEqualHashes()",
-        "MXCredentialsUnitTests\/testNotEquality()",
+        "MXBackgroundTaskUnitTests",
+        "MXCredentialsUnitTests",
         "MXDeviceListOperationsPoolUnitTests",
         "MXErrorUnitTests",
         "MXEventAnnotationUnitTests",
@@ -63,6 +61,7 @@
         "MXQRCodeDataUnitTests",
         "MXReplyEventParserUnitTests",
         "MXResponseUnitTests",
+        "MXSyncResponseUnitTests",
         "MXToolsUnitTests"
       ],
       "target" : {

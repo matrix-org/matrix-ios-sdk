@@ -29,8 +29,6 @@
 @interface MXPeekingRoomTests : XCTestCase
 {
     MatrixSDKTestsData *matrixSDKTestsData;
-
-    MXSession *mxSession;
 }
 @end
 
@@ -45,12 +43,6 @@
 
 - (void)tearDown
 {
-    if (mxSession)
-    {
-        [mxSession close];
-        mxSession = nil;
-    }
-
     matrixSDKTestsData = nil;
 
     [super tearDown];
@@ -62,9 +54,7 @@
 
         [room setHistoryVisibility:kMXRoomHistoryVisibilityWorldReadable success:^{
 
-            [matrixSDKTestsData doMXSessionTestWithAlice:nil readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation2) {
-
-                mxSession = aliceSession;
+            [matrixSDKTestsData doMXSessionTestWithAlice:nil readyToTest:^(MXSession *mxSession, XCTestExpectation *expectation2) {
 
                 XCTAssertEqual(mxSession.rooms.count, 0);
 
@@ -103,9 +93,7 @@
 
         [room setHistoryVisibility:kMXRoomHistoryVisibilityWorldReadable success:^{
 
-            [matrixSDKTestsData doMXSessionTestWithAlice:nil readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation2) {
-
-                mxSession = aliceSession;
+            [matrixSDKTestsData doMXSessionTestWithAlice:nil readyToTest:^(MXSession *mxSession, XCTestExpectation *expectation2) {
 
                 XCTAssertEqual(mxSession.rooms.count, 0);
 
@@ -142,9 +130,7 @@
 {
     [matrixSDKTestsData doMXSessionTestWithBobAndThePublicRoom:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
 
-        [matrixSDKTestsData doMXSessionTestWithAlice:nil readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation2) {
-
-            mxSession = aliceSession;
+        [matrixSDKTestsData doMXSessionTestWithAlice:nil readyToTest:^(MXSession *mxSession, XCTestExpectation *expectation2) {
 
             XCTAssertEqual(mxSession.rooms.count, 0);
 
@@ -166,9 +152,7 @@
 
 - (void)testPeekingWithMemberAlreadyInRoom
 {
-    [matrixSDKTestsData doMXSessionTestWithBobAndThePublicRoom:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
-
-        mxSession = mxSession2;
+    [matrixSDKTestsData doMXSessionTestWithBobAndThePublicRoom:self readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
 
         XCTAssertEqual(mxSession.rooms.count, 1);
         XCTAssertEqual(room.summary.membersCount.members, 1);
