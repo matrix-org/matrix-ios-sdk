@@ -22,12 +22,12 @@ Pod::Spec.new do |s|
   s.requires_arc  = true
   s.swift_versions = ['5.1', '5.2']
   
-  s.ios.deployment_target = "9.0"
+  s.ios.deployment_target = "10.0"
   s.osx.deployment_target = "10.10"
   
   s.default_subspec = 'Core'
   s.subspec 'Core' do |ss|
-      ss.ios.deployment_target = "9.0"
+      ss.ios.deployment_target = "10.0"
       ss.osx.deployment_target = "10.10"
       
       ss.source_files = "MatrixSDK", "MatrixSDK/**/*.{h,m}", "MatrixSDK/**/*.{swift}"

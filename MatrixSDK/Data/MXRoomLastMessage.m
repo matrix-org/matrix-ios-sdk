@@ -19,6 +19,7 @@
 #import "MXKeyProvider.h"
 #import "MXAesKeyData.h"
 #import "MXAes.h"
+#import "MatrixSDKSwiftHeader.h"
 
 #import <Security/Security.h>
 #import <CommonCrypto/CommonCryptor.h>
@@ -74,6 +75,29 @@ NSString *const kCodingKeyOthers = @"others";
 - (NSString*)description
 {
     return [NSString stringWithFormat:@"%@: %@ - %llu", super.description, self.eventId, self.originServerTs];
+}
+
+#pragma mark - CoreData Model
+
+- (instancetype)initWithCoreDataModel:(MXRoomLastMessageModel *)model
+{
+    if (self = [super init])
+    {
+        _eventId = model.s_eventId;
+        _originServerTs = model.s_originServerTs;
+        _isEncrypted = model.s_isEncrypted;
+        _sender = model.s_sender;
+        _text = model.s_text;
+        if (model.s_attributedText)
+        {
+            _attributedText = [NSKeyedUnarchiver unarchiveObjectWithData:model.s_attributedText];
+        }
+        if (model.s_others)
+        {
+            _others = [NSKeyedUnarchiver unarchiveObjectWithData:model.s_others];
+        }
+    }
+    return self;
 }
 
 #pragma mark - NSCoding

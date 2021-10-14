@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="18154" systemVersion="20F71" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+    <entity name="MXRoomLastMessageModel" representedClassName="MXRoomLastMessageModel" syncable="YES">
+        <attribute name="s_attributedText" optional="YES" attributeType="Binary" valueTransformerName=""/>
+        <attribute name="s_eventId" attributeType="String"/>
+        <attribute name="s_isEncrypted" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="s_originServerTs" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="s_others" optional="YES" attributeType="Binary"/>
+        <attribute name="s_sender" attributeType="String"/>
+        <attribute name="s_text" optional="YES" attributeType="String"/>
+        <relationship name="s_ofRoom" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="MXRoomSummaryModel" inverseName="s_lastMessage" inverseEntity="MXRoomSummaryModel"/>
+    </entity>
+    <entity name="MXRoomMembersCountModel" representedClassName="MXRoomMembersCountModel" syncable="YES">
+        <attribute name="s_invited" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="s_joined" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="s_members" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <relationship name="s_ofRoom" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="MXRoomSummaryModel" inverseName="s_membersCount" inverseEntity="MXRoomSummaryModel"/>
+    </entity>
+    <entity name="MXRoomSummaryModel" representedClassName="MXRoomSummaryModel" syncable="YES">
+        <attribute name="s_aliases" optional="YES" attributeType="Transformable" valueTransformerName="NSSecureUnarchiveFromData" customClassName="[String]"/>
+        <attribute name="s_avatar" optional="YES" attributeType="String"/>
+        <attribute name="s_creatorUserId" attributeType="String"/>
+        <attribute name="s_dataTypesInt" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="s_directUserId" optional="YES" attributeType="String"/>
+        <attribute name="s_displayName" optional="YES" attributeType="String"/>
+        <attribute name="s_favoriteTagOrder" optional="YES" attributeType="String"/>
+        <attribute name="s_hiddenFromUser" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="s_highlightCount" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="s_identifier" attributeType="String"/>
+        <attribute name="s_isConferenceUserRoom" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="s_isEncrypted" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="s_joinRule" optional="YES" attributeType="String"/>
+        <attribute name="s_localUnreadEventCount" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="s_membershipInt" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="s_membershipTransitionStateInt" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="s_notificationCount" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="s_others" optional="YES" attributeType="Binary"/>
+        <attribute name="s_sentStatusInt" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="s_storedHash" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="s_topic" optional="YES" attributeType="String"/>
+        <attribute name="s_typeInt" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="s_typeString" optional="YES" attributeType="String"/>
+        <relationship name="s_lastMessage" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="MXRoomLastMessageModel" inverseName="s_ofRoom" inverseEntity="MXRoomLastMessageModel"/>
+        <relationship name="s_membersCount" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="MXRoomMembersCountModel" inverseName="s_ofRoom" inverseEntity="MXRoomMembersCountModel"/>
+        <relationship name="s_trust" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="MXUsersTrustLevelSummaryModel" inverseName="s_ofRoom" inverseEntity="MXUsersTrustLevelSummaryModel"/>
+    </entity>
+    <entity name="MXUsersTrustLevelSummaryModel" representedClassName="MXUsersTrustLevelSummaryModel" syncable="YES">
+        <attribute name="s_devicesCount" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="s_trustedDevicesCount" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="s_trustedUsersCount" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="s_usersCount" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <relationship name="s_ofRoom" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="MXRoomSummaryModel" inverseName="s_trust" inverseEntity="MXRoomSummaryModel"/>
+    </entity>
+    <elements>
+        <element name="MXRoomLastMessageModel" positionX="117" positionY="90" width="128" height="14"/>
+        <element name="MXRoomMembersCountModel" positionX="297.1484375" positionY="-66.14453125" width="128" height="14"/>
+        <element name="MXRoomSummaryModel" positionX="-63" positionY="-18" width="128" height="14"/>
+        <element name="MXUsersTrustLevelSummaryModel" positionX="236.4921875" positionY="519.4296875" width="128" height="14"/>
+    </elements>
+</model>
