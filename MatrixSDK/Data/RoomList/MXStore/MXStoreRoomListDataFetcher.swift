@@ -110,7 +110,7 @@ internal class MXStoreRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
         
         if let data = data {
             //  load next page
-            if data.counts.numberOfRooms == data.counts.totalRoomsCount {
+            guard data.hasMoreRooms else {
                 //  there is no more rooms to paginate
                 return
             }

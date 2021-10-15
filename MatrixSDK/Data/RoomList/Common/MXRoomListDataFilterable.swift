@@ -51,7 +51,6 @@ extension MXRoomListDataFilterable {
         var subpredicates: [NSPredicate] = []
         
         if let space = filterOptions.space {
-            //  TODO: Block based predicates won't work for CoreData, find another way when time comes.
             let subpredicate = NSPredicate { object, bindings in
                 guard let summary = object as? MXRoomSummaryProtocol else {
                     return false

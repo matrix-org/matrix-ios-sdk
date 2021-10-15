@@ -116,6 +116,8 @@ public class MXRoomSummaryCoreDataStore: NSObject {
     
 }
 
+//  MARK: - MXRoomSummaryStore
+
 extension MXRoomSummaryCoreDataStore: MXRoomSummaryStore {
     
     public var rooms: [String] {
@@ -140,6 +142,16 @@ extension MXRoomSummaryCoreDataStore: MXRoomSummaryStore {
     
     public func summary(ofRoom roomId: String) -> MXRoomSummaryProtocol? {
         return fetchSummary(forRoomId: roomId)
+    }
+    
+}
+
+//  MARK: - CoreDataContextable
+
+extension MXRoomSummaryCoreDataStore: CoreDataContextable {
+    
+    var managedObjectContext: NSManagedObjectContext {
+        return readerMoc
     }
     
 }
