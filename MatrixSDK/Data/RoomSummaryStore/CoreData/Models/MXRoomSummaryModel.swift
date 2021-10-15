@@ -71,6 +71,7 @@ public class MXRoomSummaryModel: NSManagedObject {
         s_topic = summary.topic
         s_creatorUserId = summary.creatorUserId
         s_aliases = summary.aliases
+        s_joinRule = summary.joinRule
         s_membershipInt = Int16(summary.membership.rawValue)
         s_membershipTransitionStateInt = Int16(summary.membershipTransitionState.rawValue)
         s_isConferenceUserRoom = summary.isConferenceUserRoom
@@ -80,14 +81,25 @@ public class MXRoomSummaryModel: NSManagedObject {
             s_others = nil
         }
         s_isEncrypted = summary.isEncrypted
+        s_localUnreadEventCount = Int16(summary.localUnreadEventCount)
         s_notificationCount = Int16(summary.notificationCount)
         s_highlightCount = Int16(summary.highlightCount)
         s_directUserId = summary.directUserId
         s_hiddenFromUser = summary.hiddenFromUser
+        s_storedHash = Int64(summary.storedHash)
+        s_favoriteTagOrder = summary.favoriteTagOrder
+        s_dataTypesInt = Int64(summary.dataTypes.rawValue)
+        s_sentStatusInt = Int16(summary.sentStatus.rawValue)
         
+        if !moc.insertedObjects.contains(self) {
+            moc.delete(s_membersCount)
+        }
         s_membersCount = MXRoomMembersCountModel.insert(roomMembersCount: summary.membersCount,
                                                         into: moc)
         
+        if let old = s_trust {
+            moc.delete(old)
+        }
         if let trust = summary.trust {
             s_trust = MXUsersTrustLevelSummaryModel.insert(roomUsersTrustLevelSummary: trust,
                                                           into: moc)
@@ -95,6 +107,9 @@ public class MXRoomSummaryModel: NSManagedObject {
             s_trust = nil
         }
         
+        if let old = s_lastMessage {
+            moc.delete(old)
+        }
         if let lastMessage = summary.lastMessage {
             s_lastMessage = MXRoomLastMessageModel.insert(roomLastMessage: lastMessage,
                                                           into: moc)
