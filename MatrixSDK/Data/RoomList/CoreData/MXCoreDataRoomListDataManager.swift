@@ -36,7 +36,8 @@ public class MXCoreDataRoomListDataManager: NSObject, MXRoomListDataManager {
         guard let credentials = session?.credentials else {
             fatalError("Session has no credentials")
         }
+        let store = MXRoomSummaryCoreDataStore(withCredentials: credentials)
         return MXCoreDataRoomListDataFetcher(fetchOptions: options,
-                                             store: MXRoomSummaryCoreDataStore(withCredentials: credentials))
+                                             store: store)
     }
 }

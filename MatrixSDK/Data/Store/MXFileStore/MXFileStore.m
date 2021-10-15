@@ -2281,14 +2281,14 @@ static NSUInteger preloadOptions;
     return roomIDs;
 }
 
-- (void)storeSummaryForRoom:(NSString *)roomId summary:(id<MXRoomSummaryProtocol>)summary
+- (void)storeSummary:(id<MXRoomSummaryProtocol>)summary
 {
     @synchronized (roomSummaries)
     {
-        roomSummaries[roomId] = summary;
+        roomSummaries[summary.roomId] = summary;
     }
-    
-    [roomsToCommitForSummary addObject:roomId];
+
+    [roomsToCommitForSummary addObject:summary.roomId];
 }
 
 - (id<MXRoomSummaryProtocol>)summaryOfRoom:(NSString *)roomId

@@ -124,8 +124,8 @@ extension MXRoomSummaryCoreDataStore: MXRoomSummaryStore {
         return fetchRoomIds()
     }
     
-    public func storeSummary(forRoom roomId: String, summary: MXRoomSummaryProtocol) {
-        if let existing = fetchSummary(forRoomId: roomId), let existingInWriter = writerMoc.object(with: existing.objectID) as? MXRoomSummaryModel {
+    public func storeSummary(_ summary: MXRoomSummaryProtocol) {
+        if let existing = fetchSummary(forRoomId: summary.roomId), let existingInWriter = writerMoc.object(with: existing.objectID) as? MXRoomSummaryModel {
             existingInWriter.update(withRoomSummary: summary, in: writerMoc)
         } else {
             MXRoomSummaryModel.insert(roomSummary: summary, into: writerMoc)

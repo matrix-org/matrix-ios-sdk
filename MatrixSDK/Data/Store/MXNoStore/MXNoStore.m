@@ -433,7 +433,7 @@
     return @[];
 }
 
-- (void)storeSummaryForRoom:(NSString *)roomId summary:(id<MXRoomSummaryProtocol>)summary
+- (void)storeSummary:(id<MXRoomSummaryProtocol>)summary
 {
     
 }

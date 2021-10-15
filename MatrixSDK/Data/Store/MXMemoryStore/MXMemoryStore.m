@@ -491,12 +491,12 @@
     return roomStores.allKeys;
 }
 
-- (void)storeSummaryForRoom:(NSString *)roomId summary:(id<MXRoomSummaryProtocol>)summary
+- (void)storeSummary:(id<MXRoomSummaryProtocol>)summary
 {
-    roomSummaries[roomId] = summary;
-    if (roomStores[roomId] == nil)
+    roomSummaries[summary.roomId] = summary;
+    if (roomStores[summary.roomId] == nil)
     {
-        roomStores[roomId] = [[MXMemoryRoomStore alloc] init];
+        roomStores[summary.roomId] = [[MXMemoryRoomStore alloc] init];
     }
 }
 

@@ -166,7 +166,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     _sentStatus = self.calculateSentStatus;
     _favoriteTagOrder = self.room.accountData.tags[kMXRoomTagFavourite].order;
     
-    [store storeSummaryForRoom:_roomId summary:self];
+    [store storeSummary:self];
     
     if (commit && [store respondsToSelector:@selector(commit)])
     {

@@ -33,10 +33,9 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Store the summary for a room.
  
- @param roomId the id of the room.
  @param summary the room summary.
  */
-- (void)storeSummaryForRoom:(NSString*)roomId summary:(id<MXRoomSummaryProtocol>)summary;
+- (void)storeSummary:(id<MXRoomSummaryProtocol>)summary;
 
 /**
  Get the summary a room.

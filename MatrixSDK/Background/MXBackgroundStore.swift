@@ -261,7 +261,7 @@ class MXBackgroundStore: NSObject, MXStore {
         return []
     }
     
-    func storeSummary(forRoom roomId: String, summary: MXRoomSummaryProtocol) {
+    func storeSummary(_ summary: MXRoomSummaryProtocol) {
         
     }
     
