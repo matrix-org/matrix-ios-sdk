@@ -21,7 +21,7 @@ import CoreData
 public class MXRoomSummaryCoreDataStore: NSObject {
     
     private enum Constants {
-        static let modelName: String = "MXRoomSummaryStore"
+        static let modelName: String = "MXRoomSummaryCoreDataStore"
         static let folderName: String = "RoomSummaryStore"
         static let storeFileName: String = "RoomSummaryStore.sqlite"
     }
@@ -49,9 +49,9 @@ public class MXRoomSummaryCoreDataStore: NSObject {
         result.shouldAddStoreAsynchronously = false
         return result
     }()
-    private lazy var managedObjectModel: NSManagedObjectModel = {
-        guard let url = Bundle(for: MXRoomSummaryModel.self).url(forResource: Constants.modelName,
-                                                                 withExtension: "momd") else {
+    private static var managedObjectModel: NSManagedObjectModel = {
+        guard let url = Bundle(for: MXRoomSummaryCoreDataStore.self).url(forResource: Constants.modelName,
+                                                                         withExtension: "momd") else {
             fatalError("[MXRoomSummaryCoreDataStore] No MXRoomSummaryStore Core Data model")
         }
         guard let result = NSManagedObjectModel(contentsOf: url) else {
@@ -60,7 +60,8 @@ public class MXRoomSummaryCoreDataStore: NSObject {
         return result
     }()
     private lazy var persistentContainer: NSPersistentContainer = {
-        let container = NSPersistentContainer(name: "", managedObjectModel: managedObjectModel)
+        let container = NSPersistentContainer(name: Constants.modelName,
+                                              managedObjectModel: Self.managedObjectModel)
         container.persistentStoreDescriptions = [storeDescription]
         container.loadPersistentStores { storeDescription, error in
             if let error = error as NSError? {
@@ -79,6 +80,8 @@ public class MXRoomSummaryCoreDataStore: NSObject {
     public init(withCredentials credentials: MXCredentials) {
         self.credentials = credentials
         super.init()
+        //  create persistent container
+        _ = persistentContainer
     }
     
     private func fetchRoomIds() -> [String] {
