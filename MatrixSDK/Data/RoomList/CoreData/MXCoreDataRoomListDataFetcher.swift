@@ -149,6 +149,8 @@ internal class MXCoreDataRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
     private func recomputeData(using data: MXRoomListData) {
         removeCacheIfRequired()
         let numberOfItems = (data.currentPage + 1) * data.paginationOptions.rawValue
+        fetchedResultsController.fetchRequest.predicate = filterPredicate(for: filterOptions)
+        fetchedResultsController.fetchRequest.sortDescriptors = sortDescriptors(for: sortOptions)
         fetchedResultsController.fetchRequest.fetchLimit = numberOfItems
         performFetch()
     }
@@ -164,6 +166,7 @@ internal class MXCoreDataRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
         data = MXRoomListData(rooms: summaries,
                               counts: counts,
                               paginationOptions: fetchOptions.paginationOptions)
+        fetchedResultsController.delegate = self
     }
     
 }
