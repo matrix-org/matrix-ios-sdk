@@ -26,6 +26,7 @@
 #import "MXFileStoreMetaData.h"
 #import "MXSDKOptions.h"
 #import "MXTools.h"
+#import "MatrixSDKSwiftHeader.h"
 
 static NSUInteger const kMXFileVersion = 75;
 
@@ -117,6 +118,8 @@ static NSUInteger preloadOptions;
 
     // The evenst stream token that corresponds to the data being backed up.
     NSString *backupEventStreamToken;
+    
+    id<MXRoomSummaryStore> roomSummaryStore;
 }
 
 // The commit to file store background task
@@ -132,7 +135,7 @@ static NSUInteger preloadOptions;
     dispatch_once(&onceToken, ^{
 
         // By default, we do not need to preload rooms states now
-        preloadOptions = MXFileStorePreloadOptionRoomSummary | MXFileStorePreloadOptionRoomAccountData;
+        preloadOptions = MXFileStorePreloadOptionRoomAccountData;
     });
 }
 
@@ -170,6 +173,7 @@ static NSUInteger preloadOptions;
     if (self)
     {
         credentials = someCredentials;
+        roomSummaryStore = [[MXRoomSummaryCoreDataStore alloc] initWithCredentials:credentials];
         [self setUpStoragePaths];
     }
     return self;
@@ -178,6 +182,8 @@ static NSUInteger preloadOptions;
 - (void)openWithCredentials:(MXCredentials*)someCredentials onComplete:(void (^)(void))onComplete failure:(void (^)(NSError *))failure
 {
     credentials = someCredentials;
+    
+    roomSummaryStore = [[MXRoomSummaryCoreDataStore alloc] initWithCredentials:credentials];
     
     // Create the file path where data will be stored for the user id passed in credentials
     [self setUpStoragePaths];
@@ -613,6 +619,11 @@ static NSUInteger preloadOptions;
 - (BOOL)areAllIdentityServerTermsAgreed
 {
     return metaData.areAllIdentityServerTermsAgreed;
+}
+
+- (id<MXRoomSummaryStore>)summariesModule
+{
+    return roomSummaryStore;
 }
 
 #pragma mark - Matrix filters

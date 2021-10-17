@@ -486,6 +486,11 @@
 
 #pragma mark - MXRoomSummaryStore
 
+- (id<MXRoomSummaryStore>)summariesModule
+{
+    return self;
+}
+
 - (NSArray<NSString *> *)rooms
 {
     return roomStores.allKeys;

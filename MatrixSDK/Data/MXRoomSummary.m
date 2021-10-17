@@ -138,7 +138,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     {
         _mxSession = mxSession;
         store = mxSession.store;
-        [self updateWith:[store summaryOfRoom:_roomId]];
+        [self updateWith:[store.summariesModule summaryOfRoom:_roomId]];
 
         // Listen to the event sent state changes
         // This is used to follow evolution of local echo events
@@ -166,7 +166,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     _sentStatus = self.calculateSentStatus;
     _favoriteTagOrder = self.room.accountData.tags[kMXRoomTagFavourite].order;
     
-    [store storeSummary:self];
+    [store.summariesModule storeSummary:self];
     
     if (commit && [store respondsToSelector:@selector(commit)])
     {

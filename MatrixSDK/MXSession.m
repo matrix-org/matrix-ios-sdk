@@ -393,7 +393,7 @@ typedef void (^MXOnResumeDone)(void);
 
                 // Load MXRoomSummaries from the store
                 NSDate *startDate2 = [NSDate date];
-                for (NSString *roomId in self.store.rooms)
+                for (NSString *roomId in self.store.summariesModule.rooms)
                 {
                     @autoreleasepool
                     {
@@ -409,7 +409,7 @@ typedef void (^MXOnResumeDone)(void);
 
                 // Create MXRooms from their states stored in the store
                 NSDate *startDate3 = [NSDate date];
-                for (NSString *roomId in self.store.rooms)
+                for (NSString *roomId in self.store.summariesModule.rooms)
                 {
                     [self loadRoom:roomId];
                 }
@@ -834,7 +834,7 @@ typedef void (^MXOnResumeDone)(void);
     [self setState:MXSessionStateSyncInProgress];
 
     // Can we resume from data available in the cache
-    if (_store.isPermanent && self.isEventStreamInitialised && 0 < _store.rooms.count)
+    if (_store.isPermanent && self.isEventStreamInitialised && 0 < _store.summariesModule.rooms.count)
     {
         // Resume the stream (presence will be retrieved during server sync)
         MXLogDebug(@"[MXSession] Resuming the events stream from %@...", self.store.eventStreamToken);

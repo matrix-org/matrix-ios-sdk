@@ -21,22 +21,22 @@ public class MXStoreRoomListDataManager: NSObject, MXRoomListDataManager {
     public weak var session: MXSession?
     
     public func configure(withSession session: MXSession) {
-        assert(self.session == nil, "Cannot configure the session again")
+        assert(self.session == nil, "[MXStoreRoomListDataManager] Cannot configure the session again")
         self.session = session
     }
     
     public func fetcher(withOptions options: MXRoomListDataFetchOptions) -> MXRoomListDataFetcher {
         if options.filterOptions.onlySuggested {
             guard let spaceService = session?.spaceService else {
-                fatalError("Session has no spaceService")
+                fatalError("[MXStoreRoomListDataManager] Session has no spaceService")
             }
             return MXSuggestedRoomListDataFetcher(fetchOptions: options,
                                                   spaceService: spaceService)
         }
         guard let store = session?.store else {
-            fatalError("Session has no store")
+            fatalError("[MXStoreRoomListDataManager] Session has no store")
         }
         return MXStoreRoomListDataFetcher(fetchOptions: options,
-                                          store: store)
+                                          store: store.summariesModule)
     }
 }

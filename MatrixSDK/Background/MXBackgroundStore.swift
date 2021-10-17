@@ -257,6 +257,14 @@ class MXBackgroundStore: NSObject, MXStore {
     
     //  MARK: - MXRoomSummaryStore
     
+    var summariesModule: MXRoomSummaryStore {
+        return self
+    }
+    
+}
+
+extension MXBackgroundStore: MXRoomSummaryStore {
+    
     var rooms: [String] {
         return []
     }
@@ -267,7 +275,7 @@ class MXBackgroundStore: NSObject, MXStore {
     
     //  Fetch real soom summary
     func summary(ofRoom roomId: String) -> MXRoomSummaryProtocol? {
-        return fileStore.summary(ofRoom: roomId)
+        return fileStore.summariesModule.summary(ofRoom: roomId)
     }
     
 }
