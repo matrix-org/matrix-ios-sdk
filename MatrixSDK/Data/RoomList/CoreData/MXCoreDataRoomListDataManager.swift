@@ -21,23 +21,28 @@ public class MXCoreDataRoomListDataManager: NSObject, MXRoomListDataManager {
     public weak var session: MXSession?
     
     public func configure(withSession session: MXSession) {
-        assert(self.session == nil, "Cannot configure the session again")
+        assert(self.session == nil, "[MXCoreDataRoomListDataManager] Cannot configure the session again")
         self.session = session
     }
     
     public func fetcher(withOptions options: MXRoomListDataFetchOptions) -> MXRoomListDataFetcher {
         if options.filterOptions.onlySuggested {
             guard let spaceService = session?.spaceService else {
-                fatalError("Session has no spaceService")
+                fatalError("[MXCoreDataRoomListDataManager] Session has no spaceService")
             }
             return MXSuggestedRoomListDataFetcher(fetchOptions: options,
                                                   spaceService: spaceService)
         }
-        guard let credentials = session?.credentials else {
-            fatalError("Session has no credentials")
+        guard let store = session?.store else {
+            fatalError("[MXCoreDataRoomListDataManager] Session has no store")
         }
-        let store = MXRoomSummaryCoreDataStore(withCredentials: credentials)
+        guard let coreDataStore = store.summariesModule as? MXRoomSummaryCoreDataContextableStore else {
+            fatalError("[MXCoreDataRoomListDataManager] Session.store.summariesModule is not CoreDataContextable")
+        }
+        
+        assert(coreDataStore.managedObjectContext.concurrencyType == .mainQueueConcurrencyType)
+        
         return MXCoreDataRoomListDataFetcher(fetchOptions: options,
-                                             store: store)
+                                             store: coreDataStore)
     }
 }
