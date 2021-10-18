@@ -22,7 +22,7 @@ public class MXCoreDataRoomSummaryStore: NSObject {
     
     private enum Constants {
         static let modelName: String = "MXCoreDataRoomSummaryStore"
-        static let folderName: String = "RoomSummaryStore"
+        static let folderName: String = "MXCoreDataRoomSummaryStore"
         static let storeFileName: String = "RoomSummaryStore.sqlite"
     }
     
