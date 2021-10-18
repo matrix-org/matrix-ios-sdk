@@ -1334,10 +1334,10 @@
 		EC0B941227184E8A00B4D440 /* MXRoomSummaryModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC0B940927184E8A00B4D440 /* MXRoomSummaryModel.swift */; };
 		EC0B941327184E8A00B4D440 /* MXRoomMembersCountModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC0B940A27184E8A00B4D440 /* MXRoomMembersCountModel.swift */; };
 		EC0B941427184E8A00B4D440 /* MXRoomMembersCountModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC0B940A27184E8A00B4D440 /* MXRoomMembersCountModel.swift */; };
-		EC0B941527184E8A00B4D440 /* MXRoomSummaryCoreDataStore.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = EC0B940B27184E8A00B4D440 /* MXRoomSummaryCoreDataStore.xcdatamodeld */; };
-		EC0B941627184E8A00B4D440 /* MXRoomSummaryCoreDataStore.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = EC0B940B27184E8A00B4D440 /* MXRoomSummaryCoreDataStore.xcdatamodeld */; };
-		EC0B9418271855CA00B4D440 /* MXRoomSummaryCoreDataStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC0B9417271855C900B4D440 /* MXRoomSummaryCoreDataStore.swift */; };
-		EC0B9419271855CA00B4D440 /* MXRoomSummaryCoreDataStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC0B9417271855C900B4D440 /* MXRoomSummaryCoreDataStore.swift */; };
+		EC0B941527184E8A00B4D440 /* MXCoreDataRoomSummaryStore.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = EC0B940B27184E8A00B4D440 /* MXCoreDataRoomSummaryStore.xcdatamodeld */; };
+		EC0B941627184E8A00B4D440 /* MXCoreDataRoomSummaryStore.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = EC0B940B27184E8A00B4D440 /* MXCoreDataRoomSummaryStore.xcdatamodeld */; };
+		EC0B9418271855CA00B4D440 /* MXCoreDataRoomSummaryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC0B9417271855C900B4D440 /* MXCoreDataRoomSummaryStore.swift */; };
+		EC0B9419271855CA00B4D440 /* MXCoreDataRoomSummaryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC0B9417271855C900B4D440 /* MXCoreDataRoomSummaryStore.swift */; };
 		EC0B941B2718654B00B4D440 /* NSManagedObject+MatrixSDK.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC0B941A2718654B00B4D440 /* NSManagedObject+MatrixSDK.swift */; };
 		EC0B941C2718654B00B4D440 /* NSManagedObject+MatrixSDK.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC0B941A2718654B00B4D440 /* NSManagedObject+MatrixSDK.swift */; };
 		EC0B941E27186C3500B4D440 /* MXRoomListDataSortable.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC0B941D27186C3500B4D440 /* MXRoomListDataSortable.swift */; };
@@ -2369,7 +2369,7 @@
 		EC0B940927184E8A00B4D440 /* MXRoomSummaryModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MXRoomSummaryModel.swift; sourceTree = "<group>"; };
 		EC0B940A27184E8A00B4D440 /* MXRoomMembersCountModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MXRoomMembersCountModel.swift; sourceTree = "<group>"; };
 		EC0B940C27184E8A00B4D440 /* MXRoomSummaryCoreDataStore.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = MXRoomSummaryCoreDataStore.xcdatamodel; sourceTree = "<group>"; };
-		EC0B9417271855C900B4D440 /* MXRoomSummaryCoreDataStore.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MXRoomSummaryCoreDataStore.swift; sourceTree = "<group>"; };
+		EC0B9417271855C900B4D440 /* MXCoreDataRoomSummaryStore.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MXCoreDataRoomSummaryStore.swift; sourceTree = "<group>"; };
 		EC0B941A2718654B00B4D440 /* NSManagedObject+MatrixSDK.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSManagedObject+MatrixSDK.swift"; sourceTree = "<group>"; };
 		EC0B941D27186C3500B4D440 /* MXRoomListDataSortable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXRoomListDataSortable.swift; sourceTree = "<group>"; };
 		EC0B942027186D4600B4D440 /* MXRoomListDataFilterable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXRoomListDataFilterable.swift; sourceTree = "<group>"; };
@@ -4128,8 +4128,8 @@
 		EC0B940527184E8A00B4D440 /* CoreData */ = {
 			isa = PBXGroup;
 			children = (
-				EC0B9417271855C900B4D440 /* MXRoomSummaryCoreDataStore.swift */,
-				EC0B940B27184E8A00B4D440 /* MXRoomSummaryCoreDataStore.xcdatamodeld */,
+				EC0B9417271855C900B4D440 /* MXCoreDataRoomSummaryStore.swift */,
+				EC0B940B27184E8A00B4D440 /* MXCoreDataRoomSummaryStore.xcdatamodeld */,
 				EC0B941A2718654B00B4D440 /* NSManagedObject+MatrixSDK.swift */,
 				EC0B940627184E8A00B4D440 /* Models */,
 			);
@@ -5654,7 +5654,7 @@
 				EC1848C52685F64D00865E16 /* MXiOSAudioOutputRoute.swift in Sources */,
 				EC60EE08265CFFF400B39A4E /* MXGroupSyncProfile.m in Sources */,
 				B19A30A0240424BD00FB6F35 /* MXQRCodeTransaction.m in Sources */,
-				EC0B941527184E8A00B4D440 /* MXRoomSummaryCoreDataStore.xcdatamodeld in Sources */,
+				EC0B941527184E8A00B4D440 /* MXCoreDataRoomSummaryStore.xcdatamodeld in Sources */,
 				C63E78B01F26588000AC692F /* MXRoomPowerLevels.swift in Sources */,
 				EC0B943F271DB68F00B4D440 /* MXVoidRoomSummaryStore.m in Sources */,
 				EC383BA5253DE6C9002FBBE6 /* MXSyncResponseStore.swift in Sources */,
@@ -5756,7 +5756,7 @@
 				320BBF441D6C81550079890E /* MXEventsEnumeratorOnArray.m in Sources */,
 				32618E7220ED2DF500E1D2EA /* MXFilterJSONModel.m in Sources */,
 				3259D02526037A7200C365DB /* NSDictionary.swift in Sources */,
-				EC0B9418271855CA00B4D440 /* MXRoomSummaryCoreDataStore.swift in Sources */,
+				EC0B9418271855CA00B4D440 /* MXCoreDataRoomSummaryStore.swift in Sources */,
 				ECF29BE52641953C0053E6D6 /* MXAssertedIdentityModel.m in Sources */,
 				323F8865212D4E480001C73C /* MXMatrixVersions.m in Sources */,
 				32133026228BFA800070BA9B /* MXReactionCountChangeListener.m in Sources */,
@@ -6130,7 +6130,7 @@
 				B14EF23D2397E90400758AF0 /* MXCallManager.m in Sources */,
 				B14EF23E2397E90400758AF0 /* MXPeekingRoom.m in Sources */,
 				B14EF23F2397E90400758AF0 /* MXEncryptedContentFile.m in Sources */,
-				EC0B941627184E8A00B4D440 /* MXRoomSummaryCoreDataStore.xcdatamodeld in Sources */,
+				EC0B941627184E8A00B4D440 /* MXCoreDataRoomSummaryStore.xcdatamodeld in Sources */,
 				EC8A539625B1BC77004E0802 /* MXUserModel.m in Sources */,
 				EC0B9440271DB68F00B4D440 /* MXVoidRoomSummaryStore.m in Sources */,
 				B14EF2402397E90400758AF0 /* MXSessionEventListener.m in Sources */,
@@ -6232,7 +6232,7 @@
 				324AAC772399140D00380A66 /* MXKeyVerificationDone.m in Sources */,
 				B14EF2702397E90400758AF0 /* MXIdentityServerRestClient.swift in Sources */,
 				B14EF2712397E90400758AF0 /* MXSASTransaction.m in Sources */,
-				EC0B9419271855CA00B4D440 /* MXRoomSummaryCoreDataStore.swift in Sources */,
+				EC0B9419271855CA00B4D440 /* MXCoreDataRoomSummaryStore.swift in Sources */,
 				B14EF2722397E90400758AF0 /* MXDiscoveredClientConfig.m in Sources */,
 				B19A30A1240424BD00FB6F35 /* MXQRCodeTransaction.m in Sources */,
 				B14EF2732397E90400758AF0 /* MXRealmEventScan.m in Sources */,
@@ -6803,13 +6803,13 @@
 /* End XCConfigurationList section */
 
 /* Begin XCVersionGroup section */
-		EC0B940B27184E8A00B4D440 /* MXRoomSummaryCoreDataStore.xcdatamodeld */ = {
+		EC0B940B27184E8A00B4D440 /* MXCoreDataRoomSummaryStore.xcdatamodeld */ = {
 			isa = XCVersionGroup;
 			children = (
 				EC0B940C27184E8A00B4D440 /* MXRoomSummaryCoreDataStore.xcdatamodel */,
 			);
 			currentVersion = EC0B940C27184E8A00B4D440 /* MXRoomSummaryCoreDataStore.xcdatamodel */;
-			path = MXRoomSummaryCoreDataStore.xcdatamodeld;
+			path = MXCoreDataRoomSummaryStore.xcdatamodeld;
 			sourceTree = "<group>";
 			versionGroupType = wrapper.xcdatamodel;
 		};
