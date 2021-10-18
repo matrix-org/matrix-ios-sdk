@@ -161,9 +161,11 @@ internal class MXCoreDataRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
             return
         }
         
-        let counts = MXStoreRoomListDataCounts(withRooms: summaries,
+        let mapped = summaries.compactMap({ MXRoomSummary(summaryModel: $0) })
+        
+        let counts = MXStoreRoomListDataCounts(withRooms: mapped,
                                                totalRoomsCount: totalRoomsCount)
-        data = MXRoomListData(rooms: summaries,
+        data = MXRoomListData(rooms: mapped,
                               counts: counts,
                               paginationOptions: fetchOptions.paginationOptions)
         fetchedResultsController.delegate = self
