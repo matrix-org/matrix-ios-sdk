@@ -18,6 +18,7 @@
 #import "MXNoStore.h"
 
 #import "MXEventsEnumeratorOnArray.h"
+#import "MXVoidRoomSummaryStore.h"
 
 @interface MXNoStore ()
 {
@@ -50,6 +51,8 @@
     // All matrix groups known by the user
     // The keys are groups ids.
     NSMutableDictionary <NSString*, MXGroup*> *groups;
+    
+    id<MXRoomSummaryStore> roomSummaryStore;
 }
 @end
 
@@ -71,6 +74,7 @@
         partialTextMessages = [NSMutableDictionary dictionary];
         users = [NSMutableDictionary dictionary];
         groups = [NSMutableDictionary dictionary];
+        roomSummaryStore = [[MXVoidRoomSummaryStore alloc] init];
     }
     return self;
 }
@@ -155,6 +159,7 @@
     {
         [partialTextMessages removeObjectForKey:roomId];
     }
+    [roomSummaryStore removeSummaryOfRoom:roomId];
 }
 
 - (void)deleteAllData
@@ -166,6 +171,7 @@
     [hasLoadedAllRoomMembersForRooms removeAllObjects];
     [lastMessages removeAllObjects];
     [partialTextMessages removeAllObjects];
+    [roomSummaryStore removeAllSummaries];
 }
 
 - (void)storePaginationTokenOfRoom:(NSString*)roomId andToken:(NSString*)token
@@ -257,6 +263,11 @@
 
 - (void)setAreAllIdentityServerTermsAgreed:(BOOL)areAllIdentityServerTermsAgreed
 {
+}
+
+- (id<MXRoomSummaryStore>)summariesModule
+{
+    return roomSummaryStore;
 }
 
 #pragma mark - Matrix users
@@ -424,28 +435,6 @@
     [partialTextMessages removeAllObjects];
     [users removeAllObjects];
     [groups removeAllObjects];
-}
-
-#pragma mark - MXRoomSummaryStore
-
-- (id<MXRoomSummaryStore>)summariesModule
-{
-    return self;
-}
-
-- (NSArray<NSString *> *)rooms
-{
-    return @[];
-}
-
-- (void)storeSummary:(id<MXRoomSummaryProtocol>)summary
-{
-    
-}
-
-- (id<MXRoomSummaryProtocol>)summaryOfRoom:(NSString *)roomId
-{
-    return nil;
 }
 
 @end

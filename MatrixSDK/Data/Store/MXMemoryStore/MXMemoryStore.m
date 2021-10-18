@@ -20,6 +20,7 @@
 #import "MXMemoryRoomStore.h"
 
 #import "MXTools.h"
+#import "MXMemoryRoomSummaryStore.h"
 
 @interface MXMemoryStore()
 {
@@ -29,7 +30,7 @@
     
     //  Execution queue for computationally expensive operations.
     dispatch_queue_t executionQueue;
-    NSMutableDictionary<NSString *, id<MXRoomSummaryProtocol>> *roomSummaries;
+    id<MXRoomSummaryStore> roomSummaryStore;
 }
 @end
 
@@ -48,7 +49,7 @@
         roomReceiptsStores = [NSMutableDictionary dictionary];
         users = [NSMutableDictionary dictionary];
         groups = [NSMutableDictionary dictionary];
-        roomSummaries = [NSMutableDictionary dictionary];
+        roomSummaryStore = [[MXMemoryRoomSummaryStore alloc] init];
         maxUploadSize = -1;
         areAllIdentityServerTermsAgreed = NO;
         executionQueue = dispatch_queue_create("MXMemoryStoreExecutionQueue", DISPATCH_QUEUE_SERIAL);
@@ -108,11 +109,14 @@
     {
         [roomReceiptsStores removeObjectForKey:roomId];
     }
+    
+    [roomSummaryStore removeSummaryOfRoom:roomId];
 }
 
 - (void)deleteAllData
 {
     [roomStores removeAllObjects];
+    [roomSummaryStore removeAllSummaries];
 }
 
 - (void)storePaginationTokenOfRoom:(NSString*)roomId andToken:(NSString*)token
@@ -317,6 +321,10 @@
     return NO;
 }
 
+- (id<MXRoomSummaryStore>)summariesModule
+{
+    return roomSummaryStore;
+}
 
 #pragma mark - Matrix users
 - (void)storeUser:(MXUser *)user
@@ -482,32 +490,6 @@
         roomReceiptsStores[roomId] = store;
     }
     return store;
-}
-
-#pragma mark - MXRoomSummaryStore
-
-- (id<MXRoomSummaryStore>)summariesModule
-{
-    return self;
-}
-
-- (NSArray<NSString *> *)rooms
-{
-    return roomStores.allKeys;
-}
-
-- (void)storeSummary:(id<MXRoomSummaryProtocol>)summary
-{
-    roomSummaries[summary.roomId] = summary;
-    if (roomStores[summary.roomId] == nil)
-    {
-        roomStores[summary.roomId] = [[MXMemoryRoomStore alloc] init];
-    }
-}
-
-- (id<MXRoomSummaryProtocol>)summaryOfRoom:(NSString *)roomId
-{
-    return roomSummaries[roomId];
 }
 
 @end

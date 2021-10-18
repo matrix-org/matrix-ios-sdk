@@ -38,12 +38,31 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)storeSummary:(id<MXRoomSummaryProtocol>)summary;
 
 /**
- Get the summary a room.
+ Get the summary of a room.
  
  @param roomId the id of the room.
  @return the user private data for this room.
  */
 - (id<MXRoomSummaryProtocol> _Nullable)summaryOfRoom:(NSString*)roomId;
+
+/**
+ Remove the summary of a room.
+ 
+ @param roomId the id of the room.
+ */
+- (void)removeSummaryOfRoom:(NSString*)roomId;
+
+/**
+ Remove all the room summaries.
+ */
+- (void)removeAllSummaries;
+
+/**
+ Fetch all summaries asynchoronously.
+ 
+ @param completion completion block containing summaries, to be called at the end of the process. Should be called on main thread.
+ */
+- (void)fetchAllSummaries:(void(^)(NSArray<id<MXRoomSummaryProtocol>>*))completion;
 
 @end
 

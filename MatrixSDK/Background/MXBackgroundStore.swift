@@ -255,13 +255,13 @@ class MXBackgroundStore: NSObject, MXStore {
         return []
     }
     
-    //  MARK: - MXRoomSummaryStore
-    
     var summariesModule: MXRoomSummaryStore {
         return self
     }
     
 }
+
+//  MARK: - MXRoomSummaryStore
 
 extension MXBackgroundStore: MXRoomSummaryStore {
     
@@ -276,6 +276,20 @@ extension MXBackgroundStore: MXRoomSummaryStore {
     //  Fetch real soom summary
     func summary(ofRoom roomId: String) -> MXRoomSummaryProtocol? {
         return fileStore.summariesModule.summary(ofRoom: roomId)
+    }
+    
+    func removeSummary(ofRoom roomId: String) {
+        
+    }
+    
+    func removeAllSummaries() {
+        
+    }
+    
+    func fetchAllSummaries(_ completion: @escaping ([MXRoomSummaryProtocol]) -> Void) {
+        DispatchQueue.main.async {
+            completion([])
+        }
     }
     
 }
