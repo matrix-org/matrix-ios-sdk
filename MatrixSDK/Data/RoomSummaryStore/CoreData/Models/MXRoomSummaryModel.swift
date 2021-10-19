@@ -31,7 +31,7 @@ public class MXRoomSummaryModel: NSManagedObject {
     @NSManaged public var s_displayName: String?
     @NSManaged public var s_topic: String?
     @NSManaged public var s_creatorUserId: String
-    @NSManaged public var s_aliases: [String]
+    @NSManaged public var s_aliases: [String]?
     @NSManaged public var s_joinRule: String?
     @NSManaged public var s_membershipInt: Int16
     @NSManaged public var s_membershipTransitionStateInt: Int16
@@ -47,6 +47,7 @@ public class MXRoomSummaryModel: NSManagedObject {
     @NSManaged public var s_favoriteTagOrder: String?
     @NSManaged public var s_dataTypesInt: Int64
     @NSManaged public var s_sentStatusInt: Int16
+    @NSManaged public var s_parentSpaceIds: Set<String>?
     @NSManaged public var s_membersCount: MXRoomMembersCountModel
     @NSManaged public var s_trust: MXUsersTrustLevelSummaryModel?
     @NSManaged public var s_lastMessage: MXRoomLastMessageModel?
@@ -90,6 +91,7 @@ public class MXRoomSummaryModel: NSManagedObject {
         s_favoriteTagOrder = summary.favoriteTagOrder
         s_dataTypesInt = Int64(summary.dataTypes.rawValue)
         s_sentStatusInt = Int16(summary.sentStatus.rawValue)
+        s_parentSpaceIds = summary.parentSpaceIds
         
         if !moc.insertedObjects.contains(self) {
             moc.delete(s_membersCount)
@@ -152,7 +154,7 @@ extension MXRoomSummaryModel: MXRoomSummaryProtocol {
     }
     
     public var aliases: [String] {
-        return s_aliases
+        return s_aliases ?? []
     }
     
     public var joinRule: String? {
@@ -239,6 +241,10 @@ extension MXRoomSummaryModel: MXRoomSummaryProtocol {
     
     public var spaceChildInfo: MXSpaceChildInfo? {
         return nil
+    }
+    
+    public var parentSpaceIds: Set<String> {
+        return s_parentSpaceIds ?? []
     }
     
     public var trust: MXUsersTrustLevelSummary? {

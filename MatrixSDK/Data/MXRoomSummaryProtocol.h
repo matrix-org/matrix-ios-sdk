@@ -131,6 +131,9 @@ NS_ASSUME_NONNULL_BEGIN
 /// In case of suggested rooms we store the `MXSpaceChildInfo` instance for the room
 @property (nonatomic, readonly) MXSpaceChildInfo * _Nullable spaceChildInfo;
 
+/// Parent space identifiers of whom the room is a descendant
+@property (nonatomic, readonly) NSSet<NSString*> *parentSpaceIds;
+
 #pragma mark - Optional
 
 @optional

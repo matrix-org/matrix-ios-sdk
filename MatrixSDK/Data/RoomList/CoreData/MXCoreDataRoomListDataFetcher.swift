@@ -225,16 +225,11 @@ extension MXCoreDataRoomListDataFetcher: MXRoomListDataFilterable {
     func filterPredicate(for filterOptions: MXRoomListDataFilterOptions) -> NSPredicate? {
         var subpredicates: [NSPredicate] = []
         
-//        if let space = filterOptions.space {
-//            //  TODO: Block based predicates won't work for CoreData, find another way when time comes.
-//            let subpredicate = NSPredicate { object, bindings in
-//                guard let summary = object as? MXRoomSummaryProtocol else {
-//                    return false
-//                }
-//                return space.isRoomAChild(roomId: summary.roomId)
-//            }
-//            subpredicates.append(subpredicate)
-//        }
+        if let space = filterOptions.space {
+            let subpredicate = NSPredicate(format: "%@ IN %K",
+                                           #keyPath(MXRoomSummaryModel.s_parentSpaceIds), space)
+            subpredicates.append(subpredicate)
+        }
         
         if let query = filterOptions.query, !query.isEmpty {
             let subpredicate = NSPredicate(format: "%K CONTAINS[cd] %@",

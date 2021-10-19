@@ -79,6 +79,8 @@ internal class MockRoomSummary: NSObject, MXRoomSummaryProtocol {
     
     var spaceChildInfo: MXSpaceChildInfo?
     
+    var parentSpaceIds: Set<String> = []
+    
     init(withRoomId roomId: String) {
         self.roomId = roomId
         super.init()

@@ -18,7 +18,7 @@
 
 @interface MXMemoryRoomSummaryStore()
 
-@property (atomic, copy) NSMutableDictionary<NSString *, id<MXRoomSummaryProtocol>> *cache;
+@property (atomic, strong) NSMutableDictionary<NSString *, id<MXRoomSummaryProtocol>> *cache;
 
 @end
 

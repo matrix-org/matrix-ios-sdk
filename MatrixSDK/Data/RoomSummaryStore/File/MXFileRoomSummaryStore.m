@@ -42,8 +42,7 @@ static NSString *const kMXFileRoomSummaryStoreBackupFolder = @"backup";
 
 - (instancetype)initWithCredentials:(MXCredentials *)someCredentials
 {
-    self = [self init];
-    if (self)
+    if (self = [super init])
     {
         credentials = someCredentials;
         executionQueue = dispatch_queue_create("MXFileRoomSummaryStoreExecutionQueue", DISPATCH_QUEUE_SERIAL);
