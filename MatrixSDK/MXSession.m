@@ -235,6 +235,11 @@ typedef void (^MXOnResumeDone)(void);
         nativeToVirtualRoomIds = [NSMutableDictionary dictionary];
         asyncTaskQueue = [[MXAsyncTaskQueue alloc] initWithDispatchQueue:dispatch_get_main_queue() label:@"MXAsyncTaskQueue-MXSession"];
         _spaceService = [[MXSpaceService alloc] initWithSession:self];
+        //  add did build graph notification
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(spaceServiceDidBuildSpaceGraph:)
+                                                     name:MXSpaceService.didBuildSpaceGraph
+                                                   object:_spaceService];
         
         [self setIdentityServer:mxRestClient.identityServer andAccessToken:mxRestClient.credentials.identityServerAccessToken];
         
@@ -1176,6 +1181,9 @@ typedef void (^MXOnResumeDone)(void);
     }
     
     // Clear spaces
+    [[NSNotificationCenter defaultCenter] removeObserver:self
+                                                    name:MXSpaceService.didBuildSpaceGraph
+                                                  object:self.spaceService];
     [self.spaceService close];
 
     _myUser = nil;
@@ -4756,6 +4764,22 @@ typedef void (^MXOnResumeDone)(void);
 - (NSString *)virtualRoomOf:(NSString *)nativeRoomId
 {
     return nativeToVirtualRoomIds[nativeRoomId];
+}
+
+#pragma mark - Spaces
+
+- (void)spaceServiceDidBuildSpaceGraph:(NSNotification *)notification
+{
+    if (!self.spaceService.isInitialised)
+    {
+        //  may also be notified when the space service is closed
+        return;
+    }
+    
+    [self.spaceService.ancestorsPerRoomId enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull roomId, NSSet<NSString *> * _Nonnull parentIds, BOOL * _Nonnull stop)
+    {
+        self->roomsSummaries[roomId].parentSpaceIds = parentIds;
+    }];
 }
 
 @end

@@ -132,6 +132,7 @@ public class MXSpaceService: NSObject {
         self.graph = MXSpaceGraphData()
         self.notificationCounter.close()
         self.isGraphBuilding = false
+        self.isInitialised = false
         self.completionQueue.async {
             NotificationCenter.default.post(name: MXSpaceService.didBuildSpaceGraph, object: self)
         }

@@ -195,6 +195,16 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     }
 }
 
+- (void)setParentSpaceIds:(NSSet<NSString *> *)parentSpaceIds
+{
+    if (![_parentSpaceIds isEqualToSet:parentSpaceIds])
+    {
+        _parentSpaceIds = parentSpaceIds;
+        
+        [self save:YES];
+    }
+}
+
 - (void)updateWith:(id<MXRoomSummaryProtocol>)summary
 {
     if (!summary)
@@ -227,6 +237,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     _favoriteTagOrder = summary.favoriteTagOrder;
     _dataTypes = summary.dataTypes;
     _sentStatus = summary.sentStatus;
+    _parentSpaceIds = summary.parentSpaceIds;
     
     if (!_others)
     {
@@ -909,6 +920,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
         _joinRule = [aDecoder decodeObjectForKey:@"joinRule"];
         _sentStatus = (MXRoomSummarySentStatus)[aDecoder decodeIntegerForKey:@"sentStatus"];
         _favoriteTagOrder = [aDecoder decodeObjectForKey:@"favoriteTagOrder"];
+        _parentSpaceIds = [aDecoder decodeObjectForKey:@"parentSpaceIds"];
         
         // Compute the trust if asked to do it automatically
         // or maintain its computation it has been already calcutated
@@ -962,6 +974,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     [aCoder encodeObject:_joinRule forKey:@"joinRule"];
     [aCoder encodeInteger:_sentStatus forKey:@"sentStatus"];
     [aCoder encodeObject:_favoriteTagOrder forKey:@"favoriteTagOrder"];
+    [aCoder encodeObject:_parentSpaceIds forKey:@"parentSpaceIds"];
 }
 
 - (NSString *)description

@@ -341,6 +341,11 @@ FOUNDATION_EXPORT NSUInteger const MXRoomSummaryPaginationChunkSize;
 @property (nonatomic, readonly) MXRoomSummarySentStatus sentStatus;
 
 /**
+ Parent space identifiers.
+ */
+@property (nonatomic) NSSet<NSString*> *parentSpaceIds;
+
+/**
  Mark all messages as read.
  */
 - (void)markAllAsRead;

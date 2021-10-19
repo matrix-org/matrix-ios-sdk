@@ -36,7 +36,7 @@ class MXRoomListDataManagerUnitTests: XCTestCase {
     }
     
     private var basicFetchOptions: MXRoomListDataFetchOptions {
-        let filterOptions = MXRoomListDataFilterOptions()
+        let filterOptions = MXRoomListDataFilterOptions(showAllRoomsInHomeSpace: false)
         let sortOptions = MXRoomListDataSortOptions(missedNotificationsFirst: false, unreadMessagesFirst: false)
         return MXRoomListDataFetchOptions(filterOptions: filterOptions,
                                           sortOptions: sortOptions,
@@ -60,7 +60,7 @@ class MXRoomListDataManagerUnitTests: XCTestCase {
     }
     
     func testFilterOptionsInit() {
-        let filterOptions = MXRoomListDataFilterOptions()
+        let filterOptions = MXRoomListDataFilterOptions(showAllRoomsInHomeSpace: false)
         XCTAssertTrue(filterOptions.dataTypes.isEmpty, "Default data types should be empty")
         XCTAssertEqual(filterOptions.notDataTypes, [.hidden, .conferenceUser, .space], "Default not data types should be provided")
         XCTAssertFalse(filterOptions.onlySuggested, "Default filter options should not include onlySuggested")
