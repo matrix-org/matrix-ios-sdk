@@ -120,8 +120,14 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
             liveTimeline = [[MXEventTimeline alloc] initWithRoom:self andInitialEventId:nil];
         }
         
-        // Update the stored outgoing messages, by removing the sent messages and tagging as failed the others.
-        [self refreshOutgoingMessages];
+        //  Update the stored outgoing messages, by removing the sent messages and tagging as failed the others.
+        //  Delay refreshing outgoing messages to the next run loop.
+        //  Added to avoid the race in MXRoom initialization.
+        //  When initializing the room instance it's not stored in the session yet until init finishes.
+        //  This causes a failure in summary.sentStatus calculation, so MXRoomSummary.room would be nil.
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self refreshOutgoingMessages];
+        });
     }
     return self;
 }
@@ -2442,20 +2448,18 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
 #pragma mark - Outgoing events management
 - (void)storeOutgoingMessage:(MXEvent*)outgoingMessage
 {
-    if ([mxSession.store respondsToSelector:@selector(storeOutgoingMessageForRoom:outgoingMessage:)]
-        && [mxSession.store respondsToSelector:@selector(commit)])
+    [mxSession.store storeOutgoingMessageForRoom:self.roomId outgoingMessage:outgoingMessage];
+    if ([mxSession.store respondsToSelector:@selector(commit)])
     {
-        [mxSession.store storeOutgoingMessageForRoom:self.roomId outgoingMessage:outgoingMessage];
         [mxSession.store commit];
     }
 }
 
 - (void)removeAllOutgoingMessages
 {
-    if ([mxSession.store respondsToSelector:@selector(removeAllOutgoingMessagesFromRoom:)]
-        && [mxSession.store respondsToSelector:@selector(commit)])
+    [mxSession.store removeAllOutgoingMessagesFromRoom:self.roomId];
+    if ([mxSession.store respondsToSelector:@selector(commit)])
     {
-        [mxSession.store removeAllOutgoingMessagesFromRoom:self.roomId];
         [mxSession.store commit];
     }
 
@@ -2472,10 +2476,9 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
 
 - (void)removeOutgoingMessage:(NSString*)outgoingMessageEventId
 {
-    if ([mxSession.store respondsToSelector:@selector(removeOutgoingMessageFromRoom:outgoingMessage:)]
-        && [mxSession.store respondsToSelector:@selector(commit)])
+    [mxSession.store removeOutgoingMessageFromRoom:self.roomId outgoingMessage:outgoingMessageEventId];
+    if ([mxSession.store respondsToSelector:@selector(commit)])
     {
-        [mxSession.store removeOutgoingMessageFromRoom:self.roomId outgoingMessage:outgoingMessageEventId];
         [mxSession.store commit];
     }
 
@@ -2490,14 +2493,8 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
 {
     // Do the update by removing the existing one and create a new one
     // Thus, `outgoingMessage` will go at the end of the outgoing messages list
-    if ([mxSession.store respondsToSelector:@selector(removeOutgoingMessageFromRoom:outgoingMessage:)])
-    {
-        [mxSession.store removeOutgoingMessageFromRoom:self.roomId outgoingMessage:outgoingMessageEventId];
-    }
-    if ([mxSession.store respondsToSelector:@selector(storeOutgoingMessageForRoom:outgoingMessage:)])
-    {
-        [mxSession.store storeOutgoingMessageForRoom:self.roomId outgoingMessage:outgoingMessage];
-    }
+    [mxSession.store removeOutgoingMessageFromRoom:self.roomId outgoingMessage:outgoingMessageEventId];
+    [mxSession.store storeOutgoingMessageForRoom:self.roomId outgoingMessage:outgoingMessage];
 
     if ([mxSession.store respondsToSelector:@selector(commit)])
     {
@@ -2507,15 +2504,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
 
 - (NSArray<MXEvent*>*)outgoingMessages
 {
-    if ([mxSession.store respondsToSelector:@selector(outgoingMessagesInRoom:)])
-    {
-        NSArray<MXEvent*> *outgoingMessages = [mxSession.store outgoingMessagesInRoom:self.roomId];
-        return outgoingMessages;
-    }
-    else
-    {
-        return nil;
-    }
+    return [mxSession.store outgoingMessagesInRoom:self.roomId];
 }
 
 - (void)refreshOutgoingMessages
@@ -2532,11 +2521,8 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
             // Remove successfully sent messages
             if (outgoingMessage.isLocalEvent == NO)
             {
-                if ([mxSession.store respondsToSelector:@selector(removeOutgoingMessageFromRoom:outgoingMessage:)])
-                {
-                    [mxSession.store removeOutgoingMessageFromRoom:_roomId outgoingMessage:outgoingMessage.eventId];
-                    continue;
-                }
+                [mxSession.store removeOutgoingMessageFromRoom:_roomId outgoingMessage:outgoingMessage.eventId];
+                continue;
             }
             else
             {

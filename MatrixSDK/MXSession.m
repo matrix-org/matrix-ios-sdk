@@ -46,6 +46,7 @@
 
 #import "MXAggregations_Private.h"
 #import "MatrixSDKSwiftHeader.h"
+#import "MXRoomSummaryProtocol.h"
 
 #pragma mark - Constants definitions
 NSString *const kMXSessionStateDidChangeNotification = @"kMXSessionStateDidChangeNotification";
@@ -205,6 +206,8 @@ typedef void (^MXOnResumeDone)(void);
 
 @property (atomic, copy, readwrite) NSDictionary<NSString*, NSArray<NSString*>*> *directRooms;
 
+@property (nonatomic, readwrite) id<MXRoomListDataManager> roomListDataManager;
+
 @end
 
 @implementation MXSession
@@ -232,6 +235,11 @@ typedef void (^MXOnResumeDone)(void);
         nativeToVirtualRoomIds = [NSMutableDictionary dictionary];
         asyncTaskQueue = [[MXAsyncTaskQueue alloc] initWithDispatchQueue:dispatch_get_main_queue() label:@"MXAsyncTaskQueue-MXSession"];
         _spaceService = [[MXSpaceService alloc] initWithSession:self];
+        //  add did build graph notification
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(spaceServiceDidBuildSpaceGraph:)
+                                                     name:MXSpaceService.didBuildSpaceGraph
+                                                   object:_spaceService];
         
         [self setIdentityServer:mxRestClient.identityServer andAccessToken:mxRestClient.credentials.identityServerAccessToken];
         
@@ -329,11 +337,11 @@ typedef void (^MXOnResumeDone)(void);
     if (_store.isPermanent)
     {
         // A permanent MXStore must implement these methods:
-        NSParameterAssert([_store respondsToSelector:@selector(rooms)]);
         NSParameterAssert([_store respondsToSelector:@selector(storeStateForRoom:stateEvents:)]);
         NSParameterAssert([_store respondsToSelector:@selector(stateOfRoom:success:failure:)]);
-        NSParameterAssert([_store respondsToSelector:@selector(summaryOfRoom:)]);
     }
+    
+    self.roomListDataManager = [[MXSDKOptions.sharedInstance.roomListDataManagerClass alloc] init];
 
     NSDate *startDate = [NSDate date];
     MXTaskProfile *taskProfile = [MXSDKOptions.sharedInstance.profiler startMeasuringTaskWithName:kMXAnalyticsStartupMountData category:kMXAnalyticsStartupCategory];
@@ -394,9 +402,11 @@ typedef void (^MXOnResumeDone)(void);
                 {
                     @autoreleasepool
                     {
-                        MXRoomSummary *summary = [self.store summaryOfRoom:roomId];
-                        [summary setMatrixSession:self];
-                        self->roomsSummaries[roomId] = summary;
+                        MXRoomSummary *summary = [[MXRoomSummary alloc] initWithRoomId:roomId andMatrixSession:self];
+                        if (summary)
+                        {
+                            self->roomsSummaries[roomId] = summary;
+                        }
                     }
                 }
 
@@ -444,6 +454,14 @@ typedef void (^MXOnResumeDone)(void);
             failure(error);
         }
     }];
+}
+
+- (void)setRoomListDataManager:(id<MXRoomListDataManager>)roomListDataManager
+{
+    NSParameterAssert(_roomListDataManager == nil);
+    
+    _roomListDataManager = roomListDataManager;
+    [_roomListDataManager configureWithSession:self];
 }
 
 /// Handle a sync response and decide serverTimeout for the next sync request.
@@ -1108,6 +1126,7 @@ typedef void (^MXOnResumeDone)(void);
     {
         [_store close];
     }
+    _roomListDataManager = nil;
     
     [self removeAllListeners];
 
@@ -1162,6 +1181,9 @@ typedef void (^MXOnResumeDone)(void);
     }
     
     // Clear spaces
+    [[NSNotificationCenter defaultCenter] removeObserver:self
+                                                    name:MXSpaceService.didBuildSpaceGraph
+                                                  object:self.spaceService];
     [self.spaceService close];
 
     _myUser = nil;
@@ -2945,7 +2967,7 @@ typedef void (^MXOnResumeDone)(void);
 
     if (roomId)
     {
-        roomSummary =  roomsSummaries[roomId];
+        roomSummary = roomsSummaries[roomId];
     }
 
     return roomSummary;
@@ -4742,6 +4764,22 @@ typedef void (^MXOnResumeDone)(void);
 - (NSString *)virtualRoomOf:(NSString *)nativeRoomId
 {
     return nativeToVirtualRoomIds[nativeRoomId];
+}
+
+#pragma mark - Spaces
+
+- (void)spaceServiceDidBuildSpaceGraph:(NSNotification *)notification
+{
+    if (!self.spaceService.isInitialised)
+    {
+        //  may also be notified when the space service is closed
+        return;
+    }
+    
+    [self.spaceService.ancestorsPerRoomId enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull roomId, NSSet<NSString *> * _Nonnull parentIds, BOOL * _Nonnull stop)
+    {
+        self->roomsSummaries[roomId].parentSpaceIds = parentIds;
+    }];
 }
 
 @end

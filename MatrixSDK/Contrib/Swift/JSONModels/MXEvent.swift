@@ -163,24 +163,3 @@ public enum MXMessageType: Equatable, Hashable {
         self = messages.first(where: { $0.identifier == identifier }) ?? .custom(identifier)
     }
 }
-
-
-/// Membership definitions
-public enum MXMembership: Equatable, Hashable {
-    case unknown, invite, join, leave, ban
-    
-    public var identifier: __MXMembership {
-        switch self {
-        case .unknown: return __MXMembershipUnknown
-        case .invite: return __MXMembershipInvite
-        case .join: return __MXMembershipJoin
-        case .leave: return __MXMembershipLeave
-        case .ban: return __MXMembershipBan
-        }
-    }
-    
-    public init(identifier: __MXMembership) {
-        let possibilities: [MXMembership] = [.unknown, .invite, .join, .leave, .ban]
-        self = possibilities.first(where: { $0.identifier == identifier }) ?? .unknown
-    }
-}

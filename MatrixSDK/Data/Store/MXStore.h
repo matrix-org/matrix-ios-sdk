@@ -28,6 +28,7 @@
 #import "MXFilterJSONModel.h"
 
 #import "MXEventsEnumerator.h"
+#import "MXRoomSummaryStore.h"
 
 @class MXSpaceGraphData;
 
@@ -35,7 +36,7 @@
  The `MXStore` protocol defines an interface that must be implemented in order to store
  Matrix data handled during a `MXSession`.
  */
-@protocol MXStore <NSObject>
+@protocol MXStore <NSObject, MXRoomSummaryStore>
 
 #pragma mark - Room data
 
@@ -319,6 +320,38 @@
  */
 - (void)loadRoomMessagesForRoom:(nonnull NSString *)roomId completion:(nullable void (^)(void))completion;
 
+#pragma mark - Outgoing events
+/**
+ Store into the store an outgoing message event being sent in a room.
+ 
+ @param roomId the id of the room.
+ @param outgoingMessage the MXEvent object of the message.
+ */
+- (void)storeOutgoingMessageForRoom:(nonnull NSString*)roomId outgoingMessage:(nonnull MXEvent*)outgoingMessage;
+
+/**
+ Remove all outgoing messages from a room.
+
+ @param roomId the id of the room.
+ */
+- (void)removeAllOutgoingMessagesFromRoom:(nonnull NSString*)roomId;
+
+/**
+ Remove an outgoing message from a room.
+
+ @param roomId the id of the room.
+ @param outgoingMessageEventId the id of the message to remove.
+ */
+- (void)removeOutgoingMessageFromRoom:(nonnull NSString*)roomId outgoingMessage:(nonnull NSString*)outgoingMessageEventId;
+
+/**
+ Get all outgoing messages pending in a room.
+
+ @param roomId the id of the room.
+ @return the list of messages that have not been sent yet
+ */
+- (NSArray<MXEvent*>* _Nullable)outgoingMessagesInRoom:(nonnull NSString*)roomId;
+
 @optional
 
 /**
@@ -363,15 +396,6 @@
 
 #pragma mark - Permanent storage -
 
-/**
- Return the ids of the rooms currently stored.
-
- Note: this method is required in permanent storage implementation.
-
- @return the array of room ids.
- */
-- (NSArray* _Nullable)rooms;
-
 #pragma mark - Room state
 
 /**
@@ -397,30 +421,6 @@
             success:(nonnull void (^)(NSArray<MXEvent *> * _Nonnull stateEvents))success
             failure:(nullable void (^)(NSError * _Nonnull error))failure;
 
-
-#pragma mark - Room summary
-
-/**
- Store the summary for a room.
-
- Note: this method is required in permanent storage implementation.
-
- @param roomId the id of the room.
- @param summary the room summary.
- */
-- (void)storeSummaryForRoom:(nonnull NSString*)roomId summary:(nonnull MXRoomSummary*)summary;
-
-/**
- Get the summary a room.
-
- Note: this method is required in permanent storage implementation.
-
- @param roomId the id of the room.
- @return the user private data for this room.
- */
-- (MXRoomSummary* _Nullable)summaryOfRoom:(nonnull NSString*)roomId;
-
-
 #pragma mark - Room user data
 
 /**
@@ -442,38 +442,6 @@
  @return the user private data for this room.
 */
 - (MXRoomAccountData* _Nullable)accountDataOfRoom:(nonnull NSString*)roomId;
-
-#pragma mark - Outgoing events
-/**
- Store into the store an outgoing message event being sent in a room.
- 
- @param roomId the id of the room.
- @param outgoingMessage the MXEvent object of the message.
- */
-- (void)storeOutgoingMessageForRoom:(nonnull NSString*)roomId outgoingMessage:(nonnull MXEvent*)outgoingMessage;
-
-/**
- Remove all outgoing messages from a room.
-
- @param roomId the id of the room.
- */
-- (void)removeAllOutgoingMessagesFromRoom:(nonnull NSString*)roomId;
-
-/**
- Remove an outgoing message from a room.
-
- @param roomId the id of the room.
- @param outgoingMessageEventId the id of the message to remove.
- */
-- (void)removeOutgoingMessageFromRoom:(nonnull NSString*)roomId outgoingMessage:(nonnull NSString*)outgoingMessageEventId;
-
-/**
- Get all outgoing messages pending in a room.
-
- @param roomId the id of the room.
- @return the list of messages that have not been sent yet
- */
-- (NSArray<MXEvent*>* _Nullable)outgoingMessagesInRoom:(nonnull NSString*)roomId;
 
 
 #pragma mark - User Account data

@@ -227,29 +227,30 @@ public class MXSyncResponseStoreManager: NSObject {
 
     /// Fetch room summary for an invited room. Just uses the data in syncResponse to guess the room display name
     /// - Parameter roomId: Room identifier to be fetched
-    /// - Parameter summary: A room summary (if exists) which user had before a sync response
-    public func roomSummary(forRoomId roomId: String, using summary: MXRoomSummary?) -> MXRoomSummary? {
-        guard let summary = summary ?? MXRoomSummary(roomId: roomId, andMatrixSession: nil) else {
+    /// - Parameter model: A room summary model (if exists) which user had before a sync response
+    public func roomSummary(forRoomId roomId: String, using model: MXRoomSummaryProtocol?) -> MXRoomSummaryProtocol? {
+        let summary: MXRoomSummary?
+        
+        if let model = model {
+            summary = MXRoomSummary(summaryModel: model)
+        } else {
+            summary = MXRoomSummary(roomId: roomId, andMatrixSession: nil)
+        }
+        
+        guard var result = summary else {
             return nil
         }
         
+        //  update summary with each sync response
         for id in syncResponseStore.syncResponseIds.reversed() {
-            let summary = autoreleasepool { () -> MXRoomSummary? in
-                guard let response = try? syncResponseStore.syncResponse(withId: id) else {
-                    return nil
+            autoreleasepool {
+                if let response = try? syncResponseStore.syncResponse(withId: id) {
+                    result = roomSummary(forRoomId: roomId, using: result, inSyncResponse: response)
                 }
-                
-                return roomSummary(forRoomId: roomId, using: summary, inSyncResponse: response)
-            }
-            
-            if let summary = summary {
-                return summary
             }
         }
         
-        MXLog.debug("[MXSyncResponseStoreManager] roomSummary: Not found for room \(roomId)")
-        
-        return nil
+        return result
     }
     
     //  MARK: - Private
@@ -306,7 +307,7 @@ public class MXSyncResponseStoreManager: NSObject {
         return MXSyncResponse(fromJSON: dictionary as? [AnyHashable : Any])
     }
     
-    private func roomSummary(forRoomId roomId: String, using summary: MXRoomSummary, inSyncResponse response: MXCachedSyncResponse) -> MXRoomSummary? {
+    private func roomSummary(forRoomId roomId: String, using summary: MXRoomSummary, inSyncResponse response: MXCachedSyncResponse) -> MXRoomSummary {
         var eventsToProcess: [MXEvent] = []
         
         if let invitedRoomSync = response.syncResponse.rooms?.invite?[roomId] {
