@@ -1,3 +1,10 @@
+## Changes in 0.20.7 (2021-10-13)
+
+🐛 Bugfixes
+
+- [MXSPaceService, MXSpaceNotificationCounter] Avoid calling SDK dispatch queue synchroniously ([#4999](https://github.com/vector-im/element-ios/issues/4999))
+
+
 ## Changes in 0.20.6 (2021-10-12)
 
 🐛 Bugfixes
