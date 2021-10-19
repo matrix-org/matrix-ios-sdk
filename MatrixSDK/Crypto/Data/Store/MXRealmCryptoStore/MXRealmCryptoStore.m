@@ -370,6 +370,11 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
     [self _deleteStoreWithCredentials:credentials readOnly:YES];
 }
 
++ (void)deleteAllStores
+{
+    [[NSFileManager defaultManager] removeItemAtURL:[self storeFolderURL] error:nil];
+}
+
 + (void)deleteReadonlyStoreWithCredentials:(MXCredentials *)credentials
 {
     [self _deleteStoreWithCredentials:credentials readOnly:YES];
@@ -1775,36 +1780,32 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
     return realm;
 }
 
-// Return the realm db file to use for a given user and device
-+ (NSURL*)realmFileURLForUserWithUserId:(NSString*)userId andDevice:(NSString*)deviceId
++ (NSURL*)storeFolderURL
 {
-    NSURL *realmFileURL;
-    
-    RLMRealmConfiguration *config = [RLMRealmConfiguration defaultConfiguration];
-    
-    NSURL *defaultRealmPathURL = config.fileURL.URLByDeletingLastPathComponent;
-    
-    // Default db file URL: use the default directory, but replace the filename with the userId.
-    NSString *realmFile = [self realmFileNameWithUserId:userId deviceId:deviceId];
-    NSURL *defaultRealmFileURL = [[defaultRealmPathURL URLByAppendingPathComponent:realmFile]
-                                  URLByAppendingPathExtension:@"realm"];
-    
     // Check for a potential application group id.
     NSString *applicationGroupIdentifier = [MXSDKOptions sharedInstance].applicationGroupIdentifier;
     if (applicationGroupIdentifier)
     {
         // Use the shared db file URL.
         NSURL *sharedContainerURL = [[NSFileManager defaultManager] containerURLForSecurityApplicationGroupIdentifier:applicationGroupIdentifier];
-        NSURL *realmFileFolderURL = [sharedContainerURL URLByAppendingPathComponent:kMXRealmCryptoStoreFolder];
-        realmFileURL = [[realmFileFolderURL URLByAppendingPathComponent:realmFile] URLByAppendingPathExtension:@"realm"];
+        return [sharedContainerURL URLByAppendingPathComponent:kMXRealmCryptoStoreFolder];
     }
     else
     {
         // Use the default URL
-        realmFileURL = defaultRealmFileURL;
+        NSURL *defaultRealmPathURL = [RLMRealmConfiguration defaultConfiguration].fileURL.URLByDeletingLastPathComponent;
+        return [defaultRealmPathURL URLByAppendingPathComponent:kMXRealmCryptoStoreFolder];
     }
+}
+
+// Return the realm db file to use for a given user and device
++ (NSURL*)realmFileURLForUserWithUserId:(NSString*)userId andDevice:(NSString*)deviceId
+{
+    // Default db file URL: use the default directory, but replace the filename with the userId.
+    NSString *fileName = [self realmFileNameWithUserId:userId
+                                              deviceId:deviceId];
     
-    return realmFileURL;
+    return [[[self storeFolderURL] URLByAppendingPathComponent:fileName] URLByAppendingPathExtension:@"realm"];
 }
 
 /**

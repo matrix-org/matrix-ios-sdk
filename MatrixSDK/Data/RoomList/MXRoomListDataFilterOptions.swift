@@ -66,24 +66,37 @@ public final class MXRoomListDataFilterOptions: NSObject {
             }
         }
     }
-    /// Flag to filter only suggested rooms, if set to `true`, `dataTypes` and `notDataTypes` are not valid.
+    /// Show all rooms when `space` is not provided. Related fetcher will be refreshed automatically when updated.
+    public var showAllRoomsInHomeSpace: Bool {
+        didSet {
+            if showAllRoomsInHomeSpace != oldValue {
+                refreshFetcher()
+            }
+        }
+    }
+    /// Flag to filter only suggested rooms, if set to `true`, `dataTypes`, `notDataTypes` and `showAllRoomsInHomeSpace` are not used.
     public let onlySuggested: Bool
     
     /// Initializer
     /// - Parameters:
     ///   - dataTypes: data types to fetch. Pass `MXRoomListDataFilterOptions.emptyDataTypes` not to specify any.
     ///   - notDataTypes: data types not to fetch. Pass `MXRoomListDataFilterOptions.emptyDataTypes` not to specify any.
+    ///   - onlySuggested: flag to filter only suggested rooms. Only `space` and `query` parameters are honored if true.
     ///   - query: search query
+    ///   - space: active space
+    ///   - showAllRoomsInHomeSpace: flag to show all rooms in home space (when `space` is not provided)
     public init(dataTypes: MXRoomSummaryDataTypes = MXRoomListDataFilterOptions.emptyDataTypes,
                 notDataTypes: MXRoomSummaryDataTypes = [.hidden, .conferenceUser, .space],
                 onlySuggested: Bool = false,
                 query: String? = nil,
-                space: MXSpace? = nil) {
+                space: MXSpace? = nil,
+                showAllRoomsInHomeSpace: Bool) {
         self.dataTypes = dataTypes
         self.notDataTypes = notDataTypes
         self.onlySuggested = onlySuggested
         self.query = query
         self.space = space
+        self.showAllRoomsInHomeSpace = showAllRoomsInHomeSpace
         super.init()
     }
     

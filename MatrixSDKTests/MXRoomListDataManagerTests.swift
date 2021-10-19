@@ -35,7 +35,7 @@ class MXRoomListDataManagerTests: XCTestCase {
     }
     
     private var basicFetchOptions: MXRoomListDataFetchOptions {
-        let filterOptions = MXRoomListDataFilterOptions()
+        let filterOptions = MXRoomListDataFilterOptions(showAllRoomsInHomeSpace: false)
         let sortOptions = MXRoomListDataSortOptions(missedNotificationsFirst: false, unreadMessagesFirst: false)
         return MXRoomListDataFetchOptions(filterOptions: filterOptions,
                                           sortOptions: sortOptions,

@@ -1182,7 +1182,9 @@ typedef void (^MXOnResumeDone)(void);
     }
     
     // Clear spaces
-    [[NSNotificationCenter defaultCenter] removeObserver:self name:MXSpaceService.didBuildSpaceGraph object:self.spaceService];
+    [[NSNotificationCenter defaultCenter] removeObserver:self
+                                                    name:MXSpaceService.didBuildSpaceGraph
+                                                  object:self.spaceService];
     [self.spaceService close];
 
     _myUser = nil;
