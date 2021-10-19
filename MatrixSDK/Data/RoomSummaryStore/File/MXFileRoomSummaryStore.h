@@ -38,7 +38,7 @@ NS_ASSUME_NONNULL_BEGIN
  
  @param credentials user credentials.
  */
-- (instancetype)initWithCredentials:(MXCredentials *)someCredentials;
+- (instancetype)initWithCredentials:(MXCredentials *)credentials;
 
 @end
 

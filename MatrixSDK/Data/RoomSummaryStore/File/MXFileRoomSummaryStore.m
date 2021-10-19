@@ -40,11 +40,11 @@ static NSString *const kMXFileRoomSummaryStoreBackupFolder = @"backup";
 
 @implementation MXFileRoomSummaryStore
 
-- (instancetype)initWithCredentials:(MXCredentials *)someCredentials
+- (instancetype)initWithCredentials:(MXCredentials *)credentials
 {
     if (self = [super init])
     {
-        credentials = someCredentials;
+        self->credentials = credentials;
         executionQueue = dispatch_queue_create("MXFileRoomSummaryStoreExecutionQueue", DISPATCH_QUEUE_SERIAL);
         [self setUpStoragePaths];
     }
