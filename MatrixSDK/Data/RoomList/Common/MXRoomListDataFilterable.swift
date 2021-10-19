@@ -48,50 +48,83 @@ extension MXRoomListDataFilterable {
     }
     
     func filterPredicate(for filterOptions: MXRoomListDataFilterOptions) -> NSPredicate? {
-        var subpredicates: [NSPredicate] = []
+        var predicates: [NSPredicate] = []
         
-        if let space = filterOptions.space {
-            let subpredicate = NSPredicate { object, bindings in
-                guard let summary = object as? MXRoomSummaryProtocol else {
-                    return false
-                }
-                return space.isRoomAChild(roomId: summary.roomId)
-            }
-            subpredicates.append(subpredicate)
-        }
-        
+        //  query
         if let query = filterOptions.query, !query.isEmpty {
-            let subpredicate1 = NSPredicate(format: "%K CONTAINS[cd] %@",
-                                            #keyPath(MXRoomSummaryProtocol.displayname), query)
-            let subpredicate2 = NSPredicate(format: "%K CONTAINS[cd] %@",
-                                            #keyPath(MXRoomSummaryProtocol.spaceChildInfo.displayName), query)
-            let subpredicate = NSCompoundPredicate(orPredicateWithSubpredicates: [subpredicate1, subpredicate2])
-            subpredicates.append(subpredicate)
+            let predicate1 = NSPredicate(format: "%K CONTAINS[cd] %@",
+                                         #keyPath(MXRoomSummaryProtocol.displayname),
+                                         query)
+            let predicate2 = NSPredicate(format: "%K CONTAINS[cd] %@",
+                                         #keyPath(MXRoomSummaryProtocol.spaceChildInfo.displayName),
+                                         query)
+            let predicate = NSCompoundPredicate(type: .or,
+                                                subpredicates: [predicate1, predicate2])
+            predicates.append(predicate)
         }
         
         if !filterOptions.onlySuggested {
+            //  data types
             if !filterOptions.dataTypes.isEmpty {
-                let subpredicate = NSPredicate(format: "(%K & %d) != 0",
-                                               #keyPath(MXRoomSummaryProtocol.dataTypes), filterOptions.dataTypes.rawValue)
-                subpredicates.append(subpredicate)
+                let predicate = NSPredicate(format: "(%K & %d) != 0",
+                                            #keyPath(MXRoomSummaryProtocol.dataTypes),
+                                            filterOptions.dataTypes.rawValue)
+                predicates.append(predicate)
             }
             
+            //  not data types
             if !filterOptions.notDataTypes.isEmpty {
-                let subpredicate = NSPredicate(format: "(%K & %d) == 0",
-                                               #keyPath(MXRoomSummaryProtocol.dataTypes), filterOptions.notDataTypes.rawValue)
-                subpredicates.append(subpredicate)
+                let predicate = NSPredicate(format: "(%K & %d) == 0",
+                                            #keyPath(MXRoomSummaryProtocol.dataTypes),
+                                            filterOptions.notDataTypes.rawValue)
+                predicates.append(predicate)
+            }
+            
+            //  space
+            if let space = filterOptions.space {
+                //  specific space
+                let predicate = NSPredicate(format: "%@ IN %K", space.spaceId,
+                                            #keyPath(MXRoomSummaryProtocol.parentSpaceIds))
+                predicates.append(predicate)
+            } else {
+                //  home space
+                
+                // In case of home space we show a room if one of the following conditions is true:
+                // - Show All Rooms is enabled
+                // - It's a direct room
+                // - The room is a favourite
+                // - The room is orphaned
+                
+                let predicate1 = NSPredicate(value: filterOptions.showAllRoomsInHomeSpace)
+                
+                let directDataTypes: MXRoomSummaryDataTypes = .direct
+                let predicate2 = NSPredicate(format: "(%K & %d) != 0",
+                                             #keyPath(MXRoomSummaryProtocol.dataTypes),
+                                             directDataTypes.rawValue)
+                
+                let favoritedDataTypes: MXRoomSummaryDataTypes = .favorited
+                let predicate3 = NSPredicate(format: "(%K & %d) != 0",
+                                             #keyPath(MXRoomSummaryProtocol.dataTypes),
+                                             favoritedDataTypes.rawValue)
+                
+                let predicate4 = NSPredicate(format: "%K.@count == 0",
+                                             #keyPath(MXRoomSummaryProtocol.parentSpaceIds))
+                
+                let predicate = NSCompoundPredicate(type: .or,
+                                                    subpredicates: [predicate1, predicate2, predicate3, predicate4])
+                predicates.append(predicate)
             }
         }
         
-        guard !subpredicates.isEmpty else {
+        guard !predicates.isEmpty else {
             return nil
         }
         
-        if subpredicates.count == 1 {
-            return subpredicates.first
+        if predicates.count == 1 {
+            return predicates.first
         }
         return NSCompoundPredicate(type: .and,
-                                   subpredicates: subpredicates)
+                                   subpredicates: predicates)
     }
     
 }
