@@ -26,6 +26,8 @@ public class MXCoreDataRoomListDataManager: NSObject, MXRoomListDataManager {
     }
     
     public func fetcher(withOptions options: MXRoomListDataFetchOptions) -> MXRoomListDataFetcher {
+        assert(options.async, "[MXCoreDataRoomListDataManager] cannot work with sync fetch options")
+        
         if options.filterOptions.onlySuggested {
             guard let spaceService = session?.spaceService else {
                 fatalError("[MXCoreDataRoomListDataManager] Session has no spaceService")
@@ -40,7 +42,8 @@ public class MXCoreDataRoomListDataManager: NSObject, MXRoomListDataManager {
             fatalError("[MXCoreDataRoomListDataManager] Session.store.summariesModule is not CoreDataContextable")
         }
         
-        assert(coreDataStore.managedObjectContext.concurrencyType == .mainQueueConcurrencyType)
+        assert(coreDataStore.managedObjectContext.concurrencyType == .mainQueueConcurrencyType,
+               "[MXCoreDataRoomListDataManager] Managed object context must have mainQueueConcurrencyType")
         
         return MXCoreDataRoomListDataFetcher(fetchOptions: options,
                                              store: coreDataStore)

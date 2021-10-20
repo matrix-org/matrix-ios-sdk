@@ -18,7 +18,10 @@ import XCTest
 
 @testable import MatrixSDK
 
-class MXRoomListDataManagerUnitTests: XCTestCase {
+class MXCoreDataRoomListDataManagerUnitTests: XCTestCase {
+    
+    private static var fetcher: MXRoomListDataFetcher?
+    private static var delegate: MXRoomListDataFetcherDelegate?
     
     private enum Constants {
         static var credentials: MXCredentials {
@@ -32,15 +35,21 @@ class MXRoomListDataManagerUnitTests: XCTestCase {
     }
     
     override class func setUp() {
+        MXSDKOptions.sharedInstance().roomListDataManagerClass = MXCoreDataRoomListDataManager.self
         MXRealmCryptoStore.deleteAllStores()
     }
     
+    override class func tearDown() {
+//        fetcher?.stop()
+//        fetcher = nil
+//        delegate = nil
+    }
+    
     private var basicFetchOptions: MXRoomListDataFetchOptions {
-        let filterOptions = MXRoomListDataFilterOptions(showAllRoomsInHomeSpace: false)
+        let filterOptions = MXRoomListDataFilterOptions(showAllRoomsInHomeSpace: true)
         let sortOptions = MXRoomListDataSortOptions(missedNotificationsFirst: false, unreadMessagesFirst: false)
         return MXRoomListDataFetchOptions(filterOptions: filterOptions,
-                                          sortOptions: sortOptions,
-                                          async: false)
+                                          sortOptions: sortOptions)
     }
     
     //  MARK - Tests
@@ -86,7 +95,7 @@ class MXRoomListDataManagerUnitTests: XCTestCase {
     
     func testFetchOptionsInit() {
         let fetchOptions = self.basicFetchOptions
-        XCTAssertEqual(fetchOptions.async, false, "Fetch options should not include async")
+        XCTAssertEqual(fetchOptions.async, true, "Fetch options should include async")
         XCTAssertEqual(fetchOptions.paginationOptions, .none, "Default fetch options should not include pagination")
         XCTAssertNil(fetchOptions.fetcher, "Fetch options should not include fetcher without initializing a fetcher")
     }
@@ -99,7 +108,7 @@ class MXRoomListDataManagerUnitTests: XCTestCase {
             return
         }
         wait { expectation in
-            session.setStore(MXMemoryStore(), completion: { response in
+            session.setStore(MXFileStore(), completion: { response in
                 switch response {
                 case .success:
                     manager.configure(withSession: session)
@@ -129,7 +138,7 @@ class MXRoomListDataManagerUnitTests: XCTestCase {
         XCTAssertNil(session.roomListDataManager, "Room list data manager should be created after setting the store")
         
         wait { expectation in
-            session.setStore(MXMemoryStore(), completion: { response in
+            session.setStore(MXFileStore(), completion: { response in
                 switch response {
                 case .success:
                     guard let manager = session.roomListDataManager else {
@@ -154,138 +163,33 @@ class MXRoomListDataManagerUnitTests: XCTestCase {
     }
     
     func testFilterDataTypes() {
-        generateDefaultFetcher { fetcher in
-            //  clear not data types first
-            fetcher.fetchOptions.filterOptions.notDataTypes = []
-            XCTAssertEqual(fetcher.data?.counts.numberOfRooms, 90, "Fetcher should update data to 90 (all) rooms")
-            
-            //  filter to only invited
-            fetcher.fetchOptions.filterOptions.dataTypes = .invited
-            XCTAssertEqual(fetcher.data?.counts.numberOfRooms, 10, "Fetcher should update data to 10 invited rooms")
-            XCTAssertEqual(fetcher.data?.counts.numberOfInvitedRooms, 10, "Fetcher should update data to 10 invited rooms")
-            
-            //  filter to invited and direct
-            fetcher.fetchOptions.filterOptions.dataTypes = [.invited, .direct]
-            XCTAssertEqual(fetcher.data?.counts.numberOfRooms, 20, "Fetcher should update data to 20 rooms (10 invited + 10 direct)")
-            XCTAssertEqual(fetcher.data?.counts.numberOfInvitedRooms, 10, "Fetcher should update data to 10 invited rooms")
+        let fetcher = generateDefaultFetcher()
+        Self.fetcher = fetcher
+        self.wait { expectation in
+            let delegate = MockRoomListDataFetcherDelegate(withBlock: {
+                XCTAssertEqual(fetcher.data?.counts.numberOfRooms, 60, "Fetcher should fetch all rooms except types: [.hidden, .conferenceUser, .space]")
+                
+                expectation.fulfill()
+            })
+            Self.delegate = delegate
+            fetcher.addDelegate(delegate)
         }
+        
+        fetcher.paginate()
     }
     
-    func testFilterQuery() {
-        generateDefaultFetcher { fetcher in
-            //  clear not data types first
-            fetcher.fetchOptions.filterOptions.notDataTypes = []
-            XCTAssertEqual(fetcher.data?.counts.numberOfRooms, 90, "Fetcher should update data to 90 (all) rooms")
-            
-            //  update query
-            fetcher.fetchOptions.filterOptions.query = "9"
-            XCTAssertEqual(fetcher.data?.counts.numberOfRooms, 10, "Fetcher should update data to 10 rooms (all rooms suffixing with '9')")
-            
-            //  update query
-            fetcher.fetchOptions.filterOptions.query = "Room 9"
-            XCTAssertEqual(fetcher.data?.counts.numberOfRooms, 2, "Fetcher should update data to only 2 rooms (Room 9 and Room 90)")
-            
-            //  update query
-            fetcher.fetchOptions.filterOptions.query = "Room 90"
-            XCTAssertEqual(fetcher.data?.counts.numberOfRooms, 1, "Fetcher should update data to only 1 rooms")
-            
-            //  update query
-            fetcher.fetchOptions.filterOptions.query = "Room 91"
-            XCTAssertEqual(fetcher.data?.counts.numberOfRooms, 0, "Fetcher should update data to 0 rooms")
-            
-            //  reset query
-            fetcher.fetchOptions.filterOptions.query = nil
-            XCTAssertEqual(fetcher.data?.counts.numberOfRooms, 90, "Fetcher should update data to 90 (all) rooms")
-            
-            //  set query as empty
-            fetcher.fetchOptions.filterOptions.query = ""
-            XCTAssertEqual(fetcher.data?.counts.numberOfRooms, 90, "Fetcher should update data to 90 (all) rooms")
-        }
-    }
-    
-    func testSortOptionsInvitesFirst() {
-        generateDefaultFetcher { fetcher in
-            guard let rooms = fetcher.data?.rooms else {
-                XCTFail("Failed to setup test conditions")
-                return
-            }
-            
-            //  check first 10 rooms are invited
-            for index in 0..<10 {
-                let summary = rooms[index]
-                XCTAssertTrue(summary.isTyped(.invited), "First 10 rooms must be invited rooms")
-            }
-        }
-    }
-    
-    func testSortOptionsLastEventDate() {
-        generateDefaultFetcher { fetcher in
-            fetcher.fetchOptions.filterOptions.notDataTypes = []
-            fetcher.fetchOptions.sortOptions.invitesFirst = false
-            
-            guard let rooms = fetcher.data?.rooms else {
-                XCTFail("Failed to setup test conditions")
-                return
-            }
-            
-            //  check first 10 rooms are untyped
-            for index in 0..<10 {
-                let summary = rooms[index]
-                XCTAssertTrue(summary.dataTypes.isEmpty, "First 10 rooms must be untyped rooms, according to last event date")
-            }
-            
-            let typesToCheck = MXRoomSummaryDataTypes.all.reversed()
-            
-            var start = 10
-            for type in typesToCheck {
-                //  check second 10 rooms are untyped
-                for index in start..<start+10 {
-                    let summary = rooms[index]
-                    XCTAssertTrue(summary.isTyped(type), "nth 10 rooms must be typed rooms, according to last event date")
-                }
-                start += 10
-            }
-        }
-    }
-    
-    private func generateDefaultFetcher(_ completion: @escaping (MXRoomListDataFetcher) -> Void) {
-        let restClient = MXRestClient(credentials: Constants.credentials, unrecognizedCertificateHandler: nil)
-        guard let session = MXSession(matrixRestClient: restClient) else {
-            XCTFail("Failed to setup test conditions")
-            return
-        }
-        let store = MXMemoryStore()
+    private func generateDefaultFetcher() -> MXRoomListDataFetcher {
+        let store = MXCoreDataRoomSummaryStore(withCredentials: Constants.credentials)
         let roomSummaries = generateMockRoomSummaries()
         XCTAssertEqual(roomSummaries.count, 90, "Generator must generate 90 rooms in total")
         //  insert all rooms into the store
         for summary in roomSummaries {
-            store.summariesModule.storeSummary(summary)
+            store.storeSummary(summary)
         }
         
-        self.wait { expectation in
-            session.setStore(store, completion: { response in
-                switch response {
-                case .success:
-                    guard let manager = session.roomListDataManager else {
-                        XCTFail("Failed to setup test conditions")
-                        return
-                    }
-                    let fetcher = manager.fetcher(withOptions: self.basicFetchOptions)
-                    fetcher.paginate()
-                    
-                    XCTAssertEqual(fetcher.data?.counts.numberOfRooms, 60, "Fetcher should fetch all rooms except types: [.hidden, .conferenceUser, .space]")
-                    
-                    completion(fetcher)
-                    
-                    store.deleteAllData()
-                    session.close()
-                    expectation.fulfill()
-                case .failure(let error):
-                    XCTFail("Failed to setup test conditions: \(error)")
-                    return
-                }
-            })
-        }
+        let fetcher = MXCoreDataRoomListDataFetcher(fetchOptions: basicFetchOptions,
+                                                    store: store)
+        return fetcher
     }
     
     /// Generates 10 rooms per each type. Generates 90 rooms by default. Sorted by data types and lastEventDate ascending.
@@ -334,5 +238,19 @@ class MXRoomListDataManagerUnitTests: XCTestCase {
 fileprivate extension MXRoomSummaryDataTypes {
     
     static let all: [MXRoomSummaryDataTypes] = [.invited, .favorited, .direct, .lowPriority, .serverNotice, .hidden, .space, .conferenceUser]
+    
+}
+
+fileprivate class MockRoomListDataFetcherDelegate: MXRoomListDataFetcherDelegate {
+    
+    private var block: () -> Void
+    
+    init(withBlock block: @escaping () -> Void) {
+        self.block = block
+    }
+    
+    func fetcherDidChangeData(_ fetcher: MXRoomListDataFetcher) {
+        self.block()
+    }
     
 }

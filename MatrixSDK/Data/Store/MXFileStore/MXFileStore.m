@@ -178,7 +178,10 @@ static NSUInteger preloadOptions;
 {
     NSParameterAssert(credentials);
     
-    roomSummaryStore = [[MXCoreDataRoomSummaryStore alloc] initWithCredentials:credentials];
+    if (!roomSummaryStore)
+    {
+        roomSummaryStore = [[MXCoreDataRoomSummaryStore alloc] initWithCredentials:credentials];
+    }
 }
 
 - (void)openWithCredentials:(MXCredentials*)someCredentials onComplete:(void (^)(void))onComplete failure:(void (^)(NSError *))failure
@@ -950,6 +953,11 @@ static NSUInteger preloadOptions;
 {
     // credentials must be set before this method starts execution
     NSParameterAssert(credentials);
+    
+    if (storePath)
+    {
+        return;
+    }
     
     NSString *cachePath = nil;
     
