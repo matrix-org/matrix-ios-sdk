@@ -254,9 +254,9 @@ extension MXCoreDataRoomListDataFetcher: MXRoomListDataFilterable {
             //  space
             if let space = filterOptions.space {
                 //  specific space
-                let predicate = NSPredicate(format: "%@ IN %K",
-                                            space.spaceId,
-                                            #keyPath(MXRoomSummaryModel.s_parentSpaceIds))
+                let predicate = NSPredicate(format: "%K CONTAINS[c] %@",
+                                            #keyPath(MXRoomSummaryModel.s_parentSpaceIds),
+                                            space.spaceId)
                 predicates.append(predicate)
             } else {
                 //  home space
@@ -279,8 +279,9 @@ extension MXCoreDataRoomListDataFetcher: MXRoomListDataFilterable {
                                              #keyPath(MXRoomSummaryModel.s_dataTypesInt),
                                              favoritedDataTypes.rawValue)
                 
-                let predicate4 = NSPredicate(format: "%K.@count == 0",
-                                             #keyPath(MXRoomSummaryModel.s_parentSpaceIds))
+                let predicate4 = NSPredicate(format: "%K MATCHES %@",
+                                             #keyPath(MXRoomSummaryModel.s_parentSpaceIds),
+                                             "^$")
                 
                 let predicate = NSCompoundPredicate(type: .or,
                                                     subpredicates: [predicate1, predicate2, predicate3, predicate4])

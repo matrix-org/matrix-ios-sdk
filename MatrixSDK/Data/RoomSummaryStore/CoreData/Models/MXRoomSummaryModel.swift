@@ -17,6 +17,8 @@
 import Foundation
 import CoreData
 
+internal let StringArrayDelimiter: String = ";"
+
 @objc(MXRoomSummaryModel)
 public class MXRoomSummaryModel: NSManagedObject {
     
@@ -31,7 +33,7 @@ public class MXRoomSummaryModel: NSManagedObject {
     @NSManaged public var s_displayName: String?
     @NSManaged public var s_topic: String?
     @NSManaged public var s_creatorUserId: String
-    @NSManaged public var s_aliases: [String]?
+    @NSManaged public var s_aliases: String?
     @NSManaged public var s_joinRule: String?
     @NSManaged public var s_membershipInt: Int16
     @NSManaged public var s_membershipTransitionStateInt: Int16
@@ -47,8 +49,8 @@ public class MXRoomSummaryModel: NSManagedObject {
     @NSManaged public var s_favoriteTagOrder: String?
     @NSManaged public var s_dataTypesInt: Int64
     @NSManaged public var s_sentStatusInt: Int16
-    @NSManaged public var s_parentSpaceIds: Set<String>?
-    @NSManaged public var s_membersCount: MXRoomMembersCountModel
+    @NSManaged public var s_parentSpaceIds: String?
+    @NSManaged public var s_membersCount: MXRoomMembersCountModel?
     @NSManaged public var s_trust: MXUsersTrustLevelSummaryModel?
     @NSManaged public var s_lastMessage: MXRoomLastMessageModel?
     
@@ -71,7 +73,7 @@ public class MXRoomSummaryModel: NSManagedObject {
         s_displayName = summary.displayname
         s_topic = summary.topic
         s_creatorUserId = summary.creatorUserId
-        s_aliases = summary.aliases
+        s_aliases = summary.aliases.joined(separator: StringArrayDelimiter)
         s_joinRule = summary.joinRule
         s_membershipInt = Int16(summary.membership.rawValue)
         s_membershipTransitionStateInt = Int16(summary.membershipTransitionState.rawValue)
@@ -91,10 +93,10 @@ public class MXRoomSummaryModel: NSManagedObject {
         s_favoriteTagOrder = summary.favoriteTagOrder
         s_dataTypesInt = Int64(summary.dataTypes.rawValue)
         s_sentStatusInt = Int16(summary.sentStatus.rawValue)
-        s_parentSpaceIds = summary.parentSpaceIds
+        s_parentSpaceIds = summary.parentSpaceIds.joined(separator: StringArrayDelimiter)
         
-        if !moc.insertedObjects.contains(self) {
-            moc.delete(s_membersCount)
+        if let old = s_membersCount {
+            moc.delete(old)
         }
         s_membersCount = MXRoomMembersCountModel.insert(roomMembersCount: summary.membersCount,
                                                         into: moc)
@@ -154,7 +156,7 @@ extension MXRoomSummaryModel: MXRoomSummaryProtocol {
     }
     
     public var aliases: [String] {
-        return s_aliases ?? []
+        return s_aliases?.components(separatedBy: StringArrayDelimiter) ?? []
     }
     
     public var joinRule: String? {
@@ -170,7 +172,10 @@ extension MXRoomSummaryModel: MXRoomSummaryProtocol {
     }
     
     public var membersCount: MXRoomMembersCount {
-        return MXRoomMembersCount(coreDataModel: s_membersCount)
+        if let s_membersCount = s_membersCount {
+            return MXRoomMembersCount(coreDataModel: s_membersCount)
+        }
+        return MXRoomMembersCount()
     }
     
     public var isConferenceUserRoom: Bool {
@@ -244,7 +249,10 @@ extension MXRoomSummaryModel: MXRoomSummaryProtocol {
     }
     
     public var parentSpaceIds: Set<String> {
-        return s_parentSpaceIds ?? []
+        if let array = s_parentSpaceIds?.components(separatedBy: StringArrayDelimiter) {
+            return Set<String>(array)
+        }
+        return []
     }
     
     public var trust: MXUsersTrustLevelSummary? {
