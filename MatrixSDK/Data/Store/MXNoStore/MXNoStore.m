@@ -250,6 +250,15 @@
     }
 }
 
+- (BOOL)areAllIdentityServerTermsAgreed
+{
+    return NO;
+}
+
+- (void)setAreAllIdentityServerTermsAgreed:(BOOL)areAllIdentityServerTermsAgreed
+{
+}
+
 #pragma mark - Matrix users
 - (void)storeUser:(MXUser *)user
 {
@@ -417,5 +426,21 @@
     [groups removeAllObjects];
 }
 
+#pragma mark - MXRoomSummaryStore
+
+- (NSArray<NSString *> *)rooms
+{
+    return @[];
+}
+
+- (void)storeSummaryForRoom:(NSString *)roomId summary:(id<MXRoomSummaryProtocol>)summary
+{
+    
+}
+
+- (id<MXRoomSummaryProtocol>)summaryOfRoom:(NSString *)roomId
+{
+    return nil;
+}
 
 @end

@@ -1,3 +1,16 @@
+## Changes in 0.20.8 (2021-10-20)
+
+🙌 Improvements
+
+- RoomSummaries: Introduce `MXRoomListDataManager` and implementation. ([#4384](https://github.com/vector-im/element-ios/issues/4384))
+- MXIdentityService: Add an areAllTermsAgreed property. ([#4484](https://github.com/vector-im/element-ios/issues/4484))
+
+🐛 Bugfixes
+
+- MXMemoryStore: Add missing synthesize for `areAllIdentityServerTermsAgreed`. ([#1264](https://github.com/matrix-org/matrix-ios-sdk/issues/1264))
+- Fixed space preview toast is broken if I'm not a member when clicking on a link ([#4966](https://github.com/vector-im/element-ios/issues/4966))
+
+
 ## Changes in 0.20.7 (2021-10-13)
 
 🐛 Bugfixes

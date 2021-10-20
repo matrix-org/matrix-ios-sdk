@@ -38,7 +38,7 @@ extension MXSpaceServiceError: CustomNSError {
 // MARK: - MXSpaceService notification constants
 extension MXSpaceService {
     /// Posted once the first graph as been built or loaded
-    public static let didInitialised = Notification.Name("MXSpaceServiceDidInitialised")
+    public static let didInitialise = Notification.Name("MXSpaceServiceDidInitialise")
 
     /// Posted once the graph of rooms is up and running
     public static let didBuildSpaceGraph = Notification.Name("MXSpaceServiceDidBuildSpaceGraph")
@@ -64,11 +64,13 @@ public class MXSpaceService: NSObject {
     
     private var graph: MXSpaceGraphData = MXSpaceGraphData() {
         didSet {
+            var spacesPerId: [String:MXSpace] = [:]
             self.graph.spaceRoomIds.forEach { spaceId in
                 if let space = self.getSpace(withId: spaceId) {
-                    self.spacesPerId[spaceId] = space
+                    spacesPerId[spaceId] = space
                 }
             }
+            self.spacesPerId = spacesPerId
         }
     }
     private var spacesPerId: [String:MXSpace] = [:]
@@ -97,7 +99,7 @@ public class MXSpaceService: NSObject {
         didSet {
             if !oldValue && isInitialised {
                 self.completionQueue.async {
-                    NotificationCenter.default.post(name: MXSpaceService.didInitialised, object: self)
+                    NotificationCenter.default.post(name: MXSpaceService.didInitialise, object: self)
                 }
             }
         }
@@ -130,6 +132,7 @@ public class MXSpaceService: NSObject {
         self.graph = MXSpaceGraphData()
         self.notificationCounter.close()
         self.isGraphBuilding = false
+        self.isInitialised = false
         self.completionQueue.async {
             NotificationCenter.default.post(name: MXSpaceService.didBuildSpaceGraph, object: self)
         }

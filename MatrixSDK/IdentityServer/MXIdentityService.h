@@ -22,6 +22,8 @@
 #import "MXCredentials.h"
 #import "MXIdentityServerRestClient.h"
 
+@class MXServiceTerms;
+
 NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - Defines & Constants
@@ -31,6 +33,13 @@ NS_ASSUME_NONNULL_BEGIN
  Give an associated userInfo dictionary of type NSDictionary<NSString*, NSString*> with following keys: "userId", "identityServer", "accessToken". Use constants below for convenience.
  */
 extern NSString *const MXIdentityServiceTermsNotSignedNotification;
+
+/**
+ Notification name to send when MXServiceTerms have been accepted. Must provide the identity server whose terms were accepted.
+ Give an associated userInfo dictionary of type NSDictionary<NSString*, NSString*> with following key: "identityServer". Use
+ `MXIdentityServiceNotificationIdentityServerKey` for convenience.
+ */
+extern NSString *const MXIdentityServiceTermsAcceptedNotification;
 
 /**
  Notification name sent when access token change. Provides user id, identity server and access token.
@@ -58,6 +67,12 @@ extern NSString *const MXIdentityServiceNotificationAccessTokenKey;
  The identity server URL.
  */
 @property (nonatomic, readonly) NSString *identityServer;
+
+/**
+ Whether or not the terms for this identity server have been agreed to, or nil if unknown.
+ This value is automatically updated by MXSession as the user account data changes.
+ */
+@property (nonatomic) BOOL areAllTermsAgreed;
 
 /**
  The queue on which asynchronous response blocks are called.

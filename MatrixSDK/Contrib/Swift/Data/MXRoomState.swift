@@ -34,15 +34,6 @@ extension MXRoomState {
         return MXRoomGuestAccess(identifier: self.__guestAccess)
     }
     
-    
-    /// The membership state of the logged in user for this room
-    ///
-    /// If the membership is `invite`, the room state contains few information.
-    /// Join the room with [MXRoom join] to get full information about the room.
-    public var membership: MXMembership {
-        return MXMembership(identifier: self.__membership)
-    }
-    
     /**
      Return the state events with the given type.
      

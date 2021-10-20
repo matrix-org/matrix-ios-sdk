@@ -145,6 +145,7 @@ typedef NS_ENUM(NSUInteger, MXSessionState)
 
 };
 
+@protocol MXRoomListDataManager;
 
 #pragma mark - Notifications
 /**
@@ -460,6 +461,11 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
 @property (nonatomic, readonly) id<MXStore> store;
 
 /**
+ The room list data manager.
+ */
+@property (nonatomic, readonly) id<MXRoomListDataManager> roomListDataManager;
+
+/**
  The module that manages push notifications.
  */
 @property (nonatomic, readonly) MXNotificationCenter *notificationCenter;
@@ -700,6 +706,11 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  */
 - (void)setStore:(id<MXStore>)store success:(void (^)(void))onStoreDataReady
          failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
+/**
+ Sets a room list data manager. Can be only configured once per active session.
+ */
+- (void)setRoomListDataManager:(id<MXRoomListDataManager>)roomListDataManager;
 
 /**
  Set a new identity server.
@@ -1428,6 +1439,19 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
          to differentiate the 2 options.
  */
 - (NSString*)accountDataIdentityServer;
+
+/**
+ Prepares `identityService` ready to accept its service terms:
+ - If it is missing, a new one will be created, first checking the user's account data, falling back on the supplied default.
+ - Registers a new accessToken if necessary so the server is ready to use.
+ 
+ @param defaultIdentityServerUrlString The identity server URL to fallback to when the user's account data has no value
+ @param success The block called when the operation completes. The provides the `MXSession`, identity server's URL and it's access token.
+ @param failure The block called the the operation fails. This provides the error that occurred.
+ */
+- (void)prepareIdentityServiceForTermsWithDefault:(NSString *)defaultIdentityServerUrlString
+                                          success:(void (^)(MXSession *session, NSString *baseURL, NSString *accessToken))success
+                                          failure:(void (^)(NSError *error))failure;
 
 
 #pragma mark - Homeserver information

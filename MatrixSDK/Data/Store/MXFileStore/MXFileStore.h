@@ -160,8 +160,8 @@ typedef NS_OPTIONS(NSInteger, MXFileStorePreloadOptions)
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
  */
-- (void)asyncRoomsSummaries:(void (^)(NSArray<MXRoomSummary *> *roomsSummaries))success
-                    failure:(nullable void (^)(NSError *error))failure;
+- (void)asyncRoomsSummaries:(void (^)(NSArray<id<MXRoomSummaryProtocol>> * _Nonnull))success
+                    failure:(nullable void (^)(NSError * _Nonnull))failure;
 
 /**
  Get the stored account data for a specific room.

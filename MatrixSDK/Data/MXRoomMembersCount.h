@@ -25,4 +25,15 @@
 @property (nonatomic) NSUInteger joined;
 @property (nonatomic) NSUInteger invited;
 
+/**
+ Initializer with numbers.
+ 
+ @param members number of members
+ @param joined number of joined members
+ @param invited number of invited members
+ */
+- (instancetype)initWithMembers:(NSUInteger)members
+                         joined:(NSUInteger)joined
+                        invited:(NSUInteger)invited;
+
 @end
