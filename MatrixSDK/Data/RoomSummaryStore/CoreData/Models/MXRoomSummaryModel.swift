@@ -98,15 +98,27 @@ public class MXRoomSummaryModel: NSManagedObject {
         if let old = s_membersCount {
             moc.delete(old)
         }
-        s_membersCount = MXRoomMembersCountModel.insert(roomMembersCount: summary.membersCount,
-                                                        into: moc)
+        let membersCountModel = MXRoomMembersCountModel.insert(roomMembersCount: summary.membersCount,
+                                                               into: moc)
+        do {
+            try moc.obtainPermanentIDs(for: [membersCountModel])
+        } catch {
+            MXLog.error("[MXRoomSummaryModel] update: couldn't obtain permanent id for membersCount: \(error)")
+        }
+        s_membersCount = membersCountModel
         
         if let old = s_trust {
             moc.delete(old)
         }
         if let trust = summary.trust {
-            s_trust = MXUsersTrustLevelSummaryModel.insert(roomUsersTrustLevelSummary: trust,
-                                                          into: moc)
+            let trustModel = MXUsersTrustLevelSummaryModel.insert(roomUsersTrustLevelSummary: trust,
+                                                                  into: moc)
+            do {
+                try moc.obtainPermanentIDs(for: [trustModel])
+            } catch {
+                MXLog.error("[MXRoomSummaryModel] update: couldn't obtain permanent id for trust: \(error)")
+            }
+            s_trust = trustModel
         } else {
             s_trust = nil
         }
@@ -115,8 +127,14 @@ public class MXRoomSummaryModel: NSManagedObject {
             moc.delete(old)
         }
         if let lastMessage = summary.lastMessage {
-            s_lastMessage = MXRoomLastMessageModel.insert(roomLastMessage: lastMessage,
-                                                          into: moc)
+            let lastMessageModel = MXRoomLastMessageModel.insert(roomLastMessage: lastMessage,
+                                                                 into: moc)
+            do {
+                try moc.obtainPermanentIDs(for: [lastMessageModel])
+            } catch {
+                MXLog.error("[MXRoomSummaryModel] update: couldn't obtain permanent id for lastMessage: \(error)")
+            }
+            s_lastMessage = lastMessageModel
         } else {
             s_lastMessage = nil
         }

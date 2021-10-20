@@ -66,6 +66,11 @@ public class MXCoreDataRoomSummaryStore: NSObject {
         return result
     }()
     
+    private lazy var defaultTempMoc: NSManagedObjectContext = {
+        let result = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
+        result.parent = mainMoc
+        return result
+    }()
     private lazy var mainMoc: NSManagedObjectContext = {
         let result = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
         result.automaticallyMergesChangesFromParent = true
@@ -87,12 +92,6 @@ public class MXCoreDataRoomSummaryStore: NSObject {
     }
     
     //  MARK: - Private
-    
-    private func createTempMoc() -> NSManagedObjectContext {
-        let result = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
-        result.parent = mainMoc
-        return result
-    }
     
     private func fetchRoomIds(in moc: NSManagedObjectContext) -> [String] {
         let propertyName = "s_identifier"
@@ -117,7 +116,9 @@ public class MXCoreDataRoomSummaryStore: NSObject {
     
     private func fetchSummary(forRoomId roomId: String, in moc: NSManagedObjectContext) -> MXRoomSummaryModel? {
         let request = MXRoomSummaryModel.typedFetchRequest()
-        request.predicate = NSPredicate(format: "%K == %@", #keyPath(MXRoomSummaryModel.s_identifier), roomId)
+        request.predicate = NSPredicate(format: "%K == %@",
+                                        #keyPath(MXRoomSummaryModel.s_identifier),
+                                        roomId)
         do {
             let results = try moc.fetch(request)
             return results.first
@@ -128,14 +129,19 @@ public class MXCoreDataRoomSummaryStore: NSObject {
     }
     
     private func saveSummary(_ summary: MXRoomSummaryProtocol) {
-        let moc = createTempMoc()
+        let moc = defaultTempMoc
         
         moc.perform { [weak self] in
             guard let self = self else { return }
             if let existing = self.fetchSummary(forRoomId: summary.roomId, in: moc) {
                 existing.update(withRoomSummary: summary, in: moc)
             } else {
-                MXRoomSummaryModel.insert(roomSummary: summary, into: moc)
+                let model = MXRoomSummaryModel.insert(roomSummary: summary, into: moc)
+                do {
+                    try moc.obtainPermanentIDs(for: [model])
+                } catch {
+                    MXLog.error("[MXCoreDataRoomSummaryStore] saveSummary couldn't obtain permanent id: \(error)")
+                }
             }
             
             self.saveIfNeeded(moc)
@@ -143,11 +149,20 @@ public class MXCoreDataRoomSummaryStore: NSObject {
     }
     
     private func deleteSummary(forRoomId roomId: String) {
-        let moc = createTempMoc()
+        let moc = defaultTempMoc
         
         moc.perform { [weak self] in
             guard let self = self else { return }
             if let existing = self.fetchSummary(forRoomId: roomId, in: moc) {
+                if let membersCount = existing.s_membersCount {
+                    moc.delete(membersCount)
+                }
+                if let trust = existing.s_trust {
+                    moc.delete(trust)
+                }
+                if let lastMessage = existing.s_lastMessage {
+                    moc.delete(lastMessage)
+                }
                 moc.delete(existing)
             }
             
@@ -156,15 +171,23 @@ public class MXCoreDataRoomSummaryStore: NSObject {
     }
     
     private func deleteAllSummaries() {
-        let request = NSFetchRequest<NSFetchRequestResult>(entityName: MXRoomSummaryModel.entityName)
-        let deleteRequest = NSBatchDeleteRequest(fetchRequest: request)
+        let entityNames: [String] = [
+            MXRoomSummaryModel.entityName,
+            MXRoomLastMessageModel.entityName,
+            MXUsersTrustLevelSummaryModel.entityName,
+            MXRoomMembersCountModel.entityName
+        ]
         
-        let moc = createTempMoc()
+        let moc = defaultTempMoc
         
         moc.perform { [weak self] in
             guard let self = self else { return }
             do {
-                try moc.execute(deleteRequest)
+                for entityName in entityNames {
+                    let request = NSFetchRequest<NSFetchRequestResult>(entityName: entityName)
+                    let deleteRequest = NSBatchDeleteRequest(fetchRequest: request)
+                    try moc.execute(deleteRequest)
+                }
                 
                 self.saveIfNeeded(moc)
             } catch {
@@ -176,7 +199,7 @@ public class MXCoreDataRoomSummaryStore: NSObject {
     private func allSummaries(_ completion: @escaping ([MXRoomSummaryProtocol]) -> Void) {
         let request = MXRoomSummaryModel.typedFetchRequest()
         
-        let moc = createTempMoc()
+        let moc = defaultTempMoc
         
         moc.perform {
             do {
