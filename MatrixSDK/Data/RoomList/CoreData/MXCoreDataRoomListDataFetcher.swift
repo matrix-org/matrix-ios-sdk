@@ -101,13 +101,14 @@ internal class MXCoreDataRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
         }
         removeCacheIfRequired()
         let numberOfItems = (oldData.currentPage + 2) * oldData.paginationOptions.rawValue
-        fetchedResultsController.fetchRequest.fetchLimit = numberOfItems
+        fetchedResultsController.fetchRequest.fetchLimit = numberOfItems > 0 ? numberOfItems : 0
         performFetch()
     }
     
     func resetPagination() {
         removeCacheIfRequired()
-        fetchedResultsController.fetchRequest.fetchLimit = fetchOptions.paginationOptions.rawValue
+        let numberOfItems = fetchOptions.paginationOptions.rawValue
+        fetchedResultsController.fetchRequest.fetchLimit = numberOfItems > 0 ? numberOfItems : 0
         performFetch()
     }
     
@@ -151,7 +152,7 @@ internal class MXCoreDataRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
         let numberOfItems = (data.currentPage + 1) * data.paginationOptions.rawValue
         fetchedResultsController.fetchRequest.predicate = filterPredicate(for: filterOptions)
         fetchedResultsController.fetchRequest.sortDescriptors = sortDescriptors(for: sortOptions)
-        fetchedResultsController.fetchRequest.fetchLimit = numberOfItems
+        fetchedResultsController.fetchRequest.fetchLimit = numberOfItems > 0 ? numberOfItems : 0
         performFetch()
     }
     
@@ -227,14 +228,9 @@ extension MXCoreDataRoomListDataFetcher: MXRoomListDataFilterable {
         
         //  query
         if let query = filterOptions.query, !query.isEmpty {
-            let predicate1 = NSPredicate(format: "%K CONTAINS[cd] %@",
-                                         #keyPath(MXRoomSummaryModel.s_displayName),
-                                         query)
-            let predicate2 = NSPredicate(format: "%K CONTAINS[cd] %@",
-                                         #keyPath(MXRoomSummaryModel.spaceChildInfo.displayName),
-                                         query)
-            let predicate = NSCompoundPredicate(type: .or,
-                                                subpredicates: [predicate1, predicate2])
+            let predicate = NSPredicate(format: "%K CONTAINS[cd] %@",
+                                        #keyPath(MXRoomSummaryModel.s_displayName),
+                                        query)
             predicates.append(predicate)
         }
         
@@ -258,7 +254,8 @@ extension MXCoreDataRoomListDataFetcher: MXRoomListDataFilterable {
             //  space
             if let space = filterOptions.space {
                 //  specific space
-                let predicate = NSPredicate(format: "%@ IN %K", space.spaceId,
+                let predicate = NSPredicate(format: "%@ IN %K",
+                                            space.spaceId,
                                             #keyPath(MXRoomSummaryModel.s_parentSpaceIds))
                 predicates.append(predicate)
             } else {

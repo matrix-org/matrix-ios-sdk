@@ -168,17 +168,24 @@ static NSUInteger preloadOptions;
     if (self)
     {
         credentials = someCredentials;
-        roomSummaryStore = [[MXFileRoomSummaryStore alloc] initWithCredentials:credentials];
+        [self setupRoomSummaryStore];
         [self setUpStoragePaths];
     }
     return self;
+}
+
+- (void)setupRoomSummaryStore
+{
+    NSParameterAssert(credentials);
+    
+    roomSummaryStore = [[MXCoreDataRoomSummaryStore alloc] initWithCredentials:credentials];
 }
 
 - (void)openWithCredentials:(MXCredentials*)someCredentials onComplete:(void (^)(void))onComplete failure:(void (^)(NSError *))failure
 {
     credentials = someCredentials;
     
-    roomSummaryStore = [[MXFileRoomSummaryStore alloc] initWithCredentials:credentials];
+    [self setupRoomSummaryStore];
     
     // Create the file path where data will be stored for the user id passed in credentials
     [self setUpStoragePaths];
