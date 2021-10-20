@@ -71,11 +71,6 @@ class MXBackgroundStore: NSObject, MXStore {
         fileStore.state(ofRoom: roomId, success: success, failure: failure)
     }
     
-    //  Fetch real soom summary
-    func summary(ofRoom roomId: String) -> MXRoomSummary? {
-        return fileStore.summary(ofRoom: roomId)
-    }
-    
     //  Fetch real room account data
     func accountData(ofRoom roomId: String) -> MXRoomAccountData? {
         return fileStore.accountData(ofRoom: roomId)
@@ -242,6 +237,37 @@ class MXBackgroundStore: NSObject, MXStore {
         DispatchQueue.main.async {
             completion?()
         }
+    }
+    
+    func storeOutgoingMessage(forRoom roomId: String, outgoingMessage: MXEvent) {
+        
+    }
+    
+    func removeAllOutgoingMessages(fromRoom roomId: String) {
+        
+    }
+    
+    func removeOutgoingMessage(fromRoom roomId: String, outgoingMessage outgoingMessageEventId: String) {
+        
+    }
+    
+    func outgoingMessages(inRoom roomId: String) -> [MXEvent]? {
+        return []
+    }
+    
+    //  MARK: - MXRoomSummaryStore
+    
+    var rooms: [String] {
+        return []
+    }
+    
+    func storeSummary(forRoom roomId: String, summary: MXRoomSummaryProtocol) {
+        
+    }
+    
+    //  Fetch real soom summary
+    func summary(ofRoom roomId: String) -> MXRoomSummaryProtocol? {
+        return fileStore.summary(ofRoom: roomId)
     }
     
 }
