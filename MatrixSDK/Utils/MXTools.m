@@ -822,7 +822,7 @@ static NSMutableDictionary *fileExtensionByContentType = nil;
 + (void)convertVideoToMP4:(NSURL*)videoLocalURL
        withTargetFileSize:(NSInteger)targetFileSize
                   success:(void(^)(NSURL *videoLocalURL, NSString *mimetype, CGSize size, double durationInMs))success
-                  failure:(void(^)(void))failure
+                  failure:(void(^)(NSError *error))failure
 {
     AVURLAsset *videoAsset = [AVURLAsset assetWithURL:videoLocalURL];
     [self convertVideoAssetToMP4:videoAsset withTargetFileSize:targetFileSize success:success failure:failure];
@@ -831,7 +831,7 @@ static NSMutableDictionary *fileExtensionByContentType = nil;
 + (void)convertVideoAssetToMP4:(AVAsset*)videoAsset
             withTargetFileSize:(NSInteger)targetFileSize
                        success:(void(^)(NSURL *videoLocalURL, NSString *mimetype, CGSize size, double durationInMs))success
-                       failure:(void(^)(void))failure
+                       failure:(void(^)(NSError *error))failure
 {
     NSParameterAssert(success);
     NSParameterAssert(failure);
@@ -912,7 +912,12 @@ static NSMutableDictionary *fileExtensionByContentType = nil;
                     
                     // Remove output file (if any)
                     [[NSFileManager defaultManager] removeItemAtPath:[outputVideoLocalURL path] error:nil];
-                    failure();
+                    
+                    NSError *error = [[NSError alloc] initWithDomain:AVFoundationErrorDomain code:0 userInfo:@{
+                        NSLocalizedDescriptionKey: @"Unable to calculate video size."
+                    }];
+                    
+                    failure(exportSession.error ?: error);
                 }
             }
             else
@@ -922,7 +927,7 @@ static NSMutableDictionary *fileExtensionByContentType = nil;
                 
                 // Remove output file (if any)
                 [[NSFileManager defaultManager] removeItemAtPath:[outputVideoLocalURL path] error:nil];
-                failure();
+                failure(exportSession.error);
             }
         });
         
