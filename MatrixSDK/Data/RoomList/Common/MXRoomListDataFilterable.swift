@@ -107,8 +107,12 @@ extension MXRoomListDataFilterable {
                                              #keyPath(MXRoomSummaryProtocol.dataTypes),
                                              favoritedDataTypes.rawValue)
                 
-                let predicate4 = NSPredicate(format: "%K.@count == 0",
-                                             #keyPath(MXRoomSummaryProtocol.parentSpaceIds))
+                let predicate4_1 = NSPredicate(format: "%K == NULL",
+                                               #keyPath(MXRoomSummaryProtocol.parentSpaceIds))
+                let predicate4_2 = NSPredicate(format: "%K.@count == 0",
+                                               #keyPath(MXRoomSummaryProtocol.parentSpaceIds))
+                let predicate4 = NSCompoundPredicate(type: .or,
+                                                     subpredicates: [predicate4_1, predicate4_2])
                 
                 let predicate = NSCompoundPredicate(type: .or,
                                                     subpredicates: [predicate1, predicate2, predicate3, predicate4])
