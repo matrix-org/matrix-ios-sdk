@@ -156,8 +156,12 @@ public final class MXRoomListDataFilterOptions: NSObject {
                 let subpredicate3 = NSPredicate(format: "(%K & %d) != 0",
                                                 #keyPath(MXRoomSummaryProtocol.dataTypes), favoritedDataTypes.rawValue)
                 
-                let subpredicate4 = NSPredicate(format: "%K.@count == 0",
+                let subpredicate4_1 = NSPredicate(format: "%K == NULL",
                                                 #keyPath(MXRoomSummaryProtocol.parentSpaceIds))
+                let subpredicate4_2 = NSPredicate(format: "%K.@count == 0",
+                                                #keyPath(MXRoomSummaryProtocol.parentSpaceIds))
+                let subpredicate4 = NSCompoundPredicate(type: .or,
+                                                        subpredicates: [subpredicate4_1, subpredicate4_2])
                 
                 let subpredicate = NSCompoundPredicate(type: .or,
                                                        subpredicates: [subpredicate1, subpredicate2, subpredicate3, subpredicate4])
