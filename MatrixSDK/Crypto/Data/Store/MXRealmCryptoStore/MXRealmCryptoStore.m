@@ -518,39 +518,28 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
 
 - (void)performAccountOperationWithBlock:(void (^)(OLMAccount *))block
 {
-    // Make sure write operations complete in background to avoid to keep the realm internal lock until the app resumes.
-    // Thus, other components (Notification Extension Service, Share Extension, ...) will not be blocked by this lock.
-    id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
-    id<MXBackgroundTask> backgroundTask = [handler startBackgroundTaskWithName:@"[MXRealmCryptoStore] performAccountOperationWithBlock"];
-                                           
-    MXRealmOlmAccount *account = self.accountInCurrentThread;
-    if (account.olmAccountData)
-    {
-        OLMAccount *olmAccount = [NSKeyedUnarchiver unarchiveObjectWithData:account.olmAccountData];
-        if (olmAccount)
+    [self.realm transactionWithName:@"[MXRealmCryptoStore] performAccountOperationWithBlock" block:^{
+        MXRealmOlmAccount *account = self.accountInCurrentThread;
+        if (account.olmAccountData)
         {
-            // Use beginWriteTransaction instead of transactionWithBlock because the doc
-            // explicitely says this method is blocking
-            [account.realm beginWriteTransaction];
-            
-            block(olmAccount);
-            account.olmAccountData = [NSKeyedArchiver archivedDataWithRootObject:olmAccount];
-            
-            [account.realm commitWriteTransaction];
+            OLMAccount *olmAccount = [NSKeyedUnarchiver unarchiveObjectWithData:account.olmAccountData];
+            if (olmAccount)
+            {
+                block(olmAccount);
+                account.olmAccountData = [NSKeyedArchiver archivedDataWithRootObject:olmAccount];
+            }
+            else
+            {
+                MXLogDebug(@"[MXRealmCryptoStore] performAccountOperationWithBlock. Error: Cannot build OLMAccount");
+                block(nil);
+            }
         }
         else
         {
-            MXLogDebug(@"[MXRealmCryptoStore] performAccountOperationWithBlock. Error: Cannot build OLMAccount");
+            MXLogDebug(@"[MXRealmCryptoStore] performAccountOperationWithBlock. Error: No OLMAccount yet");
             block(nil);
         }
-    }
-    else
-    {
-        MXLogDebug(@"[MXRealmCryptoStore] performAccountOperationWithBlock. Error: No OLMAccount yet");
-        block(nil);
-    }
-
-    [backgroundTask stop];
+    }];
 }
 
 - (void)storeDeviceSyncToken:(NSString*)deviceSyncToken
@@ -882,36 +871,26 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
 
 - (void)performSessionOperationWithDevice:(NSString*)deviceKey andSessionId:(NSString*)sessionId block:(void (^)(MXOlmSession *olmSession))block
 {
-    // Make sure write operations complete in background to avoid to keep the realm internal lock until the app resumes.
-    // Thus, other components (Notification Extension Service, Share Extension, ...) will not be blocked by this lock.
-    id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
-    id<MXBackgroundTask> backgroundTask = [handler startBackgroundTaskWithName:@"[MXRealmCryptoStore] performSessionOperationWithDevice"];
-    
-    RLMRealm *realm = self.realm;
-    
-    [realm beginWriteTransaction];
-    
-    MXRealmOlmSession *realmOlmSession = [MXRealmOlmSession objectsInRealm:realm
-                                                                     where:@"sessionId = %@ AND deviceKey = %@", sessionId, deviceKey].firstObject;
-    if (realmOlmSession.olmSessionData)
-    {
-        OLMSession *olmSession = [NSKeyedUnarchiver unarchiveObjectWithData:realmOlmSession.olmSessionData];
-        
-        MXOlmSession *mxOlmSession = [[MXOlmSession alloc] initWithOlmSession:olmSession];
-        mxOlmSession.lastReceivedMessageTs = realmOlmSession.lastReceivedMessageTs;
-        
-        block(mxOlmSession);
-        
-        realmOlmSession.olmSessionData = [NSKeyedArchiver archivedDataWithRootObject:mxOlmSession.session];
-    }
-    else
-    {
-        MXLogDebug(@"[MXRealmCryptoStore] performSessionOperationWithDevice. Error: olm session %@ not found", sessionId);
-        block(nil);
-    }
-    
-    [realm commitWriteTransaction];
-    [backgroundTask stop];
+    [self.realm transactionWithName:@"[MXRealmCryptoStore] performSessionOperationWithDevice" block:^{
+        MXRealmOlmSession *realmOlmSession = [MXRealmOlmSession objectsInRealm:self.realm
+                                                                         where:@"sessionId = %@ AND deviceKey = %@", sessionId, deviceKey].firstObject;
+        if (realmOlmSession.olmSessionData)
+        {
+            OLMSession *olmSession = [NSKeyedUnarchiver unarchiveObjectWithData:realmOlmSession.olmSessionData];
+            
+            MXOlmSession *mxOlmSession = [[MXOlmSession alloc] initWithOlmSession:olmSession];
+            mxOlmSession.lastReceivedMessageTs = realmOlmSession.lastReceivedMessageTs;
+            
+            block(mxOlmSession);
+            
+            realmOlmSession.olmSessionData = [NSKeyedArchiver archivedDataWithRootObject:mxOlmSession.session];
+        }
+        else
+        {
+            MXLogDebug(@"[MXRealmCryptoStore] performSessionOperationWithDevice. Error: olm session %@ not found", sessionId);
+            block(nil);
+        }
+    }];
 }
 
 - (NSArray<MXOlmSession*>*)sessionsWithDevice:(NSString*)deviceKey;
@@ -1008,43 +987,33 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
 
 - (void)performSessionOperationWithGroupSessionWithId:(NSString*)sessionId senderKey:(NSString*)senderKey block:(void (^)(MXOlmInboundGroupSession *inboundGroupSession))block
 {
-    // Make sure write operations complete in background to avoid to keep the realm internal lock until the app resumes.
-    // Thus, other components (Notification Extension Service, Share Extension, ...) will not be blocked by this lock.
-    id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
-    id<MXBackgroundTask> backgroundTask = [handler startBackgroundTaskWithName:@"[MXRealmCryptoStore] performSessionOperationWithGroupSessionWithId"];
-    
-    RLMRealm *realm = self.realm;
-    
-    [realm beginWriteTransaction];
-    
-    NSString *sessionIdSenderKey = [MXRealmOlmInboundGroupSession primaryKeyWithSessionId:sessionId
-                                                                                senderKey:senderKey];
-    MXRealmOlmInboundGroupSession *realmSession = [MXRealmOlmInboundGroupSession objectInRealm:realm forPrimaryKey:sessionIdSenderKey];
-    
-    if (realmSession.olmInboundGroupSessionData)
-    {
-        MXOlmInboundGroupSession *session = [NSKeyedUnarchiver unarchiveObjectWithData:realmSession.olmInboundGroupSessionData];
+    [self.realm transactionWithName:@"[MXRealmCryptoStore] performSessionOperationWithGroupSessionWithId" block:^{
+        NSString *sessionIdSenderKey = [MXRealmOlmInboundGroupSession primaryKeyWithSessionId:sessionId
+                                                                                    senderKey:senderKey];
+        MXRealmOlmInboundGroupSession *realmSession = [MXRealmOlmInboundGroupSession objectInRealm:self.realm forPrimaryKey:sessionIdSenderKey];
         
-        if (session)
+        if (realmSession.olmInboundGroupSessionData)
         {
-            block(session);
+            MXOlmInboundGroupSession *session = [NSKeyedUnarchiver unarchiveObjectWithData:realmSession.olmInboundGroupSessionData];
             
-            realmSession.olmInboundGroupSessionData = [NSKeyedArchiver archivedDataWithRootObject:session];
+            if (session)
+            {
+                block(session);
+                
+                realmSession.olmInboundGroupSessionData = [NSKeyedArchiver archivedDataWithRootObject:session];
+            }
+            else
+            {
+                MXLogDebug(@"[MXRealmCryptoStore] performSessionOperationWithGroupSessionWithId. Error: Cannot build MXOlmInboundGroupSession for megolm session %@", sessionId);
+                block(nil);
+            }
         }
         else
         {
-            MXLogDebug(@"[MXRealmCryptoStore] performSessionOperationWithGroupSessionWithId. Error: Cannot build MXOlmInboundGroupSession for megolm session %@", sessionId);
+            MXLogDebug(@"[MXRealmCryptoStore] performSessionOperationWithGroupSessionWithId. Error: megolm session %@ not found", sessionId);
             block(nil);
         }
-    }
-    else
-    {
-        MXLogDebug(@"[MXRealmCryptoStore] performSessionOperationWithGroupSessionWithId. Error: megolm session %@ not found", sessionId);
-        block(nil);
-    }
-    
-    [realm commitWriteTransaction];
-    [backgroundTask stop];
+    }];
 }
 
 - (NSArray<MXOlmInboundGroupSession *> *)inboundGroupSessions
