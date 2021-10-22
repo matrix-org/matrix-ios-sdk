@@ -530,13 +530,13 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
             }
             else
             {
-                MXLogDebug(@"[MXRealmCryptoStore] performAccountOperationWithBlock. Error: Cannot build OLMAccount");
+                MXLogError(@"[MXRealmCryptoStore] performAccountOperationWithBlock. Error: Cannot build OLMAccount");
                 block(nil);
             }
         }
         else
         {
-            MXLogDebug(@"[MXRealmCryptoStore] performAccountOperationWithBlock. Error: No OLMAccount yet");
+            MXLogError(@"[MXRealmCryptoStore] performAccountOperationWithBlock. Error: No OLMAccount yet");
             block(nil);
         }
     }];
@@ -887,7 +887,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
         }
         else
         {
-            MXLogDebug(@"[MXRealmCryptoStore] performSessionOperationWithDevice. Error: olm session %@ not found", sessionId);
+            MXLogError(@"[MXRealmCryptoStore] performSessionOperationWithDevice. Error: olm session %@ not found", sessionId);
             block(nil);
         }
     }];
@@ -1004,13 +1004,13 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
             }
             else
             {
-                MXLogDebug(@"[MXRealmCryptoStore] performSessionOperationWithGroupSessionWithId. Error: Cannot build MXOlmInboundGroupSession for megolm session %@", sessionId);
+                MXLogError(@"[MXRealmCryptoStore] performSessionOperationWithGroupSessionWithId. Error: Cannot build MXOlmInboundGroupSession for megolm session %@", sessionId);
                 block(nil);
             }
         }
         else
         {
-            MXLogDebug(@"[MXRealmCryptoStore] performSessionOperationWithGroupSessionWithId. Error: megolm session %@ not found", sessionId);
+            MXLogError(@"[MXRealmCryptoStore] performSessionOperationWithGroupSessionWithId. Error: megolm session %@ not found", sessionId);
             block(nil);
         }
     }];
