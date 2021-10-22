@@ -189,6 +189,7 @@ FOUNDATION_EXPORT NSString *const kMXMessageTypeKeyVerificationRequest;
 FOUNDATION_EXPORT NSString *const MXEventRelationTypeAnnotation;    // Reactions
 FOUNDATION_EXPORT NSString *const MXEventRelationTypeReference;     // Reply
 FOUNDATION_EXPORT NSString *const MXEventRelationTypeReplace;       // Edition
+FOUNDATION_EXPORT NSString *const MXEventRelationTypeThread;        // Thread
 
 /**
  Prefix used for id of temporary local event.

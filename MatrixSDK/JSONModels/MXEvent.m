@@ -100,6 +100,7 @@ NSString *const kMXMessageTypeKeyVerificationRequest = @"m.key.verification.requ
 NSString *const MXEventRelationTypeAnnotation        = @"m.annotation";
 NSString *const MXEventRelationTypeReference         = @"m.reference";
 NSString *const MXEventRelationTypeReplace           = @"m.replace";
+NSString *const MXEventRelationTypeThread            = @"io.element.thread";
 
 NSString *const kMXEventLocalEventIdPrefix           = @"kMXEventLocalId_";
 
