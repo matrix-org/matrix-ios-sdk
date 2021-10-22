@@ -447,6 +447,12 @@ NSString *const kMXMessageContentKeyExtensibleFileMimeType   = @"mimetype";
     return self.eventType == MXEventTypeRoomMessage && self.content[@"m.relates_to"][@"m.in_reply_to"][@"event_id"] != nil;
 }
 
+- (BOOL)isInThread
+{
+    return self.eventType == MXEventTypeRoomMessage &&
+        [self.content[@"m.relates_to"][@"rel_type"] isEqualToString:MXEventRelationTypeThread];
+}
+
 - (BOOL)isVoiceMessage
 {
     NSString *msgtype = self.content[@"msgtype"];

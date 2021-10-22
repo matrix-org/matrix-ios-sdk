@@ -466,6 +466,11 @@ extern NSString *const kMXEventIdentifierKey;
 - (BOOL)isReplyEvent;
 
 /**
+ Return YES if the event is in a thread.
+ */
+- (BOOL)isInThread;
+
+/**
  Return YES if the event contains a voice message
  */
 - (BOOL)isVoiceMessage;
