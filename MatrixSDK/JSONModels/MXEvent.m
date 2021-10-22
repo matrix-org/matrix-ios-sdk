@@ -447,12 +447,6 @@ NSString *const kMXMessageContentKeyExtensibleFileMimeType   = @"mimetype";
     return self.eventType == MXEventTypeRoomMessage && self.content[@"m.relates_to"][@"m.in_reply_to"][@"event_id"] != nil;
 }
 
-- (BOOL)isInThread
-{
-    return self.eventType == MXEventTypeRoomMessage &&
-        [self.content[@"m.relates_to"][@"rel_type"] isEqualToString:MXEventRelationTypeThread];
-}
-
 - (BOOL)isVoiceMessage
 {
     NSString *msgtype = self.content[@"msgtype"];
@@ -876,6 +870,23 @@ NSString *const kMXMessageContentKeyExtensibleFileMimeType   = @"mimetype";
 - (BOOL)isContentScannable
 {
     return [self getMediaURLs].count != 0;
+}
+
+#pragma mark - Threading
+
+- (BOOL)isInThread
+{
+    return self.eventType == MXEventTypeRoomMessage
+        && [self.relatesTo.relationType isEqualToString:MXEventRelationTypeThread];
+}
+
+- (NSString *)threadIdentifier
+{
+    if (self.isInThread)
+    {
+        return self.relatesTo.eventId;
+    }
+    return nil;
 }
 
 #pragma mark - Crypto

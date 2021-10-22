@@ -466,11 +466,6 @@ extern NSString *const kMXEventIdentifierKey;
 - (BOOL)isReplyEvent;
 
 /**
- Return YES if the event is in a thread.
- */
-- (BOOL)isInThread;
-
-/**
  Return YES if the event contains a voice message
  */
 - (BOOL)isVoiceMessage;
@@ -541,6 +536,19 @@ extern NSString *const kMXEventIdentifierKey;
  @return true if event content could be scanned by `MXScanManager`.
  */
 - (BOOL)isContentScannable;
+
+#pragma mark - Threading
+
+/**
+ Return YES if the event is in a thread.
+ */
+- (BOOL)isInThread;
+
+/**
+ Thread identifier for the event. This is actually the eventId of the thread's root event.
+ nil if the event is not in a thread.
+ */
+@property (nonatomic, readonly) NSString *threadIdentifier;
 
 #pragma mark - Crypto
 
