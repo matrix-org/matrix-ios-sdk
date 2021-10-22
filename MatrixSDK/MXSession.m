@@ -794,6 +794,8 @@ typedef void (^MXOnResumeDone)(void);
 
         } failure:^(NSError *error) {
             MXStrongifyAndReturnIfNil(self);
+            
+            MXLogError(@"[MXSession] startWithSyncFilterId: Failed with error %@", error);
 
             [self setState:MXSessionStateInitialSyncFailed];
             failure(error);
@@ -882,6 +884,8 @@ typedef void (^MXOnResumeDone)(void);
                 // Initial server sync
                 [self serverSyncWithServerTimeout:0 success:onServerSyncDone failure:^(NSError *error) {
 
+                    MXLogError(@"[MXSession] _startWithSyncFilterId: Failed with error %@", error);
+                
                     [self setState:MXSessionStateInitialSyncFailed];
                     failure(error);
 
@@ -889,7 +893,7 @@ typedef void (^MXOnResumeDone)(void);
 
             } failure:^(NSError *error) {
 
-                MXLogDebug(@"[MXSession] Crypto failed to start. Error: %@", error);
+                MXLogError(@"[MXSession] Crypto failed to start. Error: %@", error);
                 
                 // Check whether the token is valid
                 if ([self isUnknownTokenError:error])
@@ -905,7 +909,7 @@ typedef void (^MXOnResumeDone)(void);
 
         } failure:^(NSError *error) {
             
-            MXLogDebug(@"[MXSession] Get the user's profile information failed");
+            MXLogError(@"[MXSession] Get the user's profile information failed with error %@", error);
             
             // Check whether the token is valid
             if ([self isUnknownTokenError:error])
@@ -1592,7 +1596,7 @@ typedef void (^MXOnResumeDone)(void);
         if ([error.domain isEqualToString:NSURLErrorDomain]
             && code == kCFURLErrorCancelled)
         {
-            MXLogDebug(@"[MXSession] The connection has been cancelled in state: %@", [MXTools readableSessionState:_state]);
+            MXLogError(@"[MXSession] The connection has been cancelled in state: %@", [MXTools readableSessionState:_state]);
 
             // This happens when the SDK cannot make any more requests because the app is in background
             // and the background task is expired or going to expire.
@@ -1603,7 +1607,7 @@ typedef void (^MXOnResumeDone)(void);
         else if ([error.domain isEqualToString:NSURLErrorDomain]
                  && code == kCFURLErrorTimedOut && serverTimeout == 0)
         {
-            MXLogDebug(@"[MXSession] The connection has been timeout.");
+            MXLogError(@"[MXSession] The connection has been timeout.");
             // The reconnection attempt failed on timeout: there is no data to retrieve from server
             [self->eventStreamRequest cancel];
             self->eventStreamRequest = nil;
@@ -1620,6 +1624,8 @@ typedef void (^MXOnResumeDone)(void);
         }
         else
         {
+            MXLogError(@"[MXSession] handleServerSyncError: %@", error);
+            
             MXError *mxError = [[MXError alloc] initWithNSError:error];
             if (mxError)
             {
