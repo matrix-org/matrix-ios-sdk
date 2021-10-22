@@ -795,7 +795,7 @@ typedef void (^MXOnResumeDone)(void);
         } failure:^(NSError *error) {
             MXStrongifyAndReturnIfNil(self);
             
-            MXLogError(@"[MXSession] startWithSyncFilterId: Failed with error %@", error);
+            MXLogError(@"[MXSession] startWithSyncFilterId: setStore failed with error: %@", error);
 
             [self setState:MXSessionStateInitialSyncFailed];
             failure(error);
@@ -1596,7 +1596,7 @@ typedef void (^MXOnResumeDone)(void);
         if ([error.domain isEqualToString:NSURLErrorDomain]
             && code == kCFURLErrorCancelled)
         {
-            MXLogError(@"[MXSession] The connection has been cancelled in state: %@", [MXTools readableSessionState:_state]);
+            MXLogDebug(@"[MXSession] The connection has been cancelled in state: %@", [MXTools readableSessionState:_state]);
 
             // This happens when the SDK cannot make any more requests because the app is in background
             // and the background task is expired or going to expire.
