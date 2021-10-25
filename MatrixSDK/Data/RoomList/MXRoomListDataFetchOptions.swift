@@ -26,13 +26,17 @@ public final class MXRoomListDataFetchOptions: NSObject {
     /// Filter options. Related fetcher will be refreshed automatically when updated.
     public var filterOptions: MXRoomListDataFilterOptions {
         didSet {
-            fetcher?.refresh()
+            if filterOptions != oldValue {
+                fetcher?.refresh()
+            }
         }
     }
     /// Sort options. Related fetcher will be refreshed automatically when updated.
     public var sortOptions: MXRoomListDataSortOptions {
         didSet {
-            fetcher?.refresh()
+            if sortOptions != oldValue {
+                fetcher?.refresh()
+            }
         }
     }
     /// Pagination options
@@ -55,7 +59,5 @@ public final class MXRoomListDataFetchOptions: NSObject {
         self.paginationOptions = paginationOptions
         self.async = async
         super.init()
-        self.filterOptions.fetchOptions = self
-        self.sortOptions.fetchOptions = self
     }
 }
