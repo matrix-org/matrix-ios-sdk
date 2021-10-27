@@ -426,5 +426,21 @@
     [groups removeAllObjects];
 }
 
+#pragma mark - MXRoomSummaryStore
+
+- (NSArray<NSString *> *)rooms
+{
+    return @[];
+}
+
+- (void)storeSummaryForRoom:(NSString *)roomId summary:(id<MXRoomSummaryProtocol>)summary
+{
+    
+}
+
+- (id<MXRoomSummaryProtocol>)summaryOfRoom:(NSString *)roomId
+{
+    return nil;
+}
 
 @end

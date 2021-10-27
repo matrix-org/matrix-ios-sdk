@@ -29,13 +29,14 @@
     
     //  Execution queue for computationally expensive operations.
     dispatch_queue_t executionQueue;
+    NSMutableDictionary<NSString *, id<MXRoomSummaryProtocol>> *roomSummaries;
 }
 @end
 
 
 @implementation MXMemoryStore
 
-@synthesize eventStreamToken, userAccountData, syncFilterId, homeserverWellknown;
+@synthesize eventStreamToken, userAccountData, syncFilterId, homeserverWellknown, areAllIdentityServerTermsAgreed;
 
 - (instancetype)init
 {
@@ -47,8 +48,9 @@
         roomReceiptsStores = [NSMutableDictionary dictionary];
         users = [NSMutableDictionary dictionary];
         groups = [NSMutableDictionary dictionary];
+        roomSummaries = [NSMutableDictionary dictionary];
         maxUploadSize = -1;
-        self.areAllIdentityServerTermsAgreed = NO;
+        areAllIdentityServerTermsAgreed = NO;
         executionQueue = dispatch_queue_create("MXMemoryStoreExecutionQueue", DISPATCH_QUEUE_SERIAL);
     }
     return self;
@@ -315,11 +317,6 @@
     return NO;
 }
 
-- (NSArray *)rooms
-{
-    return roomStores.allKeys;
-}
-
 
 #pragma mark - Matrix users
 - (void)storeUser:(MXUser *)user
@@ -485,6 +482,27 @@
         roomReceiptsStores[roomId] = store;
     }
     return store;
+}
+
+#pragma mark - MXRoomSummaryStore
+
+- (NSArray<NSString *> *)rooms
+{
+    return roomStores.allKeys;
+}
+
+- (void)storeSummaryForRoom:(NSString *)roomId summary:(id<MXRoomSummaryProtocol>)summary
+{
+    roomSummaries[roomId] = summary;
+    if (roomStores[roomId] == nil)
+    {
+        roomStores[roomId] = [[MXMemoryRoomStore alloc] init];
+    }
+}
+
+- (id<MXRoomSummaryProtocol>)summaryOfRoom:(NSString *)roomId
+{
+    return roomSummaries[roomId];
 }
 
 @end

@@ -66,6 +66,8 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     MXRoomSummaryNextTrustComputation nextTrustComputation;
 }
 
+@property (nonatomic, readwrite) MXSpaceChildInfo *spaceChildInfo;
+
 @end
 
 @implementation MXRoomSummary
@@ -102,6 +104,26 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     return self;
 }
 
+- (instancetype)initWithSummaryModel:(id<MXRoomSummaryProtocol>)model
+{
+    if (self = [super init])
+    {
+        _roomId = model.roomId;
+        [self updateWith:model];
+    }
+    return self;
+}
+
+- (instancetype)initWithSpaceChildInfo:(MXSpaceChildInfo *)spaceChildInfo
+{
+    if (self = [super init])
+    {
+        _roomId = spaceChildInfo.childRoomId;
+        _spaceChildInfo = spaceChildInfo;
+    }
+    return self;
+}
+
 - (void)destroy
 {
     [[NSNotificationCenter defaultCenter] removeObserver:self name:kMXEventDidChangeSentStateNotification object:nil];
@@ -116,6 +138,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     {
         _mxSession = mxSession;
         store = mxSession.store;
+        [self updateWith:[store summaryOfRoom:_roomId]];
 
         // Listen to the event sent state changes
         // This is used to follow evolution of local echo events
@@ -135,14 +158,16 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
         // Listen to event edits within the room
         [self registerEventEditsListener];
     }
- }
+}
 
 - (void)save:(BOOL)commit
 {
-    if ([store respondsToSelector:@selector(storeSummaryForRoom:summary:)])
-    {
-        [store storeSummaryForRoom:_roomId summary:self];
-    }
+    _dataTypes = self.calculateDataTypes;
+    _sentStatus = self.calculateSentStatus;
+    _favoriteTagOrder = self.room.accountData.tags[kMXRoomTagFavourite].order;
+    
+    [store storeSummaryForRoom:_roomId summary:self];
+    
     if (commit && [store respondsToSelector:@selector(commit)])
     {
         [store commit];
@@ -167,6 +192,56 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
         MXMembershipTransitionState membershipTransitionState = [MXRoomSummary membershipTransitionStateForMembership:membership];
         
         [self updateMemberhsipTransitionState:membershipTransitionState notifyUpdate:NO];
+    }
+}
+
+- (void)setParentSpaceIds:(NSSet<NSString *> *)parentSpaceIds
+{
+    if (![_parentSpaceIds isEqualToSet:parentSpaceIds])
+    {
+        _parentSpaceIds = parentSpaceIds;
+        
+        [self save:YES];
+    }
+}
+
+- (void)updateWith:(id<MXRoomSummaryProtocol>)summary
+{
+    if (!summary)
+    {
+        return;
+    }
+    
+    _roomTypeString = summary.roomTypeString;
+    _roomType = summary.roomType;
+    _avatar = summary.avatar;
+    _displayname = summary.displayname;
+    _topic = summary.topic;
+    _creatorUserId = summary.creatorUserId;
+    _aliases = summary.aliases;
+    _joinRule = summary.joinRule;
+    _membership = summary.membership;
+    _membershipTransitionState = summary.membershipTransitionState;
+    _membersCount = summary.membersCount;
+    _isConferenceUserRoom = summary.isConferenceUserRoom;
+    _hiddenFromUser = summary.hiddenFromUser;
+    _storedHash = summary.storedHash;
+    _lastMessage = summary.lastMessage;
+    _isEncrypted = summary.isEncrypted;
+    _trust = summary.trust;
+    _localUnreadEventCount = summary.localUnreadEventCount;
+    _notificationCount = summary.notificationCount;
+    _highlightCount = summary.highlightCount;
+    _directUserId = summary.directUserId;
+    _others = [summary.others mutableCopy];
+    _favoriteTagOrder = summary.favoriteTagOrder;
+    _dataTypes = summary.dataTypes;
+    _sentStatus = summary.sentStatus;
+    _parentSpaceIds = summary.parentSpaceIds;
+    
+    if (!_others)
+    {
+        _others = [NSMutableDictionary dictionary];
     }
 }
 
@@ -700,6 +775,10 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
         {
             updated |= [self.mxSession.roomSummaryUpdateDelegate session:self.mxSession updateRoomSummary:self withServerRoomSummary:roomSync.summary roomState:roomState];
         }
+        if (roomSync.accountData)
+        {
+            updated = YES;
+        }
 
         // Handle the last message starting by the most recent event.
         // Then, if the delegate refuses it as last message, pass the previous event.
@@ -837,6 +916,11 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
         
         _hiddenFromUser = [aDecoder decodeBoolForKey:@"hiddenFromUser"];
         _storedHash = [aDecoder decodeIntegerForKey:@"storedHash"];
+        _dataTypes = (MXRoomSummaryDataTypes)[aDecoder decodeIntegerForKey:@"dataTypes"];
+        _joinRule = [aDecoder decodeObjectForKey:@"joinRule"];
+        _sentStatus = (MXRoomSummarySentStatus)[aDecoder decodeIntegerForKey:@"sentStatus"];
+        _favoriteTagOrder = [aDecoder decodeObjectForKey:@"favoriteTagOrder"];
+        _parentSpaceIds = [aDecoder decodeObjectForKey:@"parentSpaceIds"];
         
         // Compute the trust if asked to do it automatically
         // or maintain its computation it has been already calcutated
@@ -886,6 +970,11 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     
     [aCoder encodeBool:_hiddenFromUser forKey:@"hiddenFromUser"];
     [aCoder encodeInteger:self.hash forKey:@"storedHash"];
+    [aCoder encodeInteger:_dataTypes forKey:@"dataTypes"];
+    [aCoder encodeObject:_joinRule forKey:@"joinRule"];
+    [aCoder encodeInteger:_sentStatus forKey:@"sentStatus"];
+    [aCoder encodeObject:_favoriteTagOrder forKey:@"favoriteTagOrder"];
+    [aCoder encodeObject:_parentSpaceIds forKey:@"parentSpaceIds"];
 }
 
 - (NSString *)description
@@ -895,13 +984,118 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
 
 - (NSUInteger)hash
 {
-    NSUInteger prime = 31;
+    NSUInteger prime = 2;
     NSUInteger result = 1;
 
+    result = prime * result + [_roomId hash];
+    result = prime * result + [_roomTypeString hash];
+    result = prime * result + [_avatar hash];
+    result = prime * result + [_displayname hash];
+    result = prime * result + [_topic hash];
+    result = prime * result + [_creatorUserId hash];
+    result = prime * result + [_aliases hash];
+    result = prime * result + _membership;
+    result = prime * result + _membershipTransitionState;
+    result = prime * result + _isEncrypted;
+    result = prime * result + [_trust hash];
+    result = prime * result + _localUnreadEventCount;
+    result = prime * result + _notificationCount;
+    result = prime * result + _highlightCount;
+    result = prime * result + _dataTypes;
+    result = prime * result + _sentStatus;
     result = prime * result + [_lastMessage.eventId hash];
     result = prime * result + [_lastMessage.text hash];
 
     return result;
+}
+
+- (MXRoomSummaryDataTypes)calculateDataTypes
+{
+    MXRoomSummaryDataTypes result = 0;
+    
+    if (self.hiddenFromUser)
+    {
+        result |= MXRoomSummaryDataTypesHidden;
+    }
+    if (self.room.accountData.tags[kMXRoomTagServerNotice])
+    {
+        result |= MXRoomSummaryDataTypesServerNotice;
+    }
+    if (self.room.accountData.tags[kMXRoomTagFavourite])
+    {
+        result |= MXRoomSummaryDataTypesFavorited;
+    }
+    if (self.room.accountData.tags[kMXRoomTagLowPriority])
+    {
+        result |= MXRoomSummaryDataTypesLowPriority;
+    }
+    if (self.membership == MXMembershipInvite)
+    {
+        result |= MXRoomSummaryDataTypesInvited;
+    }
+    if (self.isDirect)
+    {
+        result |= MXRoomSummaryDataTypesDirect;
+    }
+    if (self.roomType == MXRoomTypeSpace)
+    {
+        result |= MXRoomSummaryDataTypesSpace;
+    }
+    if (self.isConferenceUserRoom)
+    {
+        result |= MXRoomSummaryDataTypesConferenceUser;
+    }
+    
+    return result;
+}
+
+- (BOOL)isTyped:(MXRoomSummaryDataTypes)types
+{
+    return (self.dataTypes & types) != 0;
+}
+
+ -(MXRoomSummarySentStatus)calculateSentStatus
+{
+    MXRoomSummarySentStatus status = MXRoomSummarySentStatusOk;
+    NSArray<MXEvent*> *outgoingMsgs = self.room.outgoingMessages;
+
+    for (MXEvent *event in outgoingMsgs)
+    {
+        if (event.sentState == MXEventSentStateFailed)
+        {
+            status = MXRoomSummarySentStatusSentFailed;
+
+            // Check if the error is due to unknown devices
+            if ([event.sentError.domain isEqualToString:MXEncryptingErrorDomain]
+                && event.sentError.code == MXEncryptingErrorUnknownDeviceCode)
+            {
+                status = MXRoomSummarySentStatusSentFailedDueToUnknownDevices;
+                break;
+            }
+        }
+    }
+    
+    return status;
+}
+
+- (BOOL)isEqual:(id)object
+{
+    if (self == object)
+    {
+        return YES;
+    }
+    
+    if (![object isKindOfClass:[MXRoomSummary class]])
+    {
+        return NO;
+    }
+    
+    return [self isEqualToRoomSummary:(MXRoomSummary *)object];
+}
+
+- (BOOL) isEqualToRoomSummary:(MXRoomSummary *)summary
+{
+    return self.hash == summary.hash;
 }
 
 @end

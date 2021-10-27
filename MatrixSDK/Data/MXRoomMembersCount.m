@@ -16,9 +16,20 @@
 
 #import "MXRoomMembersCount.h"
 
-
 @implementation MXRoomMembersCount
 
+- (instancetype)initWithMembers:(NSUInteger)members
+                         joined:(NSUInteger)joined
+                        invited:(NSUInteger)invited
+{
+    if (self = [super init])
+    {
+        self.members = members;
+        self.joined = joined;
+        self.invited = invited;
+    }
+    return self;
+}
 
 - (BOOL)isEqual:(id)object
 {

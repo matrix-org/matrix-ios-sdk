@@ -370,6 +370,11 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
     [self _deleteStoreWithCredentials:credentials readOnly:YES];
 }
 
++ (void)deleteAllStores
+{
+    [[NSFileManager defaultManager] removeItemAtURL:[self storeFolderURL] error:nil];
+}
+
 + (void)deleteReadonlyStoreWithCredentials:(MXCredentials *)credentials
 {
     [self _deleteStoreWithCredentials:credentials readOnly:YES];
@@ -513,39 +518,28 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
 
 - (void)performAccountOperationWithBlock:(void (^)(OLMAccount *))block
 {
-    // Make sure write operations complete in background to avoid to keep the realm internal lock until the app resumes.
-    // Thus, other components (Notification Extension Service, Share Extension, ...) will not be blocked by this lock.
-    id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
-    id<MXBackgroundTask> backgroundTask = [handler startBackgroundTaskWithName:@"[MXRealmCryptoStore] performAccountOperationWithBlock"];
-                                           
-    MXRealmOlmAccount *account = self.accountInCurrentThread;
-    if (account.olmAccountData)
-    {
-        OLMAccount *olmAccount = [NSKeyedUnarchiver unarchiveObjectWithData:account.olmAccountData];
-        if (olmAccount)
+    [self.realm transactionWithName:@"[MXRealmCryptoStore] performAccountOperationWithBlock" block:^{
+        MXRealmOlmAccount *account = self.accountInCurrentThread;
+        if (account.olmAccountData)
         {
-            // Use beginWriteTransaction instead of transactionWithBlock because the doc
-            // explicitely says this method is blocking
-            [account.realm beginWriteTransaction];
-            
-            block(olmAccount);
-            account.olmAccountData = [NSKeyedArchiver archivedDataWithRootObject:olmAccount];
-            
-            [account.realm commitWriteTransaction];
+            OLMAccount *olmAccount = [NSKeyedUnarchiver unarchiveObjectWithData:account.olmAccountData];
+            if (olmAccount)
+            {
+                block(olmAccount);
+                account.olmAccountData = [NSKeyedArchiver archivedDataWithRootObject:olmAccount];
+            }
+            else
+            {
+                MXLogError(@"[MXRealmCryptoStore] performAccountOperationWithBlock. Error: Cannot build OLMAccount");
+                block(nil);
+            }
         }
         else
         {
-            MXLogDebug(@"[MXRealmCryptoStore] performAccountOperationWithBlock. Error: Cannot build OLMAccount");
+            MXLogError(@"[MXRealmCryptoStore] performAccountOperationWithBlock. Error: No OLMAccount yet");
             block(nil);
         }
-    }
-    else
-    {
-        MXLogDebug(@"[MXRealmCryptoStore] performAccountOperationWithBlock. Error: No OLMAccount yet");
-        block(nil);
-    }
-
-    [backgroundTask stop];
+    }];
 }
 
 - (void)storeDeviceSyncToken:(NSString*)deviceSyncToken
@@ -877,36 +871,26 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
 
 - (void)performSessionOperationWithDevice:(NSString*)deviceKey andSessionId:(NSString*)sessionId block:(void (^)(MXOlmSession *olmSession))block
 {
-    // Make sure write operations complete in background to avoid to keep the realm internal lock until the app resumes.
-    // Thus, other components (Notification Extension Service, Share Extension, ...) will not be blocked by this lock.
-    id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
-    id<MXBackgroundTask> backgroundTask = [handler startBackgroundTaskWithName:@"[MXRealmCryptoStore] performSessionOperationWithDevice"];
-    
-    RLMRealm *realm = self.realm;
-    
-    [realm beginWriteTransaction];
-    
-    MXRealmOlmSession *realmOlmSession = [MXRealmOlmSession objectsInRealm:realm
-                                                                     where:@"sessionId = %@ AND deviceKey = %@", sessionId, deviceKey].firstObject;
-    if (realmOlmSession.olmSessionData)
-    {
-        OLMSession *olmSession = [NSKeyedUnarchiver unarchiveObjectWithData:realmOlmSession.olmSessionData];
-        
-        MXOlmSession *mxOlmSession = [[MXOlmSession alloc] initWithOlmSession:olmSession];
-        mxOlmSession.lastReceivedMessageTs = realmOlmSession.lastReceivedMessageTs;
-        
-        block(mxOlmSession);
-        
-        realmOlmSession.olmSessionData = [NSKeyedArchiver archivedDataWithRootObject:mxOlmSession.session];
-    }
-    else
-    {
-        MXLogDebug(@"[MXRealmCryptoStore] performSessionOperationWithDevice. Error: olm session %@ not found", sessionId);
-        block(nil);
-    }
-    
-    [realm commitWriteTransaction];
-    [backgroundTask stop];
+    [self.realm transactionWithName:@"[MXRealmCryptoStore] performSessionOperationWithDevice" block:^{
+        MXRealmOlmSession *realmOlmSession = [MXRealmOlmSession objectsInRealm:self.realm
+                                                                         where:@"sessionId = %@ AND deviceKey = %@", sessionId, deviceKey].firstObject;
+        if (realmOlmSession.olmSessionData)
+        {
+            OLMSession *olmSession = [NSKeyedUnarchiver unarchiveObjectWithData:realmOlmSession.olmSessionData];
+            
+            MXOlmSession *mxOlmSession = [[MXOlmSession alloc] initWithOlmSession:olmSession];
+            mxOlmSession.lastReceivedMessageTs = realmOlmSession.lastReceivedMessageTs;
+            
+            block(mxOlmSession);
+            
+            realmOlmSession.olmSessionData = [NSKeyedArchiver archivedDataWithRootObject:mxOlmSession.session];
+        }
+        else
+        {
+            MXLogError(@"[MXRealmCryptoStore] performSessionOperationWithDevice. Error: olm session %@ not found", sessionId);
+            block(nil);
+        }
+    }];
 }
 
 - (NSArray<MXOlmSession*>*)sessionsWithDevice:(NSString*)deviceKey;
@@ -1003,43 +987,33 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
 
 - (void)performSessionOperationWithGroupSessionWithId:(NSString*)sessionId senderKey:(NSString*)senderKey block:(void (^)(MXOlmInboundGroupSession *inboundGroupSession))block
 {
-    // Make sure write operations complete in background to avoid to keep the realm internal lock until the app resumes.
-    // Thus, other components (Notification Extension Service, Share Extension, ...) will not be blocked by this lock.
-    id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
-    id<MXBackgroundTask> backgroundTask = [handler startBackgroundTaskWithName:@"[MXRealmCryptoStore] performSessionOperationWithGroupSessionWithId"];
-    
-    RLMRealm *realm = self.realm;
-    
-    [realm beginWriteTransaction];
-    
-    NSString *sessionIdSenderKey = [MXRealmOlmInboundGroupSession primaryKeyWithSessionId:sessionId
-                                                                                senderKey:senderKey];
-    MXRealmOlmInboundGroupSession *realmSession = [MXRealmOlmInboundGroupSession objectInRealm:realm forPrimaryKey:sessionIdSenderKey];
-    
-    if (realmSession.olmInboundGroupSessionData)
-    {
-        MXOlmInboundGroupSession *session = [NSKeyedUnarchiver unarchiveObjectWithData:realmSession.olmInboundGroupSessionData];
+    [self.realm transactionWithName:@"[MXRealmCryptoStore] performSessionOperationWithGroupSessionWithId" block:^{
+        NSString *sessionIdSenderKey = [MXRealmOlmInboundGroupSession primaryKeyWithSessionId:sessionId
+                                                                                    senderKey:senderKey];
+        MXRealmOlmInboundGroupSession *realmSession = [MXRealmOlmInboundGroupSession objectInRealm:self.realm forPrimaryKey:sessionIdSenderKey];
         
-        if (session)
+        if (realmSession.olmInboundGroupSessionData)
         {
-            block(session);
+            MXOlmInboundGroupSession *session = [NSKeyedUnarchiver unarchiveObjectWithData:realmSession.olmInboundGroupSessionData];
             
-            realmSession.olmInboundGroupSessionData = [NSKeyedArchiver archivedDataWithRootObject:session];
+            if (session)
+            {
+                block(session);
+                
+                realmSession.olmInboundGroupSessionData = [NSKeyedArchiver archivedDataWithRootObject:session];
+            }
+            else
+            {
+                MXLogError(@"[MXRealmCryptoStore] performSessionOperationWithGroupSessionWithId. Error: Cannot build MXOlmInboundGroupSession for megolm session %@", sessionId);
+                block(nil);
+            }
         }
         else
         {
-            MXLogDebug(@"[MXRealmCryptoStore] performSessionOperationWithGroupSessionWithId. Error: Cannot build MXOlmInboundGroupSession for megolm session %@", sessionId);
+            MXLogError(@"[MXRealmCryptoStore] performSessionOperationWithGroupSessionWithId. Error: megolm session %@ not found", sessionId);
             block(nil);
         }
-    }
-    else
-    {
-        MXLogDebug(@"[MXRealmCryptoStore] performSessionOperationWithGroupSessionWithId. Error: megolm session %@ not found", sessionId);
-        block(nil);
-    }
-    
-    [realm commitWriteTransaction];
-    [backgroundTask stop];
+    }];
 }
 
 - (NSArray<MXOlmInboundGroupSession *> *)inboundGroupSessions
@@ -1633,7 +1607,14 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
  */
 + (nullable RLMRealm*)realmForUser:(NSString*)userId andDevice:(NSString*)deviceId readOnly:(BOOL)readOnly
 {
-    if (readOnly)
+    // Each user has its own db file.
+    // Else, it can lead to issue with primary keys.
+    // Ex: if 2 users are is the same encrypted room, [self storeAlgorithmForRoom]
+    // will be called twice for the same room id which breaks the uniqueness of the
+    // primary key (roomId) for this table.
+    NSURL *realmFileURL = [self realmFileURLForUserWithUserId:userId andDevice:deviceId];
+    
+    if (readOnly && [[NSFileManager defaultManager] fileExistsAtPath:realmFileURL.path])
     {
         //  just open Realm once in writable mode to trigger migrations
         static dispatch_once_t onceToken;
@@ -1645,13 +1626,6 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
     }
     
     RLMRealmConfiguration *config = [RLMRealmConfiguration defaultConfiguration];
-    
-    // Each user has its own db file.
-    // Else, it can lead to issue with primary keys.
-    // Ex: if 2 users are is the same encrypted room, [self storeAlgorithmForRoom]
-    // will be called twice for the same room id which breaks the uniqueness of the
-    // primary key (roomId) for this table.
-    NSURL *realmFileURL = [self realmFileURLForUserWithUserId:userId andDevice:deviceId];
     [self ensurePathExistenceForFileAtFileURL:realmFileURL];
     config.fileURL = realmFileURL;
     
@@ -1775,36 +1749,32 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
     return realm;
 }
 
-// Return the realm db file to use for a given user and device
-+ (NSURL*)realmFileURLForUserWithUserId:(NSString*)userId andDevice:(NSString*)deviceId
++ (NSURL*)storeFolderURL
 {
-    NSURL *realmFileURL;
-    
-    RLMRealmConfiguration *config = [RLMRealmConfiguration defaultConfiguration];
-    
-    NSURL *defaultRealmPathURL = config.fileURL.URLByDeletingLastPathComponent;
-    
-    // Default db file URL: use the default directory, but replace the filename with the userId.
-    NSString *realmFile = [self realmFileNameWithUserId:userId deviceId:deviceId];
-    NSURL *defaultRealmFileURL = [[defaultRealmPathURL URLByAppendingPathComponent:realmFile]
-                                  URLByAppendingPathExtension:@"realm"];
-    
     // Check for a potential application group id.
     NSString *applicationGroupIdentifier = [MXSDKOptions sharedInstance].applicationGroupIdentifier;
     if (applicationGroupIdentifier)
     {
         // Use the shared db file URL.
         NSURL *sharedContainerURL = [[NSFileManager defaultManager] containerURLForSecurityApplicationGroupIdentifier:applicationGroupIdentifier];
-        NSURL *realmFileFolderURL = [sharedContainerURL URLByAppendingPathComponent:kMXRealmCryptoStoreFolder];
-        realmFileURL = [[realmFileFolderURL URLByAppendingPathComponent:realmFile] URLByAppendingPathExtension:@"realm"];
+        return [sharedContainerURL URLByAppendingPathComponent:kMXRealmCryptoStoreFolder];
     }
     else
     {
         // Use the default URL
-        realmFileURL = defaultRealmFileURL;
+        NSURL *defaultRealmPathURL = [RLMRealmConfiguration defaultConfiguration].fileURL.URLByDeletingLastPathComponent;
+        return [defaultRealmPathURL URLByAppendingPathComponent:kMXRealmCryptoStoreFolder];
     }
+}
+
+// Return the realm db file to use for a given user and device
++ (NSURL*)realmFileURLForUserWithUserId:(NSString*)userId andDevice:(NSString*)deviceId
+{
+    // Default db file URL: use the default directory, but replace the filename with the userId.
+    NSString *fileName = [self realmFileNameWithUserId:userId
+                                              deviceId:deviceId];
     
-    return realmFileURL;
+    return [[[self storeFolderURL] URLByAppendingPathComponent:fileName] URLByAppendingPathExtension:@"realm"];
 }
 
 /**

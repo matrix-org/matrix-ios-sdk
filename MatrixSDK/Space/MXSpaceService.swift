@@ -38,7 +38,7 @@ extension MXSpaceServiceError: CustomNSError {
 // MARK: - MXSpaceService notification constants
 extension MXSpaceService {
     /// Posted once the first graph as been built or loaded
-    public static let didInitialised = Notification.Name("MXSpaceServiceDidInitialised")
+    public static let didInitialise = Notification.Name("MXSpaceServiceDidInitialise")
 
     /// Posted once the graph of rooms is up and running
     public static let didBuildSpaceGraph = Notification.Name("MXSpaceServiceDidBuildSpaceGraph")
@@ -76,6 +76,7 @@ public class MXSpaceService: NSObject {
     private var spacesPerId: [String:MXSpace] = [:]
     
     private var isGraphBuilding = false;
+    private var isClosed = false;
     
     public let notificationCounter: MXSpaceNotificationCounter
     
@@ -99,7 +100,7 @@ public class MXSpaceService: NSObject {
         didSet {
             if !oldValue && isInitialised {
                 self.completionQueue.async {
-                    NotificationCenter.default.post(name: MXSpaceService.didInitialised, object: self)
+                    NotificationCenter.default.post(name: MXSpaceService.didInitialise, object: self)
                 }
             }
         }
@@ -128,10 +129,10 @@ public class MXSpaceService: NSObject {
     
     /// close the service and free all data
     public func close() {
-        self.isGraphBuilding = true
+        self.isClosed = true
         self.graph = MXSpaceGraphData()
         self.notificationCounter.close()
-        self.isGraphBuilding = false
+        self.isInitialised = false
         self.completionQueue.async {
             NotificationCenter.default.post(name: MXSpaceService.didBuildSpaceGraph, object: self)
         }
@@ -140,7 +141,21 @@ public class MXSpaceService: NSObject {
     /// Loads graph from the given store
     public func loadData() {
         self.processingQueue.async {
-            let store = MXSpaceFileStore(userId: self.session.myUserId, deviceId: self.session.myDeviceId)
+            var _myUserId: String?
+            var _myDeviceId: String?
+            
+            self.sdkProcessingQueue.sync {
+                _myUserId = self.session.myUserId
+                _myDeviceId = self.session.myDeviceId
+            }
+            
+            guard let myUserId = _myUserId, let myDeviceId = _myDeviceId else {
+                MXLog.error("[MXSpaceService] loadData: Unexpectedly found nil for myUserId and/or myDeviceId")
+                return
+            }
+            
+            let store = MXSpaceFileStore(userId: myUserId, deviceId: myDeviceId)
+            
             if let loadedGraph = store.loadSpaceGraphData() {
                 self.graph = loadedGraph
 
@@ -393,7 +408,7 @@ public class MXSpaceService: NSObject {
     
     /// Build the graph of rooms
     private func buildGraph() {
-        guard !self.isGraphBuilding && self.graphUpdateEnabled else {
+        guard !self.isClosed && !self.isGraphBuilding && self.graphUpdateEnabled else {
             MXLog.debug("[MXSpaceService] buildGraph: aborted: graph is building or disabled")
             self.needsUpdate = true
             return
@@ -416,9 +431,17 @@ public class MXSpaceService: NSObject {
         let output = PrepareDataResult()
         MXLog.debug("[MXSpaceService] buildGraph: preparing data for \(roomIds.count) rooms")
         self.prepareData(with: roomIds, index: 0, output: output) { result in
+            guard !self.isClosed else {
+                return
+            }
+            
             MXLog.debug("[MXSpaceService] buildGraph: data prepared in \(Date().timeIntervalSince(startDate))")
             
             self.computSpaceGraph(with: result, roomIds: roomIds, directRoomIds: directRoomIds) { graph in
+                guard !self.isClosed else {
+                    return
+                }
+                
                 self.graph = graph
                 
                 MXLog.debug("[MXSpaceService] buildGraph: ended after \(Date().timeIntervalSince(startDate))s")
@@ -429,7 +452,20 @@ public class MXSpaceService: NSObject {
                 NotificationCenter.default.post(name: MXSpaceService.didBuildSpaceGraph, object: self)
 
                 self.processingQueue.async {
-                    let store = MXSpaceFileStore(userId: self.session.myUserId, deviceId: self.session.myDeviceId)
+                    var _myUserId: String?
+                    var _myDeviceId: String?
+                    
+                    self.sdkProcessingQueue.sync {
+                        _myUserId = self.session.myUserId
+                        _myDeviceId = self.session.myDeviceId
+                    }
+                    
+                    guard let myUserId = _myUserId, let myDeviceId = _myDeviceId else {
+                        MXLog.error("[MXSpaceService] buildGraph: Unexpectedly found nil for myUserId and/or myDeviceId")
+                        return
+                    }
+                    
+                    let store = MXSpaceFileStore(userId: myUserId, deviceId: myDeviceId)
                     if !store.store(spaceGraphData: self.graph) {
                         MXLog.error("[MXSpaceService] buildGraph: failed to store space graph")
                     }
@@ -440,8 +476,13 @@ public class MXSpaceService: NSObject {
             }
         }
     }
-
+    
     private func prepareData(with roomIds:[String], index: Int, output: PrepareDataResult, completion: @escaping (_ result: PrepareDataResult) -> Void) {
+        guard !self.isClosed else {
+            // abort prepareData if the service is closed. No completion needed
+            return
+        }
+        
         self.processingQueue.async {
             guard index < roomIds.count else {
                 self.completionQueue.async {
@@ -453,30 +494,37 @@ public class MXSpaceService: NSObject {
                 return
             }
             
-            var _room: MXRoom?
-            var _space: MXSpace?
-            var isRoomDirect = false
-            var _directUserId: String?
-            self.sdkProcessingQueue.sync {
-                _room = self.session.room(withRoomId: roomIds[index])
-                
-                if let room = _room {
-                    _space = self.spacesPerId[room.roomId] ?? room.toSpace()
-                    isRoomDirect = room.isDirect
-                    _directUserId = room.directUserId
+            self.sdkProcessingQueue.async {
+                guard let room = self.session.room(withRoomId: roomIds[index]) else {
+                    self.prepareData(with: roomIds, index: index+1, output: output, completion: completion)
+                    return
                 }
+                
+                let space = self.spacesPerId[room.roomId] ?? room.toSpace()
+                
+                self.prepareData(with: roomIds, index: index, output: output, room: room, space: space, isRoomDirect: room.isDirect, directUserId: room.directUserId, completion: completion)
             }
-            
-            guard let room = _room else {
-                self.prepareData(with: roomIds, index: index+1, output: output, completion: completion)
-                return
-            }
-            
+        }
+    }
+    
+    private func prepareData(with roomIds:[String], index: Int, output: PrepareDataResult, room: MXRoom, space _space: MXSpace?, isRoomDirect:Bool, directUserId _directUserId: String?, completion: @escaping (_ result: PrepareDataResult) -> Void) {
+        
+        guard !self.isClosed else {
+            // abort prepareData if the service is closed. No completion needed
+            return
+        }
+        
+        self.processingQueue.async {
             if let space = _space {
                 output.setComputing(true, forSpace: space)
                 space.readChildRoomsAndMembers {
                     output.setComputing(false, forSpace: space)
                     if !output.isPreparingData && !output.isComputing {
+                        guard !self.isClosed else {
+                            // abort prepareData if the service is closed. No completion needed
+                            return
+                        }
+                        
                         completion(output)
                     }
                 }
@@ -492,6 +540,11 @@ public class MXSpaceService: NSObject {
                         output.setComputing(true, forDirectRoom: room)
                         
                         room.members { response in
+                            guard !self.isClosed else {
+                                // abort prepareData if the service is closed. No completion needed
+                                return
+                            }
+                            
                             guard let members = response.value as? MXRoomMembers else {
                                 self.prepareData(with: roomIds, index: index+1, output: output, completion: completion)
                                 return
@@ -500,8 +553,6 @@ public class MXSpaceService: NSObject {
                             let membersId = members.members?.compactMap({ roomMember in
                                 return roomMember.userId != self.session.myUserId ? roomMember.userId : nil
                             }) ?? []
-
-                            assert(membersId.count == 1)
 
                             self.processingQueue.async {
                                 membersId.forEach { memberId in
