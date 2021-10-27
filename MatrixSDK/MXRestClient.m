@@ -5497,13 +5497,13 @@ MXAuthAction;
                                      suggestedOnly:(BOOL)suggestedOnly
                                              limit:(NSInteger)limit
                                           maxDepth:(NSInteger)maxDepth
-                                              from:(NSString*)from
+                                   paginationToken:(NSString*)paginationToken
                                            success:(void (^)(MXSpaceChildrenResponse *spaceChildrenResponse))success
                                            failure:(void (^)(NSError *error))failure
 {
     NSString *limitParam = limit >= 0 ? [NSString stringWithFormat:@"&limit=%ld", (long)limit] : @"";
     NSString *maxDepthParam = maxDepth >= 0 ? [NSString stringWithFormat:@"&max_depth=%ld", (long)maxDepth] : @"";
-    NSString *fromParam = from != nil ? [NSString stringWithFormat:@"&from=%@", from] : @"";
+    NSString *fromParam = paginationToken != nil ? [NSString stringWithFormat:@"&from=%@", paginationToken] : @"";
     NSString *path = [NSString stringWithFormat:@"%@/org.matrix.msc2946/rooms/%@/hierarchy?suggested_only=%@%@%@%@",
                       kMXAPIPrefixPathUnstable, spaceId, suggestedOnly ? @"true": @"false", limitParam, maxDepthParam, fromParam];
     

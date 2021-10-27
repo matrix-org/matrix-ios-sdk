@@ -248,7 +248,7 @@ public class MXSpaceService: NSObject {
     ///   - suggestedOnly: If `true`, return only child events and rooms where the `m.space.child` event has `suggested: true`.
     ///   - limit: Optional. A limit to the maximum number of children to return per space. `-1` for no limit
     ///   - maxDepth: Optional. The maximum depth in the tree (from the root room) to return. `-1` for no limit
-    ///   - from: Optional. Pagination token given to retrieve the next set of rooms.
+    ///   - paginationToken: Optional. Pagination token given to retrieve the next set of rooms.
     ///   - completion: A closure called when the operation completes.
     /// - Returns: a `MXHTTPOperation` instance.
     @discardableResult
@@ -256,9 +256,9 @@ public class MXSpaceService: NSObject {
                                          suggestedOnly: Bool,
                                          limit: Int?,
                                          maxDepth: Int?,
-                                         from: String?,
+                                         paginationToken: String?,
                                          completion: @escaping (MXResponse<MXSpaceChildrenSummary>) -> Void) -> MXHTTPOperation {
-        return self.session.matrixRestClient.getSpaceChildrenForSpace(withId: spaceId, suggestedOnly: suggestedOnly, limit: limit, maxDepth: maxDepth, from: from) { (response) in
+        return self.session.matrixRestClient.getSpaceChildrenForSpace(withId: spaceId, suggestedOnly: suggestedOnly, limit: limit, maxDepth: maxDepth, paginationToken: paginationToken) { (response) in
             switch response {
             case .success(let spaceChildrenResponse):
                 self.processingQueue.async { [weak self] in
@@ -274,23 +274,6 @@ public class MXSpaceService: NSObject {
                         return
                     }
 
-//                    var spaceSummary: MXRoomSummary?
-//
-//                    if from == nil {
-//                        guard let rootSpaceChildSummaryResponse = rooms.first(where: { spaceResponse -> Bool in
-//                            return spaceResponse.roomId == spaceId
-//                        }) else {
-//                            // Fail to find root child. We should have at least one room for the requested space
-//                            self.completionQueue.async {
-//                                completion(.failure(MXSpaceServiceError.spaceNotFound))
-//                            }
-//                            return
-//                        }
-//
-//                        // Build the queried space summary
-//                        spaceSummary = self.createRoomSummary(with: rootSpaceChildSummaryResponse)
-//                    }
-//
                     // Build room hierarchy and events
                     var childrenIdsPerChildRoomId: [String: [String]] = [:]
                     var parentIdsPerChildRoomId: [String:Set<String>] = [:]
@@ -743,13 +726,13 @@ extension MXSpaceService {
     ///   - suggestedOnly: If `true`, return only child events and rooms where the `m.space.child` event has `suggested: true`.
     ///   - limit: Optional. A limit to the maximum number of children to return per space. `-1` for no limit
     ///   - maxDepth: Optional. The maximum depth in the tree (from the root room) to return. `-1` for no limit
-    ///   - from: Optional. Pagination token given to retrieve the next set of rooms.
+    ///   - paginationToken: Optional. Pagination token given to retrieve the next set of rooms.
     ///   - success: A closure called when the operation is complete.
     ///   - failure: A closure called  when the operation fails.
     /// - Returns: a `MXHTTPOperation` instance.
     @discardableResult
-    @objc public func getSpaceChildrenForSpace(withId spaceId: String, suggestedOnly: Bool, limit: Int, maxDepth: Int, from: String?, success: @escaping (MXSpaceChildrenSummary) -> Void, failure: @escaping (Error) -> Void) -> MXHTTPOperation {
-        return self.getSpaceChildrenForSpace(withId: spaceId, suggestedOnly: suggestedOnly, limit: limit, maxDepth: maxDepth, from: from) { (response) in
+    @objc public func getSpaceChildrenForSpace(withId spaceId: String, suggestedOnly: Bool, limit: Int, maxDepth: Int, paginationToken: String?, success: @escaping (MXSpaceChildrenSummary) -> Void, failure: @escaping (Error) -> Void) -> MXHTTPOperation {
+        return self.getSpaceChildrenForSpace(withId: spaceId, suggestedOnly: suggestedOnly, limit: limit, maxDepth: maxDepth, paginationToken: paginationToken) { (response) in
             uncurryResponse(response, success: success, failure: failure)
         }
     }

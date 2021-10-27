@@ -2787,7 +2787,7 @@ Note: Clients should consider avoiding this endpoint for URLs posted in encrypte
 /// @param suggestedOnly If `true`, return only child events and rooms where the `m.space.child` event has `suggested: true`.
 /// @param limit A limit to the maximum number of children to return per space. `-1` for no limit
 /// @param maxDepth The maximum depth in the tree (from the root room) to return. The deepest depth returned will not include children events. `-1` for no limit
-/// @param from Pagination token given to retrieve the next set of rooms.
+/// @param paginationToken Pagination token given to retrieve the next set of rooms.
 /// @param success A block object called when the operation succeeds. It provides a `MXSpaceChildrenResponse` object.
 /// @param failure A block object called when the operation fails.
 /// @return a MXHTTPOperation instance.
@@ -2795,7 +2795,7 @@ Note: Clients should consider avoiding this endpoint for URLs posted in encrypte
                                      suggestedOnly:(BOOL)suggestedOnly
                                              limit:(NSInteger)limit
                                           maxDepth:(NSInteger)maxDepth
-                                              from:(NSString*)from
+                                   paginationToken:(NSString*)paginationToken
                                            success:(void (^)(MXSpaceChildrenResponse *spaceChildrenResponse))success
                                            failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 @end
