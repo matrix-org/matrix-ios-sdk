@@ -22,9 +22,9 @@
 #import <Foundation/Foundation.h>
 #import "MXBackgroundTask.h"
 
-typedef void (^MXBackgroundTaskExpirationHandler)(void);
-
 NS_ASSUME_NONNULL_BEGIN
+
+typedef void (^MXBackgroundModeHandlerTaskExpirationHandler)(void);
 
 /**
  Interface to handle enabling background mode
@@ -49,7 +49,7 @@ NS_ASSUME_NONNULL_BEGIN
  @return background task
  */
 - (nullable id<MXBackgroundTask>)startBackgroundTaskWithName:(NSString *)name
-                                           expirationHandler:(nullable MXBackgroundTaskExpirationHandler)expirationHandler;
+                                           expirationHandler:(nullable MXBackgroundModeHandlerTaskExpirationHandler)expirationHandler;
 
 /**
  Create a background task with a name and expirationHandler.
@@ -62,7 +62,7 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (nullable id<MXBackgroundTask>)startBackgroundTaskWithName:(NSString *)name
                                                     reusable:(BOOL)reusable
-                                           expirationHandler:(nullable MXBackgroundTaskExpirationHandler)expirationHandler;
+                                           expirationHandler:(nullable MXBackgroundModeHandlerTaskExpirationHandler)expirationHandler;
 
 @end
 

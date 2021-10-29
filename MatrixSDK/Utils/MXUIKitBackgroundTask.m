@@ -27,13 +27,15 @@ static const UIBackgroundTaskIdentifier UIBackgroundTaskInvalid = -1;
 @interface MXUIKitBackgroundTask ()
 
 @property (nonatomic) UIBackgroundTaskIdentifier identifier;
+
 @property (nonatomic, copy) NSString *name;
-@property (nonatomic, copy, nullable) MXBackgroundTaskExpirationHandler expirationHandler;
 @property (nonatomic, assign, getter=isReusable) BOOL reusable;
+@property (nonatomic, copy, nullable) MXBackgroundTaskExpirationHandler expirationHandler;
+@property (nonatomic, copy) MXApplicationGetterBlock applicationBlock;
+
 @property (nonatomic, strong, nullable) NSDate *startDate;
 @property (nonatomic, assign) NSInteger useCounter;
-@property (nonatomic, copy) MXApplicationGetterBlock applicationBlock;
-    
+
 @end
 
 @implementation MXUIKitBackgroundTask
@@ -45,26 +47,27 @@ static const UIBackgroundTaskIdentifier UIBackgroundTaskInvalid = -1;
            expirationHandler:(MXBackgroundTaskExpirationHandler)expirationHandler
             applicationBlock:(MXApplicationGetterBlock)applicationBlock
 {
-    self = [super init];
-    if (self)
+    if (self = [super init])
     {
         self.identifier = UIBackgroundTaskInvalid;
+        
         self.name = name;
         self.reusable = reusable;
         self.expirationHandler = expirationHandler;
+        self.applicationBlock = applicationBlock;
+        
         @synchronized (self)
         {
             self.useCounter = 0;
         }
-        self.applicationBlock = applicationBlock;
     }
     return self;
 }
 
-- (nullable instancetype)initAndStartWithName:(NSString*)name
-                                     reusable:(BOOL)reusable
-                            expirationHandler:(nullable MXBackgroundTaskExpirationHandler)expirationHandler
-                             applicationBlock:(MXApplicationGetterBlock)applicationBlock
+- (instancetype)initAndStartWithName:(NSString*)name
+                            reusable:(BOOL)reusable
+                   expirationHandler:(MXBackgroundTaskExpirationHandler)expirationHandler
+                    applicationBlock:(MXApplicationGetterBlock)applicationBlock
 {
     self = [self initWithName:name reusable:reusable expirationHandler:expirationHandler applicationBlock:applicationBlock];
     if (self)
@@ -76,7 +79,6 @@ static const UIBackgroundTaskIdentifier UIBackgroundTaskInvalid = -1;
             self.startDate = [NSDate date];
             
             MXWeakify(self);
-            
             self.identifier = [application beginBackgroundTaskWithName:self.name expirationHandler:^{
                 
                 MXStrongifyAndReturnIfNil(self);
@@ -86,7 +88,7 @@ static const UIBackgroundTaskIdentifier UIBackgroundTaskInvalid = -1;
                 //  call expiration handler immediately
                 if (self.expirationHandler)
                 {
-                    self.expirationHandler();
+                    self.expirationHandler(self);
                 }
                 
                 //  be sure to call endBackgroundTask
@@ -101,7 +103,7 @@ static const UIBackgroundTaskIdentifier UIBackgroundTaskInvalid = -1;
                 //  call expiration handler immediately
                 if (self.expirationHandler)
                 {
-                    self.expirationHandler();
+                    self.expirationHandler(self);
                 }
                 return nil;
             }
