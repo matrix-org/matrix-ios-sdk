@@ -28,17 +28,17 @@ static const UIBackgroundTaskIdentifier UIBackgroundTaskInvalid = -1;
 
 @property (nonatomic) UIBackgroundTaskIdentifier identifier;
 
-@property (nonatomic, copy) NSString *name;
-@property (nonatomic, assign, getter=isReusable) BOOL reusable;
-@property (nonatomic, copy, nullable) MXBackgroundTaskExpirationHandler expirationHandler;
-@property (nonatomic, copy) MXApplicationGetterBlock applicationBlock;
+@property (nonatomic, copy, readonly) MXBackgroundTaskExpirationHandler expirationHandler;
+@property (nonatomic, copy, readonly) MXApplicationGetterBlock applicationBlock;
 
-@property (nonatomic, strong, nullable) NSDate *startDate;
+@property (nonatomic, strong) NSDate *startDate;
 @property (nonatomic, assign) NSInteger useCounter;
 
 @end
 
 @implementation MXUIKitBackgroundTask
+@synthesize name = _name;
+@synthesize reusable = _reusable;
 
 #pragma Setup
 
@@ -49,12 +49,12 @@ static const UIBackgroundTaskIdentifier UIBackgroundTaskInvalid = -1;
 {
     if (self = [super init])
     {
-        self.identifier = UIBackgroundTaskInvalid;
+        _name = name;
+        _reusable = reusable;
+        _expirationHandler = expirationHandler;
+        _applicationBlock = applicationBlock;
         
-        self.name = name;
-        self.reusable = reusable;
-        self.expirationHandler = expirationHandler;
-        self.applicationBlock = applicationBlock;
+        _identifier = UIBackgroundTaskInvalid;
         
         @synchronized (self)
         {
