@@ -21,7 +21,9 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-typedef void (^MXBackgroundTaskExpirationHandler)(void);
+@protocol MXBackgroundTask;
+
+typedef void (^MXBackgroundTaskExpirationHandler)(id<MXBackgroundTask>);
 
 /**
  MXBackgroundTask is protocol describing a background task regardless of the platform used.

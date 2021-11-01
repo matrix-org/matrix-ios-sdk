@@ -75,7 +75,6 @@ class MXCoreDataRoomListDataManagerUnitTests: XCTestCase {
         XCTAssertFalse(filterOptions.onlySuggested, "Default filter options should not include onlySuggested")
         XCTAssertNil(filterOptions.query, "Default filter options should not include query")
         XCTAssertNil(filterOptions.space, "Default filter options should not include space")
-        XCTAssertNil(filterOptions.fetchOptions, "Filter options should not include fetchOptions without initializing a fetcher")
     }
     
     func testSortOptionsInit() {
@@ -90,7 +89,6 @@ class MXCoreDataRoomListDataManagerUnitTests: XCTestCase {
         XCTAssertTrue(sortOptions.lastEventDate, "Default sort options should include lastEventDate")
         XCTAssertFalse(sortOptions.favoriteTag, "Default sort options should not include favoriteTag")
         XCTAssertTrue(sortOptions.suggested, "Default sort options should include suggested")
-        XCTAssertNil(sortOptions.fetchOptions, "Sort options should not include fetchOptions without initializing a fetcher")
     }
     
     func testFetchOptionsInit() {
@@ -115,8 +113,6 @@ class MXCoreDataRoomListDataManagerUnitTests: XCTestCase {
                     XCTAssertEqual(manager.session, session, "Manager should persist session")
                     let fetchOptions = self.basicFetchOptions
                     let fetcher = manager.fetcher(withOptions: fetchOptions)
-                    XCTAssertEqual(fetchOptions.filterOptions.fetchOptions, fetchOptions, "Fetch options should be persisted in filter options")
-                    XCTAssertEqual(fetchOptions.sortOptions.fetchOptions, fetchOptions, "Fetch options should be persisted in filter options")
                     XCTAssertEqual(fetcher.fetchOptions, fetchOptions, "Fetch options should be persisted in fetcher")
                     
                     session.close()
@@ -148,8 +144,6 @@ class MXCoreDataRoomListDataManagerUnitTests: XCTestCase {
                     XCTAssertEqual(manager.session, session, "Manager should persist session")
                     let fetchOptions = self.basicFetchOptions
                     let fetcher = manager.fetcher(withOptions: fetchOptions)
-                    XCTAssertEqual(fetchOptions.filterOptions.fetchOptions, fetchOptions, "Fetch options should be persisted in filter options")
-                    XCTAssertEqual(fetchOptions.sortOptions.fetchOptions, fetchOptions, "Fetch options should be persisted in filter options")
                     XCTAssertEqual(fetcher.fetchOptions, fetchOptions, "Fetch options should be persisted in fetcher")
                     
                     session.close()

@@ -1,3 +1,10 @@
+## Changes in 0.20.9 (2021-10-21)
+
+🐛 Bugfixes
+
+- MXRoomListDataFilterOptions: Fix predicate for orphaned rooms. ([#5031](https://github.com/vector-im/element-ios/issues/5031))
+
+
 ## Changes in 0.20.8 (2021-10-20)
 
 🙌 Improvements
