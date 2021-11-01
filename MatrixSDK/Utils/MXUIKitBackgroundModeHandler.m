@@ -35,17 +35,17 @@ static const NSTimeInterval BackgroundTimeRemainingThresholdToStartTasks = 5.0;
 
 
 @interface MXUIKitBackgroundModeHandler ()
-{
-#if TARGET_OS_IPHONE
-    MXUIKitApplicationStateService *applicationStateService;
-#endif
-    /**
-     Cache to store reusable background tasks.
-     */
-    NSMapTable<NSString *, id<MXBackgroundTask>> *reusableTasks;
-}
 
-@property (nonatomic, copy) MXApplicationGetterBlock applicationBlock;
+#if TARGET_OS_IPHONE
+@property (nonatomic, strong, readonly) MXUIKitApplicationStateService *applicationStateService;
+#endif
+
+/**
+ Cache to store reusable background tasks.
+ */
+@property (nonatomic, strong, readonly) NSMapTable<NSString *, id<MXBackgroundTask>> *reusableTasks;
+
+@property (nonatomic, copy, readonly) MXApplicationGetterBlock applicationBlock;
 
 @end
 
@@ -55,11 +55,11 @@ static const NSTimeInterval BackgroundTimeRemainingThresholdToStartTasks = 5.0;
 - (instancetype)init
 {
 #if TARGET_OS_IPHONE
-    self = [self initWithApplicationBlock:^id<MXApplicationProtocol> _Nullable{
+    self = [self initWithApplicationBlock:^id<MXApplicationProtocol> {
         return [UIApplication performSelector:@selector(sharedApplication)];
     }];
 #else
-    self = [self initWithApplicationBlock:^id<MXApplicationProtocol> _Nullable{
+    self = [self initWithApplicationBlock:^id<MXApplicationProtocol> {
         return nil;
     }];
 #endif
@@ -71,10 +71,10 @@ static const NSTimeInterval BackgroundTimeRemainingThresholdToStartTasks = 5.0;
     if (self = [super init])
     {
 #if TARGET_OS_IPHONE
-        applicationStateService = [MXUIKitApplicationStateService new];
+        _applicationStateService = [MXUIKitApplicationStateService new];
 #endif
-        reusableTasks = [NSMapTable weakToWeakObjectsMapTable];
-        self.applicationBlock = applicationBlock;
+        _reusableTasks = [NSMapTable weakToWeakObjectsMapTable];
+        _applicationBlock = applicationBlock;
     }
     return self;
 }
@@ -88,20 +88,20 @@ static const NSTimeInterval BackgroundTimeRemainingThresholdToStartTasks = 5.0;
 }
 
 - (nullable id<MXBackgroundTask>)startBackgroundTaskWithName:(NSString *)name
-                                           expirationHandler:(nullable MXBackgroundTaskExpirationHandler)expirationHandler
+                                           expirationHandler:(MXBackgroundModeHandlerTaskExpirationHandler)expirationHandler
 {
     return [self startBackgroundTaskWithName:name reusable:NO expirationHandler:expirationHandler];
 }
 
 - (nullable id<MXBackgroundTask>)startBackgroundTaskWithName:(NSString *)name
                                                     reusable:(BOOL)reusable
-                                           expirationHandler:(nullable MXBackgroundTaskExpirationHandler)expirationHandler
+                                           expirationHandler:(MXBackgroundModeHandlerTaskExpirationHandler)expirationHandler
                                                     
 {
 #if TARGET_OS_IPHONE
     //  application is in background and not enough time to start this task
-    if (applicationStateService.applicationState == UIApplicationStateBackground &&
-        applicationStateService.backgroundTimeRemaining < BackgroundTimeRemainingThresholdToStartTasks)
+    if (self.applicationStateService.applicationState == UIApplicationStateBackground &&
+        self.applicationStateService.backgroundTimeRemaining < BackgroundTimeRemainingThresholdToStartTasks)
     {
         MXLogDebug(@"[MXBackgroundTask] Do not start background task - %@, as not enough time exists", name);
         
@@ -119,20 +119,19 @@ static const NSTimeInterval BackgroundTimeRemainingThresholdToStartTasks = 5.0;
     __block id<MXBackgroundTask> backgroundTask;
     if (reusable)
     {
-        //  reusable
-        
         //  first look in the cache
-        backgroundTask = [reusableTasks objectForKey:name];
+        backgroundTask = [self.reusableTasks objectForKey:name];
         
         //  create if not found or not running
         //  According to the documentation, a weak-values map table doesn't have to remove objects immediately when they are released, so also check the running state of the task.
         if (backgroundTask == nil || !backgroundTask.isRunning)
         {
-            backgroundTask = [[MXUIKitBackgroundTask alloc] initAndStartWithName:name
-                                                                        reusable:reusable
-                                                               expirationHandler:^{
+            MXWeakify(self);
+            backgroundTask = [[MXUIKitBackgroundTask alloc] initAndStartWithName:name reusable:reusable expirationHandler:^(id<MXBackgroundTask> task) {
+                MXStrongifyAndReturnIfNil(self);
+                
                 //  remove when expired
-                [self->reusableTasks removeObjectForKey:backgroundTask.name];
+                [self.reusableTasks removeObjectForKey:task.name];
                 
                 if (expirationHandler)
                 {
@@ -144,7 +143,7 @@ static const NSTimeInterval BackgroundTimeRemainingThresholdToStartTasks = 5.0;
             //  cache the task if successfully created
             if (backgroundTask)
             {
-                [reusableTasks setObject:backgroundTask forKey:name];
+                [self.reusableTasks setObject:backgroundTask forKey:name];
             }
         }
         else
@@ -158,16 +157,20 @@ static const NSTimeInterval BackgroundTimeRemainingThresholdToStartTasks = 5.0;
         //  not reusable, just create one and continue. Do not store non-reusable tasks in the cache
         backgroundTask = [[MXUIKitBackgroundTask alloc] initAndStartWithName:name
                                                                     reusable:reusable
-                                                           expirationHandler:expirationHandler
-                                                            applicationBlock:self.applicationBlock];
+                                                           expirationHandler:^(id<MXBackgroundTask> task) {
+            if (expirationHandler)
+            {
+                expirationHandler();
+            }
+        } applicationBlock:self.applicationBlock];
         created = YES;
     }
     
     if (backgroundTask)
     {
 #if TARGET_OS_IPHONE
-        NSString *readableAppState = [MXUIKitApplicationStateService readableApplicationState:applicationStateService.applicationState];
-        NSString *readableBackgroundTimeRemaining = [MXUIKitApplicationStateService readableEstimatedBackgroundTimeRemaining:applicationStateService.backgroundTimeRemaining];
+        NSString *readableAppState = [MXUIKitApplicationStateService readableApplicationState:self.applicationStateService.applicationState];
+        NSString *readableBackgroundTimeRemaining = [MXUIKitApplicationStateService readableEstimatedBackgroundTimeRemaining:self.applicationStateService.backgroundTimeRemaining];
         
         MXLogDebug(@"[MXBackgroundTask] Background task %@ %@ with app state: %@ and estimated background time remaining: %@", backgroundTask.name, (created ? @"started" : @"reused"), readableAppState, readableBackgroundTimeRemaining);
 #endif

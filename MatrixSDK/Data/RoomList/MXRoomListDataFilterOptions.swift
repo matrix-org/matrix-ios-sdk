@@ -16,64 +16,27 @@
 
 import Foundation
 
-@objcMembers
 /// Filter options to be used with fetch options. See `MXRoomListDataFetchOptions`.
-public final class MXRoomListDataFilterOptions: NSObject {
+public struct MXRoomListDataFilterOptions: Equatable {
     
     /// Value to be used not to specify any type for initializer
     public static let emptyDataTypes: MXRoomSummaryDataTypes = []
-    
-    /// Weak reference to the fetch options
-    internal weak var fetchOptions: MXRoomListDataFetchOptions?
-    
+        
     /// Data types to fetch. Related fetcher will be refreshed automatically when updated.
-    public var dataTypes: MXRoomSummaryDataTypes {
-        didSet {
-            if onlySuggested {
-                //  only suggested rooms are filtered, data types are not valid
-                return
-            }
-            if dataTypes != oldValue {
-                refreshFetcher()
-            }
-        }
-    }
+    public var dataTypes: MXRoomSummaryDataTypes
+    
     /// Data types not to fetch. Related fetcher will be refreshed automatically when updated.
-    public var notDataTypes: MXRoomSummaryDataTypes {
-        didSet {
-            if onlySuggested {
-                //  only suggested rooms are filtered, not data types are not valid
-                return
-            }
-            if notDataTypes != oldValue {
-                refreshFetcher()
-            }
-        }
-    }
+    public var notDataTypes: MXRoomSummaryDataTypes
+    
     /// Search query. Related fetcher will be refreshed automatically when updated.
-    public var query: String? {
-        didSet {
-            if query != oldValue {
-                refreshFetcher()
-            }
-        }
-    }
+    public var query: String?
+    
     /// Space for room list data. Related fetcher will be refreshed automatically when updated.
-    public var space: MXSpace? {
-        didSet {
-            if space != oldValue {
-                refreshFetcher()
-            }
-        }
-    }
+    public var space: MXSpace?
+    
     /// Show all rooms when `space` is not provided. Related fetcher will be refreshed automatically when updated.
-    public var showAllRoomsInHomeSpace: Bool {
-        didSet {
-            if showAllRoomsInHomeSpace != oldValue {
-                refreshFetcher()
-            }
-        }
-    }
+    public var showAllRoomsInHomeSpace: Bool
+    
     /// Flag to filter only suggested rooms, if set to `true`, `dataTypes` and `notDataTypes` are not valid.
     public let onlySuggested: Bool
     
@@ -94,7 +57,6 @@ public final class MXRoomListDataFilterOptions: NSObject {
         self.query = query
         self.space = space
         self.showAllRoomsInHomeSpace = showAllRoomsInHomeSpace
-        super.init()
     }
     
     /// Just to be used for in-memory data
@@ -178,13 +140,5 @@ public final class MXRoomListDataFilterOptions: NSObject {
         }
         return NSCompoundPredicate(type: .and,
                                    subpredicates: subpredicates)
-    }
-    
-    /// Refresh fetcher after updates
-    private func refreshFetcher() {
-        guard let fetcher = fetchOptions?.fetcher else {
-            return
-        }
-        fetcher.refresh()
     }
 }
