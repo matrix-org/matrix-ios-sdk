@@ -33,7 +33,7 @@ static NSString* const kFormattedBodyRegexPattern = @"(^<mx-reply>.+</mx-reply>)
         MXReplyEventBodyParts *bodyParts = [self parseBody:body];
         MXReplyEventFormattedBodyParts *formattedBodyParts = [self parseFormattedBody:formattedBody];
         
-        if (bodyParts && formattedBodyParts)
+        if (bodyParts)
         {
             parts = [[MXReplyEventParts alloc] initWithBodyParts:bodyParts andFormattedBodyParts:formattedBodyParts];
         }
