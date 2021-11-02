@@ -66,11 +66,13 @@ public class MXCoreDataRoomSummaryStore: NSObject {
         return result
     }()
     
+    /// Managed object context to be used when inserting data, whose parent context is `mainMoc`.
     private lazy var defaultTempMoc: NSManagedObjectContext = {
         let result = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
         result.parent = mainMoc
         return result
     }()
+    /// Managed object context to be used on main thread for fetching data, whose parent context is `persistentMoc`.
     private lazy var mainMoc: NSManagedObjectContext = {
         let result = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
         result.automaticallyMergesChangesFromParent = true
@@ -78,6 +80,7 @@ public class MXCoreDataRoomSummaryStore: NSObject {
         result.parent = persistentMoc
         return result
     }()
+    /// Managed object context which is connected to the persistent store. Not intended to be used with fetch or update operations directly.
     private lazy var persistentMoc: NSManagedObjectContext = {
         let result = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
         result.persistentStoreCoordinator = persistenceCoordinator
