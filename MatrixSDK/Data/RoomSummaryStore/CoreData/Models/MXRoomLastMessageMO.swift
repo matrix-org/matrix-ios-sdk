@@ -18,19 +18,19 @@ import Foundation
 import CoreData
 
 @objc(MXRoomLastMessageMO)
-internal class MXRoomLastMessageMO: NSManagedObject {
+public class MXRoomLastMessageMO: NSManagedObject {
 
     internal static func typedFetchRequest() -> NSFetchRequest<MXRoomLastMessageMO> {
         return NSFetchRequest<MXRoomLastMessageMO>(entityName: entityName)
     }
 
-    @NSManaged internal var s_eventId: String
-    @NSManaged internal var s_originServerTs: UInt64
-    @NSManaged internal var s_isEncrypted: Bool
-    @NSManaged internal var s_sender: String
-    @NSManaged internal var s_text: String?
-    @NSManaged internal var s_attributedText: Data?
-    @NSManaged internal var s_others: Data?
+    @NSManaged public var s_eventId: String
+    @NSManaged public var s_originServerTs: UInt64
+    @NSManaged public var s_isEncrypted: Bool
+    @NSManaged public var s_sender: String
+    @NSManaged public var s_text: String?
+    @NSManaged public var s_attributedText: Data?
+    @NSManaged public var s_others: Data?
     
     @discardableResult
     internal static func insert(roomLastMessage lastMessage: MXRoomLastMessage,
