@@ -40,9 +40,9 @@ class MXCoreDataRoomListDataManagerUnitTests: XCTestCase {
     }
     
     override class func tearDown() {
-//        fetcher?.stop()
-//        fetcher = nil
-//        delegate = nil
+        fetcher?.stop()
+        fetcher = nil
+        delegate = nil
     }
     
     private var basicFetchOptions: MXRoomListDataFetchOptions {
