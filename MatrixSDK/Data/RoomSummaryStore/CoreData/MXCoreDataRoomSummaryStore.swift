@@ -226,7 +226,7 @@ public class MXCoreDataRoomSummaryStore: NSObject {
             guard let self = self else { return }
             do {
                 try moc.save()
-                //  propogate changes to the parent context, until reaching the persistent store
+                //  propagate changes to the parent context, until reaching the persistent store
                 if let parent = moc.parent {
                     self.saveIfNeeded(parent)
                 }
