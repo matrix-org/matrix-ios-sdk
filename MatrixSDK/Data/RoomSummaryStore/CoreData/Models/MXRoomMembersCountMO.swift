@@ -24,18 +24,18 @@ public class MXRoomMembersCountMO: NSManagedObject {
         return NSFetchRequest<MXRoomMembersCountMO>(entityName: entityName)
     }
 
-    @NSManaged public var s_members: Int16
-    @NSManaged public var s_joined: Int16
-    @NSManaged public var s_invited: Int16
+    @NSManaged public var s_members: Int32
+    @NSManaged public var s_joined: Int32
+    @NSManaged public var s_invited: Int32
     
     @discardableResult
     internal static func insert(roomMembersCount membersCount: MXRoomMembersCount,
                                 into moc: NSManagedObjectContext) -> MXRoomMembersCountMO {
         let model = MXRoomMembersCountMO(context: moc)
         
-        model.s_members = Int16(membersCount.members)
-        model.s_joined = Int16(membersCount.joined)
-        model.s_invited = Int16(membersCount.invited)
+        model.s_members = Int32(membersCount.members)
+        model.s_joined = Int32(membersCount.joined)
+        model.s_invited = Int32(membersCount.invited)
         
         return model
     }

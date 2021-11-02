@@ -11,9 +11,9 @@
         <relationship name="s_ofRoom" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="MXRoomSummary" inverseName="s_lastMessage" inverseEntity="MXRoomSummary"/>
     </entity>
     <entity name="MXRoomMembersCount" representedClassName="MXRoomMembersCountMO" syncable="YES">
-        <attribute name="s_invited" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
-        <attribute name="s_joined" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
-        <attribute name="s_members" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="s_invited" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="s_joined" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="s_members" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <relationship name="s_ofRoom" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="MXRoomSummary" inverseName="s_membersCount" inverseEntity="MXRoomSummary"/>
     </entity>
     <entity name="MXRoomSummary" representedClassName="MXRoomSummaryMO" syncable="YES">
@@ -51,10 +51,10 @@
         </uniquenessConstraints>
     </entity>
     <entity name="MXUsersTrustLevelSummary" representedClassName="MXUsersTrustLevelSummaryMO" syncable="YES">
-        <attribute name="s_devicesCount" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
-        <attribute name="s_trustedDevicesCount" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
-        <attribute name="s_trustedUsersCount" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
-        <attribute name="s_usersCount" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="s_devicesCount" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="s_trustedDevicesCount" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="s_trustedUsersCount" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="s_usersCount" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <relationship name="s_ofRoom" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="MXRoomSummary" inverseName="s_trust" inverseEntity="MXRoomSummary"/>
     </entity>
     <elements>
