@@ -83,6 +83,11 @@ public struct MXRoomListDataFilterOptions: Equatable {
         }
         
         if !onlySuggested {
+            // Filter out any room previews by making sure the user has valid membership.
+            let memberPredicate = NSPredicate(format: "%K != %d",
+                                              #keyPath(MXRoomSummaryProtocol.membership), MXMembership.unknown.rawValue)
+            subpredicates.append(memberPredicate)
+            
             if !dataTypes.isEmpty {
                 let subpredicate = NSPredicate(format: "(%K & %d) != 0",
                                                #keyPath(MXRoomSummaryProtocol.dataTypes), dataTypes.rawValue)
@@ -119,9 +124,9 @@ public struct MXRoomListDataFilterOptions: Equatable {
                                                 #keyPath(MXRoomSummaryProtocol.dataTypes), favoritedDataTypes.rawValue)
                 
                 let subpredicate4_1 = NSPredicate(format: "%K == NULL",
-                                                #keyPath(MXRoomSummaryProtocol.parentSpaceIds))
+                                                  #keyPath(MXRoomSummaryProtocol.parentSpaceIds))
                 let subpredicate4_2 = NSPredicate(format: "%K.@count == 0",
-                                                #keyPath(MXRoomSummaryProtocol.parentSpaceIds))
+                                                  #keyPath(MXRoomSummaryProtocol.parentSpaceIds))
                 let subpredicate4 = NSCompoundPredicate(type: .or,
                                                         subpredicates: [subpredicate4_1, subpredicate4_2])
                 
