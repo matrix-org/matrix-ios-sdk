@@ -103,7 +103,6 @@ public class MXCoreDataRoomSummaryStore: NSObject {
             fatalError("[MXCoreDataRoomSummaryStore] Couldn't find \(propertyName) on entity \(String(describing: MXRoomSummaryMO.self)), probably property name changed")
         }
         let request = MXRoomSummaryMO.typedFetchRequest()
-        request.returnsDistinctResults = true
         request.includesSubentities = false
         //  only fetch room identifiers
         request.propertiesToFetch = [property]

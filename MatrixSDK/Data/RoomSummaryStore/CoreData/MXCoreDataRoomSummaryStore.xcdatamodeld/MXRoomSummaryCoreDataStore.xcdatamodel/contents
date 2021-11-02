@@ -44,6 +44,11 @@
         <relationship name="s_lastMessage" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="MXRoomLastMessage" inverseName="s_ofRoom" inverseEntity="MXRoomLastMessage"/>
         <relationship name="s_membersCount" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="MXRoomMembersCount" inverseName="s_ofRoom" inverseEntity="MXRoomMembersCount"/>
         <relationship name="s_trust" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="MXUsersTrustLevelSummary" inverseName="s_ofRoom" inverseEntity="MXUsersTrustLevelSummary"/>
+        <uniquenessConstraints>
+            <uniquenessConstraint>
+                <constraint value="s_identifier"/>
+            </uniquenessConstraint>
+        </uniquenessConstraints>
     </entity>
     <entity name="MXUsersTrustLevelSummary" representedClassName="MXUsersTrustLevelSummaryMO" syncable="YES">
         <attribute name="s_devicesCount" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
