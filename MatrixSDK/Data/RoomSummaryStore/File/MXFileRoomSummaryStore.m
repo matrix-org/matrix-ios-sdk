@@ -20,7 +20,6 @@
 #import "MatrixSDKSwiftHeader.h"
 
 static NSString *const kMXFileRoomSummaryStoreFolder = @"MXFileRoomSummaryStore";
-static NSString *const kMXFileRoomSummaryStoreBackupFolder = @"backup";
 
 @interface MXFileRoomSummaryStore()
 {
@@ -30,9 +29,6 @@ static NSString *const kMXFileRoomSummaryStoreBackupFolder = @"backup";
     // The path of the MXFileStore folder
     NSString *storePath;
 
-    // The path of the backup folder
-    NSString *storeBackupPath;
-    
     //  Execution queue for computationally expensive operations.
     dispatch_queue_t executionQueue;
 }
@@ -71,8 +67,6 @@ static NSString *const kMXFileRoomSummaryStoreBackupFolder = @"backup";
     }
     
     storePath = [[cachePath stringByAppendingPathComponent:kMXFileRoomSummaryStoreFolder] stringByAppendingPathComponent:credentials.userId];
-    
-    storeBackupPath = [storePath stringByAppendingPathComponent:kMXFileRoomSummaryStoreBackupFolder];
 }
 
 - (void)checkStorePathExistence
