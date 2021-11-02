@@ -35,7 +35,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - CoreData Model
 
-- (instancetype)initWithCoreDataModel:(MXUsersTrustLevelSummaryModel *)model;
+- (instancetype)initWithManagedObject:(MXUsersTrustLevelSummaryModel *)model;
 
 @end
 

@@ -39,7 +39,7 @@
 
 #pragma mark - CoreData Model
 
-- (instancetype)initWithCoreDataModel:(MXUsersTrustLevelSummaryModel *)model
+- (instancetype)initWithManagedObject:(MXUsersTrustLevelSummaryModel *)model
 {
     if (self = [super init])
     {

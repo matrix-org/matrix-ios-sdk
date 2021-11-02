@@ -191,7 +191,7 @@ extension MXRoomSummaryModel: MXRoomSummaryProtocol {
     
     public var membersCount: MXRoomMembersCount {
         if let s_membersCount = s_membersCount {
-            return MXRoomMembersCount(coreDataModel: s_membersCount)
+            return MXRoomMembersCount(managedObject: s_membersCount)
         }
         return MXRoomMembersCount()
     }
@@ -210,7 +210,7 @@ extension MXRoomSummaryModel: MXRoomSummaryProtocol {
     
     public var lastMessage: MXRoomLastMessage? {
         if let s_lastMessage = s_lastMessage {
-            return MXRoomLastMessage(coreDataModel: s_lastMessage)
+            return MXRoomLastMessage(managedObject: s_lastMessage)
         }
         return nil
     }
@@ -275,7 +275,7 @@ extension MXRoomSummaryModel: MXRoomSummaryProtocol {
     
     public var trust: MXUsersTrustLevelSummary? {
         if let s_trust = s_trust {
-            return MXUsersTrustLevelSummary(coreDataModel: s_trust)
+            return MXUsersTrustLevelSummary(managedObject: s_trust)
         }
         return nil
     }

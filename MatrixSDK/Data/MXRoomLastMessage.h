@@ -71,7 +71,7 @@ FOUNDATION_EXPORT NSString *const MXRoomLastMessageDataType;
 
 #pragma mark - CoreData Model
 
-- (instancetype)initWithCoreDataModel:(MXRoomLastMessageModel *)model;
+- (instancetype)initWithManagedObject:(MXRoomLastMessageModel *)model;
 
 - (NSComparisonResult)compareOriginServerTs:(MXRoomLastMessage *)otherMessage;
 
