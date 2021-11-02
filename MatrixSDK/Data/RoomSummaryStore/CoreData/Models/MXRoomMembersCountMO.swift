@@ -33,11 +33,15 @@ public class MXRoomMembersCountMO: NSManagedObject {
                                 into moc: NSManagedObjectContext) -> MXRoomMembersCountMO {
         let model = MXRoomMembersCountMO(context: moc)
         
-        model.s_members = Int32(membersCount.members)
-        model.s_joined = Int32(membersCount.joined)
-        model.s_invited = Int32(membersCount.invited)
+        model.update(withMembersCount: membersCount)
         
         return model
+    }
+    
+    internal func update(withMembersCount membersCount: MXRoomMembersCount) {
+        s_members = Int32(membersCount.members)
+        s_joined = Int32(membersCount.joined)
+        s_invited = Int32(membersCount.invited)
     }
     
 }

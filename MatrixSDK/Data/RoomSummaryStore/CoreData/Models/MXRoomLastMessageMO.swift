@@ -37,25 +37,29 @@ public class MXRoomLastMessageMO: NSManagedObject {
                                 into moc: NSManagedObjectContext) -> MXRoomLastMessageMO {
         let model = MXRoomLastMessageMO(context: moc)
         
-        model.s_eventId = lastMessage.eventId
-        model.s_originServerTs = lastMessage.originServerTs
-        model.s_isEncrypted = lastMessage.isEncrypted
-        model.s_sender = lastMessage.sender
-        model.s_text = lastMessage.text
+        model.update(withLastMessage: lastMessage)
+        
+        return model
+    }
+    
+    internal func update(withLastMessage lastMessage: MXRoomLastMessage) {
+        s_eventId = lastMessage.eventId
+        s_originServerTs = lastMessage.originServerTs
+        s_isEncrypted = lastMessage.isEncrypted
+        s_sender = lastMessage.sender
+        s_text = lastMessage.text
         
         if let attributedText = lastMessage.attributedText {
-            model.s_attributedText = NSKeyedArchiver.archivedData(withRootObject: attributedText)
+            s_attributedText = NSKeyedArchiver.archivedData(withRootObject: attributedText)
         } else {
-            model.s_attributedText = nil
+            s_attributedText = nil
         }
         
         if let others = lastMessage.others {
-            model.s_others = NSKeyedArchiver.archivedData(withRootObject: others)
+            s_others = NSKeyedArchiver.archivedData(withRootObject: others)
         } else {
-            model.s_others = nil
+            s_others = nil
         }
-        
-        return model
     }
     
 }

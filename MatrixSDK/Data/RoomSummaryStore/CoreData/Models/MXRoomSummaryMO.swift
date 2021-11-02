@@ -95,11 +95,8 @@ public class MXRoomSummaryMO: NSManagedObject {
         s_sentStatusInt = Int16(summary.sentStatus.rawValue)
         s_parentSpaceIds = summary.parentSpaceIds.joined(separator: StringArrayDelimiter)
         
-        if let old = s_membersCount {
-            moc.delete(old)
-        }
-        let membersCountModel = MXRoomMembersCountMO.insert(roomMembersCount: summary.membersCount,
-                                                               into: moc)
+        let membersCountModel = s_membersCount ?? MXRoomMembersCountMO(context: moc)
+        membersCountModel.update(withMembersCount: summary.membersCount)
         do {
             try moc.obtainPermanentIDs(for: [membersCountModel])
         } catch {
@@ -107,12 +104,9 @@ public class MXRoomSummaryMO: NSManagedObject {
         }
         s_membersCount = membersCountModel
         
-        if let old = s_trust {
-            moc.delete(old)
-        }
         if let trust = summary.trust {
-            let trustModel = MXUsersTrustLevelSummaryMO.insert(roomUsersTrustLevelSummary: trust,
-                                                                  into: moc)
+            let trustModel = s_trust ?? MXUsersTrustLevelSummaryMO(context: moc)
+            trustModel.update(withUsersTrustLevelSummary: trust)
             do {
                 try moc.obtainPermanentIDs(for: [trustModel])
             } catch {
@@ -120,15 +114,15 @@ public class MXRoomSummaryMO: NSManagedObject {
             }
             s_trust = trustModel
         } else {
+            if let old = s_trust {
+                moc.delete(old)
+            }
             s_trust = nil
         }
         
-        if let old = s_lastMessage {
-            moc.delete(old)
-        }
         if let lastMessage = summary.lastMessage {
-            let lastMessageModel = MXRoomLastMessageMO.insert(roomLastMessage: lastMessage,
-                                                                 into: moc)
+            let lastMessageModel = s_lastMessage ?? MXRoomLastMessageMO(context: moc)
+            lastMessageModel.update(withLastMessage: lastMessage)
             do {
                 try moc.obtainPermanentIDs(for: [lastMessageModel])
             } catch {
@@ -136,6 +130,9 @@ public class MXRoomSummaryMO: NSManagedObject {
             }
             s_lastMessage = lastMessageModel
         } else {
+            if let old = s_lastMessage {
+                moc.delete(old)
+            }
             s_lastMessage = nil
         }
     }

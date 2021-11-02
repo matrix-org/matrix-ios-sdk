@@ -34,12 +34,16 @@ public class MXUsersTrustLevelSummaryMO: NSManagedObject {
                                 into moc: NSManagedObjectContext) -> MXUsersTrustLevelSummaryMO {
         let model = MXUsersTrustLevelSummaryMO(context: moc)
         
-        model.s_usersCount = Int32(usersTrustLevelSummary.trustedUsersProgress.totalUnitCount)
-        model.s_trustedUsersCount = Int32(usersTrustLevelSummary.trustedUsersProgress.completedUnitCount)
-        model.s_devicesCount = Int32(usersTrustLevelSummary.trustedDevicesProgress.totalUnitCount)
-        model.s_trustedDevicesCount = Int32(usersTrustLevelSummary.trustedDevicesProgress.completedUnitCount)
+        model.update(withUsersTrustLevelSummary: usersTrustLevelSummary)
         
         return model
+    }
+    
+    internal func update(withUsersTrustLevelSummary usersTrustLevelSummary: MXUsersTrustLevelSummary) {
+        s_usersCount = Int32(usersTrustLevelSummary.trustedUsersProgress.totalUnitCount)
+        s_trustedUsersCount = Int32(usersTrustLevelSummary.trustedUsersProgress.completedUnitCount)
+        s_devicesCount = Int32(usersTrustLevelSummary.trustedDevicesProgress.totalUnitCount)
+        s_trustedDevicesCount = Int32(usersTrustLevelSummary.trustedDevicesProgress.completedUnitCount)
     }
     
 }
