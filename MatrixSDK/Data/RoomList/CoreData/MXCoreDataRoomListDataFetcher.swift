@@ -45,7 +45,7 @@ internal class MXCoreDataRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
         request.sortDescriptors = sortDescriptors(for: sortOptions)
         request.fetchLimit = fetchOptions.paginationOptions.rawValue
         let controller = NSFetchedResultsController(fetchRequest: request,
-                                                    managedObjectContext: store.managedObjectContext,
+                                                    managedObjectContext: store.mainManagedObjectContext,
                                                     sectionNameKeyPath: nil,
                                                     cacheName: nil)
         controller.delegate = self
@@ -57,7 +57,7 @@ internal class MXCoreDataRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
         request.predicate = filterPredicate(for: filterOptions)
         request.resultType = .countResultType
         do {
-            return try store.managedObjectContext.count(for: request)
+            return try store.mainManagedObjectContext.count(for: request)
         } catch let error {
             MXLog.error("[MXCoreDataRoomListDataFetcher] failed to count rooms: \(error)")
             return 0

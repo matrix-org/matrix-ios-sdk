@@ -42,7 +42,7 @@ public class MXCoreDataRoomListDataManager: NSObject, MXRoomListDataManager {
             fatalError("[MXCoreDataRoomListDataManager] Session.store.summariesModule is not CoreDataContextable")
         }
         
-        assert(coreDataStore.managedObjectContext.concurrencyType == .mainQueueConcurrencyType,
+        assert(coreDataStore.mainManagedObjectContext.concurrencyType == .mainQueueConcurrencyType,
                "[MXCoreDataRoomListDataManager] Managed object context must have mainQueueConcurrencyType")
         
         return MXCoreDataRoomListDataFetcher(fetchOptions: options,

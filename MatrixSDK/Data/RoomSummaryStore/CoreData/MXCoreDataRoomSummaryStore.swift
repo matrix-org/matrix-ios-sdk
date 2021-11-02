@@ -273,7 +273,7 @@ extension MXCoreDataRoomSummaryStore: MXRoomSummaryStore {
 
 extension MXCoreDataRoomSummaryStore: CoreDataContextable {
     
-    var managedObjectContext: NSManagedObjectContext {
+    var mainManagedObjectContext: NSManagedObjectContext {
         return mainMoc
     }
     

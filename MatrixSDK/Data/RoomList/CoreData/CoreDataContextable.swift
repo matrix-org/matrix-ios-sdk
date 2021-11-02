@@ -21,6 +21,6 @@ internal protocol CoreDataContextable {
     
     /// Managed object context to be used for main thread applications.
     /// Implementations should return a context with `.mainQueueConcurrencyType` concurrency type
-    var managedObjectContext: NSManagedObjectContext { get }
+    var mainManagedObjectContext: NSManagedObjectContext { get }
     
 }
