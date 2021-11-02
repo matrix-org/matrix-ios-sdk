@@ -20,39 +20,39 @@ import CoreData
 internal let StringArrayDelimiter: String = ";"
 
 @objc(MXRoomSummaryMO)
-public class MXRoomSummaryMO: NSManagedObject {
+internal class MXRoomSummaryMO: NSManagedObject {
     
     internal static func typedFetchRequest() -> NSFetchRequest<MXRoomSummaryMO> {
         return NSFetchRequest<MXRoomSummaryMO>(entityName: entityName)
     }
 
-    @NSManaged public var s_identifier: String
-    @NSManaged public var s_typeString: String?
-    @NSManaged public var s_typeInt: Int16
-    @NSManaged public var s_avatar: String?
-    @NSManaged public var s_displayName: String?
-    @NSManaged public var s_topic: String?
-    @NSManaged public var s_creatorUserId: String
-    @NSManaged public var s_aliases: String?
-    @NSManaged public var s_joinRule: String?
-    @NSManaged public var s_membershipInt: Int16
-    @NSManaged public var s_membershipTransitionStateInt: Int16
-    @NSManaged public var s_isConferenceUserRoom: Bool
-    @NSManaged public var s_others: Data?
-    @NSManaged public var s_isEncrypted: Bool
-    @NSManaged public var s_localUnreadEventCount: Int16
-    @NSManaged public var s_notificationCount: Int16
-    @NSManaged public var s_highlightCount: Int16
-    @NSManaged public var s_directUserId: String?
-    @NSManaged public var s_hiddenFromUser: Bool
-    @NSManaged public var s_storedHash: Int64
-    @NSManaged public var s_favoriteTagOrder: String?
-    @NSManaged public var s_dataTypesInt: Int64
-    @NSManaged public var s_sentStatusInt: Int16
-    @NSManaged public var s_parentSpaceIds: String?
-    @NSManaged public var s_membersCount: MXRoomMembersCountMO?
-    @NSManaged public var s_trust: MXUsersTrustLevelSummaryMO?
-    @NSManaged public var s_lastMessage: MXRoomLastMessageMO?
+    @NSManaged internal var s_identifier: String
+    @NSManaged internal var s_typeString: String?
+    @NSManaged internal var s_typeInt: Int16
+    @NSManaged internal var s_avatar: String?
+    @NSManaged internal var s_displayName: String?
+    @NSManaged internal var s_topic: String?
+    @NSManaged internal var s_creatorUserId: String
+    @NSManaged internal var s_aliases: String?
+    @NSManaged internal var s_joinRule: String?
+    @NSManaged internal var s_membershipInt: Int16
+    @NSManaged internal var s_membershipTransitionStateInt: Int16
+    @NSManaged internal var s_isConferenceUserRoom: Bool
+    @NSManaged internal var s_others: Data?
+    @NSManaged internal var s_isEncrypted: Bool
+    @NSManaged internal var s_localUnreadEventCount: Int16
+    @NSManaged internal var s_notificationCount: Int16
+    @NSManaged internal var s_highlightCount: Int16
+    @NSManaged internal var s_directUserId: String?
+    @NSManaged internal var s_hiddenFromUser: Bool
+    @NSManaged internal var s_storedHash: Int64
+    @NSManaged internal var s_favoriteTagOrder: String?
+    @NSManaged internal var s_dataTypesInt: Int64
+    @NSManaged internal var s_sentStatusInt: Int16
+    @NSManaged internal var s_parentSpaceIds: String?
+    @NSManaged internal var s_membersCount: MXRoomMembersCountMO?
+    @NSManaged internal var s_trust: MXUsersTrustLevelSummaryMO?
+    @NSManaged internal var s_lastMessage: MXRoomLastMessageMO?
     
     @discardableResult
     internal static func insert(roomSummary summary: MXRoomSummaryProtocol,

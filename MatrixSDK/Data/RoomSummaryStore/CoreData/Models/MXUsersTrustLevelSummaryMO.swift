@@ -18,16 +18,16 @@ import Foundation
 import CoreData
 
 @objc(MXUsersTrustLevelSummaryMO)
-public class MXUsersTrustLevelSummaryMO: NSManagedObject {
+internal class MXUsersTrustLevelSummaryMO: NSManagedObject {
 
     internal static func typedFetchRequest() -> NSFetchRequest<MXUsersTrustLevelSummaryMO> {
         return NSFetchRequest<MXUsersTrustLevelSummaryMO>(entityName: entityName)
     }
 
-    @NSManaged public var s_usersCount: Int16
-    @NSManaged public var s_trustedUsersCount: Int16
-    @NSManaged public var s_devicesCount: Int16
-    @NSManaged public var s_trustedDevicesCount: Int16
+    @NSManaged internal var s_usersCount: Int16
+    @NSManaged internal var s_trustedUsersCount: Int16
+    @NSManaged internal var s_devicesCount: Int16
+    @NSManaged internal var s_trustedDevicesCount: Int16
     
     @discardableResult
     internal static func insert(roomUsersTrustLevelSummary usersTrustLevelSummary: MXUsersTrustLevelSummary,

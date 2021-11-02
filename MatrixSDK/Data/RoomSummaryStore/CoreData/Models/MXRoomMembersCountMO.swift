@@ -18,15 +18,15 @@ import Foundation
 import CoreData
 
 @objc(MXRoomMembersCountMO)
-public class MXRoomMembersCountMO: NSManagedObject {
+internal class MXRoomMembersCountMO: NSManagedObject {
     
     internal static func typedFetchRequest() -> NSFetchRequest<MXRoomMembersCountMO> {
         return NSFetchRequest<MXRoomMembersCountMO>(entityName: entityName)
     }
 
-    @NSManaged public var s_members: Int16
-    @NSManaged public var s_joined: Int16
-    @NSManaged public var s_invited: Int16
+    @NSManaged internal var s_members: Int16
+    @NSManaged internal var s_joined: Int16
+    @NSManaged internal var s_invited: Int16
     
     @discardableResult
     internal static func insert(roomMembersCount membersCount: MXRoomMembersCount,
