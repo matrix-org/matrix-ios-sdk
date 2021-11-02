@@ -61,7 +61,7 @@
 
 #pragma mark - CoreData Model
 
-- (instancetype)initWithManagedObject:(MXRoomMembersCountModel *)model
+- (instancetype)initWithManagedObject:(MXRoomMembersCountMO *)model
 {
     return [self initWithMembers:model.s_members
                           joined:model.s_joined

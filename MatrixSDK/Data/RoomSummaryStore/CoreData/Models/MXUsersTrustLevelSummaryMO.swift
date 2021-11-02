@@ -17,11 +17,11 @@
 import Foundation
 import CoreData
 
-@objc(MXUsersTrustLevelSummaryModel)
-public class MXUsersTrustLevelSummaryModel: NSManagedObject {
+@objc(MXUsersTrustLevelSummaryMO)
+public class MXUsersTrustLevelSummaryMO: NSManagedObject {
 
-    internal static func typedFetchRequest() -> NSFetchRequest<MXUsersTrustLevelSummaryModel> {
-        return NSFetchRequest<MXUsersTrustLevelSummaryModel>(entityName: entityName)
+    internal static func typedFetchRequest() -> NSFetchRequest<MXUsersTrustLevelSummaryMO> {
+        return NSFetchRequest<MXUsersTrustLevelSummaryMO>(entityName: entityName)
     }
 
     @NSManaged public var s_usersCount: Int16
@@ -31,8 +31,8 @@ public class MXUsersTrustLevelSummaryModel: NSManagedObject {
     
     @discardableResult
     internal static func insert(roomUsersTrustLevelSummary usersTrustLevelSummary: MXUsersTrustLevelSummary,
-                                into moc: NSManagedObjectContext) -> MXUsersTrustLevelSummaryModel {
-        let model = MXUsersTrustLevelSummaryModel(context: moc)
+                                into moc: NSManagedObjectContext) -> MXUsersTrustLevelSummaryMO {
+        let model = MXUsersTrustLevelSummaryMO(context: moc)
         
         model.s_usersCount = Int16(usersTrustLevelSummary.trustedUsersProgress.totalUnitCount)
         model.s_trustedUsersCount = Int16(usersTrustLevelSummary.trustedUsersProgress.completedUnitCount)

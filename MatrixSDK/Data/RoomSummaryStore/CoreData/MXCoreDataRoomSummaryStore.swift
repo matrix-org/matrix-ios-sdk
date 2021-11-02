@@ -99,10 +99,10 @@ public class MXCoreDataRoomSummaryStore: NSObject {
     private func fetchRoomIds(in moc: NSManagedObjectContext) -> [String] {
         let propertyName = "s_identifier"
         
-        guard let property = MXRoomSummaryModel.entity().propertiesByName[propertyName] else {
-            fatalError("[MXCoreDataRoomSummaryStore] Couldn't find \(propertyName) on entity \(String(describing: MXRoomSummaryModel.self)), probably property name changed")
+        guard let property = MXRoomSummaryMO.entity().propertiesByName[propertyName] else {
+            fatalError("[MXCoreDataRoomSummaryStore] Couldn't find \(propertyName) on entity \(String(describing: MXRoomSummaryMO.self)), probably property name changed")
         }
-        let request = MXRoomSummaryModel.typedFetchRequest()
+        let request = MXRoomSummaryMO.typedFetchRequest()
         request.returnsDistinctResults = true
         request.includesSubentities = false
         //  only fetch room identifiers
@@ -117,10 +117,10 @@ public class MXCoreDataRoomSummaryStore: NSObject {
         return []
     }
     
-    private func fetchSummary(forRoomId roomId: String, in moc: NSManagedObjectContext) -> MXRoomSummaryModel? {
-        let request = MXRoomSummaryModel.typedFetchRequest()
+    private func fetchSummary(forRoomId roomId: String, in moc: NSManagedObjectContext) -> MXRoomSummaryMO? {
+        let request = MXRoomSummaryMO.typedFetchRequest()
         request.predicate = NSPredicate(format: "%K == %@",
-                                        #keyPath(MXRoomSummaryModel.s_identifier),
+                                        #keyPath(MXRoomSummaryMO.s_identifier),
                                         roomId)
         do {
             let results = try moc.fetch(request)
@@ -139,7 +139,7 @@ public class MXCoreDataRoomSummaryStore: NSObject {
             if let existing = self.fetchSummary(forRoomId: summary.roomId, in: moc) {
                 existing.update(withRoomSummary: summary, in: moc)
             } else {
-                let model = MXRoomSummaryModel.insert(roomSummary: summary, into: moc)
+                let model = MXRoomSummaryMO.insert(roomSummary: summary, into: moc)
                 do {
                     try moc.obtainPermanentIDs(for: [model])
                 } catch {
@@ -175,10 +175,10 @@ public class MXCoreDataRoomSummaryStore: NSObject {
     
     private func deleteAllSummaries() {
         let entityNames: [String] = [
-            MXRoomSummaryModel.entityName,
-            MXRoomLastMessageModel.entityName,
-            MXUsersTrustLevelSummaryModel.entityName,
-            MXRoomMembersCountModel.entityName
+            MXRoomSummaryMO.entityName,
+            MXRoomLastMessageMO.entityName,
+            MXUsersTrustLevelSummaryMO.entityName,
+            MXRoomMembersCountMO.entityName
         ]
         
         let moc = defaultTempMoc
@@ -200,7 +200,7 @@ public class MXCoreDataRoomSummaryStore: NSObject {
     }
     
     private func allSummaries(_ completion: @escaping ([MXRoomSummaryProtocol]) -> Void) {
-        let request = MXRoomSummaryModel.typedFetchRequest()
+        let request = MXRoomSummaryMO.typedFetchRequest()
         
         let moc = defaultTempMoc
         

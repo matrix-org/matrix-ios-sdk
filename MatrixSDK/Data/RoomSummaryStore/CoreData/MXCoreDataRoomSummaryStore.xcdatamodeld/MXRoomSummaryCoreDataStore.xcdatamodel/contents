@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="18154" systemVersion="20F71" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
-    <entity name="MXRoomLastMessageModel" representedClassName="MXRoomLastMessageModel" syncable="YES">
+    <entity name="MXRoomLastMessage" representedClassName="MXRoomLastMessageMO" syncable="YES">
         <attribute name="s_attributedText" optional="YES" attributeType="Binary" valueTransformerName=""/>
         <attribute name="s_eventId" attributeType="String"/>
         <attribute name="s_isEncrypted" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
@@ -8,15 +8,15 @@
         <attribute name="s_others" optional="YES" attributeType="Binary"/>
         <attribute name="s_sender" attributeType="String"/>
         <attribute name="s_text" optional="YES" attributeType="String"/>
-        <relationship name="s_ofRoom" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="MXRoomSummaryModel" inverseName="s_lastMessage" inverseEntity="MXRoomSummaryModel"/>
+        <relationship name="s_ofRoom" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="MXRoomSummary" inverseName="s_lastMessage" inverseEntity="MXRoomSummary"/>
     </entity>
-    <entity name="MXRoomMembersCountModel" representedClassName="MXRoomMembersCountModel" syncable="YES">
+    <entity name="MXRoomMembersCount" representedClassName="MXRoomMembersCountMO" syncable="YES">
         <attribute name="s_invited" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="s_joined" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="s_members" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
-        <relationship name="s_ofRoom" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="MXRoomSummaryModel" inverseName="s_membersCount" inverseEntity="MXRoomSummaryModel"/>
+        <relationship name="s_ofRoom" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="MXRoomSummary" inverseName="s_membersCount" inverseEntity="MXRoomSummary"/>
     </entity>
-    <entity name="MXRoomSummaryModel" representedClassName="MXRoomSummaryModel" syncable="YES">
+    <entity name="MXRoomSummary" representedClassName="MXRoomSummaryMO" syncable="YES">
         <attribute name="s_aliases" optional="YES" attributeType="String"/>
         <attribute name="s_avatar" optional="YES" attributeType="String"/>
         <attribute name="s_creatorUserId" attributeType="String"/>
@@ -41,21 +41,21 @@
         <attribute name="s_topic" optional="YES" attributeType="String"/>
         <attribute name="s_typeInt" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="s_typeString" optional="YES" attributeType="String"/>
-        <relationship name="s_lastMessage" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="MXRoomLastMessageModel" inverseName="s_ofRoom" inverseEntity="MXRoomLastMessageModel"/>
-        <relationship name="s_membersCount" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="MXRoomMembersCountModel" inverseName="s_ofRoom" inverseEntity="MXRoomMembersCountModel"/>
-        <relationship name="s_trust" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="MXUsersTrustLevelSummaryModel" inverseName="s_ofRoom" inverseEntity="MXUsersTrustLevelSummaryModel"/>
+        <relationship name="s_lastMessage" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="MXRoomLastMessage" inverseName="s_ofRoom" inverseEntity="MXRoomLastMessage"/>
+        <relationship name="s_membersCount" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="MXRoomMembersCount" inverseName="s_ofRoom" inverseEntity="MXRoomMembersCount"/>
+        <relationship name="s_trust" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="MXUsersTrustLevelSummary" inverseName="s_ofRoom" inverseEntity="MXUsersTrustLevelSummary"/>
     </entity>
-    <entity name="MXUsersTrustLevelSummaryModel" representedClassName="MXUsersTrustLevelSummaryModel" syncable="YES">
+    <entity name="MXUsersTrustLevelSummary" representedClassName="MXUsersTrustLevelSummaryMO" syncable="YES">
         <attribute name="s_devicesCount" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="s_trustedDevicesCount" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="s_trustedUsersCount" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="s_usersCount" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
-        <relationship name="s_ofRoom" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="MXRoomSummaryModel" inverseName="s_trust" inverseEntity="MXRoomSummaryModel"/>
+        <relationship name="s_ofRoom" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="MXRoomSummary" inverseName="s_trust" inverseEntity="MXRoomSummary"/>
     </entity>
     <elements>
-        <element name="MXRoomLastMessageModel" positionX="117" positionY="90" width="128" height="14"/>
-        <element name="MXRoomMembersCountModel" positionX="297.1484375" positionY="-66.14453125" width="128" height="14"/>
-        <element name="MXRoomSummaryModel" positionX="-63" positionY="-18" width="128" height="434"/>
-        <element name="MXUsersTrustLevelSummaryModel" positionX="236.4921875" positionY="519.4296875" width="128" height="14"/>
+        <element name="MXRoomLastMessage" positionX="117" positionY="90" width="128" height="149"/>
+        <element name="MXRoomMembersCount" positionX="297.1484375" positionY="-66.14453125" width="128" height="89"/>
+        <element name="MXRoomSummary" positionX="-63" positionY="-18" width="128" height="434"/>
+        <element name="MXUsersTrustLevelSummary" positionX="236.4921875" positionY="519.4296875" width="128" height="104"/>
     </elements>
 </model>

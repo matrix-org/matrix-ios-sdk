@@ -19,11 +19,11 @@ import CoreData
 
 internal let StringArrayDelimiter: String = ";"
 
-@objc(MXRoomSummaryModel)
-public class MXRoomSummaryModel: NSManagedObject {
+@objc(MXRoomSummaryMO)
+public class MXRoomSummaryMO: NSManagedObject {
     
-    internal static func typedFetchRequest() -> NSFetchRequest<MXRoomSummaryModel> {
-        return NSFetchRequest<MXRoomSummaryModel>(entityName: entityName)
+    internal static func typedFetchRequest() -> NSFetchRequest<MXRoomSummaryMO> {
+        return NSFetchRequest<MXRoomSummaryMO>(entityName: entityName)
     }
 
     @NSManaged public var s_identifier: String
@@ -50,14 +50,14 @@ public class MXRoomSummaryModel: NSManagedObject {
     @NSManaged public var s_dataTypesInt: Int64
     @NSManaged public var s_sentStatusInt: Int16
     @NSManaged public var s_parentSpaceIds: String?
-    @NSManaged public var s_membersCount: MXRoomMembersCountModel?
-    @NSManaged public var s_trust: MXUsersTrustLevelSummaryModel?
-    @NSManaged public var s_lastMessage: MXRoomLastMessageModel?
+    @NSManaged public var s_membersCount: MXRoomMembersCountMO?
+    @NSManaged public var s_trust: MXUsersTrustLevelSummaryMO?
+    @NSManaged public var s_lastMessage: MXRoomLastMessageMO?
     
     @discardableResult
     internal static func insert(roomSummary summary: MXRoomSummaryProtocol,
-                                into moc: NSManagedObjectContext) -> MXRoomSummaryModel {
-        let model = MXRoomSummaryModel(context: moc)
+                                into moc: NSManagedObjectContext) -> MXRoomSummaryMO {
+        let model = MXRoomSummaryMO(context: moc)
         
         model.update(withRoomSummary: summary, in: moc)
         
@@ -98,12 +98,12 @@ public class MXRoomSummaryModel: NSManagedObject {
         if let old = s_membersCount {
             moc.delete(old)
         }
-        let membersCountModel = MXRoomMembersCountModel.insert(roomMembersCount: summary.membersCount,
+        let membersCountModel = MXRoomMembersCountMO.insert(roomMembersCount: summary.membersCount,
                                                                into: moc)
         do {
             try moc.obtainPermanentIDs(for: [membersCountModel])
         } catch {
-            MXLog.error("[MXRoomSummaryModel] update: couldn't obtain permanent id for membersCount: \(error)")
+            MXLog.error("[MXRoomSummaryMO] update: couldn't obtain permanent id for membersCount: \(error)")
         }
         s_membersCount = membersCountModel
         
@@ -111,12 +111,12 @@ public class MXRoomSummaryModel: NSManagedObject {
             moc.delete(old)
         }
         if let trust = summary.trust {
-            let trustModel = MXUsersTrustLevelSummaryModel.insert(roomUsersTrustLevelSummary: trust,
+            let trustModel = MXUsersTrustLevelSummaryMO.insert(roomUsersTrustLevelSummary: trust,
                                                                   into: moc)
             do {
                 try moc.obtainPermanentIDs(for: [trustModel])
             } catch {
-                MXLog.error("[MXRoomSummaryModel] update: couldn't obtain permanent id for trust: \(error)")
+                MXLog.error("[MXRoomSummaryMO] update: couldn't obtain permanent id for trust: \(error)")
             }
             s_trust = trustModel
         } else {
@@ -127,12 +127,12 @@ public class MXRoomSummaryModel: NSManagedObject {
             moc.delete(old)
         }
         if let lastMessage = summary.lastMessage {
-            let lastMessageModel = MXRoomLastMessageModel.insert(roomLastMessage: lastMessage,
+            let lastMessageModel = MXRoomLastMessageMO.insert(roomLastMessage: lastMessage,
                                                                  into: moc)
             do {
                 try moc.obtainPermanentIDs(for: [lastMessageModel])
             } catch {
-                MXLog.error("[MXRoomSummaryModel] update: couldn't obtain permanent id for lastMessage: \(error)")
+                MXLog.error("[MXRoomSummaryMO] update: couldn't obtain permanent id for lastMessage: \(error)")
             }
             s_lastMessage = lastMessageModel
         } else {
@@ -144,7 +144,7 @@ public class MXRoomSummaryModel: NSManagedObject {
 
 //  MARK: - MXRoomSummaryProtocol
 
-extension MXRoomSummaryModel: MXRoomSummaryProtocol {
+extension MXRoomSummaryMO: MXRoomSummaryProtocol {
     public var roomId: String {
         return s_identifier
     }

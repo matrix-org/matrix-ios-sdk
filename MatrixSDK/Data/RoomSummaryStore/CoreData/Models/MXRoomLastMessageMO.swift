@@ -17,11 +17,11 @@
 import Foundation
 import CoreData
 
-@objc(MXRoomLastMessageModel)
-public class MXRoomLastMessageModel: NSManagedObject {
+@objc(MXRoomLastMessageMO)
+public class MXRoomLastMessageMO: NSManagedObject {
 
-    internal static func typedFetchRequest() -> NSFetchRequest<MXRoomLastMessageModel> {
-        return NSFetchRequest<MXRoomLastMessageModel>(entityName: entityName)
+    internal static func typedFetchRequest() -> NSFetchRequest<MXRoomLastMessageMO> {
+        return NSFetchRequest<MXRoomLastMessageMO>(entityName: entityName)
     }
 
     @NSManaged public var s_eventId: String
@@ -34,8 +34,8 @@ public class MXRoomLastMessageModel: NSManagedObject {
     
     @discardableResult
     internal static func insert(roomLastMessage lastMessage: MXRoomLastMessage,
-                                into moc: NSManagedObjectContext) -> MXRoomLastMessageModel {
-        let model = MXRoomLastMessageModel(context: moc)
+                                into moc: NSManagedObjectContext) -> MXRoomLastMessageMO {
+        let model = MXRoomLastMessageMO(context: moc)
         
         model.s_eventId = lastMessage.eventId
         model.s_originServerTs = lastMessage.originServerTs

@@ -16,7 +16,7 @@
 
 #import <Foundation/Foundation.h>
 
-@class MXUsersTrustLevelSummaryModel;
+@class MXUsersTrustLevelSummaryMO;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -35,7 +35,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - CoreData Model
 
-- (instancetype)initWithManagedObject:(MXUsersTrustLevelSummaryModel *)model;
+- (instancetype)initWithManagedObject:(MXUsersTrustLevelSummaryMO *)model;
 
 @end
 

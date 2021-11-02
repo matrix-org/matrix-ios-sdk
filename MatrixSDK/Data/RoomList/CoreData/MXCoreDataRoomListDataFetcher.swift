@@ -39,8 +39,8 @@ internal class MXCoreDataRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
     }
     private let store: MXRoomSummaryCoreDataContextableStore
     
-    private lazy var fetchedResultsController: NSFetchedResultsController<MXRoomSummaryModel> = {
-        let request = MXRoomSummaryModel.typedFetchRequest()
+    private lazy var fetchedResultsController: NSFetchedResultsController<MXRoomSummaryMO> = {
+        let request = MXRoomSummaryMO.typedFetchRequest()
         request.predicate = filterPredicate(for: filterOptions)
         request.sortDescriptors = sortDescriptors(for: sortOptions)
         request.fetchLimit = fetchOptions.paginationOptions.rawValue
@@ -53,7 +53,7 @@ internal class MXCoreDataRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
     }()
     
     private var totalRoomsCount: Int {
-        let request = MXRoomSummaryModel.typedFetchRequest()
+        let request = MXRoomSummaryMO.typedFetchRequest()
         request.predicate = filterPredicate(for: filterOptions)
         request.resultType = .countResultType
         do {
@@ -186,28 +186,28 @@ extension MXCoreDataRoomListDataFetcher: MXRoomListDataSortable {
         var result: [NSSortDescriptor] = []
         
         if sortOptions.invitesFirst {
-            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryModel.s_membershipInt, ascending: true))
+            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryMO.s_membershipInt, ascending: true))
         }
         
         if sortOptions.sentStatus {
-            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryModel.s_sentStatusInt, ascending: false))
+            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryMO.s_sentStatusInt, ascending: false))
         }
         
         if sortOptions.missedNotificationsFirst {
-            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryModel.s_highlightCount, ascending: false))
-            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryModel.s_notificationCount, ascending: false))
+            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryMO.s_highlightCount, ascending: false))
+            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryMO.s_notificationCount, ascending: false))
         }
         
         if sortOptions.unreadMessagesFirst {
-            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryModel.s_localUnreadEventCount, ascending: false))
+            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryMO.s_localUnreadEventCount, ascending: false))
         }
         
         if sortOptions.lastEventDate {
-            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryModel.s_lastMessage?.s_originServerTs, ascending: false))
+            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryMO.s_lastMessage?.s_originServerTs, ascending: false))
         }
         
         if sortOptions.favoriteTag {
-            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryModel.s_favoriteTagOrder, ascending: false))
+            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryMO.s_favoriteTagOrder, ascending: false))
         }
         
         return result
@@ -229,7 +229,7 @@ extension MXCoreDataRoomListDataFetcher: MXRoomListDataFilterable {
         //  query
         if let query = filterOptions.query, !query.isEmpty {
             let predicate = NSPredicate(format: "%K CONTAINS[cd] %@",
-                                        #keyPath(MXRoomSummaryModel.s_displayName),
+                                        #keyPath(MXRoomSummaryMO.s_displayName),
                                         query)
             predicates.append(predicate)
         }
@@ -238,7 +238,7 @@ extension MXCoreDataRoomListDataFetcher: MXRoomListDataFilterable {
             //  data types
             if !filterOptions.dataTypes.isEmpty {
                 let predicate = NSPredicate(format: "(%K & %d) != 0",
-                                            #keyPath(MXRoomSummaryModel.s_dataTypesInt),
+                                            #keyPath(MXRoomSummaryMO.s_dataTypesInt),
                                             filterOptions.dataTypes.rawValue)
                 predicates.append(predicate)
             }
@@ -246,7 +246,7 @@ extension MXCoreDataRoomListDataFetcher: MXRoomListDataFilterable {
             //  not data types
             if !filterOptions.notDataTypes.isEmpty {
                 let predicate = NSPredicate(format: "(%K & %d) == 0",
-                                            #keyPath(MXRoomSummaryModel.s_dataTypesInt),
+                                            #keyPath(MXRoomSummaryMO.s_dataTypesInt),
                                             filterOptions.notDataTypes.rawValue)
                 predicates.append(predicate)
             }
@@ -255,7 +255,7 @@ extension MXCoreDataRoomListDataFetcher: MXRoomListDataFilterable {
             if let space = filterOptions.space {
                 //  specific space
                 let predicate = NSPredicate(format: "%K CONTAINS[c] %@",
-                                            #keyPath(MXRoomSummaryModel.s_parentSpaceIds),
+                                            #keyPath(MXRoomSummaryMO.s_parentSpaceIds),
                                             space.spaceId)
                 predicates.append(predicate)
             } else {
@@ -271,16 +271,16 @@ extension MXCoreDataRoomListDataFetcher: MXRoomListDataFilterable {
                 
                 let directDataTypes: MXRoomSummaryDataTypes = .direct
                 let predicate2 = NSPredicate(format: "(%K & %d) != 0",
-                                             #keyPath(MXRoomSummaryModel.s_dataTypesInt),
+                                             #keyPath(MXRoomSummaryMO.s_dataTypesInt),
                                              directDataTypes.rawValue)
                 
                 let favoritedDataTypes: MXRoomSummaryDataTypes = .favorited
                 let predicate3 = NSPredicate(format: "(%K & %d) != 0",
-                                             #keyPath(MXRoomSummaryModel.s_dataTypesInt),
+                                             #keyPath(MXRoomSummaryMO.s_dataTypesInt),
                                              favoritedDataTypes.rawValue)
                 
                 let predicate4 = NSPredicate(format: "%K MATCHES %@",
-                                             #keyPath(MXRoomSummaryModel.s_parentSpaceIds),
+                                             #keyPath(MXRoomSummaryMO.s_parentSpaceIds),
                                              "^$")
                 
                 let predicate = NSCompoundPredicate(type: .or,

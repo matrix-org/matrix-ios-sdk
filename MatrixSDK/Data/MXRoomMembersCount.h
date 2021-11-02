@@ -16,7 +16,7 @@
 
 #import <Foundation/Foundation.h>
 
-@class MXRoomMembersCountModel;
+@class MXRoomMembersCountMO;
 
 /**
  Room members counts.
@@ -29,7 +29,7 @@
 
 #pragma mark - CoreData Model
 
-- (instancetype) initWithManagedObject:(MXRoomMembersCountModel *)model;
+- (instancetype) initWithManagedObject:(MXRoomMembersCountMO *)model;
 
 /**
  Initializer with numbers.

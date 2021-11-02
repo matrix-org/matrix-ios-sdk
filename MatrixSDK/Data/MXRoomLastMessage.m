@@ -79,7 +79,7 @@ NSString *const kCodingKeyOthers = @"others";
 
 #pragma mark - CoreData Model
 
-- (instancetype)initWithManagedObject:(MXRoomLastMessageModel *)model
+- (instancetype)initWithManagedObject:(MXRoomLastMessageMO *)model
 {
     if (self = [super init])
     {
