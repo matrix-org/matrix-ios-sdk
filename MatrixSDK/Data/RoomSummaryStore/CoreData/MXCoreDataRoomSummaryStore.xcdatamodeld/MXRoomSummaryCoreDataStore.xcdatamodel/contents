@@ -8,13 +8,13 @@
         <attribute name="s_others" optional="YES" attributeType="Binary"/>
         <attribute name="s_sender" attributeType="String"/>
         <attribute name="s_text" optional="YES" attributeType="String"/>
-        <relationship name="s_ofRoom" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="MXRoomSummary" inverseName="s_lastMessage" inverseEntity="MXRoomSummary"/>
+        <relationship name="s_ofRoom" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="MXRoomSummary" inverseName="s_lastMessage" inverseEntity="MXRoomSummary"/>
     </entity>
     <entity name="MXRoomMembersCount" representedClassName="MXRoomMembersCountMO" syncable="YES">
         <attribute name="s_invited" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="s_joined" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="s_members" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
-        <relationship name="s_ofRoom" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="MXRoomSummary" inverseName="s_membersCount" inverseEntity="MXRoomSummary"/>
+        <relationship name="s_ofRoom" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="MXRoomSummary" inverseName="s_membersCount" inverseEntity="MXRoomSummary"/>
     </entity>
     <entity name="MXRoomSummary" representedClassName="MXRoomSummaryMO" syncable="YES">
         <attribute name="s_aliases" optional="YES" attributeType="String"/>
@@ -41,9 +41,9 @@
         <attribute name="s_topic" optional="YES" attributeType="String"/>
         <attribute name="s_typeInt" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="s_typeString" optional="YES" attributeType="String"/>
-        <relationship name="s_lastMessage" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="MXRoomLastMessage" inverseName="s_ofRoom" inverseEntity="MXRoomLastMessage"/>
-        <relationship name="s_membersCount" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="MXRoomMembersCount" inverseName="s_ofRoom" inverseEntity="MXRoomMembersCount"/>
-        <relationship name="s_trust" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="MXUsersTrustLevelSummary" inverseName="s_ofRoom" inverseEntity="MXUsersTrustLevelSummary"/>
+        <relationship name="s_lastMessage" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="MXRoomLastMessage" inverseName="s_ofRoom" inverseEntity="MXRoomLastMessage"/>
+        <relationship name="s_membersCount" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="MXRoomMembersCount" inverseName="s_ofRoom" inverseEntity="MXRoomMembersCount"/>
+        <relationship name="s_trust" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="MXUsersTrustLevelSummary" inverseName="s_ofRoom" inverseEntity="MXUsersTrustLevelSummary"/>
         <uniquenessConstraints>
             <uniquenessConstraint>
                 <constraint value="s_identifier"/>
@@ -55,7 +55,7 @@
         <attribute name="s_trustedDevicesCount" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="s_trustedUsersCount" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="s_usersCount" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
-        <relationship name="s_ofRoom" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="MXRoomSummary" inverseName="s_trust" inverseEntity="MXRoomSummary"/>
+        <relationship name="s_ofRoom" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="MXRoomSummary" inverseName="s_trust" inverseEntity="MXRoomSummary"/>
     </entity>
     <elements>
         <element name="MXRoomLastMessage" positionX="117" positionY="90" width="128" height="149"/>

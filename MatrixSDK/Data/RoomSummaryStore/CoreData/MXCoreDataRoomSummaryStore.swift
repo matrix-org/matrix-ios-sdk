@@ -156,15 +156,6 @@ public class MXCoreDataRoomSummaryStore: NSObject {
         moc.perform { [weak self] in
             guard let self = self else { return }
             if let existing = self.fetchSummary(forRoomId: roomId, in: moc) {
-                if let membersCount = existing.s_membersCount {
-                    moc.delete(membersCount)
-                }
-                if let trust = existing.s_trust {
-                    moc.delete(trust)
-                }
-                if let lastMessage = existing.s_lastMessage {
-                    moc.delete(lastMessage)
-                }
                 moc.delete(existing)
             }
             
