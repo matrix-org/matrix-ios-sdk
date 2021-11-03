@@ -1484,7 +1484,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
     }
 
     MXHTTPOperation *operation = [MXHTTPOperation new];
-    operation = [room sendEventOfType:eventType content:content localEcho:nil success:success failure:^(NSError *error) {
+    operation = [room sendEventOfType:eventType content:content threadId:nil localEcho:nil success:success failure:^(NSError *error) {
 
         if ([error.domain isEqualToString:MXEncryptingErrorDomain] &&
             error.code == MXEncryptingErrorUnknownDeviceCode)
@@ -1493,7 +1493,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
             MXUsersDevicesMap<MXDeviceInfo *> *unknownDevices = error.userInfo[MXEncryptingErrorUnknownDeviceDevicesKey];
             [self.crypto setDevicesKnown:unknownDevices complete:^{
                 // And retry
-                MXHTTPOperation *operation2 = [room sendEventOfType:eventType content:content localEcho:nil success:success failure:failure];
+                MXHTTPOperation *operation2 = [room sendEventOfType:eventType content:content threadId:nil localEcho:nil success:success failure:failure];
                 [operation mutateTo:operation2];
             }];
         }

@@ -315,7 +315,7 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
                 }
                 
                 MXWeakify(self);
-                [self.callSignalingRoom sendEventOfType:kMXEventTypeStringCallInvite content:content localEcho:nil success:^(NSString *eventId) {
+                [self.callSignalingRoom sendEventOfType:kMXEventTypeStringCallInvite content:content threadId:nil localEcho:nil success:^(NSString *eventId) {
 
                     self->callInviteEventContent = [MXCallInviteEventContent modelFromJSON:content];
                     [self setState:MXCallStateInviteSent reason:nil];
@@ -394,7 +394,7 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
                     
                     MXWeakify(self);
                     
-                    [self.callSignalingRoom sendEventOfType:kMXEventTypeStringCallAnswer content:content localEcho:nil success:^(NSString *eventId){
+                    [self.callSignalingRoom sendEventOfType:kMXEventTypeStringCallAnswer content:content threadId:nil localEcho:nil success:^(NSString *eventId){
                         //  assume for now, this is the selected answer
                         self.selectedAnswer = [MXEvent modelFromJSON:@{
                             @"event_id": eventId,
@@ -500,7 +500,7 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
         {
             // Send the reject event
             MXWeakify(self);
-            [_callSignalingRoom sendEventOfType:kMXEventTypeStringCallReject content:content localEcho:nil success:^(NSString *eventId) {
+            [_callSignalingRoom sendEventOfType:kMXEventTypeStringCallReject content:content threadId:nil localEcho:nil success:^(NSString *eventId) {
                 terminateBlock();
             } failure:^(NSError *error) {
                 MXStrongifyAndReturnIfNil(self);
@@ -540,7 +540,7 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
         {
             //  Send the hangup event
             MXWeakify(self);
-            [_callSignalingRoom sendEventOfType:kMXEventTypeStringCallHangup content:content localEcho:nil success:^(NSString *eventId) {
+            [_callSignalingRoom sendEventOfType:kMXEventTypeStringCallHangup content:content threadId:nil localEcho:nil success:^(NSString *eventId) {
                 [[MXSDKOptions sharedInstance].analyticsDelegate trackValue:@(reason)
                                                                    category:kMXAnalyticsVoipCategory
                                                                        name:kMXAnalyticsVoipNameCallHangup];
@@ -627,7 +627,7 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
             } mutableCopy];
             
             MXWeakify(self);
-            [self.callSignalingRoom sendEventOfType:kMXEventTypeStringCallNegotiate content:content localEcho:nil success:^(NSString *eventId) {
+            [self.callSignalingRoom sendEventOfType:kMXEventTypeStringCallNegotiate content:content threadId:nil localEcho:nil success:^(NSString *eventId) {
 
                 if (hold)
                 {
@@ -715,6 +715,7 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
     MXWeakify(self);
     [self.callSignalingRoom sendEventOfType:kMXEventTypeStringCallReplaces
                                     content:content.JSONDictionary
+                                   threadId:nil
                                   localEcho:nil
                                     success:^(NSString *eventId) {
         MXStrongifyAndReturnIfNil(self);
@@ -1022,7 +1023,7 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
                                   };
 
         MXWeakify(self);
-        [_callSignalingRoom sendEventOfType:kMXEventTypeStringCallCandidates content:content localEcho:nil success:nil failure:^(NSError *error) {
+        [_callSignalingRoom sendEventOfType:kMXEventTypeStringCallCandidates content:content threadId:nil localEcho:nil success:nil failure:^(NSError *error) {
             MXStrongifyAndReturnIfNil(self);
             
             MXLogError(@"[MXCall][%@] onICECandidate: Warning: Cannot send m.call.candidates event.", self.callId);
@@ -1226,6 +1227,7 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
             MXWeakify(self);
             [self.callSignalingRoom sendEventOfType:kMXEventTypeStringCallSelectAnswer
                                             content:selectAnswerContent
+                                           threadId:nil
                                           localEcho:nil
                                             success:^(NSString *eventId) {
                 
@@ -1348,6 +1350,7 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
             MXWeakify(self);
             [self.callSignalingRoom sendEventOfType:kMXEventTypeStringCallSelectAnswer
                                             content:selectAnswerContent
+                                           threadId:nil
                                           localEcho:nil
                                             success:^(NSString *eventId) {
                 
@@ -1419,7 +1422,7 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
                     };
                     
                     MXWeakify(self);
-                    [self.callSignalingRoom sendEventOfType:kMXEventTypeStringCallNegotiate content:content localEcho:nil success:nil failure:^(NSError *error) {
+                    [self.callSignalingRoom sendEventOfType:kMXEventTypeStringCallNegotiate content:content threadId:nil localEcho:nil success:nil failure:^(NSError *error) {
                         MXStrongifyAndReturnIfNil(self);
                         
                         MXLogError(@"[MXCall][%@] handleCallNegotiate: negotiate answer: ERROR: Cannot send m.call.negotiate event.", self.callId);
