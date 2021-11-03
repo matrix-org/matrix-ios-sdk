@@ -1964,24 +1964,12 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     {
         NSString *eventId = eventToReply.eventId;
         
-        NSDictionary *relatesToDict = nil;
-        if (eventToReply.threadIdentifier)
-        {
-            //  TODO: This will change when we support in-thread replies
-            relatesToDict = @{
-                @"rel_type": MXEventRelationTypeThread,
-                @"event_id" : eventToReply.threadIdentifier
-            };
-        }
-        else
-        {
-            relatesToDict = @{
-                @"m.in_reply_to" :
-                    @{
-                        @"event_id" : eventId
-                    }
-            };
-        }
+        NSDictionary *relatesToDict = @{
+            @"m.in_reply_to" :
+                @{
+                    @"event_id" : eventId
+                }
+        };
         
         NSMutableDictionary *msgContent = [NSMutableDictionary dictionary];
         
@@ -1992,6 +1980,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
         msgContent[@"m.relates_to"] = relatesToDict;
         
         operation = [self sendMessageWithContent:msgContent
+                                        threadId:eventToReply.threadIdentifier  //  reply in the same thread
                                        localEcho:localEcho
                                          success:success
                                          failure:failure];
