@@ -40,6 +40,10 @@ public struct MXRoomListDataFilterOptions: Equatable {
     /// Flag to filter only suggested rooms, if set to `true`, `dataTypes` and `notDataTypes` are not valid.
     public let onlySuggested: Bool
     
+    /// Flag to hide any rooms where the user's membership is unknown. This has no effect when `onlySuggested` is `true`.
+    /// When set to `false`, rooms that have been cached during peeking may be included in the filtered results.
+    public let hideUnknownMembershipRooms: Bool
+    
     /// Initializer
     /// - Parameters:
     ///   - dataTypes: data types to fetch. Pass `MXRoomListDataFilterOptions.emptyDataTypes` not to specify any.
@@ -50,13 +54,15 @@ public struct MXRoomListDataFilterOptions: Equatable {
                 onlySuggested: Bool = false,
                 query: String? = nil,
                 space: MXSpace? = nil,
-                showAllRoomsInHomeSpace: Bool) {
+                showAllRoomsInHomeSpace: Bool,
+                hideUnknownMembershipRooms: Bool = true) {
         self.dataTypes = dataTypes
         self.notDataTypes = notDataTypes
         self.onlySuggested = onlySuggested
         self.query = query
         self.space = space
         self.showAllRoomsInHomeSpace = showAllRoomsInHomeSpace
+        self.hideUnknownMembershipRooms = hideUnknownMembershipRooms
     }
     
     /// Just to be used for in-memory data
@@ -83,10 +89,11 @@ public struct MXRoomListDataFilterOptions: Equatable {
         }
         
         if !onlySuggested {
-            // Filter out any room previews by making sure the user has valid membership.
-            let memberPredicate = NSPredicate(format: "%K != %d",
-                                              #keyPath(MXRoomSummaryProtocol.membership), MXMembership.unknown.rawValue)
-            subpredicates.append(memberPredicate)
+            if hideUnknownMembershipRooms {
+                let memberPredicate = NSPredicate(format: "%K != %d",
+                                                  #keyPath(MXRoomSummaryProtocol.membership), MXMembership.unknown.rawValue)
+                subpredicates.append(memberPredicate)
+            }
             
             if !dataTypes.isEmpty {
                 let subpredicate = NSPredicate(format: "(%K & %d) != 0",
