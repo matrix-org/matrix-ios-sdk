@@ -2143,12 +2143,15 @@ static BOOL shouldCompactOnLaunch = YES;
                 
                 MXLogDebug(@"[MXRealmCryptoStore]    Make sure MXRealmOlmAccount.cryptoVersion is MXCryptoVersion2");
                 [migration enumerateObjects:MXRealmOlmAccount.className block:^(RLMObject *oldObject, RLMObject *newObject) {
-                    NSNumber *version;
-                    MXJSONModelSetNumber(version, oldObject[@"cryptoVersion"]);
-                    if (version && version.intValue == 0)
-                    {
-                        MXLogDebug(@"[MXRealmCryptoStore]    -> Fix MXRealmOlmAccount.cryptoVersion");
-                        newObject[@"cryptoVersion"] = @(MXCryptoVersion2);
+                    if (oldSchemaVersion > 12) {
+                        // cryptoVersion available
+                        NSNumber *version;
+                        MXJSONModelSetNumber(version, oldObject[@"cryptoVersion"]);
+                        if (version && version.intValue == 0)
+                        {
+                            MXLogDebug(@"[MXRealmCryptoStore]    -> Fix MXRealmOlmAccount.cryptoVersion");
+                            newObject[@"cryptoVersion"] = @(MXCryptoVersion2);
+                        }
                     }
                 }];
         }
