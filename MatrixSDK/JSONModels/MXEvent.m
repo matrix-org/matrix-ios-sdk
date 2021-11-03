@@ -100,6 +100,9 @@ NSString *const kMXMessageTypeKeyVerificationRequest = @"m.key.verification.requ
 NSString *const MXEventRelationTypeAnnotation        = @"m.annotation";
 NSString *const MXEventRelationTypeReference         = @"m.reference";
 NSString *const MXEventRelationTypeReplace           = @"m.replace";
+//  TODO: Replace when the MSC merged
+//  https://github.com/matrix-org/matrix-doc/pull/3440
+NSString *const MXEventRelationTypeThread            = @"io.element.thread";
 
 NSString *const kMXEventLocalEventIdPrefix           = @"kMXEventLocalId_";
 
@@ -869,6 +872,23 @@ NSString *const kMXMessageContentKeyExtensibleFileMimeType   = @"mimetype";
 - (BOOL)isContentScannable
 {
     return [self getMediaURLs].count != 0;
+}
+
+#pragma mark - Threading
+
+- (BOOL)isInThread
+{
+    return self.eventType == MXEventTypeRoomMessage
+        && [self.relatesTo.relationType isEqualToString:MXEventRelationTypeThread];
+}
+
+- (NSString *)threadIdentifier
+{
+    if (self.isInThread)
+    {
+        return self.relatesTo.eventId;
+    }
+    return nil;
 }
 
 #pragma mark - Crypto
