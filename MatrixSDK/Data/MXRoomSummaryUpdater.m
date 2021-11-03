@@ -216,7 +216,20 @@
                 
                 summary.roomTypeString = roomTypeString;
                 summary.roomType = [self.roomTypeMapper roomTypeFrom:roomTypeString];
-                summary.hiddenFromUser = [self shouldHideRoomWithRoomTypeString:roomTypeString];
+                
+                // In most instances a create event shouldn't have a tombstone in its state.
+                if (roomState.tombStoneContent == nil)
+                {
+                    summary.hiddenFromUser = [self shouldHideRoomWithRoomTypeString:roomTypeString];
+                }
+                // If it does the entire room state is likely being refreshed after a limited sync.
+                // We don't want to unhide the room if it's already hidden. If it needs to be hidden
+                // checkRoomCreateStateEventPredecessor… and checkForTombStoneStateEvent… will have
+                // already been called by this stage.
+                else if ([self shouldHideRoomWithRoomTypeString:roomTypeString])
+                {
+                    summary.hiddenFromUser = YES;
+                }
                 
                 updated = YES;
                 [self checkRoomCreateStateEventPredecessorAndUpdateObsoleteRoomSummaryIfNeededWithCreateContent:createContent summary:summary session:session roomState:roomState];
