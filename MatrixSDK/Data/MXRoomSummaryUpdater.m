@@ -216,17 +216,8 @@
                 
                 summary.roomTypeString = roomTypeString;
                 summary.roomType = [self.roomTypeMapper roomTypeFrom:roomTypeString];
-                
-                // In most instances a create event shouldn't have a tombstone in its state.
-                if (roomState.tombStoneContent == nil)
-                {
-                    summary.hiddenFromUser = [self shouldHideRoomWithRoomTypeString:roomTypeString];
-                }
-                // If it does the entire room state is likely being refreshed after a limited sync.
-                // We don't want to unhide the room if it's already hidden. If it needs to be hidden
-                // checkRoomCreateStateEventPredecessor… and checkForTombStoneStateEvent… will have
-                // already been called by this stage.
-                else if ([self shouldHideRoomWithRoomTypeString:roomTypeString])
+                                
+                if ([self shouldHideRoomWithRoomTypeString:roomTypeString])
                 {
                     summary.hiddenFromUser = YES;
                 }
@@ -298,8 +289,13 @@
         
         if (replacementRoomSummary)
         {
-            summary.hiddenFromUser = replacementRoomSummary.membership == MXMembershipJoin;
-            updated = YES;
+            BOOL isReplacementRoomJoined = replacementRoomSummary.membership == MXMembershipJoin;
+                        
+            if (isReplacementRoomJoined && summary.hiddenFromUser == NO)
+            {
+                summary.hiddenFromUser = YES;
+                updated = YES;                
+            }
         }
     }
     
@@ -316,12 +312,15 @@
         MXRoomSummary *obsoleteRoomSummary = [session roomSummaryWithRoomId:createContent.roomPredecessorInfo.roomId];
      
         BOOL obsoleteRoomHiddenFromUserFormerValue = obsoleteRoomSummary.hiddenFromUser;
-        obsoleteRoomSummary.hiddenFromUser = summary.membership == MXMembershipJoin; // Hide room predecessor if user joined the new one
         
-        if (obsoleteRoomHiddenFromUserFormerValue != obsoleteRoomSummary.hiddenFromUser)
+        BOOL isRoomJoined = summary.membership == MXMembershipJoin; 
+        
+        // Hide room predecessor if user joined the new one
+        if (isRoomJoined && obsoleteRoomSummary.hiddenFromUser == NO)
         {
+            obsoleteRoomSummary.hiddenFromUser = YES;
             [obsoleteRoomSummary save:YES];
-        }
+        }                
     }
 }
 
