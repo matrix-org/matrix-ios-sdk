@@ -310,8 +310,6 @@
     if (createContent.roomPredecessorInfo)
     {
         MXRoomSummary *obsoleteRoomSummary = [session roomSummaryWithRoomId:createContent.roomPredecessorInfo.roomId];
-     
-        BOOL obsoleteRoomHiddenFromUserFormerValue = obsoleteRoomSummary.hiddenFromUser;
         
         BOOL isRoomJoined = summary.membership == MXMembershipJoin; 
         
