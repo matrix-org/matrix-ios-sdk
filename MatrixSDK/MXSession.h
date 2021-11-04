@@ -363,6 +363,7 @@ FOUNDATION_EXPORT NSString *const kMXSessionNotificationUserIdsArrayKey;
 FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
 
 @class MXSpaceService;
+@class MXThreadingService;
 
 #pragma mark - MXSession
 /**
@@ -497,6 +498,8 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
  The module that manages spaces.
  */
 @property (nonatomic, readonly) MXSpaceService *spaceService;
+
+@property (nonatomic, readonly) MXThreadingService *threadingService;
 
 /**
  Flag indicating the session can be paused.
