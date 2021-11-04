@@ -638,7 +638,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                 if (!event)
                 {
                     // Add a local echo for this message during the sending process.
-                    event = [self addLocalEchoForMessageContent:contentCopy eventType:eventTypeString withState:MXEventSentStateEncrypting];
+                    event = [self addLocalEchoForMessageContent:contentCopy eventType:eventTypeString withState:MXEventSentStateEncrypting threadId:threadId];
 
                     if (localEcho)
                     {
@@ -685,7 +685,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                     if (event)
                     {
                         // Encapsulate the resulting event in a fake encrypted event
-                        MXEvent *clearEvent = [self fakeEventWithEventId:event.eventId eventType:eventTypeString andContent:event.content];
+                        MXEvent *clearEvent = [self fakeEventWithEventId:event.eventId eventType:eventTypeString andContent:event.content threadId:threadId];
 
                         event.wireType = encryptedEventType;
                         event.wireContent = finalEncryptedContent;
@@ -738,7 +738,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
             if (!event)
             {
                 // Add a local echo for this message during the sending process.
-                event = [self addLocalEchoForMessageContent:contentCopy eventType:eventTypeString withState:MXEventSentStateSending];
+                event = [self addLocalEchoForMessageContent:contentCopy eventType:eventTypeString withState:MXEventSentStateSending threadId:threadId];
 
                 if (localEcho)
                 {
@@ -999,7 +999,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     
     // Add a local echo for this message during the sending process.
     MXEventSentState initialSentState = (mxSession.crypto && self.summary.isEncrypted) ? MXEventSentStateEncrypting : MXEventSentStateUploading;
-    event = [self addLocalEchoForMessageContent:msgContent eventType:kMXEventTypeStringRoomMessage withState:initialSentState];
+    event = [self addLocalEchoForMessageContent:msgContent eventType:kMXEventTypeStringRoomMessage withState:initialSentState threadId:threadId];
     
     if (localEcho)
     {
@@ -1240,7 +1240,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     };
     
     // Add a local echo for this message during the sending process.
-    event = [self addLocalEchoForMessageContent:msgContent eventType:kMXEventTypeStringRoomMessage withState:MXEventSentStatePreparing];
+    event = [self addLocalEchoForMessageContent:msgContent eventType:kMXEventTypeStringRoomMessage withState:MXEventSentStatePreparing threadId:threadId];
     
     if (localEcho)
     {
@@ -1620,7 +1620,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     
     // Add a local echo for this message during the sending process.
     MXEventSentState initialSentState = (mxSession.crypto && self.summary.isEncrypted) ? MXEventSentStateEncrypting : MXEventSentStateUploading;
-    event = [self addLocalEchoForMessageContent:msgContent eventType:kMXEventTypeStringRoomMessage withState:initialSentState];
+    event = [self addLocalEchoForMessageContent:msgContent eventType:kMXEventTypeStringRoomMessage withState:initialSentState threadId:threadId];
     
     if (localEcho)
     {
@@ -2445,7 +2445,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
 
 
 #pragma mark - Fake event objects creation
-- (MXEvent*)fakeEventWithEventId:(NSString*)eventId eventType:(NSString*)eventType andContent:(NSDictionary*)content
+- (MXEvent*)fakeEventWithEventId:(NSString*)eventId eventType:(NSString*)eventType andContent:(NSDictionary*)content threadId:(NSString*)threadId
 {
     if (!eventId)
     {
@@ -2458,14 +2458,26 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     event.wireType = eventType;
     event.originServerTs = (uint64_t) ([[NSDate date] timeIntervalSince1970] * 1000);
     event.sender = mxSession.myUserId;
-    event.wireContent = content;
+    if (threadId)
+    {
+        NSMutableDictionary *newContent = [NSMutableDictionary dictionaryWithDictionary:content];
+        newContent[@"m.relates_to"] = @{
+            @"rel_type": MXEventRelationTypeThread,
+            @"event_id": threadId
+        };
+        event.wireContent = newContent;
+    }
+    else
+    {
+        event.wireContent = content;
+    }
     
     return event;
 }
 
-- (MXEvent*)fakeRoomMessageEventWithEventId:(NSString*)eventId andContent:(NSDictionary<NSString*, id>*)content
+- (MXEvent*)fakeRoomMessageEventWithEventId:(NSString*)eventId andContent:(NSDictionary<NSString*, id>*)content threadId:(NSString*)threadId
 {
-    return [self fakeEventWithEventId:eventId eventType:kMXEventTypeStringRoomMessage andContent:content];
+    return [self fakeEventWithEventId:eventId eventType:kMXEventTypeStringRoomMessage andContent:content threadId:threadId];
 }
 
 #pragma mark - Outgoing events management
@@ -2565,10 +2577,13 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
 
 #pragma mark - Local echo handling
 
-- (MXEvent*)addLocalEchoForMessageContent:(NSDictionary*)msgContent eventType:(MXEventTypeString)eventType withState:(MXEventSentState)eventState
+- (MXEvent*)addLocalEchoForMessageContent:(NSDictionary*)msgContent
+                                eventType:(MXEventTypeString)eventType
+                                withState:(MXEventSentState)eventState
+                                 threadId:(NSString*)threadId
 {
     // Create a room message event.
-    MXEvent *localEcho = [self fakeEventWithEventId:nil eventType:eventType andContent:msgContent];
+    MXEvent *localEcho = [self fakeEventWithEventId:nil eventType:eventType andContent:msgContent threadId:threadId];
     localEcho.sentState = eventState;
 
     // Register the echo as pending for its future deletion

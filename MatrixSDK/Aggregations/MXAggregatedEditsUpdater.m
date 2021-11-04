@@ -174,7 +174,7 @@
         if (localEchoBlock)
         {
             // Build a temporary local echo
-            localEcho = [room fakeEventWithEventId:nil eventType:kMXEventTypeStringRoomMessage andContent:content];
+            localEcho = [room fakeEventWithEventId:nil eventType:kMXEventTypeStringRoomMessage andContent:content threadId:nil];
             localEcho.sentState = event.sentState;
         }
     }

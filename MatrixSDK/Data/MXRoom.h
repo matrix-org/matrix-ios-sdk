@@ -1005,18 +1005,20 @@ FOUNDATION_EXPORT NSInteger const kMXRoomAlreadyJoinedErrorCode;
  @param eventId the event id. A globally unique string with kMXEventLocalEventIdPrefix prefix is defined when this param is nil.
  @param eventType the type of the event. @see MXEventType.
  @param content the event content.
+ @param threadId the id of the thread to use.
  @return the created event.
  */
-- (MXEvent*)fakeEventWithEventId:(NSString*)eventId eventType:(MXEventTypeString)eventType andContent:(NSDictionary<NSString*, id>*)content;
+- (MXEvent*)fakeEventWithEventId:(NSString*)eventId eventType:(MXEventTypeString)eventType andContent:(NSDictionary<NSString*, id>*)content threadId:(NSString*)threadId;
 
 /**
  Create a temporary message event for the room.
 
  @param eventId the event id. A globally unique string with kMXEventLocalEventIdPrefix prefix is defined when this param is nil.
  @param content the event content.
+ @param threadId the id of the thread to use.
  @return the created event.
  */
-- (MXEvent*)fakeRoomMessageEventWithEventId:(NSString*)eventId andContent:(NSDictionary<NSString*, id>*)content;
+- (MXEvent*)fakeRoomMessageEventWithEventId:(NSString*)eventId andContent:(NSDictionary<NSString*, id>*)content threadId:(NSString*)threadId;
 
 #pragma mark - Outgoing events management
 /**

@@ -233,7 +233,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
         
         // Build the corresponding the event
         MXRoom *room = [self.crypto.mxSession roomWithRoomId:roomId];
-        MXEvent *event = [room fakeRoomMessageEventWithEventId:eventId andContent:request.JSONDictionary];
+        MXEvent *event = [room fakeRoomMessageEventWithEventId:eventId andContent:request.JSONDictionary threadId:nil];
         
         MXKeyVerificationRequest *request = [self verificationRequestInDMEvent:event];
         [request updateState:MXKeyVerificationRequestStatePending notifiy:YES];
