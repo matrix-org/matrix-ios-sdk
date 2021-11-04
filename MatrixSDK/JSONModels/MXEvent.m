@@ -330,7 +330,7 @@ NSString *const kMXMessageContentKeyExtensibleFileMimeType   = @"mimetype";
 - (MXEventContentRelatesTo *)relatesTo
 {
     MXEventContentRelatesTo *relatesTo;
-    if (self.content[@"m.relates_to"])
+    if (self.wireContent[@"m.relates_to"])
     {
         MXJSONModelSetMXJSONModel(relatesTo, MXEventContentRelatesTo, self.content[@"m.relates_to"])
     }
