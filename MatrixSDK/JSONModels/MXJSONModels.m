@@ -275,6 +275,21 @@ NSString *const kMXLoginIdentifierTypePhone = @"m.id.phone";
 
 @end
 
+@implementation MXUpgradeRoomResponse
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXUpgradeRoomResponse *upgradeRoomResponse = [[MXUpgradeRoomResponse alloc] init];
+    if (upgradeRoomResponse)
+    {
+        MXJSONModelSetString(upgradeRoomResponse.replacementRoomId, JSONDictionary[@"replacement_room"]);
+    }
+
+    return upgradeRoomResponse;
+}
+
+@end
+
 @implementation MXPaginationResponse
 
 + (id)modelFromJSON:(NSDictionary *)JSONDictionary

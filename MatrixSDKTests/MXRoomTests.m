@@ -795,6 +795,32 @@
     }];
 }
 
+- (void)testUpgradeRoom
+{
+    [matrixSDKTestsData doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
+        [room state:^(MXRoomState *roomState) {
+            
+            // Given a room of the default version
+            MXEvent *event = [roomState stateEventsWithType:kMXEventTypeStringRoomCreate].firstObject;
+            MXRoomCreateContent *createContent = [MXRoomCreateContent modelFromJSON:event.content];
+            NSUInteger version = [createContent.roomVersion integerValue];
+            
+            // When upgrading the room to the next version
+            NSString *newVersion = [NSString stringWithFormat:@"%ld", version + 1];
+            [mxSession.matrixRestClient upgradeRoom:room.roomId toVersion:newVersion success:^(MXUpgradeRoomResponse *upgradeResponse) {
+                
+                // Then a replacement room should be created
+                XCTAssertNotNil(upgradeResponse.replacementRoomId);
+                [expectation fulfill];
+                
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+        }];
+    }];
+}
+
 @end
 
 #pragma clang diagnostic pop

@@ -276,6 +276,18 @@ FOUNDATION_EXPORT NSString *const kMXLoginIdentifierTypePhone;
 @end
 
 /**
+ `MXUpgradeRoomResponse` represents the response of the roomUpgrade request.
+ */
+@interface MXUpgradeRoomResponse : MXJSONModel
+        
+    /**
+     The room id of the upgraded room.
+     */
+    @property (nonatomic) NSString *replacementRoomId;
+        
+@end
+
+/**
  `MXPaginationResponse` represents a response from an api that supports pagination.
  */
 @interface MXPaginationResponse : MXJSONModel

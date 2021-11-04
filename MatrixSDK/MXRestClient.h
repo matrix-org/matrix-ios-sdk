@@ -1499,6 +1499,21 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
                             success:(void (^)(MXPublicRoom *room))success
                             failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
+/**
+ Upgrade a room to a new version
+ 
+ @param roomId the id of the room to upgrade
+ @param newVersion the version to upgrade the room to
+ @param success A block object called when the operation succeeds. It provides the upgrade response with the id of the replacement room.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)upgradeRoom:(NSString *)roomId
+                      toVersion:(NSString *)newVersion
+                        success:(void (^)(MXUpgradeRoomResponse *upgradeResponse))success
+                        failure:(void (^)(NSError *error))failure;
+
 #pragma mark - Room tags operations
 /**
  List the tags of a room.

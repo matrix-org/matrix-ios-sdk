@@ -1480,6 +1480,34 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
     }];
 }
 
+- (void)testTombstoneRoomIsHidden
+{
+    [matrixSDKTestsData doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
+        [room state:^(MXRoomState *roomState) {
+            MXEvent *event = [roomState stateEventsWithType:kMXEventTypeStringRoomCreate].firstObject;
+            MXRoomCreateContent *createContent = [MXRoomCreateContent modelFromJSON:event.content];
+            NSUInteger version = [createContent.roomVersion integerValue];
+            
+            // Given a non tombstoned room
+            XCTAssertNil(roomState.tombStoneContent);
+            XCTAssertFalse(room.summary.hiddenFromUser);
+            
+            // When upgrading the room to the next version
+            NSString *newVersion = [NSString stringWithFormat:@"%ld", version + 1];
+            [mxSession.matrixRestClient upgradeRoom:room.roomId toVersion:newVersion success:^(MXUpgradeRoomResponse *upgradeResponse) {
+                
+                // Then the original room should be hidden from the user
+                XCTAssertTrue(room.summary.hiddenFromUser);
+                [expectation fulfill];
+                
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+        }];
+    }];
+}
+
 @end
 
 #pragma clang diagnostic pop
