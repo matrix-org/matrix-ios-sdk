@@ -20,6 +20,11 @@
 
 #import "MXJSONModel.h"
 
+//  TODO: Replace when the MSC merged
+//  https://github.com/matrix-org/matrix-doc/pull/3440
+NSString *const kMXRoomEventFilterKeyRelationTypes = @"io.element.relation_types";
+NSString *const kMXRoomEventFilterKeyRelationSenders = @"io.element.relation_senders";
+
 @implementation MXRoomEventFilter
 
 - (void)setContainsURL:(BOOL)containsURL
@@ -138,6 +143,29 @@
     return lazyLoadMembers;
 }
 
+- (void)setRelationTypes:(NSArray<NSString *> *)relationTypes
+{
+    dictionary[kMXRoomEventFilterKeyRelationTypes] = relationTypes;
+}
+
+- (NSArray<NSString *> *)relationTypes
+{
+    NSArray<NSString *> *result;
+    MXJSONModelSetArray(result, dictionary[kMXRoomEventFilterKeyRelationTypes]);
+    return result;
+}
+
+- (void)setRelationSenders:(NSArray<NSString *> *)relationSenders
+{
+    dictionary[kMXRoomEventFilterKeyRelationSenders] = relationSenders;
+}
+
+- (NSArray<NSString *> *)relationSenders
+{
+    NSArray<NSString *> *result;
+    MXJSONModelSetArray(result, dictionary[kMXRoomEventFilterKeyRelationSenders]);
+    return result;
+}
 
 #pragma mark - NSCopying
 
