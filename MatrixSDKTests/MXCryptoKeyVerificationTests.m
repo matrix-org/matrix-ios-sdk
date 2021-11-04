@@ -909,7 +909,6 @@
         __block NSString *requestId;
 
         MXCredentials *alice = aliceSession.matrixRestClient.credentials;
-        MXCredentials *bob = bobSession.matrixRestClient.credentials;
 
         // - Bob requests a verification of Alice in this Room
         [bobSession.crypto.keyVerificationManager requestVerificationByDMWithUserId:alice.userId

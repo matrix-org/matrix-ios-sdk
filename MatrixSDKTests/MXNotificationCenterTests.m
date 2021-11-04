@@ -85,7 +85,7 @@
 
         }];
 
-        [room sendTextMessage:@"This message should not generate a notification" success:^(NSString *eventId) {
+        [room sendTextMessage:@"This message should not generate a notification" threadId:nil success:^(NSString *eventId) {
 
             // Wait to check that no notification happens
             dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 2 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
@@ -157,7 +157,7 @@
                     [expectation fulfill];
                 }];
 
-                [aliceRestClient sendTextMessageToRoom:roomId text:@"a message" success:^(NSString *eventId) {
+                [aliceRestClient sendTextMessageToRoom:roomId threadId:nil text:@"a message" success:^(NSString *eventId) {
 
                 } failure:^(NSError *error) {
                     XCTFail(@"Cannot set up intial test conditions - error: %@", error);
@@ -255,7 +255,7 @@
                 }];
 
                 MXRoom *roomBobSide = [bobSession roomWithRoomId:roomId];
-                [roomBobSide sendTextMessage:messageFromBob success:^(NSString *eventId) {
+                [roomBobSide sendTextMessage:messageFromBob threadId:nil success:^(NSString *eventId) {
 
                 } failure:^(NSError *error) {
                     XCTFail(@"Cannot set up intial test conditions - error: %@", error);
@@ -297,7 +297,7 @@
             [expectation fulfill];
         }];
 
-        [aliceRestClient sendTextMessageToRoom:roomId text:messageFromAlice success:^(NSString *eventId) {
+        [aliceRestClient sendTextMessageToRoom:roomId threadId:nil text:messageFromAlice success:^(NSString *eventId) {
 
         } failure:^(NSError *error) {
             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
@@ -323,7 +323,7 @@
         [bobSession.notificationCenter removeListener:listener];
 
 
-        [aliceRestClient sendTextMessageToRoom:roomId text:messageFromAlice success:^(NSString *eventId) {
+        [aliceRestClient sendTextMessageToRoom:roomId threadId:nil text:messageFromAlice success:^(NSString *eventId) {
 
             // Wait to check that no notification happens
             dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 2 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
@@ -377,7 +377,7 @@
                 }];
 
                 MXRoom *roomBobSide = [bobSession roomWithRoomId:roomId];
-                [roomBobSide sendTextMessage:messageFromBob success:^(NSString *eventId) {
+                [roomBobSide sendTextMessage:messageFromBob threadId:nil success:^(NSString *eventId) {
 
                 } failure:^(NSError *error) {
                     XCTFail(@"Cannot set up intial test conditions - error: %@", error);

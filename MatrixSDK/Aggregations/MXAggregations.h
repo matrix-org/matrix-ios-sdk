@@ -49,7 +49,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)addReaction:(NSString*)reaction
            forEvent:(NSString*)eventId
              inRoom:(NSString*)roomId
-           threadId:(NSString*)threadId
+           threadId:(nullable NSString*)threadId
             success:(void (^)(void))success
             failure:(void (^)(NSError *error))failure;
 

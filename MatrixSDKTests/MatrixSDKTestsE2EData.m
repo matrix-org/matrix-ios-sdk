@@ -219,15 +219,15 @@
 
 
         // Send messages in expected order
-        [roomFromAlicePOV sendTextMessage:messagesFromAlice[0] success:^(NSString *eventId) {
+        [roomFromAlicePOV sendTextMessage:messagesFromAlice[0] threadId:nil success:^(NSString *eventId) {
 
-            [roomFromBobPOV sendTextMessage:messagesFromBob[0] success:^(NSString *eventId) {
+            [roomFromBobPOV sendTextMessage:messagesFromBob[0] threadId:nil success:^(NSString *eventId) {
 
-                [roomFromBobPOV sendTextMessage:messagesFromBob[1] success:^(NSString *eventId) {
+                [roomFromBobPOV sendTextMessage:messagesFromBob[1] threadId:nil success:^(NSString *eventId) {
 
-                    [roomFromBobPOV sendTextMessage:messagesFromBob[2] success:^(NSString *eventId) {
+                    [roomFromBobPOV sendTextMessage:messagesFromBob[2] threadId:nil success:^(NSString *eventId) {
 
-                        [roomFromAlicePOV sendTextMessage:messagesFromAlice[1] success:nil failure:nil];
+                        [roomFromAlicePOV sendTextMessage:messagesFromAlice[1] threadId:nil success:nil failure:nil];
 
                     } failure:nil];
 
@@ -345,7 +345,7 @@
          [aliceSession1.crypto.crossSigning setupWithPassword:MXTESTS_ALICE_PWD success:^{
              [bobSession.crypto.crossSigning setupWithPassword:MXTESTS_BOB_PWD success:^{
                  
-                 [self loginUserOnANewDevice:self credentials:aliceSession1.matrixRestClient.credentials withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *aliceSession2) {
+                 [self loginUserOnANewDevice:testCase credentials:aliceSession1.matrixRestClient.credentials withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *aliceSession2) {
                      
                      NSString *aliceUserId = aliceSession1.matrixRestClient.credentials.userId;
                      NSString *bobUserId = bobSession.matrixRestClient.credentials.userId;

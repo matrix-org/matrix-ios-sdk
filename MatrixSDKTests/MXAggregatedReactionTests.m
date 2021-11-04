@@ -56,9 +56,9 @@
     [matrixSDKTestsData doTestWithAliceAndBobInARoom:self aliceStore:[[MXMemoryStore alloc] init] bobStore:[[MXMemoryStore alloc] init] readyToTest:^(MXSession *mxSession, MXSession *otherSession, NSString *roomId, XCTestExpectation *expectation) {
 
         MXRoom *room = [mxSession roomWithRoomId:roomId];
-        [room sendTextMessage:@"Hello" success:^(NSString *eventId) {
+        [room sendTextMessage:@"Hello" threadId:nil success:^(NSString *eventId) {
 
-            [mxSession.aggregations addReaction:@"👍" forEvent:eventId inRoom:room.roomId success:^() {
+            [mxSession.aggregations addReaction:@"👍" forEvent:eventId inRoom:room.roomId threadId:nil success:^() {
 
                 // TODO: sendReaction should return only when the actual reaction event comes back the sync
                 dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
@@ -89,7 +89,7 @@
         [matrixSDKTestsData for:mxSession.matrixRestClient andRoom:room.roomId sendMessages:10 testCase:self success:^{
 
             // - Add a reaction in the gap
-            [otherSession.aggregations addReaction:@"🙂" forEvent:eventId inRoom:room.roomId success:^() {
+            [otherSession.aggregations addReaction:@"🙂" forEvent:eventId inRoom:room.roomId threadId:nil success:^() {
 
                 [matrixSDKTestsData for:mxSession.matrixRestClient andRoom:room.roomId sendMessages:20 testCase:self success:^{
 
@@ -152,10 +152,10 @@
     [matrixSDKTestsData doMXSessionTestWithBobAndARoom:self andStore:[[MXMemoryStore alloc] init] readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
 
         // - Send a message
-        [room sendTextMessage:@"Hello" success:^(NSString *eventId) {
+        [room sendTextMessage:@"Hello" threadId:nil success:^(NSString *eventId) {
 
             // - React on it
-            [mxSession.aggregations addReaction:@"👍" forEvent:eventId inRoom:room.roomId success:^() {
+            [mxSession.aggregations addReaction:@"👍" forEvent:eventId inRoom:room.roomId threadId:nil success:^() {
                 XCTAssertNotNil(eventId);
             } failure:^(NSError *error) {
                 XCTFail(@"The operation should not fail - NSError: %@", error);
@@ -311,7 +311,7 @@
         }];
 
         // - Add one more reaction
-        [mxSession.aggregations addReaction:@"😄" forEvent:eventId inRoom:room.roomId success:^() {
+        [mxSession.aggregations addReaction:@"😄" forEvent:eventId inRoom:room.roomId threadId:nil success:^() {
         } failure:^(NSError *error) {
             XCTFail(@"The operation should not fail - NSError: %@", error);
             [expectation fulfill];
@@ -430,7 +430,7 @@
     [self createScenario:^(MXSession *mxSession, MXRoom *room, MXSession *otherSession, XCTestExpectation *expectation, NSString *eventId) {
 
         // - Make another user react
-        [otherSession.aggregations addReaction:@"👍" forEvent:eventId inRoom:room.roomId success:^{
+        [otherSession.aggregations addReaction:@"👍" forEvent:eventId inRoom:room.roomId threadId:nil success:^{
         } failure:^(NSError *error) {
             XCTFail(@"The operation should not fail - NSError: %@", error);
             [expectation fulfill];
@@ -482,10 +482,10 @@
     [matrixSDKTestsData doMXSessionTestWithBobAndARoom:self andStore:[[MXMemoryStore alloc] init] readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
 
         // - Send a message
-        [room sendTextMessage:@"Hello" success:^(NSString *eventId) {
+        [room sendTextMessage:@"Hello" threadId:nil success:^(NSString *eventId) {
 
             // - React on it
-            [mxSession.aggregations addReaction:@"👍" forEvent:eventId inRoom:room.roomId success:^() {
+            [mxSession.aggregations addReaction:@"👍" forEvent:eventId inRoom:room.roomId threadId:nil success:^() {
             } failure:^(NSError *error) {
                 XCTFail(@"The operation should not fail - NSError: %@", error);
                 [expectation fulfill];
@@ -570,7 +570,7 @@
             XCTFail(@"The operation should not fail - NSError: %@", error);
             [expectation fulfill];
         }];
-        [mxSession.aggregations addReaction:@"👍" forEvent:eventId inRoom:room.roomId success:^() {
+        [mxSession.aggregations addReaction:@"👍" forEvent:eventId inRoom:room.roomId threadId:nil success:^() {
         } failure:^(NSError *error) {
             XCTFail(@"The operation should not fail - NSError: %@", error);
             [expectation fulfill];
@@ -580,7 +580,7 @@
             XCTFail(@"The operation should not fail - NSError: %@", error);
             [expectation fulfill];
         }];
-        [mxSession.aggregations addReaction:@"👍" forEvent:eventId inRoom:room.roomId success:^() {
+        [mxSession.aggregations addReaction:@"👍" forEvent:eventId inRoom:room.roomId threadId:nil success:^() {
         } failure:^(NSError *error) {
             XCTFail(@"The operation should not fail - NSError: %@", error);
             [expectation fulfill];
@@ -596,7 +596,7 @@
             XCTFail(@"The operation should not fail - NSError: %@", error);
             [expectation fulfill];
         }];
-        [mxSession.aggregations addReaction:@"👍" forEvent:eventId inRoom:room.roomId success:^() {
+        [mxSession.aggregations addReaction:@"👍" forEvent:eventId inRoom:room.roomId threadId:nil success:^() {
         } failure:^(NSError *error) {
             XCTFail(@"The operation should not fail - NSError: %@", error);
             [expectation fulfill];

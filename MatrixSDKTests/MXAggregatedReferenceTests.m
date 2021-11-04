@@ -61,7 +61,7 @@ static NSString* const kThreadedMessage1Text = @"Morning!";
 {
     [matrixSDKTestsData doMXSessionTestWithBobAndARoom:self andStore:[[MXMemoryStore alloc] init] readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
 
-        [room sendTextMessage:kOriginalMessageText success:^(NSString *eventId) {
+        [room sendTextMessage:kOriginalMessageText threadId:nil success:^(NSString *eventId) {
 
             NSDictionary *eventContent = @{
                                            @"msgtype": kMXMessageTypeText,
@@ -72,7 +72,7 @@ static NSString* const kThreadedMessage1Text = @"Morning!";
                                               }
                                            };
 
-            [room sendEventOfType:kMXEventTypeStringRoomMessage content:eventContent localEcho:nil success:^(NSString *referenceEventId) {
+            [room sendEventOfType:kMXEventTypeStringRoomMessage content:eventContent threadId:nil localEcho:nil success:^(NSString *referenceEventId) {
 
                 dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
                     readyToTest(mxSession, room, expectation, eventId, referenceEventId);
@@ -235,7 +235,7 @@ static NSString* const kThreadedMessage1Text = @"Morning!";
 
         MXRoom *room = [mxSession roomWithRoomId:roomId];
 
-        [room sendTextMessage:kOriginalMessageText success:^(NSString *eventId) {
+        [room sendTextMessage:kOriginalMessageText threadId:nil success:^(NSString *eventId) {
 
             NSDictionary *eventContent = @{
                                            @"msgtype": kMXMessageTypeText,
@@ -246,7 +246,7 @@ static NSString* const kThreadedMessage1Text = @"Morning!";
                                                    }
                                            };
 
-            [room sendEventOfType:kMXEventTypeStringRoomMessage content:eventContent localEcho:nil success:^(NSString *referenceEventId) {
+            [room sendEventOfType:kMXEventTypeStringRoomMessage content:eventContent threadId:nil localEcho:nil success:^(NSString *referenceEventId) {
 
                 dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
                     readyToTest(mxSession, room, expectation, eventId, referenceEventId);

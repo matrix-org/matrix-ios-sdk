@@ -435,7 +435,7 @@
             XCTAssertNil(mxSession.myUser);
 
             // Do some activity to check nothing comes through mxSession, room and bob
-            [bobRestClient sendTextMessageToRoom:roomId text:@"A message" success:^(NSString *eventId) {
+            [bobRestClient sendTextMessageToRoom:roomId threadId:nil text:@"A message" success:^(NSString *eventId) {
 
                 [expectation performSelector:@selector(fulfill) withObject:nil afterDelay:5];
 
@@ -539,7 +539,7 @@
 
                 // Do some activity while MXSession is paused
                 // We should not receive events while paused
-                [bobRestClient sendTextMessageToRoom:roomId text:@"A message" success:^(NSString *eventId) {
+                [bobRestClient sendTextMessageToRoom:roomId threadId:nil text:@"A message" success:^(NSString *eventId) {
 
                 } failure:^(NSError *error) {
                     XCTFail(@"Cannot set up intial test conditions - error: %@", error);
@@ -729,7 +729,7 @@
             [expectation fulfill];
         }];
 
-        [room sendTextMessage:@"Hello" success:nil failure:^(NSError *error) {
+        [room sendTextMessage:@"Hello" threadId:nil success:nil failure:^(NSError *error) {
             XCTFail(@"The request should not fail - NSError: %@", error);
             [expectation fulfill];
         }];

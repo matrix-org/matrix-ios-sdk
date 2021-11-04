@@ -335,7 +335,7 @@
                                     }];
                                     
                                     // - Bob sends a message
-                                    [roomFromBobPOV sendTextMessage:messageFromBob success:nil failure:^(NSError *error) {
+                                    [roomFromBobPOV sendTextMessage:messageFromBob threadId:nil success:nil failure:^(NSError *error) {
                                         XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                                         [expectation fulfill];
                                     }];
@@ -388,7 +388,7 @@
                         // - Alice sends a message
                         NSString *message = @"Hello I'm Alice!";
                         MXRoom *roomFromAlicePOV = [aliceSession roomWithRoomId:roomId];
-                        [roomFromAlicePOV sendTextMessage:message success:^(NSString *eventId) {
+                        [roomFromAlicePOV sendTextMessage:message threadId:nil success:^(NSString *eventId) {
                             
                             // - Bob logs in on a new device
                             [self.matrixSDKTestsData loginUserOnANewDevice:self credentials:bobCredentials withPassword:MXTESTS_BOB_PWD sessionToLogout:nil newSessionStore:nil startNewSession:NO e2e:YES onComplete:^(MXSession *bobSession2) {

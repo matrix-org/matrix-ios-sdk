@@ -80,7 +80,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
 
             // - Alice sends a message
             var localEcho: MXEvent?
-            room.sendTextMessage(Constants.messageText, localEcho: &localEcho) { (response) in
+            room.sendTextMessage(Constants.messageText, threadId: nil, localEcho: &localEcho) { (response) in
                 switch response {
                 case .success(let eventId):
 
@@ -167,7 +167,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
             
             // - Alice sends a message
             var localEcho: MXEvent?
-            room.sendTextMessage(Constants.messageText, localEcho: &localEcho) { (response) in
+            room.sendTextMessage(Constants.messageText, threadId: nil, localEcho: &localEcho) { (response) in
                 switch response {
                 case .success(let eventId):
                     
@@ -269,7 +269,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                 
                 // - Alice sends a message
                 var localEcho: MXEvent?
-                room.sendTextMessage(Constants.messageText, localEcho: &localEcho) { (response) in
+                room.sendTextMessage(Constants.messageText, threadId: nil, localEcho: &localEcho) { (response) in
                     switch response {
                         case .success(let eventId):
                             
@@ -368,7 +368,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
             bobSession?.close()
             
             var localEcho: MXEvent?
-            room.sendTextMessage(Constants.messageText, localEcho: &localEcho) { (response) in
+            room.sendTextMessage(Constants.messageText, threadId: nil, localEcho: &localEcho) { (response) in
                 switch response {
                 case .success(let eventId):
                     
@@ -470,7 +470,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                             
                             //  then send a single message
                             var localEcho: MXEvent?
-                            room.sendTextMessage(Constants.messageText, localEcho: &localEcho) { (response2) in
+                            room.sendTextMessage(Constants.messageText, threadId: nil, localEcho: &localEcho) { (response2) in
                                 switch response2 {
                                 case .success(let eventId):
                                     guard let eventId = eventId else {
@@ -545,7 +545,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
             
             //  send a single message first
             var localEcho: MXEvent?
-            room.sendTextMessage(Constants.messageText, localEcho: &localEcho) { (response2) in
+            room.sendTextMessage(Constants.messageText, threadId: nil, localEcho: &localEcho) { (response2) in
                 switch response2 {
                 case .success(let eventId):
                     guard let eventId = eventId else {
@@ -650,7 +650,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
             
             // - Alice sends a message
             var localEcho: MXEvent?
-            room.sendTextMessage(Constants.messageText, localEcho: &localEcho) { (response) in
+            room.sendTextMessage(Constants.messageText, threadId: nil, localEcho: &localEcho) { (response) in
                 switch response {
                     case .success(let eventId):
                         
@@ -669,7 +669,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                             let syncResponseStoreSyncToken = syncResponseStoreManager.syncToken()
                             
                             // - Alice sends a message. This make bob MXSession update its sync token
-                            room.sendTextMessage(Constants.messageText, localEcho: &localEcho) { _ in }
+                            room.sendTextMessage(Constants.messageText, threadId: nil, localEcho: &localEcho) { _ in }
                             
                             // Wait a bit that bob MXSession updates its sync token
                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
@@ -722,7 +722,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
             
             // - Alice sends a message
             var localEcho: MXEvent?
-            room.sendTextMessage(Constants.messageText, localEcho: &localEcho) { (response) in
+            room.sendTextMessage(Constants.messageText, threadId: nil, localEcho: &localEcho) { (response) in
                 switch response {
                     case .success(let eventId):
                         
@@ -1148,7 +1148,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                 
                 // - Alice sends a message
                 var localEcho: MXEvent?
-                room.sendTextMessage(Constants.messageText, localEcho: &localEcho) { (response) in
+                room.sendTextMessage(Constants.messageText, threadId: nil, localEcho: &localEcho) { (response) in
                     guard let eventId1 = response.value as? String else {
                         XCTFail("Cannot set up initial test conditions")
                         expectation.fulfill()
@@ -1162,7 +1162,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                         bobSession.setAccountData(accountDataTestEvent2.content, forType: accountDataTestEvent2.type) {
                             
                             // - Alice sends another message
-                            room.sendTextMessage(Constants.messageText, localEcho: &localEcho) { (response) in
+                            room.sendTextMessage(Constants.messageText, threadId: nil, localEcho: &localEcho) { (response) in
                                 guard let eventId2 = response.value as? String else {
                                     XCTFail("Cannot set up initial test conditions")
                                     expectation.fulfill()
@@ -1452,7 +1452,7 @@ private extension MXRoom {
         for message in messages {
             dispatchGroup.enter()
             var localEcho: MXEvent?
-            sendTextMessage(message, localEcho: &localEcho) { (response) in
+            sendTextMessage(message, threadId: nil, localEcho: &localEcho) { (response) in
                 switch response {
                 case .success(let eventId):
                     if let eventId = eventId {
