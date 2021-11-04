@@ -30,6 +30,7 @@
 #import "MXEventsEnumeratorOnArray.h"
 
 #import "MXRoomSync.h"
+#import "MatrixSDKSwiftHeader.h"
 
 NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 
@@ -710,6 +711,8 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     // aggregated data sent by the server
 
     [room.mxSession.aggregations handleOriginalDataOfEvent:event];
+
+    [room.mxSession.threadingService handleEvent:event];
 
     // Notify listeners
     [self notifyListeners:event direction:direction];

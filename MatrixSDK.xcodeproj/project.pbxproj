@@ -1545,6 +1545,8 @@
 		ECBF658826DE3DF800AA3A99 /* MXFileRoomOutgoingMessagesStore.m in Sources */ = {isa = PBXBuildFile; fileRef = ECBF658426DE3DF800AA3A99 /* MXFileRoomOutgoingMessagesStore.m */; };
 		ECCA02BB273485B200B6F34F /* MXThreadingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECCA02BA273485B200B6F34F /* MXThreadingService.swift */; };
 		ECCA02BC273485B200B6F34F /* MXThreadingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECCA02BA273485B200B6F34F /* MXThreadingService.swift */; };
+		ECCA02BE27348FE300B6F34F /* MXThread.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECCA02BD27348FE300B6F34F /* MXThread.swift */; };
+		ECCA02BF27348FE300B6F34F /* MXThread.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECCA02BD27348FE300B6F34F /* MXThread.swift */; };
 		ECD2897726E8ED0900F268CF /* MXRoomListDataFetchOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECD2897626E8ED0900F268CF /* MXRoomListDataFetchOptions.swift */; };
 		ECD2897926E8EE9300F268CF /* MXRoomListDataSortOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECD2897826E8EE9300F268CF /* MXRoomListDataSortOptions.swift */; };
 		ECD2897D26E8F06F00F268CF /* MXStoreRoomListDataFetcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECD2897C26E8F06F00F268CF /* MXStoreRoomListDataFetcher.swift */; };
@@ -2449,6 +2451,7 @@
 		ECBF658326DE3DF800AA3A99 /* MXFileRoomOutgoingMessagesStore.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXFileRoomOutgoingMessagesStore.h; sourceTree = "<group>"; };
 		ECBF658426DE3DF800AA3A99 /* MXFileRoomOutgoingMessagesStore.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXFileRoomOutgoingMessagesStore.m; sourceTree = "<group>"; };
 		ECCA02BA273485B200B6F34F /* MXThreadingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXThreadingService.swift; sourceTree = "<group>"; };
+		ECCA02BD27348FE300B6F34F /* MXThread.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXThread.swift; sourceTree = "<group>"; };
 		ECD2897226E8EC3D00F268CF /* MXRoomListDataManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXRoomListDataManager.swift; sourceTree = "<group>"; };
 		ECD2897626E8ED0900F268CF /* MXRoomListDataFetchOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXRoomListDataFetchOptions.swift; sourceTree = "<group>"; };
 		ECD2897826E8EE9300F268CF /* MXRoomListDataSortOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXRoomListDataSortOptions.swift; sourceTree = "<group>"; };
@@ -4299,6 +4302,7 @@
 			isa = PBXGroup;
 			children = (
 				ECCA02BA273485B200B6F34F /* MXThreadingService.swift */,
+				ECCA02BD27348FE300B6F34F /* MXThread.swift */,
 			);
 			path = Threads;
 			sourceTree = "<group>";
@@ -5665,6 +5669,7 @@
 				321CFDF92254E721004D31DF /* MXTransactionCancelCode.m in Sources */,
 				B19A30C22404268600FB6F35 /* MXVerifyingAnotherUserQRCodeData.m in Sources */,
 				EC8A53BD25B1BC77004E0802 /* MXCallRejectEventContent.m in Sources */,
+				ECCA02BE27348FE300B6F34F /* MXThread.swift in Sources */,
 				EC1848C72686174E00865E16 /* MXiOSAudioOutputRouteType.swift in Sources */,
 				3220093919EFA4C9008DE41D /* MXEventListener.m in Sources */,
 				C6481AF21F1678A9000DB8A0 /* MXSessionEventListener.swift in Sources */,
@@ -6127,6 +6132,7 @@
 				EC60ED60265CFC2C00B39A4E /* MXSyncResponse.m in Sources */,
 				3A108AB825812995005EEBE9 /* MXKeyProvider.m in Sources */,
 				B14EF2822397E90400758AF0 /* MXDeviceList.m in Sources */,
+				ECCA02BF27348FE300B6F34F /* MXThread.swift in Sources */,
 				320B3937239FA56900BE2C06 /* MXKeyVerificationByDMRequest.m in Sources */,
 				B14EF2832397E90400758AF0 /* MXRoomCreateContent.m in Sources */,
 				EC8A53B025B1BC77004E0802 /* MXCallAnswerEventContent.m in Sources */,
