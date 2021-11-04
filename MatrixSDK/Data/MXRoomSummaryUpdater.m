@@ -320,7 +320,7 @@
         {
             obsoleteRoomSummary.hiddenFromUser = YES;
             [obsoleteRoomSummary save:YES];
-        }                
+        }
     }
 }
 
