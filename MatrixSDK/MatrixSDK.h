@@ -173,3 +173,5 @@ FOUNDATION_EXPORT NSString *MatrixSDKVersion;
 #import "MXInvitedGroupSync.h"
 #import "MXGroupSyncProfile.h"
 #import "MXDehydrationService.h"
+
+#import "MatrixSDKSwiftHeader.h"
