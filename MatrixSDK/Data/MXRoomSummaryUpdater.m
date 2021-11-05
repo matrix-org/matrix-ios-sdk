@@ -116,7 +116,7 @@
         [summary updateLastMessage:[[MXRoomLastMessage alloc] initWithEvent:event]];
         updated = YES;
     }
-    else if ([event.type isEqualToString:kRoomIsVirtualJSONKey])
+    else if ([event.type isEqualToString:kRoomIsVirtualJSONKey] && !summary.hiddenFromUser)
     {
         MXVirtualRoomInfo *virtualRoomInfo = [MXVirtualRoomInfo modelFromJSON:event.content];
         if (virtualRoomInfo.isVirtual)
@@ -216,7 +216,11 @@
                 
                 summary.roomTypeString = roomTypeString;
                 summary.roomType = [self.roomTypeMapper roomTypeFrom:roomTypeString];
-                summary.hiddenFromUser = [self shouldHideRoomWithRoomTypeString:roomTypeString];
+                                
+                if (!summary.hiddenFromUser && [self shouldHideRoomWithRoomTypeString:roomTypeString])
+                {
+                    summary.hiddenFromUser = YES;
+                }
                 
                 updated = YES;
                 [self checkRoomCreateStateEventPredecessorAndUpdateObsoleteRoomSummaryIfNeededWithCreateContent:createContent summary:summary session:session roomState:roomState];
@@ -275,6 +279,12 @@
 // in this case it should be processed when checking the room replacement in `checkRoomCreateStateEventPredecessorAndUpdateObsoleteRoomSummaryIfNeeded:session:room:`.
 - (BOOL)checkForTombStoneStateEventAndUpdateRoomSummaryIfNeeded:(MXRoomSummary*)summary session:(MXSession*)session roomState:(MXRoomState*)roomState
 {
+    // If room is already hidden, do not check if we should hide it
+    if (summary.hiddenFromUser)
+    {
+        return NO;
+    }
+    
     BOOL updated = NO;
     
     MXRoomTombStoneContent *roomTombStoneContent = roomState.tombStoneContent;
@@ -285,8 +295,13 @@
         
         if (replacementRoomSummary)
         {
-            summary.hiddenFromUser = replacementRoomSummary.membership == MXMembershipJoin;
-            updated = YES;
+            BOOL isReplacementRoomJoined = replacementRoomSummary.membership == MXMembershipJoin;
+                        
+            if (isReplacementRoomJoined)
+            {
+                summary.hiddenFromUser = YES;
+                updated = YES;                
+            }
         }
     }
     
@@ -301,12 +316,13 @@
     if (createContent.roomPredecessorInfo)
     {
         MXRoomSummary *obsoleteRoomSummary = [session roomSummaryWithRoomId:createContent.roomPredecessorInfo.roomId];
-     
-        BOOL obsoleteRoomHiddenFromUserFormerValue = obsoleteRoomSummary.hiddenFromUser;
-        obsoleteRoomSummary.hiddenFromUser = summary.membership == MXMembershipJoin; // Hide room predecessor if user joined the new one
         
-        if (obsoleteRoomHiddenFromUserFormerValue != obsoleteRoomSummary.hiddenFromUser)
+        BOOL isRoomJoined = summary.membership == MXMembershipJoin; 
+        
+        // Hide room predecessor if user joined the new one
+        if (isRoomJoined && obsoleteRoomSummary.hiddenFromUser == NO)
         {
+            obsoleteRoomSummary.hiddenFromUser = YES;
             [obsoleteRoomSummary save:YES];
         }
     }
@@ -314,6 +330,12 @@
 
 - (void)checkRoomIsVirtualWithCreateEvent:(MXEvent*)createEvent summary:(MXRoomSummary*)summary session:(MXSession *)session
 {
+    // If room is already hidden, do not check if we should hide it
+    if (summary.hiddenFromUser)
+    {
+        return;
+    }
+    
     MXRoomCreateContent *createContent = [MXRoomCreateContent modelFromJSON:createEvent.content];
     
     if (createContent.virtualRoomInfo.isVirtual && [summary.creatorUserId isEqualToString:createEvent.sender])
