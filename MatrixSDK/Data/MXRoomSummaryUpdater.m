@@ -297,7 +297,7 @@
         {
             BOOL isReplacementRoomJoined = replacementRoomSummary.membership == MXMembershipJoin;
                         
-            if (isReplacementRoomJoined && summary.hiddenFromUser == NO)
+            if (isReplacementRoomJoined)
             {
                 summary.hiddenFromUser = YES;
                 updated = YES;                
