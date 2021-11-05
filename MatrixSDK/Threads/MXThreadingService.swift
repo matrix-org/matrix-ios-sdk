@@ -48,6 +48,10 @@ public class MXThreadingService: NSObject {
     }
     
     public func handleEvent(_ event: MXEvent) {
+        guard let session = session else {
+            //  session closed
+            return
+        }
         guard let threadIdentifier = event.threadIdentifier else {
             //  event is not in a thread
             return
@@ -60,10 +64,10 @@ public class MXThreadingService: NSObject {
             //  create the thread for the first time
             let thread: MXThread
             //  try to find the root event in the session store
-            if let rootEvent = session?.store.event(withEventId: threadIdentifier, inRoom: event.roomId) {
-                thread = MXThread(withRootEvent: rootEvent)
+            if let rootEvent = session.store.event(withEventId: threadIdentifier, inRoom: event.roomId) {
+                thread = MXThread(withSession: session, rootEvent: rootEvent)
             } else {
-                thread = MXThread(withIdentifier: threadIdentifier, roomId: event.roomId)
+                thread = MXThread(withSession: session, identifier: threadIdentifier, roomId: event.roomId)
             }
             saveThread(thread)
         }
@@ -104,7 +108,7 @@ public class MXThreadingService: NSObject {
             switch response {
             case .success(let paginationResponse):
                 if let rootEvents = paginationResponse.chunk {
-                    let threads = rootEvents.map({ MXThread(withRootEvent: $0) })
+                    let threads = rootEvents.map({ MXThread(withSession: session, rootEvent: $0) })
                     completion(.success(threads))
                 } else {
                     completion(.success([]))

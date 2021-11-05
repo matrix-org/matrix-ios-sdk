@@ -1892,4 +1892,33 @@ public extension MXRestClient {
     @nonobjc @discardableResult func getSpaceChildrenForSpace(withId spaceId: String, suggestedOnly: Bool, limit: Int?, completion: @escaping (_ response: MXResponse<MXSpaceChildrenResponse>) -> Void) -> MXHTTPOperation {
         return __getSpaceChildrenForSpace(withId: spaceId, suggestedOnly: suggestedOnly, limit: limit ?? -1, success: currySuccess(completion), failure: curryFailure(completion))
     }
+    
+    //  MARK: - Aggregations
+    
+    /// Get relations for a given event.
+    /// - Parameters:
+    ///   - eventId: the id of the event
+    ///   - roomId: the id of the room
+    ///   - relationType: Optional. The type of relation
+    ///   - eventType: Optional. Event type to filter by
+    ///   - from: Optional. The token to start getting results from
+    ///   - limit: Optional. The maximum number of messages to return
+    ///   - completion: A closure called when the operation completes.
+    /// - Returns: a `MXHTTPOperation` instance.
+    @nonobjc @discardableResult func relations(forEvent eventId: String,
+                                               inRoom roomId: String,
+                                               relationType: String?,
+                                               eventType: String?,
+                                               from: String?,
+                                               limit: UInt?,
+                                               completion: @escaping (_ response: MXResponse<MXAggregationPaginatedResponse>) -> Void) -> MXHTTPOperation {
+        let _limit: Int
+        if let limit = limit {
+            _limit = Int(limit)
+        } else {
+            _limit = -1
+        }
+        return __relations(forEvent: eventId, inRoom: roomId, relationType: relationType, eventType: eventType, from: from, limit: _limit, success: currySuccess(completion), failure: curryFailure(completion))
+    }
+    
 }

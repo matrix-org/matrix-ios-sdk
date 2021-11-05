@@ -19,6 +19,8 @@ import Foundation
 @objcMembers
 public class MXThread: NSObject {
     
+    private weak var session: MXSession?
+    
     public let identifier: String
     
     public let roomId: String
@@ -27,19 +29,23 @@ public class MXThread: NSObject {
     
     public private(set) var events: [MXEvent] = []
     
-    internal init(withIdentifier identifier: String,
+    internal init(withSession session: MXSession,
+                  identifier: String,
                   roomId: String) {
+        self.session = session
         self.identifier = identifier
         self.roomId = roomId
         self.hasRootEvent = false
         super.init()
     }
     
-    internal init(withRootEvent event: MXEvent) {
-        self.identifier = event.eventId
-        self.roomId = event.roomId
+    internal init(withSession session: MXSession,
+                  rootEvent: MXEvent) {
+        self.session = session
+        self.identifier = rootEvent.eventId
+        self.roomId = rootEvent.roomId
         self.hasRootEvent = true
-        self.events = [event]
+        self.events = [rootEvent]
         super.init()
     }
     
@@ -63,6 +69,27 @@ public class MXThread: NSObject {
         } else {
             //  count all events
             return events.count
+        }
+    }
+    
+    public func allReplies(completion: @escaping (MXResponse<[MXEvent]>) -> Void) {
+        guard let session = session else {
+            completion(.failure(MXThreadingServiceError.sessionNotFound))
+            return
+        }
+        
+        session.matrixRestClient.relations(forEvent: identifier,
+                                           inRoom: roomId,
+                                           relationType: MXEventRelationTypeThread,
+                                           eventType: nil,
+                                           from: nil,
+                                           limit: nil) { response in
+            switch response {
+            case .success(let aggregatedResponse):
+                completion(.success(aggregatedResponse.chunk))
+            case .failure(let error):
+                completion(.failure(error))
+            }
         }
     }
 }
