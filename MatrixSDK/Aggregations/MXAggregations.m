@@ -50,11 +50,10 @@
 - (void)addReaction:(NSString*)reaction
            forEvent:(NSString*)eventId
              inRoom:(NSString*)roomId
-           threadId:(NSString*)threadId
             success:(void (^)(void))success
             failure:(void (^)(NSError *error))failure
 {
-    [self.aggregatedReactionsUpdater addReaction:reaction forEvent:eventId inRoom:roomId threadId:threadId success:success failure:failure];
+    [self.aggregatedReactionsUpdater addReaction:reaction forEvent:eventId inRoom:roomId success:success failure:failure];
 }
 
 - (void)removeReaction:(NSString*)reaction

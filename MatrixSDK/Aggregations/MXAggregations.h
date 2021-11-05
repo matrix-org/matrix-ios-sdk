@@ -40,7 +40,6 @@ NS_ASSUME_NONNULL_BEGIN
  @param reaction the reaction.
  @param eventId the id of the event.
  @param roomId the id of the room.
- @param threadId the id of the thread.
 
  @param success A block object called when the operation succeeds. It returns
                 the event id of the event generated on the homeserver.
@@ -49,7 +48,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)addReaction:(NSString*)reaction
            forEvent:(NSString*)eventId
              inRoom:(NSString*)roomId
-           threadId:(nullable NSString*)threadId
             success:(void (^)(void))success
             failure:(void (^)(NSError *error))failure;
 

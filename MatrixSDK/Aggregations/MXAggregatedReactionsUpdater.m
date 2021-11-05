@@ -62,7 +62,6 @@
 - (void)addReaction:(NSString*)reaction
            forEvent:(NSString*)eventId
              inRoom:(NSString*)roomId
-           threadId:(NSString*)threadId
             success:(void (^)(void))success
             failure:(void (^)(NSError *error))failure
 {
@@ -76,7 +75,7 @@
             return;
         }
 
-        [self sendReaction:reaction forEvent:eventId inRoom:roomId threadId:threadId success:success failure:^(NSError *error) {
+        [self sendReaction:reaction forEvent:eventId inRoom:roomId success:success failure:^(NSError *error) {
             [self didOperationCompleteForReaction:reaction forEvent:eventId isAdd:YES];
             failure(error);
         }];
@@ -612,7 +611,6 @@
 - (MXHTTPOperation*)sendReaction:(NSString*)reaction
                         forEvent:(NSString*)eventId
                           inRoom:(NSString*)roomId
-                        threadId:(NSString*)threadId
                          success:(void (^)(void))success
                          failure:(void (^)(NSError *error))failure
 {
@@ -633,7 +631,7 @@
                                               }
                                       };
 
-    return [room sendEventOfType:kMXEventTypeStringReaction content:reactionContent threadId:threadId localEcho:nil success:^(NSString *eventId) {
+    return [room sendEventOfType:kMXEventTypeStringReaction content:reactionContent threadId:nil localEcho:nil success:^(NSString *eventId) {
         success();
     } failure:failure];
 }

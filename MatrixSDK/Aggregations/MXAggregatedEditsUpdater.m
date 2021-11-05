@@ -180,7 +180,7 @@
     }
     else
     {
-        operation = [room sendEventOfType:kMXEventTypeStringRoomMessage content:content threadId:event.threadIdentifier localEcho:&localEcho success:success failure:failure];
+        operation = [room sendEventOfType:kMXEventTypeStringRoomMessage content:content threadId:nil localEcho:&localEcho success:success failure:failure];
     }
 
     if (localEchoBlock && localEcho)
