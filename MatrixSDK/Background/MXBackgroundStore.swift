@@ -139,6 +139,9 @@ class MXBackgroundStore: NSObject, MXStore {
     func deleteAllData() {
     }
     
+    /// This callback is never executed on `MXBackgroundStore`.
+    var clearSecondaryStoresCallback: (() -> Void)?
+    
     func storePaginationToken(ofRoom roomId: String, andToken token: String) {
     }
     

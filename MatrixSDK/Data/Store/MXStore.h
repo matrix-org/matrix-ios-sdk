@@ -114,6 +114,11 @@
 - (void)deleteAllData;
 
 /**
+ A callback that will be executed before `deleteAllData` is called. This callback is only used on file stores.
+ */
+@property (nonatomic, copy, nullable) void (^clearSecondaryStoresCallback)(void);
+
+/**
  Store/retrieve the current pagination token of a room.
  */
 // @TODO(summary): Move to MXRoomSummary

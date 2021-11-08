@@ -168,6 +168,15 @@
     [partialTextMessages removeAllObjects];
 }
 
+- (void (^)(void))clearSecondaryStoresCallback
+{
+    return nil;
+}
+
+- (void)setClearSecondaryStoresCallback:(void (^)(void))callback
+{
+}
+
 - (void)storePaginationTokenOfRoom:(NSString*)roomId andToken:(NSString*)token
 {
     paginationTokens[roomId] = token;

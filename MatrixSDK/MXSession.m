@@ -350,6 +350,12 @@ typedef void (^MXOnResumeDone)(void);
     [_store openWithCredentials:matrixRestClient.credentials onComplete:^{
         MXStrongifyAndReturnIfNil(self);
         
+        MXWeakify(self);
+        self.store.clearSecondaryStoresCallback = ^{
+            MXStrongifyAndReturnIfNil(self);
+            [self.aggregations resetData];
+        };
+        
         // Sanity check: The session may be closed before the end of store opening.
         if (!self->matrixRestClient)
         {
@@ -357,9 +363,13 @@ typedef void (^MXOnResumeDone)(void);
         }
 
         self->_aggregations = [[MXAggregations alloc] initWithMatrixSession:self];
+        if ([MXStoreHelper shouldSecondaryStoresBeClearedFor:self.credentials.userId])
+        {
+            self.store.clearSecondaryStoresCallback();
+            [MXStoreHelper secondaryStoresWereClearedFor:self.credentials.userId];
+        }
 
         // Check if the user has enabled crypto
-        MXWeakify(self);
         [MXCrypto checkCryptoWithMatrixSession:self complete:^(MXCrypto *crypto) {
             MXStrongifyAndReturnIfNil(self);
             

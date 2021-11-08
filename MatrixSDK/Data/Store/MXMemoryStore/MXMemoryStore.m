@@ -36,7 +36,7 @@
 
 @implementation MXMemoryStore
 
-@synthesize eventStreamToken, userAccountData, syncFilterId, homeserverWellknown, areAllIdentityServerTermsAgreed;
+@synthesize eventStreamToken, userAccountData, syncFilterId, homeserverWellknown, clearSecondaryStoresCallback, areAllIdentityServerTermsAgreed;
 
 - (instancetype)init
 {
