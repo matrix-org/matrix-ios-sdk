@@ -50,10 +50,14 @@ public class MXThread: NSObject {
     }
     
     public func addEvent(_ event: MXEvent) {
+        guard events.firstIndex(where: { $0.eventId == event.eventId }) == nil else {
+            //  do not re-add the event
+            return
+        }
         self.events.append(event)
         
         if event.eventId == identifier {
-            //  if root event is added later
+            //  if root event is added later, update the flag
             self.hasRootEvent = true
         }
     }
@@ -63,13 +67,7 @@ public class MXThread: NSObject {
     }
     
     public var numberOfReplies: Int {
-        if hasRootEvent {
-            //  do not count the root event
-            return events.count - 1
-        } else {
-            //  count all events
-            return events.count
-        }
+        return events.filter({ $0.eventId != identifier && $0.isInThread() }).count
     }
     
     public func allReplies(completion: @escaping (MXResponse<[MXEvent]>) -> Void) {
