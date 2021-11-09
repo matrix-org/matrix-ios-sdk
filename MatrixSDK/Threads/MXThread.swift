@@ -19,7 +19,7 @@ import Foundation
 @objcMembers
 public class MXThread: NSObject {
     
-    private weak var session: MXSession?
+    public weak var session: MXSession?
     
     public let identifier: String
     
@@ -27,7 +27,7 @@ public class MXThread: NSObject {
     
     public private(set) var hasRootEvent: Bool
     
-    public private(set) var events: [MXEvent] = []
+    private var eventsMap: [String:MXEvent] = [:]
     
     internal init(withSession session: MXSession,
                   identifier: String,
@@ -45,29 +45,30 @@ public class MXThread: NSObject {
         self.identifier = rootEvent.eventId
         self.roomId = rootEvent.roomId
         self.hasRootEvent = true
-        self.events = [rootEvent]
+        self.eventsMap = [rootEvent.eventId: rootEvent]
         super.init()
     }
     
     public func addEvent(_ event: MXEvent) {
-        guard events.firstIndex(where: { $0.eventId == event.eventId }) == nil else {
+        guard eventsMap[event.eventId] == nil else {
             //  do not re-add the event
             return
         }
-        self.events.append(event)
+        eventsMap[event.eventId] = event
         
         if event.eventId == identifier {
             //  if root event is added later, update the flag
-            self.hasRootEvent = true
+            hasRootEvent = true
         }
     }
     
     public var lastMessage: MXEvent? {
-        return events.last
+        //  sort events by their age: so older events will be at the beginning in the array
+        return eventsMap.values.sorted(by: >).last
     }
     
     public var numberOfReplies: Int {
-        return events.filter({ $0.eventId != identifier && $0.isInThread() }).count
+        return eventsMap.filter({ $0 != identifier && $1.isInThread() }).count
     }
     
     public func allReplies(completion: @escaping (MXResponse<[MXEvent]>) -> Void) {
@@ -90,4 +91,15 @@ public class MXThread: NSObject {
             }
         }
     }
+}
+
+//  MARK: - MXEvent Extension
+
+extension MXEvent: Comparable {
+    
+    public static func < (lhs: MXEvent, rhs: MXEvent) -> Bool {
+        //  event will be 'smaller' than an other event if it's newer
+        return lhs.age < rhs.age
+    }
+    
 }

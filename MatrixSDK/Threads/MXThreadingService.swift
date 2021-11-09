@@ -69,6 +69,7 @@ public class MXThreadingService: NSObject {
             } else {
                 thread = MXThread(withSession: session, identifier: threadIdentifier, roomId: event.roomId)
             }
+            thread.addEvent(event)
             saveThread(thread)
         }
     }
