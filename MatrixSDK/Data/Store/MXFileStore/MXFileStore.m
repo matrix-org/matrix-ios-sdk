@@ -26,6 +26,7 @@
 #import "MXFileStoreMetaData.h"
 #import "MXSDKOptions.h"
 #import "MXTools.h"
+#import "MatrixSDKSwiftHeader.h"
 
 static NSUInteger const kMXFileVersion = 76;
 
@@ -382,6 +383,16 @@ static NSUInteger preloadOptions;
 - (void)deleteAllData
 {
     MXLogDebug(@"[MXFileStore] Delete all data");
+    
+    if (self.storeService)
+    {
+        // Clear aggregations to avoid accumulating counts.
+        [self.storeService resetSecondaryStoresWithSender:self];
+    }
+    else
+    {
+        MXLogError(@"[MXFileStore] deleteAllData called without an MXStoreService, aggregations may become out of sync.")
+    }
 
     [super deleteAllData];
 
