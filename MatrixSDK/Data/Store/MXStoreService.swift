@@ -16,6 +16,9 @@
 
 import Foundation
 
+/// A class to help coordinate the session's main store with any secondary
+/// stores that it relies upon such as aggregations. It will ensure that actions
+/// which need synchronisation (such as deleting all data) are handled properly.
 @objcMembers
 public class MXStoreService: NSObject {
     
@@ -71,6 +74,8 @@ public class MXStoreService: NSObject {
         if let aggregations = aggregations {
             aggregations.resetData()
         } else {
+            // It is possible that aggregations doesn't exist (for example in MXBackgroundStore),
+            // In this instance, remember to reset the aggregations store when it is set.
             addStoreToReset(.aggregations)
             MXLog.debug("[MXStoreService] Aggregations will be reset when added to the service.")
         }
@@ -122,8 +127,8 @@ public class MXStoreService: NSObject {
     /// - Parameter userId: The user ID to check with.
     /// - Returns: An array of store types.
     private func storesToReset(for userId: String) -> [StoreType] {
-        let allStores = defaults.object(forKey: Constants.storesToResetKey) as? [String: [String]] ?? [:]
-        let userStoreTypes = allStores[userId] ?? []
+        let allStoresToReset = defaults.object(forKey: Constants.storesToResetKey) as? [String: [String]] ?? [:]
+        let userStoreTypes = allStoresToReset[userId] ?? []
         
         return userStoreTypes.compactMap { StoreType(rawValue: $0) }
     }
@@ -133,9 +138,9 @@ public class MXStoreService: NSObject {
     ///   - storeTypes: The store types that should be reset.
     ///   - userId: The user ID to store the types for.
     private func updateStoresToReset(_ storeTypes: [StoreType], for userId: String) {
-        var allStores = defaults.object(forKey: Constants.storesToResetKey) as? [String: [String]] ?? [:]
-        allStores[userId] = storeTypes.map { $0.rawValue }
+        var allStoresToReset = defaults.object(forKey: Constants.storesToResetKey) as? [String: [String]] ?? [:]
+        allStoresToReset[userId] = storeTypes.map { $0.rawValue }
         
-        defaults.setValue(allStores, forKey: Constants.storesToResetKey)
+        defaults.setValue(allStoresToReset, forKey: Constants.storesToResetKey)
     }
 }
