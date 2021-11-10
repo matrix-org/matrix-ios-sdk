@@ -81,6 +81,15 @@
     onComplete();
 }
 
+- (MXStoreService *)storeService
+{
+    return nil;
+}
+
+- (void)setStoreService:(MXStoreService *)storeService
+{
+}
+
 - (void)storeEventForRoom:(NSString*)roomId event:(MXEvent*)event direction:(MXTimelineDirection)direction
 {
     // Store nothing in the MXNoStore except the last message
@@ -166,15 +175,6 @@
     [hasLoadedAllRoomMembersForRooms removeAllObjects];
     [lastMessages removeAllObjects];
     [partialTextMessages removeAllObjects];
-}
-
-- (void (^)(void))clearSecondaryStoresCallback
-{
-    return nil;
-}
-
-- (void)setClearSecondaryStoresCallback:(void (^)(void))callback
-{
 }
 
 - (void)storePaginationTokenOfRoom:(NSString*)roomId andToken:(NSString*)token

@@ -31,12 +31,20 @@
 #import "MXRoomSummaryStore.h"
 
 @class MXSpaceGraphData;
+@class MXStoreService;
 
 /**
  The `MXStore` protocol defines an interface that must be implemented in order to store
  Matrix data handled during a `MXSession`.
  */
 @protocol MXStore <NSObject, MXRoomSummaryStore>
+
+#pragma mark - Store Management
+
+/**
+ The store service that is managing this store.
+ */
+@property (nonatomic, weak, nullable) MXStoreService *storeService;
 
 #pragma mark - Room data
 
@@ -112,11 +120,6 @@
  Erase all data from the store.
  */
 - (void)deleteAllData;
-
-/**
- A callback that will be executed before `deleteAllData` is called. This callback is only used on file stores.
- */
-@property (nonatomic, copy, nullable) void (^clearSecondaryStoresCallback)(void);
 
 /**
  Store/retrieve the current pagination token of a room.

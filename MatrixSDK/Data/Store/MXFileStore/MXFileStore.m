@@ -384,14 +384,14 @@ static NSUInteger preloadOptions;
 {
     MXLogDebug(@"[MXFileStore] Delete all data");
     
-    if (self.clearSecondaryStoresCallback)
+    if (self.storeService)
     {
-        self.clearSecondaryStoresCallback();
-        [MXStoreHelper secondaryStoresWereClearedFor:credentials.userId];
+        // Clear aggregations to avoid accumulating counts.
+        [self.storeService resetSecondaryStoresWithSender:self];
     }
     else
     {
-        [MXStoreHelper setSecondaryStoresToBeClearedFor:credentials.userId];
+        MXLogError(@"[MXFileStore] deleteAllData called without an MXStoreService, aggregations may become out of sync.")
     }
 
     [super deleteAllData];

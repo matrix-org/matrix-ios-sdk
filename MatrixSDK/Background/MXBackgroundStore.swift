@@ -26,8 +26,11 @@ enum MXBackgroundStoreErrorCode: Int {
 
 /// Minimalist MXStore implementation. It uses some real values from an MXFileStore instance.
 class MXBackgroundStore: NSObject, MXStore {
+    
+    // A store service to record if the file store deletes its data
+    var storeService: MXStoreService?
 
-    //  real store
+    // Real store
     private var fileStore: MXFileStore
     
     // Room stores cache
@@ -35,6 +38,7 @@ class MXBackgroundStore: NSObject, MXStore {
     
     init(withCredentials credentials: MXCredentials) {
         fileStore = MXFileStore(credentials: credentials)
+        storeService = MXStoreService(store: fileStore, credentials: credentials)
         //  load real eventStreamToken
         fileStore.loadMetaData()
     }
@@ -138,9 +142,6 @@ class MXBackgroundStore: NSObject, MXStore {
     
     func deleteAllData() {
     }
-    
-    /// This callback is never executed on `MXBackgroundStore`.
-    var clearSecondaryStoresCallback: (() -> Void)?
     
     func storePaginationToken(ofRoom roomId: String, andToken token: String) {
     }
