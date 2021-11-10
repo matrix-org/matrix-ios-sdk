@@ -111,17 +111,15 @@
     BOOL updated = NO;
 
     // Accept event which type is in the filter list
-    if (event.eventId && (_lastMessageEventTypesAllowList == nil || [_lastMessageEventTypesAllowList containsObject:event.type]))
+    // Don't accept event related to profile change
+    // TODO: Add a flag if needed to configure
+    // TODO: Only accept membership changes from current user
+    if (event.eventId 
+        && [self isEventTypeAllowedAsLastMessage:event.type]
+        && ![self isEventUserProfileChange:event])
     {
-        // Don't accept event related to profile change
-        // TODO: Add a flag if needed to configure this
-        // TODO: Only accept membership changes from current user
-        if (event.eventType == MXEventTypeRoomMember 
-            && !event.isUserProfileChange)
-        {
-            [summary updateLastMessage:[[MXRoomLastMessage alloc] initWithEvent:event]];
-            updated = YES;        
-        }
+        [summary updateLastMessage:[[MXRoomLastMessage alloc] initWithEvent:event]];
+        updated = YES;                
     }
     else if ([event.type isEqualToString:kRoomIsVirtualJSONKey] && !summary.hiddenFromUser)
     {
@@ -736,6 +734,26 @@
 {
     NSString *name = [roomState.members memberName:identifier];
     return (name.length > 0 ? name : identifier);
+}
+
+- (BOOL)isEventTypeAllowedAsLastMessage:(NSString*)eventTypeString
+{
+    if (!self.lastMessageEventTypesAllowList)
+    {
+        return YES;
+    }
+    
+    return [self.lastMessageEventTypesAllowList containsObject:eventTypeString];    
+}
+
+- (BOOL)isEventUserProfileChange:(MXEvent*)event
+{
+    if (event.eventType != MXEventTypeRoomMember)
+    {
+        return NO;
+    }
+        
+    return event.isUserProfileChange;
 }
 
 @end
