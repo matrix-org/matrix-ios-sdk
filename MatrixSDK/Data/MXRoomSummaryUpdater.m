@@ -119,7 +119,7 @@
         && ![self isEventUserProfileChange:event])
     {
         [summary updateLastMessage:[[MXRoomLastMessage alloc] initWithEvent:event]];
-        updated = YES;                
+        updated = YES;
     }
     else if ([event.type isEqualToString:kRoomIsVirtualJSONKey] && !summary.hiddenFromUser)
     {
