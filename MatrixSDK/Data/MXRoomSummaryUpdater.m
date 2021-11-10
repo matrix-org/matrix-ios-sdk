@@ -113,8 +113,15 @@
     // Accept event which type is in the filter list
     if (event.eventId && (_lastMessageEventTypesAllowList == nil || [_lastMessageEventTypesAllowList containsObject:event.type]))
     {
-        [summary updateLastMessage:[[MXRoomLastMessage alloc] initWithEvent:event]];
-        updated = YES;
+        // Don't accept event related to profile change
+        // TODO: Add a flag if needed to configure this
+        // TODO: Only accept membership changes from current user
+        if (event.eventType == MXEventTypeRoomMember 
+            && !event.isUserProfileChange)
+        {
+            [summary updateLastMessage:[[MXRoomLastMessage alloc] initWithEvent:event]];
+            updated = YES;        
+        }
     }
     else if ([event.type isEqualToString:kRoomIsVirtualJSONKey] && !summary.hiddenFromUser)
     {
