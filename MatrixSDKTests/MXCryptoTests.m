@@ -32,6 +32,8 @@
 #import "MXOutboundSessionInfo.h"
 #import <OLMKit/OLMKit.h>
 
+#import "MXKey.h"
+
 #if 1 // MX_CRYPTO autamatic definiton does not work well for tests so force it
 //#ifdef MX_CRYPTO
 
@@ -3004,6 +3006,53 @@
             XCTFail(@"The request should not fail - NSError: %@", error);
             [expectation fulfill];
         }];
+    }];
+}
+
+#pragma mark - One time / fallback keys
+
+- (void)testFallbackKeySignatures
+{
+    [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
+    [matrixSDKTestsData doMXSessionTestWithBob:self readyToTest:^(MXSession *mxSession, XCTestExpectation *expectation) {
+        [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
+        
+        [mxSession.crypto.olmDevice generateFallbackKey];
+        
+        NSDictionary *fallbackKeyDictionary = mxSession.crypto.olmDevice.fallbackKey;
+        NSMutableDictionary *fallbackKeyJson = [NSMutableDictionary dictionary];
+        
+        for (NSString *keyId in fallbackKeyDictionary[kMXKeyCurve25519Type])
+        {
+            // Sign the fallback key
+            NSMutableDictionary *signedKey = [NSMutableDictionary dictionary];
+            signedKey[@"key"] = fallbackKeyDictionary[kMXKeyCurve25519Type][keyId];
+            signedKey[@"fallback"] = @(YES);
+            signedKey[@"signatures"] = [mxSession.crypto signObject:signedKey];
+            
+            fallbackKeyJson[[NSString stringWithFormat:@"%@:%@", kMXKeySignedCurve25519Type, keyId]] = signedKey;
+        }
+        
+        MXKey *fallbackKey = [MXKey modelFromJSON:fallbackKeyJson];
+        
+        NSString *signKeyId = [NSString stringWithFormat:@"%@:%@", kMXKeyEd25519Type, mxSession.myDeviceId];
+        NSString *signature = [fallbackKey.signatures objectForDevice:signKeyId forUser:mxSession.myUserId];
+        
+        MXUsersDevicesMap<NSString *> *usersDevicesKeyTypesMap = [[MXUsersDevicesMap alloc] init];
+        [usersDevicesKeyTypesMap setObject:@"curve25519"
+                                   forUser:mxSession.matrixRestClient.credentials.userId
+                                 andDevice:mxSession.matrixRestClient.credentials.deviceId];
+        
+        MXDeviceInfo *deviceInfo = [mxSession.crypto deviceWithDeviceId:mxSession.myDeviceId
+                                                                 ofUser:mxSession.myUserId];
+        
+        NSError *error;
+        BOOL result = [mxSession.crypto.olmDevice verifySignature:deviceInfo.fingerprint JSON:fallbackKey.signalableJSONDictionary signature:signature error:&error];
+        
+        XCTAssertNil(error);
+        XCTAssertTrue(result);
+        
+        [expectation fulfill];
     }];
 }
 
