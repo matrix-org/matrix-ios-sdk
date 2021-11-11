@@ -1946,10 +1946,13 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
         NSDictionary *relatesToDict = nil;
         if (eventToReply.threadIdentifier)
         {
-            //  TODO: This will change when we support in-thread replies
             relatesToDict = @{
                 @"rel_type": MXEventRelationTypeThread,
-                @"event_id" : eventToReply.threadIdentifier
+                @"event_id" : eventToReply.threadIdentifier,
+                @"m.in_reply_to" :
+                    @{
+                        @"event_id" : eventId
+                    }
             };
         }
         else
