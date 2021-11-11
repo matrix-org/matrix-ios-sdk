@@ -744,6 +744,21 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     return updated;
 }
 
+- (BOOL)hasAnyUnread
+{
+    return _localUnreadEventCount > 0;
+}
+
+- (BOOL)hasAnyNotification
+{
+    return _notificationCount > 0;
+}
+
+- (BOOL)hasAnyHighlight
+{
+    return _highlightCount > 0;
+}
+
 #pragma mark - Server sync
 - (void)handleStateEvents:(NSArray<MXEvent *> *)stateEvents
 {
