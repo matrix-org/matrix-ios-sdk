@@ -42,6 +42,8 @@ public class MXThreadingService: NSObject {
     
     private var threads: [String: MXThread] = [:]
     
+    public static let newThreadCreated: Notification.Name = Notification.Name("MXThreadingService.newThreadCreated")
+    
     public init(withSession session: MXSession) {
         self.session = session
         super.init()
@@ -71,6 +73,7 @@ public class MXThreadingService: NSObject {
             }
             thread.addEvent(event)
             saveThread(thread)
+            NotificationCenter.default.post(name: Self.newThreadCreated, object: thread, userInfo: nil)
         }
     }
     
