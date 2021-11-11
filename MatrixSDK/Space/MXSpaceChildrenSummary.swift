@@ -22,16 +22,20 @@ public class MXSpaceChildrenSummary: NSObject {
     
     // MARK - Properties
     
-    /// The queried space room summary
-    public let spaceSummary: MXRoomSummary
+    /// The queried space room summary. Can be nil in case of batched request
+    public let spaceInfo: MXSpaceChildInfo?
     
     /// The child summaries of the queried space
     public let childInfos: [MXSpaceChildInfo]
     
+    /// The token to supply in the `from` param of the next request in order to request more rooms. If this is absent, there are no more results.
+    public let nextBatch: String?
+    
     // MARK - Setup
     
-    init(spaceSummary: MXRoomSummary, childInfos: [MXSpaceChildInfo]) {
-        self.spaceSummary = spaceSummary
+    init(spaceInfo: MXSpaceChildInfo?, childInfos: [MXSpaceChildInfo], nextBatch: String?) {
+        self.spaceInfo = spaceInfo
         self.childInfos = childInfos
+        self.nextBatch = nextBatch
     }
 }
