@@ -91,12 +91,12 @@ public struct MXRoomListDataSortOptions: Equatable {
         }
         
         if missedNotificationsFirst {
-            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryProtocol.highlightCount, ascending: false))
-            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryProtocol.notificationCount, ascending: false))
+            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryProtocol.highlightCount, ascending: false, comparator: groupNonZeroCountComparator()))
+            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryProtocol.notificationCount, ascending: false, comparator: groupNonZeroCountComparator()))
         }
         
         if unreadMessagesFirst {
-            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryProtocol.localUnreadEventCount, ascending: false))
+            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryProtocol.localUnreadEventCount, ascending: false, comparator: groupNonZeroCountComparator()))
         }
         
         if lastEventDate {
@@ -108,5 +108,20 @@ public struct MXRoomListDataSortOptions: Equatable {
         }
         
         return result
+    }
+    
+    func groupNonZeroCountComparator() -> Comparator {
+        return {
+            guard let lhs = $0 as? Int, let rhs = $1 as? Int else { return .orderedSame }
+            
+            switch (lhs, rhs) {
+            case (1..., 0):
+                return .orderedDescending
+            case (0, 1...):
+                return .orderedAscending
+            default:
+                return .orderedSame
+            }
+        }
     }
 }
