@@ -1456,8 +1456,9 @@ typedef void (^MXOnResumeDone)(void);
             }
             
             dispatch_group_notify(dispatchGroupLastMessage, dispatch_get_main_queue(), ^{
-                // Do a loop of /syncs until catching up is done
-                if (nextServerTimeout == 0)
+                // Do a loop of /syncs until catching up is done, if not already paused or pause requested
+                if (nextServerTimeout == 0
+                    && (self.state != MXSessionStatePauseRequested && self.state != MXSessionStatePaused))
                 {
                     // Pursue live events listening
                     [self serverSyncWithServerTimeout:nextServerTimeout success:success failure:failure clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
