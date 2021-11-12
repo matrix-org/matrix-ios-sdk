@@ -954,6 +954,14 @@ typedef void (^MXOnResumeDone)(void);
         || _state == MXSessionStatePauseRequested;
 }
 
+- (BOOL)isResumable
+{
+    return !eventStreamRequest ||
+        (_state == MXSessionStateBackgroundSyncInProgress
+        || _state == MXSessionStatePauseRequested
+        || _state == MXSessionStatePaused);
+}
+
 - (MXAggregations *)aggregations
 {
     return self.storeService.aggregations;
@@ -961,7 +969,7 @@ typedef void (^MXOnResumeDone)(void);
 
 - (void)pause
 {
-    MXLogDebug(@"[MXSession] pause the event stream in state %@", [MXTools readableSessionState:_state]);
+    MXLogDebug(@"[MXSession] pause the event stream in state: %@", [MXTools readableSessionState:_state]);
 
     if (self.isPauseable)
     {
@@ -1021,7 +1029,7 @@ typedef void (^MXOnResumeDone)(void);
 
 - (void)_resume:(void (^)(void))resumeDone
 {
-    MXLogDebug(@"[MXSession] _resume: resume the event stream from state %@", [MXTools readableSessionState:_state]);
+    MXLogDebug(@"[MXSession] _resume: resume the event stream from state: %@", [MXTools readableSessionState:_state]);
     
     if (self.backgroundTask.isRunning)
     {
@@ -1029,9 +1037,8 @@ typedef void (^MXOnResumeDone)(void);
         self.backgroundTask = nil;
     }
 
-    // Check whether no request is already in progress
-    if (!eventStreamRequest ||
-        (_state == MXSessionStateBackgroundSyncInProgress || _state == MXSessionStatePauseRequested))
+    //  check if the session can resume from here
+    if (self.isResumable)
     {
         [self setState:MXSessionStateSyncInProgress];
         
@@ -1052,7 +1059,7 @@ typedef void (^MXOnResumeDone)(void);
     
     if (!onResumeDone && resumeDone)
     {
-        MXLogDebug(@"[MXSession] _resume: the event stream is already running. Nothing to resume");
+        MXLogDebug(@"[MXSession] _resume: cannot resume from the state: %@", [MXTools readableSessionState:_state]);
         resumeDone();
     }
 }
@@ -1449,8 +1456,9 @@ typedef void (^MXOnResumeDone)(void);
             }
             
             dispatch_group_notify(dispatchGroupLastMessage, dispatch_get_main_queue(), ^{
-                // Do a loop of /syncs until catching up is done
-                if (nextServerTimeout == 0)
+                // Do a loop of /syncs until catching up is done, if not already paused or pause requested
+                if (nextServerTimeout == 0
+                    && (self.state != MXSessionStatePauseRequested && self.state != MXSessionStatePaused))
                 {
                     // Pursue live events listening
                     [self serverSyncWithServerTimeout:nextServerTimeout success:success failure:failure clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];

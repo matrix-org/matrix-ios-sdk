@@ -1,0 +1,1 @@
+MXSession: Make session resumable from paused state & avoid to-device events catchup request when paused or pause requested.
