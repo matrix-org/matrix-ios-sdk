@@ -783,7 +783,7 @@
     }
     
     // Only accept membership join or invite for given user id
-    return [self isMembershipEventJoinOrInvite:event forUserId:userId]); 
+    return [self isMembershipEventJoinOrInvite:event forUserId:userId]; 
 }
 
 @end
