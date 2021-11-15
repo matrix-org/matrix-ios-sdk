@@ -111,13 +111,12 @@
     BOOL updated = NO;
 
     // Accept event which type is in the filter list
-    // Don't accept event related to profile change
-    // TODO: Add a flag if needed to configure
-    // TODO: Only accept membership changes from current user
+    // Only accept membership join or invite from current user but not profile changes
+    // TODO: Add a flag if needed to configure membership event filtering 
     if (event.eventId 
         && [self isEventTypeAllowedAsLastMessage:event.type]
-        && ![self isEventUserProfileChange:event])
-    {
+        && (event.eventType != MXEventTypeRoomMember || [self isMembershipEventAllowedAsLastMessage:event forUserId:session.myUserId]))
+    {        
         [summary updateLastMessage:[[MXRoomLastMessage alloc] initWithEvent:event]];
         updated = YES;
     }
@@ -754,6 +753,44 @@
     }
         
     return event.isUserProfileChange;
+}
+
+- (BOOL)isMembershipEventJoinOrInvite:(MXEvent*)event forUserId:(NSString*)userId
+{
+    if (event.eventType != MXEventTypeRoomMember)
+    {
+        return NO;
+    }
+    
+    NSString *eventUserId = event.stateKey;
+    
+    BOOL isMembershipEventAffectingUser = eventUserId && userId && [userId isEqualToString:eventUserId];
+        
+    if (!isMembershipEventAffectingUser)
+    {
+        return NO;
+    }
+    
+    MXRoomMember *roomMember = [[MXRoomMember alloc] initWithMXEvent:event];
+    
+    return roomMember.membership == MXMembershipInvite || roomMember.membership == MXMembershipJoin;    
+}
+
+- (BOOL)isMembershipEventAllowedAsLastMessage:(MXEvent*)event forUserId:(NSString*)userId
+{
+    // Do not handle user profile change
+    if ([self isEventUserProfileChange:event])
+    {
+        return NO;
+    }
+    
+    // Only accept membership join or invite for given user id
+    if ([self isMembershipEventJoinOrInvite:event forUserId:userId])
+    {
+        return YES;
+    }
+    
+    return NO;
 }
 
 @end
