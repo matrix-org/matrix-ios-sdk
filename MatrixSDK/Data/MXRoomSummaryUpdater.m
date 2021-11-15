@@ -116,7 +116,7 @@
     if (event.eventId 
         && [self isEventTypeAllowedAsLastMessage:event.type]
         && (event.eventType != MXEventTypeRoomMember || [self isMembershipEventAllowedAsLastMessage:event forUserId:session.myUserId]))
-    {        
+    {
         [summary updateLastMessage:[[MXRoomLastMessage alloc] initWithEvent:event]];
         updated = YES;
     }
