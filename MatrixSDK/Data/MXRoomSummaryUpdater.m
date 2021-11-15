@@ -763,10 +763,8 @@
     }
     
     NSString *eventUserId = event.stateKey;
-    
-    BOOL isMembershipEventAffectingUser = eventUserId && userId && [userId isEqualToString:eventUserId];
         
-    if (!isMembershipEventAffectingUser)
+    if (![userId isEqualToString:eventUserId])
     {
         return NO;
     }
@@ -785,12 +783,7 @@
     }
     
     // Only accept membership join or invite for given user id
-    if ([self isMembershipEventJoinOrInvite:event forUserId:userId])
-    {
-        return YES;
-    }
-    
-    return NO;
+    return [self isMembershipEventJoinOrInvite:event forUserId:userId]); 
 }
 
 @end
