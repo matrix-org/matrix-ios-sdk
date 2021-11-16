@@ -16,30 +16,41 @@
 
 import Foundation
 
-class Poll {
-    enum Kind {
-        case disclosed
-        case undisclosed
-    }
+enum PollKind {
+    case disclosed
+    case undisclosed
+}
+
+protocol PollAnswerOptionProtocol {
+    var id: String { get }
+    var text: String { get }
+    var count: UInt { get }
+    var isWinner: Bool { get }
+    var isCurrentUserSelection: Bool { get }
+}
+
+protocol PollProtocol {
+    var text: String { get }
+    var answerOptions: [PollAnswerOptionProtocol] { get }
+    var kind: PollKind { get }
+    var maxAllowedSelections: UInt { get }
+    var isClosed: Bool { get }
+}
+
+class PollAnswerOption: PollAnswerOptionProtocol {
+    var id: String = ""
+    var text: String = ""
     
-    class AnswerOption {
-        var id: String!
-        var text: String!
-        
-        var count: UInt = 0
-        var isWinner: Bool = false
-        var isCurrentUserSelection: Bool = false
-        
-        init(id: String, text: String) {
-            self.id = id
-            self.text = text
-        }
-    }
+    var count: UInt = 0
+    var isWinner: Bool = false
+    var isCurrentUserSelection: Bool = false
+}
+
+class Poll: PollProtocol {
+    var text: String = ""
+    var answerOptions: [PollAnswerOptionProtocol] = []
     
-    var text: String!
-    var answerOptions: [AnswerOption]!
-    
-    var kind: Kind = .disclosed
+    var kind: PollKind = .disclosed
     var maxAllowedSelections: UInt = 1
     var isClosed: Bool = false
     

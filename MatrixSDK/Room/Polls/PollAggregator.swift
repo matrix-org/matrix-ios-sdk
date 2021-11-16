@@ -28,6 +28,12 @@ protocol PollAggregatorDelegate: AnyObject {
     func pollAggregatorDidUpdateData(_ aggregator: PollAggregator)
 }
 
+/**
+ Responsible for building poll models out of the original poll start event and listen to replies.
+ It will listen for PollResponse and PollEnd events on the live timline and update the built models accordingly.
+ I will also listen for `mxRoomDidFlushData` and reload all data to avoid gappy sync problems
+*/
+
 class PollAggregator {
     
     private let session: MXSession
@@ -39,7 +45,7 @@ class PollAggregator {
     private var eventListener: Any!
     private var events: [MXEvent] = []
     
-    private(set) var poll: Poll! {
+    private(set) var poll: PollProtocol! {
         didSet {
             delegate?.pollAggregatorDidUpdateData(self)
         }

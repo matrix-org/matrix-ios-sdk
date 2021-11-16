@@ -2285,18 +2285,20 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
 {
     NSParameterAssert(content);
     
-    if(content.question.length == 0) {
+    if (content.question.length == 0)
+    {
         MXLogError(@"[MXRoom] Cannot send poll with empty question.");
         return nil;
     }
     
-    if(content.answerOptions.count < 2) {
+    if (content.answerOptions.count < 2)
+    {
         MXLogError(@"[MXRoom] Cannot send poll with less than 2 answer options.");
         return nil;
     }
     
-    for(MXEventContentPollStartAnswerOption *answerOption in content.answerOptions) {
-        if(answerOption.text.length == 0) {
+    for (MXEventContentPollStartAnswerOption *answerOption in content.answerOptions) {
+        if (answerOption.text.length == 0) {
             MXLogError(@"[MXRoom] Cannot send poll with empty answer option.");
             return nil;
         }
@@ -2315,8 +2317,9 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     NSAssert([pollStartEvent.type isEqualToString:kMXEventTypeStringPollStart], @"Invalid event type");
     NSParameterAssert(answerIdentifiers);
     
-    for(NSString *answerIdentifier in answerIdentifiers) {
-        if(answerIdentifier.length == 0) {
+    for (NSString *answerIdentifier in answerIdentifiers)
+    {
+        if (answerIdentifier.length == 0) {
             MXLogError(@"[MXRoom] Cannot send poll answer with empty identifier.");
             return nil;
         }

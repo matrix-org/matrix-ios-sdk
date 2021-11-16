@@ -153,7 +153,8 @@
         dispatch_group_enter(dispatchGroup);
         [aliceSession eventWithEventId:pollStartEventId inRoom:roomId success:^(MXEvent *event) {
             
-            for(NSUInteger i = 0; i < 10; i++) {
+            for (NSUInteger i = 0; i < 10; i++)
+            {
                 dispatch_group_enter(dispatchGroup);
                 [aliceRoom sendPollResponseForEvent:event withAnswerIdentifiers:@[pollStartContent.answerOptions.lastObject.uuid] localEcho:nil success:^(NSString *eventId) {
                     dispatch_group_leave(dispatchGroup);

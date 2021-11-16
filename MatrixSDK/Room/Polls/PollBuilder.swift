@@ -17,7 +17,7 @@
 import Foundation
 
 struct PollBuilder {
-    func build(pollStartEventContent: MXEventContentPollStart, events: [MXEvent], currentUserIdentifer: String? = nil) -> Poll {
+    func build(pollStartEventContent: MXEventContentPollStart, events: [MXEvent], currentUserIdentifer: String? = nil) -> PollProtocol {
         
         let poll = Poll()
         
@@ -28,13 +28,15 @@ struct PollBuilder {
         var answerOptionIdentifiers = [String]()
         poll.answerOptions = pollStartEventContent.answerOptions.map { answerOption in
             answerOptionIdentifiers.append(answerOption.uuid)
-            return Poll.AnswerOption(id: answerOption.uuid, text: answerOption.text)
+            
+            let option = PollAnswerOption()
+            option.id = answerOption.uuid
+            option.text = answerOption.text
+            return option
         }
         
         let stopEvent = events.filter { $0.type == kMXEventTypeStringPollEnd }.first
-        if stopEvent != nil {
-            poll.isClosed = true
-        }
+        poll.isClosed = (stopEvent != nil)
         
         var filteredEvents = events.filter { event in
             guard
@@ -100,7 +102,7 @@ struct PollBuilder {
             return result
         }
         
-        for answerOption in poll.answerOptions {
+        for case let answerOption as PollAnswerOption in poll.answerOptions {
             answerOption.count = countedAnswers[answerOption.id] ?? 0
             answerOption.isWinner = (answerOption.count > 0 && answerOption.count == winningCount)
             answerOption.isCurrentUserSelection = (currentUserAnswers?.contains(answerOption.id) ?? false)
