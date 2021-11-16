@@ -86,6 +86,10 @@ NSString *const kMXEventTypeStringSpaceChild            = @"m.space.child";
 NSString *const kMXEventTypeStringAutoJoinKey           = @"auto_join";
 NSString *const kMXEventTypeStringSuggestedKey          = @"suggested";
 
+NSString *const kMXEventTypeStringPollStart    = @"org.matrix.msc3381.poll.start";
+NSString *const kMXEventTypeStringPollResponse = @"org.matrix.msc3381.poll.response";
+NSString *const kMXEventTypeStringPollEnd      = @"org.matrix.msc3381.poll.end";
+
 NSString *const kMXMessageTypeText                   = @"m.text";
 NSString *const kMXMessageTypeEmote                  = @"m.emote";
 NSString *const kMXMessageTypeNotice                 = @"m.notice";
@@ -97,6 +101,7 @@ NSString *const kMXMessageTypeFile                   = @"m.file";
 NSString *const kMXMessageTypeServerNotice           = @"m.server_notice";
 NSString *const kMXMessageTypeKeyVerificationRequest = @"m.key.verification.request";
 
+NSString *const kMXEventRelationRelatesToKey         = @"m.relates_to";
 NSString *const MXEventRelationTypeAnnotation        = @"m.annotation";
 NSString *const MXEventRelationTypeReference         = @"m.reference";
 NSString *const MXEventRelationTypeReplace           = @"m.replace";
@@ -129,6 +134,19 @@ NSString *const kMXMessageContentKeyExtensibleFileSize       = @"size";
 NSString *const kMXMessageContentKeyExtensibleFileName       = @"name";
 NSString *const kMXMessageContentKeyExtensibleFileURL        = @"url";
 NSString *const kMXMessageContentKeyExtensibleFileMimeType   = @"mimetype";
+
+//Polls
+
+NSString *const kMXMessageContentKeyExtensiblePollStart = @"org.matrix.msc3381.poll.start";
+NSString *const kMXMessageContentKeyExtensiblePollResponse = @"org.matrix.msc3381.poll.response";
+NSString *const kMXMessageContentKeyExtensiblePollEnd = @"org.matrix.msc3381.poll.end";
+NSString *const kMXMessageContentKeyExtensiblePollQuestion = @"question";
+NSString *const kMXMessageContentKeyExtensiblePollAnswers = @"answers";
+NSString *const kMXMessageContentKeyExtensiblePollAnswerId = @"id";
+NSString *const kMXMessageContentKeyExtensiblePollMaxSelections = @"max_selections";
+NSString *const kMXMessageContentKeyExtensiblePollKind = @"kind";
+NSString *const kMXMessageContentKeyExtensiblePollKindDisclosed = @"m.poll.disclosed";
+NSString *const kMXMessageContentKeyExtensiblePollKindUndisclosed = @"m.poll.undisclosed";
 
 #pragma mark - MXEvent
 @interface MXEvent ()
