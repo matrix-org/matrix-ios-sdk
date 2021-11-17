@@ -1,1 +1,0 @@
-MXRoomSummaryUpdater: Fix upgraded rooms being marked as visible if the tombstone event comes in as part of a limited sync.
