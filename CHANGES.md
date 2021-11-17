@@ -1,3 +1,23 @@
+## Changes in 0.20.10 (2021-11-17)
+
+🙌 Improvements
+
+- Made room list fetch sort and filter options structs. Removed fetch options references from them and made them equatable. Comparing them in the fetch options before refreshing the fetchers. ([#4384](https://github.com/vector-im/element-ios/issues/4384))
+- MXRealmCryptoStore: Reuse background tasks and use new api for remaining perform operations. ([#4431](https://github.com/vector-im/element-ios/issues/4431))
+
+🐛 Bugfixes
+
+- MXAggregations: Ensure the store is cleared when the file store is cleared. ([#3884](https://github.com/vector-im/element-ios/issues/3884))
+- MXSpaceService: abort graph building when session is closing ([#5049](https://github.com/vector-im/element-ios/issues/5049))
+- Fixed retain cycles between background tasks and themselves, and between the background task expiration handler and the background mode handler. ([#5054](https://github.com/vector-im/element-ios/issues/5054))
+- MXRoomSummaryUpdater: Fix upgraded rooms being marked as visible if the tombstone event comes in as part of a limited sync. ([#5080](https://github.com/vector-im/element-ios/issues/5080))
+- MXRoomListDataFilterOptions: Filter out any cached room previews. ([#5083](https://github.com/vector-im/element-ios/issues/5083))
+- MXRoomListDataSortOptions: Fix room ordering regression. ([#5105](https://github.com/vector-im/element-ios/issues/5105))
+- Fixed fallback key signature validation. ([#5120](https://github.com/vector-im/element-ios/issues/5120))
+- MXSession: Make session resumable from paused state & avoid to-device events catchup request when paused or pause requested. ([#5127](https://github.com/vector-im/element-ios/issues/5127))
+- Room ordering: Improve membership event filtering. ([#5150](https://github.com/vector-im/element-ios/issues/5150))
+
+
 ## Changes in 0.20.9 (2021-10-21)
 
 🐛 Bugfixes

@@ -31,12 +31,20 @@
 #import "MXRoomSummaryStore.h"
 
 @class MXSpaceGraphData;
+@class MXStoreService;
 
 /**
  The `MXStore` protocol defines an interface that must be implemented in order to store
  Matrix data handled during a `MXSession`.
  */
 @protocol MXStore <NSObject, MXRoomSummaryStore>
+
+#pragma mark - Store Management
+
+/**
+ The store service that is managing this store.
+ */
+@property (nonatomic, weak, nullable) MXStoreService *storeService;
 
 #pragma mark - Room data
 

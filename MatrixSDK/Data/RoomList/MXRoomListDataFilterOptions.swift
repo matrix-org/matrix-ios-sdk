@@ -16,66 +16,33 @@
 
 import Foundation
 
-@objcMembers
 /// Filter options to be used with fetch options. See `MXRoomListDataFetchOptions`.
-public final class MXRoomListDataFilterOptions: NSObject {
+public struct MXRoomListDataFilterOptions: Equatable {
     
     /// Value to be used not to specify any type for initializer
     public static let emptyDataTypes: MXRoomSummaryDataTypes = []
-    
-    /// Weak reference to the fetch options
-    internal weak var fetchOptions: MXRoomListDataFetchOptions?
-    
+        
     /// Data types to fetch. Related fetcher will be refreshed automatically when updated.
-    public var dataTypes: MXRoomSummaryDataTypes {
-        didSet {
-            if onlySuggested {
-                //  only suggested rooms are filtered, data types are not valid
-                return
-            }
-            if dataTypes != oldValue {
-                refreshFetcher()
-            }
-        }
-    }
+    public var dataTypes: MXRoomSummaryDataTypes
+    
     /// Data types not to fetch. Related fetcher will be refreshed automatically when updated.
-    public var notDataTypes: MXRoomSummaryDataTypes {
-        didSet {
-            if onlySuggested {
-                //  only suggested rooms are filtered, not data types are not valid
-                return
-            }
-            if notDataTypes != oldValue {
-                refreshFetcher()
-            }
-        }
-    }
+    public var notDataTypes: MXRoomSummaryDataTypes
+    
     /// Search query. Related fetcher will be refreshed automatically when updated.
-    public var query: String? {
-        didSet {
-            if query != oldValue {
-                refreshFetcher()
-            }
-        }
-    }
+    public var query: String?
+    
     /// Space for room list data. Related fetcher will be refreshed automatically when updated.
-    public var space: MXSpace? {
-        didSet {
-            if space != oldValue {
-                refreshFetcher()
-            }
-        }
-    }
+    public var space: MXSpace?
+    
     /// Show all rooms when `space` is not provided. Related fetcher will be refreshed automatically when updated.
-    public var showAllRoomsInHomeSpace: Bool {
-        didSet {
-            if showAllRoomsInHomeSpace != oldValue {
-                refreshFetcher()
-            }
-        }
-    }
+    public var showAllRoomsInHomeSpace: Bool
+    
     /// Flag to filter only suggested rooms, if set to `true`, `dataTypes` and `notDataTypes` are not valid.
     public let onlySuggested: Bool
+    
+    /// Flag to hide any rooms where the user's membership is unknown. This has no effect when `onlySuggested` is `true`.
+    /// When set to `false`, rooms that have been cached during peeking may be included in the filtered results.
+    public let hideUnknownMembershipRooms: Bool
     
     /// Initializer
     /// - Parameters:
@@ -87,14 +54,15 @@ public final class MXRoomListDataFilterOptions: NSObject {
                 onlySuggested: Bool = false,
                 query: String? = nil,
                 space: MXSpace? = nil,
-                showAllRoomsInHomeSpace: Bool) {
+                showAllRoomsInHomeSpace: Bool,
+                hideUnknownMembershipRooms: Bool = true) {
         self.dataTypes = dataTypes
         self.notDataTypes = notDataTypes
         self.onlySuggested = onlySuggested
         self.query = query
         self.space = space
         self.showAllRoomsInHomeSpace = showAllRoomsInHomeSpace
-        super.init()
+        self.hideUnknownMembershipRooms = hideUnknownMembershipRooms
     }
     
     /// Just to be used for in-memory data
@@ -121,6 +89,12 @@ public final class MXRoomListDataFilterOptions: NSObject {
         }
         
         if !onlySuggested {
+            if hideUnknownMembershipRooms {
+                let memberPredicate = NSPredicate(format: "%K != %d",
+                                                  #keyPath(MXRoomSummaryProtocol.membership), MXMembership.unknown.rawValue)
+                subpredicates.append(memberPredicate)
+            }
+            
             if !dataTypes.isEmpty {
                 let subpredicate = NSPredicate(format: "(%K & %d) != 0",
                                                #keyPath(MXRoomSummaryProtocol.dataTypes), dataTypes.rawValue)
@@ -157,9 +131,9 @@ public final class MXRoomListDataFilterOptions: NSObject {
                                                 #keyPath(MXRoomSummaryProtocol.dataTypes), favoritedDataTypes.rawValue)
                 
                 let subpredicate4_1 = NSPredicate(format: "%K == NULL",
-                                                #keyPath(MXRoomSummaryProtocol.parentSpaceIds))
+                                                  #keyPath(MXRoomSummaryProtocol.parentSpaceIds))
                 let subpredicate4_2 = NSPredicate(format: "%K.@count == 0",
-                                                #keyPath(MXRoomSummaryProtocol.parentSpaceIds))
+                                                  #keyPath(MXRoomSummaryProtocol.parentSpaceIds))
                 let subpredicate4 = NSCompoundPredicate(type: .or,
                                                         subpredicates: [subpredicate4_1, subpredicate4_2])
                 
@@ -178,13 +152,5 @@ public final class MXRoomListDataFilterOptions: NSObject {
         }
         return NSCompoundPredicate(type: .and,
                                    subpredicates: subpredicates)
-    }
-    
-    /// Refresh fetcher after updates
-    private func refreshFetcher() {
-        guard let fetcher = fetchOptions?.fetcher else {
-            return
-        }
-        fetcher.refresh()
     }
 }
