@@ -16,75 +16,36 @@
 
 import Foundation
 
-@objcMembers
 /// Sort options to be used with fetch options. See `MXRoomListDataFetchOptions`.
-public final class MXRoomListDataSortOptions: NSObject {
-    /// Weak reference to the fetch options
-    internal weak var fetchOptions: MXRoomListDataFetchOptions?
-    
+public struct MXRoomListDataSortOptions: Equatable {
+
     /// Flag to sort by suggested room flag: suggested rooms will come later
     /// Related fetcher will be refreshed automatically when updated.
-    public var suggested: Bool {
-        didSet {
-            if suggested != oldValue {
-                refreshFetcher()
-            }
-        }
-    }
+    public var suggested: Bool
+    
     /// Flag to sort by invite status: invited rooms will come first
     /// Related fetcher will be refreshed automatically when updated.
-    public var invitesFirst: Bool {
-        didSet {
-            if invitesFirst != oldValue {
-                refreshFetcher()
-            }
-        }
-    }
+    public var invitesFirst: Bool
+    
     /// Flag to sort by sent status: rooms having unsent messages will come first
     /// Related fetcher will be refreshed automatically when updated.
-    public var sentStatus: Bool {
-        didSet {
-            if sentStatus != oldValue {
-                refreshFetcher()
-            }
-        }
-    }
+    public var sentStatus: Bool
+    
     /// Flag to sort by last event date: most recent rooms will come first
     /// Related fetcher will be refreshed automatically when updated.
-    public var lastEventDate: Bool {
-        didSet {
-            if lastEventDate != oldValue {
-                refreshFetcher()
-            }
-        }
-    }
+    public var lastEventDate: Bool
+    
     /// Flag to sort by favorite tag order: rooms having "bigger" tags will come first
     /// Related fetcher will be refreshed automatically when updated.
-    public var favoriteTag: Bool {
-        didSet {
-            if favoriteTag != oldValue {
-                refreshFetcher()
-            }
-        }
-    }
+    public var favoriteTag: Bool
+    
     /// Flag to sort by missed notifications count: rooms having more missed notification count will come first
     /// Related fetcher will be refreshed automatically when updated.
-    public var missedNotificationsFirst: Bool {
-        didSet {
-            if missedNotificationsFirst != oldValue {
-                refreshFetcher()
-            }
-        }
-    }
+    public var missedNotificationsFirst: Bool
+    
     /// Flag to sort by unread count: rooms having unread messages will come first
     /// Related fetcher will be refreshed automatically when updated.
-    public var unreadMessagesFirst: Bool {
-        didSet {
-            if unreadMessagesFirst != oldValue {
-                refreshFetcher()
-            }
-        }
-    }
+    public var unreadMessagesFirst: Bool
     
     /// Initializer
     /// - Parameters:
@@ -106,7 +67,6 @@ public final class MXRoomListDataSortOptions: NSObject {
         self.suggested = suggested
         self.missedNotificationsFirst = missedNotificationsFirst
         self.unreadMessagesFirst = unreadMessagesFirst
-        super.init()
     }
     
     /// Just to be used for in-memory data
@@ -131,12 +91,12 @@ public final class MXRoomListDataSortOptions: NSObject {
         }
         
         if missedNotificationsFirst {
-            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryProtocol.highlightCount, ascending: false))
-            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryProtocol.notificationCount, ascending: false))
+            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryProtocol.hasAnyHighlight, ascending: false))
+            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryProtocol.hasAnyNotification, ascending: false))
         }
         
         if unreadMessagesFirst {
-            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryProtocol.localUnreadEventCount, ascending: false))
+            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryProtocol.hasAnyUnread, ascending: false))
         }
         
         if lastEventDate {
@@ -148,13 +108,5 @@ public final class MXRoomListDataSortOptions: NSObject {
         }
         
         return result
-    }
-    
-    /// Refresh fetcher after updates
-    private func refreshFetcher() {
-        guard let fetcher = fetchOptions?.fetcher else {
-            return
-        }
-        fetcher.refresh()
     }
 }

@@ -20,6 +20,16 @@ NSString *const kMXKeyCurve25519Type = @"curve25519";
 NSString *const kMXKeySignedCurve25519Type = @"signed_curve25519";
 NSString *const kMXKeyEd25519Type = @"ed25519";
 
+@interface MXKey()
+
+/**
+ * We have to store the original key dictionary because it can contain other fields
+ * that we don't support yet but they would be needed to check signatures
+ */
+@property (nonatomic, strong) NSDictionary *signalableJSONDictionary;
+
+@end
+
 @implementation MXKey
 
 - (instancetype)initWithType:(NSString *)type keyId:(NSString *)keyId value:(NSString *)value
@@ -77,6 +87,12 @@ NSString *const kMXKeyEd25519Type = @"ed25519";
         MXJSONModelSetString(key.keyFullId, JSONDictionary.allKeys[0]);
         MXJSONModelSetString(key.value, JSONDictionary[key.keyFullId][@"key"]);
         key.signatures = [[MXUsersDevicesMap<NSString*> alloc] initWithMap:JSONDictionary[key.keyFullId][@"signatures"]];
+        
+        NSMutableDictionary *signableJSONDictionary = [JSONDictionary[key.keyFullId] mutableCopy];
+        [signableJSONDictionary removeObjectForKey:@"signatures"];
+        [signableJSONDictionary removeObjectForKey:@"unsigned"];
+       
+        key.signalableJSONDictionary = signableJSONDictionary;
     }
 
     return key;
@@ -85,22 +101,25 @@ NSString *const kMXKeyEd25519Type = @"ed25519";
 - (NSDictionary *)JSONDictionary
 {
     NSDictionary *JSONDictionary;
-
+    
     NSString *keyFullId = self.keyFullId;
-    if (keyFullId && _value)
+    if (keyFullId && self.value)
     {
         JSONDictionary = @{
-                           keyFullId: _value
-                           };
+            keyFullId: self.value
+        };
     }
     return JSONDictionary;
 }
 
 - (NSDictionary *)signalableJSONDictionary
 {
-    return @{
-             @"key": _value
-             };
+    if (_signalableJSONDictionary == nil)
+    {
+        return @{ @"key": self.value };
+    }
+    
+    return _signalableJSONDictionary;
 }
 
 - (NSString *)description

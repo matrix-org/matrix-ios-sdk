@@ -2928,6 +2928,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
         // Sign the fallback key
         NSMutableDictionary *signedKey = [NSMutableDictionary dictionary];
         signedKey[@"key"] = fallbackKey[kMXKeyCurve25519Type][keyId];
+        signedKey[@"fallback"] = @(YES);
         signedKey[@"signatures"] = [self signObject:signedKey];
         
         fallbackKeyJson[[NSString stringWithFormat:@"%@:%@", kMXKeySignedCurve25519Type, keyId]] = signedKey;
