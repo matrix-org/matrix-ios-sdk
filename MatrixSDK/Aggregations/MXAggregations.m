@@ -204,6 +204,7 @@
 
 - (void)resetData
 {
+    MXLogDebug(@"[MXAggregations] Reset data")
     [self.store deleteAll];
 }
 

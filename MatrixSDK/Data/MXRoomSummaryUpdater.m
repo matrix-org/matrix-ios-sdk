@@ -111,12 +111,16 @@
     BOOL updated = NO;
 
     // Accept event which type is in the filter list
-    if (event.eventId && (_lastMessageEventTypesAllowList == nil || [_lastMessageEventTypesAllowList containsObject:event.type]))
+    // Only accept membership join or invite from current user but not profile changes
+    // TODO: Add a flag if needed to configure membership event filtering 
+    if (event.eventId 
+        && [self isEventTypeAllowedAsLastMessage:event.type]
+        && (event.eventType != MXEventTypeRoomMember || [self isMembershipEventAllowedAsLastMessage:event forUserId:session.myUserId]))
     {
         [summary updateLastMessage:[[MXRoomLastMessage alloc] initWithEvent:event]];
         updated = YES;
     }
-    else if ([event.type isEqualToString:kRoomIsVirtualJSONKey])
+    else if ([event.type isEqualToString:kRoomIsVirtualJSONKey] && !summary.hiddenFromUser)
     {
         MXVirtualRoomInfo *virtualRoomInfo = [MXVirtualRoomInfo modelFromJSON:event.content];
         if (virtualRoomInfo.isVirtual)
@@ -216,7 +220,11 @@
                 
                 summary.roomTypeString = roomTypeString;
                 summary.roomType = [self.roomTypeMapper roomTypeFrom:roomTypeString];
-                summary.hiddenFromUser = [self shouldHideRoomWithRoomTypeString:roomTypeString];
+                                
+                if (!summary.hiddenFromUser && [self shouldHideRoomWithRoomTypeString:roomTypeString])
+                {
+                    summary.hiddenFromUser = YES;
+                }
                 
                 updated = YES;
                 [self checkRoomCreateStateEventPredecessorAndUpdateObsoleteRoomSummaryIfNeededWithCreateContent:createContent summary:summary session:session roomState:roomState];
@@ -275,6 +283,12 @@
 // in this case it should be processed when checking the room replacement in `checkRoomCreateStateEventPredecessorAndUpdateObsoleteRoomSummaryIfNeeded:session:room:`.
 - (BOOL)checkForTombStoneStateEventAndUpdateRoomSummaryIfNeeded:(MXRoomSummary*)summary session:(MXSession*)session roomState:(MXRoomState*)roomState
 {
+    // If room is already hidden, do not check if we should hide it
+    if (summary.hiddenFromUser)
+    {
+        return NO;
+    }
+    
     BOOL updated = NO;
     
     MXRoomTombStoneContent *roomTombStoneContent = roomState.tombStoneContent;
@@ -285,8 +299,13 @@
         
         if (replacementRoomSummary)
         {
-            summary.hiddenFromUser = replacementRoomSummary.membership == MXMembershipJoin;
-            updated = YES;
+            BOOL isReplacementRoomJoined = replacementRoomSummary.membership == MXMembershipJoin;
+                        
+            if (isReplacementRoomJoined)
+            {
+                summary.hiddenFromUser = YES;
+                updated = YES;                
+            }
         }
     }
     
@@ -301,12 +320,13 @@
     if (createContent.roomPredecessorInfo)
     {
         MXRoomSummary *obsoleteRoomSummary = [session roomSummaryWithRoomId:createContent.roomPredecessorInfo.roomId];
-     
-        BOOL obsoleteRoomHiddenFromUserFormerValue = obsoleteRoomSummary.hiddenFromUser;
-        obsoleteRoomSummary.hiddenFromUser = summary.membership == MXMembershipJoin; // Hide room predecessor if user joined the new one
         
-        if (obsoleteRoomHiddenFromUserFormerValue != obsoleteRoomSummary.hiddenFromUser)
+        BOOL isRoomJoined = summary.membership == MXMembershipJoin; 
+        
+        // Hide room predecessor if user joined the new one
+        if (isRoomJoined && obsoleteRoomSummary.hiddenFromUser == NO)
         {
+            obsoleteRoomSummary.hiddenFromUser = YES;
             [obsoleteRoomSummary save:YES];
         }
     }
@@ -314,6 +334,12 @@
 
 - (void)checkRoomIsVirtualWithCreateEvent:(MXEvent*)createEvent summary:(MXRoomSummary*)summary session:(MXSession *)session
 {
+    // If room is already hidden, do not check if we should hide it
+    if (summary.hiddenFromUser)
+    {
+        return;
+    }
+    
     MXRoomCreateContent *createContent = [MXRoomCreateContent modelFromJSON:createEvent.content];
     
     if (createContent.virtualRoomInfo.isVirtual && [summary.creatorUserId isEqualToString:createEvent.sender])
@@ -707,6 +733,57 @@
 {
     NSString *name = [roomState.members memberName:identifier];
     return (name.length > 0 ? name : identifier);
+}
+
+- (BOOL)isEventTypeAllowedAsLastMessage:(NSString*)eventTypeString
+{
+    if (!self.lastMessageEventTypesAllowList)
+    {
+        return YES;
+    }
+    
+    return [self.lastMessageEventTypesAllowList containsObject:eventTypeString];    
+}
+
+- (BOOL)isEventUserProfileChange:(MXEvent*)event
+{
+    if (event.eventType != MXEventTypeRoomMember)
+    {
+        return NO;
+    }
+        
+    return event.isUserProfileChange;
+}
+
+- (BOOL)isMembershipEventJoinOrInvite:(MXEvent*)event forUserId:(NSString*)userId
+{
+    if (event.eventType != MXEventTypeRoomMember)
+    {
+        return NO;
+    }
+    
+    NSString *eventUserId = event.stateKey;
+        
+    if (![userId isEqualToString:eventUserId])
+    {
+        return NO;
+    }
+    
+    MXRoomMember *roomMember = [[MXRoomMember alloc] initWithMXEvent:event];
+    
+    return roomMember.membership == MXMembershipInvite || roomMember.membership == MXMembershipJoin;    
+}
+
+- (BOOL)isMembershipEventAllowedAsLastMessage:(MXEvent*)event forUserId:(NSString*)userId
+{
+    // Do not handle user profile change
+    if ([self isEventUserProfileChange:event])
+    {
+        return NO;
+    }
+    
+    // Only accept membership join or invite for given user id
+    return [self isMembershipEventJoinOrInvite:event forUserId:userId]; 
 }
 
 @end

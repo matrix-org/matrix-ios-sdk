@@ -92,12 +92,12 @@ public struct MXRoomListDataSortOptions: Equatable {
         }
         
         if missedNotificationsFirst {
-            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryProtocol.highlightCount, ascending: false))
-            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryProtocol.notificationCount, ascending: false))
+            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryProtocol.hasAnyHighlight, ascending: false))
+            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryProtocol.hasAnyNotification, ascending: false))
         }
         
         if unreadMessagesFirst {
-            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryProtocol.localUnreadEventCount, ascending: false))
+            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryProtocol.hasAnyUnread, ascending: false))
         }
         
         if lastEventDate {
