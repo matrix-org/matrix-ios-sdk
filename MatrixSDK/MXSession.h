@@ -506,6 +506,21 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
  */
 @property (nonatomic, readonly, getter=isPauseable) BOOL pauseable;
 
+/**
+ Flag indicating the session can resume from its current state.
+ */
+@property (nonatomic, readonly, getter=isResumable) BOOL resumable;
+
+/**
+ Whether the user is part of a room with the membership state of `join` or
+ they are in the process of joining.
+
+ @param roomIdOrAlias The ID or alias of the room to check.
+
+ @return YES if they are.
+ */
+- (BOOL)isJoinedOnRoom:(NSString *)roomIdOrAlias;
+
 #pragma mark - Class methods
 
 /**

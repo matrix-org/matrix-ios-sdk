@@ -150,7 +150,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         httpOperation = nil;
     }
     
-    if (!_isLiveTimeline)
+    if (!_isLiveTimeline && !store.isPermanent)
     {
         // Release past timeline events stored in memory
         [store deleteAllData];
@@ -206,7 +206,10 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     [room.mxSession resetReplayAttackCheckInTimeline:_timelineId];
     
     // Reset the store
-    [store deleteAllData];
+    if (!store.isPermanent)
+    {
+        [store deleteAllData];
+    }
 
     forwardsPaginationToken = nil;
     hasReachedHomeServerForwardsPaginationEnd = NO;

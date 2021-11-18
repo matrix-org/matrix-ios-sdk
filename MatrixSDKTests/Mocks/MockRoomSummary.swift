@@ -59,6 +59,18 @@ internal class MockRoomSummary: NSObject, MXRoomSummaryProtocol {
     
     var highlightCount: UInt = 0
     
+    var hasAnyUnread: Bool {
+        return localUnreadEventCount > 0
+    }
+    
+    var hasAnyNotification: Bool {
+        return notificationCount > 0
+    }
+    
+    var hasAnyHighlight: Bool {
+        return highlightCount > 0
+    }
+    
     var isDirect: Bool {
         return isTyped(.direct)
     }
