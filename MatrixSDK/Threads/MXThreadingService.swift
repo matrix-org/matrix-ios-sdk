@@ -88,6 +88,11 @@ public class MXThreadingService: NSObject {
         return result
     }
     
+    public func threads(inRoom roomId: String) -> [MXThread] {
+        //  sort threads so that the newer is the first
+        return Array(threads.values).filter({ $0.roomId == roomId }).sorted(by: <)
+    }
+    
     private func saveThread(_ thread: MXThread) {
         objc_sync_enter(threads)
         threads[thread.identifier] = thread
