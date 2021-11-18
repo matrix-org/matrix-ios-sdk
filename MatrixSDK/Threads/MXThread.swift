@@ -101,6 +101,29 @@ public class MXThread: NSObject {
     }
 }
 
+//  MARK: - Comparable
+
+extension MXThread: Comparable {
+    
+    public static func < (lhs: MXThread, rhs: MXThread) -> Bool {
+        //  thread will be 'smaller' than an other thread if it's last message is newer
+        let leftLastMessage = lhs.lastMessage
+        let rightLastMessage = rhs.lastMessage
+        if let leftLastMessage = leftLastMessage {
+            if let rightLastMessage = rightLastMessage {
+                return leftLastMessage < rightLastMessage
+            } else {
+                return false
+            }
+        } else if rightLastMessage != nil {
+            return true
+        } else {
+            return false
+        }
+    }
+    
+}
+
 //  MARK: - MXEvent Extension
 
 extension MXEvent: Comparable {
