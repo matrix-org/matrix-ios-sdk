@@ -2357,6 +2357,62 @@ MXAuthAction;
                                  }];
 }
 
+- (MXHTTPOperation*)threadsForRoom:(NSString*)roomId
+                              from:(NSString*)from
+                         direction:(MXTimelineDirection)direction
+                             limit:(NSInteger)limit
+                            filter:(MXRoomEventFilter*)roomEventFilter
+                           success:(void (^)(MXPaginationResponse *paginatedResponse))success
+                           failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/messages", kMXAPIPrefixPathUnstable, roomId];
+    
+    // All query parameters are optional. Fill the request parameters on demand
+    NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
+
+    parameters[@"from"] = from;
+
+    if (direction == MXTimelineDirectionForwards)
+    {
+        parameters[@"dir"] = @"f";
+    }
+    else
+    {
+        parameters[@"dir"] = @"b";
+    }
+    if (-1 != limit)
+    {
+        parameters[@"limit"] = [NSNumber numberWithUnsignedInteger:limit];
+    }
+    
+    if (roomEventFilter.dictionary.count)
+    {
+        parameters[@"filter"] = roomEventFilter.jsonString;
+    }
+
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"GET"
+                                    path:path
+                              parameters:parameters
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
+                                     if (success)
+                                     {
+                                         __block MXPaginationResponse *paginatedResponse;
+                                         [self dispatchProcessing:^{
+                                             MXJSONModelSetMXJSONModel(paginatedResponse, MXPaginationResponse, JSONResponse);
+                                         } andCompletion:^{
+                                             success(paginatedResponse);
+                                         }];
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
 - (MXHTTPOperation*)membersOfRoom:(NSString*)roomId
                           success:(void (^)(NSArray *roomMemberEvents))success
                           failure:(void (^)(NSError *error))failure

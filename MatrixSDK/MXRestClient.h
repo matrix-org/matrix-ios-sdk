@@ -1286,6 +1286,28 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
                             failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
+ Get list of threads for this room.
+
+ @param roomId the id of the room.
+ @param from the token to start getting results from.
+ @param direction `MXTimelineDirectionForwards` or `MXTimelineDirectionBackwards`
+ @param limit (optional, use -1 to not defined this value) the maximum number of messages to return.
+ @param roomEventFilter the filter to pass in the request. Can be nil.
+
+ @param success A block object called when the operation succeeds. It provides a `MXPaginationResponse` object.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)threadsForRoom:(NSString*)roomId
+                              from:(NSString*)from
+                         direction:(MXTimelineDirection)direction
+                             limit:(NSInteger)limit
+                            filter:(MXRoomEventFilter*)roomEventFilter
+                           success:(void (^)(MXPaginationResponse *paginatedResponse))success
+                           failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
+/**
  Get a list of members for this room.
 
  @param roomId the id of the room.
