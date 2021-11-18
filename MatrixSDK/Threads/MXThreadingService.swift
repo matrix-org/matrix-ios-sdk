@@ -35,12 +35,18 @@ extension MXThreadingServiceError: CustomNSError {
     }
 }
 
+@objc
+public protocol MXThreadingServiceDelegate: AnyObject {
+    func threadingServiceDidUpdateThreads(_ service: MXThreadingService)
+}
+
 @objcMembers
 public class MXThreadingService: NSObject {
     
     private weak var session: MXSession?
     
     private var threads: [String: MXThread] = [:]
+    private let multicastDelegate: MXMulticastDelegate<MXThreadingServiceDelegate> = MXMulticastDelegate()
     
     public static let newThreadCreated: Notification.Name = Notification.Name("MXThreadingService.newThreadCreated")
     
@@ -62,6 +68,7 @@ public class MXThreadingService: NSObject {
         if let thread = thread(withId: threadIdentifier) {
             //  add event to the thread if found
             thread.addEvent(event)
+            notifyDidUpdateThreads()
         } else {
             //  create the thread for the first time
             let thread: MXThread
@@ -74,6 +81,7 @@ public class MXThreadingService: NSObject {
             thread.addEvent(event)
             saveThread(thread)
             NotificationCenter.default.post(name: Self.newThreadCreated, object: thread, userInfo: nil)
+            notifyDidUpdateThreads()
         }
     }
     
@@ -132,6 +140,24 @@ public class MXThreadingService: NSObject {
                 completion(.failure(error))
             }
         }
+    }
+    
+    //  MARK: - Delegate
+    
+    public func addDelegate(_ delegate: MXThreadingServiceDelegate) {
+        multicastDelegate.addDelegate(delegate)
+    }
+    
+    public func removeDelegate(_ delegate: MXThreadingServiceDelegate) {
+        multicastDelegate.removeDelegate(delegate)
+    }
+    
+    public func removeAllDelegates() {
+        multicastDelegate.removeAllDelegates()
+    }
+    
+    private func notifyDidUpdateThreads() {
+        multicastDelegate.invoke({ $0.threadingServiceDidUpdateThreads(self) })
     }
     
 }
