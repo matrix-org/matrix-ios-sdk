@@ -62,8 +62,16 @@ public class MXThread: NSObject {
         }
     }
     
+    public var rootMessage: MXEvent? {
+        guard hasRootEvent else {
+            return nil
+        }
+        //  sort events so that the older is the first
+        return eventsMap.values.sorted(by: >).first
+    }
+    
     public var lastMessage: MXEvent? {
-        //  sort events by their age: so older events will be at the beginning in the array
+        //  sort events so that the older is the first
         return eventsMap.values.sorted(by: >).last
     }
     
