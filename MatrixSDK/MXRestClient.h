@@ -1280,7 +1280,7 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
 - (MXHTTPOperation*)messagesForRoom:(NSString*)roomId
                                from:(NSString*)from
                           direction:(MXTimelineDirection)direction
-                              limit:(NSUInteger)limit
+                              limit:(NSInteger)limit
                              filter:(MXRoomEventFilter*)roomEventFilter
                             success:(void (^)(MXPaginationResponse *paginatedResponse))success
                             failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;

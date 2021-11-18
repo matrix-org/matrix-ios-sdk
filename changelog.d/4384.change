@@ -1,1 +1,0 @@
-Made room list fetch sort and filter options structs. Removed fetch options references from them and made them equatable. Comparing them in the fetch options before refreshing the fetchers.

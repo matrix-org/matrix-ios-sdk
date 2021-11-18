@@ -28,6 +28,7 @@
 
 #import "MXEvent.h"
 #import "MXJSONModels.h"
+#import "MXEventContentPollStart.h"
 #import "MXRoomSummary.h"
 #import "MXRoomMember.h"
 #import "MXReceiptData.h"
@@ -956,6 +957,23 @@ FOUNDATION_EXPORT NSInteger const kMXRoomAlreadyJoinedErrorCode;
                              success:(void (^)(NSString *eventId))success
                              failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
+#pragma mark - Polls
+
+- (MXHTTPOperation *)sendPollStartWithContent:(MXEventContentPollStart *)content
+                                    localEcho:(MXEvent **)localEcho
+                                      success:(void (^)(NSString *))success
+                                      failure:(void (^)(NSError *))failure;
+
+- (MXHTTPOperation*)sendPollResponseForEvent:(MXEvent *)pollEvent
+                       withAnswerIdentifiers:(NSArray<NSString *> *)answerIdentifiers
+                                   localEcho:(MXEvent **)localEcho
+                                     success:(void (^)(NSString *eventId))success
+                                     failure:(void (^)(NSError *error))failure;
+
+- (MXHTTPOperation*)sendPollEndForEvent:(MXEvent *)pollEvent
+                              localEcho:(MXEvent **)localEcho
+                                success:(void (^)(NSString *eventId))success
+                                failure:(void (^)(NSError *error))failure;
 
 #pragma mark - Events listeners on the live timeline
 /**
