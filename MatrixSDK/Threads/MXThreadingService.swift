@@ -99,25 +99,31 @@ public class MXThreadingService: NSObject {
         objc_sync_exit(threads)
     }
     
+    @discardableResult
     public func allThreads(inRoom roomId: String,
-                           completion: @escaping (MXResponse<[MXThread]>) -> Void) {
+                           completion: @escaping (MXResponse<[MXThread]>) -> Void) -> MXHTTPOperation? {
         guard let session = session else {
             completion(.failure(MXThreadingServiceError.sessionNotFound))
-            return
+            return nil
         }
         
         let filter = MXRoomEventFilter()
         filter.relationTypes = [MXEventRelationTypeThread]
         
-        session.matrixRestClient.messages(forRoom: roomId,
-                                          from: "",
-                                          direction: .backwards,
-                                          limit: nil,
-                                          filter: filter) { response in
+        return session.matrixRestClient.threads(forRoom: roomId,
+                                                 from: "",
+                                                 direction: .backwards,
+                                                 limit: nil,
+                                                 filter: filter) { response in
             switch response {
             case .success(let paginationResponse):
                 if let rootEvents = paginationResponse.chunk {
-                    let threads = rootEvents.map({ MXThread(withSession: session, rootEvent: $0) })
+                    let threads = rootEvents.map { event -> MXThread in
+                        if let thread = self.thread(withId: event.eventId) {
+                            return thread
+                        }
+                        return MXThread(withSession: session, rootEvent: event)
+                    }
                     completion(.success(threads))
                 } else {
                     completion(.success([]))
