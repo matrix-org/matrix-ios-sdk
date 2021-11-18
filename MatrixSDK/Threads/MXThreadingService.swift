@@ -101,6 +101,11 @@ public class MXThreadingService: NSObject {
         return Array(threads.values).filter({ $0.roomId == roomId }).sorted(by: <)
     }
     
+    public func participatedThreads(inRoom roomId: String) -> [MXThread] {
+        //  filter only participated threads
+        return threads(inRoom: roomId).filter({ $0.isParticipated })
+    }
+    
     private func saveThread(_ thread: MXThread) {
         objc_sync_enter(threads)
         threads[thread.identifier] = thread

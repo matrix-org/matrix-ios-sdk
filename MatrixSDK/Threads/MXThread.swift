@@ -62,6 +62,13 @@ public class MXThread: NSObject {
         }
     }
     
+    public var isParticipated: Bool {
+        guard let session = session else {
+            return false
+        }
+        return eventsMap.values.first(where: { $0.sender == session.myUserId }) != nil
+    }
+    
     public var rootMessage: MXEvent? {
         guard hasRootEvent else {
             return nil
