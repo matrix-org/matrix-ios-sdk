@@ -25,9 +25,7 @@ public class MXThread: NSObject {
     
     public let roomId: String
     
-    public private(set) var hasRootEvent: Bool
-    
-    private var eventsMap: [String:MXEvent] = [:]
+    private var eventsMap: [String: MXEvent] = [:]
     
     internal init(withSession session: MXSession,
                   identifier: String,
@@ -35,7 +33,6 @@ public class MXThread: NSObject {
         self.session = session
         self.identifier = identifier
         self.roomId = roomId
-        self.hasRootEvent = false
         super.init()
     }
     
@@ -44,7 +41,6 @@ public class MXThread: NSObject {
         self.session = session
         self.identifier = rootEvent.eventId
         self.roomId = rootEvent.roomId
-        self.hasRootEvent = true
         self.eventsMap = [rootEvent.eventId: rootEvent]
         super.init()
     }
@@ -55,11 +51,6 @@ public class MXThread: NSObject {
             return
         }
         eventsMap[event.eventId] = event
-        
-        if event.eventId == identifier {
-            //  if root event is added later, update the flag
-            hasRootEvent = true
-        }
     }
     
     public var isParticipated: Bool {
@@ -70,11 +61,7 @@ public class MXThread: NSObject {
     }
     
     public var rootMessage: MXEvent? {
-        guard hasRootEvent else {
-            return nil
-        }
-        //  sort events so that the older is the first
-        return eventsMap.values.sorted(by: >).first
+        return eventsMap[identifier]
     }
     
     public var lastMessage: MXEvent? {

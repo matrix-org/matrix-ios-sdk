@@ -68,7 +68,6 @@ public class MXThreadingService: NSObject {
         if let thread = thread(withId: threadIdentifier) {
             //  add event to the thread if found
             thread.addEvent(event)
-            notifyDidUpdateThreads()
         } else {
             //  create the thread for the first time
             let thread: MXThread
@@ -81,8 +80,8 @@ public class MXThreadingService: NSObject {
             thread.addEvent(event)
             saveThread(thread)
             NotificationCenter.default.post(name: Self.newThreadCreated, object: thread, userInfo: nil)
-            notifyDidUpdateThreads()
         }
+        notifyDidUpdateThreads()
     }
     
     public func isEventThreadRoot(_ event: MXEvent) -> Bool {
