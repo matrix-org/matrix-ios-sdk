@@ -960,17 +960,20 @@ FOUNDATION_EXPORT NSInteger const kMXRoomAlreadyJoinedErrorCode;
 #pragma mark - Polls
 
 - (MXHTTPOperation *)sendPollStartWithContent:(MXEventContentPollStart *)content
+                                     threadId:(NSString*)threadId
                                     localEcho:(MXEvent **)localEcho
                                       success:(void (^)(NSString *))success
                                       failure:(void (^)(NSError *))failure;
 
 - (MXHTTPOperation*)sendPollResponseForEvent:(MXEvent *)pollEvent
                        withAnswerIdentifiers:(NSArray<NSString *> *)answerIdentifiers
+                                    threadId:(NSString*)threadId
                                    localEcho:(MXEvent **)localEcho
                                      success:(void (^)(NSString *eventId))success
                                      failure:(void (^)(NSError *error))failure;
 
 - (MXHTTPOperation*)sendPollEndForEvent:(MXEvent *)pollEvent
+                               threadId:(NSString*)threadId
                               localEcho:(MXEvent **)localEcho
                                 success:(void (^)(NSString *eventId))success
                                 failure:(void (^)(NSError *error))failure;

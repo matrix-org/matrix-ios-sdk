@@ -2289,6 +2289,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
 #pragma mark - Polls
 
 - (MXHTTPOperation *)sendPollStartWithContent:(MXEventContentPollStart *)content
+                                     threadId:(NSString*)threadId
                                     localEcho:(MXEvent **)localEcho
                                       success:(void (^)(NSString *))success
                                       failure:(void (^)(NSError *))failure
@@ -2314,11 +2315,12 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
         }
     }
 
-    return [self sendEventOfType:kMXEventTypeStringPollStart content:content.JSONDictionary localEcho:localEcho success:success failure:failure];
+    return [self sendEventOfType:kMXEventTypeStringPollStart content:content.JSONDictionary threadId:threadId localEcho:localEcho success:success failure:failure];
 }
 
 - (MXHTTPOperation *)sendPollResponseForEvent:(MXEvent *)pollStartEvent
                         withAnswerIdentifiers:(NSArray<NSString *> *)answerIdentifiers
+                                     threadId:(NSString*)threadId
                                     localEcho:(MXEvent **)localEcho
                                       success:(void (^)(NSString *))success
                                       failure:(void (^)(NSError *))failure
@@ -2343,10 +2345,11 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
         kMXMessageContentKeyExtensiblePollResponse: @{ kMXMessageContentKeyExtensiblePollAnswers: answerIdentifiers }
     };
     
-    return [self sendEventOfType:kMXEventTypeStringPollResponse content:content localEcho:localEcho success:success failure:failure];
+    return [self sendEventOfType:kMXEventTypeStringPollResponse content:content threadId:threadId localEcho:localEcho success:success failure:failure];
 }
 
 - (MXHTTPOperation *)sendPollEndForEvent:(MXEvent *)pollStartEvent
+                                threadId:(NSString*)threadId
                                localEcho:(MXEvent **)localEcho
                                  success:(void (^)(NSString *))success
                                  failure:(void (^)(NSError *))failure
@@ -2362,7 +2365,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
         kMXMessageContentKeyExtensiblePollEnd: @{}
     };
     
-    return [self sendEventOfType:kMXEventTypeStringPollEnd content:content localEcho:localEcho success:success failure:failure];
+    return [self sendEventOfType:kMXEventTypeStringPollEnd content:content threadId:threadId localEcho:localEcho success:success failure:failure];
 }
 
 #pragma mark - Message order preserving
