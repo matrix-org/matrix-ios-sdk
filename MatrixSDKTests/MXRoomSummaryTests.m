@@ -1508,6 +1508,73 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
     }];
 }
 
+- (void)testTombstoneRoomIsHiddenAfterGappySync
+{
+    [matrixSDKTestsData doMXRestClientTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
+        
+        MXSession *aliceSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+        [matrixSDKTestsData retain:aliceSession];
+        
+        [aliceSession start:^{
+            MXRoom *room = [aliceSession roomWithRoomId:roomId];
+            [room state:^(MXRoomState *roomState) {
+                MXEvent *event = [roomState stateEventsWithType:kMXEventTypeStringRoomCreate].firstObject;
+                MXRoomCreateContent *createContent = [MXRoomCreateContent modelFromJSON:event.content];
+                NSUInteger version = [createContent.roomVersion integerValue];
+                
+                // Given a non tombstoned room
+                XCTAssertNil(roomState.tombStoneContent);
+                XCTAssertFalse(room.summary.hiddenFromUser);
+                
+                // When the next sync for this room is gappy and the room has been upgraded.
+                [aliceSession pause];
+                
+                [matrixSDKTestsData for:bobRestClient andRoom:roomId sendMessages:30 testCase:self success:^{
+                    NSString *newVersion = [NSString stringWithFormat:@"%ld", version + 1];
+                    [bobRestClient upgradeRoom:roomId toVersion:newVersion success:^(MXUpgradeRoomResponse *upgradeResponse) {
+                        [bobRestClient inviteUser:aliceRestClient.credentials.userId toRoom:upgradeResponse.replacementRoomId success:^{
+                            
+#warning For debugging only, remove this when finished.
+                            MXRoomSummaryUpdater *updater = (MXRoomSummaryUpdater *)aliceSession.roomSummaryUpdateDelegate;
+                            updater.ignoreRedactedEvent = YES;
+                            
+                            // Then the original room should be hidden after the gappy sync
+                            [aliceRestClient joinRoom:upgradeResponse.replacementRoomId viaServers:nil withThirdPartySigned:nil success:^(NSString *theRoomId) {
+                                [aliceSession start:^{
+                                    MXRoom *oldRoom = [aliceSession roomWithRoomId:roomId];
+                                    
+                                    [oldRoom state:^(MXRoomState *roomState) {
+                                        XCTAssertNotNil(roomState.tombStoneContent);
+                                        XCTAssertTrue(oldRoom.summary.hiddenFromUser);
+                                        [aliceSession close];
+                                        
+                                        [expectation fulfill];
+                                    }];
+                                } failure:^(NSError *error) {
+                                    XCTFail(@"The request should not fail - NSError: %@", error);
+                                    [expectation fulfill];
+                                }];
+                            } failure:^(NSError *error) {
+                                XCTFail(@"The request should not fail - NSError: %@", error);
+                                [expectation fulfill];
+                            }];
+                        } failure:^(NSError *error) {
+                            XCTFail(@"The request should not fail - NSError: %@", error);
+                            [expectation fulfill];
+                        }];
+                    } failure:^(NSError *error) {
+                        XCTFail(@"The request should not fail - NSError: %@", error);
+                        [expectation fulfill];
+                    }];
+                }];
+            }];
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
 @end
 
 #pragma clang diagnostic pop
