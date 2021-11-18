@@ -1024,7 +1024,7 @@ public extension MXRestClient {
         } else {
             _limit = -1;
         }
-        return __messages(forRoom: roomId, from: from, direction: direction.identifier, limit: UInt(_limit), filter: filter, success: currySuccess(completion), failure: curryFailure(completion))
+        return __messages(forRoom: roomId, from: from, direction: direction.identifier, limit: _limit, filter: filter, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
     /**
