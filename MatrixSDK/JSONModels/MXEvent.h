@@ -91,6 +91,7 @@ typedef NS_ENUM(NSInteger, MXEventType)
     MXEventTypeSecretStorageDefaultKey,
     MXEventTypeTaggedEvents,
     MXEventTypeSpaceChild,
+    MXEventTypePollStart,
 
     // The event is a custom event. Refer to its `MXEventTypeString` version
     MXEventTypeCustom = 1000
