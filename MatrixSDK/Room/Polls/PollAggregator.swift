@@ -17,11 +17,11 @@
 import Foundation
 
 /// PollAggregator errors 
-enum PollAggregatorError: Error {
+public enum PollAggregatorError: Error {
     case invalidPollStartEvent
 }
 
-protocol PollAggregatorDelegate: AnyObject {
+public protocol PollAggregatorDelegate: AnyObject {
     func pollAggregatorDidStartLoading(_ aggregator: PollAggregator)
     func pollAggregatorDidEndLoading(_ aggregator: PollAggregator)
     func pollAggregator(_ aggregator: PollAggregator, didFailWithError: Error)
@@ -34,7 +34,7 @@ protocol PollAggregatorDelegate: AnyObject {
  I will also listen for `mxRoomDidFlushData` and reload all data to avoid gappy sync problems
 */
 
-class PollAggregator {
+public class PollAggregator {
     
     private let session: MXSession
     private let room: MXRoom
@@ -45,19 +45,19 @@ class PollAggregator {
     private var eventListener: Any!
     private var events: [MXEvent] = []
     
-    private(set) var poll: PollProtocol! {
+    public private(set) var poll: PollProtocol! {
         didSet {
             delegate?.pollAggregatorDidUpdateData(self)
         }
     }
     
-    var delegate: PollAggregatorDelegate?
+    public var delegate: PollAggregatorDelegate?
     
     deinit {
         room.removeListener(eventListener)
     }
     
-    init(session: MXSession, room: MXRoom, pollStartEvent: MXEvent) throws {
+    public init(session: MXSession, room: MXRoom, pollStartEvent: MXEvent) throws {
         self.session = session
         self.room = room
         self.pollStartEvent = pollStartEvent
