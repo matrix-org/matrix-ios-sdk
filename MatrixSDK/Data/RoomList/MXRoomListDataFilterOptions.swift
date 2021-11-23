@@ -76,8 +76,8 @@ public struct MXRoomListDataFilterOptions: Equatable {
     
     /// To be used for CoreData fetch request
     internal var predicate: NSPredicate? {
-        var subpredicates: [NSPredicate] = []
-        
+        let hiddenFromUserPredicate = NSPredicate(format: "%K == 0", #keyPath(MXRoomSummaryProtocol.hiddenFromUser))
+        var subpredicates: [NSPredicate] = [hiddenFromUserPredicate]
         if let query = query, !query.isEmpty {
             let subpredicate1 = NSPredicate(format: "%K CONTAINS[cd] %@",
                                             #keyPath(MXRoomSummaryProtocol.displayname), query)
