@@ -60,28 +60,30 @@ public class MXThreadingService: NSObject {
             //  session closed
             return
         }
-        guard let threadIdentifier = event.threadIdentifier else {
-            //  event is not in a thread
-            return
-        }
-        
-        if let thread = thread(withId: threadIdentifier) {
-            //  add event to the thread if found
-            thread.addEvent(event)
-        } else {
-            //  create the thread for the first time
-            let thread: MXThread
-            //  try to find the root event in the session store
-            if let rootEvent = session.store.event(withEventId: threadIdentifier, inRoom: event.roomId) {
-                thread = MXThread(withSession: session, rootEvent: rootEvent)
+        if let threadIdentifier = event.threadIdentifier {
+            //  event is in a thread
+            if let thread = thread(withId: threadIdentifier) {
+                //  add event to the thread if found
+                thread.addEvent(event)
             } else {
-                thread = MXThread(withSession: session, identifier: threadIdentifier, roomId: event.roomId)
+                //  create the thread for the first time
+                let thread: MXThread
+                //  try to find the root event in the session store
+                if let rootEvent = session.store.event(withEventId: threadIdentifier, inRoom: event.roomId) {
+                    thread = MXThread(withSession: session, rootEvent: rootEvent)
+                } else {
+                    thread = MXThread(withSession: session, identifier: threadIdentifier, roomId: event.roomId)
+                }
+                thread.addEvent(event)
+                saveThread(thread)
+                NotificationCenter.default.post(name: Self.newThreadCreated, object: thread, userInfo: nil)
             }
+            notifyDidUpdateThreads()
+        } else if let thread = thread(withId: event.eventId) {
+            //  event is the root event of a thread
             thread.addEvent(event)
-            saveThread(thread)
-            NotificationCenter.default.post(name: Self.newThreadCreated, object: thread, userInfo: nil)
+            notifyDidUpdateThreads()
         }
-        notifyDidUpdateThreads()
     }
     
     public func isEventThreadRoot(_ event: MXEvent) -> Bool {
