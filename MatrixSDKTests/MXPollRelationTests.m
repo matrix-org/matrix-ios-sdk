@@ -93,7 +93,7 @@
 // Make sure that's still the case.
 - (void)testNoPollRelationPagination
 {
-    NSUInteger totalAnswers = 5;
+    NSUInteger totalAnswers = 100;
     
     [self createScenarioForBob:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation, MXEvent *pollStartEvent, MXEventContentPollStart *pollStartContent) {
         dispatch_group_t dispatchGroup = dispatch_group_create();
