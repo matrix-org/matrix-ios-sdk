@@ -36,19 +36,25 @@ extension MXThreadingServiceError: CustomNSError {
 }
 
 @objcMembers
+/// Threading service class.
 public class MXThreadingService: NSObject {
     
     private weak var session: MXSession?
     
     private var threads: [String: MXThread] = [:]
     
+    /// Notification to be posted when a new thread is created.
     public static let newThreadCreated: Notification.Name = Notification.Name("MXThreadingService.newThreadCreated")
     
+    /// Initializer
+    /// - Parameter session: session instance
     public init(withSession session: MXSession) {
         self.session = session
         super.init()
     }
     
+    /// Adds event to the related thread instance
+    /// - Parameter event: event to be handled
     public func handleEvent(_ event: MXEvent) {
         guard let session = session else {
             //  session closed
@@ -77,10 +83,16 @@ public class MXThreadingService: NSObject {
         }
     }
     
+    /// Method to check an event is a thread root or not
+    /// - Parameter event: event to be checked
+    /// - Returns: true is given event is a thread root
     public func isEventThreadRoot(_ event: MXEvent) -> Bool {
         return thread(withId: event.eventId) != nil
     }
     
+    /// Method to get a thread with specific identifier
+    /// - Parameter identifier: identifier of a thread
+    /// - Returns: thread instance if found, nil otherwise
     public func thread(withId identifier: String) -> MXThread? {
         objc_sync_enter(threads)
         let result = threads[identifier]
@@ -94,6 +106,10 @@ public class MXThreadingService: NSObject {
         objc_sync_exit(threads)
     }
     
+    /// Method to fetch all threads in a room. Will be used in future.
+    /// - Parameters:
+    ///   - roomId: room identifier
+    ///   - completion: completion block to be called at the end of the process
     public func allThreads(inRoom roomId: String,
                            completion: @escaping (MXResponse<[MXThread]>) -> Void) {
         guard let session = session else {
