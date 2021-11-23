@@ -124,6 +124,9 @@ extension MXEvent: Comparable {
     
     public static func < (lhs: MXEvent, rhs: MXEvent) -> Bool {
         //  event will be 'smaller' than an other event if it's newer
+        if lhs.originServerTs != NSNotFound && rhs.originServerTs != NSNotFound {
+            return lhs.compareOriginServerTs(rhs) == .orderedAscending
+        }
         return lhs.age < rhs.age
     }
     
