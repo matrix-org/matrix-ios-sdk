@@ -17,12 +17,12 @@
 import Foundation
 
 struct PollBuilder {
-    func build(pollStartEventContent: MXEventContentPollStart, events: [MXEvent], currentUserIdentifer: String? = nil) -> PollProtocol {
+    func build(pollStartEventContent: MXEventContentPollStart, events: [MXEvent], currentUserIdentifier: String) -> PollProtocol {
         
         let poll = Poll()
         
         poll.text = pollStartEventContent.question
-        poll.maxAllowedSelections = pollStartEventContent.maxSelections.uintValue
+        poll.maxAllowedSelections = max(1, pollStartEventContent.maxSelections.uintValue)
         poll.kind = (pollStartEventContent.kind == kMXMessageContentKeyExtensiblePollKindUndisclosed ? .undisclosed : .disclosed)
         
         var answerOptionIdentifiers = [String]()
@@ -95,7 +95,7 @@ struct PollBuilder {
                 }
             }
             
-            if groupedUserAnswers.key == currentUserIdentifer {
+            if groupedUserAnswers.key == currentUserIdentifier {
                 currentUserAnswers = groupedUserAnswers.value
             }
             

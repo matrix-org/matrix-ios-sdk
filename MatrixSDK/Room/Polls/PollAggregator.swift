@@ -70,7 +70,7 @@ public class PollAggregator {
         
         pollBuilder = PollBuilder()
         
-        poll = pollBuilder.build(pollStartEventContent: self.pollStartEventContent, events: self.events)
+        poll = pollBuilder.build(pollStartEventContent: self.pollStartEventContent, events: self.events, currentUserIdentifier: session.myUserId)
         
         reloadData()
         
@@ -103,10 +103,10 @@ public class PollAggregator {
                 
                 self.events.append(event)
                 
-                self.poll = self.pollBuilder.build(pollStartEventContent: self.pollStartEventContent, events: self.events)
+                self.poll = self.pollBuilder.build(pollStartEventContent: self.pollStartEventContent, events: self.events, currentUserIdentifier: self.session.myUserId)
             } as Any
             
-            self.poll = self.pollBuilder.build(pollStartEventContent: self.pollStartEventContent, events: self.events)
+            self.poll = self.pollBuilder.build(pollStartEventContent: self.pollStartEventContent, events: self.events, currentUserIdentifier: self.session.myUserId)
             
             self.delegate?.pollAggregatorDidEndLoading(self)
             
