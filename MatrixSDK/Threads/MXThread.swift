@@ -17,12 +17,16 @@
 import Foundation
 
 @objcMembers
+/// Thread instance. Use `MXThreadingService` to access threads.
 public class MXThread: NSObject {
     
-    public weak var session: MXSession?
+    /// Session instance
+    public private(set) weak var session: MXSession?
     
+    /// Identifier of a thread. It's equal to identifier of the root event
     public let identifier: String
     
+    /// Identifier of the room, in which the thread is
     public let roomId: String
     
     private var eventsMap: [String: MXEvent] = [:]
@@ -45,7 +49,7 @@ public class MXThread: NSObject {
         super.init()
     }
     
-    public func addEvent(_ event: MXEvent) {
+    internal func addEvent(_ event: MXEvent) {
         guard eventsMap[event.eventId] == nil else {
             //  do not re-add the event
             return
@@ -64,15 +68,19 @@ public class MXThread: NSObject {
         return eventsMap[identifier]
     }
     
+    /// Last message of the thread
     public var lastMessage: MXEvent? {
         //  sort events so that the older is the first
         return eventsMap.values.sorted(by: >).last
     }
     
+    /// Number of replies in the thread. Does not count the root event
     public var numberOfReplies: Int {
         return eventsMap.filter({ $0 != identifier && $1.isInThread() }).count
     }
     
+    /// Fetches all replies in a thread. Not used right now
+    /// - Parameter completion: Completion block to be called at the end of the progress
     public func allReplies(completion: @escaping (MXResponse<[MXEvent]>) -> Void) {
         guard let session = session else {
             completion(.failure(MXThreadingServiceError.sessionNotFound))
