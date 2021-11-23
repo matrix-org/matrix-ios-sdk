@@ -57,6 +57,7 @@ public class MXThread: NSObject {
         eventsMap[event.eventId] = event
     }
     
+    /// Flag indicating the current user participated in the thread
     public var isParticipated: Bool {
         guard let session = session else {
             return false
@@ -64,6 +65,7 @@ public class MXThread: NSObject {
         return eventsMap.values.first(where: { $0.sender == session.myUserId }) != nil
     }
     
+    /// Root message of the thread
     public var rootMessage: MXEvent? {
         return eventsMap[identifier]
     }
@@ -107,6 +109,11 @@ public class MXThread: NSObject {
 
 extension MXThread: Comparable {
     
+    /// Comparator for thread instances, to compare two threads according to their last message time.
+    /// - Parameters:
+    ///   - lhs: left operand
+    ///   - rhs: right operand
+    /// - Returns: true if left operand's last message is newer than the right operand's last message, false otherwise
     public static func < (lhs: MXThread, rhs: MXThread) -> Bool {
         //  thread will be 'smaller' than an other thread if it's last message is newer
         let leftLastMessage = lhs.lastMessage

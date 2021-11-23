@@ -107,11 +107,17 @@ public class MXThreadingService: NSObject {
         return result
     }
     
+    /// Get threads in a room
+    /// - Parameter roomId: room identifier
+    /// - Returns: thread list in given room
     public func threads(inRoom roomId: String) -> [MXThread] {
         //  sort threads so that the newer is the first
         return Array(threads.values).filter({ $0.roomId == roomId }).sorted(by: <)
     }
     
+    /// Get participated threads in a room
+    /// - Parameter roomId: room identifier
+    /// - Returns: participated thread list in given room
     public func participatedThreads(inRoom roomId: String) -> [MXThread] {
         //  filter only participated threads
         return threads(inRoom: roomId).filter({ $0.isParticipated })
@@ -164,14 +170,19 @@ public class MXThreadingService: NSObject {
     
     //  MARK: - Delegate
     
+    /// Add delegate instance
+    /// - Parameter delegate: delegate instance
     public func addDelegate(_ delegate: MXThreadingServiceDelegate) {
         multicastDelegate.addDelegate(delegate)
     }
     
+    /// Remove delegate instance
+    /// - Parameter delegate: delegate instance
     public func removeDelegate(_ delegate: MXThreadingServiceDelegate) {
         multicastDelegate.removeDelegate(delegate)
     }
     
+    /// Remove all delegates
     public func removeAllDelegates() {
         multicastDelegate.removeAllDelegates()
     }
