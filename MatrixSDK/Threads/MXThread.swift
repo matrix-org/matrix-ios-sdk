@@ -17,12 +17,16 @@
 import Foundation
 
 @objcMembers
+/// Thread instance. Use `MXThreadingService` to access threads.
 public class MXThread: NSObject {
     
-    public weak var session: MXSession?
+    /// Session instance
+    public private(set) weak var session: MXSession?
     
+    /// Identifier of a thread. It's equal to identifier of the root event
     public let identifier: String
     
+    /// Identifier of the room, in which the thread is
     public let roomId: String
     
     private var eventsMap: [String: MXEvent] = [:]
@@ -45,7 +49,7 @@ public class MXThread: NSObject {
         super.init()
     }
     
-    public func addEvent(_ event: MXEvent) {
+    internal func addEvent(_ event: MXEvent) {
         guard eventsMap[event.eventId] == nil else {
             //  do not re-add the event
             return
@@ -53,6 +57,7 @@ public class MXThread: NSObject {
         eventsMap[event.eventId] = event
     }
     
+    /// Flag indicating the current user participated in the thread
     public var isParticipated: Bool {
         guard let session = session else {
             return false
@@ -60,19 +65,24 @@ public class MXThread: NSObject {
         return eventsMap.values.first(where: { $0.sender == session.myUserId }) != nil
     }
     
+    /// Root message of the thread
     public var rootMessage: MXEvent? {
         return eventsMap[identifier]
     }
     
+    /// Last message of the thread
     public var lastMessage: MXEvent? {
         //  sort events so that the older is the first
         return eventsMap.values.sorted(by: >).last
     }
     
+    /// Number of replies in the thread. Does not count the root event
     public var numberOfReplies: Int {
         return eventsMap.filter({ $0 != identifier && $1.isInThread() }).count
     }
     
+    /// Fetches all replies in a thread. Not used right now
+    /// - Parameter completion: Completion block to be called at the end of the progress
     public func allReplies(completion: @escaping (MXResponse<[MXEvent]>) -> Void) {
         guard let session = session else {
             completion(.failure(MXThreadingServiceError.sessionNotFound))
@@ -99,6 +109,11 @@ public class MXThread: NSObject {
 
 extension MXThread: Comparable {
     
+    /// Comparator for thread instances, to compare two threads according to their last message time.
+    /// - Parameters:
+    ///   - lhs: left operand
+    ///   - rhs: right operand
+    /// - Returns: true if left operand's last message is newer than the right operand's last message, false otherwise
     public static func < (lhs: MXThread, rhs: MXThread) -> Bool {
         //  thread will be 'smaller' than an other thread if it's last message is newer
         let leftLastMessage = lhs.lastMessage
