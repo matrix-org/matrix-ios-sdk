@@ -17,6 +17,10 @@
 
 #import <Foundation/Foundation.h>
 
+#import "MXCallHangupEventContent.h"
+
+@class MXCall;
+
 NS_ASSUME_NONNULL_BEGIN
 
 /**
@@ -44,15 +48,28 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)trackDuration:(NSTimeInterval)seconds category:(NSString*)category name:(NSString*)name;
 
 /**
- Report a value.
+ Report that a call has started.
  
- An example is the user's room count.
- 
- @param value the number to report.
- @param category the category the value belongs to.
- @param name the name of the value.
+ @param call The call that has started.
  */
-- (void)trackValue:(NSNumber*)value category:(NSString*)category name:(NSString*)name;
+- (void)trackCallStarted:(MXCall *)call;
+
+/**
+ Report that a call has ended.
+ 
+ @param call The call that has started.
+ */
+- (void)trackCallEnded:(MXCall *)call;
+
+/**
+ Report that a call encountered an error.
+ 
+ @param call The call that has started.
+ @param reason The call hangup reason.
+ */
+- (void)trackCallError:(MXCall *)call withReason:(MXCallHangupReason)reason;
+
+- (void)trackContactsAccessGranted:(BOOL)granted;
 
 @end
 

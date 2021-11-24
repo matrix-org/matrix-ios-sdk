@@ -1368,8 +1368,8 @@ typedef void (^MXOnResumeDone)(void);
         if (!self->firstSyncDone)
         {
             BOOL isInitialSync = !self.isEventStreamInitialised;
-            syncTaskProfile = [MXSDKOptions.sharedInstance.profiler startMeasuringTaskWithName:isInitialSync ? kMXAnalyticsStartupInititialSync : kMXAnalyticsStartupIncrementalSync
-                                                            category:kMXAnalyticsStartupCategory];
+            syncTaskProfile = [MXSDKOptions.sharedInstance.profiler startMeasuringTaskWithName:isInitialSync ? kMXAnalyticsStartupInitialSync : kMXAnalyticsStartupIncrementalSync
+                                                                                      category:kMXAnalyticsStartupCategory];
         }
         
         NSString * streamToken = self.store.eventStreamToken;
@@ -1402,10 +1402,10 @@ typedef void (^MXOnResumeDone)(void);
     }
     
     dispatch_group_notify(initialSyncDispatchGroup, dispatch_get_main_queue(), ^{
-        BOOL wasfirstSync = NO;
+        BOOL wasFirstSync = NO;
         if (!self->firstSyncDone && syncTaskProfile)
         {
-            wasfirstSync = YES;
+            wasFirstSync = YES;
             self->firstSyncDone = YES;
             
             // Contextualise the profiling with the amount of received information
@@ -1435,13 +1435,6 @@ typedef void (^MXOnResumeDone)(void);
         }
         
         [self handleSyncResponse:syncResponse completion:^{
-            
-            if (wasfirstSync)
-            {
-                [[MXSDKOptions sharedInstance].analyticsDelegate trackValue:@(self->rooms.count)
-                                                                   category:kMXAnalyticsStatsCategory
-                                                                       name:kMXAnalyticsStatsRooms];
-            }
             
             dispatch_group_t dispatchGroupLastMessage = dispatch_group_create();
             
