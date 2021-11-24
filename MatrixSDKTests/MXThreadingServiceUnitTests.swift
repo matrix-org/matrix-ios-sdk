@@ -183,10 +183,7 @@ class MXThreadingServiceUnitTests: XCTestCase {
             "event_id": threadIdentifier,
             "room_id": roomId,
             "type": kMXEventTypeStringRoomMessage,
-            "origin_server_ts": Date().timeIntervalSince1970,
-            "unsigned": [
-                "age": 1001
-            ],
+            "origin_server_ts": Date().timeIntervalSince1970 - 1,
             "content": [
                 "type": kMXMessageTypeText,
                 "body": "Root",
@@ -202,9 +199,6 @@ class MXThreadingServiceUnitTests: XCTestCase {
             "room_id": roomId,
             "type": kMXEventTypeStringRoomMessage,
             "origin_server_ts": Date().timeIntervalSince1970,
-            "unsigned": [
-                "age": 1000
-            ],
             "content": [
                 "type": kMXMessageTypeText,
                 "body": "Message",
@@ -257,6 +251,73 @@ class MXThreadingServiceUnitTests: XCTestCase {
                 }
             }
         }
+    }
+    
+    func testHandleEventUpdatingThreadWithRootEvent() {
+        let threadIdentifier = "some_thread_identifier"
+        let roomId = "!some_room_id:some_domain.com"
+        
+        //  create thread root event
+        guard let rootEvent = MXEvent(fromJSON: [
+            "event_id": threadIdentifier,
+            "room_id": roomId,
+            "type": kMXEventTypeStringRoomMessage,
+            "origin_server_ts": Date().timeIntervalSince1970 - 1,
+            "content": [
+                "type": kMXMessageTypeText,
+                "body": "Root",
+            ]
+        ]) else {
+            XCTFail("Failed to setup initial conditions")
+            return
+        }
+        
+        //  create an event
+        guard let event = MXEvent(fromJSON: [
+            "event_id": MXTools.generateTransactionId() as Any,
+            "room_id": roomId,
+            "type": kMXEventTypeStringRoomMessage,
+            "origin_server_ts": Date().timeIntervalSince1970,
+            "content": [
+                "type": kMXMessageTypeText,
+                "body": "Message",
+                kMXEventRelationRelatesToKey: [
+                    "rel_type": MXEventRelationTypeThread,
+                    "event_id": threadIdentifier
+                ],
+            ]
+        ]) else {
+            XCTFail("Failed to setup initial conditions")
+            return
+        }
+        
+        let restClient = MXRestClient(credentials: Constants.credentials, unrecognizedCertificateHandler: nil)
+        guard let session = MXSession(matrixRestClient: restClient) else {
+            XCTFail("Failed to setup test conditions")
+            return
+        }
+        guard let threadingService = session.threadingService else {
+            XCTFail("Failed to setup initial conditions")
+            return
+        }
+        
+        defer {
+            session.close()
+        }
+        
+        threadingService.handleEvent(event)
+        threadingService.handleEvent(rootEvent)
+        
+        guard let thread = threadingService.thread(withId: threadIdentifier) else {
+            XCTFail("Thread not created after handling event")
+            return
+        }
+        
+        XCTAssertEqual(thread.identifier, threadIdentifier, "Thread identifier must be kept")
+        XCTAssertEqual(thread.roomId, roomId, "Thread room ids must be equal")
+        XCTAssertEqual(thread.lastMessage, event, "Thread last message must be kept")
+        XCTAssertEqual(thread.rootMessage, rootEvent, "Thread must have the root event")
+        XCTAssertEqual(thread.numberOfReplies, 1, "Thread must have only 1 reply")
     }
     
     private func wait(_ timeout: TimeInterval = 5, _ block: @escaping (XCTestExpectation) -> Void) {
