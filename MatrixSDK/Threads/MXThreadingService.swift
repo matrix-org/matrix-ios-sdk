@@ -72,7 +72,7 @@ public class MXThreadingService: NSObject {
             //  create the thread for the first time
             let thread: MXThread
             //  try to find the root event in the session store
-            if let rootEvent = session.store.event(withEventId: threadIdentifier, inRoom: event.roomId) {
+            if let rootEvent = session.store?.event(withEventId: threadIdentifier, inRoom: event.roomId) {
                 thread = MXThread(withSession: session, rootEvent: rootEvent)
             } else {
                 thread = MXThread(withSession: session, identifier: threadIdentifier, roomId: event.roomId)
