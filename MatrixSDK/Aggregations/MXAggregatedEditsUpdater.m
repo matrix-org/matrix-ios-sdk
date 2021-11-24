@@ -140,10 +140,10 @@
     
     content[@"m.new_content"] = newContent;
     
-    content[@"m.relates_to"] = @{
-                                 @"rel_type" : @"m.replace",
-                                 @"event_id": event.eventId
-                                 };
+    content[kMXEventRelationRelatesToKey] = @{
+        @"rel_type" : @"m.replace",
+        @"event_id": event.eventId
+    };
     
     MXHTTPOperation *operation;
     MXEvent *localEcho;

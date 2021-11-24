@@ -51,7 +51,7 @@ static NSString* const kThreadedMessage1Text = @"Morning!";
                                        @"content": @{
                                                @"body": kThreadedMessage1Text,
                                                @"msgtype": @"m.text",
-                                               @"m.relates_to": @{
+                                               kMXEventRelationRelatesToKey: @{
                                                        @"event_id": @"$messageeventid:matrix.org",
                                                        @"rel_type": @"m.replace"
                                                        }

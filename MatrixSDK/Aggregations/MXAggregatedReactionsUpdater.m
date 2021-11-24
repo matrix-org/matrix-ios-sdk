@@ -624,12 +624,12 @@
     }
 
     NSDictionary *reactionContent = @{
-                                      @"m.relates_to": @{
-                                              @"rel_type": @"m.annotation",
-                                              @"event_id": eventId,
-                                              @"key": reaction
-                                              }
-                                      };
+        kMXEventRelationRelatesToKey: @{
+                @"rel_type": @"m.annotation",
+                @"event_id": eventId,
+                @"key": reaction
+        }
+    };
 
     return [room sendEventOfType:kMXEventTypeStringReaction content:reactionContent threadId:nil localEcho:nil success:^(NSString *eventId) {
         success();

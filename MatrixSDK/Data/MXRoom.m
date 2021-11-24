@@ -2545,7 +2545,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     if (threadId)
     {
         NSMutableDictionary *newContent = [NSMutableDictionary dictionaryWithDictionary:content];
-        newContent[@"m.relates_to"] = @{
+        newContent[kMXEventRelationRelatesToKey] = @{
             @"rel_type": MXEventRelationTypeThread,
             @"event_id": threadId
         };
