@@ -90,7 +90,7 @@ class MXThreadingServiceUnitTests: XCTestCase {
         XCTAssertEqual(thread.identifier, threadIdentifier, "Thread identifier must be kept")
         XCTAssertEqual(thread.roomId, roomId, "Thread room ids must be equal")
         XCTAssertEqual(thread.lastMessage, event, "Thread last message must be kept")
-        XCTAssertFalse(thread.hasRootEvent, "Thread must not have the root event")
+        XCTAssertNil(thread.rootMessage, "Thread must not have the root event")
         XCTAssertEqual(thread.numberOfReplies, 1, "Thread must have only 1 reply")
     }
     
@@ -150,7 +150,8 @@ class MXThreadingServiceUnitTests: XCTestCase {
                     "rel_type": MXEventRelationTypeThread,
                     "event_id": threadIdentifier
                 ],
-            ]
+            ],
+            "sender": Constants.credentials.userId!
         ]) else {
             XCTFail("Failed to setup initial conditions")
             return
@@ -168,8 +169,9 @@ class MXThreadingServiceUnitTests: XCTestCase {
         XCTAssertEqual(thread.identifier, threadIdentifier, "Thread identifier must be kept")
         XCTAssertEqual(thread.roomId, roomId, "Thread room ids must be equal")
         XCTAssertEqual(thread.lastMessage, eventNew, "Thread last message must be the new event")
-        XCTAssertFalse(thread.hasRootEvent, "Thread must not have the root event")
+        XCTAssertNil(thread.rootMessage, "Thread must not have the root event")
         XCTAssertEqual(thread.numberOfReplies, 2, "Thread must have only 1 reply")
+        XCTAssertTrue(thread.isParticipated, "Thread must be participated")
     }
     
     func testHandleEventCreatingThreadWithRootEvent() {
@@ -247,7 +249,7 @@ class MXThreadingServiceUnitTests: XCTestCase {
                     XCTAssertEqual(thread.identifier, threadIdentifier, "Thread identifier must be kept")
                     XCTAssertEqual(thread.roomId, roomId, "Thread room ids must be equal")
                     XCTAssertEqual(thread.lastMessage, event, "Thread last message must be kept")
-                    XCTAssertTrue(thread.hasRootEvent, "Thread must not have the root event")
+                    XCTAssertEqual(thread.rootMessage, rootEvent, "Thread must have the root event")
                     XCTAssertEqual(thread.numberOfReplies, 1, "Thread must have only 1 reply")
                 case .failure(let error):
                     XCTFail("Failed to setup initial conditions: \(error)")
