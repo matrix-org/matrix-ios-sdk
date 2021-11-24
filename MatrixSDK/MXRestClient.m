@@ -1458,9 +1458,9 @@ MXAuthAction;
     {
         // Add the thread id to the data to send
         NSMutableDictionary *relatesDict;
-        if (content[@"m.relates_to"])
+        if (content[kMXEventRelationRelatesToKey])
         {
-            relatesDict = [NSMutableDictionary dictionaryWithDictionary:content[@"m.relates_to"]];
+            relatesDict = [NSMutableDictionary dictionaryWithDictionary:content[kMXEventRelationRelatesToKey]];
         }
         else
         {
@@ -1470,7 +1470,7 @@ MXAuthAction;
         relatesDict[@"event_id"] = threadId;
         
         NSMutableDictionary *newContent = [NSMutableDictionary dictionaryWithDictionary:content];
-        newContent[@"m.relates_to"] = relatesDict;
+        newContent[kMXEventRelationRelatesToKey] = relatesDict;
         eventContent = newContent;
     }
 

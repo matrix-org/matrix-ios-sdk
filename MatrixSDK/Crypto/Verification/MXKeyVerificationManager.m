@@ -1360,10 +1360,10 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
 {
     NSMutableDictionary *eventContent = [content mutableCopy];
 
-    eventContent[@"m.relates_to"] = @{
-                                      @"rel_type": MXEventRelationTypeReference,
-                                      @"event_id": relatedTo,
-                                      };
+    eventContent[kMXEventRelationRelatesToKey] = @{
+        @"rel_type": MXEventRelationTypeReference,
+        @"event_id": relatedTo,
+    };
 
     [eventContent removeObjectForKey:@"transaction_id"];
 
