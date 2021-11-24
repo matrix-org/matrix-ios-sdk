@@ -28,7 +28,7 @@
 - (instancetype)initWithJSONDictionary:(NSDictionary *)JSONDictionary
 {
     MXJSONModelSetString(_transactionId, JSONDictionary[@"transaction_id"]);
-    MXJSONModelSetString(_relatedEventId, JSONDictionary[@"m.relates_to"][@"event_id"]);
+    MXJSONModelSetString(_relatedEventId, JSONDictionary[kMXEventRelationRelatesToKey][@"event_id"]);
 
     if (!_transactionId)
     {
@@ -49,10 +49,10 @@
 
     if (_relatedEventId)
     {
-        JSONDictionary[@"m.relates_to"] = @{
-                                            @"event_id": _relatedEventId,
-                                            @"rel_type": MXEventRelationTypeReference
-                                            };
+        JSONDictionary[kMXEventRelationRelatesToKey] = @{
+            @"event_id": _relatedEventId,
+            @"rel_type": MXEventRelationTypeReference
+        };
     }
     else
     {

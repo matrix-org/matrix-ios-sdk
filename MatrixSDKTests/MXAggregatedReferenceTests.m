@@ -66,7 +66,7 @@ static NSString* const kThreadedMessage1Text = @"Morning!";
             NSDictionary *eventContent = @{
                                            @"msgtype": kMXMessageTypeText,
                                            @"body": kThreadedMessage1Text,
-                                           @"m.relates_to":  @{
+                                           kMXEventRelationRelatesToKey:  @{
                                               @"rel_type": MXEventRelationTypeReference,
                                               @"event_id": eventId,
                                               }
@@ -240,7 +240,7 @@ static NSString* const kThreadedMessage1Text = @"Morning!";
             NSDictionary *eventContent = @{
                                            @"msgtype": kMXMessageTypeText,
                                            @"body": kThreadedMessage1Text,
-                                           @"m.relates_to":  @{
+                                           kMXEventRelationRelatesToKey:  @{
                                                    @"rel_type": MXEventRelationTypeReference,
                                                    @"event_id": eventId,
                                                    }
