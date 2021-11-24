@@ -1476,6 +1476,8 @@
 		EC619D9324DD834B00663A80 /* MXPushGatewayRestClient.h in Headers */ = {isa = PBXBuildFile; fileRef = EC619D9124DD834B00663A80 /* MXPushGatewayRestClient.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		EC746C56274E5197002AD24C /* MXThreadingServiceUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC746C55274E5197002AD24C /* MXThreadingServiceUnitTests.swift */; };
 		EC746C57274E5197002AD24C /* MXThreadingServiceUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC746C55274E5197002AD24C /* MXThreadingServiceUnitTests.swift */; };
+		EC746C59274E61EF002AD24C /* MXThreadingServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC746C58274E61EF002AD24C /* MXThreadingServiceTests.swift */; };
+		EC746C5A274E61EF002AD24C /* MXThreadingServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC746C58274E61EF002AD24C /* MXThreadingServiceTests.swift */; };
 		EC8A538B25B1BC77004E0802 /* MXCallCandidate.h in Headers */ = {isa = PBXBuildFile; fileRef = EC8A536C25B1BC77004E0802 /* MXCallCandidate.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		EC8A538C25B1BC77004E0802 /* MXCallCandidate.h in Headers */ = {isa = PBXBuildFile; fileRef = EC8A536C25B1BC77004E0802 /* MXCallCandidate.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		EC8A538D25B1BC77004E0802 /* MXCallSessionDescription.m in Sources */ = {isa = PBXBuildFile; fileRef = EC8A536D25B1BC77004E0802 /* MXCallSessionDescription.m */; };
@@ -2438,6 +2440,7 @@
 		EC619D9024DD834B00663A80 /* MXPushGatewayRestClient.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXPushGatewayRestClient.m; sourceTree = "<group>"; };
 		EC619D9124DD834B00663A80 /* MXPushGatewayRestClient.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXPushGatewayRestClient.h; sourceTree = "<group>"; };
 		EC746C55274E5197002AD24C /* MXThreadingServiceUnitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXThreadingServiceUnitTests.swift; sourceTree = "<group>"; };
+		EC746C58274E61EF002AD24C /* MXThreadingServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXThreadingServiceTests.swift; sourceTree = "<group>"; };
 		EC8A536C25B1BC77004E0802 /* MXCallCandidate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXCallCandidate.h; sourceTree = "<group>"; };
 		EC8A536D25B1BC77004E0802 /* MXCallSessionDescription.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXCallSessionDescription.m; sourceTree = "<group>"; };
 		EC8A536E25B1BC77004E0802 /* MXTurnServerResponse.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXTurnServerResponse.h; sourceTree = "<group>"; };
@@ -3688,6 +3691,7 @@
 				EC1165CB27107F3E0089FA56 /* MXRoomListDataManagerTests.swift */,
 				EC1165CA27107F3E0089FA56 /* MXRoomListDataManagerUnitTests.swift */,
 				EC746C55274E5197002AD24C /* MXThreadingServiceUnitTests.swift */,
+				EC746C58274E61EF002AD24C /* MXThreadingServiceTests.swift */,
 				322985CD26FAFC58001890BC /* MatrixSDKTestsSwiftHeader.h */,
 			);
 			path = MatrixSDKTests;
@@ -5826,6 +5830,7 @@
 				3A7B8D0E267FCF7200D9DD96 /* MXDehydrationTests.m in Sources */,
 				3281E8A019E2CC1200976E1A /* MXHTTPClientTests.m in Sources */,
 				321809B919EEBF3000377451 /* MXEventTests.m in Sources */,
+				EC746C59274E61EF002AD24C /* MXThreadingServiceTests.swift in Sources */,
 				32A31BC120D3F4C4005916C7 /* MXFilterTests.m in Sources */,
 				32B477842638133C00EA5800 /* MXAggregatedReferenceUnitTests.m in Sources */,
 				32B0E3E423A384D40054FF1A /* MXAggregatedReferenceTests.m in Sources */,
@@ -6301,6 +6306,7 @@
 				32D5D16423E400A600E3E37C /* MXRoomSummaryTrustTests.m in Sources */,
 				B1E09A1B2397FCE90057C069 /* MXAggregatedReactionTests.m in Sources */,
 				B1E09A3F2397FD820057C069 /* MXNotificationCenterTests.m in Sources */,
+				EC746C5A274E61EF002AD24C /* MXThreadingServiceTests.swift in Sources */,
 				B1E09A222397FCE90057C069 /* MXRoomSummaryTests.m in Sources */,
 				B1E09A3A2397FD820057C069 /* MXStoreTests.m in Sources */,
 				B1E09A342397FD750057C069 /* MXRoomStateDynamicTests.m in Sources */,
