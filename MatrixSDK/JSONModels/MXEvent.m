@@ -900,7 +900,7 @@ NSString *const kMXMessageContentKeyExtensiblePollKindUndisclosed = @"m.poll.und
         && [self.relatesTo.relationType isEqualToString:MXEventRelationTypeThread];
 }
 
-- (NSString *)threadIdentifier
+- (NSString *)threadId
 {
     if (self.isInThread)
     {

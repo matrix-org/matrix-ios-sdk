@@ -185,7 +185,7 @@ class MXRoomListDataManagerTests: XCTestCase {
                     }
                     
                     var localEcho: MXEvent?
-                    initialRoom.sendTextMessage(Constants.messageText, threadId: nil, localEcho: &localEcho) { sendMessageResponse in
+                    initialRoom.sendTextMessage(Constants.messageText, localEcho: &localEcho) { sendMessageResponse in
                         switch sendMessageResponse {
                         case .success(let eventId):
                             XCTAssertEqual(fetcher.data?.rooms.first?.roomId, initialRoom.roomId, "Initial room must be sorted in the first place again after update")
@@ -228,7 +228,7 @@ class MXRoomListDataManagerTests: XCTestCase {
                     XCTAssertEqual(fetcher.data?.counts.numberOfRooms, 2, "New room must be added")
                     XCTAssertEqual(fetcher.data?.rooms.first?.roomId, secondRoom.roomId, "New room must be sorted in the first place")
                     
-                    aliceRestClient.sendTextMessage(toRoom: initialRoomSummary.roomId, threadId: nil, text: Constants.messageText) { sendMessageResponse in
+                    aliceRestClient.sendTextMessage(toRoom: initialRoomSummary.roomId, text: Constants.messageText) { sendMessageResponse in
                         switch sendMessageResponse {
                         case .success(let eventId):
                             self.waitForOneSync(for: bobSession) {

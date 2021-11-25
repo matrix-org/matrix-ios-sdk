@@ -491,7 +491,7 @@ public extension MXRestClient {
      
      - parameters:
         - roomId: the id of the room.
-        - threadId: the id of the thread to send the message
+        - threadId: the id of the thread to send the message. nil by default.
         - eventType: the type of the event.
         - content: the content that will be sent to the server as a JSON object.
         - txnId: the transaction id to use. If nil, one will be generated
@@ -501,7 +501,7 @@ public extension MXRestClient {
      - returns: a `MXHTTPOperation` instance.
      
      */
-    @nonobjc @discardableResult func sendEvent(toRoom roomId: String, threadId: String?, eventType: MXEventType, content: [String: Any], txnId: String?, completion: @escaping (_ response: MXResponse<String>) -> Void) -> MXHTTPOperation {
+    @nonobjc @discardableResult func sendEvent(toRoom roomId: String, threadId: String? = nil, eventType: MXEventType, content: [String: Any], txnId: String?, completion: @escaping (_ response: MXResponse<String>) -> Void) -> MXHTTPOperation {
         return __sendEvent(toRoom: roomId, threadId: threadId, eventType: eventType.identifier, content: content, txnId: txnId, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -528,7 +528,7 @@ public extension MXRestClient {
      
      - parameters:
         - roomId: the id of the room.
-        - threadId: the id of the thread to send the message
+        - threadId: the id of the thread to send the message. nil by default.
         - messageType: the type of the message.
         - content: the message content that will be sent to the server as a JSON object.
         - completion: A block object called when the operation completes. 
@@ -536,7 +536,7 @@ public extension MXRestClient {
      
      -returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func sendMessage(toRoom roomId: String, threadId: String?, messageType: MXMessageType, content: [String: Any], completion: @escaping (_ response: MXResponse<String>) -> Void) -> MXHTTPOperation {
+    @nonobjc @discardableResult func sendMessage(toRoom roomId: String, threadId: String? = nil, messageType: MXMessageType, content: [String: Any], completion: @escaping (_ response: MXResponse<String>) -> Void) -> MXHTTPOperation {
         return __sendMessage(toRoom: roomId, threadId: threadId, msgType: messageType.identifier, content: content, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -546,14 +546,14 @@ public extension MXRestClient {
      
      - parameters:
         - roomId: the id of the room.
-        - threadId: the id of the thread to send the message
+        - threadId: the id of the thread to send the message. nil by default.
         - text: the text to send.
         - completion: A block object called when the operation completes.
         - response: Provides the event id of the event generated on the home server on success.
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func sendTextMessage(toRoom roomId: String, threadId: String?, text: String, completion: @escaping (_ response: MXResponse<String>) -> Void) -> MXHTTPOperation {
+    @nonobjc @discardableResult func sendTextMessage(toRoom roomId: String, threadId: String? = nil, text: String, completion: @escaping (_ response: MXResponse<String>) -> Void) -> MXHTTPOperation {
         return __sendTextMessage(toRoom: roomId, threadId: threadId, text: text, success: currySuccess(completion), failure: curryFailure(completion))
     }
     

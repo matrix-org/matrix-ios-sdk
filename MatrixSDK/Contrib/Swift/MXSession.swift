@@ -12,6 +12,11 @@ import Foundation
 
 public extension MXSession {
     
+    /// Module that manages threads
+    var threadingService: MXThreadingService {
+        return __threadingService
+    }
+    
     /**
      Start fetching events from the home server.
      

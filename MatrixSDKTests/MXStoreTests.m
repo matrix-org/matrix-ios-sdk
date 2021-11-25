@@ -732,11 +732,6 @@
     
 }
 
-- (void)checkLastMessageIgnoreProfileChange:(MXRoom *)room
-{
-    
-}
-
 - (void)checkLastMessageEventTypesAllowList:(MXRoom*)room
 {
     [room.mxSession eventWithEventId:room.summary.lastMessage.eventId
