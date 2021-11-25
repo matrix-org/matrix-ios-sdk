@@ -112,9 +112,6 @@ class MXThreadingServiceUnitTests: XCTestCase {
             "room_id": roomId,
             "type": kMXEventTypeStringRoomMessage,
             "origin_server_ts": Date().timeIntervalSince1970 - 1,
-            "unsigned": [
-                "age": 1001
-            ],
             "content": [
                 "type": kMXMessageTypeText,
                 "body": "Message Old",
@@ -134,9 +131,6 @@ class MXThreadingServiceUnitTests: XCTestCase {
             "room_id": roomId,
             "type": kMXEventTypeStringRoomMessage,
             "origin_server_ts": Date().timeIntervalSince1970,
-            "unsigned": [
-                "age": 1000
-            ],
             "content": [
                 "type": kMXMessageTypeText,
                 "body": "Message New",
@@ -175,10 +169,7 @@ class MXThreadingServiceUnitTests: XCTestCase {
             "event_id": threadId,
             "room_id": roomId,
             "type": kMXEventTypeStringRoomMessage,
-            "origin_server_ts": Date().timeIntervalSince1970,
-            "unsigned": [
-                "age": 1001
-            ],
+            "origin_server_ts": Date().timeIntervalSince1970 - 1,
             "content": [
                 "type": kMXMessageTypeText,
                 "body": "Root",
@@ -194,9 +185,6 @@ class MXThreadingServiceUnitTests: XCTestCase {
             "room_id": roomId,
             "type": kMXEventTypeStringRoomMessage,
             "origin_server_ts": Date().timeIntervalSince1970,
-            "unsigned": [
-                "age": 1000
-            ],
             "content": [
                 "type": kMXMessageTypeText,
                 "body": "Message",
