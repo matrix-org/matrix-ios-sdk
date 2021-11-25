@@ -35,12 +35,12 @@ struct PollBuilder {
             return option
         }
         
-        let stopEvent = events.filter { $0.type == kMXEventTypeStringPollEnd }.first
+        let stopEvent = events.filter { $0.eventType == __MXEventType.pollEnd }.first
         poll.isClosed = (stopEvent != nil)
         
         var filteredEvents = events.filter { event in
             guard
-                let eventContent = event.content, event.type == kMXEventTypeStringPollResponse,
+                let eventContent = event.content, event.eventType == __MXEventType.pollResponse,
                 let answer = eventContent[kMXMessageContentKeyExtensiblePollResponse] as? [String: [String]],
                 let _ = answer[kMXMessageContentKeyExtensiblePollAnswers] else {
                 return false
