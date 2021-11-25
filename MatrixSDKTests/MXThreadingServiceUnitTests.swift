@@ -58,7 +58,7 @@ class MXThreadingServiceUnitTests: XCTestCase {
             session.close()
         }
         
-        let threadIdentifier = "some_thread_identifier"
+        let threadId = "some_thread_id"
         let roomId = "!some_room_id:some_domain.com"
         
         //  create an event
@@ -72,7 +72,7 @@ class MXThreadingServiceUnitTests: XCTestCase {
                 "body": "Message",
                 kMXEventRelationRelatesToKey: [
                     "rel_type": MXEventRelationTypeThread,
-                    "event_id": threadIdentifier
+                    "event_id": threadId
                 ],
             ]
         ]) else {
@@ -82,12 +82,12 @@ class MXThreadingServiceUnitTests: XCTestCase {
         
         threadingService.handleEvent(event)
         
-        guard let thread = threadingService.thread(withId: threadIdentifier) else {
+        guard let thread = threadingService.thread(withId: threadId) else {
             XCTFail("Thread not created after handling event")
             return
         }
         
-        XCTAssertEqual(thread.identifier, threadIdentifier, "Thread identifier must be kept")
+        XCTAssertEqual(thread.id, threadId, "Thread id must be kept")
         XCTAssertEqual(thread.roomId, roomId, "Thread room ids must be equal")
         XCTAssertEqual(thread.lastMessage, event, "Thread last message must be kept")
         XCTAssertFalse(thread.hasRootEvent, "Thread must not have the root event")
@@ -109,7 +109,7 @@ class MXThreadingServiceUnitTests: XCTestCase {
             session.close()
         }
         
-        let threadIdentifier = "some_thread_identifier"
+        let threadId = "some_thread_id"
         let roomId = "!some_room_id:some_domain.com"
         
         //  create old event
@@ -126,7 +126,7 @@ class MXThreadingServiceUnitTests: XCTestCase {
                 "body": "Message Old",
                 kMXEventRelationRelatesToKey: [
                     "rel_type": MXEventRelationTypeThread,
-                    "event_id": threadIdentifier
+                    "event_id": threadId
                 ],
             ]
         ]) else {
@@ -148,7 +148,7 @@ class MXThreadingServiceUnitTests: XCTestCase {
                 "body": "Message New",
                 kMXEventRelationRelatesToKey: [
                     "rel_type": MXEventRelationTypeThread,
-                    "event_id": threadIdentifier
+                    "event_id": threadId
                 ],
             ]
         ]) else {
@@ -160,12 +160,12 @@ class MXThreadingServiceUnitTests: XCTestCase {
         threadingService.handleEvent(eventNew)
         threadingService.handleEvent(eventOld)
         
-        guard let thread = threadingService.thread(withId: threadIdentifier) else {
+        guard let thread = threadingService.thread(withId: threadId) else {
             XCTFail("Thread not created after handling events")
             return
         }
         
-        XCTAssertEqual(thread.identifier, threadIdentifier, "Thread identifier must be kept")
+        XCTAssertEqual(thread.id, threadId, "Thread id must be kept")
         XCTAssertEqual(thread.roomId, roomId, "Thread room ids must be equal")
         XCTAssertEqual(thread.lastMessage, eventNew, "Thread last message must be the new event")
         XCTAssertFalse(thread.hasRootEvent, "Thread must not have the root event")
@@ -173,12 +173,12 @@ class MXThreadingServiceUnitTests: XCTestCase {
     }
     
     func testHandleEventCreatingThreadWithRootEvent() {
-        let threadIdentifier = "some_thread_identifier"
+        let threadId = "some_thread_id"
         let roomId = "!some_room_id:some_domain.com"
         
         //  create thread root event
         guard let rootEvent = MXEvent(fromJSON: [
-            "event_id": threadIdentifier,
+            "event_id": threadId,
             "room_id": roomId,
             "type": kMXEventTypeStringRoomMessage,
             "origin_server_ts": Date().timeIntervalSince1970,
@@ -208,7 +208,7 @@ class MXThreadingServiceUnitTests: XCTestCase {
                 "body": "Message",
                 kMXEventRelationRelatesToKey: [
                     "rel_type": MXEventRelationTypeThread,
-                    "event_id": threadIdentifier
+                    "event_id": threadId
                 ],
             ]
         ]) else {
@@ -239,12 +239,12 @@ class MXThreadingServiceUnitTests: XCTestCase {
                     
                     threadingService.handleEvent(event)
                     
-                    guard let thread = threadingService.thread(withId: threadIdentifier) else {
+                    guard let thread = threadingService.thread(withId: threadId) else {
                         XCTFail("Thread not created after handling event")
                         return
                     }
                     
-                    XCTAssertEqual(thread.identifier, threadIdentifier, "Thread identifier must be kept")
+                    XCTAssertEqual(thread.id, threadId, "Thread id must be kept")
                     XCTAssertEqual(thread.roomId, roomId, "Thread room ids must be equal")
                     XCTAssertEqual(thread.lastMessage, event, "Thread last message must be kept")
                     XCTAssertTrue(thread.hasRootEvent, "Thread must not have the root event")

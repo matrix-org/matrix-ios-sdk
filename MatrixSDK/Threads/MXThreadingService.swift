@@ -102,7 +102,7 @@ public class MXThreadingService: NSObject {
     
     private func saveThread(_ thread: MXThread) {
         objc_sync_enter(threads)
-        threads[thread.identifier] = thread
+        threads[thread.id] = thread
         objc_sync_exit(threads)
     }
     

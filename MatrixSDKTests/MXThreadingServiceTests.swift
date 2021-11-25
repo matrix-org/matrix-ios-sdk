@@ -73,13 +73,13 @@ class MXThreadingServiceTests: XCTestCase {
             initialRoom.sendTextMessage("Root message", threadId: nil, localEcho: &localEcho) { response in
                 switch response {
                 case .success(let eventId):
-                    guard let threadIdentifier = eventId else {
+                    guard let threadId = eventId else {
                         XCTFail("Failed to setup test conditions")
                         expectation.fulfill()
                         return
                     }
                     
-                    initialRoom.sendTextMessage("Thread message", threadId: threadIdentifier, localEcho: &localEcho) { response2 in
+                    initialRoom.sendTextMessage("Thread message", threadId: threadId, localEcho: &localEcho) { response2 in
                         switch response2 {
                         case .success(let eventId):
                             var observer: NSObjectProtocol?
@@ -89,13 +89,13 @@ class MXThreadingServiceTests: XCTestCase {
                                 if let observer = observer {
                                     NotificationCenter.default.removeObserver(observer)
                                 }
-                                guard let thread = threadingService.thread(withId: threadIdentifier) else {
+                                guard let thread = threadingService.thread(withId: threadId) else {
                                     XCTFail("Thread must be created")
                                     expectation.fulfill()
                                     return
                                 }
                                 
-                                XCTAssertEqual(thread.identifier, threadIdentifier, "Thread must have the correctid")
+                                XCTAssertEqual(thread.id, threadId, "Thread must have the correctid")
                                 XCTAssertEqual(thread.roomId, initialRoom.roomId, "Thread must have the correct room id")
                                 XCTAssertEqual(thread.lastMessage?.eventId, eventId, "Thread last message must have the correct event id")
                                 XCTAssertTrue(thread.hasRootEvent, "Thread must have the root event")
@@ -147,14 +147,14 @@ class MXThreadingServiceTests: XCTestCase {
             initialRoom.sendTextMessage("Root message", threadId: nil, localEcho: &localEcho) { response in
                 switch response {
                 case .success(let eventId):
-                    guard let threadIdentifier = eventId else {
+                    guard let threadId = eventId else {
                         XCTFail("Failed to setup test conditions")
                         expectation.fulfill()
                         return
                     }
                     
                     initialRoom.sendTextMessage("Thread message 1",
-                                                threadId: threadIdentifier,
+                                                threadId: threadId,
                                                 localEcho: &localEcho) { response2 in
                         switch response2 {
                         case .success:
@@ -165,14 +165,14 @@ class MXThreadingServiceTests: XCTestCase {
                                 if let observer = observer {
                                     NotificationCenter.default.removeObserver(observer)
                                 }
-                                guard let thread = threadingService.thread(withId: threadIdentifier) else {
+                                guard let thread = threadingService.thread(withId: threadId) else {
                                     XCTFail("Thread must be created")
                                     expectation.fulfill()
                                     return
                                 }
                                 
                                 initialRoom.sendTextMessages(messages: ["Thread message 2", "Thread message 3"],
-                                                             threadId: threadIdentifier) { response3 in
+                                                             threadId: threadId) { response3 in
                                     switch response3 {
                                     case .success(let eventIds):
                                         var syncObserver: NSObjectProtocol?
@@ -183,7 +183,7 @@ class MXThreadingServiceTests: XCTestCase {
                                                 NotificationCenter.default.removeObserver(syncObserver)
                                             }
                                             
-                                            XCTAssertEqual(thread.identifier, threadIdentifier, "Thread must have the correctid")
+                                            XCTAssertEqual(thread.id, threadId, "Thread must have the correctid")
                                             XCTAssertEqual(thread.roomId, initialRoom.roomId, "Thread must have the correct room id")
                                             XCTAssertEqual(thread.lastMessage?.eventId, eventIds.last, "Thread last message must have the correct event id")
                                             XCTAssertTrue(thread.hasRootEvent, "Thread must have the root event")
@@ -239,13 +239,13 @@ class MXThreadingServiceTests: XCTestCase {
             initialRoom.sendTextMessage("Root message", threadId: nil, localEcho: &localEcho) { response in
                 switch response {
                 case .success(let eventId):
-                    guard let threadIdentifier = eventId else {
+                    guard let threadId = eventId else {
                         XCTFail("Failed to setup test conditions")
                         expectation.fulfill()
                         return
                     }
                     
-                    initialRoom.sendTextMessage("Thread message", threadId: threadIdentifier, localEcho: &localEcho) { response2 in
+                    initialRoom.sendTextMessage("Thread message", threadId: threadId, localEcho: &localEcho) { response2 in
                         switch response2 {
                         case .success(let lastEventId):
                             var observer: NSObjectProtocol?
@@ -255,7 +255,7 @@ class MXThreadingServiceTests: XCTestCase {
                                 if let observer = observer {
                                     NotificationCenter.default.removeObserver(observer)
                                 }
-                                guard let thread = threadingService.thread(withId: threadIdentifier),
+                                guard let thread = threadingService.thread(withId: threadId),
                                       let lastMessage = thread.lastMessage else {
                                     XCTFail("Thread must be created with a last message")
                                     expectation.fulfill()
@@ -279,7 +279,7 @@ class MXThreadingServiceTests: XCTestCase {
                                                 return
                                             }
                                             
-                                            XCTAssertEqual(replyEvent.threadIdentifier, threadIdentifier, "Reply must also be in the thread")
+                                            XCTAssertEqual(replyEvent.threadIdentifier, threadId, "Reply must also be in the thread")
                                             
                                             guard let relatesTo = replyEvent.content[kMXEventRelationRelatesToKey] as? [String: Any],
                                                   let inReplyTo = relatesTo["m.in_reply_to"] as? [String: String] else {

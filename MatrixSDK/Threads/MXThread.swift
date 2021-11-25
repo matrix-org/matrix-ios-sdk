@@ -24,7 +24,7 @@ public class MXThread: NSObject {
     public private(set) weak var session: MXSession?
     
     /// Identifier of a thread. It's equal to identifier of the root event
-    public let identifier: String
+    public let id: String
     
     /// Identifier of the room, in which the thread is
     public let roomId: String
@@ -37,7 +37,7 @@ public class MXThread: NSObject {
                   identifier: String,
                   roomId: String) {
         self.session = session
-        self.identifier = identifier
+        self.id = identifier
         self.roomId = roomId
         self.hasRootEvent = false
         super.init()
@@ -46,7 +46,7 @@ public class MXThread: NSObject {
     internal init(withSession session: MXSession,
                   rootEvent: MXEvent) {
         self.session = session
-        self.identifier = rootEvent.eventId
+        self.id = rootEvent.eventId
         self.roomId = rootEvent.roomId
         self.hasRootEvent = true
         self.eventsMap = [rootEvent.eventId: rootEvent]
@@ -60,7 +60,7 @@ public class MXThread: NSObject {
         }
         eventsMap[event.eventId] = event
         
-        if event.eventId == identifier {
+        if event.eventId == id {
             //  if root event is added later, update the flag
             hasRootEvent = true
         }
@@ -74,7 +74,7 @@ public class MXThread: NSObject {
     
     /// Number of replies in the thread. Does not count the root event
     public var numberOfReplies: Int {
-        return eventsMap.filter({ $0 != identifier && $1.isInThread() }).count
+        return eventsMap.filter({ $0 != id && $1.isInThread() }).count
     }
     
     /// Fetches all replies in a thread. Not used right now
@@ -85,7 +85,7 @@ public class MXThread: NSObject {
             return
         }
         
-        session.matrixRestClient.relations(forEvent: identifier,
+        session.matrixRestClient.relations(forEvent: id,
                                            inRoom: roomId,
                                            relationType: MXEventRelationTypeThread,
                                            eventType: nil,
@@ -100,6 +100,8 @@ public class MXThread: NSObject {
         }
     }
 }
+
+extension MXThread: Identifiable {}
 
 //  MARK: - MXEvent Extension
 
