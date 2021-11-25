@@ -26,12 +26,12 @@ public class MXThread: NSObject {
     /// Identifier of a thread. It's equal to identifier of the root event
     public let id: String
     
-    /// Identifier of the room, in which the thread is
+    /// Identifier of the room that the thread is in.
     public let roomId: String
     
     public private(set) var hasRootEvent: Bool
     
-    private var eventsMap: [String:MXEvent] = [:]
+    private var eventsMap: [String: MXEvent] = [:]
     
     internal init(withSession session: MXSession,
                   identifier: String,

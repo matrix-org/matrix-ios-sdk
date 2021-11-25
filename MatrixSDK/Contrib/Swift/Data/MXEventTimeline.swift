@@ -100,9 +100,9 @@ public extension MXEventTimeline {
         
         if let types = types {
             let typeStrings = types.map({ return $0.identifier })
-            return __listen(toEventsOfTypes: typeStrings, onEvent: legacyBlock) ?? nil
+            return __listen(toEventsOfTypes: typeStrings, onEvent: legacyBlock)
         } else {
-            return __listen(toEvents: legacyBlock) ?? nil
+            return __listen(toEvents: legacyBlock)
         }
     }
 }

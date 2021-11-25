@@ -50,7 +50,7 @@ class MXThreadingServiceTests: XCTestCase {
     /// - Create an initial room
     /// - Send a text message A to be used as thread root event
     /// - Send a threaded event B referencing the root event A
-    /// - Expect a thread craeted with identifier A
+    /// - Expect a thread created with identifier A
     /// - Expect thread's last message is B
     /// - Expect thread has the root event
     /// - Expect thread's number of replies is 1
@@ -95,7 +95,7 @@ class MXThreadingServiceTests: XCTestCase {
                                     return
                                 }
                                 
-                                XCTAssertEqual(thread.id, threadId, "Thread must have the correctid")
+                                XCTAssertEqual(thread.id, threadId, "Thread must have the correct id")
                                 XCTAssertEqual(thread.roomId, initialRoom.roomId, "Thread must have the correct room id")
                                 XCTAssertEqual(thread.lastMessage?.eventId, eventId, "Thread last message must have the correct event id")
                                 XCTAssertTrue(thread.hasRootEvent, "Thread must have the root event")
@@ -122,7 +122,7 @@ class MXThreadingServiceTests: XCTestCase {
     /// - Create an initial room
     /// - Send a text message A to be used as thread root event
     /// - Send a threaded event B referencing the root event A
-    /// - Expect a thread craeted with identifier A
+    /// - Expect a thread created with identifier A
     /// - Send threaded events [C, D] referencing the root event A
     /// - Wait for a sync, for events to be processed by the threading service
     /// - Expect thread's last message is D
@@ -183,7 +183,7 @@ class MXThreadingServiceTests: XCTestCase {
                                                 NotificationCenter.default.removeObserver(syncObserver)
                                             }
                                             
-                                            XCTAssertEqual(thread.id, threadId, "Thread must have the correctid")
+                                            XCTAssertEqual(thread.id, threadId, "Thread must have the correct id")
                                             XCTAssertEqual(thread.roomId, initialRoom.roomId, "Thread must have the correct room id")
                                             XCTAssertEqual(thread.lastMessage?.eventId, eventIds.last, "Thread last message must have the correct event id")
                                             XCTAssertTrue(thread.hasRootEvent, "Thread must have the root event")
@@ -216,7 +216,7 @@ class MXThreadingServiceTests: XCTestCase {
     /// - Create an initial room
     /// - Send a text message A to be used as thread root event
     /// - Send a threaded event B referencing the root event A
-    /// - Expect a thread craeted with identifier A
+    /// - Expect a thread created with identifier A
     /// - Send a reply to event B
     /// - Wait for a sync for the reply to be processed
     /// - Expect the reply event is also in the thread A

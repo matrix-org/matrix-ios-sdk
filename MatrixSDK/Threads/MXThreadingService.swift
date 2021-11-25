@@ -27,7 +27,7 @@ extension MXThreadingServiceError: CustomNSError {
     public static let errorDomain = "org.matrix.sdk.threadingservice"
 
     public var errorCode: Int {
-        return Int(rawValue)
+        return rawValue
     }
 
     public var errorUserInfo: [String: Any] {
@@ -44,7 +44,7 @@ public class MXThreadingService: NSObject {
     private var threads: [String: MXThread] = [:]
     
     /// Notification to be posted when a new thread is created.
-    public static let newThreadCreated: Notification.Name = Notification.Name("MXThreadingService.newThreadCreated")
+    public static let newThreadCreated = Notification.Name("MXThreadingService.newThreadCreated")
     
     /// Initializer
     /// - Parameter session: session instance
@@ -104,39 +104,6 @@ public class MXThreadingService: NSObject {
         objc_sync_enter(threads)
         threads[thread.id] = thread
         objc_sync_exit(threads)
-    }
-    
-    /// Method to fetch all threads in a room. Will be used in future.
-    /// - Parameters:
-    ///   - roomId: room identifier
-    ///   - completion: completion block to be called at the end of the process
-    public func allThreads(inRoom roomId: String,
-                           completion: @escaping (MXResponse<[MXThread]>) -> Void) {
-        guard let session = session else {
-            completion(.failure(MXThreadingServiceError.sessionNotFound))
-            return
-        }
-        
-        let filter = MXRoomEventFilter()
-        filter.relationTypes = [MXEventRelationTypeThread]
-        
-        session.matrixRestClient.messages(forRoom: roomId,
-                                          from: "",
-                                          direction: .backwards,
-                                          limit: nil,
-                                          filter: filter) { response in
-            switch response {
-            case .success(let paginationResponse):
-                if let rootEvents = paginationResponse.chunk {
-                    let threads = rootEvents.map({ MXThread(withSession: session, rootEvent: $0) })
-                    completion(.success(threads))
-                } else {
-                    completion(.success([]))
-                }
-            case .failure(let error):
-                completion(.failure(error))
-            }
-        }
     }
     
 }

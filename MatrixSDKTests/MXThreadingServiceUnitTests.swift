@@ -19,13 +19,13 @@ import XCTest
 class MXThreadingServiceUnitTests: XCTestCase {
 
     private enum Constants {
-        static var credentials: MXCredentials {
+        static let credentials: MXCredentials = {
             let result = MXCredentials(homeServer: "localhost",
                                        userId: "@some_user_id:some_domain.com",
                                        accessToken: "some_access_token")
             result.deviceId = "some_device_id"
             return result
-        }
+        }()
         static let messageText: String = "Hello there!"
     }
     
@@ -169,7 +169,7 @@ class MXThreadingServiceUnitTests: XCTestCase {
         XCTAssertEqual(thread.roomId, roomId, "Thread room ids must be equal")
         XCTAssertEqual(thread.lastMessage, eventNew, "Thread last message must be the new event")
         XCTAssertFalse(thread.hasRootEvent, "Thread must not have the root event")
-        XCTAssertEqual(thread.numberOfReplies, 2, "Thread must have only 1 reply")
+        XCTAssertEqual(thread.numberOfReplies, 2, "Thread must have 2 replies")
     }
     
     func testHandleEventCreatingThreadWithRootEvent() {
@@ -247,7 +247,7 @@ class MXThreadingServiceUnitTests: XCTestCase {
                     XCTAssertEqual(thread.id, threadId, "Thread id must be kept")
                     XCTAssertEqual(thread.roomId, roomId, "Thread room ids must be equal")
                     XCTAssertEqual(thread.lastMessage, event, "Thread last message must be kept")
-                    XCTAssertTrue(thread.hasRootEvent, "Thread must not have the root event")
+                    XCTAssertTrue(thread.hasRootEvent, "Thread must have the root event")
                     XCTAssertEqual(thread.numberOfReplies, 1, "Thread must have only 1 reply")
                 case .failure(let error):
                     XCTFail("Failed to setup initial conditions: \(error)")
