@@ -2303,7 +2303,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
         }
     }
 
-    return [self sendEventOfType:kMXEventTypeStringPollStart content:content.JSONDictionary localEcho:localEcho success:success failure:failure];
+    return [self sendEventOfType:[MXTools eventTypeString:MXEventTypePollStart] content:content.JSONDictionary localEcho:localEcho success:success failure:failure];
 }
 
 - (MXHTTPOperation *)sendPollResponseForEvent:(MXEvent *)pollStartEvent
@@ -2313,7 +2313,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                                       failure:(void (^)(NSError *))failure
 {
     NSParameterAssert(pollStartEvent);
-    NSAssert([pollStartEvent.type isEqualToString:kMXEventTypeStringPollStart], @"Invalid event type");
+    NSAssert(pollStartEvent.eventType == MXEventTypePollStart, @"Invalid event type");
     NSParameterAssert(answerIdentifiers);
     
     for (NSString *answerIdentifier in answerIdentifiers)
@@ -2332,7 +2332,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
         kMXMessageContentKeyExtensiblePollResponse: @{ kMXMessageContentKeyExtensiblePollAnswers: answerIdentifiers }
     };
     
-    return [self sendEventOfType:kMXEventTypeStringPollResponse content:content localEcho:localEcho success:success failure:failure];
+    return [self sendEventOfType:[MXTools eventTypeString:MXEventTypePollResponse] content:content localEcho:localEcho success:success failure:failure];
 }
 
 - (MXHTTPOperation *)sendPollEndForEvent:(MXEvent *)pollStartEvent
@@ -2341,7 +2341,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                                  failure:(void (^)(NSError *))failure
 {
     NSParameterAssert(pollStartEvent);
-    NSAssert([pollStartEvent.type isEqualToString:kMXEventTypeStringPollStart], @"Invalid event type");
+    NSAssert(pollStartEvent.eventType == MXEventTypePollStart, @"Invalid event type");
     
     MXEventContentRelatesTo *relatesTo = [[MXEventContentRelatesTo alloc] initWithRelationType:MXEventRelationTypeReference
                                                                                        eventId:pollStartEvent.eventId];
@@ -2351,7 +2351,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
         kMXMessageContentKeyExtensiblePollEnd: @{}
     };
     
-    return [self sendEventOfType:kMXEventTypeStringPollEnd content:content localEcho:localEcho success:success failure:failure];
+    return [self sendEventOfType:[MXTools eventTypeString:MXEventTypePollEnd] content:content localEcho:localEcho success:success failure:failure];
 }
 
 #pragma mark - Message order preserving

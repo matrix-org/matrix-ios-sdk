@@ -92,6 +92,8 @@ typedef NS_ENUM(NSInteger, MXEventType)
     MXEventTypeTaggedEvents,
     MXEventTypeSpaceChild,
     MXEventTypePollStart,
+    MXEventTypePollResponse,
+    MXEventTypePollEnd,
 
     // The event is a custom event. Refer to its `MXEventTypeString` version
     MXEventTypeCustom = 1000
@@ -170,9 +172,13 @@ FOUNDATION_EXPORT NSString *const kMXEventTypeStringAutoJoinKey;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringSuggestedKey;
 
 // Polls
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringPollStartMSC3381;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringPollStart;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringPollResponseMSC3381;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringPollResponse;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringPollEndMSC3381;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringPollEnd;
+
 
 /**
  Types of room messages
