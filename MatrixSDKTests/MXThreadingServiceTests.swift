@@ -63,11 +63,7 @@ class MXThreadingServiceTests: XCTestCase {
                 XCTFail("Failed to setup test conditions")
                 return
             }
-            guard let threadingService = bobSession.threadingService else {
-                XCTFail("Threading service must be created")
-                expectation.fulfill()
-                return
-            }
+            let threadingService = bobSession.threadingService
             
             var localEcho: MXEvent?
             initialRoom.sendTextMessage("Root message", threadId: nil, localEcho: &localEcho) { response in
@@ -137,11 +133,7 @@ class MXThreadingServiceTests: XCTestCase {
                 XCTFail("Failed to setup test conditions")
                 return
             }
-            guard let threadingService = bobSession.threadingService else {
-                XCTFail("Threading service must be created")
-                expectation.fulfill()
-                return
-            }
+            let threadingService = bobSession.threadingService
             
             var localEcho: MXEvent?
             initialRoom.sendTextMessage("Root message", threadId: nil, localEcho: &localEcho) { response in
@@ -229,11 +221,7 @@ class MXThreadingServiceTests: XCTestCase {
                 XCTFail("Failed to setup test conditions")
                 return
             }
-            guard let threadingService = bobSession.threadingService else {
-                XCTFail("Threading service must be created")
-                expectation.fulfill()
-                return
-            }
+            let threadingService = bobSession.threadingService
             
             var localEcho: MXEvent?
             initialRoom.sendTextMessage("Root message", threadId: nil, localEcho: &localEcho) { response in

@@ -49,10 +49,7 @@ class MXThreadingServiceUnitTests: XCTestCase {
             XCTFail("Failed to setup test conditions")
             return
         }
-        guard let threadingService = session.threadingService else {
-            XCTFail("Failed to setup initial conditions")
-            return
-        }
+        let threadingService = session.threadingService
         
         defer {
             session.close()
@@ -100,10 +97,7 @@ class MXThreadingServiceUnitTests: XCTestCase {
             XCTFail("Failed to setup test conditions")
             return
         }
-        guard let threadingService = session.threadingService else {
-            XCTFail("Failed to setup initial conditions")
-            return
-        }
+        let threadingService = session.threadingService
         
         defer {
             session.close()
@@ -224,10 +218,7 @@ class MXThreadingServiceUnitTests: XCTestCase {
             XCTFail("Failed to setup test conditions")
             return
         }
-        guard let threadingService = session.threadingService else {
-            XCTFail("Failed to setup initial conditions")
-            return
-        }
+        let threadingService = session.threadingService
         
         self.wait { expectation in
             session.setStore(store) { response in
