@@ -66,7 +66,7 @@ class MXThreadingServiceTests: XCTestCase {
             let threadingService = bobSession.threadingService
             
             var localEcho: MXEvent?
-            initialRoom.sendTextMessage("Root message", threadId: nil, localEcho: &localEcho) { response in
+            initialRoom.sendTextMessage("Root message", localEcho: &localEcho) { response in
                 switch response {
                 case .success(let eventId):
                     guard let threadId = eventId else {
@@ -136,7 +136,7 @@ class MXThreadingServiceTests: XCTestCase {
             let threadingService = bobSession.threadingService
             
             var localEcho: MXEvent?
-            initialRoom.sendTextMessage("Root message", threadId: nil, localEcho: &localEcho) { response in
+            initialRoom.sendTextMessage("Root message", localEcho: &localEcho) { response in
                 switch response {
                 case .success(let eventId):
                     guard let threadId = eventId else {
@@ -224,7 +224,7 @@ class MXThreadingServiceTests: XCTestCase {
             let threadingService = bobSession.threadingService
             
             var localEcho: MXEvent?
-            initialRoom.sendTextMessage("Root message", threadId: nil, localEcho: &localEcho) { response in
+            initialRoom.sendTextMessage("Root message", localEcho: &localEcho) { response in
                 switch response {
                 case .success(let eventId):
                     guard let threadId = eventId else {
