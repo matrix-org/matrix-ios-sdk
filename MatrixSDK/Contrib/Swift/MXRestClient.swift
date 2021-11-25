@@ -1028,32 +1028,6 @@ public extension MXRestClient {
     }
     
     /**
-     Get list of threads for a room.
-     
-     - parameters:
-        - roomId: the id of the room.
-        - from: the token to start getting results from.
-        - direction: `MXTimelineDirectionForwards` or `MXTimelineDirectionBackwards`
-        - limit: (optional, use -1 to not defined this value) the maximum nuber of messages to return.
-        - filter: to filter returned events with.
-        - completion: A block object called when the operation completes.
-        - response: Provides a `MXPaginationResponse` object on success.
-     
-     - returns: a MXHTTPOperation instance.
-     */
-    @nonobjc @discardableResult func threads(forRoom roomId: String, from: String, direction: MXTimelineDirection, limit: UInt?, filter: MXRoomEventFilter, completion: @escaping (_ response: MXResponse<MXPaginationResponse>) -> Void) -> MXHTTPOperation {
-        
-        // The `limit` variable should be set to -1 if it's not provided.
-        let _limit: Int
-        if let limit = limit {
-            _limit = Int(limit)
-        } else {
-            _limit = -1;
-        }
-        return __threads(forRoom: roomId, from: from, direction: direction.identifier, limit: _limit, filter: filter, success: currySuccess(completion), failure: curryFailure(completion))
-    }
-    
-    /**
      Get a list of members for this room.
      
      - parameters:
