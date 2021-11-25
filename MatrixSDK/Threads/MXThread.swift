@@ -139,10 +139,15 @@ extension MXThread: Comparable {
 
 extension MXEvent: Comparable {
     
+    /// Compare two events according to their time
+    /// - Parameters:
+    ///   - lhs: Left operand
+    ///   - rhs: Right operand
+    /// - Returns: true if the left operand is newer than the right one, false otherwise
     public static func < (lhs: MXEvent, rhs: MXEvent) -> Bool {
-        //  event will be 'smaller' than an other event if it's newer
         if lhs.originServerTs != NSNotFound && rhs.originServerTs != NSNotFound {
-            return lhs.compareOriginServerTs(rhs) == .orderedAscending
+            //  higher originServerTs means more recent event
+            return lhs.originServerTs > rhs.originServerTs
         }
         return lhs.age < rhs.age
     }
