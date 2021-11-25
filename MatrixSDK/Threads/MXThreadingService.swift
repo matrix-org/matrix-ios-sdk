@@ -27,7 +27,7 @@ extension MXThreadingServiceError: CustomNSError {
     public static let errorDomain = "org.matrix.sdk.threadingservice"
 
     public var errorCode: Int {
-        return Int(rawValue)
+        return rawValue
     }
 
     public var errorUserInfo: [String: Any] {
@@ -50,7 +50,7 @@ public class MXThreadingService: NSObject {
     private let multicastDelegate: MXMulticastDelegate<MXThreadingServiceDelegate> = MXMulticastDelegate()
     
     /// Notification to be posted when a new thread is created.
-    public static let newThreadCreated: Notification.Name = Notification.Name("MXThreadingService.newThreadCreated")
+    public static let newThreadCreated = Notification.Name("MXThreadingService.newThreadCreated")
     
     /// Initializer
     /// - Parameter session: session instance
@@ -66,22 +66,22 @@ public class MXThreadingService: NSObject {
             //  session closed
             return
         }
-        guard let threadIdentifier = event.threadIdentifier else {
+        guard let threadId = event.threadId else {
             //  event is not in a thread
             return
         }
         
-        if let thread = thread(withId: threadIdentifier) {
+        if let thread = thread(withId: threadId) {
             //  add event to the thread if found
             thread.addEvent(event)
         } else {
             //  create the thread for the first time
             let thread: MXThread
             //  try to find the root event in the session store
-            if let rootEvent = session.store?.event(withEventId: threadIdentifier, inRoom: event.roomId) {
+            if let rootEvent = session.store?.event(withEventId: threadId, inRoom: event.roomId) {
                 thread = MXThread(withSession: session, rootEvent: rootEvent)
             } else {
-                thread = MXThread(withSession: session, identifier: threadIdentifier, roomId: event.roomId)
+                thread = MXThread(withSession: session, identifier: threadId, roomId: event.roomId)
             }
             thread.addEvent(event)
             saveThread(thread)
@@ -125,47 +125,8 @@ public class MXThreadingService: NSObject {
     
     private func saveThread(_ thread: MXThread) {
         objc_sync_enter(threads)
-        threads[thread.identifier] = thread
+        threads[thread.id] = thread
         objc_sync_exit(threads)
-    }
-    
-    @discardableResult
-    /// Method to fetch all threads in a room. Will be used in future.
-    /// - Parameters:
-    ///   - roomId: room identifier
-    ///   - completion: completion block to be called at the end of the process
-    public func allThreads(inRoom roomId: String,
-                           completion: @escaping (MXResponse<[MXThread]>) -> Void) -> MXHTTPOperation? {
-        guard let session = session else {
-            completion(.failure(MXThreadingServiceError.sessionNotFound))
-            return nil
-        }
-        
-        let filter = MXRoomEventFilter()
-        filter.relationTypes = [MXEventRelationTypeThread]
-        
-        return session.matrixRestClient.threads(forRoom: roomId,
-                                                 from: "",
-                                                 direction: .backwards,
-                                                 limit: nil,
-                                                 filter: filter) { response in
-            switch response {
-            case .success(let paginationResponse):
-                if let rootEvents = paginationResponse.chunk {
-                    let threads = rootEvents.map { event -> MXThread in
-                        if let thread = self.thread(withId: event.eventId) {
-                            return thread
-                        }
-                        return MXThread(withSession: session, rootEvent: event)
-                    }
-                    completion(.success(threads))
-                } else {
-                    completion(.success([]))
-                }
-            case .failure(let error):
-                completion(.failure(error))
-            }
-        }
     }
     
     //  MARK: - Delegate
