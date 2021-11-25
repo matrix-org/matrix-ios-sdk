@@ -50,24 +50,31 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Report that a call has started.
  
- @param call The call that has started.
+ @param isVideo Whether the call is a video call
+ @param numberOfParticipants The number of participants in the call
+ @param isIncoming Whether the call is an incoming call (NO if placed by the user).
  */
-- (void)trackCallStarted:(MXCall *)call;
+- (void)trackCallStartedWithVideo:(BOOL)isVideo numberOfParticipants:(NSInteger)numberOfParticipants incoming:(BOOL)isIncoming;
 
 /**
  Report that a call has ended.
  
- @param call The call that has started.
+ @param duration The duration of the call in milliseconds
+ @param isVideo Whether the call is a video call
+ @param numberOfParticipants The number of participants in the call
+ @param isIncoming Whether the call is an incoming call (NO if placed by the user).
  */
-- (void)trackCallEnded:(MXCall *)call;
+- (void)trackCallEndedWithDuration:(NSInteger)duration video:(BOOL)isVideo numberOfParticipants:(NSInteger)numberOfParticipants incoming:(BOOL)isIncoming;
 
 /**
  Report that a call encountered an error.
  
- @param call The call that has started.
  @param reason The call hangup reason.
+ @param isVideo Whether the call is a video call
+ @param numberOfParticipants The number of participants in the call
+ @param isIncoming Whether the call is an incoming call (NO if placed by the user).
  */
-- (void)trackCallError:(MXCall *)call withReason:(MXCallHangupReason)reason;
+- (void)trackCallErrorWithReason:(MXCallHangupReason)reason video:(BOOL)isVideo numberOfParticipants:(NSInteger)numberOfParticipants incoming:(BOOL)isIncoming;
 
 - (void)trackContactsAccessGranted:(BOOL)granted;
 
