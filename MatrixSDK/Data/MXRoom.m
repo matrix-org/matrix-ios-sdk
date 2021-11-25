@@ -1982,7 +1982,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
         msgContent[kMXEventRelationRelatesToKey] = relatesToDict;
         
         operation = [self sendMessageWithContent:msgContent
-                                        threadId:eventToReply.threadIdentifier  //  reply in the same thread
+                                        threadId:eventToReply.threadId  //  reply in the same thread
                                        localEcho:localEcho
                                          success:success
                                          failure:failure];

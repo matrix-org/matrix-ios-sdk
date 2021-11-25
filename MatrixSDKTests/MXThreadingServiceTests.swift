@@ -267,7 +267,7 @@ class MXThreadingServiceTests: XCTestCase {
                                                 return
                                             }
                                             
-                                            XCTAssertEqual(replyEvent.threadIdentifier, threadId, "Reply must also be in the thread")
+                                            XCTAssertEqual(replyEvent.threadId, threadId, "Reply must also be in the thread")
                                             
                                             guard let relatesTo = replyEvent.content[kMXEventRelationRelatesToKey] as? [String: Any],
                                                   let inReplyTo = relatesTo["m.in_reply_to"] as? [String: String] else {
