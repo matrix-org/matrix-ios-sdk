@@ -236,7 +236,7 @@ class MXThreadingServiceUnitTests: XCTestCase {
         }
     }
     
-    private func wait(_ timeout: TimeInterval = 5, _ block: @escaping (XCTestExpectation) -> Void) {
+    private func wait(_ timeout: TimeInterval = 0.5, _ block: @escaping (XCTestExpectation) -> Void) {
         let waiter = XCTWaiter()
         let expectation = XCTestExpectation(description: "Async operation expectation")
         block(expectation)
