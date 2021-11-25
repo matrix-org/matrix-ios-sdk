@@ -327,7 +327,6 @@ class MXThreadingServiceTests: XCTestCase {
                   let initialRoom = initialRoom,
                   let expectation = expectation else {
                 XCTFail("Failed to setup test conditions")
-                expectation?.fulfill()
                 return
             }
             guard let threadingService = bobSession.threadingService else {
@@ -408,7 +407,6 @@ class MXThreadingServiceTests: XCTestCase {
                   let initialRoom = initialRoom,
                   let expectation = expectation else {
                 XCTFail("Failed to setup test conditions")
-                expectation?.fulfill()
                 return
             }
             guard let threadingService = bobSession.threadingService else {
