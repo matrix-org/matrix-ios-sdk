@@ -286,6 +286,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
         [mxSession close];
 
         MXSession *mxSession2 = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [matrixSDKTestsData retain:mxSession2];
         [mxSession2 setStore:[[MXMemoryStore alloc] init] success:^{
 
             // Start a new session by loading no message
@@ -344,6 +345,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
             [mxSession close];
 
             MXSession *mxSession2 = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+            [matrixSDKTestsData retain:mxSession2];
 
             // Configure the updater so that it refuses room messages as last message
             mxSession2.roomSummaryUpdateDelegate = self;
@@ -410,6 +412,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
         [mxSession close];
 
         MXSession *mxSession2 = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [matrixSDKTestsData retain:mxSession2];
         [mxSession2 setStore:[[MXMemoryStore alloc] init] success:^{
 
             // Start a new session by loading no message
@@ -650,13 +653,14 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
     }];
 }
 
-- (void)testIgnoreMemberProfileChanges
+- (void)testLastMessageEventTypesAllowList
 {
     // Need a store for this test
     [matrixSDKTestsData doMXSessionTestWithBobAndARoom:self andStore:[[MXMemoryStore alloc] init] readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
 
+        // Retrieve the summary updater and only allow message events to become the last message.
         MXRoomSummaryUpdater *defaultUpdater = [MXRoomSummaryUpdater roomSummaryUpdaterForSession:mxSession];
-        defaultUpdater.ignoreMemberProfileChanges = YES;
+        defaultUpdater.lastMessageEventTypesAllowList = @[kMXEventTypeStringRoomMessage];
 
         MXRoomSummary *summary = room.summary;
 
@@ -664,7 +668,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
 
         observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
-            XCTFail(@"The last message should not change if ignoreMemberProfileChanges == YES");
+            XCTFail(@"The last message should not change when eventTypesFilterForLastMessage == @[kMXEventTypeStringRoomMessage]");
             [expectation fulfill];
         }];
 
@@ -1040,6 +1044,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
                         // Restarting the session with a new MXMemoryStore is equivalent to
                         // clearing the cache of MXFileStore
                         MXSession *mxSession2 = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+                        [matrixSDKTestsData retain:mxSession2];
                         [mxSession2 setStore:[[MXMemoryStore alloc] init] success:^{
 
                             MXRoomSummaryUpdater *defaultUpdater = [MXRoomSummaryUpdater roomSummaryUpdaterForSession:mxSession2];
@@ -1187,6 +1192,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
 
                         // Then reopen a session on this store
                         MXSession *aliceSession2 = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+                        [matrixSDKTestsData retain:aliceSession2];
                         [aliceSession2 setStore:[[MXFileStore alloc] init] success:^{
 
                             [aliceSession2 start:^{
@@ -1270,6 +1276,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
 
                     // Then reopen a session
                     MXSession *aliceSession2 = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+                    [matrixSDKTestsData retain:aliceSession2];
                     [aliceSession2 setStore:[[MXFileStore alloc] init] success:^{
 
                         [aliceSession2 start:^{

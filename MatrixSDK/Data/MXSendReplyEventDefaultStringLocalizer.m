@@ -14,9 +14,20 @@
  limitations under the License.
  */
 
-#import "MXSendReplyEventDefaultStringLocalizations.h"
+#import "MXSendReplyEventDefaultStringLocalizer.h"
 
-@implementation MXSendReplyEventDefaultStringLocalizations
+@interface MXSendReplyEventDefaultStringLocalizer ()
+
+@property (nonatomic, strong) NSString *senderSentAnImage;
+@property (nonatomic, strong) NSString *senderSentAVideo;
+@property (nonatomic, strong) NSString *senderSentAnAudioFile;
+@property (nonatomic, strong) NSString *senderSentAVoiceMessage;
+@property (nonatomic, strong) NSString *senderSentAFile;
+@property (nonatomic, strong) NSString *messageToReplyToPrefix;
+
+@end
+
+@implementation MXSendReplyEventDefaultStringLocalizer
 
 - (instancetype)init
 {

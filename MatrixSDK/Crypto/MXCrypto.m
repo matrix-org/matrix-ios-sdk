@@ -426,7 +426,14 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 
         [self->roomDecryptors removeAllObjects];
         self->roomDecryptors = nil;
-
+        
+        self->_backup = nil;
+        self->_keyVerificationManager = nil;
+        self->_recoveryService = nil;
+        self->_secretStorage = nil;
+        self->_secretShareManager = nil;
+        self->_crossSigning = nil;
+        
         self->_myDevice = nil;
 
         MXLogDebug(@"[MXCrypto] close: done");
@@ -2921,6 +2928,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
         // Sign the fallback key
         NSMutableDictionary *signedKey = [NSMutableDictionary dictionary];
         signedKey[@"key"] = fallbackKey[kMXKeyCurve25519Type][keyId];
+        signedKey[@"fallback"] = @(YES);
         signedKey[@"signatures"] = [self signObject:signedKey];
         
         fallbackKeyJson[[NSString stringWithFormat:@"%@:%@", kMXKeySignedCurve25519Type, keyId]] = signedKey;

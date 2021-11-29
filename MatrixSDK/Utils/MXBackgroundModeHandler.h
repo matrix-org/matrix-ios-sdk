@@ -22,17 +22,47 @@
 #import <Foundation/Foundation.h>
 #import "MXBackgroundTask.h"
 
-typedef void (^MXBackgroundTaskExpirationHandler)(void);
-
 NS_ASSUME_NONNULL_BEGIN
+
+typedef void (^MXBackgroundModeHandlerTaskExpirationHandler)(void);
 
 /**
  Interface to handle enabling background mode
  */
 @protocol MXBackgroundModeHandler <NSObject>
 
+/**
+ Create a background task with a name.
+ 
+ @param name name of the background task
+ 
+ @return background task
+ */
+- (nullable id<MXBackgroundTask>)startBackgroundTaskWithName:(NSString *)name;
+
+/**
+ Create a background task with a name and expirationHandler.
+ 
+ @param name name of the background task
+ @param expirationHandler a block to be called when the background task is about to expire
+ 
+ @return background task
+ */
 - (nullable id<MXBackgroundTask>)startBackgroundTaskWithName:(NSString *)name
-                                           expirationHandler:(nullable MXBackgroundTaskExpirationHandler)expirationHandler;
+                                           expirationHandler:(nullable MXBackgroundModeHandlerTaskExpirationHandler)expirationHandler;
+
+/**
+ Create a background task with a name and expirationHandler.
+ 
+ @param name name of the background task
+ @param reusable flag indicating the background task will be reusable
+ @param expirationHandler a block to be called when the background task is about to expire
+ 
+ @return background task
+ */
+- (nullable id<MXBackgroundTask>)startBackgroundTaskWithName:(NSString *)name
+                                                    reusable:(BOOL)reusable
+                                           expirationHandler:(nullable MXBackgroundModeHandlerTaskExpirationHandler)expirationHandler;
 
 @end
 

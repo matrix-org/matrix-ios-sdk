@@ -46,6 +46,7 @@
 
 #import "MXAggregations_Private.h"
 #import "MatrixSDKSwiftHeader.h"
+#import "MXRoomSummaryProtocol.h"
 
 #pragma mark - Constants definitions
 NSString *const kMXSessionStateDidChangeNotification = @"kMXSessionStateDidChangeNotification";
@@ -205,6 +206,10 @@ typedef void (^MXOnResumeDone)(void);
 
 @property (atomic, copy, readwrite) NSDictionary<NSString*, NSArray<NSString*>*> *directRooms;
 
+@property (nonatomic, readwrite) id<MXRoomListDataManager> roomListDataManager;
+
+@property (nonatomic, readonly) MXStoreService *storeService;
+
 @end
 
 @implementation MXSession
@@ -232,6 +237,11 @@ typedef void (^MXOnResumeDone)(void);
         nativeToVirtualRoomIds = [NSMutableDictionary dictionary];
         asyncTaskQueue = [[MXAsyncTaskQueue alloc] initWithDispatchQueue:dispatch_get_main_queue() label:@"MXAsyncTaskQueue-MXSession"];
         _spaceService = [[MXSpaceService alloc] initWithSession:self];
+        //  add did build graph notification
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(spaceServiceDidBuildSpaceGraph:)
+                                                     name:MXSpaceService.didBuildSpaceGraph
+                                                   object:_spaceService];
         
         [self setIdentityServer:mxRestClient.identityServer andAccessToken:mxRestClient.credentials.identityServerAccessToken];
         
@@ -318,28 +328,33 @@ typedef void (^MXOnResumeDone)(void);
     }
 }
 
+- (id<MXStore>)store
+{
+    return self.storeService.mainStore;
+}
+
 -(void)setStore:(id<MXStore>)store success:(void (^)(void))onStoreDataReady failure:(void (^)(NSError *))failure
 {
     NSAssert(MXSessionStateInitialised == _state, @"Store can be set only just after initialisation");
     NSParameterAssert(store);
 
-    _store = store;
+    _storeService = [[MXStoreService alloc] initWithStore:store credentials:matrixRestClient.credentials];
 
     // Validate the permanent implementation
-    if (_store.isPermanent)
+    if (self.store.isPermanent)
     {
         // A permanent MXStore must implement these methods:
-        NSParameterAssert([_store respondsToSelector:@selector(rooms)]);
-        NSParameterAssert([_store respondsToSelector:@selector(storeStateForRoom:stateEvents:)]);
-        NSParameterAssert([_store respondsToSelector:@selector(stateOfRoom:success:failure:)]);
-        NSParameterAssert([_store respondsToSelector:@selector(summaryOfRoom:)]);
+        NSParameterAssert([self.store respondsToSelector:@selector(storeStateForRoom:stateEvents:)]);
+        NSParameterAssert([self.store respondsToSelector:@selector(stateOfRoom:success:failure:)]);
     }
+    
+    self.roomListDataManager = [[MXSDKOptions.sharedInstance.roomListDataManagerClass alloc] init];
 
     NSDate *startDate = [NSDate date];
     MXTaskProfile *taskProfile = [MXSDKOptions.sharedInstance.profiler startMeasuringTaskWithName:kMXAnalyticsStartupMountData category:kMXAnalyticsStartupCategory];
 
     MXWeakify(self);
-    [_store openWithCredentials:matrixRestClient.credentials onComplete:^{
+    [self.store openWithCredentials:matrixRestClient.credentials onComplete:^{
         MXStrongifyAndReturnIfNil(self);
         
         // Sanity check: The session may be closed before the end of store opening.
@@ -348,7 +363,7 @@ typedef void (^MXOnResumeDone)(void);
             return;
         }
 
-        self->_aggregations = [[MXAggregations alloc] initWithMatrixSession:self];
+        self.storeService.aggregations = [[MXAggregations alloc] initWithMatrixSession:self];
 
         // Check if the user has enabled crypto
         MXWeakify(self);
@@ -375,9 +390,18 @@ typedef void (^MXOnResumeDone)(void);
                 // My user is a MXMyUser object
                 self->_myUser = (MXMyUser*)myUser;
                 self->_myUser.mxSession = self;
+                
+                // Use the cached agreement to identity server terms.
+                if (self.identityService)
+                {
+                    self.identityService.areAllTermsAgreed = self.store.areAllIdentityServerTermsAgreed;
+                }
 
                 // Load user account data
                 [self handleAccountData:self.store.userAccountData];
+                
+                // Refresh identity server terms with complete account data
+                [self refreshIdentityServerServiceTerms];
 
                 // Load MXRoomSummaries from the store
                 NSDate *startDate2 = [NSDate date];
@@ -385,9 +409,11 @@ typedef void (^MXOnResumeDone)(void);
                 {
                     @autoreleasepool
                     {
-                        MXRoomSummary *summary = [self.store summaryOfRoom:roomId];
-                        [summary setMatrixSession:self];
-                        self->roomsSummaries[roomId] = summary;
+                        MXRoomSummary *summary = [[MXRoomSummary alloc] initWithRoomId:roomId andMatrixSession:self];
+                        if (summary)
+                        {
+                            self->roomsSummaries[roomId] = summary;
+                        }
                     }
                 }
 
@@ -435,6 +461,14 @@ typedef void (^MXOnResumeDone)(void);
             failure(error);
         }
     }];
+}
+
+- (void)setRoomListDataManager:(id<MXRoomListDataManager>)roomListDataManager
+{
+    NSParameterAssert(_roomListDataManager == nil);
+    
+    _roomListDataManager = roomListDataManager;
+    [_roomListDataManager configureWithSession:self];
 }
 
 /// Handle a sync response and decide serverTimeout for the next sync request.
@@ -663,10 +697,8 @@ typedef void (^MXOnResumeDone)(void);
             MXLogDebug(@"[MXSession] Next sync token: %@", syncResponse.nextBatch);
             self.store.eventStreamToken = syncResponse.nextBatch;
             
-            if (self.spaceService.needsUpdate || syncResponse.rooms.join.count || syncResponse.rooms.invite.count || syncResponse.rooms.leave.count || syncResponse.toDevice.events.count)
-            {
-                [self.spaceService buildGraphWith:self.rooms];
-            }
+            // Propagate sync response to the associated space service
+            [self.spaceService handleSyncResponse:syncResponse];
             
             if (completion)
             {
@@ -698,6 +730,13 @@ typedef void (^MXOnResumeDone)(void);
     if (identityServer)
     {
         _identityService = [[MXIdentityService alloc] initWithIdentityServer:identityServer accessToken:accessToken andHomeserverRestClient:matrixRestClient];
+        
+        // Only refresh the terms after the first sync to
+        // avoid multiple requests from -setStore:success:failure:
+        if (firstSyncDone)
+        {
+            [self refreshIdentityServerServiceTerms];
+        }
     }
     else
     {
@@ -747,7 +786,7 @@ typedef void (^MXOnResumeDone)(void);
 
 - (void)startWithSyncFilterId:(NSString *)syncFilterId onServerSyncDone:(void (^)(void))onServerSyncDone failure:(void (^)(NSError *))failure
 {
-    if (nil == _store)
+    if (nil == self.store)
     {
         // The user did not set a MXStore, use MXNoStore as default
         MXNoStore *store = [[MXNoStore alloc] init];
@@ -762,6 +801,8 @@ typedef void (^MXOnResumeDone)(void);
 
         } failure:^(NSError *error) {
             MXStrongifyAndReturnIfNil(self);
+            
+            MXLogError(@"[MXSession] startWithSyncFilterId: setStore failed with error: %@", error);
 
             [self setState:MXSessionStateInitialSyncFailed];
             failure(error);
@@ -771,15 +812,15 @@ typedef void (^MXOnResumeDone)(void);
     }
     
     // Check update of the filter used for /sync requests
-    if (![_store.syncFilterId isEqualToString:syncFilterId])
+    if (![self.store.syncFilterId isEqualToString:syncFilterId])
     {
-        if (_store.eventStreamToken)
+        if (self.store.eventStreamToken)
         {
             MXLogDebug(@"[MXSesssion] startWithSyncFilterId: WARNING: Changing the sync filter while there is existing data in the store is not recommended");
         }
 
         // Store the passed filter id
-        _store.syncFilterId = syncFilterId;
+        self.store.syncFilterId = syncFilterId;
     }
 
     // Determine if this filter implies lazy loading of room members
@@ -807,7 +848,7 @@ typedef void (^MXOnResumeDone)(void);
     [self setState:MXSessionStateSyncInProgress];
 
     // Can we resume from data available in the cache
-    if (_store.isPermanent && self.isEventStreamInitialised && 0 < _store.rooms.count)
+    if (self.store.isPermanent && self.isEventStreamInitialised && 0 < self.store.rooms.count)
     {
         // Resume the stream (presence will be retrieved during server sync)
         MXLogDebug(@"[MXSession] Resuming the events stream from %@...", self.store.eventStreamToken);
@@ -850,6 +891,8 @@ typedef void (^MXOnResumeDone)(void);
                 // Initial server sync
                 [self serverSyncWithServerTimeout:0 success:onServerSyncDone failure:^(NSError *error) {
 
+                    MXLogError(@"[MXSession] _startWithSyncFilterId: Failed with error %@", error);
+                
                     [self setState:MXSessionStateInitialSyncFailed];
                     failure(error);
 
@@ -857,7 +900,7 @@ typedef void (^MXOnResumeDone)(void);
 
             } failure:^(NSError *error) {
 
-                MXLogDebug(@"[MXSession] Crypto failed to start. Error: %@", error);
+                MXLogError(@"[MXSession] Crypto failed to start. Error: %@", error);
                 
                 // Check whether the token is valid
                 if ([self isUnknownTokenError:error])
@@ -873,7 +916,7 @@ typedef void (^MXOnResumeDone)(void);
 
         } failure:^(NSError *error) {
             
-            MXLogDebug(@"[MXSession] Get the user's profile information failed");
+            MXLogError(@"[MXSession] Get the user's profile information failed with error %@", error);
             
             // Check whether the token is valid
             if ([self isUnknownTokenError:error])
@@ -900,7 +943,7 @@ typedef void (^MXOnResumeDone)(void);
 
 - (NSString *)syncFilterId
 {
-    return _store.syncFilterId;
+    return self.store.syncFilterId;
 }
 
 - (BOOL)isPauseable
@@ -911,9 +954,22 @@ typedef void (^MXOnResumeDone)(void);
         || _state == MXSessionStatePauseRequested;
 }
 
+- (BOOL)isResumable
+{
+    return !eventStreamRequest ||
+        (_state == MXSessionStateBackgroundSyncInProgress
+        || _state == MXSessionStatePauseRequested
+        || _state == MXSessionStatePaused);
+}
+
+- (MXAggregations *)aggregations
+{
+    return self.storeService.aggregations;
+}
+
 - (void)pause
 {
-    MXLogDebug(@"[MXSession] pause the event stream in state %@", [MXTools readableSessionState:_state]);
+    MXLogDebug(@"[MXSession] pause the event stream in state: %@", [MXTools readableSessionState:_state]);
 
     if (self.isPauseable)
     {
@@ -973,7 +1029,7 @@ typedef void (^MXOnResumeDone)(void);
 
 - (void)_resume:(void (^)(void))resumeDone
 {
-    MXLogDebug(@"[MXSession] _resume: resume the event stream from state %@", [MXTools readableSessionState:_state]);
+    MXLogDebug(@"[MXSession] _resume: resume the event stream from state: %@", [MXTools readableSessionState:_state]);
     
     if (self.backgroundTask.isRunning)
     {
@@ -981,9 +1037,8 @@ typedef void (^MXOnResumeDone)(void);
         self.backgroundTask = nil;
     }
 
-    // Check whether no request is already in progress
-    if (!eventStreamRequest ||
-        (_state == MXSessionStateBackgroundSyncInProgress || _state == MXSessionStatePauseRequested))
+    //  check if the session can resume from here
+    if (self.isResumable)
     {
         [self setState:MXSessionStateSyncInProgress];
         
@@ -1004,7 +1059,7 @@ typedef void (^MXOnResumeDone)(void);
     
     if (!onResumeDone && resumeDone)
     {
-        MXLogDebug(@"[MXSession] _resume: the event stream is already running. Nothing to resume");
+        MXLogDebug(@"[MXSession] _resume: cannot resume from the state: %@", [MXTools readableSessionState:_state]);
         resumeDone();
     }
 }
@@ -1090,10 +1145,8 @@ typedef void (^MXOnResumeDone)(void);
     [self.initialSyncResponseCache deleteData];
     
     // Flush the store
-    if ([_store respondsToSelector:@selector(close)])
-    {
-        [_store close];
-    }
+    [self.storeService closeStores];
+    _roomListDataManager = nil;
     
     [self removeAllListeners];
 
@@ -1148,6 +1201,9 @@ typedef void (^MXOnResumeDone)(void);
     }
     
     // Clear spaces
+    [[NSNotificationCenter defaultCenter] removeObserver:self
+                                                    name:MXSpaceService.didBuildSpaceGraph
+                                                  object:self.spaceService];
     [self.spaceService close];
 
     _myUser = nil;
@@ -1194,7 +1250,7 @@ typedef void (^MXOnResumeDone)(void);
 
 - (BOOL)isEventStreamInitialised
 {
-    return (_store.eventStreamToken != nil);
+    return (self.store.eventStreamToken != nil);
 }
 
 #pragma mark - Invalid Token handling
@@ -1316,7 +1372,7 @@ typedef void (^MXOnResumeDone)(void);
                                                             category:kMXAnalyticsStartupCategory];
         }
         
-        NSString * streamToken = _store.eventStreamToken;
+        NSString * streamToken = self.store.eventStreamToken;
         
         // Determine if we are catching up
         _catchingUp = (0 == serverTimeout);
@@ -1400,8 +1456,9 @@ typedef void (^MXOnResumeDone)(void);
             }
             
             dispatch_group_notify(dispatchGroupLastMessage, dispatch_get_main_queue(), ^{
-                // Do a loop of /syncs until catching up is done
-                if (nextServerTimeout == 0)
+                // Do a loop of /syncs until catching up is done, if not already paused or pause requested
+                if (nextServerTimeout == 0
+                    && (self.state != MXSessionStatePauseRequested && self.state != MXSessionStatePaused))
                 {
                     // Pursue live events listening
                     [self serverSyncWithServerTimeout:nextServerTimeout success:success failure:failure clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
@@ -1567,7 +1624,7 @@ typedef void (^MXOnResumeDone)(void);
         else if ([error.domain isEqualToString:NSURLErrorDomain]
                  && code == kCFURLErrorTimedOut && serverTimeout == 0)
         {
-            MXLogDebug(@"[MXSession] The connection has been timeout.");
+            MXLogError(@"[MXSession] The connection has been timeout.");
             // The reconnection attempt failed on timeout: there is no data to retrieve from server
             [self->eventStreamRequest cancel];
             self->eventStreamRequest = nil;
@@ -1584,6 +1641,8 @@ typedef void (^MXOnResumeDone)(void);
         }
         else
         {
+            MXLogError(@"[MXSession] handleServerSyncError: %@", error);
+            
             MXError *mxError = [[MXError alloc] initWithNSError:error];
             if (mxError)
             {
@@ -1657,7 +1716,7 @@ typedef void (^MXOnResumeDone)(void);
         MXUser *user = [self getOrCreateUser:userId];
         [user updateWithPresenceEvent:event inMatrixSession:self];
 
-        [_store storeUser:user];
+        [self.store storeUser:user];
     }
 
     [self notifyListeners:event direction:direction];
@@ -1752,6 +1811,13 @@ typedef void (^MXOnResumeDone)(void);
                     && ![identityServer isEqualToString:self.identityService.identityServer])
                 {
                     MXLogDebug(@"[MXSession] handleAccountData: Update identity server: %@ -> %@", self.identityService.identityServer, identityServer);
+                    
+                    // Reset the cached agreement to the identity server's terms.
+                    // This will be refreshed once the new identity server is set.
+                    if (self.store.areAllIdentityServerTermsAgreed)
+                    {
+                        self.store.areAllIdentityServerTermsAgreed = NO;
+                    }
 
                     // Use the IS from the account data
                     [self setIdentityServer:identityServer andAccessToken:nil];
@@ -1761,9 +1827,19 @@ typedef void (^MXOnResumeDone)(void);
                                                                       userInfo:nil];
                 }
             }
+            
+            if([event[@"type"] isEqualToString:kMXAccountDataTypeAcceptedTerms])
+            {
+                // Only refresh the terms after the first sync to
+                // avoid multiple requests from -setStore:success:failure:
+                if (firstSyncDone)
+                {
+                    [self refreshIdentityServerServiceTerms];
+                }
+            }
         }
 
-        _store.userAccountData = _accountData.accountData;
+        self.store.userAccountData = _accountData.accountData;
         
         // Trigger a global notification for the account data update
         if (!isInitialSync)
@@ -1886,7 +1962,7 @@ typedef void (^MXOnResumeDone)(void);
     MXSyncResponseStoreManager *syncResponseStoreManager = [[MXSyncResponseStoreManager alloc] initWithSyncResponseStore:syncResponseStore];
     
     NSString *syncResponseStoreSyncToken = syncResponseStoreManager.syncToken;
-    NSString *eventStreamToken = _store.eventStreamToken;
+    NSString *eventStreamToken = self.store.eventStreamToken;
 
     NSMutableArray<NSString *> *outdatedSyncResponseIds = [syncResponseStore.outdatedSyncResponseIds mutableCopy];
     NSArray<NSString *> *syncResponseIds = syncResponseStore.syncResponseIds;
@@ -2789,8 +2865,8 @@ typedef void (^MXOnResumeDone)(void);
         }
 
         // Clean the store
-        [_store deleteRoom:roomId];
-        [_aggregations resetDataInRoom:roomId];
+        [self.store deleteRoom:roomId];
+        [self.aggregations resetDataInRoom:roomId];
 
         // And remove the room and its summary from the list
         [rooms removeObjectForKey:roomId];
@@ -2815,7 +2891,7 @@ typedef void (^MXOnResumeDone)(void);
  */
 - (MXRoom *)loadRoom:(NSString *)roomId
 {
-    MXRoom *room = [MXRoom loadRoomFromStore:_store withRoomId:roomId matrixSession:self];
+    MXRoom *room = [MXRoom loadRoomFromStore:self.store withRoomId:roomId matrixSession:self];
 
     if (room)
     {
@@ -2841,7 +2917,7 @@ typedef void (^MXOnResumeDone)(void);
         }
         else
         {
-            MXLogDebug(@"[MXSession] preloadRoomsData: Unkown room id: %@", roomId);
+            MXLogDebug(@"[MXSession] preloadRoomsData: Unknown room id: %@", roomId);
         }
     }
 
@@ -2873,12 +2949,12 @@ typedef void (^MXOnResumeDone)(void);
     {
         // Try to find it from the store first
         // (this operation requires a roomId for the moment)
-        MXEvent *event = [_store eventWithEventId:eventId inRoom:roomId];
+        MXEvent *event = [self.store eventWithEventId:eventId inRoom:roomId];
         
         //  also search in local event
         if (!event)
         {
-            NSArray<MXEvent *> *outgoingMessages = [_store outgoingMessagesInRoom:roomId];
+            NSArray<MXEvent *> *outgoingMessages = [self.store outgoingMessagesInRoom:roomId];
             for (MXEvent *localEvent in outgoingMessages)
             {
                 if ([localEvent.eventId isEqualToString:eventId])
@@ -2914,7 +2990,7 @@ typedef void (^MXOnResumeDone)(void);
 
     if (roomId)
     {
-        roomSummary =  roomsSummaries[roomId];
+        roomSummary = roomsSummaries[roomId];
     }
 
     return roomSummary;
@@ -2937,9 +3013,9 @@ typedef void (^MXOnResumeDone)(void);
     }
     
     // Commit store changes done
-    if ([_store respondsToSelector:@selector(commit)])
+    if ([self.store respondsToSelector:@selector(commit)])
     {
-        [_store commit];
+        [self.store commit];
     }
 }
 
@@ -3072,12 +3148,12 @@ typedef void (^MXOnResumeDone)(void);
 
 - (MXGroup *)groupWithGroupId:(NSString*)groupId
 {
-    return [_store groupWithGroupId:groupId];
+    return [self.store groupWithGroupId:groupId];
 }
 
 - (NSArray<MXGroup*>*)groups
 {
-    return _store.groups;
+    return self.store.groups;
 }
 
 - (MXHTTPOperation*)acceptGroupInvite:(NSString*)groupId
@@ -3461,7 +3537,7 @@ typedef void (^MXOnResumeDone)(void);
     // Set/update the user membership.
     group.membership = MXMembershipJoin;
     
-    [_store storeGroup:group];
+    [self.store storeGroup:group];
     
     // Update the group summary from server.
     [self updateGroupSummary:group success:nil failure:^(NSError *error) {
@@ -3498,7 +3574,7 @@ typedef void (^MXOnResumeDone)(void);
     // Set user membership
     group.membership = MXMembershipInvite;
     
-    [_store storeGroup:group];
+    [self.store storeGroup:group];
     
     // Retrieve the group summary from server.
     [self updateGroupSummary:group success:nil failure:^(NSError *error) {
@@ -3522,7 +3598,7 @@ typedef void (^MXOnResumeDone)(void);
 {
     MXLogDebug(@"[MXSession] removeGroup %@", groupId);
     // Clean the store
-    [_store deleteGroup:groupId];
+    [self.store deleteGroup:groupId];
     
     // Broadcast the left group
     [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDidLeaveGroupNotification
@@ -3651,12 +3727,12 @@ typedef void (^MXOnResumeDone)(void);
 
 - (MXUser *)userWithUserId:(NSString *)userId
 {
-    return [_store userWithUserId:userId];
+    return [self.store userWithUserId:userId];
 }
 
 - (NSArray<MXUser*> *)users
 {
-    return _store.users;
+    return self.store.users;
 }
 
 - (MXUser *)getOrCreateUser:(NSString *)userId
@@ -4178,11 +4254,91 @@ typedef void (^MXOnResumeDone)(void);
     return accountDataIdentityServer;
 }
 
+- (void)refreshIdentityServerServiceTerms
+{
+    if (!self.identityService)
+    {
+        MXLogDebug(@"[MXSession] No identity service available to check terms for.")
+        return;
+    }
+    
+    NSString *baseURL = self.identityService.identityServer;
+    
+    // Get the access token for the identity service
+    [self.identityService accessTokenWithSuccess:^(NSString * _Nullable accessToken) {
+        // Create the service terms and use this to update the identity service.
+        MXServiceTerms *serviceTerms = [[MXServiceTerms alloc] initWithBaseUrl:baseURL
+                                                                   serviceType:MXServiceTypeIdentityService
+                                                                 matrixSession:self
+                                                                   accessToken:accessToken];
+        
+        [serviceTerms areAllTermsAgreed:^(NSProgress * _Nonnull agreedTermsProgress) {
+            // Ensure the identity server hasn't changed during the requests
+            if (self.identityService.identityServer != baseURL)
+            {
+                return;
+            }
+            
+            // Set the value in the identity service.
+            BOOL areAllTermsAgreed = agreedTermsProgress.finished;
+            self.identityService.areAllTermsAgreed = areAllTermsAgreed;
+            
+            // And update the store if necessary.
+            if (self.store.areAllIdentityServerTermsAgreed != areAllTermsAgreed)
+            {
+                self.store.areAllIdentityServerTermsAgreed = areAllTermsAgreed;
+            }
+        } failure:nil];
+    } failure:^(NSError * _Nonnull error) {
+        MXLogDebug(@"[MXSession] Unable to check identity server terms due to missing token.")
+    }];
+}
+
+- (void)prepareIdentityServiceForTermsWithDefault:(NSString *)defaultIdentityServerUrlString
+                                          success:(void (^)(MXSession *session, NSString *baseURL, NSString *accessToken))success
+                                          failure:(void (^)(NSError *error))failure
+{
+    MXIdentityService *identityService = self.identityService;
+    
+    if (!identityService)
+    {
+        NSString *baseURL = self.accountDataIdentityServer ?: defaultIdentityServerUrlString;
+        identityService = [[MXIdentityService alloc] initWithIdentityServer:baseURL
+                                                                accessToken:nil
+                                                    andHomeserverRestClient:self.matrixRestClient];
+    }
+
+    // Get the identity service's access token.
+    [identityService accessTokenWithSuccess:^(NSString * _Nullable accessToken) {
+        MXWeakify(self);
+        
+        // Set the identity server in the session and account data as this will be nil if
+        // the terms were previously declined. These will be reverted if declined once more.
+        [self setIdentityServer:identityService.identityServer andAccessToken:accessToken];
+        [self setAccountDataIdentityServer:identityService.identityServer success:^{
+            
+            MXStrongifyAndReturnIfNil(self);
+            
+            // Call the completion with the final details
+            success(self, identityService.identityServer, accessToken);
+            
+        } failure:^(NSError *error) {
+            // Something went wrong setting the account data identity service
+            MXLogError(@"[MXSession] Error preparing identity server terms: %@", error);
+            failure(error);
+        }];
+    } failure:^(NSError * _Nonnull error) {
+        // Something went wrong getting the identity service's access token.
+        MXLogError(@"[MXSession] Error preparing identity server terms: %@", error);
+        failure(error);
+    }];
+}
+
 
 #pragma mark - Homeserver information
 - (MXWellKnown *)homeserverWellknown
 {
-    return _store.homeserverWellknown;
+    return self.store.homeserverWellknown;
 }
 
 - (MXHTTPOperation *)refreshHomeserverWellknown:(void (^)(MXWellKnown *))success
@@ -4237,14 +4393,14 @@ typedef void (^MXOnResumeDone)(void);
 {
     MXHTTPOperation *operation;
 
-    if (_store)
+    if (self.store)
     {
         // Create an empty operation that will be mutated later
         operation = [[MXHTTPOperation alloc] init];
 
         // Check if the filter has been already created and cached
         MXWeakify(self);
-        [_store filterIdForFilter:filter success:^(NSString * _Nullable filterId) {
+        [self.store filterIdForFilter:filter success:^(NSString * _Nullable filterId) {
             MXStrongifyAndReturnIfNil(self);
 
             if (filterId)
@@ -4284,14 +4440,14 @@ typedef void (^MXOnResumeDone)(void);
 {
     MXHTTPOperation *operation;
 
-    if (_store)
+    if (self.store)
     {
         // Create an empty operation that will be mutated later
         operation = [[MXHTTPOperation alloc] init];
         
         // Check in the store
         MXWeakify(self);
-        [_store filterWithFilterId:filterId success:^(MXFilterJSONModel * _Nullable filter) {
+        [self.store filterWithFilterId:filterId success:^(MXFilterJSONModel * _Nullable filter) {
             MXStrongifyAndReturnIfNil(self);
 
             if (filter)
@@ -4631,6 +4787,22 @@ typedef void (^MXOnResumeDone)(void);
 - (NSString *)virtualRoomOf:(NSString *)nativeRoomId
 {
     return nativeToVirtualRoomIds[nativeRoomId];
+}
+
+#pragma mark - Spaces
+
+- (void)spaceServiceDidBuildSpaceGraph:(NSNotification *)notification
+{
+    if (!self.spaceService.isInitialised)
+    {
+        //  may also be notified when the space service is closed
+        return;
+    }
+    
+    [self.spaceService.ancestorsPerRoomId enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull roomId, NSSet<NSString *> * _Nonnull parentIds, BOOL * _Nonnull stop)
+    {
+        self->roomsSummaries[roomId].parentSpaceIds = parentIds;
+    }];
 }
 
 @end

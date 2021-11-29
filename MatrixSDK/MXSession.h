@@ -145,6 +145,7 @@ typedef NS_ENUM(NSUInteger, MXSessionState)
 
 };
 
+@protocol MXRoomListDataManager;
 
 #pragma mark - Notifications
 /**
@@ -460,6 +461,11 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
 @property (nonatomic, readonly) id<MXStore> store;
 
 /**
+ The room list data manager.
+ */
+@property (nonatomic, readonly) id<MXRoomListDataManager> roomListDataManager;
+
+/**
  The module that manages push notifications.
  */
 @property (nonatomic, readonly) MXNotificationCenter *notificationCenter;
@@ -496,6 +502,21 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
  Flag indicating the session can be paused.
  */
 @property (nonatomic, readonly, getter=isPauseable) BOOL pauseable;
+
+/**
+ Flag indicating the session can resume from its current state.
+ */
+@property (nonatomic, readonly, getter=isResumable) BOOL resumable;
+
+/**
+ Whether the user is part of a room with the membership state of `join` or
+ they are in the process of joining.
+
+ @param roomIdOrAlias The ID or alias of the room to check.
+
+ @return YES if they are.
+ */
+- (BOOL)isJoinedOnRoom:(NSString *)roomIdOrAlias;
 
 #pragma mark - Class methods
 
@@ -702,6 +723,11 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
          failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
+ Sets a room list data manager. Can be only configured once per active session.
+ */
+- (void)setRoomListDataManager:(id<MXRoomListDataManager>)roomListDataManager;
+
+/**
  Set a new identity server.
 
  The method updates underlaying services.
@@ -897,7 +923,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 
  @return the MXRoom instance.
  */
-- (MXRoom *)roomWithRoomId:(NSString*)roomId;
+- (MXRoom  *)roomWithRoomId:(NSString*)roomId;
 
 /**
  Get the MXRoom instance of the room that owns the passed room alias.
@@ -1428,6 +1454,19 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
          to differentiate the 2 options.
  */
 - (NSString*)accountDataIdentityServer;
+
+/**
+ Prepares `identityService` ready to accept its service terms:
+ - If it is missing, a new one will be created, first checking the user's account data, falling back on the supplied default.
+ - Registers a new accessToken if necessary so the server is ready to use.
+ 
+ @param defaultIdentityServerUrlString The identity server URL to fallback to when the user's account data has no value
+ @param success The block called when the operation completes. The provides the `MXSession`, identity server's URL and it's access token.
+ @param failure The block called the the operation fails. This provides the error that occurred.
+ */
+- (void)prepareIdentityServiceForTermsWithDefault:(NSString *)defaultIdentityServerUrlString
+                                          success:(void (^)(MXSession *session, NSString *baseURL, NSString *accessToken))success
+                                          failure:(void (^)(NSError *error))failure;
 
 
 #pragma mark - Homeserver information

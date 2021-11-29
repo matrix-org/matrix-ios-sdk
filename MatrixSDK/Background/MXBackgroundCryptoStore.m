@@ -312,6 +312,11 @@ NSString *const MXBackgroundCryptoStoreUserIdSuffix = @":bgCryptoStore";
     NSAssert(NO, @"This method should be useless in the context of MXBackgroundCryptoStore");
 }
 
++ (void)deleteAllStores
+{
+    NSAssert(NO, @"This method should be useless in the context of MXBackgroundCryptoStore");
+}
+
 + (void)deleteReadonlyStoreWithCredentials:(MXCredentials*)credentials
 {
     NSAssert(NO, @"This method should be useless in the context of MXBackgroundCryptoStore");

@@ -29,7 +29,7 @@
 
 #import "MXMediaManager.h"
 #import "MXRoomOperation.h"
-#import "MXSendReplyEventDefaultStringLocalizations.h"
+#import "MXSendReplyEventDefaultStringLocalizer.h"
 
 #import "MXError.h"
 
@@ -120,8 +120,14 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
             liveTimeline = [[MXEventTimeline alloc] initWithRoom:self andInitialEventId:nil];
         }
         
-        // Update the stored outgoing messages, by removing the sent messages and tagging as failed the others.
-        [self refreshOutgoingMessages];
+        //  Update the stored outgoing messages, by removing the sent messages and tagging as failed the others.
+        //  Delay refreshing outgoing messages to the next run loop.
+        //  Added to avoid the race in MXRoom initialization.
+        //  When initializing the room instance it's not stored in the session yet until init finishes.
+        //  This causes a failure in summary.sentStatus calculation, so MXRoomSummary.room would be nil.
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self refreshOutgoingMessages];
+        });
     }
     return self;
 }
@@ -1968,7 +1974,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
 - (MXHTTPOperation*)sendReplyToEvent:(MXEvent*)eventToReply
                      withTextMessage:(NSString*)textMessage
                 formattedTextMessage:(NSString*)formattedTextMessage
-                 stringLocalizations:(id<MXSendReplyEventStringsLocalizable>)stringLocalizations
+                     stringLocalizer:(id<MXSendReplyEventStringLocalizerProtocol>)stringLocalizer
                            localEcho:(MXEvent**)localEcho
                              success:(void (^)(NSString *eventId))success
                              failure:(void (^)(NSError *error))failure
@@ -1979,15 +1985,15 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
         return nil;
     }
     
-    id<MXSendReplyEventStringsLocalizable> finalStringLocalizations;
+    id<MXSendReplyEventStringLocalizerProtocol> finalStringLocalizer;
     
-    if (stringLocalizations)
+    if (stringLocalizer)
     {
-        finalStringLocalizations = stringLocalizations;
+        finalStringLocalizer = stringLocalizer;
     }
     else
     {
-        finalStringLocalizations = [MXSendReplyEventDefaultStringLocalizations new];
+        finalStringLocalizer = [MXSendReplyEventDefaultStringLocalizer new];
     }
     
     MXHTTPOperation* operation = nil;
@@ -2000,7 +2006,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                            formattedTextMessage:formattedTextMessage
                                replyContentBody:&replyToBody
                       replyContentFormattedBody:&replyToFormattedBody
-                            stringLocalizations:finalStringLocalizations];
+                                stringLocalizer:finalStringLocalizer];
     
     if (replyToBody && replyToFormattedBody)
     {
@@ -2041,7 +2047,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
  @param formattedTextMessage the optional HTML formatted string of the text to send.
  @param replyContentBody reply string of the text to send.
  @param replyContentFormattedBody reply HTML formatted string of the text to send.
- @param stringLocalizations string localizations used when building reply content bodies.
+ @param stringLocalizer string localizations used when building reply content bodies.
  
  */
 - (void)getReplyContentBodiesWithEventToReply:(MXEvent*)eventToReply
@@ -2049,7 +2055,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                          formattedTextMessage:(NSString*)formattedTextMessage
                              replyContentBody:(NSString**)replyContentBody
                     replyContentFormattedBody:(NSString**)replyContentFormattedBody
-                          stringLocalizations:(id<MXSendReplyEventStringsLocalizable>)stringLocalizations
+                              stringLocalizer:(id<MXSendReplyEventStringLocalizerProtocol>)stringLocalizer
 {
     NSString *msgtype;
     MXJSONModelSetString(msgtype, eventToReply.content[@"msgtype"]);
@@ -2083,27 +2089,27 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     }
     else if ([msgtype isEqualToString:kMXMessageTypeImage])
     {
-        senderMessageBody = stringLocalizations.senderSentAnImage;
+        senderMessageBody = stringLocalizer.senderSentAnImage;
         senderMessageFormattedBody = senderMessageBody;
     }
     else if ([msgtype isEqualToString:kMXMessageTypeVideo])
     {
-        senderMessageBody = stringLocalizations.senderSentAVideo;
+        senderMessageBody = stringLocalizer.senderSentAVideo;
         senderMessageFormattedBody = senderMessageBody;
     }
     else if (eventToReply.isVoiceMessage)
     {
-        senderMessageBody = stringLocalizations.senderSentAVoiceMessage;
+        senderMessageBody = stringLocalizer.senderSentAVoiceMessage;
         senderMessageFormattedBody = senderMessageBody;
     }
     else if ([msgtype isEqualToString:kMXMessageTypeAudio])
     {
-        senderMessageBody = stringLocalizations.senderSentAnAudioFile;
+        senderMessageBody = stringLocalizer.senderSentAnAudioFile;
         senderMessageFormattedBody = senderMessageBody;
     }
     else if ([msgtype isEqualToString:kMXMessageTypeFile])
     {
-        senderMessageBody = stringLocalizations.senderSentAFile;
+        senderMessageBody = stringLocalizer.senderSentAFile;
         senderMessageFormattedBody = senderMessageBody;
     }
     else
@@ -2127,7 +2133,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                                                           senderMessageFormattedBody:senderMessageFormattedBody
                                                               isSenderMessageAnEmote:isSenderMessageAnEmote
                                                                replyFormattedMessage:finalFormattedTextMessage
-                                                                 stringLocalizations:stringLocalizations];
+                                                                     stringLocalizer:stringLocalizer];
     }
 }
 
@@ -2217,7 +2223,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
  @param senderMessageFormattedBody The message body of the sender.
  @param isSenderMessageAnEmote Indicate if the sender message is an emote (/me).
  @param replyFormattedMessage The response for the sender message. HTML formatted string if any otherwise non formatted string as reply formatted body is mandatory.
- @param stringLocalizations string localizations used when building formatted body.
+ @param stringLocalizer string localizations used when building formatted body.
  
  @return reply message body.
  */
@@ -2225,7 +2231,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                             senderMessageFormattedBody:(NSString*)senderMessageFormattedBody
                                 isSenderMessageAnEmote:(BOOL)isSenderMessageAnEmote
                                  replyFormattedMessage:(NSString*)replyFormattedMessage
-                                   stringLocalizations:(id<MXSendReplyEventStringsLocalizable>)stringLocalizations
+                                       stringLocalizer:(id<MXSendReplyEventStringLocalizerProtocol>)stringLocalizer
 {
     NSString *eventId = eventToReply.eventId;
     NSString *roomId = eventToReply.roomId;
@@ -2271,7 +2277,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     [replyMessageFormattedBody appendString:@"<mx-reply><blockquote>"];
     
     // Add event link
-    [replyMessageFormattedBody appendFormat:@"<a href=\"%@\">%@</a> ", eventPermalink, stringLocalizations.messageToReplyToPrefix];
+    [replyMessageFormattedBody appendFormat:@"<a href=\"%@\">%@</a> ", eventPermalink, stringLocalizer.messageToReplyToPrefix];
     
     if (isSenderMessageAnEmote)
     {
@@ -2511,20 +2517,18 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
 #pragma mark - Outgoing events management
 - (void)storeOutgoingMessage:(MXEvent*)outgoingMessage
 {
-    if ([mxSession.store respondsToSelector:@selector(storeOutgoingMessageForRoom:outgoingMessage:)]
-        && [mxSession.store respondsToSelector:@selector(commit)])
+    [mxSession.store storeOutgoingMessageForRoom:self.roomId outgoingMessage:outgoingMessage];
+    if ([mxSession.store respondsToSelector:@selector(commit)])
     {
-        [mxSession.store storeOutgoingMessageForRoom:self.roomId outgoingMessage:outgoingMessage];
         [mxSession.store commit];
     }
 }
 
 - (void)removeAllOutgoingMessages
 {
-    if ([mxSession.store respondsToSelector:@selector(removeAllOutgoingMessagesFromRoom:)]
-        && [mxSession.store respondsToSelector:@selector(commit)])
+    [mxSession.store removeAllOutgoingMessagesFromRoom:self.roomId];
+    if ([mxSession.store respondsToSelector:@selector(commit)])
     {
-        [mxSession.store removeAllOutgoingMessagesFromRoom:self.roomId];
         [mxSession.store commit];
     }
 
@@ -2541,10 +2545,9 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
 
 - (void)removeOutgoingMessage:(NSString*)outgoingMessageEventId
 {
-    if ([mxSession.store respondsToSelector:@selector(removeOutgoingMessageFromRoom:outgoingMessage:)]
-        && [mxSession.store respondsToSelector:@selector(commit)])
+    [mxSession.store removeOutgoingMessageFromRoom:self.roomId outgoingMessage:outgoingMessageEventId];
+    if ([mxSession.store respondsToSelector:@selector(commit)])
     {
-        [mxSession.store removeOutgoingMessageFromRoom:self.roomId outgoingMessage:outgoingMessageEventId];
         [mxSession.store commit];
     }
 
@@ -2559,14 +2562,8 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
 {
     // Do the update by removing the existing one and create a new one
     // Thus, `outgoingMessage` will go at the end of the outgoing messages list
-    if ([mxSession.store respondsToSelector:@selector(removeOutgoingMessageFromRoom:outgoingMessage:)])
-    {
-        [mxSession.store removeOutgoingMessageFromRoom:self.roomId outgoingMessage:outgoingMessageEventId];
-    }
-    if ([mxSession.store respondsToSelector:@selector(storeOutgoingMessageForRoom:outgoingMessage:)])
-    {
-        [mxSession.store storeOutgoingMessageForRoom:self.roomId outgoingMessage:outgoingMessage];
-    }
+    [mxSession.store removeOutgoingMessageFromRoom:self.roomId outgoingMessage:outgoingMessageEventId];
+    [mxSession.store storeOutgoingMessageForRoom:self.roomId outgoingMessage:outgoingMessage];
 
     if ([mxSession.store respondsToSelector:@selector(commit)])
     {
@@ -2576,15 +2573,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
 
 - (NSArray<MXEvent*>*)outgoingMessages
 {
-    if ([mxSession.store respondsToSelector:@selector(outgoingMessagesInRoom:)])
-    {
-        NSArray<MXEvent*> *outgoingMessages = [mxSession.store outgoingMessagesInRoom:self.roomId];
-        return outgoingMessages;
-    }
-    else
-    {
-        return nil;
-    }
+    return [mxSession.store outgoingMessagesInRoom:self.roomId];
 }
 
 - (void)refreshOutgoingMessages
@@ -2601,11 +2590,8 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
             // Remove successfully sent messages
             if (outgoingMessage.isLocalEvent == NO)
             {
-                if ([mxSession.store respondsToSelector:@selector(removeOutgoingMessageFromRoom:outgoingMessage:)])
-                {
-                    [mxSession.store removeOutgoingMessageFromRoom:_roomId outgoingMessage:outgoingMessage.eventId];
-                    continue;
-                }
+                [mxSession.store removeOutgoingMessageFromRoom:_roomId outgoingMessage:outgoingMessage.eventId];
+                continue;
             }
             else
             {

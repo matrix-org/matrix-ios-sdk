@@ -63,6 +63,11 @@
 + (void)deleteStoreWithCredentials:(MXCredentials*)credentials;
 
 /**
+ Delete crypto stores for all users. Implementations should also attempt to delete read-only stores.
+ */
++ (void)deleteAllStores;
+
+/**
  Delete the read-only crypto store for the passed credentials.
 
  @param credentials the credentials of the account.

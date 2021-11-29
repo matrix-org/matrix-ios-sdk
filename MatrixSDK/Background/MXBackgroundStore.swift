@@ -26,8 +26,11 @@ enum MXBackgroundStoreErrorCode: Int {
 
 /// Minimalist MXStore implementation. It uses some real values from an MXFileStore instance.
 class MXBackgroundStore: NSObject, MXStore {
+    
+    // A store service to record if the file store deletes its data
+    var storeService: MXStoreService?
 
-    //  real store
+    // Real store
     private var fileStore: MXFileStore
     
     // Room stores cache
@@ -35,6 +38,7 @@ class MXBackgroundStore: NSObject, MXStore {
     
     init(withCredentials credentials: MXCredentials) {
         fileStore = MXFileStore(credentials: credentials)
+        storeService = MXStoreService(store: fileStore, credentials: credentials)
         //  load real eventStreamToken
         fileStore.loadMetaData()
     }
@@ -69,11 +73,6 @@ class MXBackgroundStore: NSObject, MXStore {
     //  Fetch real room state
     func state(ofRoom roomId: String, success: @escaping ([MXEvent]) -> Void, failure: ((Error) -> Void)? = nil) {
         fileStore.state(ofRoom: roomId, success: success, failure: failure)
-    }
-    
-    //  Fetch real soom summary
-    func summary(ofRoom roomId: String) -> MXRoomSummary? {
-        return fileStore.summary(ofRoom: roomId)
     }
     
     //  Fetch real room account data
@@ -242,6 +241,37 @@ class MXBackgroundStore: NSObject, MXStore {
         DispatchQueue.main.async {
             completion?()
         }
+    }
+    
+    func storeOutgoingMessage(forRoom roomId: String, outgoingMessage: MXEvent) {
+        
+    }
+    
+    func removeAllOutgoingMessages(fromRoom roomId: String) {
+        
+    }
+    
+    func removeOutgoingMessage(fromRoom roomId: String, outgoingMessage outgoingMessageEventId: String) {
+        
+    }
+    
+    func outgoingMessages(inRoom roomId: String) -> [MXEvent]? {
+        return []
+    }
+    
+    //  MARK: - MXRoomSummaryStore
+    
+    var rooms: [String] {
+        return []
+    }
+    
+    func storeSummary(forRoom roomId: String, summary: MXRoomSummaryProtocol) {
+        
+    }
+    
+    //  Fetch real soom summary
+    func summary(ofRoom roomId: String) -> MXRoomSummaryProtocol? {
+        return fileStore.summary(ofRoom: roomId)
     }
     
 }

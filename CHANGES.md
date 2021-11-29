@@ -1,3 +1,87 @@
+## Changes in 0.20.10 (2021-11-17)
+
+🙌 Improvements
+
+- Made room list fetch sort and filter options structs. Removed fetch options references from them and made them equatable. Comparing them in the fetch options before refreshing the fetchers. ([#4384](https://github.com/vector-im/element-ios/issues/4384))
+- MXRealmCryptoStore: Reuse background tasks and use new api for remaining perform operations. ([#4431](https://github.com/vector-im/element-ios/issues/4431))
+
+🐛 Bugfixes
+
+- MXAggregations: Ensure the store is cleared when the file store is cleared. ([#3884](https://github.com/vector-im/element-ios/issues/3884))
+- MXSpaceService: abort graph building when session is closing ([#5049](https://github.com/vector-im/element-ios/issues/5049))
+- Fixed retain cycles between background tasks and themselves, and between the background task expiration handler and the background mode handler. ([#5054](https://github.com/vector-im/element-ios/issues/5054))
+- MXRoomSummaryUpdater: Fix upgraded rooms being marked as visible if the tombstone event comes in as part of a limited sync. ([#5080](https://github.com/vector-im/element-ios/issues/5080))
+- MXRoomListDataFilterOptions: Filter out any cached room previews. ([#5083](https://github.com/vector-im/element-ios/issues/5083))
+- MXRoomListDataSortOptions: Fix room ordering regression. ([#5105](https://github.com/vector-im/element-ios/issues/5105))
+- Fixed fallback key signature validation. ([#5120](https://github.com/vector-im/element-ios/issues/5120))
+- MXSession: Make session resumable from paused state & avoid to-device events catchup request when paused or pause requested. ([#5127](https://github.com/vector-im/element-ios/issues/5127))
+- Room ordering: Improve membership event filtering. ([#5150](https://github.com/vector-im/element-ios/issues/5150))
+
+
+## Changes in 0.20.9 (2021-10-21)
+
+🐛 Bugfixes
+
+- MXRoomListDataFilterOptions: Fix predicate for orphaned rooms. ([#5031](https://github.com/vector-im/element-ios/issues/5031))
+
+
+## Changes in 0.20.8 (2021-10-20)
+
+🙌 Improvements
+
+- RoomSummaries: Introduce `MXRoomListDataManager` and implementation. ([#4384](https://github.com/vector-im/element-ios/issues/4384))
+- MXIdentityService: Add an areAllTermsAgreed property. ([#4484](https://github.com/vector-im/element-ios/issues/4484))
+
+🐛 Bugfixes
+
+- MXMemoryStore: Add missing synthesize for `areAllIdentityServerTermsAgreed`. ([#1264](https://github.com/matrix-org/matrix-ios-sdk/issues/1264))
+- Fixed space preview toast is broken if I'm not a member when clicking on a link ([#4966](https://github.com/vector-im/element-ios/issues/4966))
+
+
+## Changes in 0.20.7 (2021-10-13)
+
+🐛 Bugfixes
+
+- [MXSPaceService, MXSpaceNotificationCounter] Avoid calling SDK dispatch queue synchroniously ([#4999](https://github.com/vector-im/element-ios/issues/4999))
+
+
+## Changes in 0.20.6 (2021-10-12)
+
+🐛 Bugfixes
+
+- fixed crash in `MXSpaceService.prepareData()` ([#4979](https://github.com/vector-im/element-ios/issues/4979))
+
+
+## Changes in 0.20.5 (2021-10-08)
+
+🙌 Improvements
+
+- Tests: Improve tests suites execution time by fixing leaked MXSession instances that continued to run in background. ([#4875](https://github.com/vector-im/element-ios/issues/4875))
+- Added dynamism and compile time safety to room name and send reply event localizable strings. ([#4899](https://github.com/vector-im/element-ios/issues/4899))
+- Pods: Update JitsiMeetSDK and Realm. ([#4939](https://github.com/vector-im/element-ios/issues/4939))
+- Start a background task for every Realm transaction. ([#4964](https://github.com/vector-im/element-ios/issues/4964))
+
+🐛 Bugfixes
+
+- Apply threading model for Spaces and cache space graph ([#4898](https://github.com/vector-im/element-ios/issues/4898))
+
+⚠️ API Changes
+
+- MXRoomSummaryUpdater: Combine ignoreMemberProfileChanges and eventsFilterForMessages into a single property called allowedLastMessageEventTypes. ([#4451](https://github.com/vector-im/element-ios/issues/4451))
+- `MXSendReplyEventStringsLocalizable` is now `MXSendReplyEventStringLocalizerProtocol` and `MXRoomNameStringsLocalizable` is now `MXRoomNameStringLocalizerProtocol` ([#4899](https://github.com/vector-im/element-ios/issues/4899))
+
+🧱 Build
+
+- Bundler: Update CocoaPods and fastlane. ([#4951](https://github.com/vector-im/element-ios/issues/4951))
+
+
+## Changes in 0.20.4 (2021-09-30)
+
+🐛 Bugfixes
+
+- MXSpaceService: Fix a crash due to recursion depth limit ([#4919](https://github.com/vector-im/element-ios/issues/4919))
+
+
 ## Changes in 0.20.3 (2021-09-28)
 
 🙌 Improvements
