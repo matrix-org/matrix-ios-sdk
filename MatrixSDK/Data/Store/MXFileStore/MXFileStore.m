@@ -227,7 +227,8 @@ static NSUInteger preloadOptions;
             // If metaData is still defined, we can load rooms data
             if (self->metaData)
             {                
-                MXTaskProfile *taskProfile = [MXSDKOptions.sharedInstance.profiler startMeasuringTaskWithName:kMXAnalyticsStartupStorePreload category:kMXAnalyticsStartupCategory];
+                MXTaskProfile *taskProfile = [MXSDKOptions.sharedInstance.profiler startMeasuringTaskWithName:MXTaskProfileNameStartupStorePreload
+                                                                                                     category:MXTaskProfileCategoryStartup];
                 
                 MXLogDebug(@"[MXFileStore] Start data loading from files");
 

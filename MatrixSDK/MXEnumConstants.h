@@ -217,31 +217,3 @@ typedef enum : NSUInteger
  The matrix.to base URL.
  */
 FOUNDATION_EXPORT NSString *const kMXMatrixDotToUrl;
-
-
-#pragma mark - Analytics
-
-/**
- Timing stats relative to app startup.
- */
-FOUNDATION_EXPORT NSString *const kMXAnalyticsStartupCategory;
-
-// Duration of the initial /sync request
-FOUNDATION_EXPORT NSString *const kMXAnalyticsStartupInitialSync;
-
-// Duration of the first /sync when resuming the app
-FOUNDATION_EXPORT NSString *const kMXAnalyticsStartupIncrementalSync;
-
-// Time to preload data in the MXStore
-FOUNDATION_EXPORT NSString *const kMXAnalyticsStartupStorePreload;
-
-// Time to mount all objects from the store (it includes kMXAnalyticsStartupStorePreload time)
-FOUNDATION_EXPORT NSString *const kMXAnalyticsStartupMountData;
-
-// Duration of the the display of the app launch screen
-FOUNDATION_EXPORT NSString *const kMXAnalyticsStartupLaunchScreen;
-
-// Metrics related to the initial sync request
-FOUNDATION_EXPORT NSString *const kMXAnalyticsInitialSyncCategory;
-FOUNDATION_EXPORT NSString *const kMXAnalyticsInitialSyncRequest;
-FOUNDATION_EXPORT NSString *const kMXAnalyticsInitialSyncParsing;

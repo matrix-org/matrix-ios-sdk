@@ -75,18 +75,3 @@ NSString *const kMXRoomGuestAccessForbidden = @"forbidden";
 NSString *const kMXRoomMessageFormatHTML = @"org.matrix.custom.html";
 
 NSString *const kMXMatrixDotToUrl = @"https://matrix.to";
-
-
-#pragma mark - Analytics
-
-NSString *const kMXAnalyticsStartupCategory = @"startup";
-
-NSString *const kMXAnalyticsStartupInitialSync = @"initialSync";
-NSString *const kMXAnalyticsStartupIncrementalSync = @"incrementalSync";
-NSString *const kMXAnalyticsStartupStorePreload = @"storePreload";
-NSString *const kMXAnalyticsStartupMountData = @"mountData";
-NSString *const kMXAnalyticsStartupLaunchScreen = @"launchScreen";
-
-NSString *const kMXAnalyticsInitialSyncCategory = @"initialSync";
-NSString *const kMXAnalyticsInitialSyncRequest = @"request";
-NSString *const kMXAnalyticsInitialSyncParsing = @"parsing";

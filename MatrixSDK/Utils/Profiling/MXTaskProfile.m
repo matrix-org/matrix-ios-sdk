@@ -16,15 +16,25 @@
 
 #import "MXTaskProfile.h"
 
+@interface MXTaskProfile ()
+
+// Task name
+@property (nonatomic) MXTaskProfileName name;
+
+// Category to group related tasks
+@property (nonatomic) MXTaskProfileCategory category;
+
+@end
+
 @implementation MXTaskProfile
 
-- (instancetype)initWithName:(NSString *)name category:(NSString *)category
+- (instancetype)initWithName:(MXTaskProfileName)name category:(MXTaskProfileCategory)category
 {
     self = [self init];
     if (self)
     {
-        _name = name;
-        _category = category;
+        self.name = name;
+        self.category = category;
         _startDate = [NSDate date];
         _paused = NO;
         _units = 1;

@@ -24,7 +24,7 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @interface MXTaskProfile ()
 
-- (instancetype)initWithName:(NSString *)name category:(NSString *)category;
+- (instancetype)initWithName:(MXTaskProfileName)name category:(MXTaskProfileCategory)category;
 
 - (void)markAsCompleted;
 

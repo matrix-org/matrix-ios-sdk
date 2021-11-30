@@ -40,7 +40,7 @@
     return self;
 }
 
-- (MXTaskProfile *)startMeasuringTaskWithName:(nonnull NSString *)name category:(nonnull NSString *)category
+- (MXTaskProfile *)startMeasuringTaskWithName:(MXTaskProfileName)name category:(MXTaskProfileCategory)category
 {
     MXTaskProfile *taskProfile = [[MXTaskProfile alloc] initWithName:name category:category];
     

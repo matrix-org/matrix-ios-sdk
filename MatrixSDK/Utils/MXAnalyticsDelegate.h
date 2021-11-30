@@ -18,6 +18,7 @@
 #import <Foundation/Foundation.h>
 
 #import "MXCallHangupEventContent.h"
+#import "MXTaskProfile.h"
 
 @class MXCall;
 
@@ -45,7 +46,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param category the category the task belongs to.
  @param name the name of the task.
  */
-- (void)trackDuration:(NSTimeInterval)seconds category:(NSString*)category name:(NSString*)name;
+- (void)trackDuration:(NSTimeInterval)seconds category:(MXTaskProfileCategory)category name:(MXTaskProfileName)name;
 
 /**
  Report that a call has started.

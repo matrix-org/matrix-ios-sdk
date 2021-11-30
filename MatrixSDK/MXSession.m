@@ -351,7 +351,8 @@ typedef void (^MXOnResumeDone)(void);
     self.roomListDataManager = [[MXSDKOptions.sharedInstance.roomListDataManagerClass alloc] init];
 
     NSDate *startDate = [NSDate date];
-    MXTaskProfile *taskProfile = [MXSDKOptions.sharedInstance.profiler startMeasuringTaskWithName:kMXAnalyticsStartupMountData category:kMXAnalyticsStartupCategory];
+    MXTaskProfile *taskProfile = [MXSDKOptions.sharedInstance.profiler startMeasuringTaskWithName:MXTaskProfileNameStartupMountData
+                                                                                         category:MXTaskProfileCategoryStartup];
 
     MXWeakify(self);
     [self.store openWithCredentials:matrixRestClient.credentials onComplete:^{
@@ -1368,8 +1369,9 @@ typedef void (^MXOnResumeDone)(void);
         if (!self->firstSyncDone)
         {
             BOOL isInitialSync = !self.isEventStreamInitialised;
-            syncTaskProfile = [MXSDKOptions.sharedInstance.profiler startMeasuringTaskWithName:isInitialSync ? kMXAnalyticsStartupInitialSync : kMXAnalyticsStartupIncrementalSync
-                                                                                      category:kMXAnalyticsStartupCategory];
+            MXTaskProfileName taskName = isInitialSync ? MXTaskProfileCategoryInitialSync : MXTaskProfileNameStartupIncrementalSync;
+            syncTaskProfile = [MXSDKOptions.sharedInstance.profiler startMeasuringTaskWithName:taskName
+                                                                                      category:MXTaskProfileCategoryStartup];
         }
         
         NSString * streamToken = self.store.eventStreamToken;
