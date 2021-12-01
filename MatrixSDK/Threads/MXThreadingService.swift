@@ -92,6 +92,20 @@ public class MXThreadingService: NSObject {
         }
     }
     
+    /// Get number of notified threads in a room
+    /// - Parameter roomId: Room identiier
+    /// - Returns: number of notified threads
+    public func numberOfNotifiedThreads(inRoom roomId: String) -> Int {
+        return threads(inRoom: roomId).filter { $0.notificationCount > 0 }.count
+    }
+    
+    /// Get number of highlighted threads in a room
+    /// - Parameter roomId: Room identiier
+    /// - Returns: number of highlighted threads
+    public func numberOfHighlightedThreads(inRoom roomId: String) -> Int {
+        return threads(inRoom: roomId).filter { $0.highlightCount > 0 }.count
+    }
+    
     /// Method to check an event is a thread root or not
     /// - Parameter event: event to be checked
     /// - Returns: true is given event is a thread root

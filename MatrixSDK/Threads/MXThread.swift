@@ -57,6 +57,12 @@ public class MXThread: NSObject {
         eventsMap[event.eventId] = event
     }
     
+    /// Number of notifications in the thread
+    public var notificationCount: Int = 0
+    
+    /// Number of highlights in the thread
+    public var highlightCount: Int = 0
+    
     /// Flag indicating the current user participated in the thread
     public var isParticipated: Bool {
         guard let session = session else {
