@@ -896,7 +896,7 @@ NSString *const kMXMessageContentKeyExtensiblePollKindUndisclosed = @"m.poll.und
 
 - (BOOL)isInThread
 {
-    return self.eventType == MXEventTypeRoomMessage
+    return (self.eventType == MXEventTypeRoomMessage || self.eventType == MXEventTypeRoomEncrypted)
         && [self.relatesTo.relationType isEqualToString:MXEventRelationTypeThread];
 }
 

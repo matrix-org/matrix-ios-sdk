@@ -628,6 +628,14 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                 updatedContent[kMXEventRelationRelatesToKey] = nil;
                 contentCopyToEncrypt = [updatedContent copy];
             }
+            else if (threadId)
+            {
+                relatesToJSON = @{
+                    @"rel_type": MXEventRelationTypeThread,
+                    @"event_id": threadId
+                };
+                contentCopyToEncrypt = contentCopy;
+            }
             else
             {
                 contentCopyToEncrypt = contentCopy;
