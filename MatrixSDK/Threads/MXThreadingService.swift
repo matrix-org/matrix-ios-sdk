@@ -96,9 +96,10 @@ public class MXThreadingService: NSObject {
     /// - Parameter roomId: Room identifier
     /// - Returns: Notifications count
     public func notificationsCount(forRoom roomId: String) -> MXThreadNotificationsCount {
-        let threads = unsortedThreads(inRoom: roomId)
-        return MXThreadNotificationsCount(numberOfNotifiedThreads: threads.filter { $0.notificationCount > 0 }.count,
-                                          numberOfHighlightedThreads: threads.filter { $0.highlightCount > 0 }.count)
+        let notified = unsortedParticipatedThreads(inRoom: roomId).filter { $0.notificationCount > 0 }.count
+        let highlighted = unsortedThreads(inRoom: roomId).filter { $0.highlightCount > 0 }.count
+        return MXThreadNotificationsCount(numberOfNotifiedThreads: UInt(notified),
+                                          numberOfHighlightedThreads: UInt(highlighted))
     }
     
     /// Method to check an event is a thread root or not
@@ -131,11 +132,25 @@ public class MXThreadingService: NSObject {
     /// - Returns: participated thread list in given room
     public func participatedThreads(inRoom roomId: String) -> [MXThread] {
         //  filter only participated threads and then sort threads so that the newer is the first
-        return unsortedThreads(inRoom: roomId).filter({ $0.isParticipated }).sorted(by: <)
+        return unsortedParticipatedThreads(inRoom: roomId).sorted(by: <)
+    }
+    
+    /// Mark a thread as read
+    /// - Parameter threadId: Thread id
+    public func markThreadAsRead(_ threadId: String) {
+        guard let thread = thread(withId: threadId) else {
+            return
+        }
+        thread.markAsRead()
+        notifyDidUpdateThreads()
     }
     
     private func unsortedThreads(inRoom roomId: String) -> [MXThread] {
         return Array(threads.values).filter({ $0.roomId == roomId })
+    }
+    
+    private func unsortedParticipatedThreads(inRoom roomId: String) -> [MXThread] {
+        return Array(threads.values).filter({ $0.roomId == roomId && $0.isParticipated })
     }
     
     private func saveThread(_ thread: MXThread) {

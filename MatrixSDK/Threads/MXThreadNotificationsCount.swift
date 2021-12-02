@@ -20,17 +20,17 @@ import Foundation
 public class MXThreadNotificationsCount: NSObject {
     
     /// Number of notified threads in a specific room
-    public let numberOfNotifiedThreads: Int
+    public let numberOfNotifiedThreads: UInt
     
     /// Number of highlighted threads in a specific room
-    public let numberOfHighlightedThreads: Int
+    public let numberOfHighlightedThreads: UInt
     
     /// Initializer
     /// - Parameters:
     ///   - numberOfNotifiedThreads: number of notified threads
     ///   - numberOfHighlightedThreads: number of highlighted threads
-    public init(numberOfNotifiedThreads: Int,
-                numberOfHighlightedThreads: Int) {
+    public init(numberOfNotifiedThreads: UInt,
+                numberOfHighlightedThreads: UInt) {
         self.numberOfNotifiedThreads = numberOfNotifiedThreads
         self.numberOfHighlightedThreads = numberOfHighlightedThreads
         super.init()

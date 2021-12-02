@@ -55,13 +55,14 @@ public class MXThread: NSObject {
             return
         }
         eventsMap[event.eventId] = event
+        updateNotificationsCount()
     }
     
     /// Number of notifications in the thread
-    public var notificationCount: Int = 0
+    public var notificationCount: UInt = 0
     
     /// Number of highlights in the thread
-    public var highlightCount: Int = 0
+    public var highlightCount: UInt = 0
     
     /// Flag indicating the current user participated in the thread
     public var isParticipated: Bool {
@@ -108,6 +109,20 @@ public class MXThread: NSObject {
                 completion(.failure(error))
             }
         }
+    }
+    
+    /// Mark all messages of thread as read
+    internal func markAsRead() {
+        notificationCount = 0
+        highlightCount = 0
+    }
+    
+    private func updateNotificationsCount() {
+        guard let session = session else {
+            return
+        }
+        
+        notificationCount = session.store.localUnreadEventCount(roomId, threadId: id, withTypeIn: session.unreadEventTypes)
     }
 }
 
