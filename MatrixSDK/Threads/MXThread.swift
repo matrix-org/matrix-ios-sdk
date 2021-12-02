@@ -59,10 +59,10 @@ public class MXThread: NSObject {
     }
     
     /// Number of notifications in the thread
-    public var notificationCount: UInt = 0
+    public private(set) var notificationCount: UInt = 0
     
     /// Number of highlights in the thread
-    public var highlightCount: UInt = 0
+    public private(set) var highlightCount: UInt = 0
     
     /// Flag indicating the current user participated in the thread
     public var isParticipated: Bool {
@@ -125,6 +125,8 @@ public class MXThread: NSObject {
         notificationCount = session.store.localUnreadEventCount(roomId, threadId: id, withTypeIn: session.unreadEventTypes)
     }
 }
+
+//  MARK: - Identifiable
 
 extension MXThread: Identifiable {}
 
