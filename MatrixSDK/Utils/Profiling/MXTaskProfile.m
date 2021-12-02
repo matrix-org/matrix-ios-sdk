@@ -18,23 +18,18 @@
 
 @interface MXTaskProfile ()
 
-// Task name
 @property (nonatomic) MXTaskProfileName name;
-
-// Category to group related tasks
-@property (nonatomic) MXTaskProfileCategory category;
 
 @end
 
 @implementation MXTaskProfile
 
-- (instancetype)initWithName:(MXTaskProfileName)name category:(MXTaskProfileCategory)category
+- (instancetype)initWithName:(MXTaskProfileName)name
 {
     self = [self init];
     if (self)
     {
         self.name = name;
-        self.category = category;
         _startDate = [NSDate date];
         _paused = NO;
         _units = 1;

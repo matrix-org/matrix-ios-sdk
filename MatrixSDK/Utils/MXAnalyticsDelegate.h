@@ -20,8 +20,6 @@
 #import "MXCallHangupEventContent.h"
 #import "MXTaskProfile.h"
 
-@class MXCall;
-
 NS_ASSUME_NONNULL_BEGIN
 
 /**
@@ -42,11 +40,11 @@ NS_ASSUME_NONNULL_BEGIN
  
  An example is the time to load data from the local store at startup.
  
- @param seconds the duration in seconds.
- @param category the category the task belongs to.
+ @param milliseconds the duration in milliseconds.
  @param name the name of the task.
+ @param units the number of items the were completed during the task
  */
-- (void)trackDuration:(NSTimeInterval)seconds category:(MXTaskProfileCategory)category name:(MXTaskProfileName)name;
+- (void)trackDuration:(NSInteger)milliseconds name:(MXTaskProfileName)name units:(NSUInteger)units;
 
 /**
  Report that a call has started.
@@ -77,6 +75,26 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void)trackCallErrorWithReason:(MXCallHangupReason)reason video:(BOOL)isVideo numberOfParticipants:(NSInteger)numberOfParticipants incoming:(BOOL)isIncoming;
 
+/**
+ Report that a room was created.
+ 
+ @param isDM Whether the room is direct or not.
+ */
+- (void)trackCreatedRoomAsDM:(BOOL)isDM;
+
+/**
+ Report that a room was joined.
+ 
+ @param isDM Whether the room is direct or not.
+ @param memberCount The number of members in the room.
+ */
+- (void)trackJoinedRoomAsDM:(BOOL)isDM memberCount:(NSUInteger)memberCount;
+
+/**
+ Report whether the user granted or rejected access to their contacts.
+ 
+ @param granted YES if access was granted, NO if it was rejected.
+ */
 - (void)trackContactsAccessGranted:(BOOL)granted;
 
 @end

@@ -3419,8 +3419,7 @@ MXAuthAction;
     MXTaskProfile *initialSyncRequestTaskProfile;
     if (!token)
     {
-        initialSyncRequestTaskProfile = [profiler startMeasuringTaskWithName:MXTaskProfileNameInitialSyncRequest
-                                                                    category:MXTaskProfileCategoryInitialSync];
+        initialSyncRequestTaskProfile = [profiler startMeasuringTaskWithName:MXTaskProfileNameInitialSyncRequest];
     }
     
     MXWeakify(self);
@@ -3451,8 +3450,7 @@ MXAuthAction;
                 MXTaskProfile *initialSyncParsingTaskProfile;
                 if (!token)
                 {
-                    initialSyncParsingTaskProfile = [profiler startMeasuringTaskWithName:MXTaskProfileNameInitialSyncParsing
-                                                                                category:MXTaskProfileCategoryInitialSync];
+                    initialSyncParsingTaskProfile = [profiler startMeasuringTaskWithName:MXTaskProfileNameInitialSyncParsing];
                 }
                 
                 MXJSONModelSetMXJSONModel(syncResponse, MXSyncResponse, JSONResponse);

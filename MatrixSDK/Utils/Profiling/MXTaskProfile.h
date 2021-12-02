@@ -18,33 +18,28 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-typedef NSString *const MXTaskProfileCategory NS_TYPED_EXTENSIBLE_ENUM;
-// Timing stats relative to app startup.
-static MXTaskProfileCategory const MXTaskProfileCategoryStartup = @"startup";
-// Metrics related to the initial sync request
-static MXTaskProfileCategory const MXTaskProfileCategoryInitialSync = @"initialSync";
-
 typedef NSString *const MXTaskProfileName NS_TYPED_EXTENSIBLE_ENUM;
-// Duration of the initial /sync request
-static MXTaskProfileName const MXTaskProfileNameStartupInitialSync = @"initialSync";
-// Duration of the first /sync when resuming the app
-static MXTaskProfileName const MXTaskProfileNameStartupIncrementalSync = @"incrementalSync";
-// Time to preload data in the MXStore
-static MXTaskProfileName const MXTaskProfileNameStartupStorePreload = @"storePreload";
-// Time to mount all objects from the store (it includes kMXAnalyticsStartupStorePreload time)
-static MXTaskProfileName const MXTaskProfileNameStartupMountData = @"mountData";
-// Duration of the the display of the app launch screen
-static MXTaskProfileName const MXTaskProfileNameStartupLaunchScreen = @"launchScreen";
-static MXTaskProfileName const MXTaskProfileNameInitialSyncRequest = @"request";
-static MXTaskProfileName const MXTaskProfileNameInitialSyncParsing = @"parsing";
+/// The duration of the initial /sync request.
+static MXTaskProfileName const MXTaskProfileNameStartupInitialSync = @"startup: initialSync";
+/// The duration of the first /sync when resuming the app.
+static MXTaskProfileName const MXTaskProfileNameStartupIncrementalSync = @"startup: incrementalSync";
+/// The time taken to preload data in the MXStore.
+static MXTaskProfileName const MXTaskProfileNameStartupStorePreload = @"startup: storePreload";
+/// The time to mount all objects from the store (it includes MXTaskProfileNameStartupStorePreload time).
+static MXTaskProfileName const MXTaskProfileNameStartupMountData = @"startup: mountData";
+/// The duration of the the display of the app launch screen
+static MXTaskProfileName const MXTaskProfileNameStartupLaunchScreen = @"startup: launchScreen";
+/// The time spent waiting for a response to an initial /sync request.
+static MXTaskProfileName const MXTaskProfileNameInitialSyncRequest = @"initialSync: request";
+/// The time spent parsing the response from an initial /sync request.
+static MXTaskProfileName const MXTaskProfileNameInitialSyncParsing = @"initialSync: parsing";
+/// The time taken to display an event in the timeline that was opened from a notification.
+static MXTaskProfileName const MXTaskProfileNameNotificationsOpenEvent = @"notifications: openEvent";
 
 @interface MXTaskProfile : NSObject
 
 // Task name
 @property (nonatomic, readonly) MXTaskProfileName name;
-
-// Category to group related tasks
-@property (nonatomic, readonly) MXTaskProfileCategory category;
 
 // Task timing
 @property (nonatomic, readonly) NSDate *startDate;
