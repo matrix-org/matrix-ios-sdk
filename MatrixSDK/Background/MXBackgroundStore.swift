@@ -228,7 +228,7 @@ class MXBackgroundStore: NSObject, MXStore {
         }
     }
     
-    func localUnreadEventCount(_ roomId: String, withTypeIn types: [Any]?) -> UInt {
+    func localUnreadEventCount(_ roomId: String, threadId: String?, withTypeIn types: [Any]?) -> UInt {
         return 0
     }
     

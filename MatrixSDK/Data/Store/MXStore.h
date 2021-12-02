@@ -286,10 +286,11 @@
  for a room may be higher than the returned value.
  
  @param roomId the room id.
+ @param threadId the thread id to count unread events in. Pass nil not to filter by any thread.
  @param types an array of event types strings (MXEventTypeString).
  @return The number of unread events which have their type listed in the provided array.
  */
-- (NSUInteger)localUnreadEventCount:(nonnull NSString*)roomId withTypeIn:(nullable NSArray*)types;
+- (NSUInteger)localUnreadEventCount:(nonnull NSString*)roomId threadId:(nullable NSString*)threadId withTypeIn:(nullable NSArray*)types;
 
 /**
  Indicate if the MXStore implementation stores data permanently.

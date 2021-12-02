@@ -401,7 +401,7 @@
     }
 }
 
-- (NSUInteger)localUnreadEventCount:(NSString*)roomId withTypeIn:(NSArray*)types
+- (NSUInteger)localUnreadEventCount:(NSString *)roomId threadId:(NSString *)threadId withTypeIn:(NSArray *)types
 {
     return 0;
 }
