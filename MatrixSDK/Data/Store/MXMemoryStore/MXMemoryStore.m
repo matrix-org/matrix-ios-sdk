@@ -280,7 +280,7 @@
             // Check whether these unread events have not been redacted.
             for (MXEvent *event in array)
             {
-                if (event.redactedBecause == nil)
+                if (!event.isRedactedEvent)
                 {
                     count ++;
                 }
