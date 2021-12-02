@@ -927,7 +927,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 
 /**
  Get the MXRoom instance of a room.
- Create it if does not exist yet.
+ Create it if does not exist yet. The room will be created locally if needed, won't have any effect on the home server. Posts `kMXSessionNewRoomNotification`.
  
  @param roomId The id to the user.
  
