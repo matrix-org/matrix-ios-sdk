@@ -923,7 +923,17 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 
  @return the MXRoom instance.
  */
-- (MXRoom  *)roomWithRoomId:(NSString*)roomId;
+- (MXRoom *)roomWithRoomId:(NSString*)roomId;
+
+/**
+ Get the MXRoom instance of a room.
+ Create it if does not exist yet. The room will be created locally if needed, won't have any effect on the home server. Posts `kMXSessionNewRoomNotification`.
+ 
+ @param roomId The id to the user.
+ 
+ @return the MXRoom instance.
+ */
+- (MXRoom *)getOrCreateRoom:(NSString*)roomId;
 
 /**
  Get the MXRoom instance of the room that owns the passed room alias.

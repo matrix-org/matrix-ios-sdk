@@ -26,7 +26,6 @@
     {
         MXJSONModelSetString(spaceChildrenResponse.nextBatch, JSONDictionary[@"next_batch"]);
         MXJSONModelSetMXJSONModelArray(spaceChildrenResponse.rooms, MXSpaceChildSummaryResponse, JSONDictionary[@"rooms"]);
-        MXJSONModelSetMXJSONModelArray(spaceChildrenResponse.events, MXEvent, JSONDictionary[@"events"]);
     }
 
     return spaceChildrenResponse;

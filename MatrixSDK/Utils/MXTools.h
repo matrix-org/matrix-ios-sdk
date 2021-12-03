@@ -159,33 +159,34 @@ FOUNDATION_EXPORT NSString *const kMXToolsRegexStringForMatrixGroupIdentifier;
  */
 + (NSString*)encodeURIComponent:(NSString*)string;
 
-
 #pragma mark - Permalink
 /*
- Return a matrix.to permalink to a room.
+ Return a permalink to a room.
+ The permalink could be matrix.to format or a custom client permalink (see `MXSDKOptions.clientPermalinkBaseUrl`).
 
  @param roomIdOrAlias the id or the alias of the room to link to.
- @return the matrix.to permalink.
+ @return the permalink.
  */
 + (NSString*)permalinkToRoom:(NSString*)roomIdOrAlias;
 
 /*
- Return a matrix.to permalink to an event.
-
+ Return a permalink to an event.
+ The permalink could be matrix.to format or a custom client permalink (see `MXSDKOptions.clientPermalinkBaseUrl`).
+ 
  @param eventId the id of the event to link to.
  @param roomIdOrAlias the room the event belongs to.
- @return the matrix.to permalink.
+ @return the permalink.
  */
 + (NSString*)permalinkToEvent:(NSString*)eventId inRoom:(NSString*)roomIdOrAlias;
 
 /*
- Return a matrix.to permalink to a user.
+ Return a permalink to a user.
+ The permalink could be matrix.to format or a custom client permalink (see `MXSDKOptions.clientPermalinkBaseUrl`).
  
  @param userId the id of the user to link to.
- @return the matrix.to permalink.
+ @return the permalink.
  */
 + (NSString*)permalinkToUserWithUserId:(NSString*)userId;
-
 #pragma mark - File
 
 /**
