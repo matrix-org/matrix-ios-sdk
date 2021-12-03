@@ -1,25 +1,3 @@
-## Changes in 0.20.11 (2021-12-03)
-
-✨ Features
-
-- Moved from /space to /hierarchy API to support pagination ([#4893](https://github.com/vector-im/element-ios/issues/4893))
-- Adds clientPermalinkBaseUrl for a custom permalink base url. ([#4981](https://github.com/vector-im/element-ios/issues/4981))
-- Added poll specific event sending methods, event aggregator and model builder. ([#5114](https://github.com/vector-im/element-ios/issues/5114))
-
-🐛 Bugfixes
-
-- Initialize imagesCacheLruCache before caching - caching operations would fail silently because cache was not initialized ([#1281](https://github.com/vector-im/element-ios/issues/1281))
-- MXRoom: Fix reply event content for just thread-aware clients. ([#5007](https://github.com/vector-im/element-ios/issues/5007))
-- Add ability to get roomAccountData from MXBackgroundSyncService to fix badge bug from virtual rooms. ([#5155](https://github.com/vector-im/element-ios/issues/5155))
-- Fixed duplicated children ids in MXSpaces ([#5181](https://github.com/vector-im/element-ios/issues/5181))
-- Do not expose headers that should be use privately inside the framework. ([#5194](https://github.com/vector-im/element-ios/issues/5194))
-- Fix for the in-call screen freezing on a new PSTN call. ([#5223](https://github.com/vector-im/element-ios/issues/5223))
-
-🧱 Build
-
-- Build: Update to Xcode 12.5 in the Fastfile and macOS 11 in the GitHub actions. ([#5195](https://github.com/vector-im/element-ios/issues/5195))
-
-
 ## Changes in 0.20.10 (2021-11-17)
 
 🙌 Improvements

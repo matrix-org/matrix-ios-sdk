@@ -40,13 +40,11 @@
         MXJSONModelSetString(spaceChildSummaryResponse.name, JSONDictionary[@"name"]);
         MXJSONModelSetString(spaceChildSummaryResponse.topic, JSONDictionary[@"topic"]);
         MXJSONModelSetString(spaceChildSummaryResponse.avatarUrl, JSONDictionary[@"avatar_url"]);
+        MXJSONModelSetArray(spaceChildSummaryResponse.aliases, JSONDictionary[@"aliases"]);
         MXJSONModelSetString(spaceChildSummaryResponse.canonicalAlias, JSONDictionary[@"canonical_alias"]);
         MXJSONModelSetBoolean(spaceChildSummaryResponse.guestCanJoin, JSONDictionary[@"guest_can_join"]);
         MXJSONModelSetBoolean(spaceChildSummaryResponse.worldReadable, JSONDictionary[@"world_readable"]);
         MXJSONModelSetInteger(spaceChildSummaryResponse.numJoinedMembers, JSONDictionary[@"num_joined_members"]);
-        MXJSONModelSetUInteger(spaceChildSummaryResponse.creationTime, JSONDictionary[@"creation_ts"]);
-        MXJSONModelSetString(spaceChildSummaryResponse.joinRules, JSONDictionary[@"join_rules"]);
-        MXJSONModelSetMXJSONModelArray(spaceChildSummaryResponse.childrenState, MXEvent, JSONDictionary[@"children_state"]);
     }
 
     return spaceChildSummaryResponse;

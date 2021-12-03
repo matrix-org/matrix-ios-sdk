@@ -5496,16 +5496,12 @@ MXAuthAction;
 - (MXHTTPOperation*)getSpaceChildrenForSpaceWithId:(NSString*)spaceId
                                      suggestedOnly:(BOOL)suggestedOnly
                                              limit:(NSInteger)limit
-                                          maxDepth:(NSInteger)maxDepth
-                                   paginationToken:(NSString*)paginationToken
                                            success:(void (^)(MXSpaceChildrenResponse *spaceChildrenResponse))success
                                            failure:(void (^)(NSError *error))failure
 {
-    NSString *limitParam = limit >= 0 ? [NSString stringWithFormat:@"&limit=%ld", (long)limit] : @"";
-    NSString *maxDepthParam = maxDepth >= 0 ? [NSString stringWithFormat:@"&max_depth=%ld", (long)maxDepth] : @"";
-    NSString *fromParam = paginationToken != nil ? [NSString stringWithFormat:@"&from=%@", paginationToken] : @"";
-    NSString *path = [NSString stringWithFormat:@"%@/org.matrix.msc2946/rooms/%@/hierarchy?suggested_only=%@%@%@%@",
-                      kMXAPIPrefixPathUnstable, spaceId, suggestedOnly ? @"true": @"false", limitParam, maxDepthParam, fromParam];
+    NSString *maxRoomParameter = limit >= 0 ? [NSString stringWithFormat:@"&max_rooms_per_space=%ld", (long)limit] : @"";
+    NSString *path = [NSString stringWithFormat:@"%@/org.matrix.msc2946/rooms/%@/spaces?suggested_only=%@%@",
+                      kMXAPIPrefixPathUnstable, spaceId, suggestedOnly ? @"true": @"false", maxRoomParameter];
     
     MXWeakify(self);
     return [httpClient requestWithMethod:@"GET"

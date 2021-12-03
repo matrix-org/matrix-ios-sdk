@@ -111,7 +111,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (MXHTTPOperation*)reactionsEventsForEvent:(NSString*)eventId
                                      inRoom:(NSString*)roomId
                                        from:(nullable NSString*)from
-                                      limit:(NSInteger)limit
+                                      limit:(NSUInteger)limit
                                     success:(void (^)(MXAggregationPaginatedResponse *paginatedResponse))success
                                     failure:(void (^)(NSError *error))failure;
 
@@ -168,7 +168,7 @@ NS_ASSUME_NONNULL_BEGIN
                               isEncrypted:(BOOL)isEncrypted
                                    inRoom:(NSString*)roomId
                                      from:(nullable NSString*)from
-                                    limit:(NSInteger)limit
+                                    limit:(NSUInteger)limit
                                   success:(void (^)(MXAggregationPaginatedResponse *paginatedResponse))success
                                   failure:(void (^)(NSError *error))failure;
 
@@ -191,7 +191,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (MXHTTPOperation*)referenceEventsForEvent:(NSString*)eventId
                                    inRoom:(NSString*)roomId
                                      from:(nullable NSString*)from
-                                    limit:(NSInteger)limit
+                                    limit:(NSUInteger)limit
                                   success:(void (^)(MXAggregationPaginatedResponse *paginatedResponse))success
                                   failure:(void (^)(NSError *error))failure;
 
