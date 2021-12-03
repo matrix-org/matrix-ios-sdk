@@ -2002,6 +2002,27 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                     replyContentFormattedBody:(NSString**)replyContentFormattedBody
                               stringLocalizer:(id<MXSendReplyEventStringLocalizerProtocol>)stringLocalizer
 {
+    if (eventToReply.eventType == MXEventTypePollStart)
+    {
+        NSString *question = [MXEventContentPollStart modelFromJSON:eventToReply.content].question;
+
+        *replyContentBody = [self replyMessageBodyFromSender:eventToReply.sender
+                                           senderMessageBody:question
+                                      isSenderMessageAnEmote:NO
+                                     isSenderMessageAReplyTo:eventToReply.isReplyEvent
+                                                replyMessage:textMessage];
+        
+        // As formatted body is mandatory for a reply message, use non formatted to build it
+        NSString *finalFormattedTextMessage = formattedTextMessage ?: textMessage;
+        
+        *replyContentFormattedBody = [self replyMessageFormattedBodyFromEventToReply:eventToReply
+                                                          senderMessageFormattedBody:question
+                                                              isSenderMessageAnEmote:NO
+                                                               replyFormattedMessage:finalFormattedTextMessage
+                                                                     stringLocalizer:stringLocalizer];
+        return;
+    }
+    
     NSString *msgtype;
     MXJSONModelSetString(msgtype, eventToReply.content[@"msgtype"]);
     
@@ -2248,6 +2269,11 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
 
 - (BOOL)canReplyToEvent:(MXEvent *)eventToReply
 {
+    if(eventToReply.eventType == MXEventTypePollStart)
+    {
+        return YES;
+    }
+    
     if (eventToReply.eventType != MXEventTypeRoomMessage)
     {
         return NO;

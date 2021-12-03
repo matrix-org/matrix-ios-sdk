@@ -35,7 +35,7 @@ struct PollBuilder {
             return option
         }
         
-        let stopEvent = events.filter { $0.eventType == __MXEventType.pollEnd }.first
+        let stopEvent = events.filter { $0.eventType == .pollEnd }.first
         poll.isClosed = (stopEvent != nil)
         
         var filteredEvents = events.filter { event in
