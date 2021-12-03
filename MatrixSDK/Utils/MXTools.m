@@ -565,20 +565,29 @@ NSCharacterSet *uriComponentCharset;
 
 
 #pragma mark - Permalink
+
 + (NSString *)permalinkToRoom:(NSString *)roomIdOrAlias
 {
-    return [NSString stringWithFormat:@"%@/#/%@", kMXMatrixDotToUrl, [MXTools encodeURIComponent:roomIdOrAlias]];
+    NSString *clientBaseUrl = [MXSDKOptions sharedInstance].clientPermalinkBaseUrl;
+    NSString *format = clientBaseUrl != nil ? @"%@/#/room/%@" : @"%@/#/%@";
+    NSString *baseUrl = clientBaseUrl != nil ? clientBaseUrl : kMXMatrixDotToUrl;
+    return [NSString stringWithFormat:format, baseUrl, [MXTools encodeURIComponent:roomIdOrAlias]];
 }
 
 + (NSString *)permalinkToEvent:(NSString *)eventId inRoom:(NSString *)roomIdOrAlias
 {
-    return [NSString stringWithFormat:@"%@/#/%@/%@", kMXMatrixDotToUrl, [MXTools encodeURIComponent:roomIdOrAlias], [MXTools encodeURIComponent:eventId]];
-
+    NSString *clientBaseUrl = [MXSDKOptions sharedInstance].clientPermalinkBaseUrl;
+    NSString *format = clientBaseUrl != nil ? @"%@/#/room/%@/%@" : @"%@/#/%@/%@";
+    NSString *baseUrl = clientBaseUrl != nil ? clientBaseUrl : kMXMatrixDotToUrl;
+    return [NSString stringWithFormat:format, baseUrl, [MXTools encodeURIComponent:roomIdOrAlias], [MXTools encodeURIComponent:eventId]];
 }
 
 + (NSString*)permalinkToUserWithUserId:(NSString*)userId
 {
-    return [NSString stringWithFormat:@"%@/#/%@", kMXMatrixDotToUrl, userId];
+    NSString *clientBaseUrl = [MXSDKOptions sharedInstance].clientPermalinkBaseUrl;
+    NSString *format = clientBaseUrl != nil ? @"%@/#/user/%@" : @"%@/#/%@";
+    NSString *baseUrl = clientBaseUrl != nil ? clientBaseUrl : kMXMatrixDotToUrl;
+    return [NSString stringWithFormat:format, baseUrl, userId];
 }
 
 #pragma mark - File
