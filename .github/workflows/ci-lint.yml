@@ -12,7 +12,7 @@ on:
 jobs:
   lint:
     name: pod lib lint
-    runs-on: macos-11
+    runs-on: macos-latest
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2

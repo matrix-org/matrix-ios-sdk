@@ -2562,11 +2562,6 @@ typedef void (^MXOnResumeDone)(void);
     }
 }
 
-- (MXRoom *)getOrCreateRoom:(NSString*)roomId
-{
-    return [self getOrCreateRoom:roomId notify:YES];
-}
-
 - (MXRoom *)roomWithAlias:(NSString *)alias
 {
     MXRoom *theRoom;

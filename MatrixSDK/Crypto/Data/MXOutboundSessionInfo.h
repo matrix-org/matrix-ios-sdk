@@ -17,8 +17,7 @@
 #import <Foundation/Foundation.h>
 
 #import "MXTools.h"
-#import "MXOlmOutboundGroupSession.h"
-#import "MXHTTPOperation.h"
+#import "MXCrypto_Private.h"
 
 @interface MXOutboundSessionInfo : NSObject
 {
