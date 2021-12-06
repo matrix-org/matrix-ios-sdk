@@ -17,7 +17,6 @@
 #import <Foundation/Foundation.h>
 #import "MXJSONModel.h"
 #import "MXSpaceChildSummaryResponse.h"
-#import "MXEvent.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -29,9 +28,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 /// Rooms information like name/avatar/type ...
 @property (nonatomic, nullable) NSArray<MXSpaceChildSummaryResponse*>* rooms;
-
-/// These are the edges of the graph. The objects in the array are complete (or stripped?) m.room.parent or m.space.child events.
-@property (nonatomic, nullable) NSArray<MXEvent*>* events;
 
 @end
 
