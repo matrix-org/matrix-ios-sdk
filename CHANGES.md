@@ -1,3 +1,8 @@
+## Changes in 0.20.12 (2021-12-06)
+
+No significant changes.
+
+
 ## Changes in 0.20.11 (2021-12-03)
 
 ✨ Features
