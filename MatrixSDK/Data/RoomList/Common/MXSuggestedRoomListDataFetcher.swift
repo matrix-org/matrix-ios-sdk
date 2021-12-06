@@ -183,7 +183,9 @@ internal class MXSuggestedRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
         //  do the request
         //  limit should be -1 for no limit
         let limit: Int = numberOfItems < 0 ? -1 : numberOfItems
-        currentHttpOperation =  spaceService.getSpaceChildrenForSpace(withId: space.spaceId, suggestedOnly: true, limit: limit, maxDepth: 1, paginationToken: nil) { [weak self] response in
+        currentHttpOperation = spaceService.getSpaceChildrenForSpace(withId: space.spaceId,
+                                                                     suggestedOnly: true,
+                                                                     limit: limit) { [weak self] response in
             guard let self = self else { return }
             switch response {
             case .success(let summary):

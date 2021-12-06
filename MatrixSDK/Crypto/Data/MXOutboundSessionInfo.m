@@ -15,6 +15,7 @@
 //
 
 #import "MXOutboundSessionInfo.h"
+#import "MXOlmOutboundGroupSession.h"
 
 @implementation MXOutboundSessionInfo
 

@@ -1883,12 +1883,10 @@ public extension MXRestClient {
     ///   - spaceId: The room id of the queried space.
     ///   - suggestedOnly: If `true`, return only child events and rooms where the `m.space.child` event has `suggested: true`.
     ///   - limit: Optional. A limit to the maximum number of children to return per space. `-1` for no limit
-    ///   - maxDepth: Optional. The maximum depth in the tree (from the root room) to return. `-1` for no limit
-    ///   - paginationToken: Optional. Pagination token given to retrieve the next set of rooms.
     ///   - parameters: Space children request parameters.
     ///   - completion: A closure called when the operation completes.
     /// - Returns: a `MXHTTPOperation` instance.
-    @nonobjc @discardableResult func getSpaceChildrenForSpace(withId spaceId: String, suggestedOnly: Bool, limit: Int?, maxDepth: Int?, paginationToken: String?, completion: @escaping (_ response: MXResponse<MXSpaceChildrenResponse>) -> Void) -> MXHTTPOperation {
-        return __getSpaceChildrenForSpace(withId: spaceId, suggestedOnly: suggestedOnly, limit: limit ?? -1, maxDepth: maxDepth ?? -1, paginationToken: paginationToken, success: currySuccess(completion), failure: curryFailure(completion))
+    @nonobjc @discardableResult func getSpaceChildrenForSpace(withId spaceId: String, suggestedOnly: Bool, limit: Int?, completion: @escaping (_ response: MXResponse<MXSpaceChildrenResponse>) -> Void) -> MXHTTPOperation {
+        return __getSpaceChildrenForSpace(withId: spaceId, suggestedOnly: suggestedOnly, limit: limit ?? -1, success: currySuccess(completion), failure: curryFailure(completion))
     }
 }

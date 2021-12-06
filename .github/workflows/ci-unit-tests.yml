@@ -12,7 +12,7 @@ on:
 jobs:
   unit-tests:
     name: Unit Tests
-    runs-on: macos-11
+    runs-on: macos-latest
 
     steps:
       - uses: actions/checkout@v2

@@ -19,22 +19,6 @@
 
 @implementation MXEventContentRelatesTo
 
-- (instancetype)initWithRelationType:(NSString *)relationType eventId:(NSString *)eventId
-{
-    return [self initWithRelationType:relationType eventId:eventId key:nil];
-}
-
-- (instancetype)initWithRelationType:(NSString *)relationType eventId:(NSString *)eventId key:(NSString *)key
-{
-    if (self = [super init]) {
-        _relationType = relationType;
-        _eventId = eventId;
-        _key = key;
-    }
-    
-    return self;
-}
-
 #pragma mark - MXJSONModel
 
 + (id)modelFromJSON:(NSDictionary *)JSONDictionary
@@ -58,14 +42,4 @@
     return relatesTo;
 }
 
-- (NSDictionary *)JSONDictionary
-{
-    NSMutableDictionary *JSONDictionary = [NSMutableDictionary dictionary];
-    
-    JSONDictionary[@"rel_type"] = self.relationType;
-    JSONDictionary[@"event_id"] = self.eventId;
-    JSONDictionary[@"key"] = self.key;
-    
-    return JSONDictionary;
-}
 @end

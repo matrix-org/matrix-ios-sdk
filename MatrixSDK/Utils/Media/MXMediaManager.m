@@ -155,11 +155,6 @@ static MXLRUCache* imagesCacheLruCache = nil;
 + (void)cacheImage:(NSImage *)image withCachePath:(NSString *)filePath
 #endif
 {
-    if (!imagesCacheLruCache)
-    {
-        imagesCacheLruCache = [[MXLRUCache alloc] initWithCapacity:20];
-    }
-    
     [imagesCacheLruCache put:filePath object:image];
 }
 

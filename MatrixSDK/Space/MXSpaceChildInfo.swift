@@ -47,6 +47,10 @@ public class MXSpaceChildInfo: NSObject {
     /// The Matrix content URI of the space avatar.
     public let avatarUrl: String?
     
+    /// The order key is a string which is used to provide a default ordering of siblings in the room list.
+    /// Orders should be a string of ascii characters in the range \x20 (space) to \x7F (~), and should be less or equal 50 characters.
+    public let order: String?
+    
     /// The number of members joined to the room.
     public let activeMemberCount: Int
     
@@ -56,8 +60,17 @@ public class MXSpaceChildInfo: NSObject {
     /// `true` if the room is suggested. `false` otherwise.
     public let suggested: Bool
     
+    /// List of space parent IDs
+    public let parentIds: Set<String>
+    
     /// List of children IDs
     public let childrenIds: [String]
+    
+    /// Gives a list of candidate servers that can be used to join the space.
+    public let viaServers: [String]
+       
+    /// The parent space room id.
+    public let parentRoomId: String?
     
     /// Display name of the space child
     public var displayName: String? {
@@ -74,10 +87,14 @@ public class MXSpaceChildInfo: NSObject {
                 topic: String?,
                 canonicalAlias: String?,
                 avatarUrl: String?,
+                order: String?,
                 activeMemberCount: Int,
                 autoJoin: Bool,
                 suggested: Bool,
-                childrenIds: [String]) {
+                parentIds: Set<String>,
+                childrenIds: [String],
+                viaServers: [String],
+                parentRoomId: String?) {
         self.childRoomId = childRoomId
         self.isKnown = isKnown
         self.roomTypeString = roomTypeString
@@ -86,9 +103,13 @@ public class MXSpaceChildInfo: NSObject {
         self.topic = topic
         self.canonicalAlias = canonicalAlias
         self.avatarUrl = avatarUrl
+        self.order = order
         self.activeMemberCount = activeMemberCount
         self.autoJoin = autoJoin
         self.suggested = suggested
+        self.parentIds = parentIds
         self.childrenIds = childrenIds
+        self.viaServers = viaServers
+        self.parentRoomId = parentRoomId
     }
 }

@@ -168,11 +168,6 @@ FOUNDATION_EXPORT NSString *const kMXEventTypeStringSecretStorageDefaultKey;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringAutoJoinKey;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringSuggestedKey;
 
-// Polls
-FOUNDATION_EXPORT NSString *const kMXEventTypeStringPollStart;
-FOUNDATION_EXPORT NSString *const kMXEventTypeStringPollResponse;
-FOUNDATION_EXPORT NSString *const kMXEventTypeStringPollEnd;
-
 /**
  Types of room messages
  */
@@ -191,11 +186,9 @@ FOUNDATION_EXPORT NSString *const kMXMessageTypeKeyVerificationRequest;
 /**
  Event relations
  */
-FOUNDATION_EXPORT NSString *const kMXEventRelationRelatesToKey;
 FOUNDATION_EXPORT NSString *const MXEventRelationTypeAnnotation;    // Reactions
 FOUNDATION_EXPORT NSString *const MXEventRelationTypeReference;     // Reply
 FOUNDATION_EXPORT NSString *const MXEventRelationTypeReplace;       // Edition
-FOUNDATION_EXPORT NSString *const MXEventRelationTypeThread;        // Thread
 
 /**
  Prefix used for id of temporary local event.
@@ -217,18 +210,6 @@ FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleFileSize;
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleFileName;
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleFileURL;
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleFileMimeType;
-
-// Polls
-FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensiblePollStart;
-FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensiblePollResponse;
-FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensiblePollEnd;
-FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensiblePollQuestion;
-FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensiblePollAnswers;
-FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensiblePollAnswerId;
-FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensiblePollMaxSelections;
-FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensiblePollKind;
-FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensiblePollKindDisclosed;
-FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensiblePollKindUndisclosed;
 
 /**
  The internal event state used to handle the different steps of the event sending.
@@ -554,19 +535,6 @@ extern NSString *const kMXEventIdentifierKey;
  @return true if event content could be scanned by `MXScanManager`.
  */
 - (BOOL)isContentScannable;
-
-#pragma mark - Threading
-
-/**
- Return YES if the event is in a thread.
- */
-- (BOOL)isInThread;
-
-/**
- Thread identifier for the event. This is actually the eventId of the thread's root event.
- nil if the event is not in a thread.
- */
-@property (nonatomic, readonly) NSString *threadIdentifier;
 
 #pragma mark - Crypto
 

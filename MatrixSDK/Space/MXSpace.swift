@@ -94,13 +94,11 @@ public class MXSpace: NSObject {
                 }
                 
                 self.processingQueue.async {
-                    var childRoomIds: [String] = []
                     roomState?.stateEvents.forEach({ event in
                         if event.eventType == .spaceChild {
-                            childRoomIds.append(event.stateKey)
+                            self.childRoomIds.append(event.stateKey)
                         }
                     })
-                    self.childRoomIds = childRoomIds
                     
                     self.sdkProcessingQueue.async {
                         room.members { [weak self] response in
@@ -178,13 +176,11 @@ public class MXSpace: NSObject {
     /// - Parameters:
     ///   - spacesPerId: complete list of spaces by space ID
     public func updateChildSpaces(with spacesPerId: [String: MXSpace]) {
-        var childSpaces: [MXSpace] = []
         self.childRoomIds.forEach { roomId in
             if let space = spacesPerId[roomId] {
-                childSpaces.append(space)
+                self.childSpaces.append(space)
             }
         }
-        self.childSpaces = childSpaces
     }
     
     /// Update child rooms using the list of direct rooms
