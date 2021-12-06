@@ -126,7 +126,10 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
     {
         callManager = theCallManager;
 
-        _room = [callManager.mxSession roomWithRoomId:roomId];
+        // PSTN calls received in the terminated app state(with the room automatically created
+        // and joined server-side) will not necessarily be synced and stored locally yet.
+        _room = [callManager.mxSession getOrCreateRoom: roomId];
+        
         _callSignalingRoom = [callManager.mxSession roomWithRoomId:callSignalingRoomId];
 
         _callId = [[NSUUID UUID] UUIDString];
