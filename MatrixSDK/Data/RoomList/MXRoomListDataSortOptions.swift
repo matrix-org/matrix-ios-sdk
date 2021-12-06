@@ -78,10 +78,9 @@ public struct MXRoomListDataSortOptions: Equatable {
     internal var sortDescriptors: [NSSortDescriptor] {
         var result: [NSSortDescriptor] = []
         
-        // TODO: reintroduce order once it will be supported
-//        if suggested {
-//            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryProtocol.spaceChildInfo?.order, ascending: false))
-//        }
+        if suggested {
+            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryProtocol.spaceChildInfo?.order, ascending: false))
+        }
         
         if invitesFirst {
             result.append(NSSortDescriptor(keyPath: \MXRoomSummaryProtocol.membership, ascending: true))

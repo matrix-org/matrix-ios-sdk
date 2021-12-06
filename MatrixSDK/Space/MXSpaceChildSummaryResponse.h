@@ -16,7 +16,6 @@
 
 #import <Foundation/Foundation.h>
 #import "MXJSONModel.h"
-#import "MXEvent.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -24,40 +23,36 @@ NS_ASSUME_NONNULL_BEGIN
 @interface MXSpaceChildSummaryResponse : MXJSONModel
 
 /// The ID of the room.
-@property (nonatomic) NSString *roomId;
+@property (nonatomic) NSString* roomId;
 
 /// The room type, which is m.space for subspaces.
 /// It can be omitted if there is no room type in which case it should be interpreted as a normal room.
-@property (nonatomic, nullable) NSString *roomType;
+@property (nonatomic, nullable) NSString* roomType;
 
 /// The name of the room, if any.
-@property (nonatomic, nullable) NSString *name;
+@property (nonatomic, nullable) NSString* name;
 
 /// The topic of the room, if any.
-@property (nonatomic, nullable) NSString *topic;
+@property (nonatomic, nullable) NSString* topic;
 
 /// The URL for the room's avatar, if one is set.
-@property (nonatomic, nullable) NSString *avatarUrl;
+@property (nonatomic, nullable) NSString* avatarUrl;
 
-@property (nonatomic, nullable) NSString *joinRules;
-
-@property (nonatomic) NSTimeInterval creationTime;
+/// Aliases of the room. May be empty.
+@property (nonatomic, nullable) NSArray<NSString*>* aliases;
 
 /// The canonical alias of the room, if any.
-@property (nonatomic, nullable) NSString *canonicalAlias;
+@property (nonatomic, nullable) NSString* canonicalAlias;
 
 /// Whether guest users may join the room and participate in it. If they can,
 /// they will be subject to ordinary power level rules like any other user.
-@property (nonatomic) BOOL guestCanJoin;
+@property (nonatomic, getter = areGuestCanJoin) BOOL guestCanJoin;
 
 /// Whether the room may be viewed by guest users without joining.
 @property (nonatomic, getter = isWorldReadable) BOOL worldReadable;
 
 /// The number of members joined to the room.
 @property (nonatomic) NSInteger numJoinedMembers;
-
-/// These are the edges of the graph. The objects in the array are complete (or stripped?) m.room.parent or m.space.child events.
-@property (nonatomic, nullable) NSArray<MXEvent*> *childrenState;
 
 @end
 

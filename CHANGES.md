@@ -1,10 +1,3 @@
-## Changes in 0.20.12 (2021-12-06)
-
-🐛 Bugfixes
-
-- Fix release 0.20.11 ([#5247](https://github.com/vector-im/element-ios/issues/5247))
-
-
 ## Changes in 0.20.11 (2021-12-03)
 
 ✨ Features

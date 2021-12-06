@@ -262,18 +262,14 @@ public class MXSpaceService: NSObject {
     ///   - spaceId: The room id of the queried space.
     ///   - suggestedOnly: If `true`, return only child events and rooms where the `m.space.child` event has `suggested: true`.
     ///   - limit: Optional. A limit to the maximum number of children to return per space. `-1` for no limit
-    ///   - maxDepth: Optional. The maximum depth in the tree (from the root room) to return. `-1` for no limit
-    ///   - paginationToken: Optional. Pagination token given to retrieve the next set of rooms.
     ///   - completion: A closure called when the operation completes.
     /// - Returns: a `MXHTTPOperation` instance.
     @discardableResult
     public func getSpaceChildrenForSpace(withId spaceId: String,
                                          suggestedOnly: Bool,
                                          limit: Int?,
-                                         maxDepth: Int?,
-                                         paginationToken: String?,
                                          completion: @escaping (MXResponse<MXSpaceChildrenSummary>) -> Void) -> MXHTTPOperation {
-        return self.session.matrixRestClient.getSpaceChildrenForSpace(withId: spaceId, suggestedOnly: suggestedOnly, limit: limit, maxDepth: maxDepth, paginationToken: paginationToken) { (response) in
+        return self.session.matrixRestClient.getSpaceChildrenForSpace(withId: spaceId, suggestedOnly: suggestedOnly, limit: limit) { (response) in
             switch response {
             case .success(let spaceChildrenResponse):
                 self.processingQueue.async { [weak self] in
@@ -289,33 +285,39 @@ public class MXSpaceService: NSObject {
                         return
                     }
 
+                    guard let rootSpaceChildSummaryResponse = rooms.first(where: { spaceResponse -> Bool in
+                        return spaceResponse.roomId == spaceId
+                    }) else {
+                        // Fail to find root child. We should have at least one room for the requested space
+                        self.completionQueue.async {
+                            completion(.failure(MXSpaceServiceError.spaceNotFound))
+                        }
+                        return
+                    }
+
+                    // Build the queried space summary
+                    let spaceSummary = self.createRoomSummary(with: rootSpaceChildSummaryResponse)
+                    
                     // Build room hierarchy and events
                     var childrenIdsPerChildRoomId: [String: [String]] = [:]
                     var parentIdsPerChildRoomId: [String:Set<String>] = [:]
                     var spaceChildEventsPerChildRoomId: [String:[String:Any]] = [:]
-                    for room in spaceChildrenResponse.rooms ?? [] {
-                        for event in room.childrenState ?? [] where event.wireContent.count > 0 {
-                            spaceChildEventsPerChildRoomId[event.stateKey] = event.wireContent
+                    for event in spaceChildrenResponse.events ?? [] where event.type == kMXEventTypeStringSpaceChild && event.wireContent.count > 0 {
+                        spaceChildEventsPerChildRoomId[event.stateKey] = event.wireContent
 
-                            var parentIds = parentIdsPerChildRoomId[event.stateKey] ?? Set()
-                            parentIds.insert(event.roomId)
-                            parentIdsPerChildRoomId[event.stateKey] = parentIds
+                        var parentIds = parentIdsPerChildRoomId[event.stateKey] ?? Set()
+                        parentIds.insert(event.roomId)
+                        parentIdsPerChildRoomId[event.stateKey] = parentIds
 
-                            var childrenIds = childrenIdsPerChildRoomId[event.roomId] ?? []
-                            childrenIds.append(event.stateKey)
-                            childrenIdsPerChildRoomId[event.roomId] = childrenIds
-                        }
-                    }
-                    
-                    var spaceInfo: MXSpaceChildInfo?
-                    if let rootSpaceChildSummaryResponse = rooms.first(where: { spaceResponse -> Bool in spaceResponse.roomId == spaceId}) {
-                        spaceInfo = self.createSpaceChildInfo(with: rootSpaceChildSummaryResponse, childrenIds: childrenIdsPerChildRoomId[spaceId], childEvents: spaceChildEventsPerChildRoomId[spaceId])
+                        var childrenIds = childrenIdsPerChildRoomId[event.roomId] ?? []
+                        childrenIds.append(event.stateKey)
+                        childrenIdsPerChildRoomId[event.roomId] = childrenIds
                     }
                     
                     // Build the child summaries of the queried space
                     let childInfos = self.spaceChildInfos(from: spaceChildrenResponse, excludedSpaceId: spaceId, childrenIdsPerChildRoomId: childrenIdsPerChildRoomId, parentIdsPerChildRoomId: parentIdsPerChildRoomId, spaceChildEventsPerChildRoomId: spaceChildEventsPerChildRoomId)
 
-                    let spaceChildrenSummary = MXSpaceChildrenSummary(spaceInfo: spaceInfo, childInfos: childInfos, nextBatch: spaceChildrenResponse.nextBatch)
+                    let spaceChildrenSummary = MXSpaceChildrenSummary(spaceSummary: spaceSummary, childInfos: childInfos)
 
                     self.completionQueue.async {
                         completion(.success(spaceChildrenSummary))
@@ -577,8 +579,8 @@ public class MXSpaceService: NSObject {
     
     private func computSpaceGraph(with result: PrepareDataResult, roomIds: [String], directRoomIds: Set<String>, completion: @escaping (_ graph: MXSpaceGraphData) -> Void) {
         let startDate = Date()
-        MXLog.debug("[MXSpaceService] computSpaceGraph: started for \(roomIds.count) rooms, \(directRoomIds.count) direct rooms, \(result.spaces.count) spaces, \(result.spaces.reduce(0, { $0 + $1.childSpaces.count })) child spaces, \(result.spaces.reduce(0, { $0 + $1.childRoomIds.count })) child rooms,  \(result.spaces.reduce(0, { $0 + $1.otherMembersId.count })) other members, \(result.directRoomIdsPerMemberId.count) members")
-
+        MXLog.debug("[MXSpaceService] computSpaceGraph: started")
+        
         self.processingQueue.async {
             var parentIdsPerRoomId: [String : Set<String>] = [:]
             result.spaces.forEach { space in
@@ -714,13 +716,23 @@ public class MXSpaceService: NSObject {
                 return nil
             }
             
-            return self.createSpaceChildInfo(with: spaceChildSummaryResponse, childrenIds: childrenIdsPerChildRoomId[spaceId], childEvents: spaceChildEventsPerChildRoomId[spaceId])
+            let childStateEvent = spaceChildrenResponse.events?.first(where: { (event) -> Bool in
+                return event.stateKey == spaceId && event.eventType == .spaceChild
+            })
+                        
+            return self.createSpaceChildInfo(with: spaceChildSummaryResponse, and: childStateEvent, parentIds: parentIdsPerChildRoomId[spaceId], childrenIds: childrenIdsPerChildRoomId[spaceId], childEvents: spaceChildEventsPerChildRoomId[spaceId])
         }
         
         return childInfos
     }
     
-    private func createSpaceChildInfo(with spaceChildSummaryResponse: MXSpaceChildSummaryResponse, childrenIds: [String]?, childEvents: [String:Any]?) -> MXSpaceChildInfo {
+    private func createSpaceChildInfo(with spaceChildSummaryResponse: MXSpaceChildSummaryResponse, and spaceChildStateEvent: MXEvent?, parentIds: Set<String>?, childrenIds: [String]?, childEvents: [String:Any]?) -> MXSpaceChildInfo {
+        
+        var spaceChildContent: MXSpaceChildContent?
+        
+        if let stateEventContent = spaceChildStateEvent?.content {
+            spaceChildContent = MXSpaceChildContent(fromJSON: stateEventContent)
+        }
         
         let roomTypeString = spaceChildSummaryResponse.roomType
         let roomType = self.roomTypeMapper.roomType(from: roomTypeString)
@@ -733,10 +745,14 @@ public class MXSpaceService: NSObject {
                          topic: spaceChildSummaryResponse.topic,
                          canonicalAlias: spaceChildSummaryResponse.canonicalAlias,
                          avatarUrl: spaceChildSummaryResponse.avatarUrl,
+                         order: spaceChildContent?.order,
                          activeMemberCount: spaceChildSummaryResponse.numJoinedMembers,
                          autoJoin: childEvents?[kMXEventTypeStringAutoJoinKey] as? Bool ?? false,
                          suggested: childEvents?[kMXEventTypeStringSuggestedKey] as? Bool ?? false,
-                         childrenIds: childrenIds ?? [])
+                         parentIds: parentIds ?? Set(),
+                         childrenIds: childrenIds ?? [],
+                         viaServers: spaceChildContent?.via ?? [],
+                         parentRoomId: spaceChildStateEvent?.roomId)
     }
     
 }
@@ -776,14 +792,12 @@ extension MXSpaceService {
     ///   - spaceId: The room id of the queried space.
     ///   - suggestedOnly: If `true`, return only child events and rooms where the `m.space.child` event has `suggested: true`.
     ///   - limit: Optional. A limit to the maximum number of children to return per space. `-1` for no limit
-    ///   - maxDepth: Optional. The maximum depth in the tree (from the root room) to return. `-1` for no limit
-    ///   - paginationToken: Optional. Pagination token given to retrieve the next set of rooms.
     ///   - success: A closure called when the operation is complete.
     ///   - failure: A closure called  when the operation fails.
     /// - Returns: a `MXHTTPOperation` instance.
     @discardableResult
-    @objc public func getSpaceChildrenForSpace(withId spaceId: String, suggestedOnly: Bool, limit: Int, maxDepth: Int, paginationToken: String?, success: @escaping (MXSpaceChildrenSummary) -> Void, failure: @escaping (Error) -> Void) -> MXHTTPOperation {
-        return self.getSpaceChildrenForSpace(withId: spaceId, suggestedOnly: suggestedOnly, limit: limit, maxDepth: maxDepth, paginationToken: paginationToken) { (response) in
+    @objc public func getSpaceChildrenForSpace(withId spaceId: String, suggestedOnly: Bool, limit: Int, success: @escaping (MXSpaceChildrenSummary) -> Void, failure: @escaping (Error) -> Void) -> MXHTTPOperation {
+        return self.getSpaceChildrenForSpace(withId: spaceId, suggestedOnly: suggestedOnly, limit: limit) { (response) in
             uncurryResponse(response, success: success, failure: failure)
         }
     }
