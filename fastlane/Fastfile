@@ -14,6 +14,13 @@ default_platform(:ios)
 
 platform :ios do
 
+  #### Pre ####
+
+  before_all do
+    # Ensure used Xcode version
+    xcversion(version: "~> 12.5")
+  end
+
   #### Pod ####
 
   desc "Lint all podspecs"

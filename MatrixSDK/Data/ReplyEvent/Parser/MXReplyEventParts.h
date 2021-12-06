@@ -27,9 +27,10 @@ NS_ASSUME_NONNULL_BEGIN
 @interface MXReplyEventParts : NSObject
 
 @property (nonatomic, strong, readonly) MXReplyEventBodyParts *bodyParts;
-@property (nonatomic, strong, readonly) MXReplyEventFormattedBodyParts *formattedBodyParts;
+@property (nonatomic, strong, readonly) MXReplyEventFormattedBodyParts * _Nullable formattedBodyParts;
 
-- (instancetype)initWithBodyParts:(MXReplyEventBodyParts *)bodyParts andFormattedBodyParts:(MXReplyEventFormattedBodyParts *)formattedBodyParts;
+- (instancetype)initWithBodyParts:(MXReplyEventBodyParts *)bodyParts
+            andFormattedBodyParts:(MXReplyEventFormattedBodyParts  * _Nullable)formattedBodyParts;
 
 - (instancetype)init NS_UNAVAILABLE;
 + (instancetype)new NS_UNAVAILABLE;
