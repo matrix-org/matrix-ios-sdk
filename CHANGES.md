@@ -1,3 +1,10 @@
+## Changes in 0.20.13 (2021-12-06)
+
+Others
+
+- Replace semantic imports with classic ones to enable use of the SDK in Kotlin Multiplatform Mobile projects ([#5046](https://github.com/vector-im/element-ios/issues/5046))
+
+
 ## Changes in 0.20.12 (2021-12-06)
 
 🐛 Bugfixes
