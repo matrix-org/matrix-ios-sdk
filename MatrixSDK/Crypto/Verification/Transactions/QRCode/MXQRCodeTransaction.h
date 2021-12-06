@@ -44,6 +44,8 @@ typedef NS_ENUM(NSInteger, MXQRCodeTransactionState) {
 
 @property (nonatomic) MXQRCodeTransactionState state;
 
+@property (nonatomic, strong, nullable, readonly) MXQRCodeData *qrCodeData;
+
 /**
  Start the key verification process.
  */
