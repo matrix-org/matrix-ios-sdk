@@ -90,7 +90,7 @@
 - (MXHTTPOperation*)reactionsEventsForEvent:(NSString*)eventId
                                      inRoom:(NSString*)roomId
                                        from:(nullable NSString*)from
-                                      limit:(NSUInteger)limit
+                                      limit:(NSInteger)limit
                                     success:(void (^)(MXAggregationPaginatedResponse *paginatedResponse))success
                                     failure:(void (^)(NSError *error))failure
 {
@@ -126,7 +126,7 @@
                               isEncrypted:(BOOL)isEncrypted
                                    inRoom:(NSString*)roomId
                                      from:(nullable NSString*)from
-                                    limit:(NSUInteger)limit
+                                    limit:(NSInteger)limit
                                   success:(void (^)(MXAggregationPaginatedResponse *paginatedResponse))success
                                   failure:(void (^)(NSError *error))failure
 {
@@ -137,7 +137,7 @@
 - (MXHTTPOperation*)referenceEventsForEvent:(NSString*)eventId
                                      inRoom:(NSString*)roomId
                                        from:(nullable NSString*)from
-                                      limit:(NSUInteger)limit
+                                      limit:(NSInteger)limit
                                     success:(void (^)(MXAggregationPaginatedResponse *paginatedResponse))success
                                     failure:(void (^)(NSError *error))failure
 {

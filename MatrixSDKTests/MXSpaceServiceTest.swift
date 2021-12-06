@@ -373,13 +373,13 @@ class MXSpaceServiceTest: XCTestCase {
                     dispatchGroup.notify(queue: .main) {
                                                                         
                         // Get space children of B node
-                        spaceService.getSpaceChildrenForSpace(withId: spaceB.spaceId, suggestedOnly: false, limit: nil) { response in
+                        spaceService.getSpaceChildrenForSpace(withId: spaceB.spaceId, suggestedOnly: false, limit: nil, maxDepth: nil, paginationToken: nil) { response in
                             XCTAssertTrue(Thread.isMainThread)
                             
                             switch response {
                             case .success(let spaceChildrenSummary):
 
-                                XCTAssert(spaceChildrenSummary.spaceSummary.displayname == spaceB.summary?.displayname)
+                                XCTAssert(spaceChildrenSummary.spaceInfo?.displayName == spaceB.summary?.displayname)
 
                                 let childInfos = spaceChildrenSummary.childInfos
 
