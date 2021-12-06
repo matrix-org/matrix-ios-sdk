@@ -15,7 +15,6 @@
 //
 
 import Foundation
-import Combine
 
 enum PollAggregatorError: Error {
     case invalidPollStartEvent
