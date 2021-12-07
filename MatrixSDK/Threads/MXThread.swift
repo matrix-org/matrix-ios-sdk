@@ -168,7 +168,7 @@ extension MXEvent: Comparable {
     ///   - rhs: Right operand
     /// - Returns: true if the left operand is newer than the right one, false otherwise
     public static func < (lhs: MXEvent, rhs: MXEvent) -> Bool {
-        if lhs.originServerTs != NSNotFound && rhs.originServerTs != NSNotFound {
+        if lhs.originServerTs != kMXUndefinedTimestamp && rhs.originServerTs != kMXUndefinedTimestamp {
             //  higher originServerTs means more recent event
             return lhs.originServerTs > rhs.originServerTs
         }
