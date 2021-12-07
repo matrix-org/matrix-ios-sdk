@@ -56,6 +56,10 @@ public class MXThread: NSObject {
         }
         eventsMap[event.eventId] = event
         updateNotificationsCount()
+        if event.sender == session?.myUserId {
+            //  the user sent a message to the thread, so mark the thread as read
+            markAsRead()
+        }
     }
     
     /// Number of notifications in the thread
