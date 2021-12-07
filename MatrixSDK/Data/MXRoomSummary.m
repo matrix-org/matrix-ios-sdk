@@ -374,7 +374,11 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     {
         // First, for performance reason, read messages only from the store
         // Do it one by one to decrypt the minimal number of events.
-        MXHTTPOperation *newOperation = [timeline paginate:1 direction:MXTimelineDirectionBackwards onlyFromStore:YES complete:^{
+        MXHTTPOperation *newOperation = [timeline paginate:1
+                                                 direction:MXTimelineDirectionBackwards
+                                             onlyFromStore:YES
+                                                  threadId:nil
+                                                  complete:^{
             if (lastMessageUpdated)
             {
                 // We are done
@@ -398,7 +402,11 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
         NSUInteger paginationCount = MIN(maxServerPaginationCount, MXRoomSummaryPaginationChunkSize);
         MXLogDebug(@"[MXRoomSummary] fetchLastMessage: paginate %@ (%@) messages from the server in %@", @(paginationCount), @(maxServerPaginationCount), _roomId);
         
-        MXHTTPOperation *newOperation = [timeline paginate:paginationCount direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
+        MXHTTPOperation *newOperation = [timeline paginate:paginationCount
+                                                 direction:MXTimelineDirectionBackwards
+                                             onlyFromStore:NO
+                                                  threadId:nil
+                                                  complete:^{
             if (lastMessageUpdated)
             {
                 // We are done

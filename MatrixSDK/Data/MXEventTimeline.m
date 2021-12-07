@@ -253,12 +253,12 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 }
 
 
-- (void)paginateFromStore:(NSUInteger)numItems direction:(MXTimelineDirection)direction onComplete:(void (^)(NSArray<MXEvent *>*))onComplete
+- (void)paginateFromStore:(NSUInteger)numItems direction:(MXTimelineDirection)direction threadId:(NSString *)threadId onComplete:(void (^)(NSArray<MXEvent *>*))onComplete
 {
     if (direction == MXTimelineDirectionBackwards)
     {
         // For back pagination, try to get messages from the store first
-        NSArray<MXEvent *> *eventsFromStore = [storeMessagesEnumerator nextEventsBatch:numItems];
+        NSArray<MXEvent *> *eventsFromStore = [storeMessagesEnumerator nextEventsBatch:numItems threadId:threadId];
         
         // messagesFromStore are in chronological order
         // Handle events from the most recent
@@ -277,7 +277,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     }
 }
 
-- (MXHTTPOperation *)paginate:(NSUInteger)numItems direction:(MXTimelineDirection)direction onlyFromStore:(BOOL)onlyFromStore complete:(void (^)(void))complete failure:(void (^)(NSError *))failure
+- (MXHTTPOperation *)paginate:(NSUInteger)numItems direction:(MXTimelineDirection)direction onlyFromStore:(BOOL)onlyFromStore threadId:(NSString *)threadId complete:(void (^)(void))complete failure:(void (^)(NSError *))failure
 {
     MXHTTPOperation *operation = [MXHTTPOperation new];
 
@@ -286,7 +286,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     NSAssert(!(_isLiveTimeline && direction == MXTimelineDirectionForwards), @"Cannot paginate forwards on a live timeline");
     
     MXWeakify(self);
-    [self paginateFromStore:numItems direction:direction onComplete:^(NSArray<MXEvent *> *eventsFromStore) {
+    [self paginateFromStore:numItems direction:direction threadId:threadId onComplete:^(NSArray<MXEvent *> *eventsFromStore) {
         MXStrongifyAndReturnIfNil(self);
         
         NSUInteger remainingNumItems = numItems;

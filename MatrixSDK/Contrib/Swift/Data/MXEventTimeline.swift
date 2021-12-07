@@ -72,13 +72,14 @@ public extension MXEventTimeline {
         - numItems: the number of items to get.
         - direction: `.forwards` or `.backwards`.
         - onlyFromStore: if true, return available events from the store, do not make a pagination request to the homeserver.
+        - threadId: Identifier of the thread to paginate from
         - completion: A block object called when the operation completes.
         - response: Indicates whether the operation succeeded or failed.
      
      - returns: a MXHTTPOperation instance. This instance can be nil if no request to the homeserver is required.
      */
-    @nonobjc @discardableResult func paginate(_ numItems: UInt, direction: MXTimelineDirection, onlyFromStore: Bool, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
-        return __paginate(numItems, direction: direction.identifier, onlyFromStore: onlyFromStore, complete: currySuccess(completion), failure: curryFailure(completion))
+    @nonobjc @discardableResult func paginate(_ numItems: UInt, direction: MXTimelineDirection, onlyFromStore: Bool, threadId: String?, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+        return __paginate(numItems, direction: direction.identifier, onlyFromStore: onlyFromStore, threadId: threadId, complete: currySuccess(completion), failure: curryFailure(completion))
     }
     
     

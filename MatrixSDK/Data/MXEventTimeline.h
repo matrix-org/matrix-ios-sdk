@@ -179,6 +179,7 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXTimelineDirection direction, MXR
  @param direction `MXTimelineDirectionForwards` or `MXTimelineDirectionBackwards`
  @param onlyFromStore if YES, return available events from the store, do not make
                       a pagination request to the homeserver.
+ @param threadId Identifier of the thread to paginate from
 
  @param complete A block object called when the operation is complete.
  @param failure A block object called when the operation fails.
@@ -189,6 +190,7 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXTimelineDirection direction, MXR
 - (MXHTTPOperation*)paginate:(NSUInteger)numItems
                    direction:(MXTimelineDirection)direction
                onlyFromStore:(BOOL)onlyFromStore
+                    threadId:(NSString *)threadId
                     complete:(void (^)(void))complete
                      failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
