@@ -127,6 +127,15 @@ public class MXThread: NSObject {
         }
         
         notificationCount = session.store.localUnreadEventCount(roomId, threadId: id, withTypeIn: session.unreadEventTypes)
+        guard let readReceipt = session.store.getReceiptInRoom(roomId, forUserId: session.myUserId) else {
+            return
+        }
+        let checker = MXPushRuleDisplayNameCondtionChecker(matrixSession: session,
+                                                           currentUserDisplayName: session.myUser.displayname)
+        highlightCount = UInt(eventsMap.values
+                                .filter { $0.originServerTs > readReceipt.ts }
+                                .filter { checker.isCondition(nil, satisfiedBy: $0, roomState: nil, withJsonDict: nil) }
+                                .count)
     }
 }
 
