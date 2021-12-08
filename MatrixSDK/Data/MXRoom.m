@@ -1397,11 +1397,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                     }
                 } failure:onFailure];
             }
-        } failure:^{
-
-            onFailure(nil);
-
-        }];
+        } failure:onFailure];
 
     }];
 
