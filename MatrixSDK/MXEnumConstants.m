@@ -54,10 +54,11 @@ NSString *const kMXRoomHistoryVisibilityJoined       = @"joined";
 /**
  Room join rule.
  */
-NSString *const kMXRoomJoinRulePublic  = @"public";
-NSString *const kMXRoomJoinRuleInvite  = @"invite";
-NSString *const kMXRoomJoinRulePrivate = @"private";
-NSString *const kMXRoomJoinRuleKnock   = @"knock";
+NSString *const kMXRoomJoinRulePublic       = @"public";
+NSString *const kMXRoomJoinRuleInvite       = @"invite";
+NSString *const kMXRoomJoinRulePrivate      = @"private";
+NSString *const kMXRoomJoinRuleKnock        = @"knock";
+NSString *const kMXRoomJoinRuleRestricted   = @"restricted";
 
 /**
  Room presets

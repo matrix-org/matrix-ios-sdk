@@ -702,6 +702,22 @@ public extension MXRestClient {
     }
     
     /**
+     Set the join rule of a room.
+     
+     - parameters:
+        - joinRule: the rule to set.
+        - roomId: the id of the room.
+        - allowedParentIds: Optional: list of allowedParentIds (required only for `restricted` join rule as per [MSC3083](https://github.com/matrix-org/matrix-doc/pull/3083) )
+        - completion: A block object called when the operation completes.
+        - response: Indicates whether the operation was successful.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func setRoomJoinRule(_ joinRule: MXRoomJoinRule, forRoomWithId roomId: String, allowedParentIds: [String]?, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
+        return __setRoomJoinRule(joinRule.identifier, forRoomWithId: roomId, allowedParentIds: allowedParentIds, success: currySuccess(completion), failure: curryFailure(completion))
+    }
+    
+    /**
      Get the join rule of a room.
      
      - parameters:
@@ -715,8 +731,21 @@ public extension MXRestClient {
         return __joinRule(ofRoom: roomId, success: currySuccess(transform: MXRoomJoinRule.init, completion), failure: curryFailure(completion))
     }
     
-    
-    
+    /**
+     Get the enhanced join rule of a room.
+
+     - parameters:
+        - roomId: the id of the room.
+        - completion: A block object called when the operation completes. It provides the room enhanced join rule as per [MSC3083](https://github.com/matrix-org/matrix-doc/pull/3083.
+        - response: Provides the room join rule on success.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func joinRule(ofRoomWithId roomId: String, completion: @escaping (_ response: MXResponse<MXRoomJoinRuleResponse>) -> Void) -> MXHTTPOperation {
+        return __joinRuleOfRoom(withId: roomId, success: currySuccess(completion), failure: curryFailure(completion))
+    }
+
+
     
     /**
      Set the guest access of a room.
@@ -1890,5 +1919,15 @@ public extension MXRestClient {
     /// - Returns: a `MXHTTPOperation` instance.
     @nonobjc @discardableResult func getSpaceChildrenForSpace(withId spaceId: String, suggestedOnly: Bool, limit: Int?, maxDepth: Int?, paginationToken: String?, completion: @escaping (_ response: MXResponse<MXSpaceChildrenResponse>) -> Void) -> MXHTTPOperation {
         return __getSpaceChildrenForSpace(withId: spaceId, suggestedOnly: suggestedOnly, limit: limit ?? -1, maxDepth: maxDepth ?? -1, paginationToken: paginationToken, success: currySuccess(completion), failure: curryFailure(completion))
+    }
+    
+    // MARK: - Home server capabilities
+    
+    /// Get the capabilities of the homeserver
+    /// - Parameters:
+    ///   - completion: A closure called when the operation completes.
+    /// - Returns: a `MXHTTPOperation` instance.
+    @nonobjc @discardableResult func homeServerCapabilities(completion: @escaping (_ response: MXResponse<MXHomeServerCapabilities>) -> Void) -> MXHTTPOperation {
+        return __homeServerCapabilities(success: currySuccess(completion), failure: curryFailure(completion))
     }
 }

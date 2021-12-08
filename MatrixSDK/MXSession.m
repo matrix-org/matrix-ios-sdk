@@ -286,6 +286,9 @@ typedef void (^MXOnResumeDone)(void);
         _catchingUp = NO;
         MXCredentials *initialSyncCredentials = [MXCredentials initialSyncCacheCredentialsFrom:mxRestClient.credentials];
         _initialSyncResponseCache = [[MXSyncResponseFileStore alloc] initWithCredentials:initialSyncCredentials];
+        
+        _homeServerCapabilities = [[MXHomeServerCapabilitiesService alloc] initWithSession: self];
+        [_homeServerCapabilities updateWithCompletion:nil];
 
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onDidDecryptEvent:) name:kMXEventDidDecryptNotification object:nil];
 
@@ -693,12 +696,18 @@ typedef void (^MXOnResumeDone)(void);
                                   catchingUp:self.catchingUp];
             }
 
+            NSString *lastSyncToken = self.store.eventStreamToken;
+            
             // Update live event stream token
             MXLogDebug(@"[MXSession] Next sync token: %@", syncResponse.nextBatch);
             self.store.eventStreamToken = syncResponse.nextBatch;
             
             // Propagate sync response to the associated space service
-            [self.spaceService handleSyncResponse:syncResponse];
+            [self.spaceService handleSyncResponse:syncResponse syncToken:lastSyncToken];
+            
+            if (!self.homeServerCapabilities.isInitialised) {
+                [self.homeServerCapabilities updateWithCompletion:nil];
+            }
             
             if (completion)
             {

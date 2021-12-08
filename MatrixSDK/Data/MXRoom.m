@@ -1746,6 +1746,13 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
 {
     return [mxSession.matrixRestClient setRoomJoinRule:self.roomId joinRule:joinRule success:success failure:failure];
 }
+- (MXHTTPOperation*)setJoinRule:(MXRoomJoinRule)joinRule
+                      parentIds:(NSArray<NSString *>*)parentIds
+                        success:(void (^)(void))success
+                        failure:(void (^)(NSError *error))failure
+{
+    return [mxSession.matrixRestClient setRoomJoinRule:self.roomId joinRule:joinRule success:success failure:failure];
+}
 
 - (MXHTTPOperation*)setGuestAccess:(MXRoomGuestAccess)guestAccess
                            success:(void (^)(void))success

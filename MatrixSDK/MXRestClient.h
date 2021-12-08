@@ -946,6 +946,8 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
 /**
  Set the join rule of a room.
 
+ @deprecated join rules have been enhanced to support `restricted` rule. You should now call [setRoomJoinRule:forRoomWithId:allowedParentIds:success:failure:].
+
  @param roomId the id of the room.
  @param joinRule the rule to set.
  @param success A block object called when the operation succeeds.
@@ -959,7 +961,26 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
                             failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
+ Set the join rule of a room.
+
+ @param joinRule the rule to set.
+ @param roomId the id of the room.
+ @param allowedParentIds Optional: list of allowedParentIds (required only for `restricted` join rule as per [MSC3083](https://github.com/matrix-org/matrix-doc/pull/3083) )
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)setRoomJoinRule:(MXRoomJoinRule)joinRule
+                      forRoomWithId:(NSString*)roomId
+                   allowedParentIds:(NSArray<NSString *> *)allowedParentIds
+                            success:(void (^)(void))success
+                            failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
+/**
  Get the join rule of a room.
+ 
+ @deprecated join rules have been enhanced to support `restricted` rule. You should now call [joinRuleOfRoomWithId:success:failure:].
 
  @param roomId the id of the room.
  @param success A block object called when the operation succeeds. It provides the room join rule.
@@ -970,6 +991,19 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
 - (MXHTTPOperation*)joinRuleOfRoom:(NSString*)roomId
                            success:(void (^)(MXRoomJoinRule joinRule))success
                            failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
+/**
+ Get the enhanced join rule of a room.
+
+ @param roomId the id of the room.
+ @param success A block object called when the operation succeeds. It provides the room enhanced join rule as per [MSC3083](https://github.com/matrix-org/matrix-doc/pull/3083.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)joinRuleOfRoomWithId:(NSString*)roomId
+                                 success:(void (^)(MXRoomJoinRuleResponse *joinRule))success
+                                 failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Set the guest access of a room.
@@ -2798,4 +2832,14 @@ Note: Clients should consider avoiding this endpoint for URLs posted in encrypte
                                    paginationToken:(NSString*)paginationToken
                                            success:(void (^)(MXSpaceChildrenResponse *spaceChildrenResponse))success
                                            failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
+#pragma mark - Homeserver capabilities
+
+/// Get the capabilities of the home server
+/// @param success A block object called when the operation succeeds. It provides a `MXHomeserverCapabilities` object.
+/// @param failure A block object called when the operation fails.
+/// @return a MXHTTPOperation instance.
+- (MXHTTPOperation*)homeServerCapabilitiesWithSuccess:(void (^)(MXHomeServerCapabilities *capabilities))success
+                                              failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
 @end
