@@ -66,7 +66,7 @@
         MXEvent *event;
         while ((event = self.nextEvent) && result.count < eventsCount)
         {
-            if ([event.threadId isEqualToString:threadId])
+            if ([event.threadId isEqualToString:threadId] || [event.eventId isEqualToString:threadId])
             {
                 [result addObject:event];
             }
