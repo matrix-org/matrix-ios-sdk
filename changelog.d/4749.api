@@ -1,0 +1,1 @@
+MXTools: Add an error parameter to the failure of +convertVideoAssetToMP4:withTargetFileSize:success:failure:

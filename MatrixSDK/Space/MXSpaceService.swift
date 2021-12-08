@@ -592,8 +592,7 @@ public class MXSpaceService: NSObject {
     
     private func computSpaceGraph(with result: PrepareDataResult, roomIds: [String], directRoomIds: Set<String>, nextSyncToken: String, completion: @escaping (_ graph: MXSpaceGraphData) -> Void) {
         let startDate = Date()
-        MXLog.debug("[MXSpaceService] computSpaceGraph: started for \(roomIds.count) rooms, \(directRoomIds.count) direct rooms, \(result.spaces.count) spaces, \(result.spaces.reduce(0, { $0 + $1.childSpaces.count })) child spaces, \(result.directRoomIdsPerMemberId.count) members")
-        
+        MXLog.debug("[MXSpaceService] computSpaceGraph: started for \(roomIds.count) rooms, \(directRoomIds.count) direct rooms, \(result.spaces.count) spaces, \(result.spaces.reduce(0, { $0 + $1.childSpaces.count })) child spaces, \(result.spaces.reduce(0, { $0 + $1.childRoomIds.count })) child rooms,  \(result.spaces.reduce(0, { $0 + $1.otherMembersId.count })) other members, \(result.directRoomIdsPerMemberId.count) members")
         self.processingQueue.async {
             var parentIdsPerRoomId: [String : Set<String>] = [:]
             result.spaces.forEach { space in
