@@ -39,7 +39,7 @@
     NSDictionary *content = JSONDictionary[kMXMessageContentKeyExtensiblePollStart];
     
     NSString *question, *kind;
-    MXJSONModelSetString(question, content[kMXMessageContentKeyExtensiblePollQuestion]);
+    MXJSONModelSetString(question, content[kMXMessageContentKeyExtensiblePollQuestion][kMXMessageContentKeyExtensibleText]);
     MXJSONModelSetString(kind, content[kMXMessageContentKeyExtensiblePollKind]);
     
     NSNumber *maxSelections;
@@ -57,7 +57,7 @@
 {
     NSMutableDictionary *content = [NSMutableDictionary dictionary];
     
-    content[kMXMessageContentKeyExtensiblePollQuestion] = self.question;
+    content[kMXMessageContentKeyExtensiblePollQuestion] = @{kMXMessageContentKeyExtensibleText: self.question};
     content[kMXMessageContentKeyExtensiblePollKind] = self.kind;
     content[kMXMessageContentKeyExtensiblePollMaxSelections] = self.maxSelections;
     

@@ -1410,11 +1410,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                     }
                 } failure:onFailure];
             }
-        } failure:^{
-
-            onFailure(nil);
-
-        }];
+        } failure:onFailure];
 
     }];
 
@@ -2013,6 +2009,27 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                     replyContentFormattedBody:(NSString**)replyContentFormattedBody
                               stringLocalizer:(id<MXSendReplyEventStringLocalizerProtocol>)stringLocalizer
 {
+    if (eventToReply.eventType == MXEventTypePollStart)
+    {
+        NSString *question = [MXEventContentPollStart modelFromJSON:eventToReply.content].question;
+
+        *replyContentBody = [self replyMessageBodyFromSender:eventToReply.sender
+                                           senderMessageBody:question
+                                      isSenderMessageAnEmote:NO
+                                     isSenderMessageAReplyTo:eventToReply.isReplyEvent
+                                                replyMessage:textMessage];
+        
+        // As formatted body is mandatory for a reply message, use non formatted to build it
+        NSString *finalFormattedTextMessage = formattedTextMessage ?: textMessage;
+        
+        *replyContentFormattedBody = [self replyMessageFormattedBodyFromEventToReply:eventToReply
+                                                          senderMessageFormattedBody:question
+                                                              isSenderMessageAnEmote:NO
+                                                               replyFormattedMessage:finalFormattedTextMessage
+                                                                     stringLocalizer:stringLocalizer];
+        return;
+    }
+    
     NSString *msgtype;
     MXJSONModelSetString(msgtype, eventToReply.content[@"msgtype"]);
     
@@ -2259,6 +2276,11 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
 
 - (BOOL)canReplyToEvent:(MXEvent *)eventToReply
 {
+    if(eventToReply.eventType == MXEventTypePollStart)
+    {
+        return YES;
+    }
+    
     if (eventToReply.eventType != MXEventTypeRoomMessage)
     {
         return NO;
@@ -2315,7 +2337,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
         }
     }
 
-    return [self sendEventOfType:kMXEventTypeStringPollStart content:content.JSONDictionary threadId:threadId localEcho:localEcho success:success failure:failure];
+    return [self sendEventOfType:[MXTools eventTypeString:MXEventTypePollStart] content:content.JSONDictionary threadId:threadId localEcho:localEcho success:success failure:failure];
 }
 
 - (MXHTTPOperation *)sendPollResponseForEvent:(MXEvent *)pollStartEvent
@@ -2326,7 +2348,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                                       failure:(void (^)(NSError *))failure
 {
     NSParameterAssert(pollStartEvent);
-    NSAssert([pollStartEvent.type isEqualToString:kMXEventTypeStringPollStart], @"Invalid event type");
+    NSAssert(pollStartEvent.eventType == MXEventTypePollStart, @"Invalid event type");
     NSParameterAssert(answerIdentifiers);
     
     for (NSString *answerIdentifier in answerIdentifiers)
@@ -2345,7 +2367,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
         kMXMessageContentKeyExtensiblePollResponse: @{ kMXMessageContentKeyExtensiblePollAnswers: answerIdentifiers }
     };
     
-    return [self sendEventOfType:kMXEventTypeStringPollResponse content:content threadId:threadId localEcho:localEcho success:success failure:failure];
+    return [self sendEventOfType:[MXTools eventTypeString:MXEventTypePollResponse] content:content threadId:threadId localEcho:localEcho success:success failure:failure];
 }
 
 - (MXHTTPOperation *)sendPollEndForEvent:(MXEvent *)pollStartEvent
@@ -2355,7 +2377,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                                  failure:(void (^)(NSError *))failure
 {
     NSParameterAssert(pollStartEvent);
-    NSAssert([pollStartEvent.type isEqualToString:kMXEventTypeStringPollStart], @"Invalid event type");
+    NSAssert(pollStartEvent.eventType == MXEventTypePollStart, @"Invalid event type");
     
     MXEventContentRelatesTo *relatesTo = [[MXEventContentRelatesTo alloc] initWithRelationType:MXEventRelationTypeReference
                                                                                        eventId:pollStartEvent.eventId];
@@ -2365,7 +2387,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
         kMXMessageContentKeyExtensiblePollEnd: @{}
     };
     
-    return [self sendEventOfType:kMXEventTypeStringPollEnd content:content threadId:threadId localEcho:localEcho success:success failure:failure];
+    return [self sendEventOfType:[MXTools eventTypeString:MXEventTypePollEnd] content:content threadId:threadId localEcho:localEcho success:success failure:failure];
 }
 
 #pragma mark - Message order preserving

@@ -1,1 +1,0 @@
-Moved from /space to /hierarchy API to support pagination
