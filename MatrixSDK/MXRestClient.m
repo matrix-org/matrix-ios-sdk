@@ -36,6 +36,7 @@
  Prefix used in path of home server API requests.
  */
 NSString *const kMXAPIPrefixPathR0 = @"_matrix/client/r0";
+NSString *const kMXAPIPrefixPathV1 = @"_matrix/client/v1";
 NSString *const kMXAPIPrefixPathUnstable = @"_matrix/client/unstable";
 
 /**
@@ -74,6 +75,8 @@ NSString *const kMXMembersOfRoomParametersAt            = @"at";
 NSString *const kMXMembersOfRoomParametersMembership    = @"membership";
 NSString *const kMXMembersOfRoomParametersNotMembership = @"not_membership";
 
+NSString *const MXRestClientDidRefreshTokensNotification = @"MXRestClientDidRefreshTokensNotification";
+
 /**
  Authentication flow: register or login
  */
@@ -109,6 +112,17 @@ MXAuthAction;
 @implementation MXRestClient
 @synthesize credentials, apiPathPrefix, contentPathPrefix, completionQueue, antivirusServerPathPrefix;
 
++ (dispatch_queue_t)refreshQueue
+{
+    static dispatch_once_t pred = 0;
+       static id _refreshQueue = nil;
+       dispatch_once(&pred, ^{
+           _refreshQueue = dispatch_queue_create("MXRestClient.refreshQueue", DISPATCH_QUEUE_SERIAL);
+       });
+       return _refreshQueue;
+
+}
+
 -(id)initWithHomeServer:(NSString *)homeserver andOnUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock
 {
     MXCredentials *credentials = [MXCredentials new];
@@ -128,56 +142,110 @@ MXAuthAction;
         
         credentials = inCredentials;
         _identityServer = credentials.identityServer;
-
+        
         if (credentials.homeServer)
         {
             httpClient = [[MXHTTPClient alloc] initWithBaseURL:credentials.homeServer
                                                    accessToken:credentials.accessToken
                              andOnUnrecognizedCertificateBlock:^BOOL(NSData *certificate)
                           {
-
-                              // Check whether the provided certificate has been already trusted
-                              if ([[MXAllowedCertificates sharedInstance] isCertificateAllowed:certificate])
-                              {
-                                  return YES;
-                              }
-
-                              // Check whether the provided certificate is the already trusted by the user.
-                              if (inCredentials.allowedCertificate && [inCredentials.allowedCertificate isEqualToData:certificate])
-                              {
-                                  // Store the allowed certificate for further requests (from MXMediaManager)
-                                  [[MXAllowedCertificates sharedInstance] addCertificate:certificate];
-                                  return YES;
-                              }
-
-                              // Check whether the user has already ignored this certificate change.
-                              if (inCredentials.ignoredCertificate && [inCredentials.ignoredCertificate isEqualToData:certificate])
-                              {
-                                  return NO;
-                              }
-
-                              // Let the app ask the end user to verify it
-                              if (onUnrecognizedCertBlock)
-                              {
-                                  BOOL allowed = onUnrecognizedCertBlock(certificate);
-
-                                  if (allowed)
-                                  {
-                                      // Store the allowed certificate for further requests
-                                      [[MXAllowedCertificates sharedInstance] addCertificate:certificate];
-                                  }
-
-                                  return allowed;
-                              }
-                              else
-                              {
-                                  return NO;
-                              }
-                          }];
+                
+                // Check whether the provided certificate has been already trusted
+                if ([[MXAllowedCertificates sharedInstance] isCertificateAllowed:certificate])
+                {
+                    return YES;
+                }
+                
+                // Check whether the provided certificate is the already trusted by the user.
+                if (inCredentials.allowedCertificate && [inCredentials.allowedCertificate isEqualToData:certificate])
+                {
+                    // Store the allowed certificate for further requests (from MXMediaManager)
+                    [[MXAllowedCertificates sharedInstance] addCertificate:certificate];
+                    return YES;
+                }
+                
+                // Check whether the user has already ignored this certificate change.
+                if (inCredentials.ignoredCertificate && [inCredentials.ignoredCertificate isEqualToData:certificate])
+                {
+                    return NO;
+                }
+                
+                // Let the app ask the end user to verify it
+                if (onUnrecognizedCertBlock)
+                {
+                    BOOL allowed = onUnrecognizedCertBlock(certificate);
+                    
+                    if (allowed)
+                    {
+                        // Store the allowed certificate for further requests
+                        [[MXAllowedCertificates sharedInstance] addCertificate:certificate];
+                    }
+                    
+                    return allowed;
+                }
+                else
+                {
+                    return NO;
+                }
+            }];
+            httpClient.shouldRenewTokenHandler = ^BOOL(NSError *error) {
+                // An absence of accessTokenExpiresAt indicates access token does not expire
+                if (self.credentials.accessTokenExpiresAt && [NSDate date].timeIntervalSince1970 * 1000 >= self.credentials.accessTokenExpiresAt) {
+                    return YES;
+                }
+                if (![MXError isMXError:error])
+                {
+                    return NO;
+                }
+                MXError *mxError = [[MXError alloc] initWithNSError:error];
+                return [mxError.errcode isEqualToString:kMXErrCodeStringUnknownToken] && self.credentials.refreshToken;
+            };
+            
+            MXWeakify(self);
+            httpClient.renewTokenHandler = ^MXHTTPOperation* (void (^success)(NSString *), void (^failure)(NSError *)) {
+                MXStrongifyAndReturnValueIfNil(self, nil);
+                __block MXHTTPOperation *operation = nil;
+                // Dispatch sync so that in-flight requests only trigger one refresh.
+                dispatch_sync([MXRestClient refreshQueue], ^{
+                    // If we are not the first request and had been blocked it refreshing, the access token
+                    // and expiry are now update so exit early if that is the case.
+                    // An absence of accessTokenExpiresAt indicates access token does not expire
+                    if (! self.credentials.accessTokenExpiresAt || [NSDate date].timeIntervalSince1970 * 1000 < self.credentials.accessTokenExpiresAt) {
+                        success(self.credentials.accessToken);
+                    }
+                    
+                    // An absence of refreshToken indicates the accessToken and the users session expires
+                    if(!self.credentials.refreshToken) {
+                        dispatch_async(self.completionQueue, ^{
+                            MXError *mxError = [[MXError alloc] initWithErrorCode:kMXErrCodeStringUnknownToken error:kMXErrorStringInvalidToken];
+                            self.refreshTokensFailedHandler(mxError);
+                            failure([mxError createNSError]);
+                        });
+                    }
+                    // We are the first request, so request the token synchronously on processing.
+                    operation = [self refreshAccessToken:self.credentials.refreshToken success:^(MXRefreshResponse *refreshResponse) {
+                        [self->credentials updateWithRefreshResponse:refreshResponse];
+                        [[NSNotificationCenter defaultCenter] postNotificationName:MXRestClientDidRefreshTokensNotification object:nil userInfo:nil];
+                        dispatch_async(self.completionQueue, ^{
+                            success(self.credentials.accessToken);
+                        });
+                    } failure:^(NSError *error) {
+                        dispatch_async(self.completionQueue, ^{
+                            MXError *mxError = [[MXError alloc] initWithNSError:error];
+                            if (mxError)
+                            {
+                                self.refreshTokensFailedHandler(mxError);
+                            }
+                            failure(error);
+                        });
+                    }];
+                });
+                return operation;
+            };
         }
-
+        
         completionQueue = dispatch_get_main_queue();
-
+        
         processingQueue = dispatch_queue_create("MXRestClient", DISPATCH_QUEUE_SERIAL);
     }
     return self;
@@ -743,6 +811,34 @@ MXAuthAction;
                                      MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
+}
+
+- (MXHTTPOperation*)refreshAccessToken:(NSString*)refreshToken
+                               success:(void (^)(MXRefreshResponse *refreshResponse))success
+                               failure:(void (^)(NSError *error))failure
+
+{
+    NSDictionary *jsonBodyParameters = @{
+        @"refresh_token": refreshToken,
+    };
+
+    NSData *payloadData = [NSJSONSerialization dataWithJSONObject:jsonBodyParameters options:0 error:nil];
+    return [httpClient requestWithMethod:@"POST"
+                                    path:[NSString stringWithFormat:@"%@/refresh", kMXAPIPrefixPathV1]
+                              parameters:nil
+                                    data:payloadData
+                                 headers:@{@"Content-Type": @"application/json"}
+                                 timeout:-1
+                          uploadProgress:nil
+                                 success:^(NSDictionary *JSONResponse) {
+        MXRefreshResponse *refreshResponse;
+        MXJSONModelSetMXJSONModel(refreshResponse, MXRefreshResponse, JSONResponse);
+        if (success)
+        {
+            success(refreshResponse);
+        }
+    }
+                                 failure:failure];
 }
 
 - (MXHTTPOperation*)deactivateAccountWithAuthParameters:(NSDictionary*)authParameters

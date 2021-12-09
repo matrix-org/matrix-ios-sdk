@@ -21,6 +21,9 @@
 
 #import "MXTools.h"
 
+NSString *const MXCredentialsDidRefreshAccessTokenNotification = @"MXCredentialsDidRefreshAccessTokenNotification";
+NSString *const kMXCredentialNotificationAccessTokenKey = @"access_token";
+
 @implementation MXCredentials
 
 - (instancetype)initWithHomeServer:(NSString *)homeServer userId:(NSString *)userId accessToken:(NSString *)accessToken
@@ -43,6 +46,8 @@
     {
         _userId = loginResponse.userId;
         _accessToken = loginResponse.accessToken;
+        _accessTokenExpiresAt = ((uint64_t)[NSDate date].timeIntervalSince1970 * 1000) + loginResponse.expiresInMs;
+        _refreshToken = loginResponse.refreshToken;
         _deviceId = loginResponse.deviceId;
         _loginOthers = loginResponse.others;
 
@@ -95,6 +100,16 @@
     return self;
 }
 
+- (void)updateWithRefreshResponse:(MXRefreshResponse*)refreshResponse
+{
+    _accessToken = refreshResponse.accessToken;
+    _accessTokenExpiresAt = ((uint64_t)[NSDate date].timeIntervalSince1970 * 1000) + refreshResponse.expiresInMs;
+    _refreshToken = refreshResponse.refreshToken;
+    
+    
+    [[NSNotificationCenter defaultCenter] postNotificationName:MXCredentialsDidRefreshAccessTokenNotification object:nil userInfo:@{kMXCredentialNotificationAccessTokenKey : _accessToken}];
+}
+
 + (instancetype)initialSyncCacheCredentialsFrom:(MXCredentials *)credentials
 {
     MXCredentials *result = [credentials copy];
@@ -119,17 +134,21 @@
 
     return [_homeServer isEqualToString:otherCredentials.homeServer]
         && [_userId isEqualToString:otherCredentials.userId]
-        && [_accessToken isEqualToString:otherCredentials.accessToken];
+        && [_accessToken isEqualToString:otherCredentials.accessToken]
+        && _accessTokenExpiresAt == otherCredentials.accessTokenExpiresAt
+        && [_refreshToken isEqualToString:otherCredentials.refreshToken];
 }
 
 - (NSUInteger)hash
 {
     NSUInteger prime = 31;
     NSUInteger result = 1;
-
+    
     result = prime * result + [_homeServer hash];
     result = prime * result + [_userId hash];
     result = prime * result + [_accessToken hash];
+    result = prime * result + (NSUInteger)_accessTokenExpiresAt;
+    result = prime * result + [_refreshToken hash];
 
     return result;
 }
@@ -142,6 +161,9 @@
     
     credentials.userId = [_userId copyWithZone:zone];
     credentials.homeServer = [_homeServer copyWithZone:zone];
+    credentials.accessToken = [_accessToken copyWithZone:zone];
+    credentials.accessTokenExpiresAt = _accessTokenExpiresAt;
+    credentials.refreshToken = [_refreshToken copyWithZone:zone];
     credentials.accessToken = [_accessToken copyWithZone:zone];
     credentials.identityServer = [_identityServer copyWithZone:zone];
     credentials.identityServerAccessToken = [_identityServerAccessToken copyWithZone:zone];

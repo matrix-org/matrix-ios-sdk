@@ -204,6 +204,8 @@ NSString *const kMXLoginIdentifierTypePhone = @"m.id.phone";
         MXJSONModelSetString(loginResponse.homeserver, JSONDictionary[@"home_server"]);
         MXJSONModelSetString(loginResponse.userId, JSONDictionary[@"user_id"]);
         MXJSONModelSetString(loginResponse.accessToken, JSONDictionary[@"access_token"]);
+        MXJSONModelSetUInt64(loginResponse.expiresInMs, JSONDictionary[@"expires_in_ms"]);
+        MXJSONModelSetString(loginResponse.refreshToken, JSONDictionary[@"refresh_token"]);
         MXJSONModelSetString(loginResponse.deviceId, JSONDictionary[@"device_id"]);
         MXJSONModelSetMXJSONModel(loginResponse.wellknown, MXWellKnown, JSONDictionary[@"well_known"]);
         
@@ -217,6 +219,23 @@ NSString *const kMXLoginIdentifierTypePhone = @"m.id.phone";
     }
 
     return loginResponse;
+}
+
+@end
+
+@implementation MXRefreshResponse
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXRefreshResponse *refreshResponse = [[MXRefreshResponse alloc] init];
+    if (refreshResponse)
+    {
+        MXJSONModelSetString(refreshResponse.accessToken, JSONDictionary[@"access_token"]);
+        MXJSONModelSetUInt64(refreshResponse.expiresInMs, JSONDictionary[@"expires_in_ms"]);
+        MXJSONModelSetString(refreshResponse.refreshToken, JSONDictionary[@"refresh_token"]);
+    }
+
+    return refreshResponse;
 }
 
 @end

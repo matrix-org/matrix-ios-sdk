@@ -51,6 +51,7 @@ static MXSDKOptions *sharedOnceInstance = nil;
         _callTransferType = MXCallTransferTypeBridged;
         self.roomListDataManagerClass = [MXStoreRoomListDataManager class];
         _clientPermalinkBaseUrl = nil;
+        _authEnableRefreshTokens = NO;
     }
     
     return self;

@@ -24,6 +24,7 @@
 #import "MXBackgroundModeHandler.h"
 #import "MXTools.h"
 #import "MXHTTPClient_Private.h"
+#import "MXCredentials.h"
 
 #import <AFNetworking/AFNetworking.h>
 
@@ -75,6 +76,11 @@ static NSUInteger requestCount = 0;
      In this state, we can not use anymore NSURLSession else it crashes.
      */
     BOOL invalidatedSession;
+    
+    /**
+     The main observer to AccessTokenRefresh Notifications.
+     */
+    id accessTokenRefreshObserver;
 }
 
 /**
@@ -138,6 +144,7 @@ static NSUInteger requestCount = 0;
 
         [self setUpNetworkReachibility];
         [self setUpSSLCertificatesHandler];
+        [self setupAccessTokenRefreshHandler];
 
         // Track potential expected session invalidation (seen on iOS10 beta)
         MXWeakify(self);
@@ -157,6 +164,7 @@ static NSUInteger requestCount = 0;
     [self cleanupBackgroundTask];
     
     [[NSNotificationCenter defaultCenter] removeObserver:reachabilityObserver];
+    [[NSNotificationCenter defaultCenter] removeObserver:accessTokenRefreshObserver];
 }
 
 - (MXHTTPOperation*)requestWithMethod:(NSString *)httpMethod
@@ -958,6 +966,17 @@ static NSUInteger requestCount = 0;
     MXLogDebug(@"[MXHTTPClient] Request %p failed for path: %@ - HTTP code: %@. Error: %@", mxHTTPOperation, path, @(statusCode), error);
 }
 
+- (void)setupAccessTokenRefreshHandler
+{
+    MXWeakify(self);
+    accessTokenRefreshObserver = [[NSNotificationCenter defaultCenter] addObserverForName:MXCredentialsDidRefreshAccessTokenNotification object:nil queue:nil usingBlock:^(NSNotification * _Nonnull notification) {
+        MXStrongifyAndReturnIfNil(self);
+        NSString *accessToken = notification.userInfo[kMXCredentialNotificationAccessTokenKey];
+        if (accessToken) {
+            self.accessToken = accessToken;
+        }
+    }];
+}
 
 #pragma mark - MXHTTPClient_Private
 // See MXHTTPClient_Private.h for details

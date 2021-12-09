@@ -116,6 +116,12 @@ FOUNDATION_EXPORT NSString *const kMXMembersOfRoomParametersNotMembership;
  */
 typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^success)(NSString *accessToken), void (^failure)(NSError *error));
 
+/**
+ Block called when the rest client failed to refresh it's tokens and session is now unauthenticated.
+
+ @param error The error from the failed refresh.
+ */
+typedef void(^MXRestClientRefreshTokensFailedHandler)(MXError *error);
 
 /**
  `MXRestClient` makes requests to Matrix servers.
@@ -128,9 +134,19 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
 @interface MXRestClient : NSObject
 
 /**
+ Notification name sent when the refresh/access tokens change within the associated credential.
+ */
+extern NSString *const MXRestClientDidRefreshTokensNotification;
+
+/**
  Credentials for the Matrix Client-Server API.
  */
 @property (nonatomic, readonly) MXCredentials *credentials;
+
+/**
+ Block called when the rest client failed to refresh it's tokens and session is now unauthenticated.
+ */
+@property (nonatomic, copy) MXRestClientRefreshTokensFailedHandler refreshTokensFailedHandler;
 
 /**
  The homeserver URL.

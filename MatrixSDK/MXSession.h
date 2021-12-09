@@ -126,13 +126,13 @@ typedef NS_ENUM(NSUInteger, MXSessionState)
     MXSessionStateInitialSyncFailed,
 
     /**
-     The access token is no more valid.
+     The user is no longer authenticated.
 
      @discussion
      This can happen when the user made a forget password request for example.
      The Matrix session is no more usable. The user must log in again.
      */
-    MXSessionStateUnknownToken,
+    MXSessionStateUnauthenticated,
 
     /**
      The user is logged out (invalid token) but they still have their local storage.

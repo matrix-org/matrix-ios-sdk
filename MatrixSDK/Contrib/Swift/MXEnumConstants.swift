@@ -211,8 +211,8 @@ extension MXSessionState: CustomStringConvertible {
             return "pauseRequested"
         case .initialSyncFailed:
             return "initialSyncFailed"
-        case .unknownToken:
-            return "unknownToken"
+        case .unauthenticated:
+            return "unauthenticated"
         case .softLogout:
             return "softLogout"
         @unknown default:
