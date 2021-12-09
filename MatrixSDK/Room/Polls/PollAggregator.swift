@@ -15,13 +15,13 @@
 //
 
 import Foundation
-import Combine
 
-enum PollAggregatorError: Error {
+/// PollAggregator errors 
+public enum PollAggregatorError: Error {
     case invalidPollStartEvent
 }
 
-protocol PollAggregatorDelegate: AnyObject {
+public protocol PollAggregatorDelegate: AnyObject {
     func pollAggregatorDidStartLoading(_ aggregator: PollAggregator)
     func pollAggregatorDidEndLoading(_ aggregator: PollAggregator)
     func pollAggregator(_ aggregator: PollAggregator, didFailWithError: Error)
@@ -34,7 +34,7 @@ protocol PollAggregatorDelegate: AnyObject {
  I will also listen for `mxRoomDidFlushData` and reload all data to avoid gappy sync problems
 */
 
-class PollAggregator {
+public class PollAggregator {
     
     private let session: MXSession
     private let room: MXRoom
@@ -45,19 +45,19 @@ class PollAggregator {
     private var eventListener: Any!
     private var events: [MXEvent] = []
     
-    private(set) var poll: PollProtocol! {
+    public private(set) var poll: PollProtocol! {
         didSet {
             delegate?.pollAggregatorDidUpdateData(self)
         }
     }
     
-    var delegate: PollAggregatorDelegate?
+    public var delegate: PollAggregatorDelegate?
     
     deinit {
         room.removeListener(eventListener)
     }
     
-    init(session: MXSession, room: MXRoom, pollStartEvent: MXEvent) throws {
+    public init(session: MXSession, room: MXRoom, pollStartEvent: MXEvent) throws {
         self.session = session
         self.room = room
         self.pollStartEvent = pollStartEvent
@@ -70,7 +70,7 @@ class PollAggregator {
         
         pollBuilder = PollBuilder()
         
-        poll = pollBuilder.build(pollStartEventContent: self.pollStartEventContent, events: self.events)
+        poll = pollBuilder.build(pollStartEventContent: self.pollStartEventContent, events: self.events, currentUserIdentifier: session.myUserId)
         
         reloadData()
         
@@ -96,17 +96,21 @@ class PollAggregator {
             
             self.events.append(contentsOf: response.chunk)
             
-            self.eventListener = self.room.listen(toEventsOfTypes: [kMXEventTypeStringPollResponse, kMXEventTypeStringPollEnd]) { [weak self] event, direction, state in
-                guard let self = self, let event = event else {
+            let eventTypes = [kMXEventTypeStringPollResponse, kMXEventTypeStringPollResponseMSC3381, kMXEventTypeStringPollEnd, kMXEventTypeStringPollEndMSC3381]
+            self.eventListener = self.room.listen(toEventsOfTypes: eventTypes) { [weak self] event, direction, state in
+                guard let self = self,
+                      let event = event,
+                      let relatedEventId = event.relatesTo?.eventId,
+                      relatedEventId == self.pollStartEvent.eventId else {
                     return
                 }
                 
                 self.events.append(event)
                 
-                self.poll = self.pollBuilder.build(pollStartEventContent: self.pollStartEventContent, events: self.events)
+                self.poll = self.pollBuilder.build(pollStartEventContent: self.pollStartEventContent, events: self.events, currentUserIdentifier: self.session.myUserId)
             } as Any
             
-            self.poll = self.pollBuilder.build(pollStartEventContent: self.pollStartEventContent, events: self.events)
+            self.poll = self.pollBuilder.build(pollStartEventContent: self.pollStartEventContent, events: self.events, currentUserIdentifier: self.session.myUserId)
             
             self.delegate?.pollAggregatorDidEndLoading(self)
             
