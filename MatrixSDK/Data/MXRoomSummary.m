@@ -67,6 +67,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
 }
 
 @property (nonatomic, readwrite) MXSpaceChildInfo *spaceChildInfo;
+@property (nonatomic, readwrite) MXUnsentMessageFailures *unsentMessageFailures;
 
 @end
 
@@ -1071,26 +1072,8 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
 
  -(MXRoomSummarySentStatus)calculateSentStatus
 {
-    MXRoomSummarySentStatus status = MXRoomSummarySentStatusOk;
-    NSArray<MXEvent*> *outgoingMsgs = self.room.outgoingMessages;
-
-    for (MXEvent *event in outgoingMsgs)
-    {
-        if (event.sentState == MXEventSentStateFailed)
-        {
-            status = MXRoomSummarySentStatusSentFailed;
-
-            // Check if the error is due to unknown devices
-            if ([event.sentError.domain isEqualToString:MXEncryptingErrorDomain]
-                && event.sentError.code == MXEncryptingErrorUnknownDeviceCode)
-            {
-                status = MXRoomSummarySentStatusSentFailedDueToUnknownDevices;
-                break;
-            }
-        }
-    }
-    
-    return status;
+    self.unsentMessageFailures = [[MXUnsentMessageFailures alloc] initWithOutgoingMessages:self.room.outgoingMessages];
+    return self.unsentMessageFailures.count > 0 ? MXRoomSummarySentStatusSentFailed : MXRoomSummarySentStatusOk;
 }
 
 - (BOOL)isEqual:(id)object

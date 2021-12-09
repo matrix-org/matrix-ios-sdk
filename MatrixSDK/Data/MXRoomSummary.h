@@ -32,6 +32,7 @@
 @class MXRoomSync;
 @class MXInvitedRoomSync;
 @class MXRoomSyncSummary;
+@class MXUnsentMessageFailures;
 @protocol MXStore;
 
 
@@ -339,6 +340,11 @@ FOUNDATION_EXPORT NSUInteger const MXRoomSummaryPaginationChunkSize;
  Sent status of the room.
  */
 @property (nonatomic, readonly) MXRoomSummarySentStatus sentStatus;
+
+/**
+ Information about any errors that occurred when `sentStatus` is not `MXRoomSummarySentStatusOk`.
+ */
+@property (nonatomic, readonly) MXUnsentMessageFailures *unsentMessageFailures;
 
 /**
  Parent space identifiers.

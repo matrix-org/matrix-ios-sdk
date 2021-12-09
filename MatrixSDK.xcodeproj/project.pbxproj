@@ -703,6 +703,8 @@
 		8EC5110B256822B400EC4E5B /* MXTaggedEvents.h in Headers */ = {isa = PBXBuildFile; fileRef = 8EC51108256822B400EC4E5B /* MXTaggedEvents.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8EC5110C256822B400EC4E5B /* MXTaggedEvents.m in Sources */ = {isa = PBXBuildFile; fileRef = 8EC51109256822B400EC4E5B /* MXTaggedEvents.m */; };
 		8EC5110D256822B400EC4E5B /* MXTaggedEvents.m in Sources */ = {isa = PBXBuildFile; fileRef = 8EC51109256822B400EC4E5B /* MXTaggedEvents.m */; };
+		91483D8427620340003A0159 /* MXUnsentMessageFailures.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91483D8327620340003A0159 /* MXUnsentMessageFailures.swift */; };
+		91483D8527620340003A0159 /* MXUnsentMessageFailures.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91483D8327620340003A0159 /* MXUnsentMessageFailures.swift */; };
 		918D30B7273951F400A16405 /* MXStoreService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 918D30B6273951F400A16405 /* MXStoreService.swift */; };
 		918D30B8273951F400A16405 /* MXStoreService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 918D30B6273951F400A16405 /* MXStoreService.swift */; };
 		91CC0FCA26A033AE00C2A387 /* MXURLPreview.h in Headers */ = {isa = PBXBuildFile; fileRef = 91CC0FC826A033AE00C2A387 /* MXURLPreview.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -2204,6 +2206,7 @@
 		8EC511032568216B00EC4E5B /* MXTaggedEventInfo.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXTaggedEventInfo.m; sourceTree = "<group>"; };
 		8EC51108256822B400EC4E5B /* MXTaggedEvents.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXTaggedEvents.h; sourceTree = "<group>"; };
 		8EC51109256822B400EC4E5B /* MXTaggedEvents.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXTaggedEvents.m; sourceTree = "<group>"; };
+		91483D8327620340003A0159 /* MXUnsentMessageFailures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXUnsentMessageFailures.swift; sourceTree = "<group>"; };
 		918D30B6273951F400A16405 /* MXStoreService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXStoreService.swift; sourceTree = "<group>"; };
 		91CC0FC826A033AE00C2A387 /* MXURLPreview.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXURLPreview.h; sourceTree = "<group>"; };
 		91CC0FC926A033AE00C2A387 /* MXURLPreview.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXURLPreview.m; sourceTree = "<group>"; };
@@ -2676,6 +2679,7 @@
 				ECD2899726EB3C7A00F268CF /* MXRoomSummaryProtocol.h */,
 				ECD289A426EB97E800F268CF /* MXRoomSummaryDataTypes.h */,
 				ECD289B326F9F00E00F268CF /* MXRoomSummarySentStatus.h */,
+				91483D8327620340003A0159 /* MXUnsentMessageFailures.swift */,
 				32E226A41D06AC9F00E6CA54 /* MXPeekingRoom.h */,
 				32E226A51D06AC9F00E6CA54 /* MXPeekingRoom.m */,
 				3293C6FE214BBA4F009B3DDB /* MXPeekingRoomSummary.h */,
@@ -5527,6 +5531,7 @@
 				B17B2BDD2369FC81009D6650 /* MXUIKitBackgroundTask.m in Sources */,
 				3293C701214BBA4F009B3DDB /* MXPeekingRoomSummary.m in Sources */,
 				C602B58C1F2268F700B67D87 /* MXRoom.swift in Sources */,
+				91483D8427620340003A0159 /* MXUnsentMessageFailures.swift in Sources */,
 				EC8A53D825B1BCC6004E0802 /* MXThirdPartyProtocolInstance.m in Sources */,
 				3A7509BB26FC61DF00B85773 /* MXSpaceNotificationCounter.swift in Sources */,
 				32E402BA21C957D2004E87A6 /* MXOlmSession.m in Sources */,
@@ -5999,6 +6004,7 @@
 				320B393D239FD15E00BE2C06 /* MXKeyVerificationRequest.m in Sources */,
 				EC05473725FF8A3C0047ECD7 /* MXVirtualRoomInfo.m in Sources */,
 				3290293524CB10D000DA7BB6 /* MatrixSDKVersion.m in Sources */,
+				91483D8527620340003A0159 /* MXUnsentMessageFailures.swift in Sources */,
 				3A7509BC26FC61DF00B85773 /* MXSpaceNotificationCounter.swift in Sources */,
 				B14EF21F2397E90400758AF0 /* MXMyUser.m in Sources */,
 				EC60EDAB265CFE3B00B39A4E /* MXRoomSyncTimeline.m in Sources */,

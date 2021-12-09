@@ -20,8 +20,7 @@
 typedef NS_ENUM(NSUInteger, MXRoomSummarySentStatus)
 {
     MXRoomSummarySentStatusOk,
-    MXRoomSummarySentStatusSentFailed,
-    MXRoomSummarySentStatusSentFailedDueToUnknownDevices
+    MXRoomSummarySentStatusSentFailed
 };
 
 #endif /* MXRoomSummarySentStatus_h */
