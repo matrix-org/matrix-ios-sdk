@@ -2716,14 +2716,6 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                             break;
                         }
                     }
-                    else if ([msgtype isEqualToString:kMXMessageTypeLocation])
-                    {
-                        // Compare geo uri
-                        if ([event.content[@"geo_uri"] isEqualToString:localEcho.content[@"geo_uri"]])
-                        {
-                            break;
-                        }
-                    }
                     else
                     {
                         // Here the type is kMXMessageTypeImage, kMXMessageTypeAudio, kMXMessageTypeVideo or kMXMessageTypeFile

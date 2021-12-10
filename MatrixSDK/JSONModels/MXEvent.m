@@ -138,7 +138,7 @@ NSString *const kMXMessageContentKeyExtensibleFileName       = @"name";
 NSString *const kMXMessageContentKeyExtensibleFileURL        = @"url";
 NSString *const kMXMessageContentKeyExtensibleFileMimeType   = @"mimetype";
 
-//Polls
+// Polls
 
 NSString *const kMXMessageContentKeyExtensiblePollStart = @"org.matrix.msc3381.poll.start";
 NSString *const kMXMessageContentKeyExtensiblePollResponse = @"org.matrix.msc3381.poll.response";
@@ -150,6 +150,12 @@ NSString *const kMXMessageContentKeyExtensiblePollMaxSelections = @"max_selectio
 NSString *const kMXMessageContentKeyExtensiblePollKind = @"kind";
 NSString *const kMXMessageContentKeyExtensiblePollKindDisclosed = @"m.poll.disclosed";
 NSString *const kMXMessageContentKeyExtensiblePollKindUndisclosed = @"m.poll.undisclosed";
+
+// Location
+
+NSString *const kMXMessageContentKeyExtensibleLocation = @"org.matrix.msc3488.location";
+NSString *const kMXMessageContentKeyExtensibleLocationURI = @"uri";
+NSString *const kMXMessageContentKeyExtensibleLocationDescription = @"description";
 
 #pragma mark - MXEvent
 @interface MXEvent ()
@@ -478,6 +484,11 @@ NSString *const kMXMessageContentKeyExtensiblePollKindUndisclosed = @"m.poll.und
                                                              self.content[kMXMessageContentKeyVoiceMessageMSC3245]);
 }
 
+- (BOOL)hasLocation
+{
+    return self.eventType == MXEventTypeRoomMessage && self.content[kMXMessageContentKeyExtensibleLocation] != nil;
+}
+
 - (BOOL)contentHasBeenEdited
 {
     return self.unsignedData.relations.replace != nil;
@@ -798,27 +809,6 @@ NSString *const kMXMessageContentKeyExtensiblePollKindUndisclosed = @"m.poll.und
             if (mediaURL)
             {
                 [mediaURLs addObject:mediaURL];
-            }
-            
-            if (mediaThumbnailURL)
-            {
-                [mediaURLs addObject:mediaThumbnailURL];
-            }
-        }
-        else if ([messageType isEqualToString:kMXMessageTypeLocation])
-        {
-            NSString *mediaThumbnailURL;
-            
-            if (self.isEncrypted)
-            {
-                NSDictionary *file;
-                MXJSONModelSetDictionary(file, self.content[@"file"]);
-                
-                MXJSONModelSetString(mediaThumbnailURL, file[@"thumbnail_url"]);
-            }
-            else
-            {
-                MXJSONModelSetString(mediaThumbnailURL, self.content[@"thumbnail_url"]);
             }
             
             if (mediaThumbnailURL)
