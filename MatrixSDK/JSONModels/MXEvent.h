@@ -237,6 +237,11 @@ FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensiblePollKind;
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensiblePollKindDisclosed;
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensiblePollKindUndisclosed;
 
+// Location
+FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleLocation;
+FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleLocationURI;
+FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleLocationDescription;
+
 /**
  The internal event state used to handle the different steps of the event sending.
  */
@@ -494,6 +499,11 @@ extern NSString *const kMXEventIdentifierKey;
  Return YES if the event contains a voice message
  */
 - (BOOL)isVoiceMessage;
+
+/**
+ Return YES if the event contains location data
+ */
+- (BOOL)hasLocation;
 
 /**
  Return YES if the event content has been edited.
