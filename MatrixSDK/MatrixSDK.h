@@ -83,6 +83,8 @@ FOUNDATION_EXPORT NSString *MatrixSDKVersion;
 
 #import "MXCallKitAdapter.h"
 #import "MXCallKitConfiguration.h"
+#import "MXCallAudioSessionConfigurator.h"
+#import "MXCallStackCall.h"
 
 #import "MXGroup.h"
 
