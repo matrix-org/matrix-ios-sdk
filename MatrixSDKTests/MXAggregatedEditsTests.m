@@ -146,7 +146,7 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
                     XCTAssertEqualObjects(event.relatesTo.relationType, MXEventRelationTypeReplace);
                     XCTAssertEqualObjects(event.relatesTo.eventId, eventId);
 
-                    XCTAssertEqualObjects(event.content[@"m.new_content"][@"msgtype"], kMXMessageTypeText);
+                    XCTAssertEqualObjects(event.content[@"m.new_content"][kMXMessageTypeKey], kMXMessageTypeText);
                     XCTAssertEqualObjects(event.content[@"m.new_content"][@"body"], kEditedMessageText);
 
                     [expectation fulfill];
@@ -198,7 +198,7 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
                     XCTAssertEqualObjects(event.content[@"body"], compatibilityBody);
                     XCTAssertEqualObjects(event.content[@"formatted_body"], compatibilityFormattedBody);
 
-                    XCTAssertEqualObjects(event.content[@"m.new_content"][@"msgtype"], kMXMessageTypeText);
+                    XCTAssertEqualObjects(event.content[@"m.new_content"][kMXMessageTypeKey], kMXMessageTypeText);
                     XCTAssertEqualObjects(event.content[@"m.new_content"][@"body"], kEditedMarkdownMessageText);
                     XCTAssertEqualObjects(event.content[@"m.new_content"][@"formatted_body"], kEditedMarkdownMessageFormattedText);
                     
@@ -506,7 +506,7 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
             XCTAssertNotNil(localEcho.relatesTo);
             XCTAssertEqualObjects(localEcho.relatesTo.relationType, MXEventRelationTypeReplace);
 
-            XCTAssertEqualObjects(localEcho.content[@"m.new_content"][@"msgtype"], kMXMessageTypeText);
+            XCTAssertEqualObjects(localEcho.content[@"m.new_content"][kMXMessageTypeKey], kMXMessageTypeText);
             XCTAssertEqualObjects(localEcho.content[@"m.new_content"][@"body"], kEditedMessageText);
 
             switch (localEchoBlockCount) {
@@ -621,7 +621,7 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
                     XCTAssertEqualObjects(editEvent.relatesTo.relationType, MXEventRelationTypeReplace);
                     XCTAssertEqualObjects(editEvent.relatesTo.eventId, eventId);
 
-                    XCTAssertEqualObjects(editEvent.content[@"m.new_content"][@"msgtype"], kMXMessageTypeText);
+                    XCTAssertEqualObjects(editEvent.content[@"m.new_content"][kMXMessageTypeKey], kMXMessageTypeText);
                     XCTAssertEqualObjects(editEvent.content[@"m.new_content"][@"body"], kEditedMessageText);
 
                     // -> Check the edited message in the store
@@ -632,7 +632,7 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
                         XCTAssertTrue(localEditedEvent.isEncrypted);
                         XCTAssertTrue(localEditedEvent.contentHasBeenEdited);
 
-                        XCTAssertEqualObjects(localEditedEvent.content[@"msgtype"], kMXMessageTypeText);
+                        XCTAssertEqualObjects(localEditedEvent.content[kMXMessageTypeKey], kMXMessageTypeText);
                         XCTAssertEqualObjects(localEditedEvent.content[@"body"], kEditedMessageText);
 
                         // The event content must be encrypted
@@ -727,7 +727,7 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
             XCTAssertNotNil(localEcho.relatesTo);
             XCTAssertEqualObjects(localEcho.relatesTo.relationType, MXEventRelationTypeReplace);
 
-            XCTAssertEqualObjects(localEcho.content[@"m.new_content"][@"msgtype"], kMXMessageTypeText);
+            XCTAssertEqualObjects(localEcho.content[@"m.new_content"][kMXMessageTypeKey], kMXMessageTypeText);
             XCTAssertEqualObjects(localEcho.content[@"m.new_content"][@"body"], kEditedMessageText);
 
             switch (localEchoBlockCount) {

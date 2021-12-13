@@ -208,7 +208,7 @@
                 [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                     XCTAssertEqual(direction, MXTimelineDirectionForwards);
-                    XCTAssertEqualObjects(event.content[@"msgtype"], kMXMessageTypeImage);
+                    XCTAssertEqualObjects(event.content[kMXMessageTypeKey], kMXMessageTypeImage);
 
                     NSString *contentURL = event.content[@"url"];
                     XCTAssert(contentURL);
@@ -278,7 +278,7 @@
                 [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                     XCTAssertEqual(direction, MXTimelineDirectionForwards);
-                    XCTAssertEqualObjects(event.content[@"msgtype"], kMXMessageTypeImage);
+                    XCTAssertEqualObjects(event.content[kMXMessageTypeKey], kMXMessageTypeImage);
 
                     NSString *contentURL = event.content[@"url"];
                     XCTAssert(contentURL);
