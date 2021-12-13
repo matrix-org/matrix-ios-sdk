@@ -199,7 +199,7 @@ MXAuthAction;
                     return NO;
                 }
             }];
-            httpClient.shouldRenewTokenHandler = ^BOOL(NSError *error) {
+            httpClient.tokenValidationResponseHandler = ^BOOL(NSError *error) {
                 // An absence of accessTokenExpiresAt indicates access token does not expire
                 if (self.credentials.accessTokenExpiresAt && [NSDate date].timeIntervalSince1970 * 1000 >= self.credentials.accessTokenExpiresAt) {
                     return YES;
@@ -222,7 +222,7 @@ MXAuthAction;
             };
             
             MXWeakify(self);
-            httpClient.renewTokenHandler = ^MXHTTPOperation* (void (^success)(NSString *), void (^failure)(NSError *)) {
+            httpClient.tokenProviderHandler = ^MXHTTPOperation* (void (^success)(NSString *), void (^failure)(NSError *)) {
                 MXStrongifyAndReturnValueIfNil(self, nil);
                 __block MXHTTPOperation *operation = nil;
                 // Dispatch sync so that in-flight requests only trigger one refresh.

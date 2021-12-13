@@ -50,23 +50,24 @@ FOUNDATION_EXPORT NSString* const kMXHTTPClientMatrixErrorNotificationErrorKey;
 typedef BOOL (^MXHTTPClientOnUnrecognizedCertificate)(NSData *certificate);
 
 /**
- Block called when a request fails and needs authorization to determine if the access token should be renewed.
+ Block called when an authenticated request fails and is used  to validate the response error.
+ It returns a BOOL to indicate wether the request needs to be retried after access token refresh.
  
  @param error A request error.
  
- @return YES if the access token should be renewed for the given error.
+ @return YES if the access token should be refreshed for the given error.
  */
-typedef BOOL (^MXHTTPClientShouldRenewTokenHandler)(NSError *error);
+typedef BOOL (^MXHTTPClientTokenValidationResponseHandler)(NSError *error);
 
 /**
- Block called when a request needs authorization and access token should be renewed.
+ Block called when an authenticated request requires an access token.
 
  @param success A block object called when the operation succeeds. It provides the access token.
  @param failure A block object called when the operation fails.
  
  @return a MXHTTPOperation instance.
  */
-typedef MXHTTPOperation* (^MXHTTPClientRenewTokenHandler)(void (^success)(NSString *accessToken), void (^failure)(NSError *error));
+typedef MXHTTPOperation* (^MXHTTPClientTokenProviderHandler)(void (^success)(NSString *accessToken), void (^failure)(NSError *error));
 
 /**
  SSL Pinning mode
@@ -125,12 +126,12 @@ typedef NS_ENUM(NSUInteger, MXHTTPClientSSLPinningMode) {
 /**
  Block called when a request needs authentication and access token should be renewed.
  */
-@property (nonatomic, copy) MXHTTPClientShouldRenewTokenHandler shouldRenewTokenHandler;
+@property (nonatomic, copy) MXHTTPClientTokenValidationResponseHandler tokenValidationResponseHandler;
 
 /**
  Block called when a request fails and needs authentication to determine if the access token should be renewed.
  */
-@property (nonatomic, copy) MXHTTPClientRenewTokenHandler renewTokenHandler;
+@property (nonatomic, copy) MXHTTPClientTokenProviderHandler tokenProviderHandler;
 
 #pragma mark - Public methods
 /**

@@ -228,15 +228,15 @@ static NSUInteger requestCount = 0;
     }
     
     MXWeakify(self);
-    self.renewTokenHandler(^(NSString *accessToken) {
+    self.tokenProviderHandler(^(NSString *accessToken) {
         MXStrongifyAndReturnIfNil(self);
         
         MXWeakify(self);
         [self tryRequest:mxHTTPOperation method:httpMethod path:path parameters:parameters data:data headers:headers accessToken:accessToken timeout:timeoutInSeconds uploadProgress:uploadProgress success:success failure:^(NSError *error) {
             MXStrongifyAndReturnIfNil(self);
             if (error
-                && self.shouldRenewTokenHandler(error)
-                && self.renewTokenHandler)
+                && self.tokenValidationResponseHandler(error)
+                && self.tokenProviderHandler)
             {
                 MXWeakify(self);
                 dispatch_async(dispatch_get_main_queue(), ^{
@@ -244,7 +244,7 @@ static NSUInteger requestCount = 0;
                     mxHTTPOperation.operation = nil;
                     
                     MXWeakify(self);
-                    self.renewTokenHandler(^(NSString *retryAccessToken) {
+                    self.tokenProviderHandler(^(NSString *retryAccessToken) {
                         MXStrongifyAndReturnIfNil(self);
                         [self tryRequest:mxHTTPOperation
                                   method:httpMethod

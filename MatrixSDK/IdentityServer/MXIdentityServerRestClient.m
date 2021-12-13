@@ -63,24 +63,24 @@ NSString *const MXIdentityServerRestClientErrorDomain = @"org.matrix.sdk.MXIdent
     return self.httpClient.accessToken;
 }
 
-- (void)setShouldRenewTokenHandler:(MXHTTPClientShouldRenewTokenHandler)shouldRenewTokenHandler
+- (void)setTokenValidationResponseHandler:(MXHTTPClientTokenValidationResponseHandler)tokenValidationResponseHandler
 {
-    self.httpClient.shouldRenewTokenHandler = shouldRenewTokenHandler;
+    self.httpClient.tokenValidationResponseHandler = tokenValidationResponseHandler;
 }
 
-- (MXHTTPClientShouldRenewTokenHandler)shouldRenewTokenHandler
+- (MXHTTPClientTokenValidationResponseHandler)tokenValidationResponseHandler
 {
-    return self.httpClient.shouldRenewTokenHandler;
+    return self.httpClient.tokenValidationResponseHandler;
 }
 
-- (void)setRenewTokenHandler:(MXHTTPClientRenewTokenHandler)renewTokenHandler
+- (void)setTokenProviderHandler:(MXHTTPClientTokenProviderHandler)tokenProviderHandler
 {
-    self.httpClient.renewTokenHandler = renewTokenHandler;
+    self.httpClient.tokenProviderHandler = tokenProviderHandler;
 }
 
-- (MXHTTPClientRenewTokenHandler)renewTokenHandler
+- (MXHTTPClientTokenProviderHandler)tokenProviderHandler
 {
-    return self.httpClient.renewTokenHandler;
+    return self.httpClient.tokenProviderHandler;
 }
 
 - (BOOL)isUsingV2API

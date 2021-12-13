@@ -82,12 +82,12 @@ NS_ERROR_ENUM(MXIdentityServerRestClientErrorDomain)
 /**
  Block called when a request needs authorization and access token should be renewed.
  */
-@property (nonatomic, copy) MXHTTPClientShouldRenewTokenHandler shouldRenewTokenHandler;
+@property (nonatomic, copy) MXHTTPClientTokenValidationResponseHandler tokenValidationResponseHandler;
 
 /**
  Block called when a request fails and needs authorization to determine if the access token should be renewed.
  */
-@property (nonatomic, copy) MXHTTPClientRenewTokenHandler renewTokenHandler;
+@property (nonatomic, copy) MXHTTPClientTokenProviderHandler tokenProviderHandler;
 
 #pragma mark - Setup
 

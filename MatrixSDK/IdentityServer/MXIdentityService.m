@@ -91,7 +91,7 @@ NSString *const MXIdentityServiceNotificationAccessTokenKey = @"accessToken";
     self = [super init];
     if (self)
     {
-        identityServerRestClient.shouldRenewTokenHandler = ^BOOL(NSError *error) {
+        identityServerRestClient.tokenValidationResponseHandler = ^BOOL(NSError *error) {
             
             BOOL shouldRenewAccesToken = NO;
             
@@ -109,7 +109,7 @@ NSString *const MXIdentityServiceNotificationAccessTokenKey = @"accessToken";
         };
         
         MXWeakify(self);
-        identityServerRestClient.renewTokenHandler = ^MXHTTPOperation* (void (^success)(NSString *), void (^failure)(NSError *)) {
+        identityServerRestClient.tokenProviderHandler = ^MXHTTPOperation* (void (^success)(NSString *), void (^failure)(NSError *)) {
             MXStrongifyAndReturnValueIfNil(self, nil);
             return [self accessTokenWithSuccess:success failure:failure];
         };
