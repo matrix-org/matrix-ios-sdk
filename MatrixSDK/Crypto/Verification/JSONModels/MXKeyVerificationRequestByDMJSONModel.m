@@ -25,7 +25,7 @@
     MXKeyVerificationRequestByDMJSONModel *request = [MXKeyVerificationRequestByDMJSONModel new];
     if (request)
     {
-        MXJSONModelSetString(request.body, JSONDictionary[@"body"]);
+        MXJSONModelSetString(request.body, JSONDictionary[kMXMessageBodyKey]);
         MXJSONModelSetString(request.msgtype, JSONDictionary[kMXMessageTypeKey]);
         MXJSONModelSetArray(request.methods, JSONDictionary[@"methods"]);
         MXJSONModelSetString(request.to, JSONDictionary[@"to"]);
@@ -46,7 +46,7 @@
 - (NSDictionary *)JSONDictionary
 {
     NSMutableDictionary *JSONDictionary = [NSMutableDictionary dictionary];
-    JSONDictionary[@"body"] = _body;
+    JSONDictionary[kMXMessageBodyKey] = _body;
     JSONDictionary[kMXMessageTypeKey] = _msgtype;
     JSONDictionary[@"methods"] = _methods;
     JSONDictionary[@"to"] = _to;

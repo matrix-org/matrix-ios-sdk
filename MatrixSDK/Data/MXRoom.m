@@ -805,7 +805,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
         // This is a simple text message
         msgContent = @{
             kMXMessageTypeKey: kMXMessageTypeText,
-            @"body": text
+            kMXMessageBodyKey: text
         };
     }
     else
@@ -813,7 +813,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
         // Send the HTML formatted string
         msgContent = @{
             kMXMessageTypeKey: kMXMessageTypeText,
-            @"body": text,
+            kMXMessageBodyKey: text,
             @"formatted_body": formattedText,
             @"format": kMXRoomMessageFormatHTML
         };
@@ -845,7 +845,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
         // This is a simple text message
         msgContent = @{
             kMXMessageTypeKey: kMXMessageTypeEmote,
-            @"body": emoteBody
+            kMXMessageBodyKey: emoteBody
         };
     }
     else
@@ -853,7 +853,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
         // Send the HTML formatted string
         msgContent = @{
             kMXMessageTypeKey: kMXMessageTypeEmote,
-            @"body": emoteBody,
+            kMXMessageBodyKey: emoteBody,
             @"formatted_body": formattedBody,
             @"format": kMXRoomMessageFormatHTML
         };
@@ -930,7 +930,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     // Prepare the message content for building an echo message
     NSMutableDictionary *msgContent = [@{
         kMXMessageTypeKey: kMXMessageTypeImage,
-        @"body": filename,
+        kMXMessageBodyKey: filename,
         @"url": fakeMediaURI,
         @"info": [@{
             @"mimetype": mimetype,
@@ -1172,7 +1172,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     // Prepare the message content for building an echo message
     NSMutableDictionary *msgContent = [@{
         kMXMessageTypeKey: kMXMessageTypeVideo,
-        @"body": @"Video",
+        kMXMessageBodyKey: @"Video",
         @"url": fakeMediaURI,
         @"info": [@{
             @"thumbnail_url": fakeMediaURI,
@@ -1353,7 +1353,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                         }
                         NSString *extension = [MXTools fileExtensionFromContentType:mimetype];
                         NSString *filename = [NSString stringWithFormat:@"video_%@%@", dataHash, extension];
-                        msgContent[@"body"] = filename;
+                        msgContent[kMXMessageBodyKey] = filename;
 
                         // Update thumbnail URL with the actual mxc: URL
                         msgContent[@"info"][@"thumbnail_url"] = thumbnailUrl;
@@ -1534,7 +1534,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     // Prepare the message content for building an echo message
     NSMutableDictionary *msgContent = @{
         kMXMessageTypeKey: msgType,
-        @"body": filename,
+        kMXMessageBodyKey: filename,
         @"url": fakeMediaURI,
         @"info": @{
                 @"mimetype": mimeType,
@@ -1969,7 +1969,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
         
         msgContent[@"format"] = kMXRoomMessageFormatHTML;
         msgContent[kMXMessageTypeKey] = kMXMessageTypeText;
-        msgContent[@"body"] = replyToBody;
+        msgContent[kMXMessageBodyKey] = replyToBody;
         msgContent[@"formatted_body"] = replyToFormattedBody;
         msgContent[kMXEventRelationRelatesToKey] = relatesToDict;
         
@@ -2043,7 +2043,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
         || [msgtype isEqualToString:kMXMessageTypeNotice]
         || [msgtype isEqualToString:kMXMessageTypeEmote])
     {
-        NSString *eventToReplyMessageBody = eventToReply.content[@"body"];
+        NSString *eventToReplyMessageBody = eventToReply.content[kMXMessageBodyKey];
         
         // Use formatted body only if the format is known
         NSString *eventToReplyMessageFormattedBody;
@@ -2713,7 +2713,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                     if ([msgtype isEqualToString:kMXMessageTypeText] || [msgtype isEqualToString:kMXMessageTypeEmote])
                     {
                         // Compare content body
-                        if ([event.content[@"body"] isEqualToString:localEcho.content[@"body"]])
+                        if ([event.content[kMXMessageBodyKey] isEqualToString:localEcho.content[kMXMessageBodyKey]])
                         {
                             break;
                         }

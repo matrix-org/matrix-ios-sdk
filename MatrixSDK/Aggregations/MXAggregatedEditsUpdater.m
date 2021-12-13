@@ -109,10 +109,10 @@
     
     NSMutableDictionary *content = [NSMutableDictionary new];
     NSMutableDictionary *compatibilityContent = [NSMutableDictionary dictionaryWithDictionary:@{ kMXMessageTypeKey: messageType,
-                                                                                                 @"body": [NSString stringWithFormat:@"* %@", finalText] }];
+                                                                                                 kMXMessageBodyKey: [NSString stringWithFormat:@"* %@", finalText] }];
     
     NSMutableDictionary *newContent = [NSMutableDictionary dictionaryWithDictionary:@{ kMXMessageTypeKey: messageType,
-                                                                                       @"body": finalText }];
+                                                                                       kMXMessageBodyKey: finalText }];
     
     
     if (finalFormattedText)

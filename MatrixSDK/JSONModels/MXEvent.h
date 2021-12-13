@@ -197,6 +197,12 @@ FOUNDATION_EXPORT NSString *const kMXMessageTypeServerNotice;
 FOUNDATION_EXPORT NSString *const kMXMessageTypeKeyVerificationRequest;
 
 /**
+ Room message keys
+ */
+FOUNDATION_EXPORT NSString *const kMXMessageBodyKey;
+FOUNDATION_EXPORT NSString *const kMXMessageGeoURIKey;
+
+/**
  Event relations
  */
 FOUNDATION_EXPORT NSString *const kMXEventRelationRelatesToKey;

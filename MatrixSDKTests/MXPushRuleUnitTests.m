@@ -89,7 +89,7 @@
         @"room_id": @"roomId",
         @"user_id": @"userId",
         @"content": @{
-                @"body": content,
+                kMXMessageBodyKey: content,
                 kMXMessageTypeKey: @"m.text"
         }
     }];

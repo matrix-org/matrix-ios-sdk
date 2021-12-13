@@ -34,7 +34,7 @@ static NSString* const kThreadedMessage1Text = @"Morning!";
 {
     NSDictionary *messageEventDict = @{
                                        @"content": @{
-                                               @"body": kOriginalMessageText,
+                                               kMXMessageBodyKey: kOriginalMessageText,
                                                kMXMessageTypeKey: @"m.text"
                                                },
                                        @"event_id": @"$messageeventid:matrix.org",
@@ -49,7 +49,7 @@ static NSString* const kThreadedMessage1Text = @"Morning!";
 
     NSDictionary *referenceEventDict = @{
                                        @"content": @{
-                                               @"body": kThreadedMessage1Text,
+                                               kMXMessageBodyKey: kThreadedMessage1Text,
                                                kMXMessageTypeKey: @"m.text",
                                                @"m.relates_to": @{
                                                        @"event_id": @"$messageeventid:matrix.org",

@@ -885,7 +885,7 @@
 
                 XCTAssertEqualObjects(event.eventId, eventId);
                 XCTAssertEqualObjects(event.type, kMXEventTypeStringRoomMessage);
-                XCTAssertEqualObjects(event.content[@"body"], message);
+                XCTAssertEqualObjects(event.content[kMXMessageBodyKey], message);
 
                 [expectation fulfill];
 
@@ -917,7 +917,7 @@
 
                 XCTAssertEqualObjects(event.eventId, eventId);
                 XCTAssertEqualObjects(event.type, kMXEventTypeStringRoomMessage);
-                XCTAssertEqualObjects(event.content[@"body"], message);
+                XCTAssertEqualObjects(event.content[kMXMessageBodyKey], message);
 
                 [expectation fulfill];
 

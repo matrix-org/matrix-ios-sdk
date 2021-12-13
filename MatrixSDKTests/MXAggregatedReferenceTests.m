@@ -65,7 +65,7 @@ static NSString* const kThreadedMessage1Text = @"Morning!";
             
             NSDictionary *eventContent = @{
                 kMXMessageTypeKey: kMXMessageTypeText,
-                @"body": kThreadedMessage1Text,
+                kMXMessageBodyKey: kThreadedMessage1Text,
                 @"m.relates_to":  @{
                         @"rel_type": MXEventRelationTypeReference,
                         @"event_id": eventId,
@@ -209,12 +209,12 @@ static NSString* const kThreadedMessage1Text = @"Morning!";
             XCTAssertNil(paginatedResponse.nextBatch);
 
             XCTAssertEqualObjects(paginatedResponse.chunk.firstObject.eventId, referenceEventId);
-            XCTAssertEqualObjects(paginatedResponse.chunk.firstObject.content[@"body"], kThreadedMessage1Text);
+            XCTAssertEqualObjects(paginatedResponse.chunk.firstObject.content[kMXMessageBodyKey], kThreadedMessage1Text);
 
             // -> We must get the original event
             XCTAssertNotNil(paginatedResponse.originalEvent);
             XCTAssertEqualObjects(paginatedResponse.originalEvent.eventId, eventId);
-            XCTAssertEqualObjects(paginatedResponse.originalEvent.content[@"body"], kOriginalMessageText);
+            XCTAssertEqualObjects(paginatedResponse.originalEvent.content[kMXMessageBodyKey], kOriginalMessageText);
             
             [expectation fulfill];
 
@@ -239,7 +239,7 @@ static NSString* const kThreadedMessage1Text = @"Morning!";
             
             NSDictionary *eventContent = @{
                 kMXMessageTypeKey: kMXMessageTypeText,
-                @"body": kThreadedMessage1Text,
+                kMXMessageBodyKey: kThreadedMessage1Text,
                 @"m.relates_to":  @{
                         @"rel_type": MXEventRelationTypeReference,
                         @"event_id": eventId,
@@ -289,12 +289,12 @@ static NSString* const kThreadedMessage1Text = @"Morning!";
             XCTAssertNil(paginatedResponse.nextBatch);
 
             XCTAssertEqualObjects(paginatedResponse.chunk.firstObject.eventId, referenceEventId);
-            XCTAssertEqualObjects(paginatedResponse.chunk.firstObject.content[@"body"], kThreadedMessage1Text);
+            XCTAssertEqualObjects(paginatedResponse.chunk.firstObject.content[kMXMessageBodyKey], kThreadedMessage1Text);
 
             // -> We must get the original event
             XCTAssertNotNil(paginatedResponse.originalEvent);
             XCTAssertEqualObjects(paginatedResponse.originalEvent.eventId, eventId);
-            XCTAssertEqualObjects(paginatedResponse.originalEvent.content[@"body"], kOriginalMessageText);
+            XCTAssertEqualObjects(paginatedResponse.originalEvent.content[kMXMessageBodyKey], kOriginalMessageText);
 
             [expectation fulfill];
 
