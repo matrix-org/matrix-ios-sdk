@@ -65,7 +65,7 @@
     if (displayName && event.content)
     {
         NSObject* bodyAsVoid;
-        MXJSONModelSet(bodyAsVoid, NSObject.class, event.content[@"body"]);
+        MXJSONModelSet(bodyAsVoid, NSObject.class, event.content[kMXMessageBodyKey]);
         
         if (bodyAsVoid && [bodyAsVoid isKindOfClass:[NSString class]])
         {

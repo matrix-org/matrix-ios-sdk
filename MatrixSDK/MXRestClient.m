@@ -1538,8 +1538,8 @@ MXAuthAction;
 {
     return [self sendMessageToRoom:roomId msgType:kMXMessageTypeText
                            content:@{
-                                     @"body": text
-                                     }
+                               kMXMessageBodyKey: text
+                           }
                            success:success failure:failure];
 }
 

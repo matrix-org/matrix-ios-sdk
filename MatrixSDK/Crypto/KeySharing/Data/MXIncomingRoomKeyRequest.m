@@ -34,7 +34,7 @@
         _userId = event.sender;
         _deviceId = content[@"requesting_device_id"];
         _requestId = content[@"request_id"];
-        _requestBody = content[@"body"] ? content[@"body"] : [NSDictionary dictionary];
+        _requestBody = content[kMXMessageBodyKey] ? content[kMXMessageBodyKey] : [NSDictionary dictionary];
     }
     return self;
 }

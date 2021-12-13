@@ -105,6 +105,9 @@ NSString *const kMXMessageTypeFile                   = @"m.file";
 NSString *const kMXMessageTypeServerNotice           = @"m.server_notice";
 NSString *const kMXMessageTypeKeyVerificationRequest = @"m.key.verification.request";
 
+NSString *const kMXMessageBodyKey                    = @"body";
+NSString *const kMXMessageGeoURIKey                  = @"geo_uri";
+
 NSString *const kMXEventRelationRelatesToKey         = @"m.relates_to";
 NSString *const MXEventRelationTypeAnnotation        = @"m.annotation";
 NSString *const MXEventRelationTypeReference         = @"m.reference";
@@ -661,11 +664,11 @@ NSString *const kMXMessageContentKeyExtensibleLocationDescription = @"descriptio
         // Reuse its decryption data
         replaceEventDecryptionResult = [replaceEvent decryptionResult];
     }
-    else if (event.content[@"body"] && newContentDict && [newContentDict[kMXMessageTypeKey] isEqualToString:event.content[kMXMessageTypeKey]])
+    else if (event.content[kMXMessageBodyKey] && newContentDict && [newContentDict[kMXMessageTypeKey] isEqualToString:event.content[kMXMessageTypeKey]])
     {
         editedEventDict = [event.JSONDictionary mutableCopy];
         NSMutableDictionary *editedEventContentDict = [editedEventDict[@"content"] mutableCopy];
-        editedEventContentDict[@"body"] = newContentDict[@"body"];
+        editedEventContentDict[kMXMessageBodyKey] = newContentDict[kMXMessageBodyKey];
         editedEventContentDict[@"formatted_body"] = newContentDict[@"formatted_body"];
         editedEventContentDict[@"format"] = newContentDict[@"format"];
         editedEventDict[@"content"] = editedEventContentDict;

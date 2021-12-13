@@ -36,7 +36,7 @@
 {
     NSDictionary *replyEventDict = @{
                                      @"content": @{
-                                             @"body": body,
+                                             kMXMessageBodyKey: body,
                                              @"formatted_body": formattedBody,
                                              @"format": @"org.matrix.custom.html",
                                              @"m.relates_to": @{

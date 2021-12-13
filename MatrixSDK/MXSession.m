@@ -1890,7 +1890,7 @@ typedef void (^MXOnResumeDone)(void);
             }
             else
             {
-                MXLogDebug(@"[MXSession] handleToDeviceEvents: Warning: Unable to decrypt to-device event: %@\nError: %@", event.wireContent[@"body"], event.decryptionError);
+                MXLogDebug(@"[MXSession] handleToDeviceEvents: Warning: Unable to decrypt to-device event: %@\nError: %@", event.wireContent[kMXMessageBodyKey], event.decryptionError);
             }
         }
         
