@@ -87,9 +87,12 @@ NSString *const kMXEventTypeStringSpaceChild            = @"m.space.child";
 NSString *const kMXEventTypeStringAutoJoinKey           = @"auto_join";
 NSString *const kMXEventTypeStringSuggestedKey          = @"suggested";
 
-NSString *const kMXEventTypeStringPollStart    = @"org.matrix.msc3381.poll.start";
-NSString *const kMXEventTypeStringPollResponse = @"org.matrix.msc3381.poll.response";
-NSString *const kMXEventTypeStringPollEnd      = @"org.matrix.msc3381.poll.end";
+NSString *const kMXEventTypeStringPollStartMSC3381    = @"org.matrix.msc3381.poll.start";
+NSString *const kMXEventTypeStringPollStart           = @"m.poll.start";
+NSString *const kMXEventTypeStringPollResponseMSC3381 = @"org.matrix.msc3381.poll.response";
+NSString *const kMXEventTypeStringPollResponse        = @"m.poll.response";
+NSString *const kMXEventTypeStringPollEndMSC3381      = @"org.matrix.msc3381.poll.end";
+NSString *const kMXEventTypeStringPollEnd             = @"m.poll.end";
 
 NSString *const kMXMessageTypeText                   = @"m.text";
 NSString *const kMXMessageTypeEmote                  = @"m.emote";

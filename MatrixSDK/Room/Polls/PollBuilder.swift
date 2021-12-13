@@ -17,12 +17,12 @@
 import Foundation
 
 struct PollBuilder {
-    func build(pollStartEventContent: MXEventContentPollStart, events: [MXEvent], currentUserIdentifer: String? = nil) -> PollProtocol {
+    func build(pollStartEventContent: MXEventContentPollStart, events: [MXEvent], currentUserIdentifier: String) -> PollProtocol {
         
         let poll = Poll()
         
         poll.text = pollStartEventContent.question
-        poll.maxAllowedSelections = pollStartEventContent.maxSelections.uintValue
+        poll.maxAllowedSelections = max(1, pollStartEventContent.maxSelections.uintValue)
         poll.kind = (pollStartEventContent.kind == kMXMessageContentKeyExtensiblePollKindUndisclosed ? .undisclosed : .disclosed)
         
         var answerOptionIdentifiers = [String]()
@@ -35,12 +35,12 @@ struct PollBuilder {
             return option
         }
         
-        let stopEvent = events.filter { $0.type == kMXEventTypeStringPollEnd }.first
+        let stopEvent = events.filter { $0.eventType == .pollEnd }.first
         poll.isClosed = (stopEvent != nil)
         
         var filteredEvents = events.filter { event in
             guard
-                let eventContent = event.content, event.type == kMXEventTypeStringPollResponse,
+                let eventContent = event.content, event.eventType == __MXEventType.pollResponse,
                 let answer = eventContent[kMXMessageContentKeyExtensiblePollResponse] as? [String: [String]],
                 let _ = answer[kMXMessageContentKeyExtensiblePollAnswers] else {
                 return false
@@ -95,7 +95,7 @@ struct PollBuilder {
                 }
             }
             
-            if groupedUserAnswers.key == currentUserIdentifer {
+            if groupedUserAnswers.key == currentUserIdentifier {
                 currentUserAnswers = groupedUserAnswers.value
             }
             
