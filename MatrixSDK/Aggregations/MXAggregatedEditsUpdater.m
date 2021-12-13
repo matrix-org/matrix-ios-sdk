@@ -71,7 +71,7 @@
         return nil;
     }
     
-    NSString *messageType = event.content[@"msgtype"];
+    NSString *messageType = event.content[kMXMessageTypeKey];
     
     if (![self.editSupportedMessageTypes containsObject:messageType])
     {
@@ -108,15 +108,11 @@
     }
     
     NSMutableDictionary *content = [NSMutableDictionary new];
-    NSMutableDictionary *compatibilityContent = [NSMutableDictionary dictionaryWithDictionary:@{
-                                                                                                @"msgtype": messageType,
-                                                                                                @"body": [NSString stringWithFormat:@"* %@", finalText]
-                                                                                                }];
+    NSMutableDictionary *compatibilityContent = [NSMutableDictionary dictionaryWithDictionary:@{ kMXMessageTypeKey: messageType,
+                                                                                                 @"body": [NSString stringWithFormat:@"* %@", finalText] }];
     
-    NSMutableDictionary *newContent = [NSMutableDictionary dictionaryWithDictionary:@{
-                                                                                      @"msgtype": messageType,
-                                                                                      @"body": finalText
-                                                                                      }];
+    NSMutableDictionary *newContent = [NSMutableDictionary dictionaryWithDictionary:@{ kMXMessageTypeKey: messageType,
+                                                                                       @"body": finalText }];
     
     
     if (finalFormattedText)

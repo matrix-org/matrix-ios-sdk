@@ -1526,7 +1526,7 @@ MXAuthAction;
 {
     // Add the messsage type to the data to send
     NSMutableDictionary *eventContent = [NSMutableDictionary dictionaryWithDictionary:content];
-    eventContent[@"msgtype"] = msgType;
+    eventContent[kMXMessageTypeKey] = msgType;
     
     return [self sendEventToRoom:roomId eventType:kMXEventTypeStringRoomMessage content:eventContent txnId:nil success:success failure:failure];
 }

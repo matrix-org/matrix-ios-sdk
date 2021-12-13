@@ -156,7 +156,7 @@
 - (nullable MXKeyVerificationByDMRequest*)verificationRequestInDMEvent:(MXEvent*)event events:(NSArray<MXEvent*> *)events
 {
     MXKeyVerificationByDMRequest *request;
-    if (![event.content[@"msgtype"] isEqualToString:kMXMessageTypeKeyVerificationRequest])
+    if (![event.content[kMXMessageTypeKey] isEqualToString:kMXMessageTypeKeyVerificationRequest])
     {
         return nil;
     }

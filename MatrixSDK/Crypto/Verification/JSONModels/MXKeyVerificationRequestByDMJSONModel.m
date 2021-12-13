@@ -26,7 +26,7 @@
     if (request)
     {
         MXJSONModelSetString(request.body, JSONDictionary[@"body"]);
-        MXJSONModelSetString(request.msgtype, JSONDictionary[@"msgtype"]);
+        MXJSONModelSetString(request.msgtype, JSONDictionary[kMXMessageTypeKey]);
         MXJSONModelSetArray(request.methods, JSONDictionary[@"methods"]);
         MXJSONModelSetString(request.to, JSONDictionary[@"to"]);
         MXJSONModelSetString(request.fromDevice, JSONDictionary[@"from_device"]);
@@ -47,7 +47,7 @@
 {
     NSMutableDictionary *JSONDictionary = [NSMutableDictionary dictionary];
     JSONDictionary[@"body"] = _body;
-    JSONDictionary[@"msgtype"] = _msgtype;
+    JSONDictionary[kMXMessageTypeKey] = _msgtype;
     JSONDictionary[@"methods"] = _methods;
     JSONDictionary[@"to"] = _to;
     JSONDictionary[@"from_device"] = _fromDevice;

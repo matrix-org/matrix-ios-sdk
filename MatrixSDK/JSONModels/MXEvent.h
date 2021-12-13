@@ -184,6 +184,7 @@ FOUNDATION_EXPORT NSString *const kMXEventTypeStringPollEnd;
  Types of room messages
  */
 typedef NSString* MXMessageType NS_REFINED_FOR_SWIFT;
+FOUNDATION_EXPORT NSString *const kMXMessageTypeKey;
 FOUNDATION_EXPORT NSString *const kMXMessageTypeText;
 FOUNDATION_EXPORT NSString *const kMXMessageTypeEmote;
 FOUNDATION_EXPORT NSString *const kMXMessageTypeNotice;

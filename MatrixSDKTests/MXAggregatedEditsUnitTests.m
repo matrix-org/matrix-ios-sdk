@@ -40,7 +40,7 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
     NSDictionary *messageEventDict = @{
                                        @"content": @{
                                                @"body": kOriginalMessageText,
-                                               @"msgtype": @"m.text"
+                                               kMXMessageTypeKey: @"m.text"
                                                },
                                        @"event_id": @"$messageeventid:matrix.org",
                                        @"origin_server_ts": @(1560253386247),
@@ -57,13 +57,13 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
                                                @"body": [NSString stringWithFormat:@"* %@", kEditedMessageText],
                                                @"m.new_content": @{
                                                        @"body": kEditedMessageText,
-                                                       @"msgtype": @"m.text"
+                                                       kMXMessageTypeKey: @"m.text"
                                                        },
                                                @"m.relates_to": @{
                                                        @"event_id": @"$messageeventid:matrix.org",
                                                        @"rel_type": @"m.replace"
                                                        },
-                                               @"msgtype": @"m.text"
+                                               kMXMessageTypeKey: @"m.text"
                                                },
                                        @"event_id": @"$replaceeventid:matrix.org",
                                        @"origin_server_ts": @(1560254175300),
@@ -94,7 +94,7 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
                                                @"body": kOriginalMarkdownMessageText,
                                                @"formatted_body": kOriginalMarkdownMessageFormattedText,
                                                @"format": kMXRoomMessageFormatHTML,
-                                               @"msgtype": @"m.text"
+                                               kMXMessageTypeKey: @"m.text"
                                                },
                                        @"event_id": @"$messageeventid:matrix.org",
                                        @"origin_server_ts": @(1560253386247),
@@ -115,13 +115,13 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
                                                        @"body": kEditedMarkdownMessageText,
                                                        @"formatted_body": kEditedMarkdownMessageFormattedText,
                                                        @"format": kMXRoomMessageFormatHTML,
-                                                       @"msgtype": @"m.text"
+                                                       kMXMessageTypeKey: @"m.text"
                                                        },
                                                @"m.relates_to": @{
                                                        @"event_id": @"$messageeventid:matrix.org",
                                                        @"rel_type": @"m.replace"
                                                        },
-                                               @"msgtype": @"m.text"
+                                               kMXMessageTypeKey: @"m.text"
                                                },
                                        @"event_id": @"$replaceeventid:matrix.org",
                                        @"origin_server_ts": @(1560254175300),

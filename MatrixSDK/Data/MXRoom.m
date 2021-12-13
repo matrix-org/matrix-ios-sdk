@@ -804,19 +804,19 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     {
         // This is a simple text message
         msgContent = @{
-                       @"msgtype": kMXMessageTypeText,
-                       @"body": text
-                       };
+            kMXMessageTypeKey: kMXMessageTypeText,
+            @"body": text
+        };
     }
     else
     {
         // Send the HTML formatted string
         msgContent = @{
-                       @"msgtype": kMXMessageTypeText,
-                       @"body": text,
-                       @"formatted_body": formattedText,
-                       @"format": kMXRoomMessageFormatHTML
-                       };
+            kMXMessageTypeKey: kMXMessageTypeText,
+            @"body": text,
+            @"formatted_body": formattedText,
+            @"format": kMXRoomMessageFormatHTML
+        };
     }
     
     return [self sendMessageWithContent:msgContent
@@ -844,19 +844,19 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     {
         // This is a simple text message
         msgContent = @{
-                       @"msgtype": kMXMessageTypeEmote,
-                       @"body": emoteBody
-                       };
+            kMXMessageTypeKey: kMXMessageTypeEmote,
+            @"body": emoteBody
+        };
     }
     else
     {
         // Send the HTML formatted string
         msgContent = @{
-                       @"msgtype": kMXMessageTypeEmote,
-                       @"body": emoteBody,
-                       @"formatted_body": formattedBody,
-                       @"format": kMXRoomMessageFormatHTML
-                       };
+            kMXMessageTypeKey: kMXMessageTypeEmote,
+            @"body": emoteBody,
+            @"formatted_body": formattedBody,
+            @"format": kMXRoomMessageFormatHTML
+        };
     }
     
     return [self sendMessageWithContent:msgContent
@@ -929,16 +929,17 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     
     // Prepare the message content for building an echo message
     NSMutableDictionary *msgContent = [@{
-                                         @"msgtype": kMXMessageTypeImage,
-                                         @"body": filename,
-                                         @"url": fakeMediaURI,
-                                         @"info": [@{
-                                                     @"mimetype": mimetype,
-                                                     @"w": @(imageSize.width),
-                                                     @"h": @(imageSize.height),
-                                                     @"size": @(imageData.length)
-                                                     } mutableCopy]
-                                         } mutableCopy];
+        kMXMessageTypeKey: kMXMessageTypeImage,
+        @"body": filename,
+        @"url": fakeMediaURI,
+        @"info": [@{
+            @"mimetype": mimetype,
+            @"w": @(imageSize.width),
+            @"h": @(imageSize.height),
+            @"size": @(imageData.length)
+        } mutableCopy]
+    } mutableCopy];
+    
     if (blurhash)
     {
         msgContent[@"info"][@"blurhash"] = blurhash;
@@ -1170,19 +1171,19 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     
     // Prepare the message content for building an echo message
     NSMutableDictionary *msgContent = [@{
-                                         @"msgtype": kMXMessageTypeVideo,
-                                         @"body": @"Video",
-                                         @"url": fakeMediaURI,
-                                         @"info": [@{
-                                                     @"thumbnail_url": fakeMediaURI,
-                                                     @"thumbnail_info": @{
-                                                             @"mimetype": @"image/jpeg",
-                                                             @"w": @(videoThumbnail.size.width),
-                                                             @"h": @(videoThumbnail.size.height),
-                                                             @"size": @(videoThumbnailData.length)
-                                                             }
-                                                     } mutableCopy]
-                                         } mutableCopy];
+        kMXMessageTypeKey: kMXMessageTypeVideo,
+        @"body": @"Video",
+        @"url": fakeMediaURI,
+        @"info": [@{
+            @"thumbnail_url": fakeMediaURI,
+            @"thumbnail_info": @{
+                    @"mimetype": @"image/jpeg",
+                    @"w": @(videoThumbnail.size.width),
+                    @"h": @(videoThumbnail.size.height),
+                    @"size": @(videoThumbnailData.length)
+            }
+        } mutableCopy]
+    } mutableCopy];
     
     __block MXEvent *event;
     __block id uploaderObserver;
@@ -1531,20 +1532,21 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     }
     
     // Prepare the message content for building an echo message
-    NSMutableDictionary *msgContent = @{@"msgtype": msgType,
-                                        @"body": filename,
-                                        @"url": fakeMediaURI,
-                                        @"info": @{
-                                                @"mimetype": mimeType,
-                                                @"size": @(fileData.length)
-                                        },
-                                        kMXMessageContentKeyExtensibleText: filename,
-                                        kMXMessageContentKeyExtensibleFile: @{
-                                                kMXMessageContentKeyExtensibleFileSize: @(fileData.length),
-                                                kMXMessageContentKeyExtensibleFileName: filename,
-                                                kMXMessageContentKeyExtensibleFileURL: fakeMediaURI,
-                                                kMXMessageContentKeyExtensibleFileMimeType: mimeType
-                                        }.mutableCopy}.mutableCopy;
+    NSMutableDictionary *msgContent = @{
+        kMXMessageTypeKey: msgType,
+        @"body": filename,
+        @"url": fakeMediaURI,
+        @"info": @{
+                @"mimetype": mimeType,
+                @"size": @(fileData.length)
+        },
+        kMXMessageContentKeyExtensibleText: filename,
+        kMXMessageContentKeyExtensibleFile: @{
+                kMXMessageContentKeyExtensibleFileSize: @(fileData.length),
+                kMXMessageContentKeyExtensibleFileName: filename,
+                kMXMessageContentKeyExtensibleFileURL: fakeMediaURI,
+                kMXMessageContentKeyExtensibleFileMimeType: mimeType
+        }.mutableCopy}.mutableCopy;
     
     if(additionalTypes.count)
     {
@@ -1966,7 +1968,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
         NSMutableDictionary *msgContent = [NSMutableDictionary dictionary];
         
         msgContent[@"format"] = kMXRoomMessageFormatHTML;
-        msgContent[@"msgtype"] = kMXMessageTypeText;
+        msgContent[kMXMessageTypeKey] = kMXMessageTypeText;
         msgContent[@"body"] = replyToBody;
         msgContent[@"formatted_body"] = replyToFormattedBody;
         msgContent[kMXEventRelationRelatesToKey] = relatesToDict;
@@ -2024,7 +2026,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     }
     
     NSString *msgtype;
-    MXJSONModelSetString(msgtype, eventToReply.content[@"msgtype"]);
+    MXJSONModelSetString(msgtype, eventToReply.content[kMXMessageTypeKey]);
     
     if (!msgtype)
     {
@@ -2281,7 +2283,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     
     BOOL canReplyToEvent = NO;
     
-    NSString *messageType = eventToReply.content[@"msgtype"];
+    NSString *messageType = eventToReply.content[kMXMessageTypeKey];
     
     if (messageType)
     {
@@ -2682,7 +2684,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     MXEvent *localEcho = nil;
 
     NSString *msgtype;
-    MXJSONModelSetString(msgtype, event.content[@"msgtype"]);
+    MXJSONModelSetString(msgtype, event.content[kMXMessageTypeKey]);
 
     if (msgtype)
     {
@@ -2704,7 +2706,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
             for (NSInteger index = 0; index < pendingLocalEchoes.count; index++)
             {
                 localEcho = [pendingLocalEchoes objectAtIndex:index];
-                NSString *pendingEventType = localEcho.content[@"msgtype"];
+                NSString *pendingEventType = localEcho.content[kMXMessageTypeKey];
 
                 if ([msgtype isEqualToString:pendingEventType])
                 {

@@ -93,6 +93,7 @@ NSString *const kMXEventTypeStringPollResponse        = @"m.poll.response";
 NSString *const kMXEventTypeStringPollEndMSC3381      = @"org.matrix.msc3381.poll.end";
 NSString *const kMXEventTypeStringPollEnd             = @"m.poll.end";
 
+NSString *const kMXMessageTypeKey                    = @"msgtype";
 NSString *const kMXMessageTypeText                   = @"m.text";
 NSString *const kMXMessageTypeEmote                  = @"m.emote";
 NSString *const kMXMessageTypeNotice                 = @"m.notice";
@@ -423,7 +424,7 @@ NSString *const kMXMessageContentKeyExtensibleLocationDescription = @"descriptio
     if (self.eventType == MXEventTypeRoomMessage)
     {
         NSString *msgtype;
-        MXJSONModelSetString(msgtype, self.content[@"msgtype"]);
+        MXJSONModelSetString(msgtype, self.content[kMXMessageTypeKey]);
         
         if (msgtype && [msgtype isEqualToString:kMXMessageTypeEmote])
         {
@@ -453,7 +454,7 @@ NSString *const kMXMessageContentKeyExtensibleLocationDescription = @"descriptio
 {
     if (self.eventType == MXEventTypeRoomMessage)
     {
-        NSString *msgtype = self.content[@"msgtype"];
+        NSString *msgtype = self.content[kMXMessageTypeKey];
         if ([msgtype isEqualToString:kMXMessageTypeImage] || [msgtype isEqualToString:kMXMessageTypeVideo] || [msgtype isEqualToString:kMXMessageTypeAudio] || [msgtype isEqualToString:kMXMessageTypeFile])
         {
             return YES;
@@ -478,7 +479,7 @@ NSString *const kMXMessageContentKeyExtensibleLocationDescription = @"descriptio
 
 - (BOOL)isVoiceMessage
 {
-    NSString *msgtype = self.content[@"msgtype"];
+    NSString *msgtype = self.content[kMXMessageTypeKey];
     return [msgtype isEqualToString:kMXMessageTypeAudio] && (self.content[kMXMessageContentKeyVoiceMessage] ||
                                                              self.content[kMXMessageContentKeyVoiceMessageMSC2516] ||
                                                              self.content[kMXMessageContentKeyVoiceMessageMSC3245]);
@@ -660,7 +661,7 @@ NSString *const kMXMessageContentKeyExtensibleLocationDescription = @"descriptio
         // Reuse its decryption data
         replaceEventDecryptionResult = [replaceEvent decryptionResult];
     }
-    else if (event.content[@"body"] && newContentDict && [newContentDict[@"msgtype"] isEqualToString:event.content[@"msgtype"]])
+    else if (event.content[@"body"] && newContentDict && [newContentDict[kMXMessageTypeKey] isEqualToString:event.content[kMXMessageTypeKey]])
     {
         editedEventDict = [event.JSONDictionary mutableCopy];
         NSMutableDictionary *editedEventContentDict = [editedEventDict[@"content"] mutableCopy];
@@ -775,7 +776,7 @@ NSString *const kMXMessageContentKeyExtensibleLocationDescription = @"descriptio
     if ([self.type isEqualToString:kMXEventTypeStringRoomMessage])
     {
         NSString *messageType;
-        MXJSONModelSetString(messageType, self.content[@"msgtype"])
+        MXJSONModelSetString(messageType, self.content[kMXMessageTypeKey])
         
         if ([messageType isEqualToString:kMXMessageTypeImage] || [messageType isEqualToString:kMXMessageTypeVideo])
         {
@@ -1144,10 +1145,10 @@ NSString *const kMXMessageContentKeyExtensibleLocationDescription = @"descriptio
 
 + (NSDictionary *)wireContentFixingNonStringMsgtypesIn:(NSDictionary *)content
 {
-    if (content[@"msgtype"] && ![content[@"msgtype"] isKindOfClass:[NSString class]])
+    if (content[kMXMessageTypeKey] && ![content[kMXMessageTypeKey] isKindOfClass:[NSString class]])
     {
         NSMutableDictionary *mutableContent = [NSMutableDictionary dictionaryWithDictionary:content];
-        [mutableContent removeObjectForKey:@"msgtype"];
+        [mutableContent removeObjectForKey:kMXMessageTypeKey];
         return [NSDictionary dictionaryWithDictionary:mutableContent];
     }
     return content;
