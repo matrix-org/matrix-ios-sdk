@@ -21,9 +21,6 @@
 
 #import "MXTools.h"
 
-NSString *const MXCredentialsDidRefreshAccessTokenNotification = @"MXCredentialsDidRefreshAccessTokenNotification";
-NSString *const kMXCredentialNotificationAccessTokenKey = @"access_token";
-
 @implementation MXCredentials
 
 - (instancetype)initWithHomeServer:(NSString *)homeServer userId:(NSString *)userId accessToken:(NSString *)accessToken
@@ -105,9 +102,6 @@ NSString *const kMXCredentialNotificationAccessTokenKey = @"access_token";
     _accessToken = refreshResponse.accessToken;
     _accessTokenExpiresAt = ((uint64_t)[NSDate date].timeIntervalSince1970 * 1000) + refreshResponse.expiresInMs;
     _refreshToken = refreshResponse.refreshToken;
-    
-    
-    [[NSNotificationCenter defaultCenter] postNotificationName:MXCredentialsDidRefreshAccessTokenNotification object:nil userInfo:@{kMXCredentialNotificationAccessTokenKey : _accessToken}];
 }
 
 + (instancetype)initialSyncCacheCredentialsFrom:(MXCredentials *)credentials

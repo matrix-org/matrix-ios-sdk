@@ -100,6 +100,7 @@ NSString *const MXIdentityServiceNotificationAccessTokenKey = @"accessToken";
                 MXError *mxError = [[MXError alloc] initWithNSError:error];
                 if ([mxError.errcode isEqualToString:kMXErrCodeStringUnauthorized])
                 {
+                    self.accessToken = nil;
                     shouldRenewAccesToken = YES;
                 }
             }
@@ -108,14 +109,9 @@ NSString *const MXIdentityServiceNotificationAccessTokenKey = @"accessToken";
         };
         
         MXWeakify(self);
-        
         identityServerRestClient.renewTokenHandler = ^MXHTTPOperation* (void (^success)(NSString *), void (^failure)(NSError *)) {
             MXStrongifyAndReturnValueIfNil(self, nil);
-            
-            return [self renewAccessTokenWithSuccess:^(NSString *accessToken) {
-                self.accessToken = accessToken;
-                success(accessToken);
-            } failure:failure];
+            return [self accessTokenWithSuccess:success failure:failure];
         };
         
         self.restClient = identityServerRestClient;
@@ -134,16 +130,16 @@ NSString *const MXIdentityServiceNotificationAccessTokenKey = @"accessToken";
 - (nullable MXHTTPOperation *)accessTokenWithSuccess:(void (^)(NSString * _Nullable accessToken))success
                                              failure:(void (^)(NSError *error))failure
 {
-    if (self.accessToken)
+    if(self.accessToken)
     {
         success(self.accessToken);
         return nil;
     }
-    
-    return [self.restClient getAccessTokenAndRenewIfNeededWithSuccess:^(NSString * _Nonnull accessToken) {
-        // If we get here, we have an access token
-        success(self.accessToken);
+    return [self renewAccessTokenWithSuccess:^(NSString *accessToken) {
+        self.accessToken = accessToken;
+        success(accessToken);
     } failure:failure];
+
 }
 
 #pragma mark Terms of Service

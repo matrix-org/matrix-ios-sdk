@@ -115,12 +115,23 @@ MXAuthAction;
 + (dispatch_queue_t)refreshQueue
 {
     static dispatch_once_t pred = 0;
-       static id _refreshQueue = nil;
-       dispatch_once(&pred, ^{
-           _refreshQueue = dispatch_queue_create("MXRestClient.refreshQueue", DISPATCH_QUEUE_SERIAL);
-       });
-       return _refreshQueue;
+    static id _refreshQueue = nil;
+    dispatch_once(&pred, ^{
+        _refreshQueue = dispatch_queue_create("MXRestClient.refreshQueue", DISPATCH_QUEUE_CONCURRENT);
+    });
+    return _refreshQueue;
+    
+}
 
++ (dispatch_group_t)refreshDispatchGroup
+{
+    static dispatch_once_t pred = 0;
+    static id _refreshDispatchGroup = nil;
+    dispatch_once(&pred, ^{
+        _refreshDispatchGroup = dispatch_group_create();
+    });
+    return _refreshDispatchGroup;
+    
 }
 
 -(id)initWithHomeServer:(NSString *)homeserver andOnUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock
@@ -146,7 +157,7 @@ MXAuthAction;
         if (credentials.homeServer)
         {
             httpClient = [[MXHTTPClient alloc] initWithBaseURL:credentials.homeServer
-                                                   accessToken:credentials.accessToken
+                                                 authenticated: credentials.accessToken != nil
                              andOnUnrecognizedCertificateBlock:^BOOL(NSData *certificate)
                           {
                 
@@ -198,6 +209,15 @@ MXAuthAction;
                     return NO;
                 }
                 MXError *mxError = [[MXError alloc] initWithNSError:error];
+                
+//                if(!self.credentials.refreshToken) {
+                    // check
+                //                        dispatch_async(self.completionQueue, ^{
+                //                            MXError *mxError = [[MXError alloc] initWithErrorCode:kMXErrCodeStringUnknownToken error:kMXErrorStringInvalidToken];
+                //                            self.refreshTokensFailedHandler(mxError);
+                //                            failure([mxError createNSError]);
+                //                        });
+//            }
                 return [mxError.errcode isEqualToString:kMXErrCodeStringUnknownToken] && self.credentials.refreshToken;
             };
             
@@ -206,34 +226,40 @@ MXAuthAction;
                 MXStrongifyAndReturnValueIfNil(self, nil);
                 __block MXHTTPOperation *operation = nil;
                 // Dispatch sync so that in-flight requests only trigger one refresh.
-                dispatch_sync([MXRestClient refreshQueue], ^{
-                    // If we are not the first request and had been blocked it refreshing, the access token
-                    // and expiry are now update so exit early if that is the case.
-                    // An absence of accessTokenExpiresAt indicates access token does not expire
-                    if (! self.credentials.accessTokenExpiresAt || [NSDate date].timeIntervalSince1970 * 1000 < self.credentials.accessTokenExpiresAt) {
+                dispatch_async([MXRestClient refreshQueue], ^{
+                    NSString *uuid = [[NSUUID UUID] UUIDString];
+                    MXLogDebug(@"[MXRestClient] %@: refreshQueue enter", uuid)
+                    
+                    // If refreshDispatchGroup is unmatched(a request for a new access token is in-flight) wait.
+                    dispatch_group_wait([MXRestClient refreshDispatchGroup], DISPATCH_TIME_FOREVER);
+                    
+                    // If no refresh token, no expiry, or token not expired use existing token.
+                    if (!self.credentials.refreshToken || !self.credentials.accessTokenExpiresAt || [NSDate date].timeIntervalSince1970 * 1000 < self.credentials.accessTokenExpiresAt) {
+                        MXLogDebug(@"[MXRestClient] %@: success token %@, %tu", uuid, self.credentials.refreshToken, (NSUInteger)self.credentials.accessTokenExpiresAt)
                         success(self.credentials.accessToken);
+                        return;
                     }
                     
-                    // An absence of refreshToken indicates the accessToken and the users session expires
-                    if(!self.credentials.refreshToken) {
-                        dispatch_async(self.completionQueue, ^{
-                            MXError *mxError = [[MXError alloc] initWithErrorCode:kMXErrCodeStringUnknownToken error:kMXErrorStringInvalidToken];
-                            self.refreshTokensFailedHandler(mxError);
-                            failure([mxError createNSError]);
-                        });
-                    }
-                    // We are the first request, so request the token synchronously on processing.
+                    dispatch_group_enter([MXRestClient refreshDispatchGroup]);
+                    MXLogDebug(@"[MXRestClient] %@: refreshQueue refresh token start", uuid)
                     operation = [self refreshAccessToken:self.credentials.refreshToken success:^(MXRefreshResponse *refreshResponse) {
+                        MXLogDebug(@"[MXRestClient] %@: refreshQueue refresh token request success", uuid)
                         [self->credentials updateWithRefreshResponse:refreshResponse];
                         [[NSNotificationCenter defaultCenter] postNotificationName:MXRestClientDidRefreshTokensNotification object:nil userInfo:nil];
+                        MXLogDebug(@"[MXRestClient] %@: refreshQueue credentials updated and notification sent", uuid)
+                        dispatch_group_leave([MXRestClient refreshDispatchGroup]);
                         dispatch_async(self.completionQueue, ^{
+                            MXLogDebug(@"[MXRestClient] %@: refreshQueue refresh token success", uuid)
                             success(self.credentials.accessToken);
                         });
                     } failure:^(NSError *error) {
+                        MXLogDebug(@"[MXRestClient] %@: refreshQueue refresh token request failure", uuid)
+                        dispatch_group_leave([MXRestClient refreshDispatchGroup]);
                         dispatch_async(self.completionQueue, ^{
                             MXError *mxError = [[MXError alloc] initWithNSError:error];
                             if (mxError)
                             {
+                                MXLogDebug(@"[MXRestClient] %@: refreshQueue refreshTokensFailedHandler", uuid)
                                 self.refreshTokensFailedHandler(mxError);
                             }
                             failure(error);
@@ -775,6 +801,15 @@ MXAuthAction;
             parameters = newParameters;
         }
     }
+    
+    if (MXSDKOptions.sharedInstance.authEnableRefreshTokens)
+    {
+        NSMutableDictionary *paramsWithRefresh = [NSMutableDictionary dictionaryWithDictionary:parameters];
+        paramsWithRefresh[@"refresh_token"] = @(YES);
+
+        parameters = paramsWithRefresh;
+    }
+
 
     MXWeakify(self);
     return [httpClient requestWithMethod:@"POST"
@@ -826,6 +861,7 @@ MXAuthAction;
     return [httpClient requestWithMethod:@"POST"
                                     path:[NSString stringWithFormat:@"%@/refresh", kMXAPIPrefixPathV1]
                               parameters:nil
+                     needsAuthentication:NO
                                     data:payloadData
                                  headers:@{@"Content-Type": @"application/json"}
                                  timeout:-1

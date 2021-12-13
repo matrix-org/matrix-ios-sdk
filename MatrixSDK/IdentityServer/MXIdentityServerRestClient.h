@@ -319,20 +319,6 @@ NS_ERROR_ENUM(MXIdentityServerRestClientErrorDomain)
                     success:(void (^)(NSDictionary *thirdPartySigned))success
                     failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
-/**
- Get current access or get a new one if not exist.
- Note: There is no guarantee that current access token is valid.
- 
- @param success A block object called when the operation succeeds. It provides the access token.
- @param failure A block object called when the operation fails.
- 
- @return a MXHTTPOperation instance. Nil if the access token is already known
- and no HTTP request is required.
- */
-- (MXHTTPOperation *)getAccessTokenAndRenewIfNeededWithSuccess:(void (^)(NSString *accessToken))success
-                                                       failure:(void (^)(NSError *error))failure;
-
-
 @end
 
 NS_ASSUME_NONNULL_END

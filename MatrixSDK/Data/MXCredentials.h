@@ -29,16 +29,6 @@ NS_ASSUME_NONNULL_BEGIN
 @interface MXCredentials : NSObject <NSCopying>
 
 /**
- Notification name sent when the refresh/access tokens change within the associated credential.
- */
-extern NSString *const MXCredentialsDidRefreshAccessTokenNotification;
-
-/**
- The key to get the updated access token from the MXCredentialsDidRefreshAccessTokenNotification.
- */
-extern NSString *const kMXCredentialNotificationAccessTokenKey;
-
-/**
  The homeserver url (ex: "https://matrix.org").
  */
 @property (nonatomic, nullable) NSString *homeServer;
