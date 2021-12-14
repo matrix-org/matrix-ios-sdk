@@ -43,8 +43,8 @@ NSString *const kMXToolsRegexStringForMatrixGroupIdentifier     = @"\\+[A-Z0-9=_
 
 #pragma mark - MXTools static private members
 // Mapping from MXEventTypeString to MXEventType and vice versa
-static NSDictionary<MXEventTypeString, NSNumber*> *eventTypeMapStringToEnum;
-static NSArray<MXEventTypeString> *eventTypeMapEnumToString;
+static NSDictionary<MXEventTypeString, NSNumber *> *eventTypeMapStringToEnum;
+static NSDictionary<NSNumber *, MXEventTypeString> *eventTypeMapEnumToString;
 
 static NSRegularExpression *isEmailAddressRegex;
 static NSRegularExpression *isMatrixUserIdentifierRegex;
@@ -70,74 +70,145 @@ NSCharacterSet *uriComponentCharset;
 {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
+        
+        eventTypeMapEnumToString = @{
+            @(MXEventTypeRoomName) : kMXEventTypeStringRoomName,
+            @(MXEventTypeRoomTopic) : kMXEventTypeStringRoomTopic,
+            @(MXEventTypeRoomAvatar) : kMXEventTypeStringRoomAvatar,
+            @(MXEventTypeRoomBotOptions) : kMXEventTypeStringRoomBotOptions,
+            @(MXEventTypeRoomMember) : kMXEventTypeStringRoomMember,
+            @(MXEventTypeRoomCreate) : kMXEventTypeStringRoomCreate,
+            @(MXEventTypeRoomJoinRules) : kMXEventTypeStringRoomJoinRules,
+            @(MXEventTypeRoomPowerLevels) : kMXEventTypeStringRoomPowerLevels,
+            @(MXEventTypeRoomAliases) : kMXEventTypeStringRoomAliases,
+            @(MXEventTypeRoomCanonicalAlias) : kMXEventTypeStringRoomCanonicalAlias,
+            @(MXEventTypeRoomEncrypted) : kMXEventTypeStringRoomEncrypted,
+            @(MXEventTypeRoomEncryption) : kMXEventTypeStringRoomEncryption,
+            @(MXEventTypeRoomGuestAccess) : kMXEventTypeStringRoomGuestAccess,
+            @(MXEventTypeRoomHistoryVisibility) : kMXEventTypeStringRoomHistoryVisibility,
+            @(MXEventTypeRoomKey) : kMXEventTypeStringRoomKey,
+            @(MXEventTypeRoomForwardedKey) : kMXEventTypeStringRoomForwardedKey,
+            @(MXEventTypeRoomKeyRequest) : kMXEventTypeStringRoomKeyRequest,
+            @(MXEventTypeRoomMessage) : kMXEventTypeStringRoomMessage,
+            @(MXEventTypeRoomMessageFeedback) : kMXEventTypeStringRoomMessageFeedback,
+            @(MXEventTypeRoomPlumbing) : kMXEventTypeStringRoomPlumbing,
+            @(MXEventTypeRoomRedaction) : kMXEventTypeStringRoomRedaction,
+            @(MXEventTypeRoomThirdPartyInvite) : kMXEventTypeStringRoomThirdPartyInvite,
+            @(MXEventTypeRoomRelatedGroups) : kMXEventTypeStringRoomRelatedGroups,
+            @(MXEventTypeRoomPinnedEvents) : kMXEventTypeStringRoomPinnedEvents,
+            @(MXEventTypeRoomTag) : kMXEventTypeStringRoomTag,
+            @(MXEventTypeRoomTombStone) : kMXEventTypeStringRoomTombStone,
+            
+            @(MXEventTypePresence) : kMXEventTypeStringPresence,
+            @(MXEventTypeTypingNotification) : kMXEventTypeStringTypingNotification,
+            @(MXEventTypeReaction) : kMXEventTypeStringReaction,
+            @(MXEventTypeReceipt) : kMXEventTypeStringReceipt,
+            @(MXEventTypeRead) : kMXEventTypeStringRead,
+            @(MXEventTypeReadMarker) : kMXEventTypeStringReadMarker,
+            @(MXEventTypeSticker) : kMXEventTypeStringSticker,
+            @(MXEventTypeTaggedEvents) : kMXEventTypeStringTaggedEvents,
+            @(MXEventTypeSpaceChild) : kMXEventTypeStringSpaceChild,
+            
+            @(MXEventTypeCallInvite) : kMXEventTypeStringCallInvite,
+            @(MXEventTypeCallCandidates) : kMXEventTypeStringCallCandidates,
+            @(MXEventTypeCallAnswer) : kMXEventTypeStringCallAnswer,
+            @(MXEventTypeCallSelectAnswer) : kMXEventTypeStringCallSelectAnswer,
+            @(MXEventTypeCallHangup) : kMXEventTypeStringCallHangup,
+            @(MXEventTypeCallReject) : kMXEventTypeStringCallReject,
+            @(MXEventTypeCallNegotiate) : kMXEventTypeStringCallNegotiate,
+            @(MXEventTypeCallReplaces) : kMXEventTypeStringCallReplaces,
+            @(MXEventTypeCallRejectReplacement) : kMXEventTypeStringCallRejectReplacement,
+            @(MXEventTypeCallAssertedIdentity) : kMXEventTypeStringCallAssertedIdentity,
+            @(MXEventTypeCallAssertedIdentityUnstable) : kMXEventTypeStringCallAssertedIdentityUnstable,
+            
+            @(MXEventTypeKeyVerificationRequest) : kMXEventTypeStringKeyVerificationRequest,
+            @(MXEventTypeKeyVerificationReady) : kMXEventTypeStringKeyVerificationReady,
+            @(MXEventTypeKeyVerificationStart) : kMXEventTypeStringKeyVerificationStart,
+            @(MXEventTypeKeyVerificationAccept) : kMXEventTypeStringKeyVerificationAccept,
+            @(MXEventTypeKeyVerificationKey) : kMXEventTypeStringKeyVerificationKey,
+            @(MXEventTypeKeyVerificationMac) : kMXEventTypeStringKeyVerificationMac,
+            @(MXEventTypeKeyVerificationCancel) : kMXEventTypeStringKeyVerificationCancel,
+            @(MXEventTypeKeyVerificationDone) : kMXEventTypeStringKeyVerificationDone,
+            
+            @(MXEventTypeSecretRequest) : kMXEventTypeStringSecretRequest,
+            @(MXEventTypeSecretSend) : kMXEventTypeStringSecretSend,
+            @(MXEventTypeSecretStorageDefaultKey) : kMXEventTypeStringSecretStorageDefaultKey,
+            
+            @(MXEventTypePollStart) : kMXEventTypeStringPollStartMSC3381,
+            @(MXEventTypePollResponse) : kMXEventTypeStringPollResponseMSC3381,
+            @(MXEventTypePollEnd) : kMXEventTypeStringPollEndMSC3381,
+        };
 
-        eventTypeMapEnumToString = @[
-                                kMXEventTypeStringRoomName,
-                                kMXEventTypeStringRoomTopic,
-                                kMXEventTypeStringRoomAvatar,
-                                kMXEventTypeStringRoomBotOptions,
-                                kMXEventTypeStringRoomMember,
-                                kMXEventTypeStringRoomCreate,
-                                kMXEventTypeStringRoomJoinRules,
-                                kMXEventTypeStringRoomPowerLevels,
-                                kMXEventTypeStringRoomAliases,
-                                kMXEventTypeStringRoomCanonicalAlias,
-                                kMXEventTypeStringRoomEncrypted,
-                                kMXEventTypeStringRoomEncryption,
-                                kMXEventTypeStringRoomGuestAccess,
-                                kMXEventTypeStringRoomHistoryVisibility,
-                                kMXEventTypeStringRoomKey,
-                                kMXEventTypeStringRoomForwardedKey,
-                                kMXEventTypeStringRoomKeyRequest,
-                                kMXEventTypeStringRoomMessage,
-                                kMXEventTypeStringRoomMessageFeedback,
-                                kMXEventTypeStringRoomPlumbing,
-                                kMXEventTypeStringRoomRedaction,
-                                kMXEventTypeStringRoomThirdPartyInvite,
-                                kMXEventTypeStringRoomRelatedGroups,
-                                kMXEventTypeStringRoomPinnedEvents,
-                                kMXEventTypeStringRoomTag,
-                                kMXEventTypeStringPresence,
-                                kMXEventTypeStringTypingNotification,
-                                kMXEventTypeStringReaction,
-                                kMXEventTypeStringReceipt,
-                                kMXEventTypeStringRead,
-                                kMXEventTypeStringReadMarker,
-                                kMXEventTypeStringCallInvite,
-                                kMXEventTypeStringCallCandidates,
-                                kMXEventTypeStringCallAnswer,
-                                kMXEventTypeStringCallSelectAnswer,
-                                kMXEventTypeStringCallHangup,
-                                kMXEventTypeStringCallReject,
-                                kMXEventTypeStringCallNegotiate,
-                                kMXEventTypeStringCallReplaces,
-                                kMXEventTypeStringCallRejectReplacement,
-                                kMXEventTypeStringCallAssertedIdentity,
-                                kMXEventTypeStringCallAssertedIdentityUnstable,
-                                kMXEventTypeStringSticker,
-                                kMXEventTypeStringRoomTombStone,
-                                kMXEventTypeStringKeyVerificationRequest,
-                                kMXEventTypeStringKeyVerificationReady,
-                                kMXEventTypeStringKeyVerificationStart,
-                                kMXEventTypeStringKeyVerificationAccept,
-                                kMXEventTypeStringKeyVerificationKey,
-                                kMXEventTypeStringKeyVerificationMac,
-                                kMXEventTypeStringKeyVerificationCancel,
-                                kMXEventTypeStringKeyVerificationDone,
-                                kMXEventTypeStringSecretRequest,
-                                kMXEventTypeStringSecretSend,
-                                kMXEventTypeStringSecretStorageDefaultKey,
-                                kMXEventTypeStringTaggedEvents,
-                                kMXEventTypeStringSpaceChild
-                                ];
-
-        NSMutableDictionary *map = [NSMutableDictionary dictionaryWithCapacity:eventTypeMapEnumToString.count];
-        for (NSUInteger i = 0; i <eventTypeMapEnumToString.count; i++)
-        {
-            MXEventTypeString type = eventTypeMapEnumToString[i];
-            map[type] = @(i);
-        }
-        eventTypeMapStringToEnum = map;
+        eventTypeMapStringToEnum = @{
+            kMXEventTypeStringRoomName : @(MXEventTypeRoomName),
+            kMXEventTypeStringRoomTopic : @(MXEventTypeRoomTopic),
+            kMXEventTypeStringRoomAvatar : @(MXEventTypeRoomAvatar),
+            kMXEventTypeStringRoomBotOptions : @(MXEventTypeRoomBotOptions),
+            kMXEventTypeStringRoomMember : @(MXEventTypeRoomMember),
+            kMXEventTypeStringRoomCreate : @(MXEventTypeRoomCreate),
+            kMXEventTypeStringRoomJoinRules : @(MXEventTypeRoomJoinRules),
+            kMXEventTypeStringRoomPowerLevels : @(MXEventTypeRoomPowerLevels),
+            kMXEventTypeStringRoomAliases : @(MXEventTypeRoomAliases),
+            kMXEventTypeStringRoomCanonicalAlias : @(MXEventTypeRoomCanonicalAlias),
+            kMXEventTypeStringRoomEncrypted : @(MXEventTypeRoomEncrypted),
+            kMXEventTypeStringRoomEncryption : @(MXEventTypeRoomEncryption),
+            kMXEventTypeStringRoomGuestAccess : @(MXEventTypeRoomGuestAccess),
+            kMXEventTypeStringRoomHistoryVisibility : @(MXEventTypeRoomHistoryVisibility),
+            kMXEventTypeStringRoomKey : @(MXEventTypeRoomKey),
+            kMXEventTypeStringRoomForwardedKey : @(MXEventTypeRoomForwardedKey),
+            kMXEventTypeStringRoomKeyRequest : @(MXEventTypeRoomKeyRequest),
+            kMXEventTypeStringRoomMessage : @(MXEventTypeRoomMessage),
+            kMXEventTypeStringRoomMessageFeedback : @(MXEventTypeRoomMessageFeedback),
+            kMXEventTypeStringRoomPlumbing : @(MXEventTypeRoomPlumbing),
+            kMXEventTypeStringRoomRedaction : @(MXEventTypeRoomRedaction),
+            kMXEventTypeStringRoomThirdPartyInvite : @(MXEventTypeRoomThirdPartyInvite),
+            kMXEventTypeStringRoomRelatedGroups : @(MXEventTypeRoomRelatedGroups),
+            kMXEventTypeStringRoomPinnedEvents : @(MXEventTypeRoomPinnedEvents),
+            kMXEventTypeStringRoomTag : @(MXEventTypeRoomTag),
+            kMXEventTypeStringRoomTombStone : @(MXEventTypeRoomTombStone),
+            
+            kMXEventTypeStringPresence : @(MXEventTypePresence),
+            kMXEventTypeStringTypingNotification : @(MXEventTypeTypingNotification),
+            kMXEventTypeStringReaction : @(MXEventTypeReaction),
+            kMXEventTypeStringReceipt : @(MXEventTypeReceipt),
+            kMXEventTypeStringRead : @(MXEventTypeRead),
+            kMXEventTypeStringReadMarker : @(MXEventTypeReadMarker),
+            kMXEventTypeStringSticker : @(MXEventTypeSticker),
+            kMXEventTypeStringTaggedEvents : @(MXEventTypeTaggedEvents),
+            kMXEventTypeStringSpaceChild : @(MXEventTypeSpaceChild),
+            
+            kMXEventTypeStringCallInvite : @(MXEventTypeCallInvite),
+            kMXEventTypeStringCallCandidates : @(MXEventTypeCallCandidates),
+            kMXEventTypeStringCallAnswer : @(MXEventTypeCallAnswer),
+            kMXEventTypeStringCallSelectAnswer : @(MXEventTypeCallSelectAnswer),
+            kMXEventTypeStringCallHangup : @(MXEventTypeCallHangup),
+            kMXEventTypeStringCallReject : @(MXEventTypeCallReject),
+            kMXEventTypeStringCallNegotiate : @(MXEventTypeCallNegotiate),
+            kMXEventTypeStringCallReplaces : @(MXEventTypeCallReplaces),
+            kMXEventTypeStringCallRejectReplacement : @(MXEventTypeCallRejectReplacement),
+            kMXEventTypeStringCallAssertedIdentity : @(MXEventTypeCallAssertedIdentity),
+            kMXEventTypeStringCallAssertedIdentityUnstable : @(MXEventTypeCallAssertedIdentityUnstable),
+            
+            kMXEventTypeStringKeyVerificationRequest : @(MXEventTypeKeyVerificationRequest),
+            kMXEventTypeStringKeyVerificationReady : @(MXEventTypeKeyVerificationReady),
+            kMXEventTypeStringKeyVerificationStart : @(MXEventTypeKeyVerificationStart),
+            kMXEventTypeStringKeyVerificationAccept : @(MXEventTypeKeyVerificationAccept),
+            kMXEventTypeStringKeyVerificationKey : @(MXEventTypeKeyVerificationKey),
+            kMXEventTypeStringKeyVerificationMac : @(MXEventTypeKeyVerificationMac),
+            kMXEventTypeStringKeyVerificationCancel : @(MXEventTypeKeyVerificationCancel),
+            kMXEventTypeStringKeyVerificationDone : @(MXEventTypeKeyVerificationDone),
+            
+            kMXEventTypeStringSecretRequest : @(MXEventTypeSecretRequest),
+            kMXEventTypeStringSecretSend : @(MXEventTypeSecretSend),
+            kMXEventTypeStringSecretStorageDefaultKey : @(MXEventTypeSecretStorageDefaultKey),
+            
+            kMXEventTypeStringPollStart : @(MXEventTypePollStart),
+            kMXEventTypeStringPollStartMSC3381 : @(MXEventTypePollStart),
+            kMXEventTypeStringPollResponse : @(MXEventTypePollResponse),
+            kMXEventTypeStringPollResponseMSC3381 : @(MXEventTypePollResponse),
+            kMXEventTypeStringPollEnd : @(MXEventTypePollEnd),
+            kMXEventTypeStringPollEndMSC3381 : @(MXEventTypePollEnd),
+        };
 
         isEmailAddressRegex =  [NSRegularExpression regularExpressionWithPattern:[NSString stringWithFormat:@"^%@$", kMXToolsRegexStringForEmailAddress]
                                                                          options:NSRegularExpressionCaseInsensitive error:nil];
@@ -169,11 +240,7 @@ NSCharacterSet *uriComponentCharset;
 
 + (MXEventTypeString)eventTypeString:(MXEventType)eventType
 {
-    if (eventType < eventTypeMapEnumToString.count)
-    {
-        return eventTypeMapEnumToString[eventType];
-    }
-    return nil;
+    return eventTypeMapEnumToString[@(eventType)];
 }
 
 + (MXEventType)eventType:(MXEventTypeString)eventTypeString
@@ -831,7 +898,7 @@ static NSMutableDictionary *fileExtensionByContentType = nil;
 + (void)convertVideoToMP4:(NSURL*)videoLocalURL
        withTargetFileSize:(NSInteger)targetFileSize
                   success:(void(^)(NSURL *videoLocalURL, NSString *mimetype, CGSize size, double durationInMs))success
-                  failure:(void(^)(void))failure
+                  failure:(void(^)(NSError *error))failure
 {
     AVURLAsset *videoAsset = [AVURLAsset assetWithURL:videoLocalURL];
     [self convertVideoAssetToMP4:videoAsset withTargetFileSize:targetFileSize success:success failure:failure];
@@ -840,7 +907,7 @@ static NSMutableDictionary *fileExtensionByContentType = nil;
 + (void)convertVideoAssetToMP4:(AVAsset*)videoAsset
             withTargetFileSize:(NSInteger)targetFileSize
                        success:(void(^)(NSURL *videoLocalURL, NSString *mimetype, CGSize size, double durationInMs))success
-                       failure:(void(^)(void))failure
+                       failure:(void(^)(NSError *error))failure
 {
     NSParameterAssert(success);
     NSParameterAssert(failure);
@@ -921,7 +988,12 @@ static NSMutableDictionary *fileExtensionByContentType = nil;
                     
                     // Remove output file (if any)
                     [[NSFileManager defaultManager] removeItemAtPath:[outputVideoLocalURL path] error:nil];
-                    failure();
+                    
+                    NSError *error = [[NSError alloc] initWithDomain:AVFoundationErrorDomain code:0 userInfo:@{
+                        NSLocalizedDescriptionKey: @"Unable to calculate video size."
+                    }];
+                    
+                    failure(exportSession.error ?: error);
                 }
             }
             else
@@ -931,7 +1003,7 @@ static NSMutableDictionary *fileExtensionByContentType = nil;
                 
                 // Remove output file (if any)
                 [[NSFileManager defaultManager] removeItemAtPath:[outputVideoLocalURL path] error:nil];
-                failure();
+                failure(exportSession.error);
             }
         });
         
