@@ -15,26 +15,9 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "MXTaskProfileName.h"
 
 NS_ASSUME_NONNULL_BEGIN
-
-typedef NSString *const MXTaskProfileName NS_TYPED_EXTENSIBLE_ENUM;
-/// The duration of the initial /sync request.
-static MXTaskProfileName const MXTaskProfileNameStartupInitialSync = @"startup: initialSync";
-/// The duration of the first /sync when resuming the app.
-static MXTaskProfileName const MXTaskProfileNameStartupIncrementalSync = @"startup: incrementalSync";
-/// The time taken to preload data in the MXStore.
-static MXTaskProfileName const MXTaskProfileNameStartupStorePreload = @"startup: storePreload";
-/// The time to mount all objects from the store (it includes MXTaskProfileNameStartupStorePreload time).
-static MXTaskProfileName const MXTaskProfileNameStartupMountData = @"startup: mountData";
-/// The duration of the the display of the app launch screen
-static MXTaskProfileName const MXTaskProfileNameStartupLaunchScreen = @"startup: launchScreen";
-/// The time spent waiting for a response to an initial /sync request.
-static MXTaskProfileName const MXTaskProfileNameInitialSyncRequest = @"initialSync: request";
-/// The time spent parsing the response from an initial /sync request.
-static MXTaskProfileName const MXTaskProfileNameInitialSyncParsing = @"initialSync: parsing";
-/// The time taken to display an event in the timeline that was opened from a notification.
-static MXTaskProfileName const MXTaskProfileNameNotificationsOpenEvent = @"notifications: openEvent";
 
 @interface MXTaskProfile : NSObject
 
