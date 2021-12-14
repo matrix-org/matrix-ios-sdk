@@ -252,7 +252,7 @@ FOUNDATION_EXPORT NSString *const kMXToolsRegexStringForMatrixGroupIdentifier;
 + (void)convertVideoToMP4:(NSURL*)videoLocalURL
        withTargetFileSize:(NSInteger)targetFileSize
                   success:(void(^)(NSURL *videoLocalURL, NSString *mimetype, CGSize size, double durationInMs))success
-                  failure:(void(^)(void))failure;
+                  failure:(void(^)(NSError *error))failure;
 
 /**
  Convert from a video to a MP4 video container.
@@ -269,7 +269,7 @@ FOUNDATION_EXPORT NSString *const kMXToolsRegexStringForMatrixGroupIdentifier;
 + (void)convertVideoAssetToMP4:(AVAsset*)videoAsset
             withTargetFileSize:(NSInteger)targetFileSize
                        success:(void(^)(NSURL *videoLocalURL, NSString *mimetype, CGSize size, double durationInMs))success
-                       failure:(void(^)(void))failure;
+                       failure:(void(^)(NSError *error))failure;
 
 #pragma mark - JSON Serialisation
 
