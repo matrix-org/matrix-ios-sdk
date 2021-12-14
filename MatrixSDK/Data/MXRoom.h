@@ -92,7 +92,7 @@ FOUNDATION_EXPORT NSInteger const kMXRoomAlreadyJoinedErrorCode;
 /**
  The live events timeline.
  */
-- (void)liveTimeline:(void (^)(MXEventTimeline *liveTimeline))onComplete;
+- (void)liveTimeline:(void (^)(id<MXEventTimeline> liveTimeline))onComplete;
 
 /**
  The current state of the room.
@@ -1016,7 +1016,7 @@ FOUNDATION_EXPORT NSInteger const kMXRoomAlreadyJoinedErrorCode;
  @param eventId the id of the event.
  @return a new `MXEventTimeline` instance.
  */
-- (MXEventTimeline*)timelineOnEvent:(NSString*)eventId;
+- (id<MXEventTimeline>)timelineOnEvent:(NSString*)eventId;
 
 
 #pragma mark - Fake event objects creation

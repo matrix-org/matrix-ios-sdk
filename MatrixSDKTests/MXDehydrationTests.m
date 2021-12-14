@@ -323,7 +323,7 @@
                                     
                                     NSString *messageFromBob = @"Hello I'm Bob!";
                                     
-                                    [roomFromAlice3POV liveTimeline:^(MXEventTimeline *liveTimeline) {
+                                    [roomFromAlice3POV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
                                         // -> Alice must be able to receive and decrypt the message sent by Bob
                                         [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage, kMXEventTypeStringRoomEncrypted] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
                                             

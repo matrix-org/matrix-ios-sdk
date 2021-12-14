@@ -536,7 +536,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
 
         XCTAssertEqual(room.summary.membership, MXMembershipJoin);
 
-        [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+        [room liveTimeline:^(id<MXEventTimeline> liveTimeline) {
             [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                 if (direction == MXTimelineDirectionForwards)
@@ -568,7 +568,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
 
         [matrixSDKTestsData doMXSessionTestWithAlice:nil readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation2) {
 
-            [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+            [room liveTimeline:^(id<MXEventTimeline> liveTimeline) {
                 [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                     if (direction == MXTimelineDirectionForwards)
@@ -1355,7 +1355,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
             toDeviceEvent = notif.userInfo[kMXSessionNotificationEventKey];
         }];
 
-        [roomFromBobPOV liveTimeline:^(MXEventTimeline *liveTimeline) {
+        [roomFromBobPOV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
             
             [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 

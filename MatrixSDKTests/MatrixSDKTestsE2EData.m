@@ -208,7 +208,7 @@
 
         __block NSUInteger messagesCount = 0;
 
-        [roomFromBobPOV liveTimeline:^(MXEventTimeline *liveTimeline) {
+        [roomFromBobPOV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
             [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
                 if (++messagesCount == 5)
                 {

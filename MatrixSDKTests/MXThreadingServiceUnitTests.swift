@@ -201,7 +201,7 @@ class MXThreadingServiceUnitTests: XCTestCase {
         }
         
         let store = MXMemoryStore()
-        store.storeEvent(forRoom: roomId, event: rootEvent, direction: MXTimelineDirection.forwards.identifier)
+        store.storeEvent(forRoom: roomId, event: rootEvent, direction: .forwards)
         
         let restClient = MXRestClient(credentials: Constants.credentials, unrecognizedCertificateHandler: nil)
         guard let session = MXSession(matrixRestClient: restClient) else {

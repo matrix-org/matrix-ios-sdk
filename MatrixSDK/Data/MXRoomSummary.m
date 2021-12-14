@@ -320,7 +320,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
 - (MXHTTPOperation *)fetchLastMessageWithMaxServerPaginationCount:(NSUInteger)maxServerPaginationCount
                                                        onComplete:(void (^)(void))onComplete
                                                           failure:(void (^)(NSError *))failure
-                                                         timeline:(MXEventTimeline *)timeline
+                                                         timeline:(id<MXEventTimeline>)timeline
                                                         operation:(MXHTTPOperation *)operation commit:(BOOL)commit
 {
     // Sanity checks
@@ -343,9 +343,9 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     // Get the room timeline
     if (!timeline)
     {
-        [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+        [room liveTimeline:^(id<MXEventTimeline> liveTimeline) {
             // Use a copy of the live timeline to avoid any conflicts with listeners to the unique live timeline
-            MXEventTimeline *timeline = [liveTimeline copy];
+            id<MXEventTimeline> timeline = [liveTimeline copyWithZone:nil];
             [timeline resetPagination];
             [self fetchLastMessageWithMaxServerPaginationCount:maxServerPaginationCount onComplete:onComplete failure:failure timeline:timeline operation:operation commit:commit];
         }];
@@ -377,7 +377,6 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
         MXHTTPOperation *newOperation = [timeline paginate:1
                                                  direction:MXTimelineDirectionBackwards
                                              onlyFromStore:YES
-                                                  threadId:nil
                                                   complete:^{
             if (lastMessageUpdated)
             {
@@ -405,7 +404,6 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
         MXHTTPOperation *newOperation = [timeline paginate:paginationCount
                                                  direction:MXTimelineDirectionBackwards
                                              onlyFromStore:NO
-                                                  threadId:nil
                                                   complete:^{
             if (lastMessageUpdated)
             {

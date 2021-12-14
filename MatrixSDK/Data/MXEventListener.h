@@ -17,7 +17,7 @@
 #import <Foundation/Foundation.h>
 
 #import "MXEvent.h"
-#import "MXEventTimeline.h"
+#import "MXEnumConstants.h"
 
 /**
  Block called when an event of the registered types has been handled by the Matrix SDK.

@@ -17,12 +17,13 @@
  limitations under the License.
  */
 
-#import "MXEventTimeline.h"
+#import "MXRoomEventTimeline.h"
 
 #import "MXSession.h"
 #import "MXMemoryStore.h"
 #import "MXAggregations_Private.h"
 #import "MXEventRelations.h"
+#import "MXRoomEventFilter.h"
 
 #import "MXError.h"
 #import "MXTools.h"
@@ -34,7 +35,7 @@
 
 NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 
-@interface MXEventTimeline ()
+@interface MXRoomEventTimeline ()
 {
     // The list of event listeners (`MXEventListener`) of this timeline.
     NSMutableArray<MXEventListener *> *eventListeners;
@@ -69,7 +70,13 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 }
 @end
 
-@implementation MXEventTimeline
+@implementation MXRoomEventTimeline
+
+@synthesize initialEventId = _initialEventId;
+@synthesize timelineId = _timelineId;
+@synthesize isLiveTimeline = _isLiveTimeline;
+@synthesize state = _state;
+@synthesize roomEventFilter = _roomEventFilter;
 
 #pragma mark - Initialisation
 
@@ -105,8 +112,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 
 - (instancetype)initWithRoom:(MXRoom*)theRoom initialEventId:(NSString*)initialEventId andStore:(id<MXStore>)theStore
 {
-    self = [self init];
-    if (self)
+    if (self = [self init])
     {
         _initialEventId = initialEventId;
         room = theRoom;
@@ -253,12 +259,12 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 }
 
 
-- (void)paginateFromStore:(NSUInteger)numItems direction:(MXTimelineDirection)direction threadId:(NSString *)threadId onComplete:(void (^)(NSArray<MXEvent *>*))onComplete
+- (void)paginateFromStore:(NSUInteger)numItems direction:(MXTimelineDirection)direction onComplete:(void (^)(NSArray<MXEvent *>*))onComplete
 {
     if (direction == MXTimelineDirectionBackwards)
     {
         // For back pagination, try to get messages from the store first
-        NSArray<MXEvent *> *eventsFromStore = [storeMessagesEnumerator nextEventsBatch:numItems threadId:threadId];
+        NSArray<MXEvent *> *eventsFromStore = [storeMessagesEnumerator nextEventsBatch:numItems threadId:nil];
         
         // messagesFromStore are in chronological order
         // Handle events from the most recent
@@ -277,7 +283,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     }
 }
 
-- (MXHTTPOperation *)paginate:(NSUInteger)numItems direction:(MXTimelineDirection)direction onlyFromStore:(BOOL)onlyFromStore threadId:(NSString *)threadId complete:(void (^)(void))complete failure:(void (^)(NSError *))failure
+- (MXHTTPOperation *)paginate:(NSUInteger)numItems direction:(MXTimelineDirection)direction onlyFromStore:(BOOL)onlyFromStore complete:(void (^)(void))complete failure:(void (^)(NSError *))failure
 {
     MXHTTPOperation *operation = [MXHTTPOperation new];
 
@@ -286,7 +292,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     NSAssert(!(_isLiveTimeline && direction == MXTimelineDirectionForwards), @"Cannot paginate forwards on a live timeline");
     
     MXWeakify(self);
-    [self paginateFromStore:numItems direction:direction threadId:threadId onComplete:^(NSArray<MXEvent *> *eventsFromStore) {
+    [self paginateFromStore:numItems direction:direction onComplete:^(NSArray<MXEvent *> *eventsFromStore) {
         MXStrongifyAndReturnIfNil(self);
         
         NSUInteger remainingNumItems = numItems;
@@ -952,7 +958,6 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     }
 }
 
-
 #pragma mark - Events processing
 
 // Make sure that events have a room id. They are skipped in some server responses
@@ -1005,7 +1010,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 
 - (nonnull id)copyWithZone:(nullable NSZone *)zone
 {
-    MXEventTimeline *timeline = [[[self class] allocWithZone:zone] init];
+    MXRoomEventTimeline *timeline = [[[self class] allocWithZone:zone] init];
     timeline->_initialEventId = _initialEventId;
     timeline->_roomEventFilter = _roomEventFilter;
     timeline->_state = [_state copyWithZone:zone];

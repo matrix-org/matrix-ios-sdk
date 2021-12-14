@@ -23,6 +23,7 @@
 #import "MXTools.h"
 #import "NSData+MatrixSDK.h"
 #import "MXDecryptionResult.h"
+#import "MXRoomEventTimeline.h"
 
 #import "MXEncryptedAttachments.h"
 #import "MXEncryptedContentFile.h"
@@ -54,7 +55,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
      The liveTimeline instance.
      Its data is loaded only when [self liveTimeline:] is called.
      */
-    MXEventTimeline *liveTimeline;
+    id<MXEventTimeline> liveTimeline;
 
     /**
      Flag to indicate that the data for `_liveTimeline` must be loaded before use.
@@ -64,7 +65,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     /**
      FIFO queue of objects waiting for [self liveTimeline:]. 
      */
-    NSMutableArray<void (^)(MXEventTimeline *)> *pendingLiveTimelineRequesters;
+    NSMutableArray<void (^)(id<MXEventTimeline>)> *pendingLiveTimelineRequesters;
 
     /**
      FIFO queue of success blocks waiting for [self members:].
@@ -114,12 +115,12 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
 
         if (store)
         {
-            liveTimeline = [[MXEventTimeline alloc] initWithRoom:self initialEventId:nil andStore:store];
+            liveTimeline = [[MXRoomEventTimeline alloc] initWithRoom:self initialEventId:nil andStore:store];
         }
         else
         {
             // Let the timeline use the session store
-            liveTimeline = [[MXEventTimeline alloc] initWithRoom:self andInitialEventId:nil];
+            liveTimeline = [[MXRoomEventTimeline alloc] initWithRoom:self andInitialEventId:nil];
         }
         
         //  Update the stored outgoing messages, by removing the sent messages and tagging as failed the others.
@@ -170,7 +171,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     return [mxSession roomSummaryWithRoomId:_roomId];
 }
 
-- (void)liveTimeline:(void (^)(MXEventTimeline *))onComplete
+- (void)liveTimeline:(void (^)(id<MXEventTimeline>))onComplete
 {
     // Is timelime ready?
     if (needToLoadLiveTimeline || pendingLiveTimelineRequesters)
@@ -190,10 +191,10 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                     [self->liveTimeline setState:roomState];
 
                     // Provide the timelime to pending requesters
-                    NSArray<void (^)(MXEventTimeline *)> *liveTimelineRequesters = [self->pendingLiveTimelineRequesters copy];
+                    NSArray<void (^)(id<MXEventTimeline>)> *liveTimelineRequesters = [self->pendingLiveTimelineRequesters copy];
                     self->pendingLiveTimelineRequesters = nil;
 
-                    for (void (^onRequesterComplete)(MXEventTimeline *) in liveTimelineRequesters)
+                    for (void (^onRequesterComplete)(id<MXEventTimeline>) in liveTimelineRequesters)
                     {
                         onRequesterComplete(self->liveTimeline);
                     }
@@ -214,7 +215,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
 
 - (void)state:(void (^)(MXRoomState *))onComplete
 {
-    [self liveTimeline:^(MXEventTimeline *theLiveTimeline) {
+    [self liveTimeline:^(id<MXEventTimeline> theLiveTimeline) {
         onComplete(theLiveTimeline.state);
     }];
 }
@@ -235,7 +236,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     MXHTTPOperation *operation = [[MXHTTPOperation alloc] init];
 
     MXWeakify(self);
-    [self liveTimeline:^(MXEventTimeline *liveTimeline) {
+    [self liveTimeline:^(id<MXEventTimeline> liveTimeline) {
         MXStrongifyAndReturnIfNil(self);
 
         // Return directly liveTimeline.state.members if we have already all of them
@@ -388,7 +389,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
 - (void)handleJoinedRoomSync:(MXRoomSync *)roomSync onComplete:(void (^)(void))onComplete
 {
     MXWeakify(self);
-    [self liveTimeline:^(MXEventTimeline *liveTimeline) {
+    [self liveTimeline:^(id<MXEventTimeline> liveTimeline) {
         MXStrongifyAndReturnIfNil(self);
 
         // Start with ephemeral events
@@ -406,7 +407,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     }];
 }
 
-- (void)handleEphemeralEvents:(NSArray<MXEvent*>*)events inLiveTimeline:(MXEventTimeline *)liveTimeline
+- (void)handleEphemeralEvents:(NSArray<MXEvent*>*)events inLiveTimeline:(id<MXEventTimeline>)liveTimeline
 {
     for (MXEvent *event in events)
     {
@@ -432,7 +433,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
 
 - (void)handleInvitedRoomSync:(MXInvitedRoomSync *)invitedRoomSync onComplete:(void (^)(void))onComplete
 {
-    [self liveTimeline:^(MXEventTimeline *theLiveTimeline) {
+    [self liveTimeline:^(id<MXEventTimeline> theLiveTimeline) {
 
         // Let the live timeline handle live events
         [theLiveTimeline handleInvitedRoomSync:invitedRoomSync onComplete:^{
@@ -479,7 +480,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
  @param accountDataEvents the events to handle.
  @param direction the process direction: MXTimelineDirectionSync or MXTimelineDirectionForwards. MXTimelineDirectionBackwards is not applicable here.
  */
-- (void)handleAccountDataEvents:(NSArray<MXEvent*>*)accountDataEvents liveTimeline:(MXEventTimeline*)theLiveTimeline direction:(MXTimelineDirection)direction
+- (void)handleAccountDataEvents:(NSArray<MXEvent*>*)accountDataEvents liveTimeline:(id<MXEventTimeline>)theLiveTimeline direction:(MXTimelineDirection)direction
 {
     for (MXEvent *event in accountDataEvents)
     {
@@ -2552,9 +2553,9 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
 
 
 #pragma mark - Events timeline
-- (MXEventTimeline*)timelineOnEvent:(NSString*)eventId;
+- (id<MXEventTimeline>)timelineOnEvent:(NSString*)eventId;
 {
-    return [[MXEventTimeline alloc] initWithRoom:self andInitialEventId:eventId];
+    return [[MXRoomEventTimeline alloc] initWithRoom:self andInitialEventId:eventId];
 }
 
 
@@ -2914,7 +2915,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
  @param liveTimeline the live timeline of this room.
  @param direction the timeline direction.
  */
-- (BOOL)handleReceiptEvent:(MXEvent *)event inLiveTimeline:(MXEventTimeline *)liveTimeline direction:(MXTimelineDirection)direction
+- (BOOL)handleReceiptEvent:(MXEvent *)event inLiveTimeline:(id<MXEventTimeline>)liveTimeline direction:(MXTimelineDirection)direction
 {
     BOOL managedEvents = false;
     
@@ -3201,7 +3202,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                                            }
                                    }];
 
-        [self liveTimeline:^(MXEventTimeline *theLiveTimeline) {
+        [self liveTimeline:^(id<MXEventTimeline> theLiveTimeline) {
             [theLiveTimeline notifyListeners:receiptEvent direction:MXTimelineDirectionForwards];
         }];
     }

@@ -408,7 +408,7 @@
 
             MXRoom *room = [mxSession roomWithRoomId:roomId];
             XCTAssert(room);
-            [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+            [room liveTimeline:^(id<MXEventTimeline> liveTimeline) {
                 [liveTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
                     XCTFail(@"We should not receive events after closing the session. Received: %@", event);
                     [expectation fulfill];
@@ -519,7 +519,7 @@
                 }];
 
                 MXRoom *room = [mxSession roomWithRoomId:roomId];
-                [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+                [room liveTimeline:^(id<MXEventTimeline> liveTimeline) {
                     [liveTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
                         eventCount++;
                         XCTAssertFalse(paused, @"We should not receive events when paused. Received: %@", event);
@@ -591,7 +591,7 @@
                 }];
 
                 MXRoom *room = [mxSession roomWithRoomId:roomId];
-                [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+                [room liveTimeline:^(id<MXEventTimeline> liveTimeline) {
                     [liveTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
                         eventCount++;
                         XCTAssertFalse(paused, @"We should not receive events when paused. Received: %@", event);

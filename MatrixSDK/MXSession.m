@@ -2917,7 +2917,7 @@ typedef void (^MXOnResumeDone)(void);
         if (room)
         {
             dispatch_group_enter(group);
-            [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+            [room liveTimeline:^(id<MXEventTimeline> liveTimeline) {
                 dispatch_group_leave(group);
             }];
         }

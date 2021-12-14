@@ -39,6 +39,7 @@
 #import "MXExportedOlmDevice.h"
 
 @class MXSession;
+@class MXRoom;
 
 /**
  Fires when we receive a room key request.

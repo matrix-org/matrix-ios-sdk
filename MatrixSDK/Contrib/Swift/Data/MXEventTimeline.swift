@@ -30,24 +30,6 @@ public typealias MXOnRoomEvent = (_ event: MXEvent, _ direction: MXTimelineDirec
 public extension MXEventTimeline {
     
     /**
-     Check if this timelime can be extended.
-     
-     This returns true if we either have more events, or if we have a pagination
-     token which means we can paginate in that direction. It does not necessarily
-     mean that there are more events available in that direction at this time.
-     
-     `canPaginate` in forward direction has no meaning for a live timeline.
-     
-     - parameter direction: The direction to check
-     
-     - returns: `true` if we can paginate in the given direction.
-     */
-    @nonobjc func canPaginate(_ direction: MXTimelineDirection) -> Bool {
-        return __canPaginate(direction.identifier)
-    }
-    
-    
-    /**
      Reset the pagination timelime and start loading the context around its `initialEventId`.
      The retrieved (backwards and forwards) events will be sent to registered listeners.
      
@@ -58,7 +40,7 @@ public extension MXEventTimeline {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func resetPaginationAroundInitialEvent(withLimit limit: UInt, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
+    @discardableResult func resetPaginationAroundInitialEvent(withLimit limit: UInt, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
         return __resetPaginationAroundInitialEvent(withLimit: limit, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -72,14 +54,13 @@ public extension MXEventTimeline {
         - numItems: the number of items to get.
         - direction: `.forwards` or `.backwards`.
         - onlyFromStore: if true, return available events from the store, do not make a pagination request to the homeserver.
-        - threadId: Identifier of the thread to paginate from
         - completion: A block object called when the operation completes.
         - response: Indicates whether the operation succeeded or failed.
      
      - returns: a MXHTTPOperation instance. This instance can be nil if no request to the homeserver is required.
      */
-    @nonobjc @discardableResult func paginate(_ numItems: UInt, direction: MXTimelineDirection, onlyFromStore: Bool, threadId: String?, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
-        return __paginate(numItems, direction: direction.identifier, onlyFromStore: onlyFromStore, threadId: threadId, complete: currySuccess(completion), failure: curryFailure(completion))
+    @discardableResult func paginate(_ numItems: UInt, direction: MXTimelineDirection, onlyFromStore: Bool, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+        return __paginate(numItems, direction: direction, onlyFromStore: onlyFromStore, complete: currySuccess(completion), failure: curryFailure(completion))
     }
     
     
@@ -92,18 +73,13 @@ public extension MXEventTimeline {
         - block: the block that will called once a new event has been handled.
      - returns: a reference to use to unregister the listener
      */
-    @nonobjc func listenToEvents(_ types: [MXEventType]? = nil, _ block: @escaping MXOnRoomEvent) -> Any {
-        
-        let legacyBlock: __MXOnRoomEvent = { (event, direction, state) in
-            guard let event = event, let state = state else { return }
-            block(event, MXTimelineDirection(identifer: direction), state)
-        }
+    func listenToEvents(_ types: [MXEventType]? = nil, _ block: @escaping MXOnRoomEvent) -> Any {
         
         if let types = types {
             let typeStrings = types.map({ return $0.identifier })
-            return __listen(toEventsOfTypes: typeStrings, onEvent: legacyBlock)
+            return __listen(toEventsOfTypes: typeStrings, onEvent: block)
         } else {
-            return __listen(toEvents: legacyBlock)
+            return __listen(toEvents: block)
         }
     }
 }
