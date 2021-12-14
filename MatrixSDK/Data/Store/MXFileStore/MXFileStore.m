@@ -28,7 +28,7 @@
 #import "MXTools.h"
 #import "MatrixSDKSwiftHeader.h"
 
-static NSUInteger const kMXFileVersion = 76;
+static NSUInteger const kMXFileVersion = 77;
 
 static NSString *const kMXFileStoreFolder = @"MXFileStore";
 static NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
