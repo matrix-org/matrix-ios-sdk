@@ -154,6 +154,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomJoinRuleInvite;
  */
 FOUNDATION_EXPORT NSString *const kMXRoomJoinRulePrivate;
 FOUNDATION_EXPORT NSString *const kMXRoomJoinRuleKnock;
+FOUNDATION_EXPORT NSString *const kMXRoomJoinRuleRestricted;
 
 /**
  Room presets

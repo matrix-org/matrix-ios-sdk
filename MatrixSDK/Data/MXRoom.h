@@ -650,6 +650,21 @@ FOUNDATION_EXPORT NSInteger const kMXRoomAlreadyJoinedErrorCode;
                         failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
+ Set the join rule of the room.
+
+ @param joinRule the join rule to set.
+ @param parentIds list of parent room ID (requested for `restricted` join rule)
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)setJoinRule:(MXRoomJoinRule)joinRule
+                      parentIds:(NSArray<NSString *>*)parentIds
+                        success:(void (^)(void))success
+                        failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
+/**
  Set the guest access of the room.
 
  @param guestAccess the guest access to set.

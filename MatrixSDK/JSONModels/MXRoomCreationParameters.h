@@ -67,6 +67,9 @@ NS_ASSUME_NONNULL_BEGIN
 // The power level content to override in the default power level event.
 @property (nonatomic, nullable) MXRoomPowerLevels *powerLevelContentOverride;
 
+// The room version to set for the room. If not provided, the homeserver is to use its configured default.
+@property (nonatomic, nullable) NSString *roomVersion;
+
 /**
  Return the data as a JSON dictionary.
 

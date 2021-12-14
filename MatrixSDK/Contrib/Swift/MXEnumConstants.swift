@@ -51,6 +51,9 @@ public enum MXRoomJoinRule: Equatable, Hashable {
     /// A user who wishes to join the room must first receive an invite to the room from someone already inside of the room.
     case invite
     
+    /// The room will appear as public inside parents declared as `allowed`. It will behave as private otherwise.
+    case restricted
+    
     /// Reserved keyword which is not implemented by homeservers.
     case `private`, knock
     
@@ -60,11 +63,12 @@ public enum MXRoomJoinRule: Equatable, Hashable {
         case .invite: return kMXRoomJoinRuleInvite
         case .private: return kMXRoomJoinRulePrivate
         case .knock: return kMXRoomJoinRuleKnock
+        case .restricted: return kMXRoomJoinRuleRestricted
         }
     }
     
     public init?(identifier: String?) {
-        let joinRules: [MXRoomJoinRule] = [.public, .invite, .private, .knock]
+        let joinRules: [MXRoomJoinRule] = [.public, .invite, .private, .knock, .restricted]
         guard let value = joinRules.first(where: { $0.identifier == identifier}) else { return nil }
         self = value
     }
