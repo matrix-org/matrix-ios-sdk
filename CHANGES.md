@@ -1,3 +1,10 @@
+## Changes in 0.20.15 (2021-12-14)
+
+⚠️ API Changes
+
+- MXTools: Add an error parameter to the failure of +convertVideoAssetToMP4:withTargetFileSize:success:failure: ([#4749](https://github.com/vector-im/element-ios/issues/4749))
+
+
 ## Changes in 0.20.14 (2021-12-09)
 
 🐛 Bugfixes
