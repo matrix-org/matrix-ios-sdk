@@ -884,12 +884,12 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 
 
 #pragma mark - Events listeners
-- (id)listenToEvents:(MXOnRoomEvent)onEvent
+- (MXEventListener *)listenToEvents:(MXOnRoomEvent)onEvent
 {
     return [self listenToEventsOfTypes:nil onEvent:onEvent];
 }
 
-- (id)listenToEventsOfTypes:(NSArray<MXEventTypeString> *)types onEvent:(MXOnRoomEvent)onEvent
+- (MXEventListener *)listenToEventsOfTypes:(NSArray<MXEventTypeString> *)types onEvent:(MXOnRoomEvent)onEvent
 {
     MXEventListener *listener = [[MXEventListener alloc] initWithSender:self andEventTypes:types andListenerBlock:onEvent];
 
@@ -898,7 +898,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     return listener;
 }
 
-- (void)removeListener:(id)listener
+- (void)removeListener:(MXEventListener *)listener
 {
     [eventListeners removeObject:listener];
 }

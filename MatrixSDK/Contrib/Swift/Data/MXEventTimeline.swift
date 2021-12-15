@@ -16,17 +16,6 @@
 
 import Foundation
 
-/**
- Block called when an event of the registered types has been handled in the timeline.
- This is a specialisation of the `MXOnEvent` block.
- 
- - parameters:
-    - event: the new event.
-    - direction: the origin of the event.
-    - roomState: the room state right before the event.
- */
-public typealias MXOnRoomEvent = (_ event: MXEvent, _ direction: MXTimelineDirection, _ roomState: MXRoomState) -> Void
-
 public extension MXEventTimeline {
     
     /**

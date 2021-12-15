@@ -16,9 +16,8 @@
 
 #import <Foundation/Foundation.h>
 
-#import "MXEvent.h"
 #import "MXHTTPOperation.h"
-#import "MXEnumConstants.h"
+#import "MXEventListener.h"
 
 @class MXRoom;
 @class MXRoomState;
@@ -40,7 +39,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param direction the origin of the event.
  @param roomState the room state right before the event.
  */
-typedef void (^MXOnRoomEvent)(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) NS_REFINED_FOR_SWIFT;
+typedef void (^MXOnRoomEvent)(MXEvent *event, MXTimelineDirection direction, MXRoomState *_Nullable roomState);
 
 /**
  A `MXEventTimeline` instance represents a contiguous sequence of events in a room.
@@ -87,7 +86,7 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXTimelineDirection direction, MXR
 /**
  The state of the room at the top most recent event of the timeline.
  */
-@property (nonatomic, readonly) MXRoomState *state;
+@property (nonatomic, nullable, readonly) MXRoomState *state;
 
 
 #pragma mark - Initialisation
@@ -233,7 +232,7 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXTimelineDirection direction, MXR
  @param onEvent the block that will called once a new event has been handled.
  @return a reference to use to unregister the listener
  */
-- (id)listenToEvents:(MXOnRoomEvent)onEvent NS_REFINED_FOR_SWIFT;
+- (MXEventListener *)listenToEvents:(MXOnRoomEvent)onEvent NS_REFINED_FOR_SWIFT;
 
 /**
  Register a listener for some types of events.
@@ -242,14 +241,14 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXTimelineDirection direction, MXR
  @param onEvent the block that will called once a new event has been handled.
  @return a reference to use to unregister the listener
  */
-- (id)listenToEventsOfTypes:(nullable NSArray<MXEventTypeString> *)types onEvent:(MXOnRoomEvent)onEvent NS_REFINED_FOR_SWIFT;
+- (MXEventListener *)listenToEventsOfTypes:(nullable NSArray<MXEventTypeString> *)types onEvent:(MXOnRoomEvent)onEvent NS_REFINED_FOR_SWIFT;
 
 /**
  Unregister a listener.
 
  @param listener the reference of the listener to remove.
  */
-- (void)removeListener:(id)listener;
+- (void)removeListener:(MXEventListener *)listener;
 
 /**
  Unregister all listeners.

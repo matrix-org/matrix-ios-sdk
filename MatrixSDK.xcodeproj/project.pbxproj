@@ -1387,6 +1387,8 @@
 		EC131B0B2758D56600712964 /* MXThreadNotificationsCount.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC131B092758D56600712964 /* MXThreadNotificationsCount.swift */; };
 		EC131B0E2768A0C600712964 /* MXEventTimeline.h in Headers */ = {isa = PBXBuildFile; fileRef = EC131B0D2768A0C600712964 /* MXEventTimeline.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		EC131B0F2768A0C600712964 /* MXEventTimeline.h in Headers */ = {isa = PBXBuildFile; fileRef = EC131B0D2768A0C600712964 /* MXEventTimeline.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EC131B132769E70400712964 /* MXThreadEventTimeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC131B122769E70400712964 /* MXThreadEventTimeline.swift */; };
+		EC131B142769E70400712964 /* MXThreadEventTimeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC131B122769E70400712964 /* MXThreadEventTimeline.swift */; };
 		EC1848C52685F64D00865E16 /* MXiOSAudioOutputRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC1848C42685F64D00865E16 /* MXiOSAudioOutputRoute.swift */; };
 		EC1848C72686174E00865E16 /* MXiOSAudioOutputRouteType.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC1848C62686174E00865E16 /* MXiOSAudioOutputRouteType.swift */; };
 		EC1848C92686176D00865E16 /* MXiOSAudioOutputRouterDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC1848C82686176D00865E16 /* MXiOSAudioOutputRouterDelegate.swift */; };
@@ -2395,6 +2397,7 @@
 		EC1165CB27107F3E0089FA56 /* MXRoomListDataManagerTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MXRoomListDataManagerTests.swift; sourceTree = "<group>"; };
 		EC131B092758D56600712964 /* MXThreadNotificationsCount.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXThreadNotificationsCount.swift; sourceTree = "<group>"; };
 		EC131B0D2768A0C600712964 /* MXEventTimeline.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXEventTimeline.h; sourceTree = "<group>"; };
+		EC131B122769E70400712964 /* MXThreadEventTimeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXThreadEventTimeline.swift; sourceTree = "<group>"; };
 		EC1848C42685F64D00865E16 /* MXiOSAudioOutputRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXiOSAudioOutputRoute.swift; sourceTree = "<group>"; };
 		EC1848C62686174E00865E16 /* MXiOSAudioOutputRouteType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXiOSAudioOutputRouteType.swift; sourceTree = "<group>"; };
 		EC1848C82686176D00865E16 /* MXiOSAudioOutputRouterDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXiOSAudioOutputRouterDelegate.swift; sourceTree = "<group>"; };
@@ -4190,6 +4193,7 @@
 			isa = PBXGroup;
 			children = (
 				EC131B0D2768A0C600712964 /* MXEventTimeline.h */,
+				EC131B112769E6EC00712964 /* Thread */,
 				EC131B102768A55300712964 /* Room */,
 			);
 			path = EventTimeline;
@@ -4202,6 +4206,14 @@
 				326056841C76FDF1009D44AD /* MXRoomEventTimeline.m */,
 			);
 			path = Room;
+			sourceTree = "<group>";
+		};
+		EC131B112769E6EC00712964 /* Thread */ = {
+			isa = PBXGroup;
+			children = (
+				EC131B122769E70400712964 /* MXThreadEventTimeline.swift */,
+			);
+			path = Thread;
 			sourceTree = "<group>";
 		};
 		EC1EFA2E2567F6430089C01D /* Model */ = {
@@ -5461,6 +5473,7 @@
 				B146D47121A5939100D8C2C6 /* MXRealmHelper.m in Sources */,
 				32261B8C23C74A230018F1E2 /* MXDeviceTrustLevel.m in Sources */,
 				3259D0082603705300C365DB /* Array.swift in Sources */,
+				EC131B132769E70400712964 /* MXThreadEventTimeline.swift in Sources */,
 				327E9AD82284803100A98BC1 /* MXEventAnnotation.m in Sources */,
 				EC8A53E625B1BCC6004E0802 /* MXThirdPartyProtocol.m in Sources */,
 				32999DE022DCD183004FF987 /* MXPusher.m in Sources */,
@@ -5938,6 +5951,7 @@
 				B14EF1DA2397E90400758AF0 /* MXRecoveryKey.m in Sources */,
 				B14EF1DB2397E90400758AF0 /* MXPushRuleEventMatchConditionChecker.m in Sources */,
 				B14EF1DC2397E90400758AF0 /* MXRealmReactionRelation.m in Sources */,
+				EC131B142769E70400712964 /* MXThreadEventTimeline.swift in Sources */,
 				B14EF1DD2397E90400758AF0 /* MXEventsByTypesEnumeratorOnArray.m in Sources */,
 				B14EF1DE2397E90400758AF0 /* MXRealmAggregationsMapper.m in Sources */,
 				3274538723FD69D600438328 /* MXKeyVerificationRequestByToDeviceJSONModel.m in Sources */,
