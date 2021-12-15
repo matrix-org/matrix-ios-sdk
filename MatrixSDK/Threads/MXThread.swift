@@ -122,12 +122,12 @@ public class MXThread: NSObject {
     }
     
     private func updateNotificationsCount() {
-        guard let session = session else {
+        guard let session = session, let store = session.store else {
             return
         }
         
-        notificationCount = session.store.localUnreadEventCount(roomId, threadId: id, withTypeIn: session.unreadEventTypes)
-        guard let readReceipt = session.store.getReceiptInRoom(roomId, forUserId: session.myUserId) else {
+        notificationCount = store.localUnreadEventCount(roomId, threadId: id, withTypeIn: session.unreadEventTypes)
+        guard let readReceipt = store.getReceiptInRoom(roomId, forUserId: session.myUserId) else {
             return
         }
         let checker = MXPushRuleDisplayNameCondtionChecker(matrixSession: session,
