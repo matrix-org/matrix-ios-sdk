@@ -1,3 +1,14 @@
+## Changes in 0.20.15 (2021-12-14)
+
+🙌 Improvements
+
+- Expose missing Jingle headers in umbrella header ([#1308](https://github.com/matrix-org/matrix-ios-sdk/pull/1308))
+
+⚠️ API Changes
+
+- MXTools: Add an error parameter to the failure of +convertVideoAssetToMP4:withTargetFileSize:success:failure: ([#4749](https://github.com/vector-im/element-ios/issues/4749))
+
+
 ## Changes in 0.20.14 (2021-12-09)
 
 🐛 Bugfixes
