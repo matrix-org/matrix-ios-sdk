@@ -130,6 +130,10 @@ class MXBackgroundStore: NSObject, MXStore {
     func replace(_ event: MXEvent, inRoom roomId: String) {
     }
     
+    func removeAllMessagesSent(before limitTs: UInt64, inRoom roomId: String) -> Bool {
+        return false
+    }
+    
     func eventExists(withEventId eventId: String, inRoom roomId: String) -> Bool {
         return false
     }

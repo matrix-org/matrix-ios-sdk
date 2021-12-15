@@ -108,6 +108,7 @@ NSCharacterSet *uriComponentCharset;
             @(MXEventTypeSticker) : kMXEventTypeStringSticker,
             @(MXEventTypeTaggedEvents) : kMXEventTypeStringTaggedEvents,
             @(MXEventTypeSpaceChild) : kMXEventTypeStringSpaceChild,
+            @(MXEventTypeRoomRetention) : kMXEventTypeStringRoomRetention,
             
             @(MXEventTypeCallInvite) : kMXEventTypeStringCallInvite,
             @(MXEventTypeCallCandidates) : kMXEventTypeStringCallCandidates,
@@ -176,6 +177,7 @@ NSCharacterSet *uriComponentCharset;
             kMXEventTypeStringSticker : @(MXEventTypeSticker),
             kMXEventTypeStringTaggedEvents : @(MXEventTypeTaggedEvents),
             kMXEventTypeStringSpaceChild : @(MXEventTypeSpaceChild),
+            kMXEventTypeStringRoomRetention : @(MXEventTypeRoomRetention),
             
             kMXEventTypeStringCallInvite : @(MXEventTypeCallInvite),
             kMXEventTypeStringCallCandidates : @(MXEventTypeCallCandidates),

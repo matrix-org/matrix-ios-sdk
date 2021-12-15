@@ -94,6 +94,7 @@ typedef NS_ENUM(NSInteger, MXEventType)
     MXEventTypePollStart,
     MXEventTypePollResponse,
     MXEventTypePollEnd,
+    MXEventTypeRoomRetention,
 
     // The event is a custom event. Refer to its `MXEventTypeString` version
     MXEventTypeCustom = 1000
@@ -150,6 +151,7 @@ FOUNDATION_EXPORT NSString *const kMXEventTypeStringSticker;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomTombStone;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringTaggedEvents;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringSpaceChild;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomRetention;
 
 // Interactive key verification
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringKeyVerificationRequest;

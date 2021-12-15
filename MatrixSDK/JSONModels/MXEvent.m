@@ -82,6 +82,7 @@ NSString *const kMXEventTypeStringSecretSend            = @"m.secret.send";
 NSString *const kMXEventTypeStringSecretStorageDefaultKey   = @"m.secret_storage.default_key";
 NSString *const kMXEventTypeStringTaggedEvents          = @"m.tagged_events";
 NSString *const kMXEventTypeStringSpaceChild            = @"m.space.child";
+NSString *const kMXEventTypeStringRoomRetention         = @"m.room.retention";
 
 NSString *const kMXEventTypeStringAutoJoinKey           = @"auto_join";
 NSString *const kMXEventTypeStringSuggestedKey          = @"suggested";
