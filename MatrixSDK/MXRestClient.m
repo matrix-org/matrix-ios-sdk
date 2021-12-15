@@ -78,6 +78,13 @@ NSString *const kMXMembersOfRoomParametersNotMembership = @"not_membership";
 NSString *const MXRestClientDidRefreshTokensNotification = @"MXRestClientDidRefreshTokensNotification";
 
 /**
+ The time interval before the access token expires that we will start trying to refresh the token.
+ This avoids us having to block other users requests while the token refreshes.
+ Choosing a value larger than SERVER_TIMEOUT_MS guarantees we will at least have attempted to refresh before the server last timed out from a sync.
+ */
+#define PREEMPT_REFRESH_EXPIRATION_INTERVAL 60000
+
+/**
  Authentication flow: register or login
  */
 typedef enum
@@ -200,10 +207,6 @@ MXAuthAction;
                 }
             }];
             httpClient.tokenValidationResponseHandler = ^BOOL(NSError *error) {
-                // An absence of accessTokenExpiresAt indicates access token does not expire
-                if (self.credentials.accessTokenExpiresAt && [NSDate date].timeIntervalSince1970 * 1000 >= self.credentials.accessTokenExpiresAt) {
-                    return YES;
-                }
                 if (![MXError isMXError:error])
                 {
                     return NO;
@@ -233,8 +236,12 @@ MXAuthAction;
                     // If refreshDispatchGroup is unmatched(a request for a new access token is in-flight) wait.
                     dispatch_group_wait([MXRestClient refreshDispatchGroup], DISPATCH_TIME_FOREVER);
                     
+                    NSDate *expiry = [NSDate dateWithTimeIntervalSince1970:self.credentials.accessTokenExpiresAt/1000];
+                    NSDate *preemptiveExpiry = [NSDate dateWithTimeIntervalSince1970:(self.credentials.accessTokenExpiresAt - PREEMPT_REFRESH_EXPIRATION_INTERVAL)/1000];
+                    MXLogDebug(@"[MXRestClient] %@: server expiry: %@", uuid, expiry);
+                    MXLogDebug(@"[MXRestClient] %@: preemptive expiry: %@", uuid, preemptiveExpiry);
                     // If no refresh token, no expiry, or token not expired use existing token.
-                    if (!self.credentials.refreshToken || !self.credentials.accessTokenExpiresAt || [NSDate date].timeIntervalSince1970 * 1000 < self.credentials.accessTokenExpiresAt) {
+                    if (!self.credentials.refreshToken || !self.credentials.accessTokenExpiresAt || [NSDate date].timeIntervalSince1970 * 1000 < (self.credentials.accessTokenExpiresAt - PREEMPT_REFRESH_EXPIRATION_INTERVAL)) {
                         MXLogDebug(@"[MXRestClient] %@: success token %@, %tu", uuid, self.credentials.refreshToken, (NSUInteger)self.credentials.accessTokenExpiresAt)
                         success(self.credentials.accessToken);
                         return;
