@@ -2382,6 +2382,42 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     return [self sendEventOfType:[MXTools eventTypeString:MXEventTypePollEnd] content:content localEcho:localEcho success:success failure:failure];
 }
 
+#pragma mark - Location sharing
+
+- (MXHTTPOperation *)sendLocationWithLatitude:(double)latitude
+                                    longitude:(double)longitude
+                                  description:(NSString *)description
+                                    localEcho:(MXEvent **)localEcho
+                                      success:(void (^)(NSString *))success
+                                      failure:(void (^)(NSError *))failure
+{
+    NSMutableDictionary *content = [NSMutableDictionary dictionary];
+    content[kMXMessageTypeKey] = kMXMessageTypeLocation;
+    
+    NSString *geoURI = [NSString stringWithFormat:@"geo:%@,%@", @(latitude), @(longitude)];
+    
+    content[kMXMessageGeoURIKey] = geoURI;
+    
+    content[kMXMessageContentKeyExtensibleLocation] = [NSMutableDictionary dictionary];
+    content[kMXMessageContentKeyExtensibleLocation][kMXMessageContentKeyExtensibleLocationURI] = geoURI;
+    
+    if (description.length > 0) {
+        content[kMXMessageBodyKey] = description;
+        content[kMXMessageContentKeyExtensibleText] = description;
+        content[kMXMessageContentKeyExtensibleLocation][kMXMessageContentKeyExtensibleLocationDescription] = description;
+    } else {
+        NSString *fallbackText = [NSString stringWithFormat:@"%@ @ %@", self.mxSession.myUser.displayname, geoURI];
+        
+        content[kMXMessageBodyKey] = fallbackText;
+        content[kMXMessageContentKeyExtensibleText] = fallbackText;
+    }
+    
+    return [self sendMessageWithContent:content
+                              localEcho:localEcho
+                                success:success
+                                failure:failure];
+}
+
 #pragma mark - Message order preserving
 /**
  Make sure that `block` will be called in the order expected by the end user.
