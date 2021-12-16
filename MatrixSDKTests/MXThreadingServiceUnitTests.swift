@@ -238,6 +238,70 @@ class MXThreadingServiceUnitTests: XCTestCase {
         }
     }
     
+    func testHandleEventUpdatingThreadWithRootEvent() {
+        let threadId = "some_thread_identifier"
+        let roomId = "!some_room_id:some_domain.com"
+        
+        //  create thread root event
+        guard let rootEvent = MXEvent(fromJSON: [
+            "event_id": threadId,
+            "room_id": roomId,
+            "type": kMXEventTypeStringRoomMessage,
+            "origin_server_ts": Date().timeIntervalSince1970 - 1,
+            "content": [
+                "type": kMXMessageTypeText,
+                "body": "Root",
+            ]
+        ]) else {
+            XCTFail("Failed to setup initial conditions")
+            return
+        }
+        
+        //  create an event
+        guard let event = MXEvent(fromJSON: [
+            "event_id": MXTools.generateTransactionId() as Any,
+            "room_id": roomId,
+            "type": kMXEventTypeStringRoomMessage,
+            "origin_server_ts": Date().timeIntervalSince1970,
+            "content": [
+                "type": kMXMessageTypeText,
+                "body": "Message",
+                kMXEventRelationRelatesToKey: [
+                    "rel_type": MXEventRelationTypeThread,
+                    "event_id": threadId
+                ],
+            ]
+        ]) else {
+            XCTFail("Failed to setup initial conditions")
+            return
+        }
+        
+        let restClient = MXRestClient(credentials: Constants.credentials, unrecognizedCertificateHandler: nil)
+        guard let session = MXSession(matrixRestClient: restClient) else {
+            XCTFail("Failed to setup test conditions")
+            return
+        }
+        let threadingService = session.threadingService
+        
+        defer {
+            session.close()
+        }
+        
+        threadingService.handleEvent(event)
+        threadingService.handleEvent(rootEvent)
+        
+        guard let thread = threadingService.thread(withId: threadId) else {
+            XCTFail("Thread not created after handling event")
+            return
+        }
+        
+        XCTAssertEqual(thread.id, threadId, "Thread id must be kept")
+        XCTAssertEqual(thread.roomId, roomId, "Thread room ids must be equal")
+        XCTAssertEqual(thread.lastMessage, event, "Thread last message must be kept")
+        XCTAssertEqual(thread.rootMessage, rootEvent, "Thread must have the root event")
+        XCTAssertEqual(thread.numberOfReplies, 1, "Thread must have only 1 reply")
+    }
+    
     private func wait(_ timeout: TimeInterval = 0.5, _ block: @escaping (XCTestExpectation) -> Void) {
         let waiter = XCTWaiter()
         let expectation = XCTestExpectation(description: "Async operation expectation")

@@ -66,28 +66,30 @@ public class MXThreadingService: NSObject {
             //  session closed
             return
         }
-        guard let threadId = event.threadId else {
-            //  event is not in a thread
-            return
-        }
-        
-        if let thread = thread(withId: threadId) {
-            //  add event to the thread if found
-            thread.addEvent(event)
-        } else {
-            //  create the thread for the first time
-            let thread: MXThread
-            //  try to find the root event in the session store
-            if let rootEvent = session.store?.event(withEventId: threadId, inRoom: event.roomId) {
-                thread = MXThread(withSession: session, rootEvent: rootEvent)
+        if let threadId = event.threadId {
+            //  event is in a thread
+            if let thread = thread(withId: threadId) {
+                //  add event to the thread if found
+                thread.addEvent(event)
             } else {
-                thread = MXThread(withSession: session, identifier: threadId, roomId: event.roomId)
+                //  create the thread for the first time
+                let thread: MXThread
+                //  try to find the root event in the session store
+                if let rootEvent = session.store?.event(withEventId: threadId, inRoom: event.roomId) {
+                    thread = MXThread(withSession: session, rootEvent: rootEvent)
+                } else {
+                    thread = MXThread(withSession: session, identifier: threadId, roomId: event.roomId)
+                }
+                thread.addEvent(event)
+                saveThread(thread)
+                NotificationCenter.default.post(name: Self.newThreadCreated, object: thread, userInfo: nil)
             }
+            notifyDidUpdateThreads()
+        } else if let thread = thread(withId: event.eventId) {
+            //  event is the root event of a thread
             thread.addEvent(event)
-            saveThread(thread)
-            NotificationCenter.default.post(name: Self.newThreadCreated, object: thread, userInfo: nil)
+            notifyDidUpdateThreads()
         }
-        notifyDidUpdateThreads()
     }
     
     /// Method to check an event is a thread root or not
