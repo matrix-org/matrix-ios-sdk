@@ -3093,7 +3093,7 @@
                 XCTAssertTrue(roomFromAlicePOV.summary.isEncrypted);
                 
                 // -> It must be impossible to send a messages (because the algorithm is not supported)
-                [roomFromAlicePOV sendTextMessage:@"An encrypted message" success:^(NSString *eventId) {
+                [roomFromAlicePOV sendTextMessage:@"An encrypted message" threadId:nil success:^(NSString *eventId) {
                     XCTFail(@"It should not possible to send encrypted message anymore");
                 } failure:^(NSError *error) {
 
@@ -3106,7 +3106,7 @@
                         XCTAssertTrue(roomFromAlicePOV.summary.isEncrypted);
                         
                         // -> It must be possible to send message again
-                        [roomFromAlicePOV sendTextMessage:@"An encrypted message" success:nil failure:^(NSError *error) {
+                        [roomFromAlicePOV sendTextMessage:@"An encrypted message" threadId:nil success:nil failure:^(NSError *error) {
                             XCTFail(@"The request should not fail - NSError: %@", error);
                             [expectation fulfill];
                         }];
