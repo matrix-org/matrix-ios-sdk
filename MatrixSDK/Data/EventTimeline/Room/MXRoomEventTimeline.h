@@ -18,6 +18,8 @@
 #import <Foundation/Foundation.h>
 #import "MXEventTimeline.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 /**
  Prefix used to build fake invite event.
  */
@@ -25,4 +27,28 @@ FOUNDATION_EXPORT NSString *const kMXRoomInviteStateEventIdPrefix;
 
 @interface MXRoomEventTimeline: NSObject <MXEventTimeline>
 
+/**
+ Create a timeline instance for a room.
+
+ If the timeline is live, the events will be stored to the MXSession instance store.
+ Else, they will be only stored in memory and released on [MXEventTimeline destroy].
+
+ @param room the room associated to the timeline
+ @param initialEventId the initial event for the timeline. A nil value will create a live timeline.
+ @return a MXEventTimeline instance.
+ */
+- (instancetype)initWithRoom:(MXRoom*)room andInitialEventId:(nullable NSString*)initialEventId;
+
+/**
+ Create a timeline instance for a room and force it to use the given MXStore to store events.
+
+ @param room the room associated to the timeline
+ @param initialEventId the initial event for the timeline. A nil value will create a live timeline.
+ @param store the store to use to store timeline events.
+ @return a MXEventTimeline instance.
+ */
+- (instancetype)initWithRoom:(MXRoom*)room initialEventId:(nullable NSString*)initialEventId andStore:(id<MXStore>)store;
+
 @end
+
+NS_ASSUME_NONNULL_END

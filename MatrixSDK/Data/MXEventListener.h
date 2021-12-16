@@ -19,6 +19,8 @@
 #import "MXEvent.h"
 #import "MXEnumConstants.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 /**
  Block called when an event of the registered types has been handled by the Matrix SDK.
  
@@ -27,7 +29,7 @@
  @param customObject additional contect for the event. In case of room event, customObject is a
  RoomState instance.
  */
-typedef void (^MXOnEvent)(MXEvent *event, MXTimelineDirection direction, id customObject);
+typedef void (^MXOnEvent)(MXEvent *event, MXTimelineDirection direction, id _Nullable customObject);
 
 /**
  The `MXEventListener` class stores information about a listener to MXEvents that
@@ -36,7 +38,7 @@ typedef void (^MXOnEvent)(MXEvent *event, MXTimelineDirection direction, id cust
 @interface MXEventListener : NSObject
 
 - (instancetype)initWithSender:(id)sender
-                 andEventTypes:(NSArray<MXEventTypeString>*)eventTypes
+                 andEventTypes:(nullable NSArray<MXEventTypeString>*)eventTypes
               andListenerBlock:(MXOnEvent)listenerBlock;
 
 /**
@@ -47,10 +49,12 @@ typedef void (^MXOnEvent)(MXEvent *event, MXTimelineDirection direction, id cust
  @param event the new event.
  @param direction the origin of the event.
  */
-- (void)notify:(MXEvent*)event direction:(MXTimelineDirection)direction andCustomObject:(id)customObject;
+- (void)notify:(MXEvent*)event direction:(MXTimelineDirection)direction andCustomObject:(nullable id)customObject;
 
 @property (nonatomic, readonly) id sender;
-@property (nonatomic, readonly) NSArray<MXEventTypeString>* eventTypes;
+@property (nonatomic, nullable, readonly) NSArray<MXEventTypeString>* eventTypes;
 @property (nonatomic, readonly) MXOnEvent listenerBlock;
 
 @end
+
+NS_ASSUME_NONNULL_END
