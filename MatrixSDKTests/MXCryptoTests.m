@@ -3085,7 +3085,7 @@
             
             [roomFromAlicePOV removeListener:listener];
             
-            [roomFromAlicePOV liveTimeline:^(MXEventTimeline *liveTimeline) {
+            [roomFromAlicePOV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
                 
                 // -> The room should be still marked as encrypted
                 XCTAssertTrue(liveTimeline.state.isEncrypted);
