@@ -319,7 +319,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
                 return;
             }
 
-            if (0 == remainingNumItems || YES == [self->store hasReachedHomeServerPaginationEndForRoom:self.state.roomId])
+            if (remainingNumItems <= 0 || YES == [self->store hasReachedHomeServerPaginationEndForRoom:self.state.roomId])
             {
                 dispatch_async(dispatch_get_main_queue(), ^{
                     // Nothing more to do

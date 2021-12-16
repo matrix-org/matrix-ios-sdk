@@ -45,6 +45,8 @@ public class MXThreadEventTimeline: NSObject, MXEventTimeline {
     
     /// Forward pagination token for thread timelines is managed locally.
     private var forwardsPaginationToken: String?
+    
+    private var hasReachedHomeServerBackwardsPaginationEnd: Bool = false
     private var hasReachedHomeServerForwardsPaginationEnd: Bool = false
     
     /// The current pending request
@@ -116,7 +118,7 @@ public class MXThreadEventTimeline: NSObject, MXEventTimeline {
                 return !hasReachedHomeServerForwardsPaginationEnd
             }
         @unknown default:
-            fatalError("Unknown direction")
+            fatalError("[MXThreadEventTimeline][\(timelineId)] canPaginate: Unknown direction")
         }
     }
     
@@ -131,7 +133,7 @@ public class MXThreadEventTimeline: NSObject, MXEventTimeline {
                                                     success: @escaping () -> Void,
                                                     failure: @escaping (Error) -> Void) -> MXHTTPOperation {
         guard let initialEventId = initialEventId else {
-            fatalError("[MXThreadEventTimeline] resetPaginationAroundInitialEventWithLimit cannot be called on live timeline")
+            fatalError("[MXThreadEventTimeline][\(timelineId)] resetPaginationAroundInitialEventWithLimit cannot be called on live timeline")
         }
         
         thread.session?.resetReplayAttackCheck(inTimeline: timelineId)
@@ -181,16 +183,87 @@ public class MXThreadEventTimeline: NSObject, MXEventTimeline {
                     success()
                 }
             case .failure(let error):
-                MXLog.error("[MXThreadEventTimeline] resetPaginationAroundInitialEvent failed: \(error)")
+                MXLog.error("[MXThreadEventTimeline][\(self.timelineId)] resetPaginationAroundInitialEvent failed: \(error)")
                 failure(error)
             }
         }
     }
     
     public func __paginate(_ numItems: UInt, direction: MXTimelineDirection, onlyFromStore: Bool, complete: @escaping () -> Void, failure: @escaping (Error) -> Void) -> MXHTTPOperation {
-        assert(!(isLiveTimeline && direction == .forwards), "[MXThreadEventTimeline] Cannot paginate forwards on a live timeline")
+        assert(!(isLiveTimeline && direction == .forwards), "[MXThreadEventTimeline][\(timelineId)] Cannot paginate forwards on a live timeline")
         
-        return MXHTTPOperation()
+        let operation = MXHTTPOperation()
+        
+        paginateFromStore(numberOfItems: numItems, direction: direction) { [weak self] eventsFromStore in
+            guard let self = self else { return }
+            
+            var remainingNumItems = numItems
+            let eventsFromStoreCount = UInt(eventsFromStore.count)
+            
+            if direction == .backwards {
+                // messagesFromStore are in chronological order
+                // Handle events from the most recent
+                for event in eventsFromStore.reversed() {
+                    self.addEvent(event, direction: .backwards, fromStore: true)
+                }
+                
+                remainingNumItems -= eventsFromStoreCount
+                
+                if onlyFromStore && eventsFromStoreCount > 0 {
+                    DispatchQueue.main.async {
+                        // Nothing more to do
+                        MXLog.debug("[MXThreadEventTimeline][\(self.timelineId)] paginate: is done from the store")
+                        complete()
+                    }
+                    return
+                }
+                
+                if remainingNumItems <= 0 && self.hasReachedHomeServerBackwardsPaginationEnd{
+                    DispatchQueue.main.async {
+                        // Nothing more to do
+                        MXLog.debug("[MXThreadEventTimeline][\(self.timelineId)] paginate: is done from the store")
+                        complete()
+                    }
+                    return
+                }
+            }
+            
+            // Do not try to paginate forward if end has been reached
+            if direction == .forwards && self.hasReachedHomeServerForwardsPaginationEnd {
+                DispatchQueue.main.async {
+                    // Nothing more to do
+                    MXLog.debug("[MXThreadEventTimeline][\(self.timelineId)] paginate: is done")
+                    complete()
+                }
+                return
+            }
+            
+            // Not enough messages: make a pagination request to the home server from last known token
+            MXLog.debug("[MXThreadEventTimeline][\(self.timelineId)] paginate: request \(remainingNumItems) messages from the server")
+            
+            var paginationToken: String?
+            switch direction {
+            case .backwards:
+                paginationToken = self.backwardsPaginationToken ?? "END"
+            case .forwards:
+                paginationToken = self.forwardsPaginationToken
+            @unknown default:
+                fatalError("[MXThreadEventTimeline][\(self.timelineId)] paginate: unknown direction")
+            }
+            if let operation2 = self.thread.session?.matrixRestClient.relations(forEvent: self.thread.id,
+                                                                                inRoom: self.thread.roomId,
+                                                                                relationType: MXEventRelationTypeThread,
+                                                                                eventType: nil,
+                                                                                from: paginationToken,
+                                                                                limit: remainingNumItems,
+                                                                                completion: { response in
+                                                                                    
+                                                                                }) {
+                operation.mutate(to: operation2)
+            }
+        }
+        
+        return operation
     }
     
     public func remainingMessagesForBackPaginationInStore() -> UInt {
@@ -206,7 +279,7 @@ public class MXThreadEventTimeline: NSObject, MXEventTimeline {
     }
     
     public func handleLazyLoadedStateEvents(_ stateEvents: [MXEvent]) {
-        
+        //  no-op
     }
     
     public func __listen(toEvents onEvent: @escaping MXOnRoomEvent) -> MXEventListener {
@@ -266,8 +339,8 @@ public class MXThreadEventTimeline: NSObject, MXEventTimeline {
                 completion([])
                 return
             }
-            if let events = storeMessagesEnumerator.nextEventsBatch(numberOfItems, threadId: "") {
-                MXLog.debug("[MXThreadEventTimeline][\(timelineId)] paginateFromStore: \(numberOfItems) requested, \(events.count) fetched for thread: ")
+            if let events = storeMessagesEnumerator.nextEventsBatch(numberOfItems, threadId: thread.id) {
+                MXLog.debug("[MXThreadEventTimeline][\(timelineId)] paginateFromStore: \(numberOfItems) requested, \(events.count) fetched for thread: \(thread.id)")
                 
                 decryptEvents(events) {
                     completion(events)
