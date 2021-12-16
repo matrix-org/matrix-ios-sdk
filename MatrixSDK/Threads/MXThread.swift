@@ -29,8 +29,6 @@ public class MXThread: NSObject {
     /// Identifier of the room that the thread is in.
     public let roomId: String
     
-    public private(set) var hasRootEvent: Bool
-    
     private var eventsMap: [String: MXEvent] = [:]
     
     internal init(withSession session: MXSession,
@@ -39,7 +37,6 @@ public class MXThread: NSObject {
         self.session = session
         self.id = identifier
         self.roomId = roomId
-        self.hasRootEvent = false
         super.init()
     }
     
@@ -48,7 +45,6 @@ public class MXThread: NSObject {
         self.session = session
         self.id = rootEvent.eventId
         self.roomId = rootEvent.roomId
-        self.hasRootEvent = true
         self.eventsMap = [rootEvent.eventId: rootEvent]
         super.init()
     }
@@ -59,16 +55,24 @@ public class MXThread: NSObject {
             return
         }
         eventsMap[event.eventId] = event
-        
-        if event.eventId == id {
-            //  if root event is added later, update the flag
-            hasRootEvent = true
+    }
+    
+    /// Flag indicating the current user participated in the thread
+    public var isParticipated: Bool {
+        guard let session = session else {
+            return false
         }
+        return eventsMap.values.first(where: { $0.sender == session.myUserId }) != nil
+    }
+    
+    /// Root message of the thread
+    public var rootMessage: MXEvent? {
+        return eventsMap[id]
     }
     
     /// Last message of the thread
     public var lastMessage: MXEvent? {
-        //  sort events by their age: so older events will be at the beginning in the array
+        //  sort events so that the older is the first
         return eventsMap.values.sorted(by: >).last
     }
     
@@ -103,14 +107,47 @@ public class MXThread: NSObject {
 
 extension MXThread: Identifiable {}
 
+//  MARK: - Comparable
+
+extension MXThread: Comparable {
+    
+    /// Comparator for thread instances, to compare two threads according to their last message time.
+    /// - Parameters:
+    ///   - lhs: left operand
+    ///   - rhs: right operand
+    /// - Returns: true if left operand's last message is newer than the right operand's last message, false otherwise
+    public static func < (lhs: MXThread, rhs: MXThread) -> Bool {
+        //  thread will be 'smaller' than an other thread if it's last message is newer
+        let leftLastMessage = lhs.lastMessage
+        let rightLastMessage = rhs.lastMessage
+        if let leftLastMessage = leftLastMessage {
+            if let rightLastMessage = rightLastMessage {
+                return leftLastMessage < rightLastMessage
+            } else {
+                return false
+            }
+        } else if rightLastMessage != nil {
+            return true
+        } else {
+            return false
+        }
+    }
+    
+}
+
 //  MARK: - MXEvent Extension
 
 extension MXEvent: Comparable {
     
+    /// Compare two events according to their time
+    /// - Parameters:
+    ///   - lhs: Left operand
+    ///   - rhs: Right operand
+    /// - Returns: true if the left operand is newer than the right one, false otherwise
     public static func < (lhs: MXEvent, rhs: MXEvent) -> Bool {
-        //  event will be 'smaller' than an other event if it's newer
         if lhs.originServerTs != NSNotFound && rhs.originServerTs != NSNotFound {
-            return lhs.compareOriginServerTs(rhs) == .orderedAscending
+            //  higher originServerTs means more recent event
+            return lhs.originServerTs > rhs.originServerTs
         }
         return lhs.age < rhs.age
     }

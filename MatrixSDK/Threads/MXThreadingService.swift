@@ -35,6 +35,11 @@ extension MXThreadingServiceError: CustomNSError {
     }
 }
 
+@objc
+public protocol MXThreadingServiceDelegate: AnyObject {
+    func threadingServiceDidUpdateThreads(_ service: MXThreadingService)
+}
+
 @objcMembers
 /// Threading service class.
 public class MXThreadingService: NSObject {
@@ -42,6 +47,7 @@ public class MXThreadingService: NSObject {
     private weak var session: MXSession?
     
     private var threads: [String: MXThread] = [:]
+    private let multicastDelegate: MXMulticastDelegate<MXThreadingServiceDelegate> = MXMulticastDelegate()
     
     /// Notification to be posted when a new thread is created.
     public static let newThreadCreated = Notification.Name("MXThreadingService.newThreadCreated")
@@ -60,26 +66,29 @@ public class MXThreadingService: NSObject {
             //  session closed
             return
         }
-        guard let threadId = event.threadId else {
-            //  event is not in a thread
-            return
-        }
-        
-        if let thread = thread(withId: threadId) {
-            //  add event to the thread if found
-            thread.addEvent(event)
-        } else {
-            //  create the thread for the first time
-            let thread: MXThread
-            //  try to find the root event in the session store
-            if let rootEvent = session.store?.event(withEventId: threadId, inRoom: event.roomId) {
-                thread = MXThread(withSession: session, rootEvent: rootEvent)
+        if let threadId = event.threadId {
+            //  event is in a thread
+            if let thread = thread(withId: threadId) {
+                //  add event to the thread if found
+                thread.addEvent(event)
             } else {
-                thread = MXThread(withSession: session, identifier: threadId, roomId: event.roomId)
+                //  create the thread for the first time
+                let thread: MXThread
+                //  try to find the root event in the session store
+                if let rootEvent = session.store?.event(withEventId: threadId, inRoom: event.roomId) {
+                    thread = MXThread(withSession: session, rootEvent: rootEvent)
+                } else {
+                    thread = MXThread(withSession: session, identifier: threadId, roomId: event.roomId)
+                }
+                thread.addEvent(event)
+                saveThread(thread)
+                NotificationCenter.default.post(name: Self.newThreadCreated, object: thread, userInfo: nil)
             }
+            notifyDidUpdateThreads()
+        } else if let thread = thread(withId: event.eventId) {
+            //  event is the root event of a thread
             thread.addEvent(event)
-            saveThread(thread)
-            NotificationCenter.default.post(name: Self.newThreadCreated, object: thread, userInfo: nil)
+            notifyDidUpdateThreads()
         }
     }
     
@@ -100,10 +109,49 @@ public class MXThreadingService: NSObject {
         return result
     }
     
+    /// Get threads in a room
+    /// - Parameter roomId: room identifier
+    /// - Returns: thread list in given room
+    public func threads(inRoom roomId: String) -> [MXThread] {
+        //  sort threads so that the newer is the first
+        return Array(threads.values).filter({ $0.roomId == roomId }).sorted(by: <)
+    }
+    
+    /// Get participated threads in a room
+    /// - Parameter roomId: room identifier
+    /// - Returns: participated thread list in given room
+    public func participatedThreads(inRoom roomId: String) -> [MXThread] {
+        //  filter only participated threads
+        return threads(inRoom: roomId).filter({ $0.isParticipated })
+    }
+    
     private func saveThread(_ thread: MXThread) {
         objc_sync_enter(threads)
         threads[thread.id] = thread
         objc_sync_exit(threads)
+    }
+    
+    //  MARK: - Delegate
+    
+    /// Add delegate instance
+    /// - Parameter delegate: delegate instance
+    public func addDelegate(_ delegate: MXThreadingServiceDelegate) {
+        multicastDelegate.addDelegate(delegate)
+    }
+    
+    /// Remove delegate instance
+    /// - Parameter delegate: delegate instance
+    public func removeDelegate(_ delegate: MXThreadingServiceDelegate) {
+        multicastDelegate.removeDelegate(delegate)
+    }
+    
+    /// Remove all delegates
+    public func removeAllDelegates() {
+        multicastDelegate.removeAllDelegates()
+    }
+    
+    private func notifyDidUpdateThreads() {
+        multicastDelegate.invoke({ $0.threadingServiceDidUpdateThreads(self) })
     }
     
 }
