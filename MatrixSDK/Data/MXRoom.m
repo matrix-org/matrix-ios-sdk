@@ -2394,6 +2394,9 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     NSMutableDictionary *content = [NSMutableDictionary dictionary];
     content[kMXMessageTypeKey] = kMXMessageTypeLocation;
     
+    NSInteger timestamp = NSDate.date.timeIntervalSince1970 * 1000; // milliseconds since UNIX epoch
+    content[kMXMessageContentKeyExtensibleTimestamp] = @(timestamp);
+    
     NSString *geoURI = [NSString stringWithFormat:@"geo:%@,%@", @(latitude), @(longitude)];
     
     content[kMXMessageGeoURIKey] = geoURI;
@@ -2406,7 +2409,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
         content[kMXMessageContentKeyExtensibleText] = description;
         content[kMXMessageContentKeyExtensibleLocation][kMXMessageContentKeyExtensibleLocationDescription] = description;
     } else {
-        NSString *fallbackText = [NSString stringWithFormat:@"%@ @ %@", self.mxSession.myUser.displayname, geoURI];
+        NSString *fallbackText = [NSString stringWithFormat:@"%@ was at %@ as of %@", self.mxSession.myUser.displayname, geoURI, NSDate.date];
         
         content[kMXMessageBodyKey] = fallbackText;
         content[kMXMessageContentKeyExtensibleText] = fallbackText;
