@@ -136,6 +136,8 @@ NSString *const kMXMessageContentKeyExtensibleAudioWaveform = @"waveform";
 
 NSString *const kMXMessageContentKeyExtensibleText           = @"org.matrix.msc1767.text";
 
+NSString *const kMXMessageContentKeyExtensibleTimestamp      = @"org.matrix.msc3488.ts";
+
 NSString *const kMXMessageContentKeyExtensibleFile           = @"org.matrix.msc1767.file";
 NSString *const kMXMessageContentKeyExtensibleFileSize       = @"size";
 NSString *const kMXMessageContentKeyExtensibleFileName       = @"name";
