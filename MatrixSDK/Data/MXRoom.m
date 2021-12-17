@@ -2039,7 +2039,12 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     NSString *senderMessageBody;
     NSString *senderMessageFormattedBody;
     
-    if ([msgtype isEqualToString:kMXMessageTypeText]
+    if (eventToReply.location)
+    {
+        senderMessageBody = stringLocalizer.senderSentTheirLocation;
+        senderMessageFormattedBody = senderMessageBody;
+    }
+    else if ([msgtype isEqualToString:kMXMessageTypeText]
         || [msgtype isEqualToString:kMXMessageTypeNotice]
         || [msgtype isEqualToString:kMXMessageTypeEmote])
     {
@@ -2294,7 +2299,8 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                                            kMXMessageTypeImage,
                                            kMXMessageTypeVideo,
                                            kMXMessageTypeAudio,
-                                           kMXMessageTypeFile
+                                           kMXMessageTypeFile,
+                                           kMXMessageTypeLocation
                                            ];
         
         canReplyToEvent = [supportedMessageTypes containsObject:messageType];
