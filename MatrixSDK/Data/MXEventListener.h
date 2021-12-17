@@ -35,7 +35,7 @@ typedef void (^MXOnEvent)(MXEvent *event, MXTimelineDirection direction, id _Nul
  The `MXEventListener` class stores information about a listener to MXEvents that
  are handled by the Matrix SDK.
  */
-@interface MXEventListener : NSObject
+@interface MXEventListener : NSObject <NSCopying>
 
 - (instancetype)initWithSender:(id)sender
                  andEventTypes:(nullable NSArray<MXEventTypeString>*)eventTypes

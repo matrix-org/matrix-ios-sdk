@@ -61,4 +61,13 @@
     }
 }
 
+#pragma mark - NSCopying
+
+- (id)copyWithZone:(NSZone *)zone
+{
+    return [[[self class] allocWithZone:zone] initWithSender:_sender
+                                               andEventTypes:_eventTypes
+                                            andListenerBlock:_listenerBlock];
+}
+
 @end
