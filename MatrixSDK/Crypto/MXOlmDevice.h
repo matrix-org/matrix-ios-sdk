@@ -91,6 +91,8 @@
  */
 - (void)markOneTimeKeysAsPublished;
 
+- (void)forgetFallbackKey;
+
 /**
  Generate some new one-time keys
  
@@ -99,13 +101,20 @@
 - (void)generateOneTimeKeys:(NSUInteger)numKeys;
 
 /**
+    Deprectaded : Use unpublishedFallbackKey
+ */
+@property (nonatomic, readonly) NSDictionary *fallbackKey;
+
+
+/**
  The current fallback key for this account.
 
  @return a dictionary with one key which is "curve25519".
          Its value is a dictionary where keys are keys ids
          and values, the Curve25519 keys.
  */
-@property (nonatomic, readonly) NSDictionary *fallbackKey;
+@property (nonatomic, readonly) NSDictionary *unpublishedFallbackKey;
+
 
 /**
  Generate a new fallback key

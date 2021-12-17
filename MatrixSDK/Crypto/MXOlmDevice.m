@@ -129,6 +129,7 @@
 
 - (void)markOneTimeKeysAsPublished
 {
+    MXLogDebug(@"[MXOlmDevice] markOneTimeKeysAsPublished");
     [store performAccountOperationWithBlock:^(OLMAccount *olmAccount) {
         [olmAccount markOneTimeKeysAsPublished];
     }];
@@ -144,6 +145,20 @@
 - (NSDictionary *)fallbackKey
 {
     return store.account.fallbackKey;
+}
+
+- (void)forgetFallbackKey
+{
+    MXLogDebug(@"[MXOlmDevice] markOneTimeKeysAsPublished");
+    [store performAccountOperationWithBlock:^(OLMAccount *olmAccount) {
+        [olmAccount forgetFallbackKey];
+    }];
+}
+
+
+- (NSDictionary *)unpublishedFallbackKey
+{
+    return [store.account unpublishedFallbackKey];
 }
 
 - (void)generateFallbackKey

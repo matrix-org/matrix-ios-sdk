@@ -73,6 +73,7 @@ static NSString *const kMXCryptoOneTimeKeyClaimCompleteNotificationErrorKey     
 // Frequency with which to check & upload one-time keys
 NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
+NSTimeInterval kXCryptoDefaultForgetFallbackKeyInterval = 3600.0; // one hour
 
 @interface MXCrypto ()
 {
@@ -126,9 +127,6 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
     // Migration tool
     MXCryptoMigration *cryptoMigration;
 }
-
-// The current fallback key operation, if any
-@property(nonatomic, strong) MXHTTPOperation *uploadFallbackKeyOperation;
 
 @end
 
@@ -399,9 +397,6 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
         // Cancel pending one-time keys upload
         [self->uploadOneTimeKeysOperation cancel];
         self->uploadOneTimeKeysOperation = nil;
-        
-        [self.uploadFallbackKeyOperation cancel];
-        self.uploadFallbackKeyOperation = nil;
 
         [self->outgoingRoomKeyRequestManager close];
         self->outgoingRoomKeyRequestManager = nil;
@@ -854,6 +849,9 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 - (void)handleDeviceUnusedFallbackKeys:(NSArray<NSString *> *)deviceFallbackKeys
 {
 #ifdef MX_CRYPTO
+    
+    MXLogDebug(@"[MXCrypto] handleDeviceUnusedFallbackKeys: sync response has fallback %i", [deviceFallbackKeys containsObject:kMXKeySignedCurve25519Type]);
+    
     if (deviceFallbackKeys == nil) {
         return;
     }
@@ -862,14 +860,12 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
         return;
     }
     
-    if (self.uploadFallbackKeyOperation)
-    {
-        MXLogDebug(@"[MXCrypto] handleDeviceUnusedFallbackKeys: Fallback key upload already in progress.");
-        return;
-    }
-    
-    // We will be checking this often enough for it not to warrant automatic retries.
-    self.uploadFallbackKeyOperation = [self generateAndUploadFallbackKey];
+    MXWeakify(self);
+    dispatch_async(_cryptoQueue, ^{
+        MXStrongifyAndReturnIfNil(self);
+        [self generateFallbackKeyIfNeeded];
+    });
+
 #endif
 }
 
@@ -2782,8 +2778,22 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
     }
 
     lastOneTimeKeyCheck = now;
+    
+    
+    NSDate *lastFallbackKeyUploadTime = [self lastFallbackKeyUploadTime];
+    MXLogDebug(@"[MXCrypto] lastFallbackKeyUploadTime: %@", lastFallbackKeyUploadTime);
+    if (lastFallbackKeyUploadTime
+        &&  [now timeIntervalSinceDate:lastFallbackKeyUploadTime] > kXCryptoDefaultForgetFallbackKeyInterval)
+    {
+        MXLogDebug(@"[MXCrypto] maybeUploadOneTimeKeys: Can forget a fallbackKey");
+        [self setLastFallbackKeyUploadTime:nil];
+        [_olmDevice forgetFallbackKey];
+    }
+    
+    
+    BOOL hasUnpublishedFallbackKey = [self hasUnpublishedFallbackKey];
 
-    if (oneTimeKeyCount != -1)
+    if (oneTimeKeyCount != -1 || hasUnpublishedFallbackKey)
     {
         // We already have the current one_time_key count from a /sync response.
         // Use this value instead of asking the server for the current key count.
@@ -2822,6 +2832,8 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
     }
     else
     {
+        
+        MXLogDebug(@"[MXCrypto] maybeUploadOneTimeKeys: No one time key count from sync, getting from server");
         // Ask the server how many keys we have
         MXWeakify(self);
         uploadOneTimeKeysOperation = [self publishedOneTimeKeysCount:^(NSUInteger keyCount) {
@@ -2884,13 +2896,29 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
     }
 }
 
+- (NSString *) fallbackKeyPrefKey
+{
+    return [NSString stringWithFormat:@"%@|%@", @"lastFallBackkeyUploadTime", _olmDevice.deviceEd25519Key];
+}
+
+- (void) setLastFallbackKeyUploadTime: (NSDate *) date
+{
+    [[NSUserDefaults standardUserDefaults] setObject:date forKey:self.fallbackKeyPrefKey];
+}
+
+- (NSDate *) lastFallbackKeyUploadTime
+{
+    return (NSDate *) [[NSUserDefaults standardUserDefaults] objectForKey:self.fallbackKeyPrefKey];
+}
+
+
 - (MXHTTPOperation *)generateAndUploadOneTimeKeys:(NSUInteger)keyCount retry:(BOOL)retry success:(void (^)(void))success failure:(void (^)(NSError *))failure
 {
     MXLogDebug(@"[MXCrypto] generateAndUploadOneTimeKeys: %@ one time keys are available on the homeserver", @(keyCount));
           
     MXHTTPOperation *operation;
     
-    if ([self generateOneTimeKeys:keyCount])
+    if ([self generateOneTimeKeys:keyCount] || [self hasUnpublishedFallbackKey])
     {
         operation = [self uploadOneTimeKeys:^(MXKeysUploadResponse *keysUploadResponse) {
             success();
@@ -2918,38 +2946,28 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
     return operation;
 }
 
-- (MXHTTPOperation *)generateAndUploadFallbackKey
+- (BOOL) hasUnpublishedFallbackKey
 {
-    [_olmDevice generateFallbackKey];
-    
-    NSDictionary *fallbackKey = _olmDevice.fallbackKey;
-    NSMutableDictionary *fallbackKeyJson = [NSMutableDictionary dictionary];
-    
-    for (NSString *keyId in fallbackKey[kMXKeyCurve25519Type])
+    NSDictionary *fallbackDict = _olmDevice.unpublishedFallbackKey;
+    if (![fallbackDict[kMXKeyCurve25519Type] isKindOfClass:NSDictionary.class])
     {
-        // Sign the fallback key
-        NSMutableDictionary *signedKey = [NSMutableDictionary dictionary];
-        signedKey[@"key"] = fallbackKey[kMXKeyCurve25519Type][keyId];
-        signedKey[@"fallback"] = @(YES);
-        signedKey[@"signatures"] = [self signObject:signedKey];
-        
-        fallbackKeyJson[[NSString stringWithFormat:@"%@:%@", kMXKeySignedCurve25519Type, keyId]] = signedKey;
+        MXLogDebug(@"[MXCrypto] malformed fallback key: %@", fallbackDict);
+        return false;
     }
     
-    MXLogDebug(@"[MXCrypto] generateAndUploadFallbackKey: Started uploading fallback key.");
-    
-    MXWeakify(self);
-    return [_matrixRestClient uploadKeys:nil oneTimeKeys:nil fallbackKeys:fallbackKeyJson success:^(MXKeysUploadResponse *keysUploadResponse) {
-        MXStrongifyAndReturnIfNil(self);
-        
-        self.uploadFallbackKeyOperation = nil;
-        MXLogDebug(@"[MXCrypto] generateAndUploadFallbackKey: Finished uploading fallback key.");
-    } failure:^(NSError *error) {
-        MXStrongifyAndReturnIfNil(self);
-        
-        self.uploadFallbackKeyOperation = nil;
-        MXLogError(@"[MXCrypto] generateAndUploadFallbackKey: Failed uploading fallback key.");
-    }];
+    NSDictionary *keys = fallbackDict[kMXKeyCurve25519Type];
+    return [keys count] != 0;
+}
+
+- (BOOL) generateFallbackKeyIfNeeded
+{
+    if (![self hasUnpublishedFallbackKey]) {
+        MXLogDebug(@"[MXCrypto] Generate new Fallback key");
+        [self.olmDevice generateFallbackKey];
+        [self setLastFallbackKeyUploadTime: nil];
+        return true;
+    }
+    return false;
 }
 
 /**
@@ -3025,16 +3043,40 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 
         oneTimeJson[[NSString stringWithFormat:@"%@:%@", kMXKeySignedCurve25519Type, keyId]] = k;
     }
+    
+    NSDictionary *fallbackKey = _olmDevice.unpublishedFallbackKey;
+    NSMutableDictionary *fallbackKeyJson = nil;
+    
+    BOOL hadUnpublishedFallbackKey = [self hasUnpublishedFallbackKey];
+    if (hadUnpublishedFallbackKey) {
+        fallbackKeyJson = [NSMutableDictionary dictionary];
+    
+        for (NSString *keyId in fallbackKey[kMXKeyCurve25519Type])
+        {
+            // Sign the fallback key
+            NSMutableDictionary *signedKey = [NSMutableDictionary dictionary];
+            signedKey[@"key"] = fallbackKey[kMXKeyCurve25519Type][keyId];
+            signedKey[@"fallback"] = @(YES);
+            signedKey[@"signatures"] = [self signObject:signedKey];
+            
+            fallbackKeyJson[[NSString stringWithFormat:@"%@:%@", kMXKeySignedCurve25519Type, keyId]] = signedKey;
+        }
+    }
 
     MXLogDebug(@"[MXCrypto] uploadOneTimeKeys: Upload %tu keys", ((NSDictionary*)oneTimeKeys[kMXKeyCurve25519Type]).count);
+    MXLogDebug(@"[MXCrypto] uploadOneTimeKeys: with fallback key %@", hadUnpublishedFallbackKey ? @"YES" : @"NO");
 
     // For now, we set the device id explicitly, as we may not be using the
     // same one as used in login.
-    MXWeakify(self);
-    return [_matrixRestClient uploadKeys:nil oneTimeKeys:oneTimeJson fallbackKeys:nil success:^(MXKeysUploadResponse *keysUploadResponse) {
+    MXWeakify(self); 
+    return [_matrixRestClient uploadKeys:nil oneTimeKeys:oneTimeJson fallbackKeys:fallbackKeyJson success:^(MXKeysUploadResponse *keysUploadResponse) {
         MXStrongifyAndReturnIfNil(self);
 
         [self.olmDevice markOneTimeKeysAsPublished];
+        if (hadUnpublishedFallbackKey){
+            NSDate* now = [NSDate date];
+            [self setLastFallbackKeyUploadTime: now];
+        }
         success(keysUploadResponse);
 
     } failure:^(NSError *error) {
