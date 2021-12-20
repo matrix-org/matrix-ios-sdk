@@ -36,6 +36,7 @@
 #import "MXRoomSync.h"
 
 #import "MXEventContentPollStart.h"
+#import "MXEventContentLocation.h"
 
 NSString *const kMXRoomDidFlushDataNotification = @"kMXRoomDidFlushDataNotification";
 NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotification";
@@ -2400,26 +2401,21 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     NSMutableDictionary *content = [NSMutableDictionary dictionary];
     content[kMXMessageTypeKey] = kMXMessageTypeLocation;
     
-    NSInteger timestamp = NSDate.date.timeIntervalSince1970 * 1000; // milliseconds since UNIX epoch
-    content[kMXMessageContentKeyExtensibleTimestamp] = @(timestamp);
+    NSDictionary *locationContent = [[MXEventContentLocation alloc] initWithLatitude:latitude
+                                                                           longitude:longitude
+                                                                         description:description].JSONDictionary;
     
-    NSString *geoURI = [NSString stringWithFormat:@"geo:%@,%@", @(latitude), @(longitude)];
+    content[kMXMessageContentKeyExtensibleLocationMSC3488] = locationContent;
     
+    NSString *geoURI = locationContent[kMXMessageContentKeyExtensibleLocationURI];
     content[kMXMessageGeoURIKey] = geoURI;
     
-    content[kMXMessageContentKeyExtensibleLocation] = [NSMutableDictionary dictionary];
-    content[kMXMessageContentKeyExtensibleLocation][kMXMessageContentKeyExtensibleLocationURI] = geoURI;
-    
-    if (description.length > 0) {
-        content[kMXMessageBodyKey] = description;
-        content[kMXMessageContentKeyExtensibleText] = description;
-        content[kMXMessageContentKeyExtensibleLocation][kMXMessageContentKeyExtensibleLocationDescription] = description;
-    } else {
-        NSString *fallbackText = [NSString stringWithFormat:@"%@ was at %@ as of %@", self.mxSession.myUser.displayname, geoURI, NSDate.date];
-        
-        content[kMXMessageBodyKey] = fallbackText;
-        content[kMXMessageContentKeyExtensibleText] = fallbackText;
-    }
+    NSString *fallbackText = [NSString stringWithFormat:@"%@ was at %@ as of %@", self.mxSession.myUser.displayname, geoURI, NSDate.date];
+    content[kMXMessageBodyKey] = fallbackText;
+    content[kMXMessageContentKeyExtensibleText] = fallbackText;
+                                                   
+    NSInteger timestamp = NSDate.date.timeIntervalSince1970 * 1000; // milliseconds since UNIX epoch
+    content[kMXMessageContentKeyExtensibleTimestamp] = @(timestamp);
     
     return [self sendMessageWithContent:content
                               localEcho:localEcho

@@ -22,6 +22,7 @@
 #import "MXEncryptedContentFile.h"
 #import "MXEventRelations.h"
 #import "MXEventReferenceChunk.h"
+#import "MXEventContentLocation.h"
 
 #pragma mark - Constants definitions
 
@@ -159,7 +160,8 @@ NSString *const kMXMessageContentKeyExtensiblePollKindUndisclosed = @"m.poll.und
 
 // Location
 
-NSString *const kMXMessageContentKeyExtensibleLocation = @"org.matrix.msc3488.location";
+NSString *const kMXMessageContentKeyExtensibleLocation = @"m.location";
+NSString *const kMXMessageContentKeyExtensibleLocationMSC3488 = @"org.matrix.msc3488.location";
 NSString *const kMXMessageContentKeyExtensibleLocationURI = @"uri";
 NSString *const kMXMessageContentKeyExtensibleLocationDescription = @"description";
 
@@ -490,9 +492,22 @@ NSString *const kMXMessageContentKeyExtensibleLocationDescription = @"descriptio
                                                              self.content[kMXMessageContentKeyVoiceMessageMSC3245]);
 }
 
-- (BOOL)hasLocation
+- (MXEventContentLocation *)location
 {
-    return self.eventType == MXEventTypeRoomMessage && self.content[kMXMessageContentKeyExtensibleLocation] != nil;
+    if (self.eventType != MXEventTypeRoomMessage) {
+        return nil;
+    }
+    
+    NSDictionary *locationContent = self.content[kMXMessageContentKeyExtensibleLocationMSC3488];
+    if (locationContent == nil) {
+        locationContent = self.content[kMXMessageContentKeyExtensibleLocation];
+    }
+    
+    if (locationContent == nil) {
+        return nil;
+    }
+    
+    return [MXEventContentLocation modelFromJSON:locationContent];
 }
 
 - (BOOL)contentHasBeenEdited
