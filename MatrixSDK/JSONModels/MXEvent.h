@@ -20,7 +20,9 @@
 #import "MXEventUnsignedData.h"
 #import "MXEventContentRelatesTo.h"
 
-@class MXEventDecryptionResult, MXEncryptedContentFile;
+@class MXEventDecryptionResult;
+@class MXEncryptedContentFile;
+@class MXEventContentLocation;
 
 /**
  Types of Matrix events
@@ -248,6 +250,7 @@ FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensiblePollKindUndisclo
 
 // Location
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleLocation;
+FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleLocationMSC3488;
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleLocationURI;
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleLocationDescription;
 
@@ -465,6 +468,11 @@ extern NSString *const kMXEventIdentifierKey;
 @property (nonatomic) NSError *sentError;
 
 /**
+ Location information if any
+ */
+@property (nonatomic, readonly, nullable) MXEventContentLocation *location;
+
+/**
  Indicates if the event hosts state data.
  */
 - (BOOL)isState;
@@ -508,11 +516,6 @@ extern NSString *const kMXEventIdentifierKey;
  Return YES if the event contains a voice message
  */
 - (BOOL)isVoiceMessage;
-
-/**
- Return YES if the event contains location data
- */
-- (BOOL)hasLocation;
 
 /**
  Return YES if the event content has been edited.
