@@ -81,12 +81,13 @@ public class MXThreadEventTimeline: NSObject, MXEventTimeline {
         }
         self.store = store
         self.thread = thread
+        self.state = MXRoomState(roomId: thread.roomId, andMatrixSession: thread.session, andDirection: true)
         super.init()
         self.roomEventFilter = threadEventFilter
     }
     
     public func initialiseState(_ stateEvents: [MXEvent]) {
-        //  no-op
+        state?.handleStateEvents(stateEvents)
     }
     
     public func destroy() {
@@ -109,7 +110,7 @@ public class MXThreadEventTimeline: NSObject, MXEventTimeline {
             // canPaginate depends on two things:
             //  - did we end to paginate from the MXStore?
             //  - did we reach the top of the pagination in our requests to the home server?
-            return storeMessagesEnumerator?.remaining ?? 0 > 0 || !hasReachedHomeServerForwardsPaginationEnd
+            return storeMessagesEnumerator?.remaining ?? 0 > 0 || !hasReachedHomeServerBackwardsPaginationEnd
         case .forwards:
             if isLiveTimeline {
                 // Matrix is not yet able to guess the future
@@ -218,7 +219,7 @@ public class MXThreadEventTimeline: NSObject, MXEventTimeline {
                     return
                 }
                 
-                if remainingNumItems <= 0 && self.hasReachedHomeServerBackwardsPaginationEnd{
+                if remainingNumItems <= 0 && self.hasReachedHomeServerBackwardsPaginationEnd {
                     DispatchQueue.main.async {
                         // Nothing more to do
                         MXLog.debug("[MXThreadEventTimeline][\(self.timelineId)] paginate: is done from the store")
@@ -244,21 +245,35 @@ public class MXThreadEventTimeline: NSObject, MXEventTimeline {
             var paginationToken: String?
             switch direction {
             case .backwards:
-                paginationToken = self.backwardsPaginationToken ?? "END"
+                paginationToken = self.backwardsPaginationToken
             case .forwards:
                 paginationToken = self.forwardsPaginationToken
             @unknown default:
                 fatalError("[MXThreadEventTimeline][\(self.timelineId)] paginate: unknown direction")
             }
-            if let operation2 = self.thread.session?.matrixRestClient.relations(forEvent: self.thread.id,
-                                                                                inRoom: self.thread.roomId,
-                                                                                relationType: MXEventRelationTypeThread,
-                                                                                eventType: nil,
-                                                                                from: paginationToken,
-                                                                                limit: remainingNumItems,
-                                                                                completion: { response in
-                                                                                    
-                                                                                }) {
+            if let matrixRestClient = self.thread.session?.matrixRestClient {
+                let operation2 = matrixRestClient.relations(forEvent: self.thread.id,
+                                                            inRoom: self.thread.roomId,
+                                                            relationType: MXEventRelationTypeThread,
+                                                            eventType: nil,
+                                                            from: paginationToken,
+                                                            limit: remainingNumItems,
+                                                            completion: { response in
+                                                                switch response {
+                                                                case .success(let aggregatedResponse):
+                                                                    let events = aggregatedResponse.chunk
+                                                                    if aggregatedResponse.nextBatch == nil {
+                                                                        if direction == .backwards {
+                                                                            self.hasReachedHomeServerBackwardsPaginationEnd = true
+                                                                        } else if direction == .forwards {
+                                                                            self.hasReachedHomeServerForwardsPaginationEnd = true
+                                                                        }
+                                                                    }
+                                                                    complete()
+                                                                case .failure(let error):
+                                                                    failure(error)
+                                                                }
+                                                            })
                 operation.mutate(to: operation2)
             }
         }
@@ -271,11 +286,11 @@ public class MXThreadEventTimeline: NSObject, MXEventTimeline {
     }
     
     public func handleJoinedRoomSync(_ roomSync: MXRoomSync, onComplete: @escaping () -> Void) {
-        
+        //  no-op
     }
     
     public func handle(_ invitedRoomSync: MXInvitedRoomSync, onComplete: @escaping () -> Void) {
-        
+        //  no-op
     }
     
     public func handleLazyLoadedStateEvents(_ stateEvents: [MXEvent]) {
@@ -288,7 +303,7 @@ public class MXThreadEventTimeline: NSObject, MXEventTimeline {
     
     public func __listen(toEventsOfTypes types: [String]?, onEvent: @escaping MXOnRoomEvent) -> MXEventListener {
         let listener = MXEventListener(sender: self, andEventTypes: types) { event, direction, any in
-            onEvent(event, direction, nil)
+            onEvent(event, direction, any as? MXRoomState)
         }
         synchronizeListeners {
             self.listeners.append(listener)
@@ -314,7 +329,7 @@ public class MXThreadEventTimeline: NSObject, MXEventTimeline {
             tmpListeners = self.listeners.map { $0.copy() as! MXEventListener }
         }
         for listener in tmpListeners {
-            listener.notify(event, direction: direction, andCustomObject: nil)
+            listener.notify(event, direction: direction, andCustomObject: state)
         }
     }
     
@@ -345,6 +360,8 @@ public class MXThreadEventTimeline: NSObject, MXEventTimeline {
                 decryptEvents(events) {
                     completion(events)
                 }
+            } else {
+                completion([])
             }
         case .forwards:
             completion([])

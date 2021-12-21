@@ -86,7 +86,7 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXTimelineDirection direction, MXR
 /**
  The state of the room at the top most recent event of the timeline.
  */
-@property (nonatomic, nullable, readonly) MXRoomState *state;
+@property (nonatomic, nullable) MXRoomState *state;
 
 
 #pragma mark - Initialisation
@@ -97,13 +97,6 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXTimelineDirection direction, MXR
  @param stateEvents the state event.
  */
 - (void)initialiseState:(NSArray<MXEvent*> *)stateEvents;
-
-/**
- Reset the room evenTimeline state.
-
- @param roomState the new state to use.
- */
-- (void)setState:(MXRoomState *)roomState;
 
 /**
  Release RAM memory used by the timeline.

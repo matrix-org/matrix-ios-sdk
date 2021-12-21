@@ -29,7 +29,14 @@ public class MXThread: NSObject {
     /// Identifier of the room that the thread is in.
     public let roomId: String
     
+    private var _liveTimeline: MXEventTimeline?
     private var eventsMap: [String: MXEvent] = [:]
+    private var liveTimelineOperationQueue: OperationQueue = {
+        let queue = OperationQueue()
+        queue.maxConcurrentOperationCount = 1
+        queue.isSuspended = true
+        return queue
+    }()
     
     internal init(withSession session: MXSession,
                   identifier: String,
@@ -90,6 +97,36 @@ public class MXThread: NSObject {
     /// Number of replies in the thread. Does not count the root event
     public var numberOfReplies: Int {
         return eventsMap.filter({ $0 != id && $1.isInThread() }).count
+    }
+    
+    /// The live events timeline
+    /// - Parameter completion: Completion block
+    public func liveTimeline(_ completion: @escaping (MXEventTimeline) -> Void) {
+        if let timeline = _liveTimeline {
+            liveTimelineOperationQueue.addOperation {
+                DispatchQueue.main.async {
+                    completion(timeline)
+                }
+            }
+        } else if let session = session {
+            _liveTimeline = MXThreadEventTimeline(thread: self, andInitialEventId: nil)
+            MXRoomState.load(from: session.store, withRoomId: self.roomId, matrixSession: session) { roomState in
+                self._liveTimeline?.state = roomState
+                self.liveTimelineOperationQueue.isSuspended = false
+                if let timeline = self._liveTimeline {
+                    completion(timeline)
+                }
+            }
+        }
+    }
+    
+    /// Timeline on a specific event
+    /// - Parameter eventId: Event identifier
+    /// - Returns: The timeline
+    public func timelineOnEvent(_ eventId: String) -> MXEventTimeline {
+        let timeline = MXThreadEventTimeline(thread: self, andInitialEventId: eventId)
+        timeline.state = _liveTimeline?.state
+        return timeline
     }
     
     /// Fetches all replies in a thread. Not used right now

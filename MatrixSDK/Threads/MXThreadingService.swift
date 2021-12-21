@@ -119,6 +119,13 @@ public class MXThreadingService: NSObject {
         return result
     }
     
+    public func createTempThread(withId identifier: String, roomId: String) -> MXThread {
+        guard let session = session else {
+            fatalError("Session must be available")
+        }
+        return MXThread(withSession: session, identifier: identifier, roomId: roomId)
+    }
+    
     /// Get threads in a room
     /// - Parameter roomId: room identifier
     /// - Returns: thread list in given room
