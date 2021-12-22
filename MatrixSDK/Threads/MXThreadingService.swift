@@ -61,16 +61,19 @@ public class MXThreadingService: NSObject {
     
     /// Adds event to the related thread instance
     /// - Parameter event: event to be handled
-    public func handleEvent(_ event: MXEvent) {
+    /// - Returns: true if the event handled, false otherwise
+    @discardableResult
+    public func handleEvent(_ event: MXEvent) -> Bool {
         guard let session = session else {
             //  session closed
-            return
+            return false
         }
         if let threadId = event.threadId {
             //  event is in a thread
+            let handled: Bool
             if let thread = thread(withId: threadId) {
                 //  add event to the thread if found
-                thread.addEvent(event)
+                handled = thread.addEvent(event)
             } else {
                 //  create the thread for the first time
                 let thread: MXThread
@@ -80,16 +83,19 @@ public class MXThreadingService: NSObject {
                 } else {
                     thread = MXThread(withSession: session, identifier: threadId, roomId: event.roomId)
                 }
-                thread.addEvent(event)
+                handled = thread.addEvent(event)
                 saveThread(thread)
                 NotificationCenter.default.post(name: Self.newThreadCreated, object: thread, userInfo: nil)
             }
             notifyDidUpdateThreads()
+            return handled
         } else if let thread = thread(withId: event.eventId) {
             //  event is the root event of a thread
-            thread.addEvent(event)
+            let handled = thread.addEvent(event)
             notifyDidUpdateThreads()
+            return handled
         }
+        return false
     }
     
     /// Get notifications count of threads in a room

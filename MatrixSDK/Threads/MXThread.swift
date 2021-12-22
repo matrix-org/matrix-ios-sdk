@@ -56,10 +56,14 @@ public class MXThread: NSObject {
         super.init()
     }
     
-    internal func addEvent(_ event: MXEvent) {
+    /// Add an event to the thread
+    /// - Parameter event: Event
+    /// - Returns: true if handled, false otherwise
+    @discardableResult
+    internal func addEvent(_ event: MXEvent) -> Bool {
         guard eventsMap[event.eventId] == nil else {
             //  do not re-add the event
-            return
+            return false
         }
         eventsMap[event.eventId] = event
         updateNotificationsCount()
@@ -67,6 +71,7 @@ public class MXThread: NSObject {
             //  the user sent a message to the thread, so mark the thread as read
             markAsRead()
         }
+        return true
     }
     
     /// Number of notifications in the thread

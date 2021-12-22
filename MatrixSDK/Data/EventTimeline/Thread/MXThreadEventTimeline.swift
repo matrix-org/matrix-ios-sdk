@@ -258,17 +258,12 @@ public class MXThreadEventTimeline: NSObject, MXEventTimeline {
                                                             eventType: nil,
                                                             from: paginationToken,
                                                             limit: remainingNumItems,
-                                                            completion: { response in
+                                                            completion: { [weak self] response in
+                                                                guard let self = self else { return }
                                                                 switch response {
-                                                                case .success(let aggregatedResponse):
-                                                                    let events = aggregatedResponse.chunk
-                                                                    if aggregatedResponse.nextBatch == nil {
-                                                                        if direction == .backwards {
-                                                                            self.hasReachedHomeServerBackwardsPaginationEnd = true
-                                                                        } else if direction == .forwards {
-                                                                            self.hasReachedHomeServerForwardsPaginationEnd = true
-                                                                        }
-                                                                    }
+                                                                case .success(let paginationResponse):
+                                                                    self.processPaginationResponse(paginationResponse,
+                                                                                                   direction: direction)
                                                                     complete()
                                                                 case .failure(let error):
                                                                     failure(error)
@@ -346,6 +341,26 @@ public class MXThreadEventTimeline: NSObject, MXEventTimeline {
     
     //  MARK: - Private
     
+    private func processPaginationResponse(_ response: MXAggregationPaginatedResponse, direction: MXTimelineDirection) {
+        for event in response.chunk {
+            addEvent(event, direction: direction, fromStore: false)
+        }
+        if let rootEvent = response.originalEvent {
+            addEvent(rootEvent, direction: direction, fromStore: false)
+        }
+        
+        switch direction {
+        case .backwards:
+            backwardsPaginationToken = response.nextBatch
+            hasReachedHomeServerBackwardsPaginationEnd = response.nextBatch == nil
+        case .forwards:
+            forwardsPaginationToken = response.nextBatch
+            hasReachedHomeServerForwardsPaginationEnd = response.nextBatch == nil
+        @unknown default:
+            fatalError("[MXThreadEventTimeline][\(timelineId)] processPaginationResponse: Unknown direction")
+        }
+    }
+    
     private func paginateFromStore(numberOfItems: UInt, direction: MXTimelineDirection, completion: @escaping ([MXEvent]) -> Void) {
         switch direction {
         case .backwards:
@@ -371,7 +386,16 @@ public class MXThreadEventTimeline: NSObject, MXEventTimeline {
     }
     
     private func addEvent(_ event: MXEvent, direction: MXTimelineDirection, fromStore: Bool) {
-        notifyListeners(event, direction: direction)
+        if fromStore {
+            notifyListeners(event, direction: direction)
+        } else {
+            if let threadingService = thread.session?.threadingService {
+                let handled = threadingService.handleEvent(event)
+                if handled {
+                    notifyListeners(event, direction: direction)
+                }
+            }
+        }
     }
     
     private func decryptEvents(_ events: [MXEvent], newerThanTimestamp timestamp: UInt64 = 0, completion: @escaping () -> Void) {
