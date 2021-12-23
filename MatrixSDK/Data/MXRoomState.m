@@ -358,7 +358,7 @@
 
 - (BOOL)isEncrypted
 {
-    return (0 != self.encryptionAlgorithm.length);
+    return stateEvents[kMXEventTypeStringRoomEncryption] != nil;
 }
 
 - (NSArray<NSString *> *)pinnedEvents

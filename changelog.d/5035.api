@@ -1,0 +1,1 @@
+MXAnalyticsDelegate: The generic methods have been replaced with type safe ones for each event tracked.
