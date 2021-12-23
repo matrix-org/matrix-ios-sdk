@@ -188,21 +188,12 @@ public class MXSpaceService: NSObject {
     /// Handle a sync response
     /// - Parameters:
     ///   - syncResponse: The sync response object
-    ///   - syncToken: The sync token used to perform the /sync request
-    public func handleSyncResponse(_ syncResponse: MXSyncResponse, syncToken: String?) {
-        let response = syncResponse.jsonString() ?? ""
-        MXLog.debug("[TOTO] \(response)")
-        
-        MXLog.debug("[TOTO] join \(syncResponse.rooms?.join ?? [:])")
-        MXLog.debug("[TOTO] invite \(syncResponse.rooms?.invite ?? [:])")
-        MXLog.debug("[TOTO] leave \(syncResponse.rooms?.leave ?? [:])")
-        MXLog.debug("[TOTO] events \(syncResponse.toDevice?.events ?? [])")
-
-        guard self.needsUpdate || !(syncResponse.rooms?.join?.isEmpty ?? true) || !(syncResponse.rooms?.invite?.isEmpty ?? true) || !(syncResponse.rooms?.leave?.isEmpty ?? true) || !(syncResponse.toDevice?.events.isEmpty ?? true) else {
-            return
+    public func handleSyncResponse(_ syncResponse: MXSyncResponse) {
+         guard self.needsUpdate || !(syncResponse.rooms?.join?.isEmpty ?? true) || !(syncResponse.rooms?.invite?.isEmpty ?? true) || !(syncResponse.rooms?.leave?.isEmpty ?? true) || !(syncResponse.toDevice?.events.isEmpty ?? true) else {
+             return
         }
         
-        self.buildGraph(from: syncResponse)
+        self.buildGraph()
     }
     
     /// Create a space.
@@ -422,7 +413,7 @@ public class MXSpaceService: NSObject {
     }
     
     /// Build the graph of rooms
-    private func buildGraph(from syncResponse: MXSyncResponse) {
+    private func buildGraph() {
         guard !self.isClosed && !self.isGraphBuilding && self.graphUpdateEnabled else {
             MXLog.debug("[MXSpaceService] buildGraph: aborted: graph is building or disabled")
             self.needsUpdate = true
@@ -452,7 +443,7 @@ public class MXSpaceService: NSObject {
             
             MXLog.debug("[MXSpaceService] buildGraph: data prepared in \(Date().timeIntervalSince(startDate))")
             
-            self.computSpaceGraph(with: result, roomIds: roomIds, directRoomIds: directRoomIds, nextSyncToken: syncResponse.nextBatch) { graph in
+            self.computSpaceGraph(with: result, roomIds: roomIds, directRoomIds: directRoomIds) { graph in
                 guard !self.isClosed else {
                     return
                 }
@@ -590,7 +581,7 @@ public class MXSpaceService: NSObject {
         }
     }
     
-    private func computSpaceGraph(with result: PrepareDataResult, roomIds: [String], directRoomIds: Set<String>, nextSyncToken: String, completion: @escaping (_ graph: MXSpaceGraphData) -> Void) {
+    private func computSpaceGraph(with result: PrepareDataResult, roomIds: [String], directRoomIds: Set<String>, completion: @escaping (_ graph: MXSpaceGraphData) -> Void) {
         let startDate = Date()
         MXLog.debug("[MXSpaceService] computSpaceGraph: started for \(roomIds.count) rooms, \(directRoomIds.count) direct rooms, \(result.spaces.count) spaces, \(result.spaces.reduce(0, { $0 + $1.childSpaces.count })) child spaces, \(result.spaces.reduce(0, { $0 + $1.childRoomIds.count })) child rooms,  \(result.spaces.reduce(0, { $0 + $1.otherMembersId.count })) other members, \(result.directRoomIdsPerMemberId.count) members")
         self.processingQueue.async {
@@ -632,7 +623,6 @@ public class MXSpaceService: NSObject {
             }
 
             let graph = MXSpaceGraphData(
-                nextSyncToken: nextSyncToken,
                 spaceRoomIds: result.spaces.map({ space in
                     space.spaceId
                 }),

@@ -696,14 +696,12 @@ typedef void (^MXOnResumeDone)(void);
                                   catchingUp:self.catchingUp];
             }
 
-            NSString *lastSyncToken = self.store.eventStreamToken;
-            
             // Update live event stream token
             MXLogDebug(@"[MXSession] Next sync token: %@", syncResponse.nextBatch);
             self.store.eventStreamToken = syncResponse.nextBatch;
             
             // Propagate sync response to the associated space service
-            [self.spaceService handleSyncResponse:syncResponse syncToken:lastSyncToken];
+            [self.spaceService handleSyncResponse:syncResponse];
             
             if (!self.homeServerCapabilities.isInitialised) {
                 [self.homeServerCapabilities updateWithCompletion:nil];
