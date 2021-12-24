@@ -146,6 +146,7 @@ public class MXThreadEventTimeline: NSObject, MXEventTimeline {
         
         backwardsPaginationToken = nil
         forwardsPaginationToken = nil
+        hasReachedHomeServerBackwardsPaginationEnd = false
         hasReachedHomeServerForwardsPaginationEnd = false
         
         guard let session = thread.session else {
@@ -163,8 +164,8 @@ public class MXThreadEventTimeline: NSObject, MXEventTimeline {
                 self.resetPagination()
                 
                 var events: [MXEvent] = []
-                events.append(context.event)
                 events.append(contentsOf: context.eventsBefore)
+                events.append(context.event)
                 events.append(contentsOf: context.eventsAfter)
                 
                 self.decryptEvents(events) {
@@ -394,6 +395,10 @@ public class MXThreadEventTimeline: NSObject, MXEventTimeline {
                 if handled {
                     notifyListeners(event, direction: direction)
                 }
+            }
+            
+            if !isLiveTimeline {
+                store.storeEvent(forRoom: thread.roomId, event: event, direction: direction)
             }
         }
     }

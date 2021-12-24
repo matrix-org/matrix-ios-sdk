@@ -129,9 +129,7 @@ public class MXThread: NSObject {
     /// - Parameter eventId: Event identifier
     /// - Returns: The timeline
     public func timelineOnEvent(_ eventId: String) -> MXEventTimeline {
-        let timeline = MXThreadEventTimeline(thread: self, andInitialEventId: eventId)
-        timeline.state = _liveTimeline?.state
-        return timeline
+        return MXThreadEventTimeline(thread: self, andInitialEventId: eventId)
     }
     
     /// Fetches all replies in a thread. Not used right now
