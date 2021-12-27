@@ -40,9 +40,9 @@
     return self;
 }
 
-- (MXTaskProfile *)startMeasuringTaskWithName:(nonnull NSString *)name category:(nonnull NSString *)category
+- (MXTaskProfile *)startMeasuringTaskWithName:(MXTaskProfileName)name
 {
-    MXTaskProfile *taskProfile = [[MXTaskProfile alloc] initWithName:name category:category];
+    MXTaskProfile *taskProfile = [[MXTaskProfile alloc] initWithName:name];
     
     @synchronized (taskProfiles)
     {
@@ -56,18 +56,18 @@
 {
     [taskProfile markAsCompleted];
     
-    MXLogDebug(@"[MXBaseProfiler] Task %@ - %@ for %@ units completed in %.3fms%@",
-          taskProfile.category,
+    NSNumber *durationMS = [NSNumber numberWithDouble:taskProfile.duration * 1000];
+    
+    MXLogDebug(@"[MXBaseProfiler] Task %@ for %@ units completed in %.3fms%@",
           taskProfile.name,
           @(taskProfile.units),
-          taskProfile.duration * 1000,
+          durationMS.doubleValue,
           taskProfile.paused ? @" (but it was paused)" : @"");
           
     // Do not send a task that was paused to analytics. Data is often not valid
     if (!taskProfile.paused)
     {
-        // TODO: Send units information (but Matomo does not support additional contextual data)
-        [self.analytics trackDuration:taskProfile.duration category:taskProfile.category name:taskProfile.name];
+        [self.analytics trackDuration:durationMS.integerValue name:taskProfile.name units:taskProfile.units];
     }
     
     @synchronized (taskProfiles)
@@ -104,13 +104,13 @@
 
 #pragma mark - Private
 
-- (nullable MXTaskProfile*)taskProfileWithName:(NSString*)name category:(NSString*)category
+- (nullable MXTaskProfile*)taskProfileWithName:(NSString*)name
 {
     MXTaskProfile *taskProfile;
     
     @synchronized (taskProfiles)
     {
-        taskProfile = [taskProfiles filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"name == %@ && category == %@", name, category]].firstObject;
+        taskProfile = [taskProfiles filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"name == %@", name]].firstObject;
     }
     return taskProfile;
 }
