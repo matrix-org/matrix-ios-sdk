@@ -145,6 +145,7 @@ public extension MXSession {
     ///   - parentRoomId: Optional parent room ID. Required for `restricted` jroom
     ///   - aliasLocalPart: local part of the alias (required for `public` room)
     ///   (e.g. for the alias "#my_alias:example.org", the local part is "my_alias")
+    ///   - isEncrypted: `true` if you want to enable encryption for this room. `false` otherwise.
     ///   - completion: A closure called when the operation completes. Provides the instance of created room in case of success.
     /// - Returns: a `MXHTTPOperation` instance.
     @nonobjc @discardableResult func createRoom(withName name: String,
@@ -152,6 +153,7 @@ public extension MXSession {
                                                 topic: String? = nil,
                                                 parentRoomId: String? = nil,
                                                 aliasLocalPart: String? = nil,
+                                                isEncrypted: Bool = true,
                                                 completion: @escaping (_ response: MXResponse<MXRoom>) -> Void) -> MXHTTPOperation? {
         let parameters = MXRoomCreationParameters()
         parameters.name = name
@@ -178,9 +180,6 @@ public extension MXSession {
             let historyVisibilityStateEvent = stateEventBuilder.buildHistoryVisibilityEvent(withVisibility: .shared)
             parameters.addOrUpdateInitialStateEvent(historyVisibilityStateEvent)
             
-            let encryptionStateEvent = stateEventBuilder.buildAlgorithmEvent(withAlgorithm: kMXCryptoMegolmAlgorithm)
-            parameters.addOrUpdateInitialStateEvent(encryptionStateEvent)
-            
             let joinRuleSupportType = homeServerCapabilities.isFeatureSupported(.restricted)
             if joinRuleSupportType == .supported || joinRuleSupportType == .supportedUnstable {
                 guard let parentRoomId = parentRoomId else {
@@ -202,6 +201,9 @@ public extension MXSession {
             parameters.addOrUpdateInitialStateEvent(historyVisibilityStateEvent)
             let joinRuleStateEvent = stateEventBuilder.buildJoinRuleEvent(withJoinRule: .invite)
             parameters.addOrUpdateInitialStateEvent(joinRuleStateEvent)
+        }
+        
+        if isEncrypted {
             let encryptionStateEvent = stateEventBuilder.buildAlgorithmEvent(withAlgorithm: kMXCryptoMegolmAlgorithm)
             parameters.addOrUpdateInitialStateEvent(encryptionStateEvent)
         }

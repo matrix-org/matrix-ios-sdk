@@ -22,7 +22,6 @@ class MXSpaceGraphData: NSObject, NSCoding {
     // MARK: - Constants
     
     private enum Constants {
-        static let nextSyncTokenKey: String = "nextSyncToken"
         static let spaceRoomIdsKey: String = "spaceRoomIds"
         static let parentIdsPerRoomIdKey: String = "parentIdsPerRoomId"
         static let ancestorsPerRoomIdKey: String = "ancestorsPerRoomId"
@@ -33,9 +32,6 @@ class MXSpaceGraphData: NSObject, NSCoding {
     }
     
     // MARK: - Properties
-    
-    /// Token to be used for the next /sync request
-    let nextSyncToken: String!
     
     /// Array of all space IDs for the session
     let spaceRoomIds: [String]
@@ -61,7 +57,6 @@ class MXSpaceGraphData: NSObject, NSCoding {
     // MARK: - Public
     
     override init() {
-        self.nextSyncToken = ""
         self.spaceRoomIds = []
         self.parentIdsPerRoomId = [:]
         self.ancestorsPerRoomId = [:]
@@ -73,15 +68,13 @@ class MXSpaceGraphData: NSObject, NSCoding {
         super.init()
     }
     
-    init(nextSyncToken: String,
-         spaceRoomIds: [String],
+    init(spaceRoomIds: [String],
          parentIdsPerRoomId: [String : Set<String>],
          ancestorsPerRoomId: [String: Set<String>],
          descendantsPerRoomId: [String: Set<String>],
          rootSpaceIds: [String],
          orphanedRoomIds: Set<String>,
          orphanedDirectRoomIds: Set<String>) {
-        self.nextSyncToken = nextSyncToken
         self.spaceRoomIds = spaceRoomIds
         self.parentIdsPerRoomId = parentIdsPerRoomId
         self.ancestorsPerRoomId = ancestorsPerRoomId
@@ -94,7 +87,6 @@ class MXSpaceGraphData: NSObject, NSCoding {
     // MARK: - NSCoding
     
     func encode(with coder: NSCoder) {
-        coder.encode(self.nextSyncToken, forKey: Constants.nextSyncTokenKey)
         coder.encode(self.spaceRoomIds, forKey: Constants.spaceRoomIdsKey)
         coder.encode(self.parentIdsPerRoomId, forKey: Constants.parentIdsPerRoomIdKey)
         coder.encode(self.ancestorsPerRoomId, forKey: Constants.ancestorsPerRoomIdKey)
@@ -105,7 +97,6 @@ class MXSpaceGraphData: NSObject, NSCoding {
     }
     
     required init(coder: NSCoder) {
-        self.nextSyncToken = coder.decodeObject(forKey: Constants.nextSyncTokenKey) as? String ?? ""
         self.spaceRoomIds = coder.decodeObject(forKey: Constants.spaceRoomIdsKey) as? [String] ?? []
         self.parentIdsPerRoomId = coder.decodeObject(forKey: Constants.parentIdsPerRoomIdKey) as? [String : Set<String>] ?? [:]
         self.ancestorsPerRoomId = coder.decodeObject(forKey: Constants.ancestorsPerRoomIdKey) as? [String : Set<String>] ?? [:]
@@ -119,7 +110,6 @@ class MXSpaceGraphData: NSObject, NSCoding {
     
     func jsonDictionary() -> [String : Any]! {
         return [
-            Constants.nextSyncTokenKey: self.nextSyncToken,
             Constants.spaceRoomIdsKey: self.spaceRoomIds,
             Constants.parentIdsPerRoomIdKey: self.parentIdsPerRoomId,
             Constants.ancestorsPerRoomIdKey: self.ancestorsPerRoomId,
@@ -131,10 +121,6 @@ class MXSpaceGraphData: NSObject, NSCoding {
     }
     
     class func model(fromJSON dictionary: [AnyHashable : Any]!) -> MXSpaceGraphData? {
-        guard let nextSyncToken = dictionary[Constants.nextSyncTokenKey] as? String else {
-            MXLog.error("[MXSpaceGraphData] model fromJSON aborted: missing \(Constants.nextSyncTokenKey)")
-            return nil
-        }
         guard let spaceIdsJson = dictionary[Constants.spaceRoomIdsKey] as? [String] else {
             MXLog.error("[MXSpaceGraphData] model fromJSON aborted: missing \(Constants.spaceRoomIdsKey)")
             return nil
@@ -185,8 +171,7 @@ class MXSpaceGraphData: NSObject, NSCoding {
         orphanedRoomIds = Set<String>(orphanedRoomIdsJson)
         orphanedDirectRoomIds = Set<String>(orphanedDirectRoomIdsJson)
 
-        return MXSpaceGraphData(nextSyncToken: nextSyncToken,
-                                spaceRoomIds: spaceIdsJson,
+        return MXSpaceGraphData(spaceRoomIds: spaceIdsJson,
                                 parentIdsPerRoomId: parentIdsPerRoomId,
                                 ancestorsPerRoomId: ancestorsPerRoomId,
                                 descendantsPerRoomId: descendantsPerRoomId,
