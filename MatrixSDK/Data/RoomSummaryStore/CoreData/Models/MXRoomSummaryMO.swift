@@ -43,6 +43,9 @@ public class MXRoomSummaryMO: NSManagedObject {
     @NSManaged public var s_localUnreadEventCount: Int16
     @NSManaged public var s_notificationCount: Int16
     @NSManaged public var s_highlightCount: Int16
+    @NSManaged public var s_hasAnyUnread: Bool
+    @NSManaged public var s_hasAnyNotification: Bool
+    @NSManaged public var s_hasAnyHighlight: Bool
     @NSManaged public var s_directUserId: String?
     @NSManaged public var s_hiddenFromUser: Bool
     @NSManaged public var s_storedHash: Int64
@@ -87,6 +90,9 @@ public class MXRoomSummaryMO: NSManagedObject {
         s_localUnreadEventCount = Int16(summary.localUnreadEventCount)
         s_notificationCount = Int16(summary.notificationCount)
         s_highlightCount = Int16(summary.highlightCount)
+        s_hasAnyUnread = summary.hasAnyUnread
+        s_hasAnyNotification = summary.hasAnyNotification
+        s_hasAnyHighlight = summary.hasAnyHighlight
         s_directUserId = summary.directUserId
         s_hiddenFromUser = summary.hiddenFromUser
         s_storedHash = Int64(summary.storedHash)
@@ -226,6 +232,18 @@ extension MXRoomSummaryMO: MXRoomSummaryProtocol {
     
     public var highlightCount: UInt {
         return UInt(s_highlightCount)
+    }
+    
+    public var hasAnyUnread: Bool {
+        return s_hasAnyUnread
+    }
+    
+    public var hasAnyNotification: Bool {
+        return s_hasAnyNotification
+    }
+    
+    public var hasAnyHighlight: Bool {
+        return s_hasAnyHighlight
     }
     
     public var isDirect: Bool {

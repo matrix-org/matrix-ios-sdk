@@ -24,6 +24,9 @@
         <attribute name="s_directUserId" optional="YES" attributeType="String"/>
         <attribute name="s_displayName" optional="YES" attributeType="String"/>
         <attribute name="s_favoriteTagOrder" optional="YES" attributeType="String"/>
+        <attribute name="s_hasAnyHighlight" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="s_hasAnyNotification" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="s_hasAnyUnread" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
         <attribute name="s_hiddenFromUser" attributeType="Boolean" usesScalarValueType="YES"/>
         <attribute name="s_highlightCount" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="s_identifier" attributeType="String"/>

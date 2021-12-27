@@ -46,9 +46,10 @@ extension MXRoomListDataSortable {
     func sortDescriptors(for sortOptions: MXRoomListDataSortOptions) -> [NSSortDescriptor] {
         var result: [NSSortDescriptor] = []
         
-        if sortOptions.suggested {
-            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryProtocol.spaceChildInfo?.order, ascending: false))
-        }
+        // TODO: reintroduce order once it will be supported
+//        if sortOptions.suggested {
+//            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryProtocol.spaceChildInfo?.order, ascending: false))
+//        }
         
         if sortOptions.invitesFirst {
             result.append(NSSortDescriptor(keyPath: \MXRoomSummaryProtocol.membership, ascending: true))
@@ -59,12 +60,12 @@ extension MXRoomListDataSortable {
         }
         
         if sortOptions.missedNotificationsFirst {
-            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryProtocol.highlightCount, ascending: false))
-            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryProtocol.notificationCount, ascending: false))
+            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryProtocol.hasAnyHighlight, ascending: false))
+            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryProtocol.hasAnyNotification, ascending: false))
         }
         
         if sortOptions.unreadMessagesFirst {
-            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryProtocol.localUnreadEventCount, ascending: false))
+            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryProtocol.hasAnyUnread, ascending: false))
         }
         
         if sortOptions.lastEventDate {

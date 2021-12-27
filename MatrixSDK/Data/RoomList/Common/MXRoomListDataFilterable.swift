@@ -50,7 +50,6 @@ extension MXRoomListDataFilterable {
     func filterPredicate(for filterOptions: MXRoomListDataFilterOptions) -> NSPredicate? {
         var predicates: [NSPredicate] = []
         
-        //  query
         if let query = filterOptions.query, !query.isEmpty {
             let predicate1 = NSPredicate(format: "%K CONTAINS[cd] %@",
                                          #keyPath(MXRoomSummaryProtocol.displayname),
@@ -64,7 +63,13 @@ extension MXRoomListDataFilterable {
         }
         
         if !filterOptions.onlySuggested {
-            //  data types
+            if filterOptions.hideUnknownMembershipRooms {
+                let memberPredicate = NSPredicate(format: "%K != %d",
+                                                  #keyPath(MXRoomSummaryProtocol.membership),
+                                                  MXMembership.unknown.rawValue)
+                predicates.append(memberPredicate)
+            }
+            
             if !filterOptions.dataTypes.isEmpty {
                 let predicate = NSPredicate(format: "(%K & %d) != 0",
                                             #keyPath(MXRoomSummaryProtocol.dataTypes),
@@ -72,7 +77,6 @@ extension MXRoomListDataFilterable {
                 predicates.append(predicate)
             }
             
-            //  not data types
             if !filterOptions.notDataTypes.isEmpty {
                 let predicate = NSPredicate(format: "(%K & %d) == 0",
                                             #keyPath(MXRoomSummaryProtocol.dataTypes),
@@ -80,10 +84,9 @@ extension MXRoomListDataFilterable {
                 predicates.append(predicate)
             }
             
-            //  space
             if let space = filterOptions.space {
-                //  specific space
-                let predicate = NSPredicate(format: "%@ IN %K", space.spaceId,
+                let predicate = NSPredicate(format: "%@ IN %K",
+                                            space.spaceId,
                                             #keyPath(MXRoomSummaryProtocol.parentSpaceIds))
                 predicates.append(predicate)
             } else {
