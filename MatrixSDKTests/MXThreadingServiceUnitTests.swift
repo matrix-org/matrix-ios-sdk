@@ -302,6 +302,22 @@ class MXThreadingServiceUnitTests: XCTestCase {
         XCTAssertEqual(thread.numberOfReplies, 1, "Thread must have only 1 reply")
     }
     
+    func testTemporaryThreads() {
+        let restClient = MXRestClient(credentials: Constants.credentials, unrecognizedCertificateHandler: nil)
+        guard let session = MXSession(matrixRestClient: restClient) else {
+            XCTFail("Failed to setup test conditions")
+            return
+        }
+        let threadingService = session.threadingService
+        
+        let threadId = "temp_thread_id"
+        let roomId = "temp_room_id"
+        _ = threadingService.createTempThread(withId: threadId, roomId: roomId)
+        XCTAssertNil(threadingService.thread(withId:threadId), "Temporary threads must not be stored in the service")
+        
+        session.close()
+    }
+    
     private func wait(_ timeout: TimeInterval = 0.5, _ block: @escaping (XCTestExpectation) -> Void) {
         let waiter = XCTWaiter()
         let expectation = XCTestExpectation(description: "Async operation expectation")

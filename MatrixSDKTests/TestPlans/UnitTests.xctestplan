@@ -53,6 +53,7 @@
         "MXResponseUnitTests",
         "MXRoomListDataManagerUnitTests",
         "MXSyncResponseUnitTests",
+        "MXThreadEventTimelineUnitTests",
         "MXThreadingServiceUnitTests",
         "MXToolsUnitTests"
       ],

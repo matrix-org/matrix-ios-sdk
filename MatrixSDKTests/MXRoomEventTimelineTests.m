@@ -21,7 +21,7 @@
 
 #import "MXSession.h"
 
-@interface MXEventTimelineTests : XCTestCase
+@interface MXRoomEventTimelineTests : XCTestCase
 {
     MatrixSDKTestsData *matrixSDKTestsData;
 }
@@ -29,7 +29,7 @@
 
 NSString *theInitialEventMessage = @"The initial timelime event";
 
-@implementation MXEventTimelineTests
+@implementation MXRoomEventTimelineTests
 
 - (void)setUp
 {
