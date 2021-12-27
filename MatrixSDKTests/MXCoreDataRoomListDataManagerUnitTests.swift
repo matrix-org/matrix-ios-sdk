@@ -31,7 +31,6 @@ class MXCoreDataRoomListDataManagerUnitTests: XCTestCase {
             result.deviceId = "some_device_id"
             return result
         }
-        static let messageText: String = "Hello there!"
     }
     
     override class func setUp() {
@@ -105,6 +104,9 @@ class MXCoreDataRoomListDataManagerUnitTests: XCTestCase {
             XCTFail("Failed to setup test conditions")
             return
         }
+        defer {
+            session.close()
+        }
         wait { expectation in
             session.setStore(MXFileStore(), completion: { response in
                 switch response {
@@ -132,6 +134,9 @@ class MXCoreDataRoomListDataManagerUnitTests: XCTestCase {
             return
         }
         XCTAssertNil(session.roomListDataManager, "Room list data manager should be created after setting the store")
+        defer {
+            session.close()
+        }
         
         wait { expectation in
             session.setStore(MXFileStore(), completion: { response in
