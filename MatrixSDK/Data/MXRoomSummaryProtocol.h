@@ -105,6 +105,15 @@ NS_ASSUME_NONNULL_BEGIN
 /// It is based on the notificationCount field in /sync response.
 @property (nonatomic, readonly) NSUInteger highlightCount;
 
+/// Flag indicating the room has any unread (`localUnreadEventCount` > 0)
+@property (nonatomic, readonly) BOOL hasAnyUnread;
+
+/// Flag indicating the room has any notification (`notificationCount` > 0)
+@property (nonatomic, readonly) BOOL hasAnyNotification;
+
+/// Flag indicating the room has any highlight (`highlightCount` > 0)
+@property (nonatomic, readonly) BOOL hasAnyHighlight;
+
 /// Indicate if the room is tagged as a direct chat.
 @property (nonatomic, readonly) BOOL isDirect;
 

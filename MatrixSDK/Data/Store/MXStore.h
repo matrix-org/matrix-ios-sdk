@@ -31,6 +31,7 @@
 #import "MXRoomSummaryStore.h"
 
 @class MXSpaceGraphData;
+@class MXStoreService;
 
 /**
  The `MXStore` protocol defines an interface that must be implemented in order to store
@@ -39,6 +40,13 @@
 @protocol MXStore <NSObject>
 
 @property (nonatomic, readonly) id<MXRoomSummaryStore> _Nonnull summariesModule;
+
+#pragma mark - Store Management
+
+/**
+ The store service that is managing this store.
+ */
+@property (nonatomic, weak, nullable) MXStoreService *storeService;
 
 #pragma mark - Room data
 

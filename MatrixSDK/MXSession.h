@@ -503,6 +503,21 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
  */
 @property (nonatomic, readonly, getter=isPauseable) BOOL pauseable;
 
+/**
+ Flag indicating the session can resume from its current state.
+ */
+@property (nonatomic, readonly, getter=isResumable) BOOL resumable;
+
+/**
+ Whether the user is part of a room with the membership state of `join` or
+ they are in the process of joining.
+
+ @param roomIdOrAlias The ID or alias of the room to check.
+
+ @return YES if they are.
+ */
+- (BOOL)isJoinedOnRoom:(NSString *)roomIdOrAlias;
+
 #pragma mark - Class methods
 
 /**
@@ -908,7 +923,17 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 
  @return the MXRoom instance.
  */
-- (MXRoom  *)roomWithRoomId:(NSString*)roomId;
+- (MXRoom *)roomWithRoomId:(NSString*)roomId;
+
+/**
+ Get the MXRoom instance of a room.
+ Create it if does not exist yet. The room will be created locally if needed, won't have any effect on the home server. Posts `kMXSessionNewRoomNotification`.
+ 
+ @param roomId The id to the user.
+ 
+ @return the MXRoom instance.
+ */
+- (MXRoom *)getOrCreateRoom:(NSString*)roomId;
 
 /**
  Get the MXRoom instance of the room that owns the passed room alias.

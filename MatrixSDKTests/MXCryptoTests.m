@@ -32,6 +32,8 @@
 #import "MXOutboundSessionInfo.h"
 #import <OLMKit/OLMKit.h>
 
+#import "MXKey.h"
+
 #if 1 // MX_CRYPTO autamatic definiton does not work well for tests so force it
 //#ifdef MX_CRYPTO
 
@@ -3003,6 +3005,126 @@
         } failure:^(NSError * _Nonnull error) {
             XCTFail(@"The request should not fail - NSError: %@", error);
             [expectation fulfill];
+        }];
+    }];
+}
+
+#pragma mark - One time / fallback keys
+
+- (void)testFallbackKeySignatures
+{
+    [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
+    [matrixSDKTestsData doMXSessionTestWithBob:self readyToTest:^(MXSession *mxSession, XCTestExpectation *expectation) {
+        [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
+        
+        [mxSession.crypto.olmDevice generateFallbackKey];
+        
+        NSDictionary *fallbackKeyDictionary = mxSession.crypto.olmDevice.fallbackKey;
+        NSMutableDictionary *fallbackKeyJson = [NSMutableDictionary dictionary];
+        
+        for (NSString *keyId in fallbackKeyDictionary[kMXKeyCurve25519Type])
+        {
+            // Sign the fallback key
+            NSMutableDictionary *signedKey = [NSMutableDictionary dictionary];
+            signedKey[@"key"] = fallbackKeyDictionary[kMXKeyCurve25519Type][keyId];
+            signedKey[@"fallback"] = @(YES);
+            signedKey[@"signatures"] = [mxSession.crypto signObject:signedKey];
+            
+            fallbackKeyJson[[NSString stringWithFormat:@"%@:%@", kMXKeySignedCurve25519Type, keyId]] = signedKey;
+        }
+        
+        MXKey *fallbackKey = [MXKey modelFromJSON:fallbackKeyJson];
+        
+        NSString *signKeyId = [NSString stringWithFormat:@"%@:%@", kMXKeyEd25519Type, mxSession.myDeviceId];
+        NSString *signature = [fallbackKey.signatures objectForDevice:signKeyId forUser:mxSession.myUserId];
+        
+        MXUsersDevicesMap<NSString *> *usersDevicesKeyTypesMap = [[MXUsersDevicesMap alloc] init];
+        [usersDevicesKeyTypesMap setObject:@"curve25519"
+                                   forUser:mxSession.matrixRestClient.credentials.userId
+                                 andDevice:mxSession.matrixRestClient.credentials.deviceId];
+        
+        MXDeviceInfo *deviceInfo = [mxSession.crypto deviceWithDeviceId:mxSession.myDeviceId
+                                                                 ofUser:mxSession.myUserId];
+        
+        NSError *error;
+        BOOL result = [mxSession.crypto.olmDevice verifySignature:deviceInfo.fingerprint JSON:fallbackKey.signalableJSONDictionary signature:signature error:&error];
+        
+        XCTAssertNil(error);
+        XCTAssertTrue(result);
+        
+        [expectation fulfill];
+    }];
+}
+
+// Test encryption algorithm change with a blank m.room.encryption event
+// - Alice and bob in a megolm encrypted room
+// - Send a blank m.room.encryption event
+// -> The room should be still marked as encrypted
+// -> It must be impossible to send a messages (because the algorithm is not supported)
+// - Fix e2e algorithm in the room
+// -> The room should be still marked as encrypted with the right algorithm
+// -> It must be possible to send message again
+// -> The message must be e2e encrypted
+- (void)testEncryptionAlgorithmChange
+{
+    // - Alice and bob in a megolm encrypted room
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:NO readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+        
+        MXRoom *roomFromAlicePOV= [aliceSession roomWithRoomId:roomId];
+        
+        // - Send a blank m.room.encryption event
+        [roomFromAlicePOV sendStateEventOfType:kMXEventTypeStringRoomEncryption
+                                       content:@{ }
+                                      stateKey:nil
+                                       success:nil
+                                       failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+        
+        __block id listener = [roomFromAlicePOV listenToEventsOfTypes:@[kMXEventTypeStringRoomEncryption] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+            
+            [roomFromAlicePOV removeListener:listener];
+            
+            [roomFromAlicePOV liveTimeline:^(MXEventTimeline *liveTimeline) {
+                
+                // -> The room should be still marked as encrypted
+                XCTAssertTrue(liveTimeline.state.isEncrypted);
+                XCTAssertEqual(liveTimeline.state.encryptionAlgorithm.length, 0);   // with a nil algorithm
+                XCTAssertTrue(roomFromAlicePOV.summary.isEncrypted);
+                
+                // -> It must be impossible to send a messages (because the algorithm is not supported)
+                [roomFromAlicePOV sendTextMessage:@"An encrypted message" success:^(NSString *eventId) {
+                    XCTFail(@"It should not possible to send encrypted message anymore");
+                } failure:^(NSError *error) {
+
+                    // - Fix e2e algorithm in the room
+                    [roomFromAlicePOV enableEncryptionWithAlgorithm:kMXCryptoMegolmAlgorithm success:^{
+                        
+                        // -> The room should be still marked as encrypted with the right algorithm
+                        XCTAssertTrue(liveTimeline.state.isEncrypted);
+                        XCTAssertEqualObjects(liveTimeline.state.encryptionAlgorithm, kMXCryptoMegolmAlgorithm);
+                        XCTAssertTrue(roomFromAlicePOV.summary.isEncrypted);
+                        
+                        // -> It must be possible to send message again
+                        [roomFromAlicePOV sendTextMessage:@"An encrypted message" success:nil failure:^(NSError *error) {
+                            XCTFail(@"The request should not fail - NSError: %@", error);
+                            [expectation fulfill];
+                        }];
+                        
+                        [roomFromAlicePOV listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+                            // -> The message must be e2e encrypted
+                            XCTAssertTrue(event.isEncrypted);
+                            XCTAssertEqualObjects(event.wireContent[@"algorithm"], kMXCryptoMegolmAlgorithm);
+                            [expectation fulfill];
+                        }];
+                        
+                    } failure:^(NSError *error) {
+                        XCTFail(@"The request should not fail - NSError: %@", error);
+                        [expectation fulfill];
+                    }];
+                }];
+            }];
         }];
     }];
 }

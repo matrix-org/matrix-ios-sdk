@@ -1,1 +1,0 @@
-Fixed retain cycles between background tasks and themselves, and between the background task expiration handler and the background mode handler.

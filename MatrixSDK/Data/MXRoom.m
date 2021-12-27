@@ -35,6 +35,8 @@
 
 #import "MXRoomSync.h"
 
+#import "MXEventContentPollStart.h"
+
 NSString *const kMXRoomDidFlushDataNotification = @"kMXRoomDidFlushDataNotification";
 NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotification";
 NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
@@ -618,11 +620,11 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
             NSDictionary *contentCopyToEncrypt = nil;
             
             // Store the "m.relates_to" data and remove them from event clear content before encrypting the event content
-            if (contentCopy[@"m.relates_to"])
+            if (contentCopy[kMXEventRelationRelatesToKey])
             {
-                relatesToJSON = contentCopy[@"m.relates_to"];
+                relatesToJSON = contentCopy[kMXEventRelationRelatesToKey];
                 NSMutableDictionary *updatedContent = [contentCopy mutableCopy];
-                updatedContent[@"m.relates_to"] = nil;
+                updatedContent[kMXEventRelationRelatesToKey] = nil;
                 contentCopyToEncrypt = [updatedContent copy];
             }
             else
@@ -673,7 +675,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                     if (relatesToJSON)
                     {
                         NSMutableDictionary *updatedEncryptedContent = [encryptedContent mutableCopy];
-                        updatedEncryptedContent[@"m.relates_to"] = relatesToJSON;
+                        updatedEncryptedContent[kMXEventRelationRelatesToKey] = relatesToJSON;
                         finalEncryptedContent = [updatedEncryptedContent copy];
                     }
                     else
@@ -1395,11 +1397,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                     }
                 } failure:onFailure];
             }
-        } failure:^{
-
-            onFailure(nil);
-
-        }];
+        } failure:onFailure];
 
     }];
 
@@ -1946,10 +1944,13 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
         NSDictionary *relatesToDict = nil;
         if (eventToReply.threadIdentifier)
         {
-            //  TODO: This will change when we support in-thread replies
             relatesToDict = @{
                 @"rel_type": MXEventRelationTypeThread,
-                @"event_id" : eventToReply.threadIdentifier
+                @"event_id" : eventToReply.threadIdentifier,
+                @"m.in_reply_to" :
+                    @{
+                        @"event_id" : eventId
+                    }
             };
         }
         else
@@ -1968,7 +1969,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
         msgContent[@"msgtype"] = kMXMessageTypeText;
         msgContent[@"body"] = replyToBody;
         msgContent[@"formatted_body"] = replyToFormattedBody;
-        msgContent[@"m.relates_to"] = relatesToDict;
+        msgContent[kMXEventRelationRelatesToKey] = relatesToDict;
         
         operation = [self sendMessageWithContent:msgContent
                                        localEcho:localEcho
@@ -2001,6 +2002,27 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                     replyContentFormattedBody:(NSString**)replyContentFormattedBody
                               stringLocalizer:(id<MXSendReplyEventStringLocalizerProtocol>)stringLocalizer
 {
+    if (eventToReply.eventType == MXEventTypePollStart)
+    {
+        NSString *question = [MXEventContentPollStart modelFromJSON:eventToReply.content].question;
+
+        *replyContentBody = [self replyMessageBodyFromSender:eventToReply.sender
+                                           senderMessageBody:question
+                                      isSenderMessageAnEmote:NO
+                                     isSenderMessageAReplyTo:eventToReply.isReplyEvent
+                                                replyMessage:textMessage];
+        
+        // As formatted body is mandatory for a reply message, use non formatted to build it
+        NSString *finalFormattedTextMessage = formattedTextMessage ?: textMessage;
+        
+        *replyContentFormattedBody = [self replyMessageFormattedBodyFromEventToReply:eventToReply
+                                                          senderMessageFormattedBody:question
+                                                              isSenderMessageAnEmote:NO
+                                                               replyFormattedMessage:finalFormattedTextMessage
+                                                                     stringLocalizer:stringLocalizer];
+        return;
+    }
+    
     NSString *msgtype;
     MXJSONModelSetString(msgtype, eventToReply.content[@"msgtype"]);
     
@@ -2247,6 +2269,11 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
 
 - (BOOL)canReplyToEvent:(MXEvent *)eventToReply
 {
+    if(eventToReply.eventType == MXEventTypePollStart)
+    {
+        return YES;
+    }
+    
     if (eventToReply.eventType != MXEventTypeRoomMessage)
     {
         return NO;
@@ -2272,6 +2299,85 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     }
     
     return canReplyToEvent;
+}
+
+#pragma mark - Polls
+
+- (MXHTTPOperation *)sendPollStartWithContent:(MXEventContentPollStart *)content
+                                    localEcho:(MXEvent **)localEcho
+                                      success:(void (^)(NSString *))success
+                                      failure:(void (^)(NSError *))failure
+{
+    NSParameterAssert(content);
+    
+    if (content.question.length == 0)
+    {
+        MXLogError(@"[MXRoom] Cannot send poll with empty question.");
+        return nil;
+    }
+    
+    if (content.answerOptions.count < 2)
+    {
+        MXLogError(@"[MXRoom] Cannot send poll with less than 2 answer options.");
+        return nil;
+    }
+    
+    for (MXEventContentPollStartAnswerOption *answerOption in content.answerOptions) {
+        if (answerOption.text.length == 0) {
+            MXLogError(@"[MXRoom] Cannot send poll with empty answer option.");
+            return nil;
+        }
+    }
+
+    return [self sendEventOfType:[MXTools eventTypeString:MXEventTypePollStart] content:content.JSONDictionary localEcho:localEcho success:success failure:failure];
+}
+
+- (MXHTTPOperation *)sendPollResponseForEvent:(MXEvent *)pollStartEvent
+                        withAnswerIdentifiers:(NSArray<NSString *> *)answerIdentifiers
+                                    localEcho:(MXEvent **)localEcho
+                                      success:(void (^)(NSString *))success
+                                      failure:(void (^)(NSError *))failure
+{
+    NSParameterAssert(pollStartEvent);
+    NSAssert(pollStartEvent.eventType == MXEventTypePollStart, @"Invalid event type");
+    NSParameterAssert(answerIdentifiers);
+    
+    for (NSString *answerIdentifier in answerIdentifiers)
+    {
+        if (answerIdentifier.length == 0) {
+            MXLogError(@"[MXRoom] Cannot send poll answer with empty identifier.");
+            return nil;
+        }
+    }
+    
+    MXEventContentRelatesTo *relatesTo = [[MXEventContentRelatesTo alloc] initWithRelationType:MXEventRelationTypeReference
+                                                                                       eventId:pollStartEvent.eventId];
+    
+    NSDictionary *content = @{
+        kMXEventRelationRelatesToKey: relatesTo.JSONDictionary,
+        kMXMessageContentKeyExtensiblePollResponse: @{ kMXMessageContentKeyExtensiblePollAnswers: answerIdentifiers }
+    };
+    
+    return [self sendEventOfType:[MXTools eventTypeString:MXEventTypePollResponse] content:content localEcho:localEcho success:success failure:failure];
+}
+
+- (MXHTTPOperation *)sendPollEndForEvent:(MXEvent *)pollStartEvent
+                               localEcho:(MXEvent **)localEcho
+                                 success:(void (^)(NSString *))success
+                                 failure:(void (^)(NSError *))failure
+{
+    NSParameterAssert(pollStartEvent);
+    NSAssert(pollStartEvent.eventType == MXEventTypePollStart, @"Invalid event type");
+    
+    MXEventContentRelatesTo *relatesTo = [[MXEventContentRelatesTo alloc] initWithRelationType:MXEventRelationTypeReference
+                                                                                       eventId:pollStartEvent.eventId];
+    
+    NSDictionary *content = @{
+        kMXEventRelationRelatesToKey: relatesTo.JSONDictionary,
+        kMXMessageContentKeyExtensiblePollEnd: @{}
+    };
+    
+    return [self sendEventOfType:[MXTools eventTypeString:MXEventTypePollEnd] content:content localEcho:localEcho success:success failure:failure];
 }
 
 #pragma mark - Message order preserving

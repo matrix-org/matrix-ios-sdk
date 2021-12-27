@@ -175,6 +175,13 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @property (nonatomic) Class roomListDataManagerClass;
 
+/**
+ For use in clients that use a custom base url for permalinks rather than matrix.to.
+ This baseURL is used to generate permalinks within the app (E.g. timeline message permalinks).
+ An Optional String, when nil matrix.to format/hostname is used instead.
+ */
+@property (nonatomic, nullable) NSString *clientPermalinkBaseUrl;
+
 @end
 
 NS_ASSUME_NONNULL_END

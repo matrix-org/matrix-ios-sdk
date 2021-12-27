@@ -1,0 +1,1 @@
+MXTaskProfile: Add an MXTaskProfileName enum instead of individual strings for Name and Category.

@@ -1,3 +1,76 @@
+## Changes in 0.20.15 (2021-12-14)
+
+🙌 Improvements
+
+- Expose missing Jingle headers in umbrella header ([#1308](https://github.com/matrix-org/matrix-ios-sdk/pull/1308))
+
+⚠️ API Changes
+
+- MXTools: Add an error parameter to the failure of +convertVideoAssetToMP4:withTargetFileSize:success:failure: ([#4749](https://github.com/vector-im/element-ios/issues/4749))
+
+
+## Changes in 0.20.14 (2021-12-09)
+
+🐛 Bugfixes
+
+- Sending blank m.room.encryption on iOS will disable encryption ([Security advisory](https://github.com/matrix-org/matrix-ios-sdk/security/advisories/GHSA-fxvm-7vhj-wj98))
+
+## Changes in 0.20.13 (2021-12-06)
+
+Others
+
+- Replace semantic imports with classic ones to enable use of the SDK in Kotlin Multiplatform Mobile projects ([#5046](https://github.com/vector-im/element-ios/issues/5046))
+
+
+## Changes in 0.20.12 (2021-12-06)
+
+🐛 Bugfixes
+
+- Fix release 0.20.11 ([#5247](https://github.com/vector-im/element-ios/issues/5247))
+
+
+## Changes in 0.20.11 (2021-12-03)
+
+✨ Features
+
+- Moved from /space to /hierarchy API to support pagination ([#4893](https://github.com/vector-im/element-ios/issues/4893))
+- Adds clientPermalinkBaseUrl for a custom permalink base url. ([#4981](https://github.com/vector-im/element-ios/issues/4981))
+- Added poll specific event sending methods, event aggregator and model builder. ([#5114](https://github.com/vector-im/element-ios/issues/5114))
+
+🐛 Bugfixes
+
+- Initialize imagesCacheLruCache before caching - caching operations would fail silently because cache was not initialized ([#1281](https://github.com/vector-im/element-ios/issues/1281))
+- MXRoom: Fix reply event content for just thread-aware clients. ([#5007](https://github.com/vector-im/element-ios/issues/5007))
+- Add ability to get roomAccountData from MXBackgroundSyncService to fix badge bug from virtual rooms. ([#5155](https://github.com/vector-im/element-ios/issues/5155))
+- Fixed duplicated children ids in MXSpaces ([#5181](https://github.com/vector-im/element-ios/issues/5181))
+- Do not expose headers that should be use privately inside the framework. ([#5194](https://github.com/vector-im/element-ios/issues/5194))
+- Fix for the in-call screen freezing on a new PSTN call. ([#5223](https://github.com/vector-im/element-ios/issues/5223))
+
+🧱 Build
+
+- Build: Update to Xcode 12.5 in the Fastfile and macOS 11 in the GitHub actions. ([#5195](https://github.com/vector-im/element-ios/issues/5195))
+
+
+## Changes in 0.20.10 (2021-11-17)
+
+🙌 Improvements
+
+- Made room list fetch sort and filter options structs. Removed fetch options references from them and made them equatable. Comparing them in the fetch options before refreshing the fetchers. ([#4384](https://github.com/vector-im/element-ios/issues/4384))
+- MXRealmCryptoStore: Reuse background tasks and use new api for remaining perform operations. ([#4431](https://github.com/vector-im/element-ios/issues/4431))
+
+🐛 Bugfixes
+
+- MXAggregations: Ensure the store is cleared when the file store is cleared. ([#3884](https://github.com/vector-im/element-ios/issues/3884))
+- MXSpaceService: abort graph building when session is closing ([#5049](https://github.com/vector-im/element-ios/issues/5049))
+- Fixed retain cycles between background tasks and themselves, and between the background task expiration handler and the background mode handler. ([#5054](https://github.com/vector-im/element-ios/issues/5054))
+- MXRoomSummaryUpdater: Fix upgraded rooms being marked as visible if the tombstone event comes in as part of a limited sync. ([#5080](https://github.com/vector-im/element-ios/issues/5080))
+- MXRoomListDataFilterOptions: Filter out any cached room previews. ([#5083](https://github.com/vector-im/element-ios/issues/5083))
+- MXRoomListDataSortOptions: Fix room ordering regression. ([#5105](https://github.com/vector-im/element-ios/issues/5105))
+- Fixed fallback key signature validation. ([#5120](https://github.com/vector-im/element-ios/issues/5120))
+- MXSession: Make session resumable from paused state & avoid to-device events catchup request when paused or pause requested. ([#5127](https://github.com/vector-im/element-ios/issues/5127))
+- Room ordering: Improve membership event filtering. ([#5150](https://github.com/vector-im/element-ios/issues/5150))
+
+
 ## Changes in 0.20.9 (2021-10-21)
 
 🐛 Bugfixes

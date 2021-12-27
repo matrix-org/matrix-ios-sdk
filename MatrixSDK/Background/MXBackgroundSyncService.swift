@@ -627,4 +627,24 @@ public enum MXBackgroundSyncServiceError: Error {
         }
     }
     
+    /// Fetch room account data for given roomId.
+    /// - Parameters:
+    ///   - roomId: The room identifier for the desired room.
+    ///   - completion: Completion block to be called. Always called in main thread.
+    public func roomAccountData(forRoomId roomId: String,
+                                completion: @escaping (MXResponse<MXRoomAccountData>) -> Void) {
+        processingQueue.async {
+            guard let accountData = self.store.accountData?(ofRoom: roomId) else {
+                Queues.dispatchQueue.async {
+                    completion(.failure(MXBackgroundSyncServiceError.unknown))
+                }
+                return
+            }
+            
+            Queues.dispatchQueue.async {
+                completion(.success(accountData))
+            }
+        }
+    }
+    
 }

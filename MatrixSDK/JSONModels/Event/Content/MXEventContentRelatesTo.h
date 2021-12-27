@@ -29,6 +29,13 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly) NSString *eventId;
 @property (nonatomic, readonly, nullable) NSString *key;
 
+- (instancetype)initWithRelationType:(NSString *)relationType
+                             eventId:(NSString *)eventId;
+
+- (instancetype)initWithRelationType:(NSString *)relationType
+                             eventId:(NSString *)eventId
+                                 key:(nullable NSString *)key;
+
 @end
 
 NS_ASSUME_NONNULL_END

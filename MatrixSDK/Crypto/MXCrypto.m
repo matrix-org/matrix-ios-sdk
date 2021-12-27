@@ -2039,19 +2039,21 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 
 - (BOOL)setEncryptionInRoom:(NSString*)roomId withMembers:(NSArray<NSString*>*)members algorithm:(NSString*)algorithm inhibitDeviceQuery:(BOOL)inhibitDeviceQuery
 {
-    // If we already have encryption in this room, we should ignore this event
-    // (for now at least. Maybe we should alert the user somehow?)
     NSString *existingAlgorithm = [_store algorithmForRoom:roomId];
     if (existingAlgorithm && ![existingAlgorithm isEqualToString:algorithm])
     {
-        MXLogDebug(@"[MXCrypto] setEncryptionInRoom: Ignoring m.room.encryption event which requests a change of config in %@", roomId);
-        return NO;
+        MXLogWarning(@"[MXCrypto] setEncryptionInRoom: New m.room.encryption event in %@ with an algorithm change from %@ to %@", roomId, existingAlgorithm, algorithm);
+        
+        // Reset the current encryption in this room.
+        // If the new algo is supported, it will be used
+        // Else, encryption and sending will be no more possible in this room
+        [roomEncryptors removeObjectForKey:roomId];
     }
 
     Class encryptionClass = [[MXCryptoAlgorithms sharedAlgorithms] encryptorClassForAlgorithm:algorithm];
     if (!encryptionClass)
     {
-        MXLogDebug(@"[MXCrypto] setEncryptionInRoom: Unable to encrypt with %@", algorithm);
+        MXLogError(@"[MXCrypto] setEncryptionInRoom: Unable to encrypt with %@", algorithm);
         return NO;
     }
 
@@ -2928,6 +2930,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
         // Sign the fallback key
         NSMutableDictionary *signedKey = [NSMutableDictionary dictionary];
         signedKey[@"key"] = fallbackKey[kMXKeyCurve25519Type][keyId];
+        signedKey[@"fallback"] = @(YES);
         signedKey[@"signatures"] = [self signObject:signedKey];
         
         fallbackKeyJson[[NSString stringWithFormat:@"%@:%@", kMXKeySignedCurve25519Type, keyId]] = signedKey;

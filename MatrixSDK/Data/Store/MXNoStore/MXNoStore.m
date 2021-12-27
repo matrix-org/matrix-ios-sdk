@@ -85,6 +85,15 @@
     onComplete();
 }
 
+- (MXStoreService *)storeService
+{
+    return nil;
+}
+
+- (void)setStoreService:(MXStoreService *)storeService
+{
+}
+
 - (void)storeEventForRoom:(NSString*)roomId event:(MXEvent*)event direction:(MXTimelineDirection)direction
 {
     // Store nothing in the MXNoStore except the last message
