@@ -78,6 +78,9 @@ public class MXThreadEventTimeline: NSObject, MXEventTimeline {
         self.initialEventId = initialEventId
         if initialEventId == nil {
             self.isLiveTimeline = true
+        } else {
+            hasReachedHomeServerBackwardsPaginationEnd = true
+            hasReachedHomeServerForwardsPaginationEnd = true
         }
         self.store = store
         self.thread = thread
@@ -181,6 +184,10 @@ public class MXThreadEventTimeline: NSObject, MXEventTimeline {
                     
                     self.backwardsPaginationToken = context.start
                     self.forwardsPaginationToken = context.end
+                    //  TODO: We cannot paginate backward/forward on this point, because /relations api is not capable
+                    //  to paginate with these pagination tokens.
+                    self.hasReachedHomeServerBackwardsPaginationEnd = true
+                    self.hasReachedHomeServerForwardsPaginationEnd = true
                     
                     success()
                 }
