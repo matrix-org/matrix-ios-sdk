@@ -98,6 +98,12 @@ static NSString *const kMXFileRoomSummaryStoreFolder = @"MXFileRoomSummaryStore"
     return result;
 }
 
+- (NSUInteger)countOfRooms
+{
+    NSArray<NSString *> *result = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:storePath error:nil];
+    return result.count;
+}
+
 - (void)storeSummary:(id<MXRoomSummaryProtocol>)summary
 {
     [super storeSummary:summary];

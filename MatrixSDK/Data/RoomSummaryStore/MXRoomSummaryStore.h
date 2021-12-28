@@ -31,6 +31,11 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly) NSArray<NSString *> *rooms;
 
 /**
+ The count of rooms, in a more efficient way.
+ */
+@property (nonatomic, readonly) NSUInteger countOfRooms;
+
+/**
  Store the summary for a room.
  
  @param summary the room summary.

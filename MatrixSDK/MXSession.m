@@ -849,7 +849,7 @@ typedef void (^MXOnResumeDone)(void);
     [self setState:MXSessionStateSyncInProgress];
 
     // Can we resume from data available in the cache
-    if (self.store.isPermanent && self.isEventStreamInitialised && 0 < self.store.summariesModule.rooms.count)
+    if (self.store.isPermanent && self.isEventStreamInitialised && 0 < self.store.summariesModule.countOfRooms)
     {
         // Resume the stream (presence will be retrieved during server sync)
         MXLogDebug(@"[MXSession] Resuming the events stream from %@...", self.store.eventStreamToken);

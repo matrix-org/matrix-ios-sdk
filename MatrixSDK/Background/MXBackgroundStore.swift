@@ -273,6 +273,10 @@ extension MXBackgroundStore: MXRoomSummaryStore {
         return []
     }
     
+    var countOfRooms: UInt {
+        return 0
+    }
+    
     func storeSummary(_ summary: MXRoomSummaryProtocol) {
         
     }

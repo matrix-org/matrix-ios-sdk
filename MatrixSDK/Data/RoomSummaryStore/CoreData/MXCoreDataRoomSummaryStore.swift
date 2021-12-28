@@ -96,6 +96,20 @@ public class MXCoreDataRoomSummaryStore: NSObject {
     
     //  MARK: - Private
     
+    private func countRooms(in moc: NSManagedObjectContext) -> Int {
+        let request = MXRoomSummaryMO.typedFetchRequest()
+        request.includesSubentities = false
+        request.includesPropertyValues = false
+        //  fetch nothing
+        request.propertiesToFetch = []
+        do {
+            return try moc.count(for: request)
+        } catch {
+            MXLog.error("[MXCoreDataRoomSummaryStore] countRooms failed: \(error)")
+        }
+        return 0
+    }
+    
     private func fetchRoomIds(in moc: NSManagedObjectContext) -> [String] {
         let propertyName = "s_identifier"
         
@@ -235,6 +249,10 @@ extension MXCoreDataRoomSummaryStore: MXRoomSummaryStore {
     
     public var rooms: [String] {
         return fetchRoomIds(in: mainMoc)
+    }
+    
+    public var countOfRooms: UInt {
+        return UInt(countRooms(in: mainMoc))
     }
     
     public func storeSummary(_ summary: MXRoomSummaryProtocol) {

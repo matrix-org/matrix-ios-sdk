@@ -40,6 +40,11 @@
     return self.cache.allKeys;
 }
 
+- (NSUInteger)countOfRooms
+{
+    return self.cache.count;
+}
+
 - (void)storeSummary:(id<MXRoomSummaryProtocol>)summary
 {
     self.cache[summary.roomId] = summary;

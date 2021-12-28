@@ -23,6 +23,11 @@
     return @[];
 }
 
+- (NSUInteger)countOfRooms
+{
+    return 0;
+}
+
 - (void)storeSummary:(id<MXRoomSummaryProtocol>)summary
 {
     
