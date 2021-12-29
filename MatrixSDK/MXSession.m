@@ -406,19 +406,8 @@ typedef void (^MXOnResumeDone)(void);
                 // Load MXRoomSummaries from the store
                 NSDate *startDate2 = [NSDate date];
                 NSArray<NSString*> *roomIds = self.store.summariesModule.rooms;
-                for (NSString *roomId in roomIds)
-                {
-                    @autoreleasepool
-                    {
-                        MXRoomSummary *summary = [[MXRoomSummary alloc] initWithRoomId:roomId andMatrixSession:self];
-                        if (summary)
-                        {
-                            self->roomsSummaries[roomId] = summary;
-                        }
-                    }
-                }
-
-                MXLogDebug(@"[MXSession] Built %lu MXRoomSummaries in %.0fms", (unsigned long)self->roomsSummaries.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate2] * 1000);
+                
+                MXLogDebug(@"[MXSession] Read %lu room ids in %.0fms", (unsigned long)roomIds.count, [[NSDate date] timeIntervalSinceDate:startDate2] * 1000);
 
                 // Create MXRooms from their states stored in the store
                 NSDate *startDate3 = [NSDate date];
@@ -2803,7 +2792,20 @@ typedef void (^MXOnResumeDone)(void);
     {
         room = [self createRoom:roomId notify:notify];
     }
+    //  also create the room summary if needed
+    [self getOrCreateRoomSummary:roomId];
     return room;
+}
+
+- (MXRoomSummary *)getOrCreateRoomSummary:(NSString *)roomId
+{
+    // Create the room summary if does not exist yet
+    MXRoomSummary *summary = [self roomSummaryWithRoomId:roomId];
+    if (!summary)
+    {
+        summary = [self createRoomSummary:roomId];
+    }
+    return summary;
 }
 
 - (MXRoom *)createRoom:(NSString *)roomId notify:(BOOL)notify
@@ -2812,6 +2814,22 @@ typedef void (^MXOnResumeDone)(void);
     
     [self addRoom:room notify:notify];
     return room;
+}
+
+- (MXRoomSummary *)createRoomSummary:(NSString *)roomId
+{
+    MXRoomSummary *summary = [[MXRoomSummary alloc] initWithRoomId:roomId andMatrixSession:self];
+    roomSummaries[roomId] = summary;
+
+    // Update the summary if necessary
+    NSString *directUserId = [self directUserIdInRoom:roomId];
+    if (directUserId)
+    {
+        summary.directUserId = directUserId;
+        [summary save:YES];
+    }
+    
+    return summary;
 }
 
 - (void)addRoom:(MXRoom*)room notify:(BOOL)notify
@@ -2824,22 +2842,6 @@ typedef void (^MXOnResumeDone)(void);
 
     [rooms setObject:room forKey:room.roomId];
 
-    // Create the room summary if does not exist yet
-    MXRoomSummary *summary = roomsSummaries[room.roomId];
-    if (!summary)
-    {
-        summary = [[MXRoomSummary alloc] initWithRoomId:room.roomId andMatrixSession:self];
-        roomsSummaries[room.roomId] = summary;
-
-        // Update the summary if necessary
-        NSString *directUserId = [self directUserIdInRoom:room.roomId];
-        if (directUserId)
-        {
-            summary.directUserId = directUserId;
-            [summary save:YES];
-        }
-    }
-    
     if (room.accountData.virtualRoomInfo.isVirtual)
     {
         //  cache this info
@@ -2997,25 +2999,32 @@ typedef void (^MXOnResumeDone)(void);
 
     if (roomId)
     {
-        roomSummary = roomsSummaries[roomId];
+        roomSummary = roomSummaries[roomId];
+        
+        if (roomSummary == nil)
+        {
+            //  summary not in the cache, try to load it from the store
+            id<MXRoomSummaryProtocol> roomSummaryProtocol = [self.store.summariesModule summaryOfRoom:roomId];
+            if (roomSummaryProtocol)
+            {
+                roomSummary = [[MXRoomSummary alloc] initWithSummaryModel:roomSummaryProtocol];
+                [roomSummary setMatrixSession:self];
+                roomSummaries[roomId] = roomSummary;
+            }
+        }
     }
 
     return roomSummary;
-}
-
-- (NSArray<MXRoomSummary*>*)roomsSummaries
-{
-    return [roomsSummaries allValues];
 }
 
 -(void)resetRoomsSummariesLastMessage
 {
     MXLogDebug(@"[MXSession] resetRoomsSummariesLastMessage");
 
-    for (MXRoomSummary *summary in self.roomsSummaries)
+    for (MXRoom *room in self.rooms)
     {
-        [summary resetLastMessage:nil failure:^(NSError *error) {
-            MXLogDebug(@"[MXSession] Cannot reset last message for room %@", summary.roomId);
+        [room.summary resetLastMessage:nil failure:^(NSError *error) {
+            MXLogDebug(@"[MXSession] Cannot reset last message for room %@", room.roomId);
         } commit:NO];
     }
     
