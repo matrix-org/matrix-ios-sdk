@@ -95,7 +95,7 @@ public class MXRoomSummaryMO: NSManagedObject {
         s_hasAnyHighlight = summary.hasAnyHighlight
         s_directUserId = summary.directUserId
         s_hiddenFromUser = summary.hiddenFromUser
-        s_storedHash = Int64(summary.storedHash)
+        s_storedHash = normalizeHash(summary.storedHash)
         s_favoriteTagOrder = summary.favoriteTagOrder
         s_dataTypesInt = Int64(summary.dataTypes.rawValue)
         s_sentStatusInt = Int16(summary.sentStatus.rawValue)
@@ -141,6 +141,14 @@ public class MXRoomSummaryMO: NSManagedObject {
             }
             s_lastMessage = nil
         }
+    }
+    
+    private func normalizeHash(_ hash: UInt) -> Int64 {
+        var result = hash
+        while result > Int64.max {
+            result -= UInt(Int64.max)
+        }
+        return Int64(result)
     }
     
 }

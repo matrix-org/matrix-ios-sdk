@@ -169,6 +169,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     _dataTypes = self.calculateDataTypes;
     _sentStatus = self.calculateSentStatus;
     _favoriteTagOrder = self.room.accountData.tags[kMXRoomTagFavourite].order;
+    _storedHash = self.hash;
     
     [store.summariesModule storeSummary:self];
     
@@ -1023,12 +1024,15 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     result = prime * result + _localUnreadEventCount;
     result = prime * result + _notificationCount;
     result = prime * result + _highlightCount;
+    result = prime * result + @(_hasAnyUnread).unsignedIntegerValue;
+    result = prime * result + @(_hasAnyNotification).unsignedIntegerValue;
+    result = prime * result + @(_hasAnyHighlight).unsignedIntegerValue;
     result = prime * result + _dataTypes;
     result = prime * result + _sentStatus;
     result = prime * result + [_lastMessage.eventId hash];
     result = prime * result + [_lastMessage.text hash];
 
-    return result;
+    return [NSNumber numberWithUnsignedInteger:result].hash;
 }
 
 - (MXRoomSummaryDataTypes)calculateDataTypes
