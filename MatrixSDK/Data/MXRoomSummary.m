@@ -103,6 +103,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
         store = theStore;
 
         [self setMatrixSession:mxSession];
+        [self commonInit];
     }
 
     return self;
@@ -114,6 +115,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     {
         _roomId = model.roomId;
         [self updateWith:model];
+        [self commonInit];
     }
     return self;
 }
@@ -124,8 +126,30 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     {
         _roomId = spaceChildInfo.childRoomId;
         _spaceChildInfo = spaceChildInfo;
+        [self commonInit];
     }
     return self;
+}
+
+- (void)commonInit
+{
+    // Listen to the event sent state changes
+    // This is used to follow evolution of local echo events
+    // (ex: when a sentState change from sending to sentFailed)
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(eventDidChangeSentState:) name:kMXEventDidChangeSentStateNotification object:nil];
+
+    // Listen to the event id change
+    // This is used to follow evolution of local echo events
+    // when they changed their local event id to the final event id
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(eventDidChangeIdentifier:) name:kMXEventDidChangeIdentifierNotification object:nil];
+
+    // Listen to data being flush in a room
+    // This is used to update the room summary in case of a state event redaction
+    // We may need to update the room displayname when it happens
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(roomDidFlushData:) name:kMXRoomDidFlushDataNotification object:nil];
+
+    // Listen to event edits within the room
+    [self registerEventEditsListener];
 }
 
 - (void)destroy
@@ -142,25 +166,6 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     {
         _mxSession = mxSession;
         store = mxSession.store;
-        [self updateWith:[store.summariesModule summaryOfRoom:_roomId]];
-
-        // Listen to the event sent state changes
-        // This is used to follow evolution of local echo events
-        // (ex: when a sentState change from sending to sentFailed)
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(eventDidChangeSentState:) name:kMXEventDidChangeSentStateNotification object:nil];
-
-        // Listen to the event id change
-        // This is used to follow evolution of local echo events
-        // when they changed their local event id to the final event id
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(eventDidChangeIdentifier:) name:kMXEventDidChangeIdentifierNotification object:nil];
-
-        // Listen to data being flush in a room
-        // This is used to update the room summary in case of a state event redaction
-        // We may need to update the room displayname when it happens
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(roomDidFlushData:) name:kMXRoomDidFlushDataNotification object:nil];
-
-        // Listen to event edits within the room
-        [self registerEventEditsListener];
     }
 }
 
