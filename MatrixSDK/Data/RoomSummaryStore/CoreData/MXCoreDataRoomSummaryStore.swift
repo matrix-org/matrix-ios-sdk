@@ -67,11 +67,13 @@ public class MXCoreDataRoomSummaryStore: NSObject {
     }()
     
     /// Managed object context to be used when inserting data, whose parent context is `mainMoc`.
-    private lazy var defaultTempMoc: NSManagedObjectContext = {
+    private var tempMoc: NSManagedObjectContext {
         let result = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
+        result.automaticallyMergesChangesFromParent = true
+        result.mergePolicy = NSMergePolicy.mergeByPropertyObjectTrump
         result.parent = mainMoc
         return result
-    }()
+    }
     /// Managed object context to be used on main thread for fetching data, whose parent context is `persistentMoc`.
     private lazy var mainMoc: NSManagedObjectContext = {
         let result = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
@@ -145,7 +147,7 @@ public class MXCoreDataRoomSummaryStore: NSObject {
     }
     
     private func saveSummary(_ summary: MXRoomSummaryProtocol) {
-        let moc = defaultTempMoc
+        let moc = tempMoc
         
         moc.perform { [weak self] in
             guard let self = self else { return }
@@ -165,7 +167,7 @@ public class MXCoreDataRoomSummaryStore: NSObject {
     }
     
     private func deleteSummary(forRoomId roomId: String) {
-        let moc = defaultTempMoc
+        let moc = tempMoc
         
         moc.perform { [weak self] in
             guard let self = self else { return }
@@ -185,7 +187,7 @@ public class MXCoreDataRoomSummaryStore: NSObject {
             MXRoomMembersCountMO.entityName
         ]
         
-        let moc = defaultTempMoc
+        let moc = tempMoc
         
         moc.perform { [weak self] in
             guard let self = self else { return }
@@ -206,7 +208,7 @@ public class MXCoreDataRoomSummaryStore: NSObject {
     private func allSummaries(_ completion: @escaping ([MXRoomSummaryProtocol]) -> Void) {
         let request = MXRoomSummaryMO.typedFetchRequest()
         
-        let moc = defaultTempMoc
+        let moc = tempMoc
         
         moc.perform {
             do {
