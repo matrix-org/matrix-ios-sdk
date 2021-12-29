@@ -1032,7 +1032,12 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     result = prime * result + [_lastMessage.eventId hash];
     result = prime * result + [_lastMessage.text hash];
 
-    return [NSNumber numberWithUnsignedInteger:result].hash;
+    result = [NSNumber numberWithUnsignedInteger:result].hash;
+    while (result > INT64_MAX)
+    {
+        result -= INT64_MAX;
+    }
+    return result;
 }
 
 - (MXRoomSummaryDataTypes)calculateDataTypes
