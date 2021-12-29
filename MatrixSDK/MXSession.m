@@ -108,7 +108,7 @@ typedef void (^MXOnResumeDone)(void);
      Rooms summaries
      Each key is a room id. Each value, the MXRoomSummary instance.
      */
-    NSMutableDictionary<NSString*, MXRoomSummary*> *roomsSummaries;
+    NSMutableDictionary<NSString*, MXRoomSummary*> *roomSummaries;
 
     /**
      The current request of the event stream.
@@ -224,7 +224,7 @@ typedef void (^MXOnResumeDone)(void);
         _threePidAddManager = [[MX3PidAddManager alloc] initWithMatrixSession:self];
         mediaManager = [[MXMediaManager alloc] initWithHomeServer:matrixRestClient.homeserver];
         rooms = [NSMutableDictionary dictionary];
-        roomsSummaries = [NSMutableDictionary dictionary];
+        roomSummaries = [NSMutableDictionary dictionary];
         _roomSummaryUpdateDelegate = [MXRoomSummaryUpdater roomSummaryUpdaterForSession:self];
         _roomAccountDataUpdateDelegate = [MXRoomAccountDataUpdater roomAccountDataUpdaterForSession:self];
         globalEventListeners = [NSMutableArray array];
@@ -1155,11 +1155,11 @@ typedef void (^MXOnResumeDone)(void);
     [peekingRooms removeAllObjects];
 
     // Clean summaries
-    for (MXRoomSummary *summary in roomsSummaries.allValues)
+    for (MXRoomSummary *summary in roomSummaries.allValues)
     {
         [summary destroy];
     }
-    [roomsSummaries removeAllObjects];
+    [roomSummaries removeAllObjects];
 
     // Clean notification center
     [_notificationCenter removeAllListeners];
@@ -2564,11 +2564,12 @@ typedef void (^MXOnResumeDone)(void);
 
     if (alias)
     {
-        for (MXRoomSummary *summary in roomsSummaries.allValues)
+        for (MXRoom *room in self.rooms)
         {
+            MXRoomSummary *summary = room.summary;
             if (summary.aliases && NSNotFound != [summary.aliases indexOfObject:alias])
             {
-                theRoom = [self roomWithRoomId:summary.roomId];
+                theRoom = room;
                 break;
             }
         }
@@ -2875,11 +2876,12 @@ typedef void (^MXOnResumeDone)(void);
 
         // Clean the store
         [self.store deleteRoom:roomId];
+        [self.store.summariesModule removeSummaryOfRoom:roomId];
         [self.aggregations resetDataInRoom:roomId];
 
         // And remove the room and its summary from the list
         [rooms removeObjectForKey:roomId];
-        [roomsSummaries removeObjectForKey:roomId];
+        [roomSummaries removeObjectForKey:roomId];
 
         // Broadcast the left room
         [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDidLeaveRoomNotification
@@ -3063,8 +3065,15 @@ typedef void (^MXOnResumeDone)(void);
     
     dispatch_group_t dispatchGroup = dispatch_group_create();
     
-    for (MXRoomSummary *summary in self.roomsSummaries)
+    for (MXRoom *room in self.rooms)
     {
+        MXRoomSummary *summary = room.summary;
+        
+        if (summary == nil)
+        {
+            continue;
+        }
+        
         //  ignore this room if there is no change
         if (!force && summary.storedHash == summary.hash)
         {
@@ -3631,11 +3640,12 @@ typedef void (^MXOnResumeDone)(void);
     NSUInteger notificationCount = 0;
     
     // Sum here all the notification counts from room summaries.
-    for (MXRoomSummary *roomSummary in self.roomsSummaries)
+    for (MXRoom *room in self.rooms)
     {
-        if (roomSummary.notificationCount)
+        MXRoomSummary *summary = room.summary;
+        if (summary.notificationCount)
         {
-            notificationCount += roomSummary.notificationCount;
+            notificationCount += summary.notificationCount;
         }
     }
     
@@ -3647,9 +3657,9 @@ typedef void (^MXOnResumeDone)(void);
     NSUInteger roomCount = 0;
     
     // Sum here all the rooms with missed notifications.
-    for (MXRoomSummary *roomSummary in self.roomsSummaries)
+    for (MXRoom *room in self.rooms)
     {
-        if (roomSummary.notificationCount)
+        if (room.summary.notificationCount)
         {
             roomCount ++;
         }
@@ -3663,9 +3673,9 @@ typedef void (^MXOnResumeDone)(void);
     NSUInteger roomCount = 0;
     
     // Sum here all the rooms with unread highlighted messages.
-    for (MXRoomSummary *roomSummary in self.roomsSummaries)
+    for (MXRoom *room in self.rooms)
     {
-        if (roomSummary.highlightCount)
+        if (room.summary.highlightCount)
         {
             roomCount ++;
         }
@@ -3677,9 +3687,9 @@ typedef void (^MXOnResumeDone)(void);
 - (void)markAllMessagesAsRead
 {
     // Reset the unread count in all the existing room summaries.
-    for (MXRoomSummary *roomSummary in self.roomsSummaries)
+    for (MXRoom *room in self.rooms)
     {
-        [roomSummary markAllAsRead];
+        [room.summary markAllAsRead];
     }
 }
 
@@ -4817,7 +4827,7 @@ typedef void (^MXOnResumeDone)(void);
     
     [self.spaceService.ancestorsPerRoomId enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull roomId, NSSet<NSString *> * _Nonnull parentIds, BOOL * _Nonnull stop)
     {
-        self->roomsSummaries[roomId].parentSpaceIds = parentIds;
+        self->roomSummaries[roomId].parentSpaceIds = parentIds;
     }];
 }
 
