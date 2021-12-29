@@ -194,12 +194,12 @@ extension MXCoreDataRoomListDataFetcher: MXRoomListDataSortable {
         }
         
         if sortOptions.missedNotificationsFirst {
-            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryMO.s_highlightCount, ascending: false))
-            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryMO.s_notificationCount, ascending: false))
+            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryMO.s_hasAnyHighlight, ascending: false))
+            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryMO.s_hasAnyNotification, ascending: false))
         }
         
         if sortOptions.unreadMessagesFirst {
-            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryMO.s_localUnreadEventCount, ascending: false))
+            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryMO.s_hasAnyUnread, ascending: false))
         }
         
         if sortOptions.lastEventDate {
@@ -235,6 +235,13 @@ extension MXCoreDataRoomListDataFetcher: MXRoomListDataFilterable {
         }
         
         if !filterOptions.onlySuggested {
+            if filterOptions.hideUnknownMembershipRooms {
+                let memberPredicate = NSPredicate(format: "%K != %d",
+                                                  #keyPath(MXRoomSummaryMO.s_membershipInt),
+                                                  MXMembership.unknown.rawValue)
+                predicates.append(memberPredicate)
+            }
+            
             //  data types
             if !filterOptions.dataTypes.isEmpty {
                 let predicate = NSPredicate(format: "(%K & %d) != 0",

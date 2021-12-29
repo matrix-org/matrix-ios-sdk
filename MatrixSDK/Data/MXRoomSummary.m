@@ -72,6 +72,10 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
 
 @implementation MXRoomSummary
 
+@synthesize hasAnyUnread = _hasAnyUnread;
+@synthesize hasAnyNotification = _hasAnyNotification;
+@synthesize hasAnyHighlight = _hasAnyHighlight;
+
 - (instancetype)init
 {
     self = [super init];
@@ -232,6 +236,9 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     _localUnreadEventCount = summary.localUnreadEventCount;
     _notificationCount = summary.notificationCount;
     _highlightCount = summary.highlightCount;
+    _hasAnyUnread = summary.hasAnyUnread;
+    _hasAnyNotification = summary.hasAnyNotification;
+    _hasAnyHighlight = summary.hasAnyHighlight;
     _directUserId = summary.directUserId;
     _others = [summary.others mutableCopy];
     _favoriteTagOrder = summary.favoriteTagOrder;
