@@ -226,14 +226,6 @@ extension MXCoreDataRoomListDataFetcher: MXRoomListDataFilterable {
     func filterPredicate(for filterOptions: MXRoomListDataFilterOptions) -> NSPredicate? {
         var predicates: [NSPredicate] = []
         
-        //  query
-        if let query = filterOptions.query, !query.isEmpty {
-            let predicate = NSPredicate(format: "%K CONTAINS[cd] %@",
-                                        #keyPath(MXRoomSummaryMO.s_displayName),
-                                        query)
-            predicates.append(predicate)
-        }
-        
         if !filterOptions.onlySuggested {
             if filterOptions.hideUnknownMembershipRooms {
                 let memberPredicate = NSPredicate(format: "%K != %d",
@@ -294,6 +286,14 @@ extension MXCoreDataRoomListDataFetcher: MXRoomListDataFilterable {
                                                     subpredicates: [predicate1, predicate2, predicate3, predicate4])
                 predicates.append(predicate)
             }
+        }
+        
+        //  query
+        if let query = filterOptions.query, !query.isEmpty {
+            let predicate = NSPredicate(format: "%K CONTAINS[cd] %@",
+                                        #keyPath(MXRoomSummaryMO.s_displayName),
+                                        query)
+            predicates.append(predicate)
         }
         
         guard !predicates.isEmpty else {

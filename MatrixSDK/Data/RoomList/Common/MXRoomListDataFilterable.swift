@@ -50,18 +50,6 @@ extension MXRoomListDataFilterable {
     func filterPredicate(for filterOptions: MXRoomListDataFilterOptions) -> NSPredicate? {
         var predicates: [NSPredicate] = []
         
-        if let query = filterOptions.query, !query.isEmpty {
-            let predicate1 = NSPredicate(format: "%K CONTAINS[cd] %@",
-                                         #keyPath(MXRoomSummaryProtocol.displayname),
-                                         query)
-            let predicate2 = NSPredicate(format: "%K CONTAINS[cd] %@",
-                                         #keyPath(MXRoomSummaryProtocol.spaceChildInfo.displayName),
-                                         query)
-            let predicate = NSCompoundPredicate(type: .or,
-                                                subpredicates: [predicate1, predicate2])
-            predicates.append(predicate)
-        }
-        
         if !filterOptions.onlySuggested {
             if filterOptions.hideUnknownMembershipRooms {
                 let memberPredicate = NSPredicate(format: "%K != %d",
@@ -121,6 +109,18 @@ extension MXRoomListDataFilterable {
                                                     subpredicates: [predicate1, predicate2, predicate3, predicate4])
                 predicates.append(predicate)
             }
+        }
+        
+        if let query = filterOptions.query, !query.isEmpty {
+            let predicate1 = NSPredicate(format: "%K CONTAINS[cd] %@",
+                                         #keyPath(MXRoomSummaryProtocol.displayname),
+                                         query)
+            let predicate2 = NSPredicate(format: "%K CONTAINS[cd] %@",
+                                         #keyPath(MXRoomSummaryProtocol.spaceChildInfo.displayName),
+                                         query)
+            let predicate = NSCompoundPredicate(type: .or,
+                                                subpredicates: [predicate1, predicate2])
+            predicates.append(predicate)
         }
         
         guard !predicates.isEmpty else {
