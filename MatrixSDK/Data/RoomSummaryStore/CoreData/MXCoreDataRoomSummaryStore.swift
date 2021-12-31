@@ -28,6 +28,18 @@ public class MXCoreDataRoomSummaryStore: NSObject {
     
     private let credentials: MXCredentials
     
+    private lazy var container: NSPersistentContainer = {
+        let result = NSPersistentContainer(name: Constants.modelName,
+                                           managedObjectModel: Self.managedObjectModel)
+        result.persistentStoreDescriptions.first?.url = storeURL
+        result.loadPersistentStores { description, error in
+            if let error = error {
+                MXLog.error("Failed to load store: \(error)")
+                abort()
+            }
+        }
+        return result
+    }()
     private lazy var storeURL: URL = {
         guard let userId = credentials.userId else {
             fatalError("[MXCoreDataRoomSummaryStore] Credentials must provide a user identifier")
@@ -53,47 +65,21 @@ public class MXCoreDataRoomSummaryStore: NSObject {
         }
         return result
     }()
-    private lazy var persistenceCoordinator: NSPersistentStoreCoordinator = {
-        let result = NSPersistentStoreCoordinator(managedObjectModel: Self.managedObjectModel)
-        do {
-            try result.addPersistentStore(ofType: NSSQLiteStoreType,
-                                          configurationName: nil,
-                                          at: storeURL,
-                                          options: nil)
-        } catch {
-            fatalError(error.localizedDescription)
-        }
-        return result
-    }()
     
     /// Managed object context to be used when inserting data, whose parent context is `mainMoc`.
     private var tempMoc: NSManagedObjectContext {
-        let result = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
-        result.automaticallyMergesChangesFromParent = true
-        result.mergePolicy = NSMergePolicy.mergeByPropertyObjectTrump
-        result.parent = mainMoc
-        return result
+        return container.newBackgroundContext()
     }
     /// Managed object context to be used on main thread for fetching data, whose parent context is `persistentMoc`.
     private lazy var mainMoc: NSManagedObjectContext = {
-        let result = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
+        let result = container.viewContext
         result.automaticallyMergesChangesFromParent = true
-        result.mergePolicy = NSMergePolicy.mergeByPropertyObjectTrump
-        result.parent = persistentMoc
-        return result
-    }()
-    /// Managed object context which is connected to the persistent store. Not intended to be used with fetch or update operations directly.
-    private lazy var persistentMoc: NSManagedObjectContext = {
-        let result = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
-        result.persistentStoreCoordinator = persistenceCoordinator
         return result
     }()
     
     public init(withCredentials credentials: MXCredentials) {
         self.credentials = credentials
         super.init()
-        //  create persistent container
-        _ = persistenceCoordinator
     }
     
     //  MARK: - Private
@@ -104,12 +90,15 @@ public class MXCoreDataRoomSummaryStore: NSObject {
         request.includesPropertyValues = false
         //  fetch nothing
         request.propertiesToFetch = []
-        do {
-            return try moc.count(for: request)
-        } catch {
-            MXLog.error("[MXCoreDataRoomSummaryStore] countRooms failed: \(error)")
+        var result = 0
+        moc.performAndWait {
+            do {
+                result = try moc.count(for: request)
+            } catch {
+                MXLog.error("[MXCoreDataRoomSummaryStore] countRooms failed: \(error)")
+            }
         }
-        return 0
+        return result
     }
     
     private func fetchRoomIds(in moc: NSManagedObjectContext) -> [String] {
@@ -122,17 +111,40 @@ public class MXCoreDataRoomSummaryStore: NSObject {
         request.includesSubentities = false
         //  only fetch room identifiers
         request.propertiesToFetch = [property]
-        do {
-            let results = try moc.fetch(request)
-            //  do not attempt to access other properties from the results
-            return results.map({ $0.s_identifier })
-        } catch {
-            MXLog.error("[MXCoreDataRoomSummaryStore] fetchRoomIds failed: \(error)")
+        var result: [String] = []
+        moc.performAndWait {
+            do {
+                let results = try moc.fetch(request)
+                //  do not attempt to access other properties from the results
+                result = results.map({ $0.s_identifier })
+            } catch {
+                MXLog.error("[MXCoreDataRoomSummaryStore] fetchRoomIds failed: \(error)")
+            }
         }
-        return []
+        return result
     }
     
-    private func fetchSummary(forRoomId roomId: String, in moc: NSManagedObjectContext) -> MXRoomSummaryMO? {
+    private func fetchSummary(forRoomId roomId: String, in moc: NSManagedObjectContext) -> MXRoomSummary? {
+        let request = MXRoomSummaryMO.typedFetchRequest()
+        request.predicate = NSPredicate(format: "%K == %@",
+                                        #keyPath(MXRoomSummaryMO.s_identifier),
+                                        roomId)
+        var result: MXRoomSummary? = nil
+        moc.performAndWait {
+            do {
+                let results = try moc.fetch(request)
+                if let model = results.first {
+                    result = MXRoomSummary(summaryModel: model)
+                }
+            } catch {
+                MXLog.error("[MXCoreDataRoomSummaryStore] fetchSummary failed: \(error)")
+            }
+        }
+        return result
+    }
+    
+    /// Inline method to fetch a summary managed object. Only to be called in moc.perform blocks.
+    private func fetchSummaryMO(forRoomId roomId: String, in moc: NSManagedObjectContext) -> MXRoomSummaryMO? {
         let request = MXRoomSummaryMO.typedFetchRequest()
         request.predicate = NSPredicate(format: "%K == %@",
                                         #keyPath(MXRoomSummaryMO.s_identifier),
@@ -151,7 +163,7 @@ public class MXCoreDataRoomSummaryStore: NSObject {
         
         moc.perform { [weak self] in
             guard let self = self else { return }
-            if let existing = self.fetchSummary(forRoomId: summary.roomId, in: moc) {
+            if let existing = self.fetchSummaryMO(forRoomId: summary.roomId, in: moc) {
                 existing.update(withRoomSummary: summary, in: moc)
             } else {
                 let model = MXRoomSummaryMO.insert(roomSummary: summary, into: moc)
@@ -171,7 +183,7 @@ public class MXCoreDataRoomSummaryStore: NSObject {
         
         moc.perform { [weak self] in
             guard let self = self else { return }
-            if let existing = self.fetchSummary(forRoomId: roomId, in: moc) {
+            if let existing = self.fetchSummaryMO(forRoomId: roomId, in: moc) {
                 moc.delete(existing)
             }
             
@@ -224,22 +236,16 @@ public class MXCoreDataRoomSummaryStore: NSObject {
         }
     }
     
+    /// Inline method to save a managed object context if needed. Only to be called in moc.perform blocks.
     private func saveIfNeeded(_ moc: NSManagedObjectContext) {
         guard moc.hasChanges else {
             return
         }
-        moc.perform { [weak self] in
-            guard let self = self else { return }
-            do {
-                try moc.save()
-                //  propagate changes to the parent context, until reaching the persistent store
-                if let parent = moc.parent {
-                    self.saveIfNeeded(parent)
-                }
-            } catch {
-                moc.rollback()
-                MXLog.error("[MXCoreDataRoomSummaryStore] saveIfNeeded failed: \(error)")
-            }
+        do {
+            try moc.save()
+        } catch {
+            moc.rollback()
+            MXLog.error("[MXCoreDataRoomSummaryStore] saveIfNeeded failed: \(error)")
         }
     }
     
@@ -250,11 +256,11 @@ public class MXCoreDataRoomSummaryStore: NSObject {
 extension MXCoreDataRoomSummaryStore: MXRoomSummaryStore {
     
     public var rooms: [String] {
-        return fetchRoomIds(in: mainMoc)
+        return fetchRoomIds(in: tempMoc)
     }
     
     public var countOfRooms: UInt {
-        return UInt(countRooms(in: mainMoc))
+        return UInt(countRooms(in: tempMoc))
     }
     
     public func storeSummary(_ summary: MXRoomSummaryProtocol) {
@@ -262,10 +268,7 @@ extension MXCoreDataRoomSummaryStore: MXRoomSummaryStore {
     }
     
     public func summary(ofRoom roomId: String) -> MXRoomSummaryProtocol? {
-        if let model = fetchSummary(forRoomId: roomId, in: mainMoc) {
-            return MXRoomSummary(summaryModel: model)
-        }
-        return nil
+        return fetchSummary(forRoomId: roomId, in: tempMoc)
     }
     
     public func removeSummary(ofRoom roomId: String) {
