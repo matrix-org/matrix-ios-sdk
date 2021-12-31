@@ -65,6 +65,18 @@ public class MXCoreDataRoomSummaryStore: NSObject {
         }
         return result
     }()
+    private lazy var persistenceCoordinator: NSPersistentStoreCoordinator = {
+        let result = NSPersistentStoreCoordinator(managedObjectModel: Self.managedObjectModel)
+        do {
+            try result.addPersistentStore(ofType: NSSQLiteStoreType,
+                                          configurationName: nil,
+                                          at: storeURL,
+                                          options: nil)
+        } catch {
+            fatalError(error.localizedDescription)
+        }
+        return result
+    }()
     
     /// Managed object context to be used when inserting data, whose parent context is `mainMoc`.
     private var tempMoc: NSManagedObjectContext {
@@ -80,6 +92,8 @@ public class MXCoreDataRoomSummaryStore: NSObject {
     public init(withCredentials credentials: MXCredentials) {
         self.credentials = credentials
         super.init()
+        //  create persistent container
+        _ = persistenceCoordinator
     }
     
     //  MARK: - Private
