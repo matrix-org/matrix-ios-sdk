@@ -41,6 +41,7 @@ class MXStoreRoomListDataManagerUnitTests: XCTestCase {
         let sortOptions = MXRoomListDataSortOptions(missedNotificationsFirst: false, unreadMessagesFirst: false)
         return MXRoomListDataFetchOptions(filterOptions: filterOptions,
                                           sortOptions: sortOptions,
+                                          paginationOptions: .none,
                                           async: false)
     }
     

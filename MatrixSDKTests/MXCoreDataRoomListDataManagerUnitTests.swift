@@ -93,7 +93,7 @@ class MXCoreDataRoomListDataManagerUnitTests: XCTestCase {
     func testFetchOptionsInit() {
         let fetchOptions = self.basicFetchOptions
         XCTAssertEqual(fetchOptions.async, true, "Fetch options should include async")
-        XCTAssertEqual(fetchOptions.paginationOptions, .none, "Default fetch options should not include pagination")
+        XCTAssertEqual(fetchOptions.paginationOptions, .default, "Default fetch options should enable pagination")
         XCTAssertNil(fetchOptions.fetcher, "Fetch options should not include fetcher without initializing a fetcher")
     }
     
@@ -186,7 +186,8 @@ class MXCoreDataRoomListDataManagerUnitTests: XCTestCase {
             store.storeSummary(summary)
         }
         
-        let fetcher = MXCoreDataRoomListDataFetcher(fetchOptions: basicFetchOptions,
+        let fetcher = MXCoreDataRoomListDataFetcher(session: nil,
+                                                    fetchOptions: basicFetchOptions,
                                                     store: store)
         return fetcher
     }

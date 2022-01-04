@@ -97,7 +97,7 @@ internal class MXCoreDataRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
         }
     }
     
-    internal init(session: MXSession,
+    internal init(session: MXSession?,
                   fetchOptions: MXRoomListDataFetchOptions,
                   store: MXRoomSummaryCoreDataContextableStore) {
         self.session = session
