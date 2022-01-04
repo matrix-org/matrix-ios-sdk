@@ -207,7 +207,7 @@ internal class MXSuggestedRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
         //  we don't know total rooms count, passing as current number of rooms
         self.data = MXRoomListData(rooms: rooms,
                                    counts: MXStoreRoomListDataCounts(withRooms: rooms,
-                                                                     totalRoomsCount: rooms.count),
+                                                                     total: nil),
                                    paginationOptions: fetchOptions.paginationOptions)
     }
     

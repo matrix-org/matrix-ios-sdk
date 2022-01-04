@@ -149,13 +149,17 @@ internal class MXStoreRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
         rooms = filterRooms(rooms)
         rooms = sortRooms(rooms)
         
-        let totalRoomsCount = rooms.count
+        var total: MXRoomListDataCounts?
+        
         if numberOfItems > 0 && rooms.count > numberOfItems {
+            //  compute total counts just before cutting the rooms array
+            total = MXStoreRoomListDataCounts(withRooms: rooms, total: nil)
             rooms = Array(rooms[0..<numberOfItems])
         }
         
         return MXRoomListData(rooms: rooms,
-                              counts: MXStoreRoomListDataCounts(withRooms: rooms, totalRoomsCount: totalRoomsCount),
+                              counts: MXStoreRoomListDataCounts(withRooms: rooms,
+                                                                total: total),
                               paginationOptions: fetchOptions.paginationOptions)
     }
     

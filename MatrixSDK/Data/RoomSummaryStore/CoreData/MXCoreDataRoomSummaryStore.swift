@@ -79,9 +79,9 @@ public class MXCoreDataRoomSummaryStore: NSObject {
     }()
     
     /// Managed object context to be used when inserting data, whose parent context is `mainMoc`.
-    private var tempMoc: NSManagedObjectContext {
+    private lazy var defaultTempMoc: NSManagedObjectContext = {
         return container.newBackgroundContext()
-    }
+    }()
     /// Managed object context to be used on main thread for fetching data, whose parent context is `persistentMoc`.
     private lazy var mainMoc: NSManagedObjectContext = {
         let result = container.viewContext
@@ -173,7 +173,7 @@ public class MXCoreDataRoomSummaryStore: NSObject {
     }
     
     private func saveSummary(_ summary: MXRoomSummaryProtocol) {
-        let moc = tempMoc
+        let moc = defaultTempMoc
         
         moc.perform { [weak self] in
             guard let self = self else { return }
@@ -193,7 +193,7 @@ public class MXCoreDataRoomSummaryStore: NSObject {
     }
     
     private func deleteSummary(forRoomId roomId: String) {
-        let moc = tempMoc
+        let moc = defaultTempMoc
         
         moc.perform { [weak self] in
             guard let self = self else { return }
@@ -213,7 +213,7 @@ public class MXCoreDataRoomSummaryStore: NSObject {
             MXRoomMembersCountMO.entityName
         ]
         
-        let moc = tempMoc
+        let moc = defaultTempMoc
         
         moc.perform { [weak self] in
             guard let self = self else { return }
@@ -234,7 +234,7 @@ public class MXCoreDataRoomSummaryStore: NSObject {
     private func allSummaries(_ completion: @escaping ([MXRoomSummaryProtocol]) -> Void) {
         let request = MXRoomSummaryMO.typedFetchRequest()
         
-        let moc = tempMoc
+        let moc = defaultTempMoc
         
         moc.perform {
             do {
@@ -270,11 +270,11 @@ public class MXCoreDataRoomSummaryStore: NSObject {
 extension MXCoreDataRoomSummaryStore: MXRoomSummaryStore {
     
     public var rooms: [String] {
-        return fetchRoomIds(in: tempMoc)
+        return fetchRoomIds(in: defaultTempMoc)
     }
     
     public var countOfRooms: UInt {
-        return UInt(countRooms(in: tempMoc))
+        return UInt(countRooms(in: defaultTempMoc))
     }
     
     public func storeSummary(_ summary: MXRoomSummaryProtocol) {
@@ -282,7 +282,7 @@ extension MXCoreDataRoomSummaryStore: MXRoomSummaryStore {
     }
     
     public func summary(ofRoom roomId: String) -> MXRoomSummaryProtocol? {
-        return fetchSummary(forRoomId: roomId, in: tempMoc)
+        return fetchSummary(forRoomId: roomId, in: defaultTempMoc)
     }
     
     public func removeSummary(ofRoom roomId: String) {

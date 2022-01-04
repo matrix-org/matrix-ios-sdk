@@ -64,8 +64,36 @@ internal class MXCoreDataRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
         }
     }
     
-    internal init(fetchOptions: MXRoomListDataFetchOptions,
+    private var totalCounts: MXRoomListDataCounts? {
+        guard fetchOptions.paginationOptions != .none else {
+            return nil
+        }
+        let request = MXRoomSummaryMO.typedFetchRequest()
+        request.predicate = filterPredicate(for: filterOptions)
+        let propertyNames: [String] = ["s_dataTypesInt", "s_sentStatusInt", "s_notificationCount", "s_highlightCount"]
+        var properties: [NSPropertyDescription] = []
+        
+        for propertyName in propertyNames {
+            guard let property = MXRoomSummaryMO.entity().propertiesByName[propertyName] else {
+                fatalError("[MXCoreDataRoomSummaryStore] Couldn't find \(propertyName) on entity \(String(describing: MXRoomSummaryMO.self)), probably property name changed")
+            }
+            properties.append(property)
+        }
+        request.propertiesToFetch = properties
+        do {
+            let summaries = try store.mainManagedObjectContext.fetch(request)
+            return MXStoreRoomListDataCounts(withRooms: summaries,
+                                             total: nil)
+        } catch let error {
+            MXLog.error("[MXCoreDataRoomListDataFetcher] failed to calculate total counts: \(error)")
+            return nil
+        }
+    }
+    
+    internal init(session: MXSession,
+                  fetchOptions: MXRoomListDataFetchOptions,
                   store: MXRoomSummaryCoreDataContextableStore) {
+        self.session = session
         self.fetchOptions = fetchOptions
         self.store = store
         super.init()
@@ -162,10 +190,17 @@ internal class MXCoreDataRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
             return
         }
         
-        let mapped = summaries.compactMap({ MXRoomSummary(summaryModel: $0) })
+        let fetchLimit = fetchedResultsController.fetchRequest.fetchLimit
+        let mapped: [MXRoomSummary]
         
+        if fetchLimit > 0 && summaries.count > fetchLimit {
+            data = nil
+            mapped = summaries[0..<fetchLimit].compactMap { MXRoomSummary(summaryModel: $0) }
+        } else {
+            mapped = summaries.compactMap { MXRoomSummary(summaryModel: $0) }
+        }
         let counts = MXStoreRoomListDataCounts(withRooms: mapped,
-                                               totalRoomsCount: totalRoomsCount)
+                                               total: totalCounts)
         data = MXRoomListData(rooms: mapped,
                               counts: counts,
                               paginationOptions: fetchOptions.paginationOptions)
