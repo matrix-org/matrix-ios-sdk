@@ -28,6 +28,7 @@
         _latitude = latitude;
         _longitude = longitude;
         _locationDescription = description;
+        _geoURI = [NSString stringWithFormat:@"geo:%@,%@", @(self.latitude), @(self.longitude)];
     }
     
     return self;
@@ -35,11 +36,21 @@
 
 + (instancetype)modelFromJSON:(NSDictionary *)JSONDictionary
 {
+    NSDictionary *locationContent = JSONDictionary[kMXMessageContentKeyExtensibleLocationMSC3488];
+    if (locationContent == nil)
+    {
+        locationContent = JSONDictionary[kMXMessageContentKeyExtensibleLocation];
+    }
+    
+    if  (locationContent == nil) {
+        return nil;
+    }
+    
     NSString *description;
-    MXJSONModelSetString(description, JSONDictionary[kMXMessageContentKeyExtensibleLocationDescription]);
+    MXJSONModelSetString(description, locationContent[kMXMessageContentKeyExtensibleLocationDescription]);
     
     NSString *geoURIString;
-    MXJSONModelSetString(geoURIString, JSONDictionary[kMXMessageContentKeyExtensibleLocationURI]);
+    MXJSONModelSetString(geoURIString, locationContent[kMXMessageContentKeyExtensibleLocationURI]);
     
     NSString *locationString = [[geoURIString componentsSeparatedByString:@":"].lastObject componentsSeparatedByString:@";"].firstObject;
     
@@ -61,8 +72,7 @@
 {
     NSMutableDictionary *content = [NSMutableDictionary dictionary];
     
-    NSString *geoURI = [NSString stringWithFormat:@"geo:%@,%@", @(self.latitude), @(self.longitude)];
-    content[kMXMessageContentKeyExtensibleLocationURI] = geoURI;
+    content[kMXMessageContentKeyExtensibleLocationURI] = self.geoURI;
     
     content[kMXMessageContentKeyExtensibleLocationDescription] = self.locationDescription;
     

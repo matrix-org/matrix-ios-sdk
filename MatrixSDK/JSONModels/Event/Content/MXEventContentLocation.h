@@ -26,6 +26,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, readonly) double longitude;
 
+@property (nonatomic, readonly) NSString *geoURI;
+
 @property (nonatomic, readonly, nullable) NSString *locationDescription;
 
 - (instancetype)initWithLatitude:(double)latitude

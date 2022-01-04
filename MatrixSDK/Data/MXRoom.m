@@ -2401,19 +2401,18 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     NSMutableDictionary *content = [NSMutableDictionary dictionary];
     content[kMXMessageTypeKey] = kMXMessageTypeLocation;
     
-    NSDictionary *locationContent = [[MXEventContentLocation alloc] initWithLatitude:latitude
-                                                                           longitude:longitude
-                                                                         description:description].JSONDictionary;
+    MXEventContentLocation *locationContent = [[MXEventContentLocation alloc] initWithLatitude:latitude
+                                                                                     longitude:longitude
+                                                                                   description:description];
     
-    content[kMXMessageContentKeyExtensibleLocationMSC3488] = locationContent;
+    content[kMXMessageContentKeyExtensibleLocationMSC3488] = locationContent.JSONDictionary;
     
-    NSString *geoURI = locationContent[kMXMessageContentKeyExtensibleLocationURI];
-    content[kMXMessageGeoURIKey] = geoURI;
+    content[kMXMessageGeoURIKey] = locationContent.geoURI;
     
-    NSString *fallbackText = [NSString stringWithFormat:@"%@ was at %@ as of %@", self.mxSession.myUser.displayname, geoURI, NSDate.date];
+    NSString *fallbackText = [NSString stringWithFormat:@"%@ was at %@ as of %@", self.mxSession.myUser.displayname, locationContent.geoURI, NSDate.date];
     content[kMXMessageBodyKey] = fallbackText;
     content[kMXMessageContentKeyExtensibleText] = fallbackText;
-                                                   
+    
     NSInteger timestamp = NSDate.date.timeIntervalSince1970 * 1000; // milliseconds since UNIX epoch
     content[kMXMessageContentKeyExtensibleTimestamp] = @(timestamp);
     
