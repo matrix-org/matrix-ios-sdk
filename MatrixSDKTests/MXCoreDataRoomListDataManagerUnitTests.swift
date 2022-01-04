@@ -166,7 +166,8 @@ class MXCoreDataRoomListDataManagerUnitTests: XCTestCase {
         Self.fetcher = fetcher
         self.wait { expectation in
             let delegate = MockRoomListDataFetcherDelegate(withBlock: {
-                XCTAssertEqual(fetcher.data?.counts.numberOfRooms, 60, "Fetcher should fetch all rooms except types: [.hidden, .conferenceUser, .space]")
+                XCTAssertEqual(fetcher.data?.counts.numberOfRooms, 10, "Fetcher should fetch all rooms except types: [.hidden, .conferenceUser, .space]")
+                XCTAssertEqual(fetcher.data?.counts.total?.numberOfRooms, 60, "Fetcher should be aware of all rooms except types: [.hidden, .conferenceUser, .space]")
                 
                 expectation.fulfill()
             })
