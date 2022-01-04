@@ -24,7 +24,14 @@ internal class MXCoreDataRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
     
     private let multicastDelegate: MXMulticastDelegate<MXRoomListDataFetcherDelegate> = MXMulticastDelegate()
     
+    private weak var session: MXSession?
     internal let fetchOptions: MXRoomListDataFetchOptions
+    private lazy var initialSyncThrottler: MXThrottler = {
+        return MXThrottler(minimumDelay: 1.0, queue: .main)
+    }()
+    private lazy var dataUpdateThrottler: MXThrottler = {
+        return MXThrottler(minimumDelay: 0.1, queue: .main)
+    }()
     
     internal private(set) var data: MXRoomListData? {
         didSet {
@@ -349,7 +356,15 @@ extension MXCoreDataRoomListDataFetcher: MXRoomListDataFilterable {
 extension MXCoreDataRoomListDataFetcher: NSFetchedResultsControllerDelegate {
     
     func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
-        computeData()
+        if session?.isEventStreamInitialised == true {
+            dataUpdateThrottler.throttle {
+                self.computeData()
+            }
+        } else {
+            initialSyncThrottler.throttle {
+                self.computeData()
+            }
+        }
     }
     
 }

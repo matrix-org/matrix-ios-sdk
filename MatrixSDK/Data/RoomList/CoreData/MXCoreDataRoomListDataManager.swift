@@ -35,8 +35,8 @@ public class MXCoreDataRoomListDataManager: NSObject, MXRoomListDataManager {
             return MXSuggestedRoomListDataFetcher(fetchOptions: options,
                                                   spaceService: spaceService)
         }
-        guard let store = session?.store else {
-            fatalError("[MXCoreDataRoomListDataManager] Session has no store")
+        guard let session = session, let store = session.store else {
+            fatalError("[MXCoreDataRoomListDataManager] No session or no store")
         }
         guard let coreDataStore = store.summariesModule as? MXRoomSummaryCoreDataContextableStore else {
             fatalError("[MXCoreDataRoomListDataManager] Session.store.summariesModule is not CoreDataContextable")
@@ -45,7 +45,8 @@ public class MXCoreDataRoomListDataManager: NSObject, MXRoomListDataManager {
         assert(coreDataStore.mainManagedObjectContext.concurrencyType == .mainQueueConcurrencyType,
                "[MXCoreDataRoomListDataManager] Managed object context must have mainQueueConcurrencyType")
         
-        return MXCoreDataRoomListDataFetcher(fetchOptions: options,
+        return MXCoreDataRoomListDataFetcher(session: session,
+                                             fetchOptions: options,
                                              store: coreDataStore)
     }
 }
