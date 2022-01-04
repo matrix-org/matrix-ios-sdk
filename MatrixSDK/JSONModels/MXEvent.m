@@ -494,20 +494,7 @@ NSString *const kMXMessageContentKeyExtensibleLocationDescription = @"descriptio
 
 - (MXEventContentLocation *)location
 {
-    if (self.eventType != MXEventTypeRoomMessage) {
-        return nil;
-    }
-    
-    NSDictionary *locationContent = self.content[kMXMessageContentKeyExtensibleLocationMSC3488];
-    if (locationContent == nil) {
-        locationContent = self.content[kMXMessageContentKeyExtensibleLocation];
-    }
-    
-    if (locationContent == nil) {
-        return nil;
-    }
-    
-    return [MXEventContentLocation modelFromJSON:locationContent];
+    return [MXEventContentLocation modelFromJSON:self.content];
 }
 
 - (BOOL)contentHasBeenEdited
