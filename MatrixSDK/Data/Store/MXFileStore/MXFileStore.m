@@ -28,7 +28,7 @@
 #import "MXTools.h"
 #import "MatrixSDKSwiftHeader.h"
 
-static NSUInteger const kMXFileVersion = 76;
+static NSUInteger const kMXFileVersion = 77;
 
 static NSString *const kMXFileStoreFolder = @"MXFileStore";
 static NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
@@ -227,7 +227,7 @@ static NSUInteger preloadOptions;
             // If metaData is still defined, we can load rooms data
             if (self->metaData)
             {                
-                MXTaskProfile *taskProfile = [MXSDKOptions.sharedInstance.profiler startMeasuringTaskWithName:kMXAnalyticsStartupStorePreload category:kMXAnalyticsStartupCategory];
+                MXTaskProfile *taskProfile = [MXSDKOptions.sharedInstance.profiler startMeasuringTaskWithName:MXTaskProfileNameStartupStorePreload];
                 
                 MXLogDebug(@"[MXFileStore] Start data loading from files");
 

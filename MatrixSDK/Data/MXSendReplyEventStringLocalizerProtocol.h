@@ -14,7 +14,7 @@
  limitations under the License.
  */
 
-@import Foundation;
+#import <Foundation/Foundation.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -29,6 +29,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (NSString *)senderSentAnAudioFile;
 - (NSString *)senderSentAVoiceMessage;
 - (NSString *)senderSentAFile;
+- (NSString *)senderSentTheirLocation;
 - (NSString *)messageToReplyToPrefix;
 
 @end

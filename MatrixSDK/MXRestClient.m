@@ -1753,7 +1753,7 @@ MXAuthAction;
 {
     // Add the messsage type to the data to send
     NSMutableDictionary *eventContent = [NSMutableDictionary dictionaryWithDictionary:content];
-    eventContent[@"msgtype"] = msgType;
+    eventContent[kMXMessageTypeKey] = msgType;
     
     return [self sendEventToRoom:roomId eventType:kMXEventTypeStringRoomMessage content:eventContent txnId:nil success:success failure:failure];
 }
@@ -1765,8 +1765,8 @@ MXAuthAction;
 {
     return [self sendMessageToRoom:roomId msgType:kMXMessageTypeText
                            content:@{
-                                     @"body": text
-                                     }
+                               kMXMessageBodyKey: text
+                           }
                            success:success failure:failure];
 }
 
@@ -3646,8 +3646,7 @@ MXAuthAction;
     MXTaskProfile *initialSyncRequestTaskProfile;
     if (!token)
     {
-        initialSyncRequestTaskProfile = [profiler startMeasuringTaskWithName:kMXAnalyticsInitialSyncRequest
-                                                                    category:kMXAnalyticsInitialSyncCategory];
+        initialSyncRequestTaskProfile = [profiler startMeasuringTaskWithName:MXTaskProfileNameInitialSyncRequest];
     }
     
     MXWeakify(self);
@@ -3678,8 +3677,7 @@ MXAuthAction;
                 MXTaskProfile *initialSyncParsingTaskProfile;
                 if (!token)
                 {
-                    initialSyncParsingTaskProfile = [profiler startMeasuringTaskWithName:kMXAnalyticsInitialSyncParsing
-                                                                                category:kMXAnalyticsInitialSyncCategory];
+                    initialSyncParsingTaskProfile = [profiler startMeasuringTaskWithName:MXTaskProfileNameInitialSyncParsing];
                 }
                 
                 MXJSONModelSetMXJSONModel(syncResponse, MXSyncResponse, JSONResponse);

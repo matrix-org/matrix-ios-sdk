@@ -1,3 +1,34 @@
+## Changes in 0.20.15 (2021-12-14)
+
+🙌 Improvements
+
+- Expose missing Jingle headers in umbrella header ([#1308](https://github.com/matrix-org/matrix-ios-sdk/pull/1308))
+
+⚠️ API Changes
+
+- MXTools: Add an error parameter to the failure of +convertVideoAssetToMP4:withTargetFileSize:success:failure: ([#4749](https://github.com/vector-im/element-ios/issues/4749))
+
+
+## Changes in 0.20.14 (2021-12-09)
+
+🐛 Bugfixes
+
+- Sending blank m.room.encryption on iOS will disable encryption ([Security advisory](https://github.com/matrix-org/matrix-ios-sdk/security/advisories/GHSA-fxvm-7vhj-wj98))
+
+## Changes in 0.20.13 (2021-12-06)
+
+Others
+
+- Replace semantic imports with classic ones to enable use of the SDK in Kotlin Multiplatform Mobile projects ([#5046](https://github.com/vector-im/element-ios/issues/5046))
+
+
+## Changes in 0.20.12 (2021-12-06)
+
+🐛 Bugfixes
+
+- Fix release 0.20.11 ([#5247](https://github.com/vector-im/element-ios/issues/5247))
+
+
 ## Changes in 0.20.11 (2021-12-03)
 
 ✨ Features

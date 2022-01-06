@@ -49,6 +49,10 @@
 		189CC082265E361D00BE1FD8 /* MXLog.h in Headers */ = {isa = PBXBuildFile; fileRef = 189CC07F265E361500BE1FD8 /* MXLog.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		189CC083265E362600BE1FD8 /* MXLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 189CC080265E361500BE1FD8 /* MXLog.swift */; };
 		189CC084265E362700BE1FD8 /* MXLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 189CC080265E361500BE1FD8 /* MXLog.swift */; };
+		18B22A7027707CDD00482170 /* MXEventContentLocation.h in Headers */ = {isa = PBXBuildFile; fileRef = 18B22A6E27707CDD00482170 /* MXEventContentLocation.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		18B22A7127707CDD00482170 /* MXEventContentLocation.h in Headers */ = {isa = PBXBuildFile; fileRef = 18B22A6E27707CDD00482170 /* MXEventContentLocation.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		18B22A7227707CDD00482170 /* MXEventContentLocation.m in Sources */ = {isa = PBXBuildFile; fileRef = 18B22A6F27707CDD00482170 /* MXEventContentLocation.m */; };
+		18B22A7327707CDD00482170 /* MXEventContentLocation.m in Sources */ = {isa = PBXBuildFile; fileRef = 18B22A6F27707CDD00482170 /* MXEventContentLocation.m */; };
 		18C26C3D273C031900805154 /* PollAggregator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18C26C3C273C031900805154 /* PollAggregator.swift */; };
 		18C26C3E273C032900805154 /* PollAggregator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18C26C3C273C031900805154 /* PollAggregator.swift */; };
 		18C26C4A273C0B3A00805154 /* PollAggregator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18C26C3C273C031900805154 /* PollAggregator.swift */; };
@@ -709,7 +713,9 @@
 		91CC0FCB26A033AE00C2A387 /* MXURLPreview.h in Headers */ = {isa = PBXBuildFile; fileRef = 91CC0FC826A033AE00C2A387 /* MXURLPreview.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		91CC0FCC26A033AE00C2A387 /* MXURLPreview.m in Sources */ = {isa = PBXBuildFile; fileRef = 91CC0FC926A033AE00C2A387 /* MXURLPreview.m */; };
 		91CC0FCD26A033AE00C2A387 /* MXURLPreview.m in Sources */ = {isa = PBXBuildFile; fileRef = 91CC0FC926A033AE00C2A387 /* MXURLPreview.m */; };
-		92634B7F1EF2A37A00DB9F60 /* MXCallAudioSessionConfigurator.h in Headers */ = {isa = PBXBuildFile; fileRef = 92634B7E1EF2A37A00DB9F60 /* MXCallAudioSessionConfigurator.h */; };
+		91F0685D2767CA420079F8FA /* MXTaskProfileName.h in Headers */ = {isa = PBXBuildFile; fileRef = 91F0685C2767C9FF0079F8FA /* MXTaskProfileName.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		91F0685E2767CA430079F8FA /* MXTaskProfileName.h in Headers */ = {isa = PBXBuildFile; fileRef = 91F0685C2767C9FF0079F8FA /* MXTaskProfileName.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		92634B7F1EF2A37A00DB9F60 /* MXCallAudioSessionConfigurator.h in Headers */ = {isa = PBXBuildFile; fileRef = 92634B7E1EF2A37A00DB9F60 /* MXCallAudioSessionConfigurator.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		92634B821EF2E3C400DB9F60 /* MXCallKitConfiguration.h in Headers */ = {isa = PBXBuildFile; fileRef = 92634B801EF2E3C400DB9F60 /* MXCallKitConfiguration.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		92634B831EF2E3C400DB9F60 /* MXCallKitConfiguration.m in Sources */ = {isa = PBXBuildFile; fileRef = 92634B811EF2E3C400DB9F60 /* MXCallKitConfiguration.m */; };
 		9274AFE81EE580240009BEB6 /* MXCallKitAdapter.h in Headers */ = {isa = PBXBuildFile; fileRef = 9274AFE61EE580240009BEB6 /* MXCallKitAdapter.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1037,7 +1043,7 @@
 		B14EF2C82397E90400758AF0 /* MXCallManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 3245A74E1AF7B2930001D8A7 /* MXCallManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B14EF2C92397E90400758AF0 /* MXRealmReactionRelation.h in Headers */ = {isa = PBXBuildFile; fileRef = 32B94E03228EE90300716A26 /* MXRealmReactionRelation.h */; };
 		B14EF2CA2397E90400758AF0 /* MXAnalyticsDelegate.h in Headers */ = {isa = PBXBuildFile; fileRef = C6FE1EEF1E65C4F7008587E4 /* MXAnalyticsDelegate.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		B14EF2CB2397E90400758AF0 /* MXCallAudioSessionConfigurator.h in Headers */ = {isa = PBXBuildFile; fileRef = 92634B7E1EF2A37A00DB9F60 /* MXCallAudioSessionConfigurator.h */; };
+		B14EF2CB2397E90400758AF0 /* MXCallAudioSessionConfigurator.h in Headers */ = {isa = PBXBuildFile; fileRef = 92634B7E1EF2A37A00DB9F60 /* MXCallAudioSessionConfigurator.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B14EF2CC2397E90400758AF0 /* MXMatrixVersions.h in Headers */ = {isa = PBXBuildFile; fileRef = 323F8862212D4E470001C73C /* MXMatrixVersions.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B14EF2CD2397E90400758AF0 /* MXRealmEventScanStore.h in Headers */ = {isa = PBXBuildFile; fileRef = B146D4F821A5BF7100D8C2C6 /* MXRealmEventScanStore.h */; };
 		B14EF2CE2397E90400758AF0 /* MXFileRoomStore.h in Headers */ = {isa = PBXBuildFile; fileRef = 3291D4D21A68FFEB00C3BA41 /* MXFileRoomStore.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1682,6 +1688,8 @@
 		18937E79273A5AB000902626 /* MXPollRelationTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXPollRelationTests.m; sourceTree = "<group>"; };
 		189CC07F265E361500BE1FD8 /* MXLog.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXLog.h; sourceTree = "<group>"; };
 		189CC080265E361500BE1FD8 /* MXLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXLog.swift; sourceTree = "<group>"; };
+		18B22A6E27707CDD00482170 /* MXEventContentLocation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXEventContentLocation.h; sourceTree = "<group>"; };
+		18B22A6F27707CDD00482170 /* MXEventContentLocation.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXEventContentLocation.m; sourceTree = "<group>"; };
 		18C26C3C273C031900805154 /* PollAggregator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PollAggregator.swift; sourceTree = "<group>"; };
 		18C26C4C273C0E9A00805154 /* MXPollAggregatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXPollAggregatorTests.swift; sourceTree = "<group>"; };
 		18C26C51273C16C700805154 /* MXEventContentPollStart.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXEventContentPollStart.h; sourceTree = "<group>"; };
@@ -2207,6 +2215,7 @@
 		918D30B6273951F400A16405 /* MXStoreService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXStoreService.swift; sourceTree = "<group>"; };
 		91CC0FC826A033AE00C2A387 /* MXURLPreview.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXURLPreview.h; sourceTree = "<group>"; };
 		91CC0FC926A033AE00C2A387 /* MXURLPreview.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXURLPreview.m; sourceTree = "<group>"; };
+		91F0685C2767C9FF0079F8FA /* MXTaskProfileName.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXTaskProfileName.h; sourceTree = "<group>"; };
 		92634B7E1EF2A37A00DB9F60 /* MXCallAudioSessionConfigurator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXCallAudioSessionConfigurator.h; sourceTree = "<group>"; };
 		92634B801EF2E3C400DB9F60 /* MXCallKitConfiguration.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXCallKitConfiguration.h; sourceTree = "<group>"; };
 		92634B811EF2E3C400DB9F60 /* MXCallKitConfiguration.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXCallKitConfiguration.m; sourceTree = "<group>"; };
@@ -2910,6 +2919,7 @@
 				323F878B25553D84009E9E67 /* MXTaskProfile.h */,
 				323F878C25553D84009E9E67 /* MXTaskProfile.m */,
 				323F879525554FF2009E9E67 /* MXTaskProfile_Private.h */,
+				91F0685C2767C9FF0079F8FA /* MXTaskProfileName.h */,
 			);
 			path = Profiling;
 			sourceTree = "<group>";
@@ -3198,6 +3208,8 @@
 				18C26C52273C16C700805154 /* MXEventContentPollStart.m */,
 				327E9ADF2285497100A98BC1 /* MXEventContentRelatesTo.h */,
 				327E9AE02285497100A98BC1 /* MXEventContentRelatesTo.m */,
+				18B22A6E27707CDD00482170 /* MXEventContentLocation.h */,
+				18B22A6F27707CDD00482170 /* MXEventContentLocation.m */,
 			);
 			path = Content;
 			sourceTree = "<group>";
@@ -4474,6 +4486,7 @@
 				32AF928A240EA3880008A0FD /* MXSecretShareSend.h in Headers */,
 				B14EECE52577F76100448735 /* MXLoginSSOFlow.h in Headers */,
 				EC8A53E025B1BCC6004E0802 /* MXThirdPartyProtocolInstance.h in Headers */,
+				91F0685D2767CA420079F8FA /* MXTaskProfileName.h in Headers */,
 				B1798D0624091A0100308A8F /* MXBase64Tools.h in Headers */,
 				32133015228AF4EF0070BA9B /* MXRealmAggregationsStore.h in Headers */,
 				32CE6FB81A409B1F00317F1E /* MXFileStoreMetaData.h in Headers */,
@@ -4556,6 +4569,7 @@
 				EC8A538B25B1BC77004E0802 /* MXCallCandidate.h in Headers */,
 				F03EF5041DF01596009DF592 /* MXLRUCache.h in Headers */,
 				EC8A539D25B1BC77004E0802 /* MXCallCandidatesEventContent.h in Headers */,
+				18B22A7027707CDD00482170 /* MXEventContentLocation.h in Headers */,
 				EC60EDC6265CFEA800B39A4E /* MXRoomSyncUnreadNotifications.h in Headers */,
 				329FB1791A0A74B100A5E88E /* MXTools.h in Headers */,
 				3AC135D92640335100EE1E74 /* MXDehydrationService.h in Headers */,
@@ -4872,6 +4886,7 @@
 				EC60EDDB265CFF0600B39A4E /* MXInvitedRoomSync.h in Headers */,
 				B14EF2C82397E90400758AF0 /* MXCallManager.h in Headers */,
 				B14EF2C92397E90400758AF0 /* MXRealmReactionRelation.h in Headers */,
+				91F0685E2767CA430079F8FA /* MXTaskProfileName.h in Headers */,
 				B14EF2CA2397E90400758AF0 /* MXAnalyticsDelegate.h in Headers */,
 				ECD289A626EB980200F268CF /* MXRoomSummaryDataTypes.h in Headers */,
 				B14EF2CB2397E90400758AF0 /* MXCallAudioSessionConfigurator.h in Headers */,
@@ -4986,6 +5001,7 @@
 				91CC0FCB26A033AE00C2A387 /* MXURLPreview.h in Headers */,
 				B19A30AD2404257700FB6F35 /* MXSASKeyVerificationStart.h in Headers */,
 				B14EF3142397E90400758AF0 /* MXLoginTerms.h in Headers */,
+				18B22A7127707CDD00482170 /* MXEventContentLocation.h in Headers */,
 				B14EF3152397E90400758AF0 /* MXIncomingRoomKeyRequestCancellation.h in Headers */,
 				EC8A539E25B1BC77004E0802 /* MXCallCandidatesEventContent.h in Headers */,
 				325AD44023BE3E7500FF5277 /* MXCrossSigningInfo.h in Headers */,
@@ -5525,6 +5541,7 @@
 				EC8A53BF25B1BC77004E0802 /* MXCallRejectReplacementEventContent.m in Sources */,
 				EC8A539125B1BC77004E0802 /* MXCallCandidate.m in Sources */,
 				B17B2BDD2369FC81009D6650 /* MXUIKitBackgroundTask.m in Sources */,
+				18B22A7227707CDD00482170 /* MXEventContentLocation.m in Sources */,
 				3293C701214BBA4F009B3DDB /* MXPeekingRoomSummary.m in Sources */,
 				C602B58C1F2268F700B67D87 /* MXRoom.swift in Sources */,
 				EC8A53D825B1BCC6004E0802 /* MXThirdPartyProtocolInstance.m in Sources */,
@@ -5997,6 +6014,7 @@
 				B14EF21E2397E90400758AF0 /* MXEventDecryptionResult.m in Sources */,
 				EC60EDBF265CFE8600B39A4E /* MXRoomSyncAccountData.m in Sources */,
 				320B393D239FD15E00BE2C06 /* MXKeyVerificationRequest.m in Sources */,
+				18B22A7327707CDD00482170 /* MXEventContentLocation.m in Sources */,
 				EC05473725FF8A3C0047ECD7 /* MXVirtualRoomInfo.m in Sources */,
 				3290293524CB10D000DA7BB6 /* MatrixSDKVersion.m in Sources */,
 				3A7509BC26FC61DF00B85773 /* MXSpaceNotificationCounter.swift in Sources */,

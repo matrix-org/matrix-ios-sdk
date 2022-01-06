@@ -22,6 +22,7 @@
 #import "MXEncryptedContentFile.h"
 #import "MXEventRelations.h"
 #import "MXEventReferenceChunk.h"
+#import "MXEventContentLocation.h"
 
 #pragma mark - Constants definitions
 
@@ -86,10 +87,14 @@ NSString *const kMXEventTypeStringSpaceChild            = @"m.space.child";
 NSString *const kMXEventTypeStringAutoJoinKey           = @"auto_join";
 NSString *const kMXEventTypeStringSuggestedKey          = @"suggested";
 
-NSString *const kMXEventTypeStringPollStart    = @"org.matrix.msc3381.poll.start";
-NSString *const kMXEventTypeStringPollResponse = @"org.matrix.msc3381.poll.response";
-NSString *const kMXEventTypeStringPollEnd      = @"org.matrix.msc3381.poll.end";
+NSString *const kMXEventTypeStringPollStartMSC3381    = @"org.matrix.msc3381.poll.start";
+NSString *const kMXEventTypeStringPollStart           = @"m.poll.start";
+NSString *const kMXEventTypeStringPollResponseMSC3381 = @"org.matrix.msc3381.poll.response";
+NSString *const kMXEventTypeStringPollResponse        = @"m.poll.response";
+NSString *const kMXEventTypeStringPollEndMSC3381      = @"org.matrix.msc3381.poll.end";
+NSString *const kMXEventTypeStringPollEnd             = @"m.poll.end";
 
+NSString *const kMXMessageTypeKey                    = @"msgtype";
 NSString *const kMXMessageTypeText                   = @"m.text";
 NSString *const kMXMessageTypeEmote                  = @"m.emote";
 NSString *const kMXMessageTypeNotice                 = @"m.notice";
@@ -100,6 +105,9 @@ NSString *const kMXMessageTypeLocation               = @"m.location";
 NSString *const kMXMessageTypeFile                   = @"m.file";
 NSString *const kMXMessageTypeServerNotice           = @"m.server_notice";
 NSString *const kMXMessageTypeKeyVerificationRequest = @"m.key.verification.request";
+
+NSString *const kMXMessageBodyKey                    = @"body";
+NSString *const kMXMessageGeoURIKey                  = @"geo_uri";
 
 NSString *const kMXEventRelationRelatesToKey         = @"m.relates_to";
 NSString *const MXEventRelationTypeAnnotation        = @"m.annotation";
@@ -129,13 +137,15 @@ NSString *const kMXMessageContentKeyExtensibleAudioWaveform = @"waveform";
 
 NSString *const kMXMessageContentKeyExtensibleText           = @"org.matrix.msc1767.text";
 
+NSString *const kMXMessageContentKeyExtensibleTimestamp      = @"org.matrix.msc3488.ts";
+
 NSString *const kMXMessageContentKeyExtensibleFile           = @"org.matrix.msc1767.file";
 NSString *const kMXMessageContentKeyExtensibleFileSize       = @"size";
 NSString *const kMXMessageContentKeyExtensibleFileName       = @"name";
 NSString *const kMXMessageContentKeyExtensibleFileURL        = @"url";
 NSString *const kMXMessageContentKeyExtensibleFileMimeType   = @"mimetype";
 
-//Polls
+// Polls
 
 NSString *const kMXMessageContentKeyExtensiblePollStart = @"org.matrix.msc3381.poll.start";
 NSString *const kMXMessageContentKeyExtensiblePollResponse = @"org.matrix.msc3381.poll.response";
@@ -147,6 +157,13 @@ NSString *const kMXMessageContentKeyExtensiblePollMaxSelections = @"max_selectio
 NSString *const kMXMessageContentKeyExtensiblePollKind = @"kind";
 NSString *const kMXMessageContentKeyExtensiblePollKindDisclosed = @"m.poll.disclosed";
 NSString *const kMXMessageContentKeyExtensiblePollKindUndisclosed = @"m.poll.undisclosed";
+
+// Location
+
+NSString *const kMXMessageContentKeyExtensibleLocation = @"m.location";
+NSString *const kMXMessageContentKeyExtensibleLocationMSC3488 = @"org.matrix.msc3488.location";
+NSString *const kMXMessageContentKeyExtensibleLocationURI = @"uri";
+NSString *const kMXMessageContentKeyExtensibleLocationDescription = @"description";
 
 #pragma mark - MXEvent
 @interface MXEvent ()
@@ -414,7 +431,7 @@ NSString *const kMXMessageContentKeyExtensiblePollKindUndisclosed = @"m.poll.und
     if (self.eventType == MXEventTypeRoomMessage)
     {
         NSString *msgtype;
-        MXJSONModelSetString(msgtype, self.content[@"msgtype"]);
+        MXJSONModelSetString(msgtype, self.content[kMXMessageTypeKey]);
         
         if (msgtype && [msgtype isEqualToString:kMXMessageTypeEmote])
         {
@@ -444,7 +461,7 @@ NSString *const kMXMessageContentKeyExtensiblePollKindUndisclosed = @"m.poll.und
 {
     if (self.eventType == MXEventTypeRoomMessage)
     {
-        NSString *msgtype = self.content[@"msgtype"];
+        NSString *msgtype = self.content[kMXMessageTypeKey];
         if ([msgtype isEqualToString:kMXMessageTypeImage] || [msgtype isEqualToString:kMXMessageTypeVideo] || [msgtype isEqualToString:kMXMessageTypeAudio] || [msgtype isEqualToString:kMXMessageTypeFile])
         {
             return YES;
@@ -469,10 +486,15 @@ NSString *const kMXMessageContentKeyExtensiblePollKindUndisclosed = @"m.poll.und
 
 - (BOOL)isVoiceMessage
 {
-    NSString *msgtype = self.content[@"msgtype"];
+    NSString *msgtype = self.content[kMXMessageTypeKey];
     return [msgtype isEqualToString:kMXMessageTypeAudio] && (self.content[kMXMessageContentKeyVoiceMessage] ||
                                                              self.content[kMXMessageContentKeyVoiceMessageMSC2516] ||
                                                              self.content[kMXMessageContentKeyVoiceMessageMSC3245]);
+}
+
+- (MXEventContentLocation *)location
+{
+    return [MXEventContentLocation modelFromJSON:self.content];
 }
 
 - (BOOL)contentHasBeenEdited
@@ -646,11 +668,11 @@ NSString *const kMXMessageContentKeyExtensiblePollKindUndisclosed = @"m.poll.und
         // Reuse its decryption data
         replaceEventDecryptionResult = [replaceEvent decryptionResult];
     }
-    else if (event.content[@"body"] && newContentDict && [newContentDict[@"msgtype"] isEqualToString:event.content[@"msgtype"]])
+    else if (event.content[kMXMessageBodyKey] && newContentDict && [newContentDict[kMXMessageTypeKey] isEqualToString:event.content[kMXMessageTypeKey]])
     {
         editedEventDict = [event.JSONDictionary mutableCopy];
         NSMutableDictionary *editedEventContentDict = [editedEventDict[@"content"] mutableCopy];
-        editedEventContentDict[@"body"] = newContentDict[@"body"];
+        editedEventContentDict[kMXMessageBodyKey] = newContentDict[kMXMessageBodyKey];
         editedEventContentDict[@"formatted_body"] = newContentDict[@"formatted_body"];
         editedEventContentDict[@"format"] = newContentDict[@"format"];
         editedEventDict[@"content"] = editedEventContentDict;
@@ -761,7 +783,7 @@ NSString *const kMXMessageContentKeyExtensiblePollKindUndisclosed = @"m.poll.und
     if ([self.type isEqualToString:kMXEventTypeStringRoomMessage])
     {
         NSString *messageType;
-        MXJSONModelSetString(messageType, self.content[@"msgtype"])
+        MXJSONModelSetString(messageType, self.content[kMXMessageTypeKey])
         
         if ([messageType isEqualToString:kMXMessageTypeImage] || [messageType isEqualToString:kMXMessageTypeVideo])
         {
@@ -795,27 +817,6 @@ NSString *const kMXMessageContentKeyExtensiblePollKindUndisclosed = @"m.poll.und
             if (mediaURL)
             {
                 [mediaURLs addObject:mediaURL];
-            }
-            
-            if (mediaThumbnailURL)
-            {
-                [mediaURLs addObject:mediaThumbnailURL];
-            }
-        }
-        else if ([messageType isEqualToString:kMXMessageTypeLocation])
-        {
-            NSString *mediaThumbnailURL;
-            
-            if (self.isEncrypted)
-            {
-                NSDictionary *file;
-                MXJSONModelSetDictionary(file, self.content[@"file"]);
-                
-                MXJSONModelSetString(mediaThumbnailURL, file[@"thumbnail_url"]);
-            }
-            else
-            {
-                MXJSONModelSetString(mediaThumbnailURL, self.content[@"thumbnail_url"]);
             }
             
             if (mediaThumbnailURL)
@@ -1151,10 +1152,10 @@ NSString *const kMXMessageContentKeyExtensiblePollKindUndisclosed = @"m.poll.und
 
 + (NSDictionary *)wireContentFixingNonStringMsgtypesIn:(NSDictionary *)content
 {
-    if (content[@"msgtype"] && ![content[@"msgtype"] isKindOfClass:[NSString class]])
+    if (content[kMXMessageTypeKey] && ![content[kMXMessageTypeKey] isKindOfClass:[NSString class]])
     {
         NSMutableDictionary *mutableContent = [NSMutableDictionary dictionaryWithDictionary:content];
-        [mutableContent removeObjectForKey:@"msgtype"];
+        [mutableContent removeObjectForKey:kMXMessageTypeKey];
         return [NSDictionary dictionaryWithDictionary:mutableContent];
     }
     return content;
