@@ -290,7 +290,9 @@ typedef void (^MXOnResumeDone)(void);
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onDidDecryptEvent:) name:kMXEventDidDecryptNotification object:nil];
 
         [self setState:MXSessionStateInitialised];
+        MXWeakify(self);
         mxRestClient.refreshTokensFailedHandler = ^(MXError *mxError) {
+            MXStrongifyAndReturnIfNil(self);
             [self handleUnauthenticatedWithError: mxError];
         };
     }

@@ -124,6 +124,12 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
 typedef void(^MXRestClientRefreshTokensFailedHandler)(MXError *error);
 
 /**
+ Block called when the rest client needs to check the persisted refresh token data is valid and optionally persist new data to disk if it is not.
+ @param handler A closure that accepts the current persisted credentials. These can be updated optionally saved by returning YES from the closure.
+ */
+typedef void (^MXRestClientPersistTokenDataHandler)(void (^handler)(NSArray <MXCredentials*> *credentials, void (^completion)(BOOL didUpdateCredentials)));
+
+/**
  `MXRestClient` makes requests to Matrix servers.
 
  It is the single point to send requests to Matrix servers which are:
@@ -134,9 +140,14 @@ typedef void(^MXRestClientRefreshTokensFailedHandler)(MXError *error);
 @interface MXRestClient : NSObject
 
 /**
- Notification name sent when the refresh/access tokens change within the associated credential.
+ Notification name sent when the refresh/access tokens should be updated in the credential. userInfo contains 'kMXCredentialsNewRefreshTokenDataKey'.
  */
-extern NSString *const MXRestClientDidRefreshTokensNotification;
+extern NSString *const MXCredentialsUpdateTokensNotification;
+
+/**
+ A key for getting the refresh response from `MXCredentialsWillUpdateTokensNotification` userInfo.
+ */
+extern NSString *const kMXCredentialsNewRefreshTokenDataKey;
 
 /**
  Credentials for the Matrix Client-Server API.
@@ -147,6 +158,11 @@ extern NSString *const MXRestClientDidRefreshTokensNotification;
  Block called when the rest client failed to refresh it's tokens and session is now unauthenticated.
  */
 @property (nonatomic, copy) MXRestClientRefreshTokensFailedHandler refreshTokensFailedHandler;
+
+/**
+ Block called when the rest client needs to check the persisted refresh token data is valid and optionally persist new data to disk if it is not.
+ */
+@property (nonatomic, copy) MXRestClientPersistTokenDataHandler persistTokenDataHandler;
 
 /**
  The homeserver URL.
@@ -229,8 +245,8 @@ extern NSString *const MXRestClientDidRefreshTokensNotification;
  @param onUnrecognizedCertBlock the block called to handle unrecognized certificate (nil if unrecognized certificates are ignored).
  @return a MXRestClient instance.
  */
--(id)initWithCredentials:(MXCredentials*)credentials andOnUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock NS_REFINED_FOR_SWIFT;
-
+//-(id)initWithCredentials:(MXCredentials*)credentials andOnUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock NS_REFINED_FOR_SWIFT;
+-(id)initWithCredentials:(MXCredentials*)inCredentials andOnUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock andPersistentTokenDataHandler: (MXRestClientPersistTokenDataHandler)persistentTokenDataHandler NS_REFINED_FOR_SWIFT;
 - (void)close;
 
 

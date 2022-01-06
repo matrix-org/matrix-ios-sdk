@@ -257,7 +257,7 @@ static NSUInteger requestCount = 0;
                           uploadProgress:uploadProgress
                                  success:success
                                  failure:failure];
-                    },failure);
+                    }, failure);
                 });
             }
             else

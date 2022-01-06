@@ -20,6 +20,8 @@
 #import "MXJSONModels.h"
 
 #import "MXTools.h"
+#import "MXRestClient.h"
+#import "MXRefreshTokenData.h"
 
 @implementation MXCredentials
 
@@ -31,6 +33,8 @@
         _homeServer = [homeServer copy];
         _userId = [userId copy];
         _accessToken = [accessToken copy];
+        
+        [self registerRestClientWillRefreshTokensNotification];
     }
     return self;
 }
@@ -93,15 +97,21 @@
         {
             _identityServer = [defaultCredentials.identityServer copy];
         }
+        [self registerRestClientWillRefreshTokensNotification];
     }
     return self;
 }
 
-- (void)updateWithRefreshResponse:(MXRefreshResponse*)refreshResponse
+- (void)dealloc
 {
-    _accessToken = refreshResponse.accessToken;
-    _accessTokenExpiresAt = ((uint64_t)[NSDate date].timeIntervalSince1970 * 1000) + refreshResponse.expiresInMs;
-    _refreshToken = refreshResponse.refreshToken;
+    [self unregisterRestClientWillRefreshTokensNotification];
+}
+
+- (void)clearRefreshAuth
+{
+    _accessToken = nil;
+    _accessTokenExpiresAt = 0;
+    _refreshToken = nil;
 }
 
 + (instancetype)initialSyncCacheCredentialsFrom:(MXCredentials *)credentials
@@ -166,6 +176,31 @@
     credentials.ignoredCertificate = [_ignoredCertificate copyWithZone:zone];
 
     return credentials;
+}
+
+#pragma mark - Homeserver Access/Refresh Token updates
+
+- (void)registerRestClientWillRefreshTokensNotification
+{
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleRestClientWillRefreshTokensNotification:) name:MXCredentialsUpdateTokensNotification object:nil];
+}
+
+- (void)unregisterRestClientWillRefreshTokensNotification
+{
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:MXCredentialsUpdateTokensNotification object:nil];
+}
+
+- (void)handleRestClientWillRefreshTokensNotification:(NSNotification*)notification
+{
+    MXRefreshTokenData *tokenData = notification.userInfo[kMXCredentialsNewRefreshTokenDataKey];
+    
+    if(tokenData && tokenData.userId && self.userId && [self.userId isEqualToString:tokenData.userId]en
+       && tokenData.homeserver && self.homeServer && [tokenData.homeserver isEqualToString:self.homeServer])
+    {
+        self.refreshToken = tokenData.refreshToken;
+        self.accessToken = tokenData.accessToken;
+        self.accessTokenExpiresAt = tokenData.expiresInMs;
+    }
 }
 
 @end

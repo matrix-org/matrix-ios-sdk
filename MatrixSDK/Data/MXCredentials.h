@@ -112,11 +112,9 @@ NS_ASSUME_NONNULL_BEGIN
                 andDefaultCredentials:(nullable MXCredentials*)defaultCredentials;
 
 /**
- Update credentials from a refresh response.
-
- @param refreshResponse the refresh response.
+ Clear tokens and expiry as they are no longer valid.
  */
-- (void)updateWithRefreshResponse:(MXRefreshResponse*)refreshResponse;
+- (void)clearRefreshAuth;
 
 /**
  Returns suitable credentials for initial sync cache.
