@@ -146,29 +146,8 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
         // Report the provided accountData.
         // Allocate a new instance if none, in order to handle room tag events for this room.
         room->_accountData = accountData ? accountData : [[MXRoomAccountData alloc] init];
-
-        //  room.summary call will trigger loading the room summary on session initialization. We'd like to propagate it.
-        dispatch_async(self.processingQueue, ^{
-            // Check whether the room is pending on an invitation.
-            if (room.summary.membership == MXMembershipInvite)
-            {
-                // Handle direct flag to decide if it is direct or not
-                [room handleInviteDirectFlag];
-            }
-        });
     }
     return room;
-}
-
-+ (dispatch_queue_t)processingQueue
-{
-   static dispatch_queue_t processingQueue;
-   static dispatch_once_t onceToken;
-   dispatch_once(&onceToken, ^{
-       processingQueue = dispatch_queue_create("MXRoomDispatchQueue", DISPATCH_QUEUE_SERIAL);
-   });
-
-   return processingQueue;
 }
 
 - (void)close
