@@ -1197,7 +1197,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
 
                             [aliceSession2 start:^{
 
-                                MXRoomSummary *summary2 = [aliceSession2.store.summariesModule summaryOfRoom:roomId];
+                                MXRoomSummary *summary2 = [aliceSession2.store.roomSummaryStore summaryOfRoom:roomId];
 
                                 XCTAssert(summary2.isEncrypted);
                                 XCTAssertEqualObjects(summary2.lastMessage.eventId, lastMessageEventId);

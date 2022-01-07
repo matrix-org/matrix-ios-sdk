@@ -255,7 +255,7 @@ class MXStoreRoomListDataManagerUnitTests: XCTestCase {
         XCTAssertEqual(roomSummaries.count, 90, "Generator must generate 90 rooms in total")
         //  insert all rooms into the store
         for summary in roomSummaries {
-            store.summariesModule.storeSummary(summary)
+            store.roomSummaryStore.storeSummary(summary)
         }
         
         self.wait { expectation in

@@ -416,7 +416,7 @@
             [bobSession close];
 
             // Check content from the store
-            [store.summariesModule fetchAllSummaries:^(NSArray<MXRoomSummary *> * _Nonnull roomsSummaries) {
+            [store.roomSummaryStore fetchAllSummaries:^(NSArray<MXRoomSummary *> * _Nonnull roomsSummaries) {
 
                  // Test for checking the test
                 XCTAssertEqual(roomsSummaries.count, 1);
@@ -476,7 +476,7 @@
                     [bobSession2 close];
 
                     // Check content from the store
-                    [store2.summariesModule fetchAllSummaries:^(NSArray<MXRoomSummary *> * _Nonnull roomsSummaries) {
+                    [store2.roomSummaryStore fetchAllSummaries:^(NSArray<MXRoomSummary *> * _Nonnull roomsSummaries) {
 
                         // Test for checking the test
                         XCTAssertEqual(roomsSummaries.count, 1);
