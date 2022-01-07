@@ -30,7 +30,7 @@ public class MXCoreDataRoomSummaryStore: NSObject {
     
     private lazy var container: NSPersistentContainer = {
         let result = NSPersistentContainer(name: Constants.modelName,
-                                           managedObjectModel: managedObjectModel)
+                                           managedObjectModel: Self.managedObjectModel)
         result.persistentStoreDescriptions.first?.url = storeURL
         result.loadPersistentStores { description, error in
             if let error = error {
@@ -55,7 +55,7 @@ public class MXCoreDataRoomSummaryStore: NSObject {
         try? FileManager.default.createDirectory(at: folderUrl, withIntermediateDirectories: true, attributes: nil)
         return folderUrl.appendingPathComponent(Constants.storeFileName)
     }()
-    private lazy var managedObjectModel: NSManagedObjectModel = {
+    private static var managedObjectModel: NSManagedObjectModel = {
         guard let url = Bundle(for: MXCoreDataRoomSummaryStore.self).url(forResource: Constants.modelName,
                                                                          withExtension: "momd") else {
             fatalError("[MXCoreDataRoomSummaryStore] No MXRoomSummaryStore Core Data model")
