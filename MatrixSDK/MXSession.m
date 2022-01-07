@@ -2820,10 +2820,7 @@ typedef void (^MXOnResumeDone)(void);
 - (MXRoomSummary *)createRoomSummary:(NSString *)roomId
 {
     MXRoomSummary *summary = [[MXRoomSummary alloc] initWithRoomId:roomId andMatrixSession:self];
-    @synchronized (roomSummaries)
-    {
-        roomSummaries[roomId] = summary;
-    }
+    roomSummaries[roomId] = summary;
 
     // Update the summary if necessary
     NSString *directUserId = [self directUserIdInRoom:roomId];
@@ -3004,10 +3001,7 @@ typedef void (^MXOnResumeDone)(void);
 
     if (roomId)
     {
-        @synchronized (roomSummaries)
-        {
-            roomSummary = roomSummaries[roomId];
-        }
+        roomSummary = roomSummaries[roomId];
         
         if (roomSummary == nil)
         {
@@ -3017,10 +3011,7 @@ typedef void (^MXOnResumeDone)(void);
             {
                 roomSummary = [[MXRoomSummary alloc] initWithSummaryModel:roomSummaryProtocol];
                 [roomSummary setMatrixSession:self];
-                @synchronized (roomSummaries)
-                {
-                    roomSummaries[roomId] = roomSummary;
-                }
+                roomSummaries[roomId] = roomSummary;
             }
         }
     }
@@ -4836,10 +4827,7 @@ typedef void (^MXOnResumeDone)(void);
     
     [self.spaceService.ancestorsPerRoomId enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull roomId, NSSet<NSString *> * _Nonnull parentIds, BOOL * _Nonnull stop)
     {
-        @synchronized (self->roomSummaries)
-        {
-            self->roomSummaries[roomId].parentSpaceIds = parentIds;
-        }
+        self->roomSummaries[roomId].parentSpaceIds = parentIds;
     }];
 }
 
