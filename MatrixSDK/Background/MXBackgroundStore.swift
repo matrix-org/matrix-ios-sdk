@@ -259,7 +259,7 @@ class MXBackgroundStore: NSObject, MXStore {
         return []
     }
     
-    var summariesModule: MXRoomSummaryStore {
+    var roomSummaryStore: MXRoomSummaryStore {
         return self
     }
     
@@ -283,7 +283,7 @@ extension MXBackgroundStore: MXRoomSummaryStore {
     
     //  Fetch real soom summary
     func summary(ofRoom roomId: String) -> MXRoomSummaryProtocol? {
-        return fileStore.summariesModule.summary(ofRoom: roomId)
+        return fileStore.roomSummaryStore.summary(ofRoom: roomId)
     }
     
     func removeSummary(ofRoom roomId: String) {

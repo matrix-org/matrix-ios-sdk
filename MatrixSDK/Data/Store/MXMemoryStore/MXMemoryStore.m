@@ -30,12 +30,13 @@
     
     //  Execution queue for computationally expensive operations.
     dispatch_queue_t executionQueue;
-    id<MXRoomSummaryStore> roomSummaryStore;
 }
 @end
 
 
 @implementation MXMemoryStore
+
+@synthesize roomSummaryStore;
 
 @synthesize storeService, eventStreamToken, userAccountData, syncFilterId, homeserverWellknown, areAllIdentityServerTermsAgreed;
 
@@ -319,11 +320,6 @@
 - (BOOL)isPermanent
 {
     return NO;
-}
-
-- (id<MXRoomSummaryStore>)summariesModule
-{
-    return roomSummaryStore;
 }
 
 #pragma mark - Matrix users

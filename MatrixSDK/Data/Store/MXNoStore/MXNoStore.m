@@ -51,12 +51,12 @@
     // All matrix groups known by the user
     // The keys are groups ids.
     NSMutableDictionary <NSString*, MXGroup*> *groups;
-    
-    id<MXRoomSummaryStore> roomSummaryStore;
 }
 @end
 
 @implementation MXNoStore
+
+@synthesize roomSummaryStore;
 
 @synthesize eventStreamToken, userAccountData, syncFilterId;
 
@@ -272,11 +272,6 @@
 
 - (void)setAreAllIdentityServerTermsAgreed:(BOOL)areAllIdentityServerTermsAgreed
 {
-}
-
-- (id<MXRoomSummaryStore>)summariesModule
-{
-    return roomSummaryStore;
 }
 
 #pragma mark - Matrix users

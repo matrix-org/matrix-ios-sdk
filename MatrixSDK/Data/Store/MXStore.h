@@ -39,7 +39,7 @@
  */
 @protocol MXStore <NSObject>
 
-@property (nonatomic, readonly) id<MXRoomSummaryStore> _Nonnull summariesModule;
+@property (nonatomic, readonly) id<MXRoomSummaryStore> _Nonnull roomSummaryStore;
 
 #pragma mark - Store Management
 

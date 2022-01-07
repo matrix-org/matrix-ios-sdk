@@ -115,8 +115,6 @@ static NSUInteger preloadOptions;
 
     // The evenst stream token that corresponds to the data being backed up.
     NSString *backupEventStreamToken;
-    
-    id<MXRoomSummaryStore> roomSummaryStore;
 }
 
 // The commit to file store background task
@@ -125,6 +123,8 @@ static NSUInteger preloadOptions;
 @end
 
 @implementation MXFileStore
+
+@synthesize roomSummaryStore;
 
 + (void)initialize
 {
@@ -260,7 +260,7 @@ static NSUInteger preloadOptions;
                 [self loadUsers];
                 [self loadGroups];
 
-                taskProfile.units = self.summariesModule.countOfRooms;
+                taskProfile.units = self.roomSummaryStore.countOfRooms;
                 [MXSDKOptions.sharedInstance.profiler stopMeasuringTaskWithProfile:taskProfile];
                 MXLogDebug(@"[MXFileStore] Data loaded from files in %.0fms", taskProfile.duration * 1000);
             }
@@ -631,11 +631,6 @@ static NSUInteger preloadOptions;
 - (BOOL)areAllIdentityServerTermsAgreed
 {
     return metaData.areAllIdentityServerTermsAgreed;
-}
-
-- (id<MXRoomSummaryStore>)summariesModule
-{
-    return roomSummaryStore;
 }
 
 #pragma mark - Matrix filters

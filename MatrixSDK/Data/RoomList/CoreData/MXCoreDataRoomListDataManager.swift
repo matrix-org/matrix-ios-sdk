@@ -38,8 +38,8 @@ public class MXCoreDataRoomListDataManager: NSObject, MXRoomListDataManager {
         guard let session = session, let store = session.store else {
             fatalError("[MXCoreDataRoomListDataManager] No session or no store")
         }
-        guard let coreDataStore = store.summariesModule as? MXRoomSummaryCoreDataContextableStore else {
-            fatalError("[MXCoreDataRoomListDataManager] Session.store.summariesModule is not CoreDataContextable")
+        guard let coreDataStore = store.roomSummaryStore as? MXRoomSummaryCoreDataContextableStore else {
+            fatalError("[MXCoreDataRoomListDataManager] Session.store.roomSummaryStore is not CoreDataContextable")
         }
         
         assert(coreDataStore.mainManagedObjectContext.concurrencyType == .mainQueueConcurrencyType,

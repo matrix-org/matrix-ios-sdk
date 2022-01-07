@@ -405,7 +405,7 @@ typedef void (^MXOnResumeDone)(void);
 
                 // Load MXRoomSummaries from the store
                 NSDate *startDate2 = [NSDate date];
-                NSArray<NSString*> *roomIds = self.store.summariesModule.rooms;
+                NSArray<NSString*> *roomIds = self.store.roomSummaryStore.rooms;
                 
                 MXLogDebug(@"[MXSession] Read %lu room ids in %.0fms", (unsigned long)roomIds.count, [[NSDate date] timeIntervalSinceDate:startDate2] * 1000);
 
@@ -838,7 +838,7 @@ typedef void (^MXOnResumeDone)(void);
     [self setState:MXSessionStateSyncInProgress];
 
     // Can we resume from data available in the cache
-    if (self.store.isPermanent && self.isEventStreamInitialised && 0 < self.store.summariesModule.countOfRooms)
+    if (self.store.isPermanent && self.isEventStreamInitialised && 0 < self.store.roomSummaryStore.countOfRooms)
     {
         // Resume the stream (presence will be retrieved during server sync)
         MXLogDebug(@"[MXSession] Resuming the events stream from %@...", self.store.eventStreamToken);
@@ -1934,6 +1934,14 @@ typedef void (^MXOnResumeDone)(void);
 
 - (void)handleBackgroundSyncCacheIfRequiredWithCompletion:(void (^)(void))completion
 {
+    if (_state == MXSessionStateInitialSyncFailed)
+    {
+        if (completion)
+        {
+            completion();
+        }
+        return;
+    }
     NSParameterAssert(_state == MXSessionStateStoreDataReady || _state == MXSessionStatePaused);
     
     //  keep the old state to revert later
@@ -2876,7 +2884,7 @@ typedef void (^MXOnResumeDone)(void);
 
         // Clean the store
         [self.store deleteRoom:roomId];
-        [self.store.summariesModule removeSummaryOfRoom:roomId];
+        [self.store.roomSummaryStore removeSummaryOfRoom:roomId];
         [self.aggregations resetDataInRoom:roomId];
 
         // And remove the room and its summary from the list
@@ -3006,7 +3014,7 @@ typedef void (^MXOnResumeDone)(void);
         if (roomSummary == nil)
         {
             //  summary not in the cache, try to load it from the store
-            id<MXRoomSummaryProtocol> roomSummaryProtocol = [self.store.summariesModule summaryOfRoom:roomId];
+            id<MXRoomSummaryProtocol> roomSummaryProtocol = [self.store.roomSummaryStore summaryOfRoom:roomId];
             if (roomSummaryProtocol)
             {
                 roomSummary = [[MXRoomSummary alloc] initWithSummaryModel:roomSummaryProtocol];
