@@ -30,7 +30,7 @@ public class MXCoreDataRoomSummaryStore: NSObject {
     
     private lazy var container: NSPersistentContainer = {
         let result = NSPersistentContainer(name: Constants.modelName,
-                                           managedObjectModel: Self.managedObjectModel)
+                                           managedObjectModel: managedObjectModel)
         result.persistentStoreDescriptions.first?.url = storeURL
         result.loadPersistentStores { description, error in
             if let error = error {
@@ -55,7 +55,7 @@ public class MXCoreDataRoomSummaryStore: NSObject {
         try? FileManager.default.createDirectory(at: folderUrl, withIntermediateDirectories: true, attributes: nil)
         return folderUrl.appendingPathComponent(Constants.storeFileName)
     }()
-    private static var managedObjectModel: NSManagedObjectModel = {
+    private lazy var managedObjectModel: NSManagedObjectModel = {
         guard let url = Bundle(for: MXCoreDataRoomSummaryStore.self).url(forResource: Constants.modelName,
                                                                          withExtension: "momd") else {
             fatalError("[MXCoreDataRoomSummaryStore] No MXRoomSummaryStore Core Data model")
@@ -65,22 +65,12 @@ public class MXCoreDataRoomSummaryStore: NSObject {
         }
         return result
     }()
-    private lazy var persistenceCoordinator: NSPersistentStoreCoordinator = {
-        let result = NSPersistentStoreCoordinator(managedObjectModel: Self.managedObjectModel)
-        do {
-            try result.addPersistentStore(ofType: NSSQLiteStoreType,
-                                          configurationName: nil,
-                                          at: storeURL,
-                                          options: nil)
-        } catch {
-            fatalError(error.localizedDescription)
-        }
-        return result
-    }()
     
     /// Managed object context to be used when inserting data, whose parent context is `mainMoc`.
-    private lazy var defaultTempMoc: NSManagedObjectContext = {
-        return container.newBackgroundContext()
+    private lazy var backgroundMoc: NSManagedObjectContext = {
+        let result = container.newBackgroundContext()
+        result.automaticallyMergesChangesFromParent = true
+        return result
     }()
     /// Managed object context to be used on main thread for fetching data, whose parent context is `persistentMoc`.
     private lazy var mainMoc: NSManagedObjectContext = {
@@ -92,8 +82,8 @@ public class MXCoreDataRoomSummaryStore: NSObject {
     public init(withCredentials credentials: MXCredentials) {
         self.credentials = credentials
         super.init()
-        //  create persistent container
-        _ = persistenceCoordinator
+        //  create main context
+        _ = mainMoc
     }
     
     //  MARK: - Private
@@ -104,6 +94,7 @@ public class MXCoreDataRoomSummaryStore: NSObject {
         request.includesPropertyValues = false
         //  fetch nothing
         request.propertiesToFetch = []
+        request.resultType = .countResultType
         var result = 0
         moc.performAndWait {
             do {
@@ -173,7 +164,7 @@ public class MXCoreDataRoomSummaryStore: NSObject {
     }
     
     private func saveSummary(_ summary: MXRoomSummaryProtocol) {
-        let moc = defaultTempMoc
+        let moc = backgroundMoc
         
         moc.perform { [weak self] in
             guard let self = self else { return }
@@ -193,7 +184,7 @@ public class MXCoreDataRoomSummaryStore: NSObject {
     }
     
     private func deleteSummary(forRoomId roomId: String) {
-        let moc = defaultTempMoc
+        let moc = backgroundMoc
         
         moc.perform { [weak self] in
             guard let self = self else { return }
@@ -213,7 +204,7 @@ public class MXCoreDataRoomSummaryStore: NSObject {
             MXRoomMembersCountMO.entityName
         ]
         
-        let moc = defaultTempMoc
+        let moc = backgroundMoc
         
         moc.perform { [weak self] in
             guard let self = self else { return }
@@ -234,7 +225,7 @@ public class MXCoreDataRoomSummaryStore: NSObject {
     private func allSummaries(_ completion: @escaping ([MXRoomSummaryProtocol]) -> Void) {
         let request = MXRoomSummaryMO.typedFetchRequest()
         
-        let moc = defaultTempMoc
+        let moc = backgroundMoc
         
         moc.perform {
             do {
@@ -270,11 +261,11 @@ public class MXCoreDataRoomSummaryStore: NSObject {
 extension MXCoreDataRoomSummaryStore: MXRoomSummaryStore {
     
     public var rooms: [String] {
-        return fetchRoomIds(in: defaultTempMoc)
+        return fetchRoomIds(in: backgroundMoc)
     }
     
     public var countOfRooms: UInt {
-        return UInt(countRooms(in: defaultTempMoc))
+        return UInt(countRooms(in: backgroundMoc))
     }
     
     public func storeSummary(_ summary: MXRoomSummaryProtocol) {
@@ -282,7 +273,7 @@ extension MXCoreDataRoomSummaryStore: MXRoomSummaryStore {
     }
     
     public func summary(ofRoom roomId: String) -> MXRoomSummaryProtocol? {
-        return fetchSummary(forRoomId: roomId, in: defaultTempMoc)
+        return fetchSummary(forRoomId: roomId, in: backgroundMoc)
     }
     
     public func removeSummary(ofRoom roomId: String) {

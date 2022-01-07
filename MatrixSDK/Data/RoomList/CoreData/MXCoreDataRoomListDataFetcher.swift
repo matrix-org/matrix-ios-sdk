@@ -26,9 +26,6 @@ internal class MXCoreDataRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
     
     private weak var session: MXSession?
     internal let fetchOptions: MXRoomListDataFetchOptions
-    private lazy var initialSyncThrottler: MXThrottler = {
-        return MXThrottler(minimumDelay: 1.0, queue: .main)
-    }()
     private lazy var dataUpdateThrottler: MXThrottler = {
         return MXThrottler(minimumDelay: 0.1, queue: .main)
     }()
@@ -51,12 +48,10 @@ internal class MXCoreDataRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
         request.predicate = filterPredicate(for: filterOptions)
         request.sortDescriptors = sortDescriptors(for: sortOptions)
         request.fetchLimit = fetchOptions.paginationOptions.rawValue
-        let controller = NSFetchedResultsController(fetchRequest: request,
-                                                    managedObjectContext: store.mainManagedObjectContext,
-                                                    sectionNameKeyPath: nil,
-                                                    cacheName: nil)
-        controller.delegate = self
-        return controller
+        return NSFetchedResultsController(fetchRequest: request,
+                                          managedObjectContext: store.mainManagedObjectContext,
+                                          sectionNameKeyPath: nil,
+                                          cacheName: nil)
     }()
     
     private var totalRoomsCount: Int {
@@ -77,7 +72,12 @@ internal class MXCoreDataRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
         }
         let request = MXRoomSummaryMO.typedFetchRequest()
         request.predicate = filterPredicate(for: filterOptions)
-        let propertyNames: [String] = ["s_dataTypesInt", "s_sentStatusInt", "s_notificationCount", "s_highlightCount"]
+        let propertyNames: [String] = [
+            "s_dataTypesInt",
+            "s_sentStatusInt",
+            "s_notificationCount",
+            "s_highlightCount"
+        ]
         var properties: [NSPropertyDescription] = []
         
         for propertyName in propertyNames {
@@ -105,6 +105,7 @@ internal class MXCoreDataRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
         self.store = store
         super.init()
         self.fetchOptions.fetcher = self
+        self.fetchedResultsController.delegate = self
     }
     
     //  MARK: - Delegate
@@ -158,6 +159,10 @@ internal class MXCoreDataRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
     func stop() {
         fetchedResultsController.delegate = nil
         removeCacheIfRequired()
+    }
+    
+    deinit {
+        stop()
     }
     
     //  MARK: - Private
@@ -356,14 +361,8 @@ extension MXCoreDataRoomListDataFetcher: MXRoomListDataFilterable {
 extension MXCoreDataRoomListDataFetcher: NSFetchedResultsControllerDelegate {
     
     func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
-        if session?.isEventStreamInitialised == true {
-            dataUpdateThrottler.throttle {
-                self.computeData()
-            }
-        } else {
-            initialSyncThrottler.throttle {
-                self.computeData()
-            }
+        dataUpdateThrottler.throttle {
+            self.computeData()
         }
     }
     
