@@ -1,2 +1,1 @@
-MXRoomSummaryStore: Implementation with Core Data.
-MXRoomListDataManager: Implementation with Core Data.
+MXRoomSummaryStore & MXRoomListDataManager: Implementation with Core Data.
