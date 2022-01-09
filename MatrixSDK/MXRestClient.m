@@ -1792,7 +1792,8 @@ MXAuthAction;
     if (allowedParentIds.count > 0)
     {
         NSMutableArray *allowed = [NSMutableArray new];
-        for (NSString *parentId in allowedParentIds) {
+        for (NSString *parentId in allowedParentIds)
+        {
             [allowed addObject:@{
                 @"type": kMXEventTypeStringRoomMembership,
                 @"room_id": parentId
