@@ -142,7 +142,7 @@ public extension MXSession {
     ///   - name: Name of the room
     ///   - joinRule: join rule of the room: can be `public`, `restricted`, or `private`
     ///   - topic: topic of the room
-    ///   - parentRoomId: Optional parent room ID. Required for `restricted` jroom
+    ///   - parentRoomId: Optional parent room ID. Required for `restricted` join rule
     ///   - aliasLocalPart: local part of the alias (required for `public` room)
     ///   (e.g. for the alias "#my_alias:example.org", the local part is "my_alias")
     ///   - isEncrypted: `true` if you want to enable encryption for this room. `false` otherwise.
