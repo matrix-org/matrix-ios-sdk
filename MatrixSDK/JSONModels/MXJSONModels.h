@@ -1473,9 +1473,9 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
 @end
 
 /**
- `MXHomeServerCapabilities` the capabilities of the current homeserver
+ `MXHomeserverCapabilities` the capabilities of the current homeserver
  */
-@interface MXHomeServerCapabilities : MXJSONModel
+@interface MXHomeserverCapabilities : MXJSONModel
 
     /**
      * True if it is possible to change the password of the account.

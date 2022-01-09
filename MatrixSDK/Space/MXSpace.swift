@@ -95,9 +95,13 @@ public class MXSpace: NSObject {
                 
                 self.processingQueue.async {
                     var childRoomIds: [String] = []
-                    roomState?.stateEvents.forEach({ event in
-                        if event.eventType == .spaceChild {
+                    roomState?.stateEvents(with: .spaceChild)?.forEach({ event in
+                        if let content = event.wireContent, !content.isEmpty {
                             childRoomIds.append(event.stateKey)
+                        } else {
+                            if let index = childRoomIds.firstIndex(of: event.stateKey) {
+                                childRoomIds.remove(at: index)
+                            }
                         }
                     })
                     self.childRoomIds = childRoomIds
@@ -172,6 +176,18 @@ public class MXSpace: NSObject {
         }
         
         return self.room?.sendStateEvent(.spaceChild, content: stateEventContent, stateKey: roomId, completion: completion)
+    }
+    
+    /// Remove a child space or child room from the current space.
+    /// - Parameters:
+    ///   - roomId: The room id of the child space or child room.
+    ///   - completion: A closure called when the operation completes. Provides the event id of the event generated on the home server on success.
+    ///   - response: reponse of the request
+    /// - Returns: a `MXHTTPOperation` instance.
+    @discardableResult
+    public func removeChild(roomId: String,
+                         completion: @escaping (_ response: MXResponse<String?>) -> Void) -> MXHTTPOperation? {
+        return self.room?.sendStateEvent(.spaceChild, content: [:], stateKey: roomId, completion: completion)
     }
     
     /// Update child spaces using the list of spaces

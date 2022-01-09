@@ -85,7 +85,7 @@ class MXSpaceChildContentTests: XCTestCase {
     ///
     /// -> Alice must see the created child room
     func testCreateSpaceCheckVisibilityOfPublicRoom() throws {
-        createSpaceAndChildRoom(joinRule: .public)
+        createSpaceAndChildRoom(joinRule: .public, testRemoveRoom: false)
     }
     
     /// - Create Bob And Alice sessions
@@ -95,19 +95,52 @@ class MXSpaceChildContentTests: XCTestCase {
     ///
     /// -> Alice must see the created child room
     func testCreateSpaceCheckVisibilityOfRestrictedRoom() throws {
-        createSpaceAndChildRoom(joinRule: .restricted)
+        createSpaceAndChildRoom(joinRule: .restricted, testRemoveRoom: false)
+    }
+    
+    /// - Create Bob And Alice sessions
+    /// - Bob creates a public space and invites Alice
+    /// - Alice joins the space
+    /// - Bob creates a private child room
+    ///
+    /// -> Alice must NOT see the created child room
+    func testCreateSpaceCheckVisibilityOfPrivateRoom() throws {
+        createSpaceAndChildRoom(joinRule: .private, testRemoveRoom: false)
     }
     
     /// - Create Bob And Alice sessions
     /// - Bob creates a public space and invites Alice
     /// - Alice joins the space
     /// - Bob creates a pubic child room
-    ///
-    /// -> Alice must NOT see the created child room
-    func testCreateSpaceCheckVisibilityOfPrivateRoom() throws {
-        createSpaceAndChildRoom(joinRule: .private)
+    /// -> Alice must see the created child room
+    /// - Bob removes the room from the space
+    /// -> Bob must NOT see the removed child room
+    func testRemovePublicChild() throws {
+        createSpaceAndChildRoom(joinRule: .public, testRemoveRoom: true)
     }
 
+    /// - Create Bob And Alice sessions
+    /// - Bob creates a public space and invites Alice
+    /// - Alice joins the space
+    /// - Bob creates a pubic child room
+    /// -> Alice must see the created child room
+    /// - Bob removes the room from the space
+    /// -> Bob must NOT see the removed child room
+    func testRemoverestrictedChild() throws {
+        createSpaceAndChildRoom(joinRule: .restricted, testRemoveRoom: true)
+    }
+    
+    /// - Create Bob And Alice sessions
+    /// - Bob creates a public space and invites Alice
+    /// - Alice joins the space
+    /// - Bob creates a private child room
+    /// -> Alice must NOT see the created child room
+    /// - Bob removes the room from the space
+    /// -> Bob must NOT see the removed child room
+    func testRemovePrivateChild() throws {
+        createSpaceAndChildRoom(joinRule: .private, testRemoveRoom: true)
+    }
+    
     // MARK: - Private
 
     /// - Create Bob And Alice sessions
@@ -115,7 +148,8 @@ class MXSpaceChildContentTests: XCTestCase {
     /// - Alice joins the space
     /// - Bob creates a child room with the given join rule
     /// - validate child rooms visibility according to given join rule
-    private func createSpaceAndChildRoom(joinRule: MXRoomJoinRule) {
+    /// - optionally test if the room is not anymore a child of the space after having removed it from the space
+    private func createSpaceAndChildRoom(joinRule: MXRoomJoinRule, testRemoveRoom: Bool) {
         testData.doTestWithAliceAndBob(inARoom: self, aliceStore: MXMemoryStore(), bobStore: MXMemoryStore()) { aliceSession, bobSession, roomId, expectation in
             
             guard let bobSession = bobSession, let aliceSession = aliceSession, let expectation = expectation else {
@@ -158,7 +192,24 @@ class MXSpaceChildContentTests: XCTestCase {
                                             bobSession.checkVisibilityOf(of: createdRoom, in: createdSpace!, expectedCount: 1) {
                                                 // Checking the visibility of the room from Alice's POV
                                                 aliceSession.checkVisibilityOf(of: createdRoom, in: spaceFromAlice, expectedCount: expectedCount) {
-                                                    expectation.fulfill()
+                                                    if testRemoveRoom {
+                                                        //Rremove the room from the space
+                                                        createdSpace?.removeChild(roomId: createdRoom.roomId, completion: { response in
+                                                            switch response {
+                                                            case .success:
+                                                                // Checking the visibility of the room from Bob's POV
+                                                                // -> the room must NOT be visible anymore
+                                                                bobSession.checkVisibilityOf(of: createdRoom, in: createdSpace!, expectedCount: 0) {
+                                                                    expectation.fulfill()
+                                                                }
+                                                            case .failure(let error):
+                                                                XCTFail("Remove child room failed with error \(error)")
+                                                                expectation.fulfill()
+                                                            }
+                                                        })
+                                                    } else {
+                                                        expectation.fulfill()
+                                                    }
                                                 }
                                             }
                                         }

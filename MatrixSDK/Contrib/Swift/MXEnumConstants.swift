@@ -51,7 +51,7 @@ public enum MXRoomJoinRule: Equatable, Hashable {
     /// A user who wishes to join the room must first receive an invite to the room from someone already inside of the room.
     case invite
     
-    /// The room will appear as public inside parents declared as `allowed`. It will behave as private otherwise.
+    /// The room is public to any member of spaces declared as `allowed`. It will be private otherwise.
     case restricted
     
     /// Reserved keyword which is not implemented by homeservers.

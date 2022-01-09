@@ -2839,7 +2839,7 @@ Note: Clients should consider avoiding this endpoint for URLs posted in encrypte
 /// @param success A block object called when the operation succeeds. It provides a `MXHomeserverCapabilities` object.
 /// @param failure A block object called when the operation fails.
 /// @return a MXHTTPOperation instance.
-- (MXHTTPOperation*)homeServerCapabilitiesWithSuccess:(void (^)(MXHomeServerCapabilities *capabilities))success
+- (MXHTTPOperation*)homeServerCapabilitiesWithSuccess:(void (^)(MXHomeserverCapabilities *capabilities))success
                                               failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 @end

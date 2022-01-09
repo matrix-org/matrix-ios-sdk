@@ -5573,7 +5573,7 @@ MXAuthAction;
 
 #pragma mark - Homeserver capabilities
 
-- (MXHTTPOperation*)homeServerCapabilitiesWithSuccess:(void (^)(MXHomeServerCapabilities *capabilities))success
+- (MXHTTPOperation*)homeServerCapabilitiesWithSuccess:(void (^)(MXHomeserverCapabilities *capabilities))success
                                               failure:(void (^)(NSError *error))failure
 {
     NSString *path = [NSString stringWithFormat:@"%@/capabilities", kMXAPIPrefixPathR0];
@@ -5587,9 +5587,9 @@ MXAuthAction;
 
                                      if (success)
                                      {
-                                         __block MXHomeServerCapabilities *capabilities;
+                                         __block MXHomeserverCapabilities *capabilities;
                                          [self dispatchProcessing:^{
-                                             MXJSONModelSetMXJSONModel(capabilities, MXHomeServerCapabilities, JSONResponse);
+                                             MXJSONModelSetMXJSONModel(capabilities, MXHomeserverCapabilities, JSONResponse);
                                          } andCompletion:^{
                                              success(capabilities);
                                          }];

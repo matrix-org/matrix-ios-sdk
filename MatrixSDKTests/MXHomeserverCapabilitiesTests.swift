@@ -16,26 +16,26 @@
 
 import XCTest
 
-class MXHomeServerCapabilitiesTests: XCTestCase {
+class MXHomeserverCapabilitiesTests: XCTestCase {
     
     private static let capWithPasswordEnabled =
     [
         "capabilities": [
-            "m.change_password": ["enabled": 1]
+            "m.change_password": ["enabled": true]
         ]
     ]
     
     private static let capWithPasswordDisabled =
     [
         "capabilities": [
-            "m.change_password": ["enabled": 0]
+            "m.change_password": ["enabled": false]
         ]
     ]
     
     private static let noCapabilities =
     [
         "capabilities": [
-            "m.change_password": ["enabled": 1],
+            "m.change_password": ["enabled": true],
             "m.room_versions": [
                 "default": "6",
                 "available": [
@@ -58,7 +58,7 @@ class MXHomeServerCapabilitiesTests: XCTestCase {
     private static let fullCapabilities =
     [
         "capabilities": [
-            "m.change_password": ["enabled": 1],
+            "m.change_password": ["enabled": true],
             "m.room_versions": [
                 "default": "6",
                 "available": [
@@ -99,7 +99,7 @@ class MXHomeServerCapabilitiesTests: XCTestCase {
     private static let unstableCapabilities =
     [
         "capabilities": [
-            "m.change_password": ["enabled": 1],
+            "m.change_password": ["enabled": true],
             "m.room_versions": [
                 "default": "6",
                 "available": [
@@ -140,7 +140,7 @@ class MXHomeServerCapabilitiesTests: XCTestCase {
     private static let noPreferredCapabilities =
     [
         "capabilities": [
-            "m.change_password": ["enabled": 1],
+            "m.change_password": ["enabled": true],
             "m.room_versions": [
                 "default": "6",
                 "available": [
@@ -206,7 +206,7 @@ class MXHomeServerCapabilitiesTests: XCTestCase {
                 return
             }
             
-            guard let service = session.homeServerCapabilities, service.isInitialised else {
+            guard let service = session.homeserverCapabilities, service.isInitialised else {
                 XCTFail("homeServerCapabilities should be initialised")
                 expectation?.fulfill()
                 return
@@ -346,13 +346,13 @@ class MXHomeServerCapabilitiesTests: XCTestCase {
                 return
             }
             
-            guard let capabilities = MXHomeServerCapabilities(fromJSON: jsonCapabilities) else {
+            guard let capabilities = MXHomeserverCapabilities(fromJSON: jsonCapabilities) else {
                 XCTFail("Unable to instantiate capabilities")
                 expectation?.fulfill()
                 return
             }
             
-            let service = MXHomeServerCapabilitiesService(session: session)
+            let service = MXHomeserverCapabilitiesService(session: session)
             service.update(with: capabilities)
             
             for expectation in expectations {

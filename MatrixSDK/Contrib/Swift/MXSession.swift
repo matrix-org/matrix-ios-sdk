@@ -180,13 +180,13 @@ public extension MXSession {
             let historyVisibilityStateEvent = stateEventBuilder.buildHistoryVisibilityEvent(withVisibility: .shared)
             parameters.addOrUpdateInitialStateEvent(historyVisibilityStateEvent)
             
-            let joinRuleSupportType = homeServerCapabilities.isFeatureSupported(.restricted)
+            let joinRuleSupportType = homeserverCapabilities.isFeatureSupported(.restricted)
             if joinRuleSupportType == .supported || joinRuleSupportType == .supportedUnstable {
                 guard let parentRoomId = parentRoomId else {
                     fatalError("[MXSession] createRoom: parentRoomId is required for restricted room")
                 }
                 
-                parameters.roomVersion = homeServerCapabilities.versionOverrideForFeature(.restricted)
+                parameters.roomVersion = homeserverCapabilities.versionOverrideForFeature(.restricted)
                 let joinRuleStateEvent = stateEventBuilder.buildJoinRuleEvent(withJoinRule: .restricted, allowedParentsList: [parentRoomId])
                 parameters.addOrUpdateInitialStateEvent(joinRuleStateEvent)
             } else {
