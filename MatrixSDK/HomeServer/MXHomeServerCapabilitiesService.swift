@@ -83,7 +83,7 @@ public class MXHomeServerCapabilitiesService: NSObject {
     /// True if it is possible to change the password of the account.
     public var canChangePassword: Bool {
         guard let capabilities = self.capabilities else {
-            // As per specifications, user can change password by defult
+            // As per specifications, user can change password by default
             return true
         }
         
