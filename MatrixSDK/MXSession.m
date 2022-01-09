@@ -703,7 +703,8 @@ typedef void (^MXOnResumeDone)(void);
             // Propagate sync response to the associated space service
             [self.spaceService handleSyncResponse:syncResponse];
             
-            if (!self.homeServerCapabilities.isInitialised) {
+            if (!self.homeServerCapabilities.isInitialised)
+            {
                 [self.homeServerCapabilities updateWithCompletion:nil];
             }
             
