@@ -1789,7 +1789,8 @@ MXAuthAction;
     NSMutableDictionary *stateValue = [[NSMutableDictionary alloc] initWithDictionary:@{
         @"join_rule": joinRule
     }];
-    if (allowedParentIds.count > 0) {
+    if (allowedParentIds.count > 0)
+    {
         NSMutableArray *allowed = [NSMutableArray new];
         for (NSString *parentId in allowedParentIds) {
             [allowed addObject:@{
