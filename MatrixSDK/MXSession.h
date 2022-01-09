@@ -500,7 +500,7 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
 @property (nonatomic, readonly) MXSpaceService *spaceService;
 
 /**
- Capabilities of the current home server
+ Capabilities of the current homeserver
  */
 @property (nonatomic, readonly) MXHomeServerCapabilitiesService *homeServerCapabilities;
 
