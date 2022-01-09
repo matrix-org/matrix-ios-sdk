@@ -164,7 +164,7 @@ extension MXHomeServerCapabilitiesService {
     
     /// Update the instance with given server capabilities (only for test purpose)
     /// - Parameters:
-    ///   - capabilities: new home server capabilities
+    ///   - capabilities: new homeserver capabilities
     public func update(with capabilities: MXHomeServerCapabilities?) {
         self.capabilities = capabilities
     }
