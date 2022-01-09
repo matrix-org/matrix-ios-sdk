@@ -1473,7 +1473,7 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
 @end
 
 /**
- `MXHomeServerCapabilities` the capabilities of the current home server
+ `MXHomeServerCapabilities` the capabilities of the current homeserver
  */
 @interface MXHomeServerCapabilities : MXJSONModel
 
