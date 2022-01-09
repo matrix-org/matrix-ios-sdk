@@ -1409,7 +1409,7 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
 
 @end
 
-#pragma mark - Home server Capabilities
+#pragma mark - Homeserver Capabilities
 
 @interface MXRoomVersionInfo: NSObject
 
