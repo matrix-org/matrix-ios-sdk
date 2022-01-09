@@ -162,7 +162,7 @@ public class MXHomeServerCapabilitiesService: NSObject {
 /// MARK: - Test helper methods
 extension MXHomeServerCapabilitiesService {
     
-    /// Update the instance with given server capabilties (only for test purpose)
+    /// Update the instance with given server capabilities (only for test purpose)
     /// - Parameters:
     ///   - capabilities: new home server capabilities
     public func update(with capabilities: MXHomeServerCapabilities?) {
