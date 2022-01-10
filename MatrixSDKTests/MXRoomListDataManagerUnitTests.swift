@@ -91,7 +91,7 @@ class MXRoomListDataManagerUnitTests: XCTestCase {
     
     func testDataManagerInitStandalone() {
         let manager = MXStoreRoomListDataManager()
-        let restClient = MXRestClient(credentials: Constants.credentials, unrecognizedCertificateHandler: nil)
+        let restClient = MXRestClient(credentials:  Constants.credentials, unrecognizedCertificateHandler: nil, persistentTokenDataHandler: nil, unauthenticatedHandler: nil)
         guard let session = MXSession(matrixRestClient: restClient) else {
             XCTFail("Failed to setup test conditions")
             return
@@ -117,7 +117,7 @@ class MXRoomListDataManagerUnitTests: XCTestCase {
     }
     
     func testDataManagerInitFromSession() {
-        let restClient = MXRestClient(credentials: Constants.credentials, unrecognizedCertificateHandler: nil)
+        let restClient = MXRestClient(credentials:  Constants.credentials, unrecognizedCertificateHandler: nil, persistentTokenDataHandler: nil, unauthenticatedHandler: nil)
         guard let session = MXSession(matrixRestClient: restClient) else {
             XCTFail("Failed to setup test conditions")
             return
@@ -243,7 +243,7 @@ class MXRoomListDataManagerUnitTests: XCTestCase {
     }
     
     private func generateDefaultFetcher(_ completion: @escaping (MXRoomListDataFetcher) -> Void) {
-        let restClient = MXRestClient(credentials: Constants.credentials, unrecognizedCertificateHandler: nil)
+        let restClient = MXRestClient(credentials:  Constants.credentials, unrecognizedCertificateHandler: nil, persistentTokenDataHandler: nil, unauthenticatedHandler: nil)
         guard let session = MXSession(matrixRestClient: restClient) else {
             XCTFail("Failed to setup test conditions")
             return

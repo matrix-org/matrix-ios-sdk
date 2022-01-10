@@ -91,7 +91,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                     }
 
                     // - Bob uses the MXBackgroundSyncService to fetch it
-                    self.bgSyncService = MXBackgroundSyncService(withCredentials: bobCredentials)
+                    self.bgSyncService = MXBackgroundSyncService(withCredentials: bobCredentials, persistTokenDataHandler: nil, unauthenticatedHandler: nil)
 
                     self.bgSyncService?.event(withEventId: eventId, inRoom: roomId) { (response) in
                         switch response {
@@ -108,7 +108,8 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                             XCTAssertNotNil(syncResponseStoreManager.event(withEventId: eventId, inRoom: roomId), "Event should be stored in sync response store")
 
                             // - Bob restarts their MXSession
-                            let newBobSession = MXSession(matrixRestClient: MXRestClient(credentials: bobCredentials, unrecognizedCertificateHandler: nil))
+                            let mxRestClient = MXRestClient(credentials: bobCredentials, unrecognizedCertificateHandler: nil, persistentTokenDataHandler: nil, unauthenticatedHandler: nil)
+                            let newBobSession = MXSession(matrixRestClient: mxRestClient)
                             self.testData.retain(newBobSession)
                             newBobSession?.setStore(bobStore, completion: { (_) in
                                 newBobSession?.start(withSyncFilterId: bobStore.syncFilterId, completion: { (_) in
@@ -178,7 +179,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                     }
                     
                     // - Bob uses the MXBackgroundSyncService to fetch it
-                    self.bgSyncService = MXBackgroundSyncService(withCredentials: bobCredentials)
+                    self.bgSyncService = MXBackgroundSyncService(withCredentials: bobCredentials, persistTokenDataHandler: nil, unauthenticatedHandler: nil)
                     
                     self.bgSyncService?.event(withEventId: eventId, inRoom: roomId) { (response) in
                         switch response {
@@ -198,7 +199,8 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                             XCTAssertNotNil(syncResponseStoreManager.event(withEventId: eventId, inRoom: roomId), "Event should be stored in sync response store")
                             
                             // - Bob restarts their MXSession
-                            let newBobSession = MXSession(matrixRestClient: MXRestClient(credentials: bobCredentials, unrecognizedCertificateHandler: nil))
+                            let mxRestClient = MXRestClient(credentials: bobCredentials, unrecognizedCertificateHandler: nil, persistentTokenDataHandler: nil, unauthenticatedHandler: nil)
+                            let newBobSession = MXSession(matrixRestClient: mxRestClient)
                             self.testData.retain(newBobSession)
                             newBobSession?.setStore(bobStore, completion: { (_) in
                                 newBobSession?.start(withSyncFilterId: bobStore.syncFilterId, completion: { (_) in
@@ -280,7 +282,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                             }
                             
                             // - Bob uses the MXBackgroundSyncService to fetch it
-                            self.bgSyncService = MXBackgroundSyncService(withCredentials: bobCredentials)
+                            self.bgSyncService = MXBackgroundSyncService(withCredentials: bobCredentials, persistTokenDataHandler: nil, unauthenticatedHandler: nil)
                             
                             self.bgSyncService?.event(withEventId: eventId, inRoom: roomId) { (response) in
                                 switch response {
@@ -307,7 +309,8 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                                         XCTAssertNotNil(bgSyncServiceCryptoStore?.inboundGroupSession(withId: sessionId, andSenderKey: senderKey), "Key must be stored in the intermediate MXBackgroundService MXRealmCryptoStore")
                                         
                                         // - Bob restarts their MXSession
-                                        let newBobSession = MXSession(matrixRestClient: MXRestClient(credentials: bobCredentials, unrecognizedCertificateHandler: nil))
+                                        let mxRestClient = MXRestClient(credentials: bobCredentials, unrecognizedCertificateHandler: nil, persistentTokenDataHandler: nil, unauthenticatedHandler: nil)
+                                        let newBobSession = MXSession(matrixRestClient: mxRestClient)
                                         self.testData.retain(newBobSession)
                                         newBobSession?.setStore(bobStore, completion: { (_) in
                                             newBobSession?.start(withSyncFilterId: bobStore.syncFilterId, completion: { (_) in
@@ -382,7 +385,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                     room.setName(newName) { (response) in
                         switch response {
                         case .success:
-                            self.bgSyncService = MXBackgroundSyncService(withCredentials: bobCredentials)
+                            self.bgSyncService = MXBackgroundSyncService(withCredentials: bobCredentials, persistTokenDataHandler: nil, unauthenticatedHandler: nil)
                             
                             self.bgSyncService?.event(withEventId: eventId, inRoom: roomId) { (response) in
                                 switch response {
@@ -451,7 +454,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                         return
                     }
                     
-                    self.bgSyncService = MXBackgroundSyncService(withCredentials: bobCredentials)
+                    self.bgSyncService = MXBackgroundSyncService(withCredentials: bobCredentials, persistTokenDataHandler: nil, unauthenticatedHandler: nil)
 
                     self.bgSyncService?.event(withEventId: lastEventId, inRoom: roomId) { (response) in
                         switch response {
@@ -554,7 +557,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                         return
                     }
                     
-                    self.bgSyncService = MXBackgroundSyncService(withCredentials: bobCredentials)
+                    self.bgSyncService = MXBackgroundSyncService(withCredentials: bobCredentials, persistTokenDataHandler: nil, unauthenticatedHandler: nil)
 
                     self.bgSyncService?.event(withEventId: eventId, inRoom: roomId) { (response) in
                         switch response {
@@ -661,7 +664,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                         }
                         
                         // - Bob uses the MXBackgroundSyncService to fetch it
-                        self.bgSyncService = MXBackgroundSyncService(withCredentials: bobCredentials)
+                        self.bgSyncService = MXBackgroundSyncService(withCredentials: bobCredentials, persistTokenDataHandler: nil, unauthenticatedHandler: nil)
                         self.bgSyncService?.event(withEventId: eventId, inRoom: roomId) { _ in
                             
                             let syncResponseStore = MXSyncResponseFileStore(withCredentials: bobCredentials)
@@ -735,7 +738,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                         // - Let Bob MXSession get it
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                             // - Bob uses the MXBackgroundSyncService to fetch it
-                            self.bgSyncService = MXBackgroundSyncService(withCredentials: bobCredentials)
+                            self.bgSyncService = MXBackgroundSyncService(withCredentials: bobCredentials, persistTokenDataHandler: nil, unauthenticatedHandler: nil)
                             self.bgSyncService?.event(withEventId: eventId, inRoom: roomId) { response in
                                 
                                 switch response {
@@ -793,7 +796,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
             aliceSession.pause()
             bobSession.pause()
             
-            self.bgSyncService = MXBackgroundSyncService(withCredentials: bobCredentials)
+            self.bgSyncService = MXBackgroundSyncService(withCredentials: bobCredentials, persistTokenDataHandler: nil, unauthenticatedHandler: nil)
             guard let bgSyncService = self.bgSyncService else {
                 XCTFail("Cannot set up initial test conditions")
                 expectation.fulfill()
@@ -1136,7 +1139,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
             // - Bob pause their app
             bobSession.pause()
             
-            self.bgSyncService = MXBackgroundSyncService(withCredentials: bobCredentials)
+            self.bgSyncService = MXBackgroundSyncService(withCredentials: bobCredentials, persistTokenDataHandler: nil, unauthenticatedHandler: nil)
             guard let bgSyncService = self.bgSyncService else {
                 XCTFail("Cannot set up initial test conditions")
                 expectation.fulfill()
@@ -1312,8 +1315,8 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                 bobSession.close()
                 
                 // - Restart Bob session
-                let restClient = MXRestClient(credentials: bobCredentials, unrecognizedCertificateHandler: nil)
-                guard let bobSession2 = MXSession(matrixRestClient: restClient) else {
+                let mxRestClient = MXRestClient(credentials: bobCredentials, unrecognizedCertificateHandler: nil, persistentTokenDataHandler: nil, unauthenticatedHandler: nil)
+                guard let bobSession2 = MXSession(matrixRestClient: mxRestClient) else {
                     XCTFail("The request should not fail");
                     expectation.fulfill()
                     return
