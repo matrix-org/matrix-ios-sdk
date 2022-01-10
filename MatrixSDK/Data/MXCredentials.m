@@ -194,7 +194,7 @@
 {
     MXRefreshTokenData *tokenData = notification.userInfo[kMXCredentialsNewRefreshTokenDataKey];
     
-    if(tokenData && tokenData.userId && self.userId && [self.userId isEqualToString:tokenData.userId]en
+    if(tokenData && tokenData.userId && self.userId && [self.userId isEqualToString:tokenData.userId]
        && tokenData.homeserver && self.homeServer && [tokenData.homeserver isEqualToString:self.homeServer])
     {
         self.refreshToken = tokenData.refreshToken;

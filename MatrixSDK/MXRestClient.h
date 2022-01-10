@@ -117,17 +117,17 @@ FOUNDATION_EXPORT NSString *const kMXMembersOfRoomParametersNotMembership;
 typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^success)(NSString *accessToken), void (^failure)(NSError *error));
 
 /**
- Block called when the rest client failed to refresh it's tokens and session is now unauthenticated.
+ Block called when the rest client has become unauthenticated(E.g. refresh failed or server invalidated an access token).
 
  @param error The error from the failed refresh.
  */
-typedef void(^MXRestClientRefreshTokensFailedHandler)(MXError *error);
+typedef void(^MXRestClientUnauthenticatedHandler)(MXError *error, void (^completion)(void));
 
 /**
- Block called when the rest client needs to check the persisted refresh token data is valid and optionally persist new data to disk if it is not.
+ Block called when the rest client needs to check the persisted refresh token data is valid and optionally persist new refresh data to disk if it is not.
  @param handler A closure that accepts the current persisted credentials. These can be updated optionally saved by returning YES from the closure.
  */
-typedef void (^MXRestClientPersistTokenDataHandler)(void (^handler)(NSArray <MXCredentials*> *credentials, void (^completion)(BOOL didUpdateCredentials)));
+typedef void (^MXRestClientPersistTokenDataHandler)(void (^handler)(NSArray <MXCredentials*> *credentials, void (^shouldPersistCompletion)(BOOL didUpdateCredentials)));
 
 /**
  `MXRestClient` makes requests to Matrix servers.
@@ -157,7 +157,7 @@ extern NSString *const kMXCredentialsNewRefreshTokenDataKey;
 /**
  Block called when the rest client failed to refresh it's tokens and session is now unauthenticated.
  */
-@property (nonatomic, copy) MXRestClientRefreshTokensFailedHandler refreshTokensFailedHandler;
+@property (nonatomic, copy) MXRestClientUnauthenticatedHandler unauthenticatedHandler;
 
 /**
  Block called when the rest client needs to check the persisted refresh token data is valid and optionally persist new data to disk if it is not.
@@ -241,12 +241,19 @@ extern NSString *const kMXCredentialsNewRefreshTokenDataKey;
 /**
  Create an instance based on a matrix user account.
 
- @param credentials the response to a login or a register request.
+ @param inCredentials the response to a login or a register request.
  @param onUnrecognizedCertBlock the block called to handle unrecognized certificate (nil if unrecognized certificates are ignored).
+ @param persistentTokenDataHandler the block called when the rest client needs to check the persisted refresh token data is valid and optionally persist new refresh data to disk if it is not.
+ @param unauthenticatedHandler the block called when the rest client has become unauthenticated(E.g. refresh failed or server invalidated an access token).
  @return a MXRestClient instance.
  */
-//-(id)initWithCredentials:(MXCredentials*)credentials andOnUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock NS_REFINED_FOR_SWIFT;
--(id)initWithCredentials:(MXCredentials*)inCredentials andOnUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock andPersistentTokenDataHandler: (MXRestClientPersistTokenDataHandler)persistentTokenDataHandler NS_REFINED_FOR_SWIFT;
+
+-(id)initWithCredentials:(MXCredentials*)inCredentials
+andOnUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock
+andPersistentTokenDataHandler: (MXRestClientPersistTokenDataHandler)persistentTokenDataHandler
+andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHandler
+NS_REFINED_FOR_SWIFT;
+
 - (void)close;
 
 

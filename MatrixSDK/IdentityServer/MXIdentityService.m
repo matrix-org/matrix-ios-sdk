@@ -109,9 +109,9 @@ NSString *const MXIdentityServiceNotificationAccessTokenKey = @"accessToken";
         };
         
         MXWeakify(self);
-        identityServerRestClient.tokenProviderHandler = ^MXHTTPOperation* (void (^success)(NSString *), void (^failure)(NSError *)) {
-            MXStrongifyAndReturnValueIfNil(self, nil);
-            return [self accessTokenWithSuccess:success failure:failure];
+        identityServerRestClient.tokenProviderHandler = ^(NSError *error, void (^success)(NSString *accessToken), void (^failure)(NSError *error)) {
+            MXStrongifyAndReturnIfNil(self);
+            [self accessTokenWithSuccess:success failure:failure];
         };
         
         self.restClient = identityServerRestClient;

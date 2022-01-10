@@ -88,8 +88,8 @@ public extension MXRestClient {
      
      - returns: a `MXRestClient` instance.
      */
-    @nonobjc convenience init(credentials: MXCredentials, unrecognizedCertificateHandler handler: MXHTTPClientOnUnrecognizedCertificate?, persistentTokenDataHandler: MXRestClientPersistTokenDataHandler?) {
-        self.init(__credentials: credentials, andOnUnrecognizedCertificateBlock: handler, andPersistentTokenDataHandler: persistentTokenDataHandler)
+    @nonobjc convenience init(credentials: MXCredentials, unrecognizedCertificateHandler handler: MXHTTPClientOnUnrecognizedCertificate?, persistentTokenDataHandler: MXRestClientPersistTokenDataHandler?, unauthenticatedHandler: MXRestClientUnauthenticatedHandler?) {
+        self.init(__credentials: credentials, andOnUnrecognizedCertificateBlock: handler, andPersistentTokenDataHandler: persistentTokenDataHandler, andUnauthenticatedHandler: unauthenticatedHandler)
     }
 
     

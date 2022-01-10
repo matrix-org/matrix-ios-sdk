@@ -53,6 +53,9 @@ NSString *const kMXErrCodeStringWeakPassword            = @"M_WEAK_PASSWORD";
 NSString *const kMXErrCodeStringTermsNotSigned          = @"M_TERMS_NOT_SIGNED";
 NSString *const kMXErrCodeStringInvalidPepper           = @"M_INVALID_PEPPER";
 
+/* Used for client side generated errors */
+NSString *const kMXErrCodeStringLocalError        = @"LOCAL_ERROR";
+
 NSString *const kMXErrorStringInvalidToken      = @"Invalid token";
 
 NSString *const kMXErrorCodeKey                                             = @"errcode";

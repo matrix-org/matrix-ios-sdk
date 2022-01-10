@@ -227,24 +227,35 @@ static NSUInteger requestCount = 0;
         return mxHTTPOperation;
     }
     
+    // Before each authenticated request verify access token is valid.
     MXWeakify(self);
-    self.tokenProviderHandler(^(NSString *accessToken) {
+    self.tokenProviderHandler(nil, ^(NSString *accessToken) {
         MXStrongifyAndReturnIfNil(self);
         
         MXWeakify(self);
         [self tryRequest:mxHTTPOperation method:httpMethod path:path parameters:parameters data:data headers:headers accessToken:accessToken timeout:timeoutInSeconds uploadProgress:uploadProgress success:success failure:^(NSError *error) {
+            if (!weakself) {
+                failure(error);
+            }
             MXStrongifyAndReturnIfNil(self);
+            // Check if we received an invalid token response.
             if (error
                 && self.tokenValidationResponseHandler(error)
                 && self.tokenProviderHandler)
             {
                 MXWeakify(self);
                 dispatch_async(dispatch_get_main_queue(), ^{
+                    if (!weakself) {
+                        failure(error);
+                    }
                     MXStrongifyAndReturnIfNil(self);
                     mxHTTPOperation.operation = nil;
-                    
+                    // If was an invalid token response verify we can get a new one and retry the original request with new token.
                     MXWeakify(self);
-                    self.tokenProviderHandler(^(NSString *retryAccessToken) {
+                    self.tokenProviderHandler(error, ^(NSString *retryAccessToken) {
+                        if (!weakself) {
+                            failure(error);
+                        }
                         MXStrongifyAndReturnIfNil(self);
                         [self tryRequest:mxHTTPOperation
                                   method:httpMethod
@@ -268,8 +279,6 @@ static NSUInteger requestCount = 0;
     }, ^(NSError *error) {
         failure(error);
     });
-    
-
     return mxHTTPOperation;
 }
 

@@ -1915,7 +1915,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
         _deviceList = [[MXDeviceList alloc] initWithCrypto:self];
 
         // Use our own REST client that answers on the crypto thread
-        _matrixRestClient = [[MXRestClient alloc] initWithCredentials:_mxSession.matrixRestClient.credentials andOnUnrecognizedCertificateBlock:nil andPersistentTokenDataHandler:_mxSession.matrixRestClient.persistTokenDataHandler];
+        _matrixRestClient = [[MXRestClient alloc] initWithCredentials:_mxSession.matrixRestClient.credentials andOnUnrecognizedCertificateBlock:nil andPersistentTokenDataHandler:_mxSession.matrixRestClient.persistTokenDataHandler andUnauthenticatedHandler:_mxSession.matrixRestClient.unauthenticatedHandler];
         _matrixRestClient.completionQueue = _cryptoQueue;
 
         roomEncryptors = [NSMutableDictionary dictionary];

@@ -64,10 +64,8 @@ typedef BOOL (^MXHTTPClientTokenValidationResponseHandler)(NSError *error);
 
  @param success A block object called when the operation succeeds. It provides the access token.
  @param failure A block object called when the operation fails.
- 
- @return a MXHTTPOperation instance.
  */
-typedef MXHTTPOperation* (^MXHTTPClientTokenProviderHandler)(void (^success)(NSString *accessToken), void (^failure)(NSError *error));
+typedef void (^MXHTTPClientTokenProviderHandler)(NSError *error, void (^success)( NSString *accessToken), void (^failure)(NSError *error));
 
 /**
  SSL Pinning mode

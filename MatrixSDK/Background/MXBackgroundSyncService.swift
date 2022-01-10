@@ -66,7 +66,7 @@ public enum MXBackgroundSyncServiceError: Error {
     
     /// Initializer
     /// - Parameter credentials: account credentials
-    public init(withCredentials credentials: MXCredentials, persistTokenDataHandler: @escaping MXRestClientPersistTokenDataHandler) {
+    public init(withCredentials credentials: MXCredentials, persistTokenDataHandler: @escaping MXRestClientPersistTokenDataHandler, unauthenticatedHandler: @escaping MXRestClientUnauthenticatedHandler) {
         processingQueue = DispatchQueue(label: "MXBackgroundSyncServiceQueue-" + MXTools.generateSecret())
         self.credentials = credentials
         
@@ -76,7 +76,7 @@ public enum MXBackgroundSyncServiceError: Error {
         let syncResponseStore = MXSyncResponseFileStore(withCredentials: credentials)
         syncResponseStoreManager = MXSyncResponseStoreManager(syncResponseStore: syncResponseStore)
         
-        restClient = MXRestClient(credentials: credentials, unrecognizedCertificateHandler: nil, persistentTokenDataHandler: persistTokenDataHandler)
+        restClient = MXRestClient(credentials: credentials, unrecognizedCertificateHandler: nil, persistentTokenDataHandler: persistTokenDataHandler, unauthenticatedHandler: unauthenticatedHandler)
         restClient.completionQueue = processingQueue
         store = MXBackgroundStore(withCredentials: credentials)
         // We can flush any crypto data if our sync response store is empty

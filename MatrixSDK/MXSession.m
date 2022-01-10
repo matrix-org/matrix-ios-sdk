@@ -290,11 +290,6 @@ typedef void (^MXOnResumeDone)(void);
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onDidDecryptEvent:) name:kMXEventDidDecryptNotification object:nil];
 
         [self setState:MXSessionStateInitialised];
-        MXWeakify(self);
-        mxRestClient.refreshTokensFailedHandler = ^(MXError *mxError) {
-            MXStrongifyAndReturnIfNil(self);
-            [self handleUnauthenticatedWithError: mxError];
-        };
     }
     return self;
 }
@@ -907,13 +902,6 @@ typedef void (^MXOnResumeDone)(void);
 
                 MXLogError(@"[MXSession] Crypto failed to start. Error: %@", error);
                 
-                // Check whether the token is valid
-                if ([self isUnauthenticatedWithError:error])
-                {
-                    // Do nothing more because without a valid access_token, the session is useless
-                    return;
-                }
-
                 [self setState:MXSessionStateInitialSyncFailed];
                 failure(error);
 
@@ -923,12 +911,6 @@ typedef void (^MXOnResumeDone)(void);
             
             MXLogError(@"[MXSession] Get the user's profile information failed with error %@", error);
             
-            // Check whether the token is valid
-            if ([self isUnauthenticatedWithError:error])
-            {
-                // Do nothing more because without a valid access_token, the session is useless
-                return;
-            }
             [self setState:MXSessionStateInitialSyncFailed];
             failure(error);
             
@@ -1258,46 +1240,6 @@ typedef void (^MXOnResumeDone)(void);
     return (self.store.eventStreamToken != nil);
 }
 
-#pragma mark - Invalid Token handling
-
-- (BOOL)isUnauthenticatedWithError:(NSError *)error
-{
-    // Detect invalidated access token
-    // This can happen when the user made a forget password request for example
-    if ([MXError isMXError:error])
-    {
-        MXError *mxError = [[MXError alloc] initWithNSError:error];
-        if ([mxError.errcode isEqualToString:kMXErrCodeStringUnknownToken])
-        {
-            if (self.matrixRestClient.credentials.refreshToken) {
-                // Access token is not valid but we have a refresh token
-                // that will be used to request a new access token in future requests.
-                return NO;
-            }
-            [self handleUnauthenticatedWithError: mxError];
-            return YES;
-        }
-    }
-    return NO;
-}
-
-- (void)handleUnauthenticatedWithError:(MXError *)mxError
-{    
-    MXLogDebug(@"[MXSession] isUnauthenticatedWithError: The rest client is no longer authenticated.");
-
-    if (mxError.httpResponse.statusCode == 401
-        && [mxError.userInfo[kMXErrorSoftLogoutKey] isEqual:@(YES)])
-    {
-        MXLogDebug(@"[MXSession] isUnauthenticatedWithError: Go to MXSessionStateSoftLogout state.");
-        [self setState:MXSessionStateSoftLogout];
-    }
-    else
-    {
-        MXLogDebug(@"[MXSession] isUnauthenticatedWithError: Go to MXSessionStateUnauthenticated state.");
-        [self setState:MXSessionStateUnauthenticated];
-    }
-}
-
 #pragma mark - MXSession pause prevention
 - (void)retainPreventPause
 {
@@ -1562,13 +1504,6 @@ typedef void (^MXOnResumeDone)(void);
     // Make sure [MXSession close] or [MXSession pause] has not been called before the server response
     if (!self->eventStreamRequest)
     {
-        return;
-    }
-
-    // Check whether the token is valid
-    if ([self isUnauthenticatedWithError:error])
-    {
-        // Do nothing more because without a valid access_token, the session is useless
         return;
     }
 
