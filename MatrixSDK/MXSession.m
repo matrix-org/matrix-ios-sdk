@@ -287,8 +287,8 @@ typedef void (^MXOnResumeDone)(void);
         MXCredentials *initialSyncCredentials = [MXCredentials initialSyncCacheCredentialsFrom:mxRestClient.credentials];
         _initialSyncResponseCache = [[MXSyncResponseFileStore alloc] initWithCredentials:initialSyncCredentials];
         
-        _homeServerCapabilities = [[MXHomeServerCapabilitiesService alloc] initWithSession: self];
-        [_homeServerCapabilities updateWithCompletion:nil];
+        _homeserverCapabilities = [[MXHomeserverCapabilitiesService alloc] initWithSession: self];
+        [_homeserverCapabilities updateWithCompletion:nil];
 
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onDidDecryptEvent:) name:kMXEventDidDecryptNotification object:nil];
 
@@ -703,8 +703,9 @@ typedef void (^MXOnResumeDone)(void);
             // Propagate sync response to the associated space service
             [self.spaceService handleSyncResponse:syncResponse];
             
-            if (!self.homeServerCapabilities.isInitialised) {
-                [self.homeServerCapabilities updateWithCompletion:nil];
+            if (!self.homeserverCapabilities.isInitialised)
+            {
+                [self.homeserverCapabilities updateWithCompletion:nil];
             }
             
             if (completion)

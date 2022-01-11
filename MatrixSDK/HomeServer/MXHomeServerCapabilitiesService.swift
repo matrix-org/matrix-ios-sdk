@@ -28,21 +28,21 @@ import Foundation
     case unknown
 }
 
-///  Used to know current home server capabilities as per [matrix.org specifications](https://matrix.org/docs/spec/client_server/r0.6.1#get-matrix-client-r0-capabilities)
+///  Used to know current homeserver capabilities as per [matrix.org specifications](https://matrix.org/docs/spec/client_server/r0.6.1#get-matrix-client-r0-capabilities)
 ///  and [MSC3244](https://github.com/matrix-org/matrix-doc/pull/3244)
 @objcMembers
-public class MXHomeServerCapabilitiesService: NSObject {
+public class MXHomeserverCapabilitiesService: NSObject {
     
     // MARK: - Members
     
     private let session: MXSession
     private let mapper = MXRoomCapabilityTypeMapper()
-    private var capabilities: MXHomeServerCapabilities?
+    private var capabilities: MXHomeserverCapabilities?
     private var currentRequest: MXHTTPOperation?
     
     // MARK: - Properties
     
-    /// True if it is possible to change the password of the account.
+    /// True if service succesfully read capabilities from the homeserver. False otherwise.
     public var isInitialised: Bool {
         return capabilities != nil
     }
@@ -83,7 +83,7 @@ public class MXHomeServerCapabilitiesService: NSObject {
     /// True if it is possible to change the password of the account.
     public var canChangePassword: Bool {
         guard let capabilities = self.capabilities else {
-            // As per specifications, user can change password by defult
+            // As per specifications, user can change password by default
             return true
         }
         
@@ -160,12 +160,12 @@ public class MXHomeServerCapabilitiesService: NSObject {
 }
 
 /// MARK: - Test helper methods
-extension MXHomeServerCapabilitiesService {
+extension MXHomeserverCapabilitiesService {
     
-    /// Update the instance with given server capabilties (only for test purpose)
+    /// Update the instance with given server capabilities (only for test purpose)
     /// - Parameters:
-    ///   - capabilities: new home server capabilities
-    public func update(with capabilities: MXHomeServerCapabilities?) {
+    ///   - capabilities: new homeserver capabilities
+    public func update(with capabilities: MXHomeserverCapabilities?) {
         self.capabilities = capabilities
     }
     

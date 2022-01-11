@@ -363,7 +363,7 @@ FOUNDATION_EXPORT NSString *const kMXSessionNotificationUserIdsArrayKey;
 FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
 
 @class MXSpaceService;
-@class MXHomeServerCapabilitiesService;
+@class MXHomeserverCapabilitiesService;
 
 #pragma mark - MXSession
 /**
@@ -500,9 +500,9 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
 @property (nonatomic, readonly) MXSpaceService *spaceService;
 
 /**
- Capabilities of the current home server
+ Capabilities of the current homeserver
  */
-@property (nonatomic, readonly) MXHomeServerCapabilitiesService *homeServerCapabilities;
+@property (nonatomic, readonly) MXHomeserverCapabilitiesService *homeserverCapabilities;
 
 /**
  Flag indicating the session can be paused.

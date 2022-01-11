@@ -2172,10 +2172,10 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
         NSMutableArray<MXRoomVersionInfo *> *versionInfoList = [NSMutableArray<MXRoomVersionInfo *> new];
         NSDictionary *availableVersions = nil;
         MXJSONModelSetDictionary(availableVersions, JSONDictionary[@"available"]);
-        [availableVersions enumerateKeysAndObjectsUsingBlock:^(NSString *version, NSString *statusString, BOOL* stop) {
+        [availableVersions enumerateKeysAndObjectsUsingBlock:^(id version, id status, BOOL* stop) {
             MXRoomVersionInfo *versionInfo = [MXRoomVersionInfo new];
-            versionInfo.version = version;
-            versionInfo.statusString = statusString;
+            MXJSONModelSetString(versionInfo.version, version)
+            MXJSONModelSetString(versionInfo.statusString, status)
             [versionInfoList addObject:versionInfo];
         }];
         versionCapabilities.supportedVersions = versionInfoList;
@@ -2183,7 +2183,7 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
         NSMutableDictionary<NSString *, MXRoomCapabilitySupport *> *roomCapabilities = [NSMutableDictionary<NSString *, MXRoomCapabilitySupport *> new];
         NSDictionary *roomCapabilitiesData = nil;
         MXJSONModelSetDictionary(roomCapabilitiesData, JSONDictionary[@"org.matrix.msc3244.room_capabilities"]);
-        [roomCapabilitiesData enumerateKeysAndObjectsUsingBlock:^(NSString *name, NSDictionary *capabilityData, BOOL* stop) {
+        [roomCapabilitiesData enumerateKeysAndObjectsUsingBlock:^(id name, id capabilityData, BOOL* stop) {
             MXRoomCapabilitySupport *capability = nil;
             MXJSONModelSetMXJSONModel(capability, MXRoomCapabilitySupport, capabilityData);
             if (capability)
@@ -2199,11 +2199,11 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
 
 @end
 
-@implementation MXHomeServerCapabilities
+@implementation MXHomeserverCapabilities
 
 + (id)modelFromJSON:(NSDictionary *)JSONDictionary
 {
-    MXHomeServerCapabilities *capabilities = [MXHomeServerCapabilities new];
+    MXHomeserverCapabilities *capabilities = [MXHomeserverCapabilities new];
     NSDictionary *capabilitiesData = JSONDictionary[@"capabilities"];
     if (capabilities)
     {
@@ -2213,9 +2213,7 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
         MXJSONModelSetDictionary(changePassword, capabilitiesData[@"m.change_password"]);
         if (changePassword)
         {
-            NSInteger enabled = 1;
-            MXJSONModelSetInteger(enabled, changePassword[@"enabled"]);
-            capabilities.canChangePassword = enabled != 0;
+            MXJSONModelSetBoolean(capabilities.canChangePassword, changePassword[@"enabled"])
         }
 
         NSDictionary *roomVersionsData = nil;

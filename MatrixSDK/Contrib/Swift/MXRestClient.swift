@@ -1927,7 +1927,7 @@ public extension MXRestClient {
     /// - Parameters:
     ///   - completion: A closure called when the operation completes.
     /// - Returns: a `MXHTTPOperation` instance.
-    @nonobjc @discardableResult func homeServerCapabilities(completion: @escaping (_ response: MXResponse<MXHomeServerCapabilities>) -> Void) -> MXHTTPOperation {
+    @nonobjc @discardableResult func homeServerCapabilities(completion: @escaping (_ response: MXResponse<MXHomeserverCapabilities>) -> Void) -> MXHTTPOperation {
         return __homeServerCapabilities(success: currySuccess(completion), failure: curryFailure(completion))
     }
 }
