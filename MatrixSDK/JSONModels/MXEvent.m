@@ -113,6 +113,7 @@ NSString *const kMXEventRelationRelatesToKey         = @"m.relates_to";
 NSString *const MXEventRelationTypeAnnotation        = @"m.annotation";
 NSString *const MXEventRelationTypeReference         = @"m.reference";
 NSString *const MXEventRelationTypeReplace           = @"m.replace";
+NSString *const kMXMessageContentKeyNewContent       = @"m.new_content";
 //  TODO: Replace when the MSC merged
 //  https://github.com/matrix-org/matrix-doc/pull/3440
 NSString *const MXEventRelationTypeThread            = @"io.element.thread";
@@ -476,7 +477,7 @@ NSString *const kMXMessageContentKeyExtensibleLocationDescription = @"descriptio
 
 - (BOOL)isEditEvent
 {
-    return self.eventType == MXEventTypeRoomMessage && [self.relatesTo.relationType isEqualToString:MXEventRelationTypeReplace];
+    return [self.relatesTo.relationType isEqualToString:MXEventRelationTypeReplace];
 }
 
 - (BOOL)isReplyEvent
@@ -649,6 +650,10 @@ NSString *const kMXMessageContentKeyExtensibleLocationDescription = @"descriptio
 
 - (MXEvent*)editedEventFromReplacementEvent:(MXEvent*)replaceEvent
 {
+    if ([self.eventId isEqualToString:replaceEvent.eventId]) {
+        return nil;
+    }
+    
     MXEvent *editedEvent;
     MXEvent *event = self;
     NSDictionary *newContentDict;
@@ -668,20 +673,16 @@ NSString *const kMXMessageContentKeyExtensibleLocationDescription = @"descriptio
         // Reuse its decryption data
         replaceEventDecryptionResult = [replaceEvent decryptionResult];
     }
-    else if (event.content[kMXMessageBodyKey] && newContentDict && [newContentDict[kMXMessageTypeKey] isEqualToString:event.content[kMXMessageTypeKey]])
+    else if (newContentDict)
     {
         editedEventDict = [event.JSONDictionary mutableCopy];
-        NSMutableDictionary *editedEventContentDict = [editedEventDict[@"content"] mutableCopy];
-        editedEventContentDict[kMXMessageBodyKey] = newContentDict[kMXMessageBodyKey];
-        editedEventContentDict[@"formatted_body"] = newContentDict[@"formatted_body"];
-        editedEventContentDict[@"format"] = newContentDict[@"format"];
-        editedEventDict[@"content"] = editedEventContentDict;
+        editedEventDict[@"content"] = newContentDict;
     }
 
     if (editedEventDict)
     {
         // Use the same type as the replace event
-        // This is useful for local echoes in e2e room as local echoes are always non encryted/
+        // This is useful for local echoes in e2e room as local echoes are always non encrypted/
         // So, there are switching between "m.room.encrypted" and "m.room.message"
         editedEventDict[@"type"] = replaceEvent.isEncrypted ? @"m.room.encrypted" : replaceEvent.type;
 

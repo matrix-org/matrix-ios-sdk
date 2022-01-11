@@ -35,7 +35,7 @@ class MXPollAggregatorTest: XCTestCase {
         
     func testAggregations() {
         self.createScenarioForBobAndAlice { bobSession, aliceSession, bobRoom, aliceRoom, pollStartEvent, expectation in
-            self.pollAggregator = try! PollAggregator(session: bobSession, room: bobRoom, pollStartEvent: pollStartEvent)
+            self.pollAggregator = try! PollAggregator(session: bobSession, room: bobRoom, pollStartEventId: pollStartEvent.eventId)
             
             let dispatchGroup = DispatchGroup()
             
@@ -68,7 +68,7 @@ class MXPollAggregatorTest: XCTestCase {
     
     func testSessionPausing() {
         self.createScenarioForBobAndAlice { bobSession, aliceSession, bobRoom, aliceRoom, pollStartEvent, expectation in
-            self.pollAggregator = try! PollAggregator(session: bobSession, room: bobRoom, pollStartEvent: pollStartEvent)
+            self.pollAggregator = try! PollAggregator(session: bobSession, room: bobRoom, pollStartEventId: pollStartEvent.eventId)
             
             XCTAssertEqual(self.pollAggregator.poll.answerOptions.first!.count, 1) // One from Alice
             XCTAssertEqual(self.pollAggregator.poll.answerOptions.last!.count, 0)
@@ -92,7 +92,7 @@ class MXPollAggregatorTest: XCTestCase {
     
     func testGappySync() {
         self.createScenarioForBobAndAlice { bobSession, aliceSession, bobRoom, aliceRoom, pollStartEvent, expectation in
-            self.pollAggregator = try! PollAggregator(session: bobSession, room: bobRoom, pollStartEvent: pollStartEvent)
+            self.pollAggregator = try! PollAggregator(session: bobSession, room: bobRoom, pollStartEventId: pollStartEvent.eventId)
             
             XCTAssertEqual(self.pollAggregator.poll.answerOptions.first!.count, 1) // One from Alice
             XCTAssertEqual(self.pollAggregator.poll.answerOptions.last!.count, 0)
@@ -121,6 +121,33 @@ class MXPollAggregatorTest: XCTestCase {
                 } failure: { error in
                     XCTFail("The operation should not fail - NSError: \(String(describing: error))")
                 }
+            }
+        }
+    }
+    
+    func testEditing() {
+        self.createScenarioForBobAndAlice { bobSession, aliceSession, bobRoom, aliceRoom, pollStartEvent, expectation in
+            self.pollAggregator = try! PollAggregator(session: bobSession, room: bobRoom, pollStartEventId: pollStartEvent.eventId)
+            
+            let oldContent = MXEventContentPollStart(fromJSON: pollStartEvent.content)!
+            let newContent = MXEventContentPollStart(question: "Some other question",
+                                                     kind: oldContent.kind,
+                                                     maxSelections: oldContent.maxSelections,
+                                                     answerOptions: [])
+            
+            self.pollAggregator.delegate = PollAggregatorBlockWrapper(dataUpdateCallback: {
+                
+                XCTAssertEqual(self.pollAggregator.poll.text, "Some other question")
+                XCTAssertEqual(self.pollAggregator.poll.answerOptions.count, 0)
+                
+                expectation.fulfill()
+                self.pollAggregator.delegate = nil
+            })
+            
+            bobRoom.sendPollUpdate(for: pollStartEvent, oldContent: oldContent, newContent: newContent, localEcho: nil) { result in
+                
+            } failure: { error in
+                XCTFail("The operation should not fail - NSError: \(String(describing: error))")
             }
         }
     }
