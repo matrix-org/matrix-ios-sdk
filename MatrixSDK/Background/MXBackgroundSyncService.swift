@@ -453,7 +453,7 @@ public enum MXBackgroundSyncServiceError: Error {
     
     private func decryptMessageWithOlm(message: [AnyHashable: Any], theirDeviceIdentityKey: String) -> String? {
         let sessionIds = olmDevice.sessionIds(forDevice: theirDeviceIdentityKey)
-        let messageBody = message["body"] as? String
+        let messageBody = message[kMXMessageBodyKey] as? String
         let messageType = message["type"] as? UInt ?? 0
         
         for sessionId in sessionIds ?? [] {

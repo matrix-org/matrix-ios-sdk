@@ -29,6 +29,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (NSString *)senderSentAnAudioFile;
 - (NSString *)senderSentAVoiceMessage;
 - (NSString *)senderSentAFile;
+- (NSString *)senderSentTheirLocation;
 - (NSString *)messageToReplyToPrefix;
 
 @end
