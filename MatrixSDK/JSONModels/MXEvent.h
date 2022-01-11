@@ -211,6 +211,7 @@ FOUNDATION_EXPORT NSString *const kMXEventRelationRelatesToKey;
 FOUNDATION_EXPORT NSString *const MXEventRelationTypeAnnotation;    // Reactions
 FOUNDATION_EXPORT NSString *const MXEventRelationTypeReference;     // Reply
 FOUNDATION_EXPORT NSString *const MXEventRelationTypeReplace;       // Edition
+FOUNDATION_EXPORT NSString *const kMXMessageContentKeyNewContent;   // Edited content key
 FOUNDATION_EXPORT NSString *const MXEventRelationTypeThread;        // Thread
 
 /**

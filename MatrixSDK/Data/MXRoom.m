@@ -2382,6 +2382,30 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     return [self sendEventOfType:[MXTools eventTypeString:MXEventTypePollEnd] content:content localEcho:localEcho success:success failure:failure];
 }
 
+- (MXHTTPOperation *)sendPollUpdateForEvent:(MXEvent *)pollStartEvent
+                                 oldContent:(MXEventContentPollStart *)oldContent
+                                 newContent:(MXEventContentPollStart *)newContent
+                                  localEcho:(MXEvent **)localEcho
+                                    success:(void (^)(NSString *))success
+                                    failure:(void (^)(NSError *))failure
+{
+    NSParameterAssert(oldContent);
+    NSParameterAssert(newContent);
+    
+    NSMutableDictionary *content = [NSMutableDictionary dictionary];
+    
+    [content addEntriesFromDictionary:oldContent.JSONDictionary];
+    
+    MXEventContentRelatesTo *relatesTo = [[MXEventContentRelatesTo alloc] initWithRelationType:MXEventRelationTypeReplace
+                                                                                       eventId:pollStartEvent.eventId];
+    
+    [content setObject:relatesTo.JSONDictionary forKey:kMXEventRelationRelatesToKey];
+    
+    [content setObject:newContent.JSONDictionary forKey:kMXMessageContentKeyNewContent];
+    
+    return [self sendEventOfType:[MXTools eventTypeString:MXEventTypePollStart] content:content localEcho:localEcho success:success failure:failure];
+}
+
 #pragma mark - Location sharing
 
 - (MXHTTPOperation *)sendLocationWithLatitude:(double)latitude
