@@ -140,7 +140,7 @@
         && [_userId isEqualToString:otherCredentials.userId]
         && [_accessToken isEqualToString:otherCredentials.accessToken]
         && _accessTokenExpiresAt == otherCredentials.accessTokenExpiresAt
-        && [_refreshToken isEqualToString:otherCredentials.refreshToken];
+        && ((_refreshToken == nil && otherCredentials.refreshToken == nil) || [_refreshToken isEqualToString:otherCredentials.refreshToken]);
 }
 
 - (NSUInteger)hash
