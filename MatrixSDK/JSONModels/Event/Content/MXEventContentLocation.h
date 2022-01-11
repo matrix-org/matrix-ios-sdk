@@ -1,5 +1,5 @@
 // 
-// Copyright 2020 The Matrix.org Foundation C.I.C
+// Copyright 2021 The Matrix.org Foundation C.I.C
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,26 +15,24 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "MXTaskProfileName.h"
+
+#import "MXJSONModel.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface MXTaskProfile : NSObject
+@interface MXEventContentLocation: MXJSONModel
 
-// Task name
-@property (nonatomic, readonly) MXTaskProfileName name;
+@property (nonatomic, readonly) double latitude;
 
-// Task timing
-@property (nonatomic, readonly) NSDate *startDate;
-@property (nonatomic, readonly, nullable) NSDate *endDate;
-@property (nonatomic, readonly) NSTimeInterval duration;
+@property (nonatomic, readonly) double longitude;
 
-// Number of items managed by the task
-@property (nonatomic) NSUInteger units;
+@property (nonatomic, readonly) NSString *geoURI;
 
-// YES, if the task was interrupted by a pause
-@property (nonatomic, readonly) BOOL paused;
+@property (nonatomic, readonly, nullable) NSString *locationDescription;
 
+- (instancetype)initWithLatitude:(double)latitude
+                       longitude:(double)longitude
+                     description:(nullable NSString *)description;
 
 @end
 

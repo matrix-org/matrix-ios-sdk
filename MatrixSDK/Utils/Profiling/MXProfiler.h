@@ -27,9 +27,8 @@ NS_ASSUME_NONNULL_BEGIN
  Start measuring a task.
  
  @param name the name of the task.
- @param category the category the task belongs to.
  */
-- (MXTaskProfile *)startMeasuringTaskWithName:(NSString*)name category:(NSString*)category;
+- (MXTaskProfile *)startMeasuringTaskWithName:(MXTaskProfileName)name;
 
 /**
  Stop the clock for a task.
@@ -42,9 +41,8 @@ NS_ASSUME_NONNULL_BEGIN
  Retrieve the profile of a given task.
  
  @param name the name of the task.
- @param category the category the task belongs to.
  */
-- (nullable MXTaskProfile*)taskProfileWithName:(NSString*)name category:(NSString*)category;
+- (nullable MXTaskProfile*)taskProfileWithName:(MXTaskProfileName)name;
 
 /**
  Cancel a task profiling.

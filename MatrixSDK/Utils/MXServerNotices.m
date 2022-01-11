@@ -132,7 +132,7 @@ NSUInteger const kMXServerNoticesMaxPinnedNoticesPerRoom = 2;
         for (MXEvent *pinnedEvent in pinnedEvents)
         {
             if (pinnedEvent.eventType == MXEventTypeRoomMessage
-                && [pinnedEvent.content[@"msgtype"] isEqualToString:kMXMessageTypeServerNotice])
+                && [pinnedEvent.content[kMXMessageTypeKey] isEqualToString:kMXMessageTypeServerNotice])
             {
                 // For now, there is only one server notice, usage limit
                 self.usageLimit = [MXServerNoticeContent modelFromJSON:pinnedEvent.content];
