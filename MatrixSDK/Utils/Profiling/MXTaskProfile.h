@@ -15,16 +15,14 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "MXTaskProfileName.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
 @interface MXTaskProfile : NSObject
 
 // Task name
-@property (nonatomic, readonly) NSString *name;
-
-// Category to group related tasks
-@property (nonatomic, readonly) NSString *category;
+@property (nonatomic, readonly) MXTaskProfileName name;
 
 // Task timing
 @property (nonatomic, readonly) NSDate *startDate;
