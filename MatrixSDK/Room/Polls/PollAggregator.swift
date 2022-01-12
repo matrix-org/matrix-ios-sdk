@@ -47,6 +47,7 @@ public class PollAggregator {
     private var editEventsListener: Any!
     
     private var events: [MXEvent] = []
+    private var hasBeenEdited = false
     
     public private(set) var poll: PollProtocol! {
         didSet {
@@ -94,7 +95,12 @@ public class PollAggregator {
         
         self.pollStartEventContent = pollStartEventContent
         
-        self.poll = self.pollBuilder.build(pollStartEventContent: self.pollStartEventContent, events: self.events, currentUserIdentifier: self.session.myUserId)
+        self.hasBeenEdited = (event.unsignedData.relations?.replace != nil)
+        
+        self.poll = self.pollBuilder.build(pollStartEventContent: pollStartEventContent,
+                                           events: events,
+                                           currentUserIdentifier: session.myUserId,
+                                           hasBeenEdited: hasBeenEdited)
         
         self.reloadPollData()
     }
@@ -130,10 +136,16 @@ public class PollAggregator {
                 
                 self.events.append(event)
                 
-                self.poll = self.pollBuilder.build(pollStartEventContent: self.pollStartEventContent, events: self.events, currentUserIdentifier: self.session.myUserId)
+                self.poll = self.pollBuilder.build(pollStartEventContent: self.pollStartEventContent,
+                                                   events: self.events,
+                                                   currentUserIdentifier: self.session.myUserId,
+                                                   hasBeenEdited: self.hasBeenEdited)
             } as Any
             
-            self.poll = self.pollBuilder.build(pollStartEventContent: self.pollStartEventContent, events: self.events, currentUserIdentifier: self.session.myUserId)
+            self.poll = self.pollBuilder.build(pollStartEventContent: self.pollStartEventContent,
+                                               events: self.events,
+                                               currentUserIdentifier: self.session.myUserId,
+                                               hasBeenEdited: self.hasBeenEdited)
             
             self.delegate?.pollAggregatorDidEndLoading(self)
             
