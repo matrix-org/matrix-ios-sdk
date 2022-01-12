@@ -139,6 +139,7 @@ class MXPollAggregatorTest: XCTestCase {
                 
                 XCTAssertEqual(self.pollAggregator.poll.text, "Some other question")
                 XCTAssertEqual(self.pollAggregator.poll.answerOptions.count, 0)
+                XCTAssertTrue(self.pollAggregator.poll.hasBeenEdited)
                 
                 expectation.fulfill()
                 self.pollAggregator.delegate = nil
