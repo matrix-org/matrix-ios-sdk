@@ -416,7 +416,7 @@
             [bobSession close];
 
             // Check content from the store
-            [store asyncRoomsSummaries:^(NSArray<MXRoomSummary *> * _Nonnull roomsSummaries) {
+            [store.roomSummaryStore fetchAllSummaries:^(NSArray<MXRoomSummary *> * _Nonnull roomsSummaries) {
 
                  // Test for checking the test
                 XCTAssertEqual(roomsSummaries.count, 1);
@@ -428,9 +428,6 @@
 
                 [expectation fulfill];
 
-            } failure:^(NSError *error) {
-                XCTFail(@"The operation should not fail - NSError: %@", error);
-                [expectation fulfill];
             }];
 
         } failure:^(NSError *error) {
@@ -479,7 +476,7 @@
                     [bobSession2 close];
 
                     // Check content from the store
-                    [store2 asyncRoomsSummaries:^(NSArray<MXRoomSummary *> * _Nonnull roomsSummaries) {
+                    [store2.roomSummaryStore fetchAllSummaries:^(NSArray<MXRoomSummary *> * _Nonnull roomsSummaries) {
 
                         // Test for checking the test
                         XCTAssertEqual(roomsSummaries.count, 1);
@@ -491,9 +488,6 @@
 
                         [expectation fulfill];
 
-                    } failure:^(NSError *error) {
-                        XCTFail(@"The operation should not fail - NSError: %@", error);
-                        [expectation fulfill];
                     }];
 
                 } failure:^(NSError *error) {
