@@ -97,7 +97,9 @@ public class MXSpace: NSObject {
                     var childRoomIds: [String] = []
                     roomState?.stateEvents(with: .spaceChild)?.forEach({ event in
                         if let content = event.wireContent, !content.isEmpty {
-                            childRoomIds.append(event.stateKey)
+                            if !childRoomIds.contains(event.stateKey) {
+                                childRoomIds.append(event.stateKey)
+                            }
                         } else {
                             if let index = childRoomIds.firstIndex(of: event.stateKey) {
                                 childRoomIds.remove(at: index)
