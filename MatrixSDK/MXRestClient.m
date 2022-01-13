@@ -248,10 +248,10 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
                     if(!self.credentials.refreshToken && isTokenUnknownResponse)
                     {
                         // non-refresh token auth failed
-                        MXError *mxError = [[MXError alloc] initWithNSError:error];
                         dispatch_async(self.completionQueue, ^{
+                            BOOL isSoftLogout = [MXRestClient isSoftLogout:mxError];
                             MXLogDebug(@"[MXRestClient] tokenProviderHandler: %@: non-refresh(access token) token auth failed", logId);
-                            self.unauthenticatedHandler(mxError, ^{
+                            self.unauthenticatedHandler(mxError, isSoftLogout, NO, ^{
                                 failure(error);
                             });
                         });
@@ -288,7 +288,7 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
                             }
                             else
                             {
-                                MXError *mxError = [[MXError alloc] initWithErrorCode:kMXErrCodeStringLocalError error: @"Token refresh failed"];
+                                MXError *mxError = [[MXError alloc] initWithErrorCode:kMXErrCodeStringClientError error: @"Token refresh failed"];
                                 failure(mxError.createNSError);
                             }
                         });
@@ -381,8 +381,9 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
                     [mxError.errcode isEqualToString:kMXErrCodeStringUnknownToken]))
                 {
                     dispatch_async(self.completionQueue, ^{
+                        BOOL isSoftLogout = [MXRestClient isSoftLogout:mxError];
                         MXLogDebug(@"[MXRestClient] %@: refreshQueue unauthenticatedHandler", logId)
-                        self.unauthenticatedHandler(mxError, ^{
+                        self.unauthenticatedHandler(mxError, isSoftLogout, YES,^{
                             refreshCompletion(nil);
                         });
                     });
@@ -400,6 +401,12 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
         }
         
     });
+}
+
++ (BOOL)isSoftLogout:(MXError*)error
+{
+    return error.httpResponse.statusCode == 401
+    && [error.userInfo[kMXErrorSoftLogoutKey] isEqual:@(YES)];
 }
 
 + (MXCredentials*)findMatchingCredential:(MXCredentials*)credential inCredentials:(NSArray<MXCredentials *> *)credentials

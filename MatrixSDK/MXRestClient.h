@@ -121,7 +121,7 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
 
  @param error The error from the failed refresh.
  */
-typedef void(^MXRestClientUnauthenticatedHandler)(MXError *error, void (^completion)(void));
+typedef void(^MXRestClientUnauthenticatedHandler)(MXError *error, BOOL isSoftLogout, BOOL isRefreshTokenAuth, void (^completion)(void));
 
 /**
  Block called when the rest client needs to check the persisted refresh token data is valid and optionally persist new refresh data to disk if it is not.
