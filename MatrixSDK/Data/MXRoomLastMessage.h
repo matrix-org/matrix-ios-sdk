@@ -24,6 +24,7 @@ NS_ASSUME_NONNULL_BEGIN
 FOUNDATION_EXPORT NSString *const MXRoomLastMessageDataType;
 
 @class MXEvent;
+@class MXRoomLastMessageMO;
 
 /**
  `MXRoomLastMessage` is a model class to store some lastMessage properties for room summary objects.
@@ -67,6 +68,10 @@ FOUNDATION_EXPORT NSString *const MXRoomLastMessageDataType;
 @property (nonatomic, strong, nullable) NSMutableDictionary<NSString*, id<NSCoding>> *others;
 
 - (instancetype)initWithEvent:(MXEvent *)event;
+
+#pragma mark - CoreData Model
+
+- (instancetype)initWithManagedObject:(MXRoomLastMessageMO *)model;
 
 - (NSComparisonResult)compareOriginServerTs:(MXRoomLastMessage *)otherMessage;
 

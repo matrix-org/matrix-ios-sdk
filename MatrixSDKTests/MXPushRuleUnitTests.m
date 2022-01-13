@@ -77,22 +77,22 @@
                                        }];
 
     rule.kind = MXPushRuleKindContent;
-
+    
     return rule;
 }
 
 - (MXEvent*)messageTextEventWithContent:(NSString*)content
 {
     return [MXEvent modelFromJSON:@{
-                                    @"type": @"m.room.message",
-                                    @"event_id": @"anID",
-                                    @"room_id": @"roomId",
-                                    @"user_id": @"userId",
-                                    @"content": @{
-                                            @"body": content,
-                                            @"msgtype": @"m.text"
-                                            }
-                                    }];
+        @"type": @"m.room.message",
+        @"event_id": @"anID",
+        @"room_id": @"roomId",
+        @"user_id": @"userId",
+        @"content": @{
+                kMXMessageBodyKey: content,
+                kMXMessageTypeKey: @"m.text"
+        }
+    }];
 }
 
 #pragma mark - The tests

@@ -52,7 +52,7 @@ public final class MXRoomListDataFetchOptions: NSObject {
     ///   - async: flag indicating the fetch should be performed in async
     public init(filterOptions: MXRoomListDataFilterOptions,
                 sortOptions: MXRoomListDataSortOptions,
-                paginationOptions: MXRoomListDataPaginationOptions = .none,
+                paginationOptions: MXRoomListDataPaginationOptions = .default,
                 async: Bool = true) {
         self.filterOptions = filterOptions
         self.sortOptions = sortOptions

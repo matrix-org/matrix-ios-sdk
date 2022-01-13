@@ -1178,7 +1178,7 @@
             MXUser *myUser = [store userWithUserId:matrixSDKTestsData.bobCredentials.userId];
 
             XCTAssertNil(myUser);
-            XCTAssertEqual(store.rooms.count, 0);
+            XCTAssertEqual(store.roomSummaryStore.rooms.count, 0);
 
             if ([store respondsToSelector:@selector(close)])
             {
@@ -1194,7 +1194,7 @@
                 [mxSession start:^{
 
                     NSString *eventStreamToken = [store.eventStreamToken copy];
-                    NSUInteger storeRoomsCount = store.rooms.count;
+                    NSUInteger storeRoomsCount = store.roomSummaryStore.rooms.count;
 
                     [mxSession close];
                     mxSession = nil;
@@ -1216,7 +1216,7 @@
                                 onStoreDataReadyCalled = YES;
 
                                 XCTAssertEqual(mxSession2.rooms.count, storeRoomsCount, @"MXSessionOnStoreDataReady must have loaded as many MXRooms as room stored");
-                                XCTAssertEqual(store2.rooms.count, storeRoomsCount, @"There must still the same number of stored rooms");
+                                XCTAssertEqual(store2.roomSummaryStore.rooms.count, storeRoomsCount, @"There must still the same number of stored rooms");
                                 XCTAssertEqualObjects(eventStreamToken, store2.eventStreamToken, @"The event stream token must not have changed yet");
 
                                 [mxSession2 start:^{
@@ -1224,7 +1224,7 @@
                                     XCTAssert(onStoreDataReadyCalled, @"onStoreDataReady must alway be called before onServerSyncDone");
 
                                     XCTAssertEqual(mxSession2.rooms.count, storeRoomsCount + 1, @"MXSessionOnStoreDataReady must have loaded as many MXRooms as room stored");
-                                    XCTAssertEqual(store2.rooms.count, storeRoomsCount + 1, @"There must still the same number of stored rooms");
+                                    XCTAssertEqual(store2.roomSummaryStore.rooms.count, storeRoomsCount + 1, @"There must still the same number of stored rooms");
                                     XCTAssertNotEqualObjects(eventStreamToken, store2.eventStreamToken, @"The event stream token must not have changed yet");
 
                                     [mxSession2 close];
@@ -1287,7 +1287,7 @@
                 MXRoom *room = [mxSession roomWithRoomId:roomId];
                 [room leave:^{
 
-                    XCTAssertEqual(NSNotFound, [store.rooms indexOfObject:roomId], @"The room %@ must be no more in the store", roomId);
+                    XCTAssertEqual(NSNotFound, [store.roomSummaryStore.rooms indexOfObject:roomId], @"The room %@ must be no more in the store", roomId);
 
                     [mxSession close];
                     mxSession = nil;
@@ -1296,7 +1296,7 @@
                     id<MXStore> store2 = [[mxStoreClass alloc] init];
                     [store2 openWithCredentials:matrixSDKTestsData.bobCredentials onComplete:^{
 
-                        XCTAssertEqual(NSNotFound, [store2.rooms indexOfObject:roomId], @"The room %@ must be no more in the store", roomId);
+                        XCTAssertEqual(NSNotFound, [store2.roomSummaryStore.rooms indexOfObject:roomId], @"The room %@ must be no more in the store", roomId);
 
                         if ([store2 respondsToSelector:@selector(close)])
                         {
@@ -1489,7 +1489,7 @@
                         id<MXStore> bobStore3 = [[mxStoreClass alloc] init];
                         [bobStore3 openWithCredentials:matrixSDKTestsData.bobCredentials onComplete:^{
 
-                            XCTAssertEqual(bobStore2.rooms.count, bobStore3.rooms.count);
+                            XCTAssertEqual(bobStore2.roomSummaryStore.rooms.count, bobStore3.roomSummaryStore.rooms.count);
 
                             if ([bobStore2 isKindOfClass:[MXFileStore class]])
                             {
@@ -1678,7 +1678,7 @@
 
                         [store2 openWithCredentials:bobRestClient.credentials onComplete:^{
 
-                            MXRoomSummary *summary = [store2 summaryOfRoom:response.roomId];
+                            MXRoomSummary *summary = [store2.roomSummaryStore summaryOfRoom:response.roomId];
 
                             XCTAssert(summary);
 
