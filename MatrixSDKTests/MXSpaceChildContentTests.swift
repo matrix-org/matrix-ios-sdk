@@ -141,6 +141,247 @@ class MXSpaceChildContentTests: XCTestCase {
         createSpaceAndChildRoom(joinRule: .private, testRemoveRoom: true)
     }
     
+    /// - Create Bob session with one room
+    /// - Create a space
+    /// - Add room as child of this space
+    /// -> Space should have 1 child. The ID of this child must match the room ID
+    /// - upgrade the room
+    /// - move the old child room to new child room
+    /// -> Space should have 1 child. The ID of this child must match the replacement room ID
+    func testUpgradeSpaceChild() throws {
+        testData.doMXSessionTest(withBobAndThePublicRoom: self) { session, room, expectation in
+            guard let session = session, let room = room, let expectation = expectation else {
+                XCTFail("session, room and expectation should NOT be nil")
+                expectation?.fulfill()
+                return
+            }
+            
+            session.spaceService.createSpace(withName: "Some Name", topic: nil, isPublic: true) { response in
+                switch response {
+                case .success(let space):
+                    space.addChild(roomId: room.roomId) { response in
+                        switch response {
+                        case .success:
+                            session.spaceService.getSpaceChildrenForSpace(withId: space.spaceId, suggestedOnly: false, limit: nil, maxDepth: 1, paginationToken: nil) { response in
+                                switch response {
+                                case .success(let summary):
+                                    guard summary.childInfos.count == 1 else {
+                                        XCTFail("Created space should have only 1 child")
+                                        expectation.fulfill()
+                                        return
+                                    }
+                                    
+                                    guard summary.childInfos.first?.childRoomId ?? "" == room.roomId else {
+                                        XCTFail("Child room ID mismatch")
+                                        expectation.fulfill()
+                                        return
+                                    }
+                                    
+                                    if let space = session.spaceService.getSpace(withId: space.spaceId) {
+                                        XCTAssertEqual(space.childRoomIds.count, 1, "Space should have only 1 child")
+                                        XCTAssertEqual(space.childRoomIds.first ?? "", room.roomId, "Child room ID mismatch")
+                                    }
+
+                                    session.matrixRestClient.upgradeRoom(withId: room.roomId, to: "9") { response in
+                                        switch response {
+                                        case .success(let replacementRoomId):
+                                            space.moveChild(withRoomId: room.roomId, to: replacementRoomId) { response in
+                                                switch response {
+                                                case .success:
+                                                    session.spaceService.getSpaceChildrenForSpace(withId: space.spaceId, suggestedOnly: false, limit: nil, maxDepth: 1, paginationToken: nil) { response in
+                                                        switch response {
+                                                        case .success(let summary):
+                                                            XCTAssertEqual(summary.childInfos.count, 1, "Space should have only 1 child")
+                                                            XCTAssertEqual(summary.childInfos.first?.childRoomId ?? "", replacementRoomId, "Child room ID mismatch")
+                                                            if let space = session.spaceService.getSpace(withId: space.spaceId) {
+                                                                XCTAssertEqual(space.childRoomIds.count, 1, "Space should have only 1 child")
+                                                                XCTAssertEqual(space.childRoomIds.first ?? "", replacementRoomId, "Child room ID mismatch")
+                                                            }
+                                                            expectation.fulfill()
+                                                        case .failure(let error):
+                                                            XCTFail("Failed to get space children summary with error \(error)")
+                                                            expectation.fulfill()
+                                                        }
+                                                    }
+                                                case .failure(let error):
+                                                    XCTFail("Failed to move child room with error \(error)")
+                                                    expectation.fulfill()
+                                                }
+                                            }
+                                        case .failure(let error):
+                                            XCTFail("Failed to upgrade room with error \(error)")
+                                            expectation.fulfill()
+                                        }
+                                    }
+                                case .failure(let error):
+                                    XCTFail("Failed to get space children summary with error \(error)")
+                                    expectation.fulfill()
+                                }
+                            }
+                        case .failure(let error):
+                            XCTFail("Failed to add room to space with error \(error)")
+                            expectation.fulfill()
+                        }
+                    }
+                case .failure(let error):
+                    XCTFail("Failed to create space with error \(error)")
+                    expectation.fulfill()
+                }
+            }
+        }
+    }
+    
+    /// - Create Bob session with one room
+    /// - Create a space
+    /// - Add room as child of this space
+    /// -> Space should have 1 child and no suggested room
+    /// - set the room as suggested
+    /// -> Space should have 1 child and 1 suggested room that match the rom ID
+    /// - set back the room as not suggested
+    /// -> Space should have 1 child and no suggested room
+    func testUpdateChildSuggestion() throws {
+        testData.doMXSessionTest(withBobAndThePublicRoom: self) { session, room, expectation in
+            guard let session = session, let room = room, let expectation = expectation else {
+                XCTFail("session, room and expectation should NOT be nil")
+                expectation?.fulfill()
+                return
+            }
+            
+            session.spaceService.createSpace(withName: "Some Name", topic: nil, isPublic: true) { response in
+                switch response {
+                case .success(let space):
+                    space.addChild(roomId: room.roomId) { response in
+                        switch response {
+                        case .success:
+                            session.spaceService.getSpaceChildrenForSpace(withId: space.spaceId, suggestedOnly: false, limit: nil, maxDepth: 1, paginationToken: nil) { response in
+                                switch response {
+                                case .success(let summary):
+                                    guard summary.childInfos.count == 1 else {
+                                        XCTFail("Created space should have only 1 child")
+                                        expectation.fulfill()
+                                        return
+                                    }
+                                    
+                                    guard summary.childInfos.first?.childRoomId ?? "" == room.roomId else {
+                                        XCTFail("Child room ID mismatch")
+                                        expectation.fulfill()
+                                        return
+                                    }
+                                    
+                                    guard summary.childInfos.first?.suggested == false else {
+                                        XCTFail("Child room should not be suggested")
+                                        expectation.fulfill()
+                                        return
+                                    }
+                                    
+                                    if let space = session.spaceService.getSpace(withId: space.spaceId) {
+                                        XCTAssertEqual(space.childRoomIds.count, 1, "Space should have only 1 child")
+                                        XCTAssertEqual(space.childRoomIds.first ?? "", room.roomId, "Child room ID mismatch")
+                                        XCTAssertEqual(space.suggestedRoomIds.count, 0, "Space should have no suggested child")
+                                        XCTAssert(!space.suggestedRoomIds.contains(room.roomId), "Child room should not be suggested")
+                                    }
+                                    
+                                    space.setChild(withRoomId: room.roomId, suggested: true) { response in
+                                        switch response {
+                                        case .success:
+                                            session.spaceService.getSpaceChildrenForSpace(withId: space.spaceId, suggestedOnly: false, limit: nil, maxDepth: 1, paginationToken: nil) { response in
+                                                switch response {
+                                                case .success(let summary):
+                                                    guard summary.childInfos.count == 1 else {
+                                                        XCTFail("Created space should have only 1 child")
+                                                        expectation.fulfill()
+                                                        return
+                                                    }
+                                                    
+                                                    guard summary.childInfos.first?.childRoomId ?? "" == room.roomId else {
+                                                        XCTFail("Child room ID mismatch")
+                                                        expectation.fulfill()
+                                                        return
+                                                    }
+                                                    
+                                                    guard summary.childInfos.first?.suggested == true else {
+                                                        XCTFail("Child room should be suggested")
+                                                        expectation.fulfill()
+                                                        return
+                                                    }
+                                                    
+                                                    if let space = session.spaceService.getSpace(withId: space.spaceId) {
+                                                        XCTAssertEqual(space.childRoomIds.count, 1, "Space should have only 1 child")
+                                                        XCTAssertEqual(space.childRoomIds.first ?? "", room.roomId, "Child room ID mismatch")
+                                                        XCTAssertEqual(space.suggestedRoomIds.count, 1, "Space should have 1 suggested child")
+                                                        XCTAssert(space.suggestedRoomIds.contains(room.roomId), "Child room should be suggested")
+                                                    }
+                                                    
+                                                    space.setChild(withRoomId: room.roomId, suggested: false) { response in
+                                                        switch response {
+                                                        case .success:
+                                                            session.spaceService.getSpaceChildrenForSpace(withId: space.spaceId, suggestedOnly: false, limit: nil, maxDepth: 1, paginationToken: nil) { response in
+                                                                switch response {
+                                                                case .success(let summary):
+                                                                    guard summary.childInfos.count == 1 else {
+                                                                        XCTFail("Created space should have only 1 child")
+                                                                        expectation.fulfill()
+                                                                        return
+                                                                    }
+                                                                    
+                                                                    guard summary.childInfos.first?.childRoomId ?? "" == room.roomId else {
+                                                                        XCTFail("Child room ID mismatch")
+                                                                        expectation.fulfill()
+                                                                        return
+                                                                    }
+                                                                    
+                                                                    guard summary.childInfos.first?.suggested == false else {
+                                                                        XCTFail("Child room should be suggested")
+                                                                        expectation.fulfill()
+                                                                        return
+                                                                    }
+                                                                    
+                                                                    if let space = session.spaceService.getSpace(withId: space.spaceId) {
+                                                                        XCTAssertEqual(space.childRoomIds.count, 1, "Space should have only 1 child")
+                                                                        XCTAssertEqual(space.childRoomIds.first ?? "", room.roomId, "Child room ID mismatch")
+                                                                        XCTAssertEqual(space.suggestedRoomIds.count, 0, "Space should have no suggested child")
+                                                                        XCTAssert(!space.suggestedRoomIds.contains(room.roomId), "Child room should not be suggested")
+                                                                    }
+                                                                    
+                                                                    expectation.fulfill()
+                                                                case .failure(let error):
+                                                                    XCTFail("Failed to get space children summary with error \(error)")
+                                                                    expectation.fulfill()
+                                                                }
+                                                            }
+                                                        case .failure(let error):
+                                                            XCTFail("Failed to suggest child room with error \(error)")
+                                                            expectation.fulfill()
+                                                        }
+                                                    }
+                                                case .failure(let error):
+                                                    XCTFail("Failed to get space children summary with error \(error)")
+                                                    expectation.fulfill()
+                                                }
+                                            }
+                                        case .failure(let error):
+                                            XCTFail("Failed to suggest child room with error \(error)")
+                                            expectation.fulfill()
+                                        }
+                                    }
+                                case .failure(let error):
+                                    XCTFail("Failed to get space children summary with error \(error)")
+                                    expectation.fulfill()
+                                }
+                            }
+                        case .failure(let error):
+                            XCTFail("Failed to add room to space with error \(error)")
+                            expectation.fulfill()
+                        }
+                    }
+                case .failure(let error):
+                    XCTFail("Failed to create space with error \(error)")
+                    expectation.fulfill()
+                }
+            }
+        }
+    }
+
     // MARK: - Private
 
     /// - Create Bob And Alice sessions

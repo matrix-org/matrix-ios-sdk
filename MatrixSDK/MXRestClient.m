@@ -2766,6 +2766,36 @@ MXAuthAction;
                                  }];
 }
 
+- (MXHTTPOperation*)upgradeRoomWithId:(NSString*)roomId
+                                   to:(NSString*)roomVersion
+                              success:(void (^)(NSString *replacementRoomId))success
+                              failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/upgrade", apiPathPrefix, roomId];
+
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"POST"
+                                    path:path
+                              parameters:@{@"new_version": roomVersion}
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                    __block NSString *replacementRoomId;
+                                    [self dispatchProcessing:^{
+                                        MXJSONModelSetString(replacementRoomId, JSONResponse[@"replacement_room"]);
+                                        if (!replacementRoomId.length)
+                                        {
+                                            replacementRoomId = roomId;
+                                        }
+                                    } andCompletion:^{
+                                        success(replacementRoomId);
+                                    }];
+                                 }
+                                 failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
 #pragma mark - Room tags operations
 - (MXHTTPOperation*)tagsOfRoom:(NSString*)roomId
                        success:(void (^)(NSArray<MXRoomTag*> *tags))success

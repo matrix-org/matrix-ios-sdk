@@ -168,6 +168,28 @@ public class MXSpaceService: NSObject {
         }
     }
     
+    /// Returns the set of direct parent IDs of the given room
+    /// - Parameters:
+    ///   - roomId: ID of the room
+    /// - Returns: set of direct parent IDs of the given room. Empty set if the room has no parent.
+    public func directParentIds(ofRoomWithId roomId: String) -> Set<String> {
+        return graph.parentIdsPerRoomId[roomId] ?? Set()
+    }
+    
+    /// Returns the set of direct parent IDs of the given room for which the room is suggested or not according to the request.
+    /// - Parameters:
+    ///   - roomId: ID of the room
+    ///   - suggested: If `true` the method will return the parent ID if the room is suggested. If `false`  the method will return the parent ID if the room is NOT suggested
+    /// - Returns: set of direct parent IDs of the given room. Empty set if the room has no parent.
+    public func directParentIds(ofRoomWithId roomId: String, isRoomSuggested suggested: Bool) -> Set<String> {
+        return directParentIds(ofRoomWithId: roomId).filter { spaceId in
+            guard let space = spacesPerId[spaceId] else {
+                return false
+            }
+            return (suggested && space.suggestedRoomIds.contains(roomId)) || (!suggested && !space.suggestedRoomIds.contains(roomId))
+        }
+    }
+    
     /// Allows to know if a given room is a descendant of a given space
     /// - Parameters:
     ///   - roomId: ID of the room
