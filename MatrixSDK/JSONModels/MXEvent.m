@@ -650,10 +650,6 @@ NSString *const kMXMessageContentKeyExtensibleLocationDescription = @"descriptio
 
 - (MXEvent*)editedEventFromReplacementEvent:(MXEvent*)replaceEvent
 {
-    if ([self.eventId isEqualToString:replaceEvent.eventId]) {
-        return nil;
-    }
-    
     MXEvent *editedEvent;
     MXEvent *event = self;
     NSDictionary *newContentDict;
@@ -676,7 +672,12 @@ NSString *const kMXMessageContentKeyExtensibleLocationDescription = @"descriptio
     else if (newContentDict)
     {
         editedEventDict = [event.JSONDictionary mutableCopy];
-        editedEventDict[@"content"] = newContentDict;
+        NSMutableDictionary *editedEventContentDict = [editedEventDict[@"content"] mutableCopy];
+        editedEventContentDict[kMXMessageBodyKey] = newContentDict[kMXMessageBodyKey];
+        editedEventContentDict[@"formatted_body"] = newContentDict[@"formatted_body"];
+        editedEventContentDict[@"format"] = newContentDict[@"format"];
+        editedEventContentDict[kMXEventTypeStringPollStart] = newContentDict[kMXEventTypeStringPollStart];
+        editedEventDict[@"content"] = editedEventContentDict;
     }
 
     if (editedEventDict)
