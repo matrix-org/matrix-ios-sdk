@@ -43,8 +43,8 @@ public class PollAggregator {
     
     private var pollStartEventContent: MXEventContentPollStart!
     
-    private var referenceEventsListener: Any!
-    private var editEventsListener: Any!
+    private var referenceEventsListener: Any?
+    private var editEventsListener: Any?
     
     private var events: [MXEvent] = []
     private var hasBeenEdited = false
@@ -58,8 +58,13 @@ public class PollAggregator {
     public var delegate: PollAggregatorDelegate?
     
     deinit {
-        room.removeListener(referenceEventsListener)
-        session.aggregations.removeListener(editEventsListener as Any)
+        if let referenceEventsListener = referenceEventsListener {
+            room.removeListener(referenceEventsListener)
+        }
+        
+        if let editEventsListener = editEventsListener {
+            session.aggregations.removeListener(editEventsListener)
+        }
     }
     
     public init(session: MXSession, room: MXRoom, pollStartEventId: String) throws {
@@ -88,21 +93,21 @@ public class PollAggregator {
     }
     
     private func buildPollStartContent() throws {
-        guard let event = self.session.store.event(withEventId: self.pollStartEventId, inRoom: room.roomId),
-              let pollStartEventContent = MXEventContentPollStart(fromJSON: event.content) else {
+        guard let event = session.store.event(withEventId: pollStartEventId, inRoom: room.roomId),
+              let eventContent = MXEventContentPollStart(fromJSON: event.content) else {
             throw PollAggregatorError.invalidPollStartEvent
         }
         
-        self.pollStartEventContent = pollStartEventContent
+        pollStartEventContent = eventContent
         
-        self.hasBeenEdited = (event.unsignedData.relations?.replace != nil)
+        hasBeenEdited = (event.unsignedData.relations?.replace != nil)
         
-        self.poll = self.pollBuilder.build(pollStartEventContent: pollStartEventContent,
-                                           events: events,
-                                           currentUserIdentifier: session.myUserId,
-                                           hasBeenEdited: hasBeenEdited)
+        poll = pollBuilder.build(pollStartEventContent: eventContent,
+                                 events: events,
+                                 currentUserIdentifier: session.myUserId,
+                                 hasBeenEdited: hasBeenEdited)
         
-        self.reloadPollData()
+        reloadPollData()
     }
     
     @objc private func handleRoomDataFlush(sender: Notification) {
