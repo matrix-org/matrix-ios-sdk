@@ -257,7 +257,7 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
                         });
                         return;
                     }
-                    if (!self.credentials.refreshToken || (!isTokenUnknownResponse && (!self.credentials.accessTokenExpiresAt || [NSDate date].timeIntervalSince1970 * 1000 < (self.credentials.accessTokenExpiresAt + PREEMPT_REFRESH_EXPIRATION_INTERVAL)))) {
+                    if (!self.credentials.refreshToken || (!isTokenUnknownResponse && (!self.credentials.accessTokenExpiresAt || [NSDate date].timeIntervalSince1970 * 1000 < (self.credentials.accessTokenExpiresAt - PREEMPT_REFRESH_EXPIRATION_INTERVAL)))) {
                         // If it's non-refresh token auth return the access token,
                         // or if it is refresh token auth and access token is valid also return it.
                         MXLogDebug(@"[MXRestClient] tokenProviderHandler: %@ success token %@, %tu", logId, self.credentials.refreshToken, (NSUInteger)self.credentials.accessTokenExpiresAt)
