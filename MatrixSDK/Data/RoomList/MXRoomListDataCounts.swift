@@ -41,7 +41,7 @@ public protocol MXRoomListDataCounts {
     /// Number of invited rooms for handled rooms
     var numberOfInvitedRooms: Int { get }
     
-    /// Total number of rooms. Can be different from `numberOfRooms` if pagination enabled
-    var totalRoomsCount: Int { get }
+    /// Total values. nil if pagination is not enabled.
+    var total: MXRoomListDataCounts? { get }
     
 }

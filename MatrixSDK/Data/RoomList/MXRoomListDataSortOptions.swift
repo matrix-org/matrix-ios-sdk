@@ -68,46 +68,4 @@ public struct MXRoomListDataSortOptions: Equatable {
         self.missedNotificationsFirst = missedNotificationsFirst
         self.unreadMessagesFirst = unreadMessagesFirst
     }
-    
-    /// Just to be used for in-memory data
-    internal func sortRooms(_ rooms: [MXRoomSummaryProtocol]) -> [MXRoomSummaryProtocol] {
-        return (rooms as NSArray).sortedArray(using: sortDescriptors) as! [MXRoomSummaryProtocol]
-    }
-    
-    /// To be used for CoreData fetch request
-    internal var sortDescriptors: [NSSortDescriptor] {
-        var result: [NSSortDescriptor] = []
-        
-        // TODO: reintroduce order once it will be supported
-//        if suggested {
-//            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryProtocol.spaceChildInfo?.order, ascending: false))
-//        }
-        
-        if invitesFirst {
-            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryProtocol.membership, ascending: true))
-        }
-        
-        if sentStatus {
-            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryProtocol.sentStatus, ascending: false))
-        }
-        
-        if missedNotificationsFirst {
-            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryProtocol.hasAnyHighlight, ascending: false))
-            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryProtocol.hasAnyNotification, ascending: false))
-        }
-        
-        if unreadMessagesFirst {
-            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryProtocol.hasAnyUnread, ascending: false))
-        }
-        
-        if lastEventDate {
-            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryProtocol.lastMessage?.originServerTs, ascending: false))
-        }
-        
-        if favoriteTag {
-            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryProtocol.favoriteTagOrder, ascending: false))
-        }
-        
-        return result
-    }
 }

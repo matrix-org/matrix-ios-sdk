@@ -170,8 +170,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, assign) MXCallTransferType callTransferType;
 
 /**
- The class of room list data manager. This class must be conformed to MXRoomListDataManager protocol.
- By default this class is MXStoreRoomListDataManager.
+ The class of room list data manager. This class must conform to MXRoomListDataManager protocol.
+ By default this class is MXCoreDataRoomListDataManager.
  */
 @property (nonatomic) Class roomListDataManagerClass;
 

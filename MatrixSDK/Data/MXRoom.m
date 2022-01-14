@@ -147,13 +147,6 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
         // Report the provided accountData.
         // Allocate a new instance if none, in order to handle room tag events for this room.
         room->_accountData = accountData ? accountData : [[MXRoomAccountData alloc] init];
-
-        // Check whether the room is pending on an invitation.
-        if (room.summary.membership == MXMembershipInvite)
-        {
-            // Handle direct flag to decide if it is direct or not
-            [room handleInviteDirectFlag];
-        }
     }
     return room;
 }

@@ -18,7 +18,7 @@ import XCTest
 
 @testable import MatrixSDK
 
-class MXRoomListDataManagerUnitTests: XCTestCase {
+class MXStoreRoomListDataManagerUnitTests: XCTestCase {
     
     private enum Constants {
         static var credentials: MXCredentials {
@@ -32,6 +32,7 @@ class MXRoomListDataManagerUnitTests: XCTestCase {
     }
     
     override class func setUp() {
+        MXSDKOptions.sharedInstance().roomListDataManagerClass = MXStoreRoomListDataManager.self
         MXRealmCryptoStore.deleteAllStores()
     }
     
@@ -40,6 +41,7 @@ class MXRoomListDataManagerUnitTests: XCTestCase {
         let sortOptions = MXRoomListDataSortOptions(missedNotificationsFirst: false, unreadMessagesFirst: false)
         return MXRoomListDataFetchOptions(filterOptions: filterOptions,
                                           sortOptions: sortOptions,
+                                          paginationOptions: .none,
                                           async: false)
     }
     
@@ -253,7 +255,7 @@ class MXRoomListDataManagerUnitTests: XCTestCase {
         XCTAssertEqual(roomSummaries.count, 90, "Generator must generate 90 rooms in total")
         //  insert all rooms into the store
         for summary in roomSummaries {
-            store.storeSummary(forRoom: summary.roomId, summary: summary)
+            store.roomSummaryStore.storeSummary(summary)
         }
         
         self.wait { expectation in

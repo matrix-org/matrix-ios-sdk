@@ -1040,13 +1040,6 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 - (MXRoomSummary *)roomSummaryWithRoomId:(NSString*)roomId;
 
 /**
- Get the list of all rooms summaries.
-
- @return an array of MXRoomSummary.
- */
-- (NSArray<MXRoomSummary*>*)roomsSummaries;
-
-/**
  Recompute all room summaries last message.
 
  This may lead to pagination requests to the homeserver. Updated room summaries will be
