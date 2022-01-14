@@ -99,7 +99,7 @@ class MXCoreDataRoomListDataManagerUnitTests: XCTestCase {
     
     func testDataManagerInitStandalone() {
         let manager = MXStoreRoomListDataManager()
-        let restClient = MXRestClient(credentials: Constants.credentials, unrecognizedCertificateHandler: nil)
+        let restClient = MXRestClient(credentials: Constants.credentials, unrecognizedCertificateHandler: nil, persistentTokenDataHandler: nil, unauthenticatedHandler: nil)
         guard let session = MXSession(matrixRestClient: restClient) else {
             XCTFail("Failed to setup test conditions")
             return
@@ -128,7 +128,7 @@ class MXCoreDataRoomListDataManagerUnitTests: XCTestCase {
     }
     
     func testDataManagerInitFromSession() {
-        let restClient = MXRestClient(credentials: Constants.credentials, unrecognizedCertificateHandler: nil)
+        let restClient = MXRestClient(credentials: Constants.credentials, unrecognizedCertificateHandler: nil, persistentTokenDataHandler: nil, unauthenticatedHandler: nil)
         guard let session = MXSession(matrixRestClient: restClient) else {
             XCTFail("Failed to setup test conditions")
             return
