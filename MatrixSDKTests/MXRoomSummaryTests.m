@@ -144,7 +144,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
         MXRoomSummaryUpdater *updater = [MXRoomSummaryUpdater roomSummaryUpdaterForSession:session];
         updated = [updater session:session updateRoomSummary:summary withLastEvent:event eventState:eventState roomState:roomState];
 
-        summary.lastMessage.text = event.content[@"body"];
+        summary.lastMessage.text = event.content[kMXMessageBodyKey];
     }
     else if ([self.description containsString:@"testLateRoomKey"])
     {
@@ -158,7 +158,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
         }
         else
         {
-            summary.lastMessage.text = event.content[@"body"];
+            summary.lastMessage.text = event.content[kMXMessageBodyKey];
         }
     }
     else
@@ -1197,7 +1197,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
 
                             [aliceSession2 start:^{
 
-                                MXRoomSummary *summary2 = [aliceSession2.store summaryOfRoom:roomId];
+                                MXRoomSummary *summary2 = [aliceSession2.store.roomSummaryStore summaryOfRoom:roomId];
 
                                 XCTAssert(summary2.isEncrypted);
                                 XCTAssertEqualObjects(summary2.lastMessage.eventId, lastMessageEventId);
@@ -1265,7 +1265,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
                 XCTAssertEqualObjects(event.eventId, lastMessageEventId);
                 XCTAssert(event.clearEvent, @"The event must have been decrypted by MXRoomSummary.lastMessageEvent");
                 XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
-                XCTAssertEqualObjects(event.content[@"body"], message);
+                XCTAssertEqualObjects(event.content[kMXMessageBodyKey], message);
 
                 // Use dispatch_async for not closing the session in the middle of stg
                 dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0.1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
@@ -1294,7 +1294,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
                                 XCTAssertEqualObjects(event2.eventId, lastMessageEventId);
                                 XCTAssert(event2.clearEvent, @"The event must have been decrypted by MXRoomSummary.lastMessageEvent");
                                 XCTAssertEqual(event2.eventType, MXEventTypeRoomMessage);
-                                XCTAssertEqualObjects(event2.content[@"body"], message);
+                                XCTAssertEqualObjects(event2.content[kMXMessageBodyKey], message);
 
                                 [expectation fulfill];
                                 

@@ -746,10 +746,8 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
 }
 
 - (BOOL)sendDTMF:(NSString * _Nonnull)tones
-        duration:(NSUInteger)duration
-    interToneGap:(NSUInteger)interToneGap
 {
-    return [callStackCall sendDTMF:tones duration:duration interToneGap:interToneGap];
+    return [callStackCall sendDTMF:tones];
 }
 
 #pragma mark - Properties

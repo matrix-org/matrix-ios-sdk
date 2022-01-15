@@ -18,6 +18,7 @@
 #import "MXNoStore.h"
 
 #import "MXEventsEnumeratorOnArray.h"
+#import "MXVoidRoomSummaryStore.h"
 
 @interface MXNoStore ()
 {
@@ -55,6 +56,8 @@
 
 @implementation MXNoStore
 
+@synthesize roomSummaryStore;
+
 @synthesize eventStreamToken, userAccountData, syncFilterId;
 
 - (instancetype)init
@@ -71,6 +74,7 @@
         partialTextMessages = [NSMutableDictionary dictionary];
         users = [NSMutableDictionary dictionary];
         groups = [NSMutableDictionary dictionary];
+        roomSummaryStore = [[MXVoidRoomSummaryStore alloc] init];
     }
     return self;
 }
@@ -164,6 +168,7 @@
     {
         [partialTextMessages removeObjectForKey:roomId];
     }
+    [roomSummaryStore removeSummaryOfRoom:roomId];
 }
 
 - (void)deleteAllData
@@ -175,6 +180,7 @@
     [hasLoadedAllRoomMembersForRooms removeAllObjects];
     [lastMessages removeAllObjects];
     [partialTextMessages removeAllObjects];
+    [roomSummaryStore removeAllSummaries];
 }
 
 - (void)storePaginationTokenOfRoom:(NSString*)roomId andToken:(NSString*)token
@@ -433,23 +439,6 @@
     [partialTextMessages removeAllObjects];
     [users removeAllObjects];
     [groups removeAllObjects];
-}
-
-#pragma mark - MXRoomSummaryStore
-
-- (NSArray<NSString *> *)rooms
-{
-    return @[];
-}
-
-- (void)storeSummaryForRoom:(NSString *)roomId summary:(id<MXRoomSummaryProtocol>)summary
-{
-    
-}
-
-- (id<MXRoomSummaryProtocol>)summaryOfRoom:(NSString *)roomId
-{
-    return nil;
 }
 
 @end
