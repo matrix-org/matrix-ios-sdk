@@ -150,6 +150,11 @@ internal class MXCoreDataRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
     
     func refresh() {
         guard let oldData = data else {
+            // data will still be nil if the fetchRequest properties have changed before fetching the first page.
+            // In this instance, update the fetchRequest so it is correctly configured for the first page fetch. 
+            fetchedResultsController.fetchRequest.predicate = filterPredicate(for: filterOptions)
+            fetchedResultsController.fetchRequest.sortDescriptors = sortDescriptors(for: sortOptions)
+            fetchedResultsController.fetchRequest.fetchLimit = fetchOptions.paginationOptions.rawValue
             return
         }
         data = nil
