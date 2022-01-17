@@ -2397,6 +2397,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
 - (MXHTTPOperation *)sendLocationWithLatitude:(double)latitude
                                     longitude:(double)longitude
                                   description:(NSString *)description
+                                     threadId:(NSString*)threadId
                                     localEcho:(MXEvent **)localEcho
                                       success:(void (^)(NSString *))success
                                       failure:(void (^)(NSError *))failure
@@ -2420,6 +2421,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     content[kMXMessageContentKeyExtensibleTimestamp] = @(timestamp);
     
     return [self sendMessageWithContent:content
+                               threadId:threadId
                               localEcho:localEcho
                                 success:success
                                 failure:failure];
