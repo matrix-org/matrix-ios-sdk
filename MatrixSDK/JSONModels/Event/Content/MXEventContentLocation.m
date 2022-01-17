@@ -36,21 +36,23 @@
 
 + (instancetype)modelFromJSON:(NSDictionary *)JSONDictionary
 {
+    NSString *description;
+    NSString *geoURIString;
+    
     NSDictionary *locationContent = JSONDictionary[kMXMessageContentKeyExtensibleLocationMSC3488];
     if (locationContent == nil)
     {
         locationContent = JSONDictionary[kMXMessageContentKeyExtensibleLocation];
     }
     
-    if  (locationContent == nil) {
+    if (locationContent) {
+        MXJSONModelSetString(description, locationContent[kMXMessageContentKeyExtensibleLocationDescription]);
+        MXJSONModelSetString(geoURIString, locationContent[kMXMessageContentKeyExtensibleLocationURI]);
+    } else if ([JSONDictionary[kMXMessageTypeKey] isEqualToString:kMXMessageTypeLocation]) {
+        MXJSONModelSetString(geoURIString, JSONDictionary[kMXMessageGeoURIKey]);
+    } else {
         return nil;
     }
-    
-    NSString *description;
-    MXJSONModelSetString(description, locationContent[kMXMessageContentKeyExtensibleLocationDescription]);
-    
-    NSString *geoURIString;
-    MXJSONModelSetString(geoURIString, locationContent[kMXMessageContentKeyExtensibleLocationURI]);
     
     NSString *locationString = [[geoURIString componentsSeparatedByString:@":"].lastObject componentsSeparatedByString:@";"].firstObject;
     
