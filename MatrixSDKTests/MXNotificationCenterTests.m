@@ -200,7 +200,7 @@
 //                XCTAssert([rule.pattern hasPrefix:@"mxbob"], @"As content rule, the pattern must be define. Rule: %@", rule);
 //
 //                // Check the right event has been notified
-//                XCTAssertEqualObjects(event.content[@"body"], messageFromAlice, @"The wrong messsage has been caught. event: %@", event);
+//                XCTAssertEqualObjects(event.content[kMXMessageBodyKey], messageFromAlice, @"The wrong messsage has been caught. event: %@", event);
 //
 //                [expectation fulfill];
 //            }];
@@ -292,7 +292,7 @@
             XCTAssertEqual(condition.kindType, MXPushRuleConditionTypeRoomMemberCount);
 
             // Check the right event has been notified
-            XCTAssertEqualObjects(event.content[@"body"], messageFromAlice, @"The wrong messsage has been caught. event: %@", event);
+            XCTAssertEqualObjects(event.content[kMXMessageBodyKey], messageFromAlice, @"The wrong messsage has been caught. event: %@", event);
 
             [expectation fulfill];
         }];

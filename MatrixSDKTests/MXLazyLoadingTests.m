@@ -305,7 +305,7 @@ Common initial conditions:
 
             [liveTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-                XCTAssertEqualObjects(event.content[@"body"], messageFromCharlie);
+                XCTAssertEqualObjects(event.content[kMXMessageBodyKey], messageFromCharlie);
 
                 XCTAssert([roomState.members memberWithUserId:aliceSession.myUser.userId]);
                 XCTAssert([roomState.members memberWithUserId:charlieSession.myUser.userId]);
@@ -1199,7 +1199,7 @@ Common initial conditions:
 
                 XCTAssertTrue(event.isEncrypted);
                 XCTAssert(event.clearEvent);
-                XCTAssertEqualObjects(event.content[@"body"], messageFromAlice);
+                XCTAssertEqualObjects(event.content[kMXMessageBodyKey], messageFromAlice);
 
                 [expectation fulfill];
             }];

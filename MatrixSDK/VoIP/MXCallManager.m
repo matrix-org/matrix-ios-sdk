@@ -1381,12 +1381,11 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
     __block MXRoom *conferenceUserRoom;
 
     dispatch_group_t group = dispatch_group_create();
-    for (MXRoomSummary *roomSummary in _mxSession.roomsSummaries)
+    for (MXRoom *room in _mxSession.rooms)
     {
-        if (roomSummary.isConferenceUserRoom)
+        if (room.summary.isConferenceUserRoom)
         {
             dispatch_group_enter(group);
-            MXRoom *room = [_mxSession roomWithRoomId:roomSummary.roomId];
 
             [room state:^(MXRoomState *roomState) {
                 if ([roomState.members memberWithUserId:conferenceUserId])

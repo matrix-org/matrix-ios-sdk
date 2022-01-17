@@ -22,6 +22,8 @@
 #import "MXUsersTrustLevelSummary.h"
 #import "MXRoomSummaryDataTypes.h"
 #import "MXRoomSummarySentStatus.h"
+#import "MXRoomType.h"
+#import "MXRoomLastMessage.h"
 
 @class MXSession;
 @class MXSpaceChildInfo;

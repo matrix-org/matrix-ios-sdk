@@ -82,7 +82,7 @@ NSString *theInitialEventMessage = @"The initial timelime event";
             if (events.count == 0)
             {
                 XCTAssertEqualObjects(event.eventId, initialEventId, @"The first returned event must be the initial event");
-                XCTAssertEqualObjects(event.content[@"body"], theInitialEventMessage);
+                XCTAssertEqualObjects(event.content[kMXMessageBodyKey], theInitialEventMessage);
             }
 
             if (direction == MXTimelineDirectionForwards)
@@ -133,7 +133,7 @@ NSString *theInitialEventMessage = @"The initial timelime event";
             if (events.count == 0)
             {
                 XCTAssertEqualObjects(event.eventId, initialEventId, @"The first returned event must be the initial event");
-                XCTAssertEqualObjects(event.content[@"body"], theInitialEventMessage);
+                XCTAssertEqualObjects(event.content[kMXMessageBodyKey], theInitialEventMessage);
             }
 
             if (direction == MXTimelineDirectionForwards)
@@ -195,7 +195,7 @@ NSString *theInitialEventMessage = @"The initial timelime event";
             if (events.count == 0)
             {
                 XCTAssertEqualObjects(event.eventId, initialEventId, @"The first returned event must be the initial event");
-                XCTAssertEqualObjects(event.content[@"body"], theInitialEventMessage);
+                XCTAssertEqualObjects(event.content[kMXMessageBodyKey], theInitialEventMessage);
             }
 
             if (direction == MXTimelineDirectionForwards)
@@ -289,7 +289,7 @@ NSString *theInitialEventMessage = @"The initial timelime event";
             if (events.count == 0)
             {
                 XCTAssertEqualObjects(event.eventId, initialEventId, @"The first returned event must be the initial event");
-                XCTAssertEqualObjects(event.content[@"body"], theInitialEventMessage);
+                XCTAssertEqualObjects(event.content[kMXMessageBodyKey], theInitialEventMessage);
             }
 
             if (direction == MXTimelineDirectionForwards)

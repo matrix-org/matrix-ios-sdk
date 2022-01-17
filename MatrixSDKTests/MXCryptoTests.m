@@ -80,7 +80,7 @@
 
     // Check raw event (encrypted) data as sent by the hs
     XCTAssertEqual(event.wireEventType, MXEventTypeRoomEncrypted);
-    XCTAssertNil(event.wireContent[@"body"], @"No body field in an encrypted content");
+    XCTAssertNil(event.wireContent[kMXMessageBodyKey], @"No body field in an encrypted content");
     XCTAssertEqualObjects(event.wireContent[@"algorithm"], kMXCryptoMegolmAlgorithm);
     XCTAssertNotNil(event.wireContent[@"ciphertext"]);
     XCTAssertNotNil(event.wireContent[@"session_id"]);
@@ -92,7 +92,7 @@
     XCTAssertEqualObjects(event.roomId, roomId);
     XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
     XCTAssertLessThan(event.age, 10000);
-    XCTAssertEqualObjects(event.content[@"body"], clearMessage);
+    XCTAssertEqualObjects(event.content[kMXMessageBodyKey], clearMessage);
     XCTAssertEqualObjects(event.sender, senderSession.myUser.userId);
     XCTAssertNil(event.decryptionError);
 
@@ -832,7 +832,7 @@
                     {
                         XCTAssert(event.isEncrypted);
                         XCTAssertEqual(event.eventType, MXEventTypeRoomEncrypted);
-                        XCTAssertNil(event.content[@"body"]);
+                        XCTAssertNil(event.content[kMXMessageBodyKey]);
 
                         XCTAssert(event.decryptionError);
                         XCTAssertEqualObjects(event.decryptionError.domain, MXDecryptingErrorDomain);
@@ -1453,7 +1453,7 @@
                 NSString *firstEventId = event.eventId;
                 NSString *firstEventSender = event.sender;
                 
-                NSString *secondEventBody = localEchoEvent.content[@"body"];
+                NSString *secondEventBody = localEchoEvent.content[kMXMessageBodyKey];
                 NSString *secondEventFormattedBody = localEchoEvent.content[@"formatted_body"];
                 NSString *secondEventRelatesToEventId = localEchoEvent.content[kMXEventRelationRelatesToKey][@"m.in_reply_to"][@"event_id"];
                 NSString *secondWiredEventRelatesToEventId = localEchoEvent.wireContent[kMXEventRelationRelatesToKey][@"m.in_reply_to"][@"event_id"];
@@ -1486,7 +1486,7 @@
                 NSString *secondEventId = event.eventId;
                 NSString *secondEventSender = event.sender;
                 
-                NSString *thirdEventBody = localEchoEvent.content[@"body"];
+                NSString *thirdEventBody = localEchoEvent.content[kMXMessageBodyKey];
                 NSString *thirdEventFormattedBody = localEchoEvent.content[@"formatted_body"];
                 NSString *thirdEventRelatesToEventId = localEchoEvent.content[kMXEventRelationRelatesToKey][@"m.in_reply_to"][@"event_id"];
                 NSString *thirdWiredEventRelatesToEventId = localEchoEvent.wireContent[kMXEventRelationRelatesToKey][@"m.in_reply_to"][@"event_id"];
@@ -2755,7 +2755,7 @@
                     // 6 - Make alice1MatrixRestClient make a fake room key request for the message sent at step #4
                     NSDictionary *requestMessage = @{
                                                      @"action": @"request",
-                                                     @"body": @{
+                                                     kMXMessageBodyKey: @{
                                                              @"algorithm": event.wireContent[@"algorithm"],
                                                              @"room_id": roomId,
                                                              @"sender_key": event.wireContent[@"sender_key"],

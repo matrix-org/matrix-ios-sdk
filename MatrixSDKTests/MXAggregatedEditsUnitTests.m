@@ -39,8 +39,8 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
 {
     NSDictionary *messageEventDict = @{
                                        @"content": @{
-                                               @"body": kOriginalMessageText,
-                                               @"msgtype": @"m.text"
+                                               kMXMessageBodyKey: kOriginalMessageText,
+                                               kMXMessageTypeKey: @"m.text"
                                                },
                                        @"event_id": @"$messageeventid:matrix.org",
                                        @"origin_server_ts": @(1560253386247),
@@ -54,16 +54,16 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
     
     NSDictionary *replaceEventDict = @{
                                        @"content": @{
-                                               @"body": [NSString stringWithFormat:@"* %@", kEditedMessageText],
+                                               kMXMessageBodyKey: [NSString stringWithFormat:@"* %@", kEditedMessageText],
                                                @"m.new_content": @{
-                                                       @"body": kEditedMessageText,
-                                                       @"msgtype": @"m.text"
+                                                       kMXMessageBodyKey: kEditedMessageText,
+                                                       kMXMessageTypeKey: @"m.text"
                                                        },
                                                kMXEventRelationRelatesToKey: @{
                                                        @"event_id": @"$messageeventid:matrix.org",
                                                        @"rel_type": @"m.replace"
                                                        },
-                                               @"msgtype": @"m.text"
+                                               kMXMessageTypeKey: @"m.text"
                                                },
                                        @"event_id": @"$replaceeventid:matrix.org",
                                        @"origin_server_ts": @(1560254175300),
@@ -84,17 +84,17 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
     XCTAssertNotNil(editedEvent);
     XCTAssertTrue(editedEvent.contentHasBeenEdited);
     XCTAssertEqualObjects(editedEvent.unsignedData.relations.replace.eventId, replaceEvent.eventId);
-    XCTAssertEqualObjects(editedEvent.content[@"body"], kEditedMessageText);
+    XCTAssertEqualObjects(editedEvent.content[kMXMessageBodyKey], kEditedMessageText);
 }
 
 - (void)testEditingFormattedEventManually
 {
     NSDictionary *messageEventDict = @{
                                        @"content": @{
-                                               @"body": kOriginalMarkdownMessageText,
+                                               kMXMessageBodyKey: kOriginalMarkdownMessageText,
                                                @"formatted_body": kOriginalMarkdownMessageFormattedText,
                                                @"format": kMXRoomMessageFormatHTML,
-                                               @"msgtype": @"m.text"
+                                               kMXMessageTypeKey: @"m.text"
                                                },
                                        @"event_id": @"$messageeventid:matrix.org",
                                        @"origin_server_ts": @(1560253386247),
@@ -108,20 +108,20 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
     
     NSDictionary *replaceEventDict = @{
                                        @"content": @{
-                                               @"body": [NSString stringWithFormat:@"* %@", kEditedMarkdownMessageText],
+                                               kMXMessageBodyKey: [NSString stringWithFormat:@"* %@", kEditedMarkdownMessageText],
                                                @"formatted_body": [NSString stringWithFormat:@"* %@", kEditedMarkdownMessageFormattedText],
                                                @"format": kMXRoomMessageFormatHTML,
                                                @"m.new_content": @{
-                                                       @"body": kEditedMarkdownMessageText,
+                                                       kMXMessageBodyKey: kEditedMarkdownMessageText,
                                                        @"formatted_body": kEditedMarkdownMessageFormattedText,
                                                        @"format": kMXRoomMessageFormatHTML,
-                                                       @"msgtype": @"m.text"
+                                                       kMXMessageTypeKey: @"m.text"
                                                        },
                                                kMXEventRelationRelatesToKey: @{
                                                        @"event_id": @"$messageeventid:matrix.org",
                                                        @"rel_type": @"m.replace"
                                                        },
-                                               @"msgtype": @"m.text"
+                                               kMXMessageTypeKey: @"m.text"
                                                },
                                        @"event_id": @"$replaceeventid:matrix.org",
                                        @"origin_server_ts": @(1560254175300),
@@ -143,7 +143,7 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
     XCTAssertTrue(editedEvent.contentHasBeenEdited);
     XCTAssertEqualObjects(editedEvent.unsignedData.relations.replace.eventId, replaceEvent.eventId);
     
-    XCTAssertEqualObjects(editedEvent.content[@"body"], kEditedMarkdownMessageText);
+    XCTAssertEqualObjects(editedEvent.content[kMXMessageBodyKey], kEditedMarkdownMessageText);
     XCTAssertEqualObjects(editedEvent.content[@"formatted_body"], kEditedMarkdownMessageFormattedText);
 }
 
