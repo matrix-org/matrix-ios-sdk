@@ -733,7 +733,7 @@
                 NSString *firstEventId = event.eventId;
                 NSString *firstEventSender = event.sender;
                 
-                NSString *secondEventBody = localEchoEvent.content[@"body"];
+                NSString *secondEventBody = localEchoEvent.content[kMXMessageBodyKey];
                 NSString *secondEventFormattedBody = localEchoEvent.content[@"formatted_body"];
                 NSString *secondEventRelatesToEventId = localEchoEvent.content[kMXEventRelationRelatesToKey][@"m.in_reply_to"][@"event_id"];
 
@@ -765,7 +765,7 @@
                 NSString *secondEventId = event.eventId;
                 NSString *secondEventSender = event.sender;
                 
-                NSString *thirdEventBody = localEchoEvent.content[@"body"];
+                NSString *thirdEventBody = localEchoEvent.content[kMXMessageBodyKey];
                 NSString *thirdEventFormattedBody = localEchoEvent.content[@"formatted_body"];
                 NSString *thirdEventRelatesToEventId = localEchoEvent.content[kMXEventRelationRelatesToKey][@"m.in_reply_to"][@"event_id"];
                 

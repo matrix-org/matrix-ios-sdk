@@ -1014,7 +1014,7 @@
     [aliceSession listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage]
                                 onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject)
      {
-         if ([event.content[@"msgtype"] isEqualToString:kMXMessageTypeKeyVerificationRequest])
+         if ([event.content[kMXMessageTypeKey] isEqualToString:kMXMessageTypeKeyVerificationRequest])
          {
              XCTAssertEqualObjects(event.eventId, requestId);
              
@@ -1224,7 +1224,7 @@
         [aliceSession listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage]
                                     onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject)
          {
-             if ([event.content[@"msgtype"] isEqualToString:kMXMessageTypeKeyVerificationRequest])
+             if ([event.content[kMXMessageTypeKey] isEqualToString:kMXMessageTypeKeyVerificationRequest])
              {
                  MXKeyVerificationRequestByDMJSONModel *requestJSON;
                  MXJSONModelSetMXJSONModel(requestJSON, MXKeyVerificationRequestByDMJSONModel.class, event.content);

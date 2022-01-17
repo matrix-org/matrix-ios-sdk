@@ -37,7 +37,9 @@
  The `MXStore` protocol defines an interface that must be implemented in order to store
  Matrix data handled during a `MXSession`.
  */
-@protocol MXStore <NSObject, MXRoomSummaryStore>
+@protocol MXStore <NSObject>
+
+@property (nonatomic, readonly) id<MXRoomSummaryStore> _Nonnull roomSummaryStore;
 
 #pragma mark - Store Management
 

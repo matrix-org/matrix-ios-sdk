@@ -292,14 +292,14 @@ NSUInteger const SEND_KEY_REQUESTS_DELAY_MS = 500;
                            failure:(void (^)(NSError *error))failure
 {
     MXLogDebug(@"[MXOutgoingRoomKeyRequestManager] sendOutgoingRoomKeyRequest: Requesting key %@ using request id %@ to %@: %@", request.sessionId, request.requestId, request.recipients, request.requestBody);
-
+    
     NSDictionary *requestMessage = @{
-                                     @"action": @"request",
-                                     @"requesting_device_id": deviceId,
-                                     @"request_id": request.requestId,
-                                     @"body": request.requestBody
-                                     };
-
+        @"action": @"request",
+        @"requesting_device_id": deviceId,
+        @"request_id": request.requestId,
+        kMXMessageBodyKey: request.requestBody
+    };
+    
     MXWeakify(self);
     [self sendMessageToDevices:requestMessage recipients:request.recipients txnId:request.requestId success:^{
         MXStrongifyAndReturnIfNil(self);

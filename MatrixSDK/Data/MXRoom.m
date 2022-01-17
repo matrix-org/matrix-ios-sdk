@@ -37,6 +37,7 @@
 #import "MXRoomSync.h"
 
 #import "MXEventContentPollStart.h"
+#import "MXEventContentLocation.h"
 
 NSString *const kMXRoomDidFlushDataNotification = @"kMXRoomDidFlushDataNotification";
 NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotification";
@@ -147,13 +148,6 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
         // Report the provided accountData.
         // Allocate a new instance if none, in order to handle room tag events for this room.
         room->_accountData = accountData ? accountData : [[MXRoomAccountData alloc] init];
-
-        // Check whether the room is pending on an invitation.
-        if (room.summary.membership == MXMembershipInvite)
-        {
-            // Handle direct flag to decide if it is direct or not
-            [room handleInviteDirectFlag];
-        }
     }
     return room;
 }
@@ -817,19 +811,19 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     {
         // This is a simple text message
         msgContent = @{
-                       @"msgtype": kMXMessageTypeText,
-                       @"body": text
-                       };
+            kMXMessageTypeKey: kMXMessageTypeText,
+            kMXMessageBodyKey: text
+        };
     }
     else
     {
         // Send the HTML formatted string
         msgContent = @{
-                       @"msgtype": kMXMessageTypeText,
-                       @"body": text,
-                       @"formatted_body": formattedText,
-                       @"format": kMXRoomMessageFormatHTML
-                       };
+            kMXMessageTypeKey: kMXMessageTypeText,
+            kMXMessageBodyKey: text,
+            @"formatted_body": formattedText,
+            @"format": kMXRoomMessageFormatHTML
+        };
     }
     
     return [self sendMessageWithContent:msgContent
@@ -860,19 +854,19 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     {
         // This is a simple text message
         msgContent = @{
-                       @"msgtype": kMXMessageTypeEmote,
-                       @"body": emoteBody
-                       };
+            kMXMessageTypeKey: kMXMessageTypeEmote,
+            kMXMessageBodyKey: emoteBody
+        };
     }
     else
     {
         // Send the HTML formatted string
         msgContent = @{
-                       @"msgtype": kMXMessageTypeEmote,
-                       @"body": emoteBody,
-                       @"formatted_body": formattedBody,
-                       @"format": kMXRoomMessageFormatHTML
-                       };
+            kMXMessageTypeKey: kMXMessageTypeEmote,
+            kMXMessageBodyKey: emoteBody,
+            @"formatted_body": formattedBody,
+            @"format": kMXRoomMessageFormatHTML
+        };
     }
     
     return [self sendMessageWithContent:msgContent
@@ -949,16 +943,17 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     
     // Prepare the message content for building an echo message
     NSMutableDictionary *msgContent = [@{
-                                         @"msgtype": kMXMessageTypeImage,
-                                         @"body": filename,
-                                         @"url": fakeMediaURI,
-                                         @"info": [@{
-                                                     @"mimetype": mimetype,
-                                                     @"w": @(imageSize.width),
-                                                     @"h": @(imageSize.height),
-                                                     @"size": @(imageData.length)
-                                                     } mutableCopy]
-                                         } mutableCopy];
+        kMXMessageTypeKey: kMXMessageTypeImage,
+        kMXMessageBodyKey: filename,
+        @"url": fakeMediaURI,
+        @"info": [@{
+            @"mimetype": mimetype,
+            @"w": @(imageSize.width),
+            @"h": @(imageSize.height),
+            @"size": @(imageData.length)
+        } mutableCopy]
+    } mutableCopy];
+    
     if (blurhash)
     {
         msgContent[@"info"][@"blurhash"] = blurhash;
@@ -1192,19 +1187,19 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     
     // Prepare the message content for building an echo message
     NSMutableDictionary *msgContent = [@{
-                                         @"msgtype": kMXMessageTypeVideo,
-                                         @"body": @"Video",
-                                         @"url": fakeMediaURI,
-                                         @"info": [@{
-                                                     @"thumbnail_url": fakeMediaURI,
-                                                     @"thumbnail_info": @{
-                                                             @"mimetype": @"image/jpeg",
-                                                             @"w": @(videoThumbnail.size.width),
-                                                             @"h": @(videoThumbnail.size.height),
-                                                             @"size": @(videoThumbnailData.length)
-                                                             }
-                                                     } mutableCopy]
-                                         } mutableCopy];
+        kMXMessageTypeKey: kMXMessageTypeVideo,
+        kMXMessageBodyKey: @"Video",
+        @"url": fakeMediaURI,
+        @"info": [@{
+            @"thumbnail_url": fakeMediaURI,
+            @"thumbnail_info": @{
+                    @"mimetype": @"image/jpeg",
+                    @"w": @(videoThumbnail.size.width),
+                    @"h": @(videoThumbnail.size.height),
+                    @"size": @(videoThumbnailData.length)
+            }
+        } mutableCopy]
+    } mutableCopy];
     
     __block MXEvent *event;
     __block id uploaderObserver;
@@ -1374,7 +1369,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                         }
                         NSString *extension = [MXTools fileExtensionFromContentType:mimetype];
                         NSString *filename = [NSString stringWithFormat:@"video_%@%@", dataHash, extension];
-                        msgContent[@"body"] = filename;
+                        msgContent[kMXMessageBodyKey] = filename;
 
                         // Update thumbnail URL with the actual mxc: URL
                         msgContent[@"info"][@"thumbnail_url"] = thumbnailUrl;
@@ -1561,20 +1556,21 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     }
     
     // Prepare the message content for building an echo message
-    NSMutableDictionary *msgContent = @{@"msgtype": msgType,
-                                        @"body": filename,
-                                        @"url": fakeMediaURI,
-                                        @"info": @{
-                                                @"mimetype": mimeType,
-                                                @"size": @(fileData.length)
-                                        },
-                                        kMXMessageContentKeyExtensibleText: filename,
-                                        kMXMessageContentKeyExtensibleFile: @{
-                                                kMXMessageContentKeyExtensibleFileSize: @(fileData.length),
-                                                kMXMessageContentKeyExtensibleFileName: filename,
-                                                kMXMessageContentKeyExtensibleFileURL: fakeMediaURI,
-                                                kMXMessageContentKeyExtensibleFileMimeType: mimeType
-                                        }.mutableCopy}.mutableCopy;
+    NSMutableDictionary *msgContent = @{
+        kMXMessageTypeKey: msgType,
+        kMXMessageBodyKey: filename,
+        @"url": fakeMediaURI,
+        @"info": @{
+                @"mimetype": mimeType,
+                @"size": @(fileData.length)
+        },
+        kMXMessageContentKeyExtensibleText: filename,
+        kMXMessageContentKeyExtensibleFile: @{
+                kMXMessageContentKeyExtensibleFileSize: @(fileData.length),
+                kMXMessageContentKeyExtensibleFileName: filename,
+                kMXMessageContentKeyExtensibleFileURL: fakeMediaURI,
+                kMXMessageContentKeyExtensibleFileMimeType: mimeType
+        }.mutableCopy}.mutableCopy;
     
     if(additionalTypes.count)
     {
@@ -1981,8 +1977,8 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
         NSMutableDictionary *msgContent = [NSMutableDictionary dictionary];
         
         msgContent[@"format"] = kMXRoomMessageFormatHTML;
-        msgContent[@"msgtype"] = kMXMessageTypeText;
-        msgContent[@"body"] = replyToBody;
+        msgContent[kMXMessageTypeKey] = kMXMessageTypeText;
+        msgContent[kMXMessageBodyKey] = replyToBody;
         msgContent[@"formatted_body"] = replyToFormattedBody;
         msgContent[kMXEventRelationRelatesToKey] = relatesToDict;
         
@@ -2040,7 +2036,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     }
     
     NSString *msgtype;
-    MXJSONModelSetString(msgtype, eventToReply.content[@"msgtype"]);
+    MXJSONModelSetString(msgtype, eventToReply.content[kMXMessageTypeKey]);
     
     if (!msgtype)
     {
@@ -2053,11 +2049,16 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     NSString *senderMessageBody;
     NSString *senderMessageFormattedBody;
     
-    if ([msgtype isEqualToString:kMXMessageTypeText]
+    if (eventToReply.location)
+    {
+        senderMessageBody = stringLocalizer.senderSentTheirLocation;
+        senderMessageFormattedBody = senderMessageBody;
+    }
+    else if ([msgtype isEqualToString:kMXMessageTypeText]
         || [msgtype isEqualToString:kMXMessageTypeNotice]
         || [msgtype isEqualToString:kMXMessageTypeEmote])
     {
-        NSString *eventToReplyMessageBody = eventToReply.content[@"body"];
+        NSString *eventToReplyMessageBody = eventToReply.content[kMXMessageBodyKey];
         
         // Use formatted body only if the format is known
         NSString *eventToReplyMessageFormattedBody;
@@ -2297,7 +2298,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     
     BOOL canReplyToEvent = NO;
     
-    NSString *messageType = eventToReply.content[@"msgtype"];
+    NSString *messageType = eventToReply.content[kMXMessageTypeKey];
     
     if (messageType)
     {
@@ -2308,7 +2309,8 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                                            kMXMessageTypeImage,
                                            kMXMessageTypeVideo,
                                            kMXMessageTypeAudio,
-                                           kMXMessageTypeFile
+                                           kMXMessageTypeFile,
+                                           kMXMessageTypeLocation
                                            ];
         
         canReplyToEvent = [supportedMessageTypes containsObject:messageType];
@@ -2397,6 +2399,39 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     };
     
     return [self sendEventOfType:[MXTools eventTypeString:MXEventTypePollEnd] content:content threadId:threadId localEcho:localEcho success:success failure:failure];
+}
+
+#pragma mark - Location sharing
+
+- (MXHTTPOperation *)sendLocationWithLatitude:(double)latitude
+                                    longitude:(double)longitude
+                                  description:(NSString *)description
+                                    localEcho:(MXEvent **)localEcho
+                                      success:(void (^)(NSString *))success
+                                      failure:(void (^)(NSError *))failure
+{
+    NSMutableDictionary *content = [NSMutableDictionary dictionary];
+    content[kMXMessageTypeKey] = kMXMessageTypeLocation;
+    
+    MXEventContentLocation *locationContent = [[MXEventContentLocation alloc] initWithLatitude:latitude
+                                                                                     longitude:longitude
+                                                                                   description:description];
+    
+    content[kMXMessageContentKeyExtensibleLocationMSC3488] = locationContent.JSONDictionary;
+    
+    content[kMXMessageGeoURIKey] = locationContent.geoURI;
+    
+    NSString *fallbackText = [NSString stringWithFormat:@"%@ was at %@ as of %@", self.mxSession.myUser.displayname, locationContent.geoURI, NSDate.date];
+    content[kMXMessageBodyKey] = fallbackText;
+    content[kMXMessageContentKeyExtensibleText] = fallbackText;
+    
+    NSInteger timestamp = NSDate.date.timeIntervalSince1970 * 1000; // milliseconds since UNIX epoch
+    content[kMXMessageContentKeyExtensibleTimestamp] = @(timestamp);
+    
+    return [self sendMessageWithContent:content
+                              localEcho:localEcho
+                                success:success
+                                failure:failure];
 }
 
 #pragma mark - Message order preserving
@@ -2716,7 +2751,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     MXEvent *localEcho = nil;
 
     NSString *msgtype;
-    MXJSONModelSetString(msgtype, event.content[@"msgtype"]);
+    MXJSONModelSetString(msgtype, event.content[kMXMessageTypeKey]);
 
     if (msgtype)
     {
@@ -2738,22 +2773,14 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
             for (NSInteger index = 0; index < pendingLocalEchoes.count; index++)
             {
                 localEcho = [pendingLocalEchoes objectAtIndex:index];
-                NSString *pendingEventType = localEcho.content[@"msgtype"];
+                NSString *pendingEventType = localEcho.content[kMXMessageTypeKey];
 
                 if ([msgtype isEqualToString:pendingEventType])
                 {
                     if ([msgtype isEqualToString:kMXMessageTypeText] || [msgtype isEqualToString:kMXMessageTypeEmote])
                     {
                         // Compare content body
-                        if ([event.content[@"body"] isEqualToString:localEcho.content[@"body"]])
-                        {
-                            break;
-                        }
-                    }
-                    else if ([msgtype isEqualToString:kMXMessageTypeLocation])
-                    {
-                        // Compare geo uri
-                        if ([event.content[@"geo_uri"] isEqualToString:localEcho.content[@"geo_uri"]])
+                        if ([event.content[kMXMessageBodyKey] isEqualToString:localEcho.content[kMXMessageBodyKey]])
                         {
                             break;
                         }

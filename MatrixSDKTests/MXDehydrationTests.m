@@ -413,7 +413,7 @@
                                             
                                             XCTAssertEqual(event.wireEventType, MXEventTypeRoomEncrypted);
                                             XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
-                                            XCTAssertEqualObjects(event.content[@"body"], message);
+                                            XCTAssertEqualObjects(event.content[kMXMessageBodyKey], message);
                                             XCTAssertNil(event.decryptionError);
                                             
                                             [expectation fulfill];
@@ -500,7 +500,7 @@
 
     // Check raw event (encrypted) data as sent by the hs
     XCTAssertEqual(event.wireEventType, MXEventTypeRoomEncrypted);
-    XCTAssertNil(event.wireContent[@"body"], @"No body field in an encrypted content");
+    XCTAssertNil(event.wireContent[kMXMessageBodyKey], @"No body field in an encrypted content");
     XCTAssertEqualObjects(event.wireContent[@"algorithm"], kMXCryptoMegolmAlgorithm);
     XCTAssertNotNil(event.wireContent[@"ciphertext"]);
     XCTAssertNotNil(event.wireContent[@"session_id"]);
@@ -512,7 +512,7 @@
     XCTAssertEqualObjects(event.roomId, roomId);
     XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
     XCTAssertLessThan(event.age, 10000);
-    XCTAssertEqualObjects(event.content[@"body"], clearMessage);
+    XCTAssertEqualObjects(event.content[kMXMessageBodyKey], clearMessage);
     XCTAssertEqualObjects(event.sender, senderSession.myUser.userId);
     XCTAssertNil(event.decryptionError);
 

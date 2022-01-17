@@ -559,7 +559,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
 
     // Original event or one of the thread?
     if (event.eventType == MXEventTypeRoomMessage
-        && [event.content[@"msgtype"] isEqualToString:kMXMessageTypeKeyVerificationRequest])
+        && [event.content[kMXMessageTypeKey] isEqualToString:kMXMessageTypeKeyVerificationRequest])
     {
         keyVerificationId = event.eventId;
     }
@@ -1383,7 +1383,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
 
     [_crypto.mxSession listenToEventsOfTypes:types onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
         if (direction == MXTimelineDirectionForwards
-            && [event.content[@"msgtype"] isEqualToString:kMXMessageTypeKeyVerificationRequest])
+            && [event.content[kMXMessageTypeKey] isEqualToString:kMXMessageTypeKeyVerificationRequest])
         {
             MXKeyVerificationByDMRequest *requestByDM = [[MXKeyVerificationByDMRequest alloc] initWithEvent:event andManager:self];
             if (requestByDM)
@@ -1635,7 +1635,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
 - (nullable MXKeyVerificationByDMRequest*)verificationRequestInDMEvent:(MXEvent*)event
 {
     MXKeyVerificationByDMRequest *request;
-    if ([event.content[@"msgtype"] isEqualToString:kMXMessageTypeKeyVerificationRequest])
+    if ([event.content[kMXMessageTypeKey] isEqualToString:kMXMessageTypeKeyVerificationRequest])
     {
         request = [[MXKeyVerificationByDMRequest alloc] initWithEvent:event andManager:self];
     }

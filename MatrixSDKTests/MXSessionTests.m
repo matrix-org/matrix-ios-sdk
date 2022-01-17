@@ -465,7 +465,7 @@
 
             [mxSession start:^{
 
-                NSUInteger storeRoomsCount = store.rooms.count;
+                NSUInteger storeRoomsCount = store.roomSummaryStore.rooms.count;
 
                 XCTAssertGreaterThan(storeRoomsCount, 0);
 
@@ -477,7 +477,7 @@
                     // Check the stream has been correctly shutdowned. Checking that the store has not changed is one way to verify it
                     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 3 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
 
-                        XCTAssertEqual(store.rooms.count, storeRoomsCount, @"There must still the same number of stored rooms");
+                        XCTAssertEqual(store.roomSummaryStore.rooms.count, storeRoomsCount, @"There must still the same number of stored rooms");
                         [expectation fulfill];
 
                     });

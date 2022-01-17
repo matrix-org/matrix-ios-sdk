@@ -72,6 +72,10 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
 
 @implementation MXRoomSummary
 
+@synthesize hasAnyUnread = _hasAnyUnread;
+@synthesize hasAnyNotification = _hasAnyNotification;
+@synthesize hasAnyHighlight = _hasAnyHighlight;
+
 - (instancetype)init
 {
     self = [super init];
@@ -99,6 +103,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
         store = theStore;
 
         [self setMatrixSession:mxSession];
+        [self commonInit];
     }
 
     return self;
@@ -110,6 +115,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     {
         _roomId = model.roomId;
         [self updateWith:model];
+        [self commonInit];
     }
     return self;
 }
@@ -120,8 +126,30 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     {
         _roomId = spaceChildInfo.childRoomId;
         _spaceChildInfo = spaceChildInfo;
+        [self commonInit];
     }
     return self;
+}
+
+- (void)commonInit
+{
+    // Listen to the event sent state changes
+    // This is used to follow evolution of local echo events
+    // (ex: when a sentState change from sending to sentFailed)
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(eventDidChangeSentState:) name:kMXEventDidChangeSentStateNotification object:nil];
+
+    // Listen to the event id change
+    // This is used to follow evolution of local echo events
+    // when they changed their local event id to the final event id
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(eventDidChangeIdentifier:) name:kMXEventDidChangeIdentifierNotification object:nil];
+
+    // Listen to data being flush in a room
+    // This is used to update the room summary in case of a state event redaction
+    // We may need to update the room displayname when it happens
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(roomDidFlushData:) name:kMXRoomDidFlushDataNotification object:nil];
+
+    // Listen to event edits within the room
+    [self registerEventEditsListener];
 }
 
 - (void)destroy
@@ -138,25 +166,6 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     {
         _mxSession = mxSession;
         store = mxSession.store;
-        [self updateWith:[store summaryOfRoom:_roomId]];
-
-        // Listen to the event sent state changes
-        // This is used to follow evolution of local echo events
-        // (ex: when a sentState change from sending to sentFailed)
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(eventDidChangeSentState:) name:kMXEventDidChangeSentStateNotification object:nil];
-
-        // Listen to the event id change
-        // This is used to follow evolution of local echo events
-        // when they changed their local event id to the final event id
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(eventDidChangeIdentifier:) name:kMXEventDidChangeIdentifierNotification object:nil];
-
-        // Listen to data being flush in a room
-        // This is used to update the room summary in case of a state event redaction
-        // We may need to update the room displayname when it happens
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(roomDidFlushData:) name:kMXRoomDidFlushDataNotification object:nil];
-
-        // Listen to event edits within the room
-        [self registerEventEditsListener];
     }
 }
 
@@ -165,8 +174,9 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     _dataTypes = self.calculateDataTypes;
     _sentStatus = self.calculateSentStatus;
     _favoriteTagOrder = self.room.accountData.tags[kMXRoomTagFavourite].order;
+    _storedHash = self.hash;
     
-    [store storeSummaryForRoom:_roomId summary:self];
+    [store.roomSummaryStore storeSummary:self];
     
     if (commit && [store respondsToSelector:@selector(commit)])
     {
@@ -232,6 +242,9 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     _localUnreadEventCount = summary.localUnreadEventCount;
     _notificationCount = summary.notificationCount;
     _highlightCount = summary.highlightCount;
+    _hasAnyUnread = summary.hasAnyUnread;
+    _hasAnyNotification = summary.hasAnyNotification;
+    _hasAnyHighlight = summary.hasAnyHighlight;
     _directUserId = summary.directUserId;
     _others = [summary.others mutableCopy];
     _favoriteTagOrder = summary.favoriteTagOrder;
@@ -1024,11 +1037,19 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     result = prime * result + _localUnreadEventCount;
     result = prime * result + _notificationCount;
     result = prime * result + _highlightCount;
+    result = prime * result + @(_hasAnyUnread).unsignedIntegerValue;
+    result = prime * result + @(_hasAnyNotification).unsignedIntegerValue;
+    result = prime * result + @(_hasAnyHighlight).unsignedIntegerValue;
     result = prime * result + _dataTypes;
     result = prime * result + _sentStatus;
     result = prime * result + [_lastMessage.eventId hash];
     result = prime * result + [_lastMessage.text hash];
 
+    result = [NSNumber numberWithUnsignedInteger:result].hash;
+    while (result > INT64_MAX)
+    {
+        result -= INT64_MAX;
+    }
     return result;
 }
 

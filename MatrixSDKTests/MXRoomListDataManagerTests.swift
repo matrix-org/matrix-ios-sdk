@@ -27,6 +27,7 @@ class MXRoomListDataManagerTests: XCTestCase {
     }
 
     override func setUp() {
+        MXSDKOptions.sharedInstance().roomListDataManagerClass = MXStoreRoomListDataManager.self
         testData = MatrixSDKTestsData()
     }
 
@@ -251,7 +252,7 @@ class MXRoomListDataManagerTests: XCTestCase {
     //  MARK: - Private
     
     private func createBasicFetcherWithBob(_ completion: @escaping (MXSession, MXRoom, MXRoomListDataFetcher, XCTestExpectation) -> Void) {
-        let store = MXFileStore()
+        let store = MXMemoryStore()
         testData.doMXSessionTest(withBobAndARoom: self, andStore: store) { bobSession, initialRoom, expectation in
             guard let bobSession = bobSession,
                   let initialRoom = initialRoom,
@@ -271,7 +272,7 @@ class MXRoomListDataManagerTests: XCTestCase {
     }
     
     private func createBasicFetcherWithBobAndAlice(_ completion: @escaping (MXSession, MXRestClient, MXRoomListDataFetcher, XCTestExpectation) -> Void) {
-        testData.doMXSessionTestWithBobAndAlice(inARoom: self, andStore: MXFileStore()) { bobSession, aliceRestClient, roomId, expectation in
+        testData.doMXSessionTestWithBobAndAlice(inARoom: self, andStore: MXMemoryStore()) { bobSession, aliceRestClient, roomId, expectation in
             guard let bobSession = bobSession,
                   let aliceRestClient = aliceRestClient,
                   let expectation = expectation else {
