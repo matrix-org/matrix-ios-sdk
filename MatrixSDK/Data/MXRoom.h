@@ -983,6 +983,7 @@ FOUNDATION_EXPORT NSInteger const kMXRoomAlreadyJoinedErrorCode;
 - (MXHTTPOperation *)sendLocationWithLatitude:(double)latitude
                                     longitude:(double)longitude
                                   description:(NSString *)description
+                                     threadId:(NSString*)threadId
                                     localEcho:(MXEvent **)localEcho
                                       success:(void (^)(NSString *))success
                                       failure:(void (^)(NSError *))failure;
