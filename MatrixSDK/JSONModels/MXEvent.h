@@ -239,8 +239,14 @@ FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleFileMimeType;
 
 // Polls
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensiblePollStart;
+FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensiblePollStartMSC3381;
+
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensiblePollResponse;
+FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensiblePollResponseMSC3381;
+
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensiblePollEnd;
+FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensiblePollEndMSC3381;
+
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensiblePollQuestion;
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensiblePollAnswers;
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensiblePollAnswerId;

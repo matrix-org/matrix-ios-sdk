@@ -2357,7 +2357,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     
     NSDictionary *content = @{
         kMXEventRelationRelatesToKey: relatesTo.JSONDictionary,
-        kMXMessageContentKeyExtensiblePollResponse: @{ kMXMessageContentKeyExtensiblePollAnswers: answerIdentifiers }
+        kMXMessageContentKeyExtensiblePollResponseMSC3381: @{ kMXMessageContentKeyExtensiblePollAnswers: answerIdentifiers }
     };
     
     return [self sendEventOfType:[MXTools eventTypeString:MXEventTypePollResponse] content:content localEcho:localEcho success:success failure:failure];
@@ -2376,7 +2376,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     
     NSDictionary *content = @{
         kMXEventRelationRelatesToKey: relatesTo.JSONDictionary,
-        kMXMessageContentKeyExtensiblePollEnd: @{}
+        kMXMessageContentKeyExtensiblePollEndMSC3381: @{}
     };
     
     return [self sendEventOfType:[MXTools eventTypeString:MXEventTypePollEnd] content:content localEcho:localEcho success:success failure:failure];

@@ -87,12 +87,12 @@ NSString *const kMXEventTypeStringSpaceChild            = @"m.space.child";
 NSString *const kMXEventTypeStringAutoJoinKey           = @"auto_join";
 NSString *const kMXEventTypeStringSuggestedKey          = @"suggested";
 
-NSString *const kMXEventTypeStringPollStartMSC3381    = @"org.matrix.msc3381.poll.start";
 NSString *const kMXEventTypeStringPollStart           = @"m.poll.start";
-NSString *const kMXEventTypeStringPollResponseMSC3381 = @"org.matrix.msc3381.poll.response";
+NSString *const kMXEventTypeStringPollStartMSC3381    = @"org.matrix.msc3381.poll.start";
 NSString *const kMXEventTypeStringPollResponse        = @"m.poll.response";
-NSString *const kMXEventTypeStringPollEndMSC3381      = @"org.matrix.msc3381.poll.end";
+NSString *const kMXEventTypeStringPollResponseMSC3381 = @"org.matrix.msc3381.poll.response";
 NSString *const kMXEventTypeStringPollEnd             = @"m.poll.end";
+NSString *const kMXEventTypeStringPollEndMSC3381      = @"org.matrix.msc3381.poll.end";
 
 NSString *const kMXMessageTypeKey                    = @"msgtype";
 NSString *const kMXMessageTypeText                   = @"m.text";
@@ -148,9 +148,15 @@ NSString *const kMXMessageContentKeyExtensibleFileMimeType   = @"mimetype";
 
 // Polls
 
-NSString *const kMXMessageContentKeyExtensiblePollStart = @"org.matrix.msc3381.poll.start";
-NSString *const kMXMessageContentKeyExtensiblePollResponse = @"org.matrix.msc3381.poll.response";
-NSString *const kMXMessageContentKeyExtensiblePollEnd = @"org.matrix.msc3381.poll.end";
+NSString *const kMXMessageContentKeyExtensiblePollStart = @"m.poll.start";
+NSString *const kMXMessageContentKeyExtensiblePollStartMSC3381 = @"org.matrix.msc3381.poll.start";
+
+NSString *const kMXMessageContentKeyExtensiblePollResponse = @"m.poll.response";
+NSString *const kMXMessageContentKeyExtensiblePollResponseMSC3381 = @"org.matrix.msc3381.poll.response";
+
+NSString *const kMXMessageContentKeyExtensiblePollEnd = @"m.poll.end";
+NSString *const kMXMessageContentKeyExtensiblePollEndMSC3381 = @"org.matrix.msc3381.poll.end";
+
 NSString *const kMXMessageContentKeyExtensiblePollQuestion = @"question";
 NSString *const kMXMessageContentKeyExtensiblePollAnswers = @"answers";
 NSString *const kMXMessageContentKeyExtensiblePollAnswerId = @"id";
@@ -677,6 +683,7 @@ NSString *const kMXMessageContentKeyExtensibleLocationDescription = @"descriptio
         editedEventContentDict[@"formatted_body"] = newContentDict[@"formatted_body"];
         editedEventContentDict[@"format"] = newContentDict[@"format"];
         editedEventContentDict[kMXEventTypeStringPollStart] = newContentDict[kMXEventTypeStringPollStart];
+        editedEventContentDict[kMXEventTypeStringPollStartMSC3381] = newContentDict[kMXEventTypeStringPollStartMSC3381];
         editedEventDict[@"content"] = editedEventContentDict;
     }
 

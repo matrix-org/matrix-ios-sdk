@@ -42,8 +42,8 @@ struct PollBuilder {
         var filteredEvents = events.filter { event in
             guard
                 let eventContent = event.content, event.eventType == __MXEventType.pollResponse,
-                let answer = eventContent[kMXMessageContentKeyExtensiblePollResponse] as? [String: [String]],
-                let _ = answer[kMXMessageContentKeyExtensiblePollAnswers] else {
+                let response = pollResponseFromEventContent(eventContent),
+                let _ = response[kMXMessageContentKeyExtensiblePollAnswers] else {
                 return false
             }
             
@@ -63,8 +63,8 @@ struct PollBuilder {
         let answersGroupedByUser = filteredEvents.reduce([String: [String]]()) { result, event in
             guard let userIdentifier = event.sender,
                   let eventContent = event.content,
-                  let answer = eventContent[kMXMessageContentKeyExtensiblePollResponse] as? [String: [String]],
-                  let answerIdentifiers = answer[kMXMessageContentKeyExtensiblePollAnswers],
+                  let response = pollResponseFromEventContent(eventContent),
+                  let answerIdentifiers = response[kMXMessageContentKeyExtensiblePollAnswers],
                   !result.keys.contains(userIdentifier) else {
                 return result
             }
@@ -112,4 +112,13 @@ struct PollBuilder {
         return poll
     }
     
+    private func pollResponseFromEventContent(_ eventContent: [String: Any]) -> [String: [String]]? {
+        if let response = eventContent[kMXMessageContentKeyExtensiblePollResponse] {
+            return response as? [String: [String]]
+        } else if let response = eventContent[kMXMessageContentKeyExtensiblePollResponseMSC3381]  {
+            return response as? [String: [String]]
+        }
+        
+        return nil;
+    }
 }
