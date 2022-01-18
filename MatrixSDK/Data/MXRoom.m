@@ -1457,7 +1457,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     return [self _sendFile:fileLocalURL
                    msgType:kMXMessageTypeAudio
            additionalTypes:@{kMXMessageContentKeyVoiceMessageMSC3245 : @{},
-                             kMXMessageContentKeyExtensibleAudio: extensibleAudioContent}
+                             kMXMessageContentKeyExtensibleAudioMSC1767: extensibleAudioContent}
                   mimeType:(mimeType ?: @"audio/ogg")
                  localEcho:localEcho
                    success:success
@@ -1534,8 +1534,8 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                 @"mimetype": mimeType,
                 @"size": @(fileData.length)
         },
-        kMXMessageContentKeyExtensibleText: filename,
-        kMXMessageContentKeyExtensibleFile: @{
+        kMXMessageContentKeyExtensibleTextMSC1767: filename,
+        kMXMessageContentKeyExtensibleFileMSC1767: @{
                 kMXMessageContentKeyExtensibleFileSize: @(fileData.length),
                 kMXMessageContentKeyExtensibleFileName: filename,
                 kMXMessageContentKeyExtensibleFileURL: fakeMediaURI,
@@ -1645,7 +1645,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                 }
 
                 msgContent[@"url"] = nil;
-                msgContent[kMXMessageContentKeyExtensibleFile][kMXMessageContentKeyExtensibleFileURL] = nil;
+                msgContent[kMXMessageContentKeyExtensibleFileMSC1767][kMXMessageContentKeyExtensibleFileURL] = nil;
                 msgContent[@"file"] = result.JSONDictionary;
 
                 MXHTTPOperation *operation2 = [self sendMessageWithContent:msgContent localEcho:&event success:onSuccess failure:onFailure];
@@ -1676,7 +1676,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
 
                 // Update the message content with the mxc:// of the media on the homeserver
                 msgContent[@"url"] = url;
-                msgContent[kMXMessageContentKeyExtensibleFile][kMXMessageContentKeyExtensibleFileURL] = url;
+                msgContent[kMXMessageContentKeyExtensibleFileMSC1767][kMXMessageContentKeyExtensibleFileURL] = url;
 
                 // Make the final request that posts the image event
                 MXHTTPOperation *operation2 = [self sendMessageWithContent:msgContent localEcho:&event success:onSuccess failure:onFailure];
@@ -2428,10 +2428,10 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     
     NSString *fallbackText = [NSString stringWithFormat:@"%@ was at %@ as of %@", self.mxSession.myUser.displayname, locationContent.geoURI, NSDate.date];
     content[kMXMessageBodyKey] = fallbackText;
-    content[kMXMessageContentKeyExtensibleText] = fallbackText;
+    content[kMXMessageContentKeyExtensibleTextMSC1767] = fallbackText;
     
     NSInteger timestamp = NSDate.date.timeIntervalSince1970 * 1000; // milliseconds since UNIX epoch
-    content[kMXMessageContentKeyExtensibleTimestamp] = @(timestamp);
+    content[kMXMessageContentKeyExtensibleTimestampMSC3488] = @(timestamp);
     
     return [self sendMessageWithContent:content
                               localEcho:localEcho
