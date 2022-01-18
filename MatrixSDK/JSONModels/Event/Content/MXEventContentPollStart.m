@@ -36,7 +36,14 @@
 
 + (instancetype)modelFromJSON:(NSDictionary *)JSONDictionary
 {
-    NSDictionary *content = JSONDictionary[kMXMessageContentKeyExtensiblePollStart];
+    NSDictionary *content = JSONDictionary[kMXMessageContentKeyExtensiblePollStartMSC3381];
+    if (content == nil) {
+        content = JSONDictionary[kMXMessageContentKeyExtensiblePollStart];
+    }
+    
+    if (content == nil) {
+        return nil;
+    }
     
     NSString *question, *kind;
     MXJSONModelSetString(question, content[kMXMessageContentKeyExtensiblePollQuestion][kMXMessageContentKeyExtensibleText]);
@@ -69,7 +76,7 @@
     
     content[kMXMessageContentKeyExtensiblePollAnswers] = answerOptions;
     
-    return @{kMXMessageContentKeyExtensiblePollStart: content};
+    return @{kMXMessageContentKeyExtensiblePollStartMSC3381: content};
 }
 
 @end
