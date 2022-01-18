@@ -254,6 +254,7 @@
     [self.mxSession listenToEvents:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
 
         switch (event.eventType) {
+            case MXEventTypePollStart:
             case MXEventTypeRoomMessage:
                 if (direction == MXTimelineDirectionForwards
                     && [event.relatesTo.relationType isEqualToString:MXEventRelationTypeReplace])

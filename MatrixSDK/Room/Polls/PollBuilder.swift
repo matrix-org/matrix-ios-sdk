@@ -17,16 +17,22 @@
 import Foundation
 
 struct PollBuilder {
-    func build(pollStartEventContent: MXEventContentPollStart, events: [MXEvent], currentUserIdentifier: String) -> PollProtocol {
+    
+    private struct Constants {
+        static let maxAnswerOptionCount = 20
+    }
+    
+    func build(pollStartEventContent: MXEventContentPollStart, events: [MXEvent], currentUserIdentifier: String, hasBeenEdited: Bool = false) -> PollProtocol {
         
         let poll = Poll()
+        poll.hasBeenEdited = hasBeenEdited
         
         poll.text = pollStartEventContent.question
         poll.maxAllowedSelections = max(1, pollStartEventContent.maxSelections.uintValue)
         poll.kind = (pollStartEventContent.kind == kMXMessageContentKeyExtensiblePollKindUndisclosed ? .undisclosed : .disclosed)
         
         var answerOptionIdentifiers = [String]()
-        poll.answerOptions = pollStartEventContent.answerOptions.map { answerOption in
+        poll.answerOptions = pollStartEventContent.answerOptions.prefix(Constants.maxAnswerOptionCount).map { answerOption in
             answerOptionIdentifiers.append(answerOption.uuid)
             
             let option = PollAnswerOption()
@@ -41,8 +47,8 @@ struct PollBuilder {
         var filteredEvents = events.filter { event in
             guard
                 let eventContent = event.content, event.eventType == __MXEventType.pollResponse,
-                let answer = eventContent[kMXMessageContentKeyExtensiblePollResponse] as? [String: [String]],
-                let _ = answer[kMXMessageContentKeyExtensiblePollAnswers] else {
+                let response = pollResponseFromEventContent(eventContent),
+                let _ = response[kMXMessageContentKeyExtensiblePollAnswers] else {
                 return false
             }
             
@@ -62,8 +68,8 @@ struct PollBuilder {
         let answersGroupedByUser = filteredEvents.reduce([String: [String]]()) { result, event in
             guard let userIdentifier = event.sender,
                   let eventContent = event.content,
-                  let answer = eventContent[kMXMessageContentKeyExtensiblePollResponse] as? [String: [String]],
-                  let answerIdentifiers = answer[kMXMessageContentKeyExtensiblePollAnswers],
+                  let response = pollResponseFromEventContent(eventContent),
+                  let answerIdentifiers = response[kMXMessageContentKeyExtensiblePollAnswers],
                   !result.keys.contains(userIdentifier) else {
                 return result
             }
@@ -111,4 +117,13 @@ struct PollBuilder {
         return poll
     }
     
+    private func pollResponseFromEventContent(_ eventContent: [String: Any]) -> [String: [String]]? {
+        if let response = eventContent[kMXMessageContentKeyExtensiblePollResponse] {
+            return response as? [String: [String]]
+        } else if let response = eventContent[kMXMessageContentKeyExtensiblePollResponseMSC3381]  {
+            return response as? [String: [String]]
+        }
+        
+        return nil;
+    }
 }
