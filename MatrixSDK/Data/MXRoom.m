@@ -1483,7 +1483,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     return [self _sendFile:fileLocalURL
                    msgType:kMXMessageTypeAudio
            additionalTypes:@{kMXMessageContentKeyVoiceMessageMSC3245 : @{},
-                             kMXMessageContentKeyExtensibleAudio: extensibleAudioContent}
+                             kMXMessageContentKeyExtensibleAudioMSC1767: extensibleAudioContent}
                   mimeType:(mimeType ?: @"audio/ogg")
                   threadId:threadId
                  localEcho:localEcho
@@ -1564,8 +1564,8 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                 @"mimetype": mimeType,
                 @"size": @(fileData.length)
         },
-        kMXMessageContentKeyExtensibleText: filename,
-        kMXMessageContentKeyExtensibleFile: @{
+        kMXMessageContentKeyExtensibleTextMSC1767: filename,
+        kMXMessageContentKeyExtensibleFileMSC1767: @{
                 kMXMessageContentKeyExtensibleFileSize: @(fileData.length),
                 kMXMessageContentKeyExtensibleFileName: filename,
                 kMXMessageContentKeyExtensibleFileURL: fakeMediaURI,
@@ -1675,7 +1675,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                 }
 
                 msgContent[@"url"] = nil;
-                msgContent[kMXMessageContentKeyExtensibleFile][kMXMessageContentKeyExtensibleFileURL] = nil;
+                msgContent[kMXMessageContentKeyExtensibleFileMSC1767][kMXMessageContentKeyExtensibleFileURL] = nil;
                 msgContent[@"file"] = result.JSONDictionary;
 
                 MXHTTPOperation *operation2 = [self sendMessageWithContent:msgContent threadId:threadId localEcho:&event success:onSuccess failure:onFailure];
@@ -1706,7 +1706,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
 
                 // Update the message content with the mxc:// of the media on the homeserver
                 msgContent[@"url"] = url;
-                msgContent[kMXMessageContentKeyExtensibleFile][kMXMessageContentKeyExtensibleFileURL] = url;
+                msgContent[kMXMessageContentKeyExtensibleFileMSC1767][kMXMessageContentKeyExtensibleFileURL] = url;
 
                 // Make the final request that posts the image event
                 MXHTTPOperation *operation2 = [self sendMessageWithContent:msgContent threadId:threadId localEcho:&event success:onSuccess failure:onFailure];
@@ -2375,7 +2375,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     
     NSDictionary *content = @{
         kMXEventRelationRelatesToKey: relatesTo.JSONDictionary,
-        kMXMessageContentKeyExtensiblePollResponse: @{ kMXMessageContentKeyExtensiblePollAnswers: answerIdentifiers }
+        kMXMessageContentKeyExtensiblePollResponseMSC3381: @{ kMXMessageContentKeyExtensiblePollAnswers: answerIdentifiers }
     };
     
     return [self sendEventOfType:[MXTools eventTypeString:MXEventTypePollResponse] content:content threadId:threadId localEcho:localEcho success:success failure:failure];
@@ -2395,10 +2395,34 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     
     NSDictionary *content = @{
         kMXEventRelationRelatesToKey: relatesTo.JSONDictionary,
-        kMXMessageContentKeyExtensiblePollEnd: @{}
+        kMXMessageContentKeyExtensiblePollEndMSC3381: @{}
     };
     
     return [self sendEventOfType:[MXTools eventTypeString:MXEventTypePollEnd] content:content threadId:threadId localEcho:localEcho success:success failure:failure];
+}
+
+- (MXHTTPOperation *)sendPollUpdateForEvent:(MXEvent *)pollStartEvent
+                                 oldContent:(MXEventContentPollStart *)oldContent
+                                 newContent:(MXEventContentPollStart *)newContent
+                                  localEcho:(MXEvent **)localEcho
+                                    success:(void (^)(NSString *))success
+                                    failure:(void (^)(NSError *))failure
+{
+    NSParameterAssert(oldContent);
+    NSParameterAssert(newContent);
+    
+    NSMutableDictionary *content = [NSMutableDictionary dictionary];
+    
+    [content addEntriesFromDictionary:oldContent.JSONDictionary];
+    
+    MXEventContentRelatesTo *relatesTo = [[MXEventContentRelatesTo alloc] initWithRelationType:MXEventRelationTypeReplace
+                                                                                       eventId:pollStartEvent.eventId];
+    
+    [content setObject:relatesTo.JSONDictionary forKey:kMXEventRelationRelatesToKey];
+    
+    [content setObject:newContent.JSONDictionary forKey:kMXMessageContentKeyNewContent];
+    
+    return [self sendEventOfType:[MXTools eventTypeString:MXEventTypePollStart] content:content localEcho:localEcho success:success failure:failure];
 }
 
 #pragma mark - Location sharing
@@ -2424,10 +2448,10 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     
     NSString *fallbackText = [NSString stringWithFormat:@"%@ was at %@ as of %@", self.mxSession.myUser.displayname, locationContent.geoURI, NSDate.date];
     content[kMXMessageBodyKey] = fallbackText;
-    content[kMXMessageContentKeyExtensibleText] = fallbackText;
+    content[kMXMessageContentKeyExtensibleTextMSC1767] = fallbackText;
     
     NSInteger timestamp = NSDate.date.timeIntervalSince1970 * 1000; // milliseconds since UNIX epoch
-    content[kMXMessageContentKeyExtensibleTimestamp] = @(timestamp);
+    content[kMXMessageContentKeyExtensibleTimestampMSC3488] = @(timestamp);
     
     return [self sendMessageWithContent:content
                                threadId:threadId
