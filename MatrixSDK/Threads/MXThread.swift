@@ -90,7 +90,7 @@ public class MXThread: NSObject {
     
     /// Root message of the thread
     public var rootMessage: MXEvent? {
-        return eventsMap[id] ?? session?.store.event(withEventId: id, inRoom: roomId)
+        return eventsMap[id] ?? session?.store?.event(withEventId: id, inRoom: roomId)
     }
     
     /// Last message of the thread
