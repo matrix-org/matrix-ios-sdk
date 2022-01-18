@@ -17,6 +17,11 @@
 import Foundation
 
 struct PollBuilder {
+    
+    private struct Constants {
+        static let maxAnswerOptionCount = 20
+    }
+    
     func build(pollStartEventContent: MXEventContentPollStart, events: [MXEvent], currentUserIdentifier: String, hasBeenEdited: Bool = false) -> PollProtocol {
         
         let poll = Poll()
@@ -27,7 +32,7 @@ struct PollBuilder {
         poll.kind = (pollStartEventContent.kind == kMXMessageContentKeyExtensiblePollKindUndisclosed ? .undisclosed : .disclosed)
         
         var answerOptionIdentifiers = [String]()
-        poll.answerOptions = pollStartEventContent.answerOptions.map { answerOption in
+        poll.answerOptions = pollStartEventContent.answerOptions.prefix(Constants.maxAnswerOptionCount).map { answerOption in
             answerOptionIdentifiers.append(answerOption.uuid)
             
             let option = PollAnswerOption()
