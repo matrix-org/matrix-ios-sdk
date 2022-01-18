@@ -36,6 +36,10 @@ public protocol PollAggregatorDelegate: AnyObject {
 
 public class PollAggregator {
     
+    private struct Constants {
+        static let minAnswerOptionCount = 2
+    }
+    
     private let session: MXSession
     private let room: MXRoom
     private let pollStartEventId: String
@@ -94,7 +98,9 @@ public class PollAggregator {
     
     private func buildPollStartContent() throws {
         guard let event = session.store.event(withEventId: pollStartEventId, inRoom: room.roomId),
-              let eventContent = MXEventContentPollStart(fromJSON: event.content) else {
+              let eventContent = MXEventContentPollStart(fromJSON: event.content),
+              eventContent.answerOptions.count > Constants.minAnswerOptionCount
+        else {
             throw PollAggregatorError.invalidPollStartEvent
         }
         
