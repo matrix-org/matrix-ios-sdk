@@ -2422,7 +2422,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     
     [content setObject:newContent.JSONDictionary forKey:kMXMessageContentKeyNewContent];
     
-    return [self sendEventOfType:[MXTools eventTypeString:MXEventTypePollStart] content:content localEcho:localEcho success:success failure:failure];
+    return [self sendEventOfType:[MXTools eventTypeString:MXEventTypePollStart] content:content threadId:pollStartEvent.threadId localEcho:localEcho success:success failure:failure];
 }
 
 #pragma mark - Location sharing
