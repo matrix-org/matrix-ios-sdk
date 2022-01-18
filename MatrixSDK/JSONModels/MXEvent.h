@@ -223,15 +223,20 @@ FOUNDATION_EXPORT NSString *const kMXEventLocalEventIdPrefix;
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyVoiceMessage;
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyVoiceMessageMSC2516;
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyVoiceMessageMSC3245;
+
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleAudio;
+FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleAudioMSC1767;
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleAudioDuration;
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleAudioWaveform;
 
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleText;
+FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleTextMSC1767;
 
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleTimestamp;
+FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleTimestampMSC3488;
 
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleFile;
+FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleFileMSC1767;
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleFileSize;
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleFileName;
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleFileURL;

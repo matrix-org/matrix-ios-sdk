@@ -128,23 +128,27 @@ NSString *const kMXEventDidDecryptNotification          = @"kMXEventDidDecryptNo
 
 NSString *const kMXEventIdentifierKey                   = @"kMXEventIdentifierKey";
 
-NSString *const kMXMessageContentKeyVoiceMessageMSC2516     = @"org.matrix.msc2516.voice";
-NSString *const kMXMessageContentKeyVoiceMessageMSC3245     = @"org.matrix.msc3245.voice";
-NSString *const kMXMessageContentKeyVoiceMessage            = @"m.voice";
+NSString *const kMXMessageContentKeyVoiceMessage = @"m.voice";
+NSString *const kMXMessageContentKeyVoiceMessageMSC2516 = @"org.matrix.msc2516.voice";
+NSString *const kMXMessageContentKeyVoiceMessageMSC3245 = @"org.matrix.msc3245.voice";
 
-NSString *const kMXMessageContentKeyExtensibleAudio         = @"org.matrix.msc1767.audio";
+NSString *const kMXMessageContentKeyExtensibleAudio = @"m.audio";
+NSString *const kMXMessageContentKeyExtensibleAudioMSC1767 = @"org.matrix.msc1767.audio";
 NSString *const kMXMessageContentKeyExtensibleAudioDuration = @"duration";
 NSString *const kMXMessageContentKeyExtensibleAudioWaveform = @"waveform";
 
-NSString *const kMXMessageContentKeyExtensibleText           = @"org.matrix.msc1767.text";
+NSString *const kMXMessageContentKeyExtensibleText = @"m.text";
+NSString *const kMXMessageContentKeyExtensibleTextMSC1767 = @"org.matrix.msc1767.text";
 
-NSString *const kMXMessageContentKeyExtensibleTimestamp      = @"org.matrix.msc3488.ts";
+NSString *const kMXMessageContentKeyExtensibleTimestamp = @"m.ts";
+NSString *const kMXMessageContentKeyExtensibleTimestampMSC3488 = @"org.matrix.msc3488.ts";
 
-NSString *const kMXMessageContentKeyExtensibleFile           = @"org.matrix.msc1767.file";
-NSString *const kMXMessageContentKeyExtensibleFileSize       = @"size";
-NSString *const kMXMessageContentKeyExtensibleFileName       = @"name";
-NSString *const kMXMessageContentKeyExtensibleFileURL        = @"url";
-NSString *const kMXMessageContentKeyExtensibleFileMimeType   = @"mimetype";
+NSString *const kMXMessageContentKeyExtensibleFile = @"m.file";
+NSString *const kMXMessageContentKeyExtensibleFileMSC1767 = @"org.matrix.msc1767.file";
+NSString *const kMXMessageContentKeyExtensibleFileSize = @"size";
+NSString *const kMXMessageContentKeyExtensibleFileName = @"name";
+NSString *const kMXMessageContentKeyExtensibleFileURL = @"url";
+NSString *const kMXMessageContentKeyExtensibleFileMimeType = @"mimetype";
 
 // Polls
 
