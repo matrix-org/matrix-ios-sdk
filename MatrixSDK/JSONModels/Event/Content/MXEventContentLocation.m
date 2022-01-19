@@ -87,9 +87,9 @@
     double longitude = [locationComponents.lastObject doubleValue];
     
     return [[MXEventContentLocation alloc] initWithAssetType:assetType
-                                               latitude:latitude
-                                                  longitude:longitude
-                                                description:description];
+                                                    latitude:latitude
+                                                   longitude:longitude
+                                                 description:description];
 }
 
 - (NSDictionary *)JSONDictionary
