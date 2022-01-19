@@ -40,7 +40,7 @@
 {
     NSString *description;
     NSString *geoURIString;
-    MXEventAssetType assetType = MXEventAssetTypeGeneric;
+    MXEventAssetType assetType = MXEventAssetTypeUser;
     
     NSDictionary *locationDictionary = JSONDictionary[kMXMessageContentKeyExtensibleLocationMSC3488];
     if (locationDictionary == nil)
@@ -48,25 +48,38 @@
         locationDictionary = JSONDictionary[kMXMessageContentKeyExtensibleLocation];
     }
     
-    if (locationDictionary) {
+    if (locationDictionary)
+    {
         MXJSONModelSetString(geoURIString, locationDictionary[kMXMessageContentKeyExtensibleLocationURI]);
         MXJSONModelSetString(description, locationDictionary[kMXMessageContentKeyExtensibleLocationDescription]);
-    } else if ([JSONDictionary[kMXMessageTypeKey] isEqualToString:kMXMessageTypeLocation]) {
+    }
+    else if ([JSONDictionary[kMXMessageTypeKey] isEqualToString:kMXMessageTypeLocation])
+    {
         MXJSONModelSetString(geoURIString, JSONDictionary[kMXMessageGeoURIKey]);
-    } else {
+    }
+    else
+    {
         return nil;
     }
     
-    if ([JSONDictionary[kMXMessageContentKeyExtensibleAsset][kMXMessageContentKeyExtensibleAssetType] isEqualToString:kMXMessageContentKeyExtensibleAssetTypeUser] ||
-        [JSONDictionary[kMXMessageContentKeyExtensibleAssetMSC3488][kMXMessageContentKeyExtensibleAssetType] isEqualToString:kMXMessageContentKeyExtensibleAssetTypeUser])
+    NSDictionary *assetDictionary = JSONDictionary[kMXMessageContentKeyExtensibleAssetMSC3488];
+    if (assetDictionary == nil)
     {
-        assetType = MXEventAssetTypeUser;
+        assetDictionary = JSONDictionary[kMXMessageContentKeyExtensibleAsset];
+    }
+    
+    if (assetDictionary)
+    {
+        if (![assetDictionary[kMXMessageContentKeyExtensibleAssetType] isEqualToString:kMXMessageContentKeyExtensibleAssetTypeUser]) {
+            assetType = MXEventAssetTypeGeneric;
+        }
     }
     
     NSString *locationString = [[geoURIString componentsSeparatedByString:@":"].lastObject componentsSeparatedByString:@";"].firstObject;
     NSArray *locationComponents = [locationString componentsSeparatedByString:@","];
     
-    if (locationComponents.count != 2) {
+    if (locationComponents.count != 2)
+    {
         return nil;
     }
     
