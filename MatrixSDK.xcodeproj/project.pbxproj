@@ -1456,6 +1456,10 @@
 		EC383BC02542F1E4002FBBE6 /* MXBackgroundSyncServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC383BBD2542F141002FBBE6 /* MXBackgroundSyncServiceTests.swift */; };
 		EC51019D26C41981007D6D88 /* MXSyncResponseUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC51019C26C41981007D6D88 /* MXSyncResponseUnitTests.swift */; };
 		EC51019E26C41981007D6D88 /* MXSyncResponseUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC51019C26C41981007D6D88 /* MXSyncResponseUnitTests.swift */; };
+		EC5C560A2798CEA00014CBE9 /* NSDictionary+MutableDeepCopy.h in Headers */ = {isa = PBXBuildFile; fileRef = EC5C56082798CEA00014CBE9 /* NSDictionary+MutableDeepCopy.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EC5C560B2798CEA00014CBE9 /* NSDictionary+MutableDeepCopy.h in Headers */ = {isa = PBXBuildFile; fileRef = EC5C56082798CEA00014CBE9 /* NSDictionary+MutableDeepCopy.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EC5C560C2798CEA00014CBE9 /* NSDictionary+MutableDeepCopy.m in Sources */ = {isa = PBXBuildFile; fileRef = EC5C56092798CEA00014CBE9 /* NSDictionary+MutableDeepCopy.m */; };
+		EC5C560D2798CEA00014CBE9 /* NSDictionary+MutableDeepCopy.m in Sources */ = {isa = PBXBuildFile; fileRef = EC5C56092798CEA00014CBE9 /* NSDictionary+MutableDeepCopy.m */; };
 		EC60ED5D265CFC2C00B39A4E /* MXSyncResponse.h in Headers */ = {isa = PBXBuildFile; fileRef = EC60ED5B265CFC2C00B39A4E /* MXSyncResponse.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		EC60ED5E265CFC2C00B39A4E /* MXSyncResponse.h in Headers */ = {isa = PBXBuildFile; fileRef = EC60ED5B265CFC2C00B39A4E /* MXSyncResponse.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		EC60ED5F265CFC2C00B39A4E /* MXSyncResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = EC60ED5C265CFC2C00B39A4E /* MXSyncResponse.m */; };
@@ -2481,6 +2485,8 @@
 		EC383BBD2542F141002FBBE6 /* MXBackgroundSyncServiceTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MXBackgroundSyncServiceTests.swift; sourceTree = "<group>"; };
 		EC383BC12542F251002FBBE6 /* MatrixSDKTests-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "MatrixSDKTests-Bridging-Header.h"; sourceTree = "<group>"; };
 		EC51019C26C41981007D6D88 /* MXSyncResponseUnitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXSyncResponseUnitTests.swift; sourceTree = "<group>"; };
+		EC5C56082798CEA00014CBE9 /* NSDictionary+MutableDeepCopy.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSDictionary+MutableDeepCopy.h"; sourceTree = "<group>"; };
+		EC5C56092798CEA00014CBE9 /* NSDictionary+MutableDeepCopy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSDictionary+MutableDeepCopy.m"; sourceTree = "<group>"; };
 		EC60ED5B265CFC2C00B39A4E /* MXSyncResponse.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXSyncResponse.h; sourceTree = "<group>"; };
 		EC60ED5C265CFC2C00B39A4E /* MXSyncResponse.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXSyncResponse.m; sourceTree = "<group>"; };
 		EC60ED65265CFC7200B39A4E /* MXPresenceSyncResponse.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXPresenceSyncResponse.h; sourceTree = "<group>"; };
@@ -3193,6 +3199,8 @@
 			children = (
 				3259CFE526026A6F00C365DB /* MXRestClient+Extensions.swift */,
 				3259D01A2603731A00C365DB /* MXKeysQueryResponse+Extensions.swift */,
+				EC5C56082798CEA00014CBE9 /* NSDictionary+MutableDeepCopy.h */,
+				EC5C56092798CEA00014CBE9 /* NSDictionary+MutableDeepCopy.m */,
 			);
 			path = Categories;
 			sourceTree = "<group>";
@@ -3769,9 +3777,8 @@
 				ECB6FA8D267CFF4300A941E4 /* MXCredentialsUnitTests.swift */,
 				EC116591270FB6890089FA56 /* MXBackgroundTaskUnitTests.swift */,
 				EC1165CB27107F3E0089FA56 /* MXRoomListDataManagerTests.swift */,
-				EC1165CA27107F3E0089FA56 /* MXStoreRoomListDataManagerUnitTests.swift */,
 				EC0B944527206D0B00B4D440 /* MXCoreDataRoomListDataManagerUnitTests.swift */,
-				EC1165CA27107F3E0089FA56 /* MXRoomListDataManagerUnitTests.swift */,
+				EC1165CA27107F3E0089FA56 /* MXStoreRoomListDataManagerUnitTests.swift */,
 				EC746C55274E5197002AD24C /* MXThreadingServiceUnitTests.swift */,
 				EC131B182779D8D500712964 /* MXThreadEventTimelineUnitTests.swift */,
 				EC746C58274E61EF002AD24C /* MXThreadingServiceTests.swift */,
@@ -4819,6 +4826,7 @@
 				3274538423FD69D600438328 /* MXKeyVerificationRequestByToDeviceJSONModel.h in Headers */,
 				323F878D25553D84009E9E67 /* MXTaskProfile.h in Headers */,
 				327A5F53239805F600ED6329 /* MXKeyVerificationAccept.h in Headers */,
+				EC5C560A2798CEA00014CBE9 /* NSDictionary+MutableDeepCopy.h in Headers */,
 				32A151481DAF7C0C00400192 /* MXKey.h in Headers */,
 				3A23A741256D322C00B9D00F /* MXAes.h in Headers */,
 				EC0B943D271DB68F00B4D440 /* MXVoidRoomSummaryStore.h in Headers */,
@@ -4995,6 +5003,7 @@
 				B14EF29A2397E90400758AF0 /* MXRealmCryptoStore.h in Headers */,
 				3297912F23AA126500F7BB9B /* MXKeyVerificationStatusResolver.h in Headers */,
 				B14EF29B2397E90400758AF0 /* MXMemoryRoomStore.h in Headers */,
+				EC5C560B2798CEA00014CBE9 /* NSDictionary+MutableDeepCopy.h in Headers */,
 				B14EF29C2397E90400758AF0 /* MXRealmMediaScan.h in Headers */,
 				324AAC812399143400380A66 /* MXKeyVerificationKey.h in Headers */,
 				B1798D0724091A0100308A8F /* MXBase64Tools.h in Headers */,
@@ -5918,6 +5927,7 @@
 				B11556EE230C45C600B2A2CF /* MXIdentityServerRestClient.swift in Sources */,
 				321CFDE722525A49004D31DF /* MXSASTransaction.m in Sources */,
 				32720D9D222EAA6F0086FFF5 /* MXDiscoveredClientConfig.m in Sources */,
+				EC5C560C2798CEA00014CBE9 /* NSDictionary+MutableDeepCopy.m in Sources */,
 				ECD2897926E8EE9300F268CF /* MXRoomListDataSortOptions.swift in Sources */,
 				B146D4F321A5AF7F00D8C2C6 /* MXRealmEventScan.m in Sources */,
 				B14EECD92577DE7A00448735 /* MXLoginSSOIdentityProvider.m in Sources */,
@@ -6414,6 +6424,7 @@
 				B1710B202613D01400A9B429 /* MXSpaceChildrenRequestParameters.swift in Sources */,
 				B14EF27A2397E90400758AF0 /* MXSessionEventListener.swift in Sources */,
 				B14EF27B2397E90400758AF0 /* MXOlmSessionResult.m in Sources */,
+				EC5C560D2798CEA00014CBE9 /* NSDictionary+MutableDeepCopy.m in Sources */,
 				323F877E25546170009E9E67 /* MXBaseProfiler.m in Sources */,
 				3AC135DC2640335100EE1E74 /* MXDehydrationService.m in Sources */,
 				B14EF27C2397E90400758AF0 /* MXRestClient.swift in Sources */,
