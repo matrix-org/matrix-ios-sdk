@@ -492,7 +492,14 @@ NSString *const kMXMessageContentKeyExtensibleLocationDescription = @"descriptio
 
 - (BOOL)isReplyEvent
 {
-    return self.eventType == MXEventTypeRoomMessage && self.content[kMXEventRelationRelatesToKey][@"m.in_reply_to"][@"event_id"] != nil;
+    return self.eventType == MXEventTypeRoomMessage && self.content[kMXEventRelationRelatesToKey][@"m.in_reply_to"][@"event_id"] != nil &&
+    //  add condition after new thread event fallbacks
+    (self.isInThread ? self.isReplyInThread : YES);
+}
+
+- (BOOL)isReplyInThread
+{
+    return [self.content[kMXEventRelationRelatesToKey][@"m.in_reply_to"][@"m.render_in"] containsObject:MXEventRelationTypeThread];
 }
 
 - (BOOL)isVoiceMessage

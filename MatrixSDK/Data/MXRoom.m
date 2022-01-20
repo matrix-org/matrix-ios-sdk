@@ -38,6 +38,8 @@
 
 #import "MXEventContentPollStart.h"
 #import "MXEventContentLocation.h"
+#import "MatrixSDKSwiftHeader.h"
+#import "NSDictionary+MutableDeepCopy.h"
 
 NSString *const kMXRoomDidFlushDataNotification = @"kMXRoomDidFlushDataNotification";
 NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotification";
@@ -777,7 +779,38 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                              success:(void (^)(NSString *eventId))success
                              failure:(void (^)(NSError *error))failure
 {
-    return [mxSession.matrixRestClient sendEventToRoom:self.roomId threadId:threadId eventType:eventTypeString content:content txnId:txnId success:success failure:failure];
+    NSDictionary *newContent = content;
+    if (threadId)
+    {
+        NSMutableDictionary *mutableContent = [newContent mutableDeepCopy];
+        BOOL isRealReply = content[kMXEventRelationRelatesToKey][@"m.in_reply_to"][@"event_id"] != nil;
+        if (isRealReply)
+        {
+            mutableContent[kMXEventRelationRelatesToKey][@"m.in_reply_to"][@"m.render_in"] = @[MXEventRelationTypeThread];
+        }
+        else
+        {
+            NSString *lastEventId = [mxSession.threadingService threadWithId:threadId].lastMessage.eventId;
+            NSString *replyToEventId = lastEventId ?: threadId;
+
+            if (mutableContent[kMXEventRelationRelatesToKey])
+            {
+                mutableContent[kMXEventRelationRelatesToKey][@"m.in_reply_to"] = @{
+                    @"event_id": replyToEventId
+                };
+            }
+            else
+            {
+                mutableContent[kMXEventRelationRelatesToKey] = @{
+                    @"m.in_reply_to": @{
+                            @"event_id": replyToEventId
+                    }
+                };
+            }
+        }
+        newContent = mutableContent;
+    }
+    return [mxSession.matrixRestClient sendEventToRoom:self.roomId threadId:threadId eventType:eventTypeString content:newContent txnId:txnId success:success failure:failure];
 }
 
 - (MXHTTPOperation*)sendStateEventOfType:(MXEventTypeString)eventTypeString
