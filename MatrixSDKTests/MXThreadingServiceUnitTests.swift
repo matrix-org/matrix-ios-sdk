@@ -77,7 +77,7 @@ class MXThreadingServiceUnitTests: XCTestCase {
             return
         }
         
-        threadingService.handleEvent(event)
+        threadingService.handleEvent(event, direction: .forwards)
         
         guard let thread = threadingService.thread(withId: threadId) else {
             XCTFail("Thread not created after handling event")
@@ -146,8 +146,8 @@ class MXThreadingServiceUnitTests: XCTestCase {
         }
         
         //  handle events backwards
-        threadingService.handleEvent(eventNew)
-        threadingService.handleEvent(eventOld)
+        threadingService.handleEvent(eventNew, direction: .forwards)
+        threadingService.handleEvent(eventOld, direction: .forwards)
         
         guard let thread = threadingService.thread(withId: threadId) else {
             XCTFail("Thread not created after handling events")
@@ -218,7 +218,7 @@ class MXThreadingServiceUnitTests: XCTestCase {
                         session.close()
                     }
                     
-                    threadingService.handleEvent(event)
+                    threadingService.handleEvent(event, direction: .forwards)
                     
                     guard let thread = threadingService.thread(withId: threadId) else {
                         XCTFail("Thread not created after handling event")
@@ -287,8 +287,8 @@ class MXThreadingServiceUnitTests: XCTestCase {
             session.close()
         }
         
-        threadingService.handleEvent(event)
-        threadingService.handleEvent(rootEvent)
+        threadingService.handleEvent(event, direction: .forwards)
+        threadingService.handleEvent(rootEvent, direction: .forwards)
         
         guard let thread = threadingService.thread(withId: threadId) else {
             XCTFail("Thread not created after handling event")
