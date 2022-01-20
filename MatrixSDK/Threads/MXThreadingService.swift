@@ -63,7 +63,7 @@ public class MXThreadingService: NSObject {
     /// - Parameter event: event to be handled
     /// - Returns: true if the event handled, false otherwise
     @discardableResult
-    public func handleEvent(_ event: MXEvent) -> Bool {
+    public func handleEvent(_ event: MXEvent, direction: MXTimelineDirection) -> Bool {
         guard let session = session else {
             //  session closed
             return false
@@ -94,6 +94,16 @@ public class MXThreadingService: NSObject {
             let handled = thread.addEvent(event)
             notifyDidUpdateThreads()
             return handled
+        } else if event.isEdit() && direction == .forwards {
+            let editedEventId = event.relatesTo.eventId
+            if let editedEvent = session.store?.event(withEventId: editedEventId, inRoom: event.roomId),
+               let threadId = editedEvent.threadId,
+               let thread = thread(withId: threadId),
+               let newEvent = editedEvent.editedEvent(fromReplacementEvent: event) {
+                let handled = thread.replaceEvent(withId: editedEventId, with: newEvent)
+                notifyDidUpdateThreads()
+                return handled
+            }
         }
         return false
     }

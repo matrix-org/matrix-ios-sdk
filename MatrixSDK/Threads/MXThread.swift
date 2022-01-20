@@ -73,6 +73,15 @@ public class MXThread: NSObject {
         }
         return true
     }
+
+    @discardableResult
+    internal func replaceEvent(withId oldEventId: String, with newEvent: MXEvent) -> Bool {
+        guard eventsMap[oldEventId] != nil else {
+            return false
+        }
+        eventsMap[oldEventId] = newEvent
+        return true
+    }
     
     /// Number of notifications in the thread
     public private(set) var notificationCount: UInt = 0

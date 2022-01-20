@@ -717,7 +717,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     [room.mxSession.aggregations handleOriginalDataOfEvent:event];
 
     //  Pass event to threading service to build the threads
-    [room.mxSession.threadingService handleEvent:event];
+    [room.mxSession.threadingService handleEvent:event direction:direction];
 
     // Notify listeners
     [self notifyListeners:event direction:direction];
