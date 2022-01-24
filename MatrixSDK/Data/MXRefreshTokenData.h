@@ -22,7 +22,7 @@
 /**
  The  user id.
  */
-@property (nonatomic, nullable) NSString *userId;
+@property (nonatomic, readonly) NSString *userId;
 
 /**
  The homeserver URL.
@@ -33,17 +33,17 @@
 /**
  The access token to create a MXRestClient
  */
-@property (nonatomic) NSString *accessToken;
+@property (nonatomic, readonly) NSString *accessToken;
 
 /**
  The timestamp in milliseconds for when the access token will expire
  */
-@property (nonatomic) uint64_t accessTokenExpiresAt;
+@property (nonatomic, readonly) uint64_t accessTokenExpiresAt;
 
 /**
  The refresh token, which can be used to obtain new access tokens. (optional)
 */
-@property (nonatomic) NSString *refreshToken;
+@property (nonatomic, readonly) NSString *refreshToken;
 
 - (instancetype)initWithUserId:(NSString*)userId
                     homeserver:(NSString*)homeserver
