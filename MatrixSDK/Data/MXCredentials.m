@@ -192,7 +192,7 @@
     {
         self.refreshToken = tokenData.refreshToken;
         self.accessToken = tokenData.accessToken;
-        self.accessTokenExpiresAt = ((uint64_t)[NSDate date].timeIntervalSince1970 * 1000) + tokenData.expiresInMs;
+        self.accessTokenExpiresAt = tokenData.accessTokenExpiresAt;
     }
 }
 

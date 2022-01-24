@@ -13,7 +13,7 @@
                     homeserver:(NSString*)homeserver
                    accessToken:(NSString*)accessToken
                   refreshToken:(NSString*)refreshToken
-                    expiresInM:(uint64_t)expiresInMs
+          accessTokenExpiresAt:(uint64_t)accessTokenExpiresAt
 {
     self = [super init];
     if (self)
@@ -22,7 +22,7 @@
         _homeserver = homeserver;
         _accessToken = accessToken;
         _refreshToken = refreshToken;
-        _expiresInMs = expiresInMs;
+        _accessTokenExpiresAt = accessTokenExpiresAt;
     }
     return self;
 }

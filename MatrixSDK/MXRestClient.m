@@ -333,7 +333,7 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
                                                                             homeserver:credential.homeServer
                                                                            accessToken:credential.accessToken
                                                                           refreshToken:credential.refreshToken
-                                                                            expiresInM:credential.accessTokenExpiresAt
+                                                                  accessTokenExpiresAt:credential.accessTokenExpiresAt
                                              ];
             [[NSNotificationCenter defaultCenter] postNotificationName:MXCredentialsUpdateTokensNotification object:nil userInfo:@{
                 kMXCredentialsNewRefreshTokenDataKey: tokenData
@@ -351,7 +351,7 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
                                                                                 homeserver:credential.homeServer
                                                                                accessToken:refreshResponse.accessToken
                                                                               refreshToken:refreshResponse.refreshToken
-                                                                                expiresInM:accessTokenExpiresAt
+                                                                      accessTokenExpiresAt:accessTokenExpiresAt
                                                  ];
                 [[NSNotificationCenter defaultCenter] postNotificationName:MXCredentialsUpdateTokensNotification object:nil userInfo:@{
                     kMXCredentialsNewRefreshTokenDataKey: tokenData

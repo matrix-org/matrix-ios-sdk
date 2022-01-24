@@ -19,35 +19,35 @@
  */
 @interface MXRefreshTokenData : NSObject
 
-    /**
-     The  user id.
-     */
-    @property (nonatomic, nullable) NSString *userId;
-    
 /**
-     The homeserver URL.
-     */
-    @property (nonatomic, readonly) NSString *homeserver;
+ The  user id.
+ */
+@property (nonatomic, nullable) NSString *userId;
+
+/**
+ The homeserver URL.
+ */
+@property (nonatomic, readonly) NSString *homeserver;
 
 
-    /**
-     The access token to create a MXRestClient
-     */
-    @property (nonatomic) NSString *accessToken;
+/**
+ The access token to create a MXRestClient
+ */
+@property (nonatomic) NSString *accessToken;
 
-    /**
-     The lifetime in milliseconds of the access token. (optional)
-     */
-    @property (nonatomic) uint64_t expiresInMs;
+/**
+ The timestamp in milliseconds for when the access token will expire
+ */
+@property (nonatomic) uint64_t accessTokenExpiresAt;
 
-    /**
-     The refresh token, which can be used to obtain new access tokens. (optional)
-    */
-    @property (nonatomic) NSString *refreshToken;
+/**
+ The refresh token, which can be used to obtain new access tokens. (optional)
+*/
+@property (nonatomic) NSString *refreshToken;
 
 - (instancetype)initWithUserId:(NSString*)userId
                     homeserver:(NSString*)homeserver
                    accessToken:(NSString*)accessToken
                   refreshToken:(NSString*)refreshToken
-                    expiresInM:(uint64_t)expiresInMs;
+          accessTokenExpiresAt:(uint64_t)accessTokenExpiresAt;
 @end
