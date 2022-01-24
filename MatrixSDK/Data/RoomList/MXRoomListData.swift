@@ -36,7 +36,8 @@ open class MXRoomListData: NSObject {
     
     /// Flag to indicate whether more rooms exist in next pages
     public var hasMoreRooms: Bool {
-        return counts.numberOfRooms < counts.totalRoomsCount
+        let totalNumberOfRooms = counts.total?.numberOfRooms ?? 0
+        return counts.numberOfRooms < totalNumberOfRooms
     }
     
     /// Get room at index
@@ -77,7 +78,9 @@ open class MXRoomListData: NSObject {
         let roomsHash = rooms.reduce(1, { $0 ^ $1.hash }).hashValue
         result = prime * result + Int64(roomsHash)
         result = prime * result + Int64(paginationOptions.rawValue)
-        result = prime * result + Int64(counts.totalRoomsCount)
+        if let total = counts.total {
+            result = prime * result + Int64(total.numberOfRooms)
+        }
         
         return String(result).hash
     }

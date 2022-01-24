@@ -268,11 +268,11 @@
             }
         }
     }];
-
+    
     return @{
-             @"body": olmMessage.ciphertext,
-             @"type": @(olmMessage.type)
-             };
+        kMXMessageBodyKey: olmMessage.ciphertext,
+        @"type": @(olmMessage.type)
+    };
 }
 
 - (NSString*)decryptMessage:(NSString*)ciphertext withType:(NSUInteger)messageType sessionId:(NSString*)sessionId theirDeviceIdentityKey:(NSString*)theirDeviceIdentityKey

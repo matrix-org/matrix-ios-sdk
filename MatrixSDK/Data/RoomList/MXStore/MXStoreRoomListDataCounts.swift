@@ -26,16 +26,16 @@ public class MXStoreRoomListDataCounts: NSObject, MXRoomListDataCounts {
     public let numberOfNotifications: UInt
     public let numberOfHighlights: UInt
     public let numberOfInvitedRooms: Int
-    public let totalRoomsCount: Int
+    public var total: MXRoomListDataCounts?
     
     public init(withRooms rooms: [MXRoomSummaryProtocol],
-                totalRoomsCount: Int) {
-        var numberOfInvitedRooms: Int = 0
+                total: MXRoomListDataCounts?) {
         var numberOfUnsentRooms: Int = 0
         var numberOfNotifiedRooms: Int = 0
         var numberOfHighlightedRooms: Int = 0
         var numberOfNotifications: UInt = 0
         var numberOfHighlights: UInt = 0
+        var numberOfInvitedRooms: Int = 0
         
         rooms.forEach { summary in
             if summary.isTyped(.invited) {
@@ -55,13 +55,13 @@ public class MXStoreRoomListDataCounts: NSObject, MXRoomListDataCounts {
         }
         
         self.numberOfRooms = rooms.count
-        self.numberOfInvitedRooms = numberOfInvitedRooms
         self.numberOfUnsentRooms = numberOfUnsentRooms
         self.numberOfNotifiedRooms = numberOfNotifiedRooms + numberOfInvitedRooms
         self.numberOfHighlightedRooms = numberOfHighlightedRooms
         self.numberOfNotifications = numberOfNotifications
         self.numberOfHighlights = numberOfHighlights
-        self.totalRoomsCount = totalRoomsCount
+        self.numberOfInvitedRooms = numberOfInvitedRooms
+        self.total = total
         super.init()
     }
 

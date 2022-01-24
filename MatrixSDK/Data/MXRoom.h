@@ -950,6 +950,22 @@ FOUNDATION_EXPORT NSInteger const kMXRoomAlreadyJoinedErrorCode;
                                 success:(void (^)(NSString *eventId))success
                                 failure:(void (^)(NSError *error))failure;
 
+- (MXHTTPOperation *)sendPollUpdateForEvent:(MXEvent *)pollStartEvent
+                                 oldContent:(MXEventContentPollStart *)oldContent
+                                 newContent:(MXEventContentPollStart *)newContent
+                                  localEcho:(MXEvent **)localEcho
+                                    success:(void (^)(NSString *))success
+                                    failure:(void (^)(NSError *))failure;
+
+#pragma mark - Location sharing
+
+- (MXHTTPOperation *)sendLocationWithLatitude:(double)latitude
+                                    longitude:(double)longitude
+                                  description:(NSString *)description
+                                    localEcho:(MXEvent **)localEcho
+                                      success:(void (^)(NSString *))success
+                                      failure:(void (^)(NSError *))failure;
+
 #pragma mark - Events listeners on the live timeline
 /**
  Register a listener to events of the room live timeline.

@@ -254,17 +254,17 @@
 - (NSString*)decryptMessage:(NSDictionary*)message andTheirDeviceIdentityKey:(NSString*)theirDeviceIdentityKey
 {
     NSArray<NSString *> *sessionIds = [olmDevice sessionIdsForDevice:theirDeviceIdentityKey];
-
-    NSString *messageBody = message[@"body"];
+    
+    NSString *messageBody = message[kMXMessageBodyKey];
     NSUInteger messageType = [((NSNumber*)message[@"type"]) unsignedIntegerValue];
-
+    
     // Try each session in turn
     for (NSString *sessionId in sessionIds)
     {
         NSString *payload = [olmDevice decryptMessage:messageBody
-                              withType:messageType
-                             sessionId:sessionId
-                theirDeviceIdentityKey:theirDeviceIdentityKey];
+                                             withType:messageType
+                                            sessionId:sessionId
+                               theirDeviceIdentityKey:theirDeviceIdentityKey];
 
         if (payload)
         {

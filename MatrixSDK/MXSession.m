@@ -108,7 +108,7 @@ typedef void (^MXOnResumeDone)(void);
      Rooms summaries
      Each key is a room id. Each value, the MXRoomSummary instance.
      */
-    NSMutableDictionary<NSString*, MXRoomSummary*> *roomsSummaries;
+    NSMutableDictionary<NSString*, MXRoomSummary*> *roomSummaries;
 
     /**
      The current request of the event stream.
@@ -224,7 +224,7 @@ typedef void (^MXOnResumeDone)(void);
         _threePidAddManager = [[MX3PidAddManager alloc] initWithMatrixSession:self];
         mediaManager = [[MXMediaManager alloc] initWithHomeServer:matrixRestClient.homeserver];
         rooms = [NSMutableDictionary dictionary];
-        roomsSummaries = [NSMutableDictionary dictionary];
+        roomSummaries = [NSMutableDictionary dictionary];
         _roomSummaryUpdateDelegate = [MXRoomSummaryUpdater roomSummaryUpdaterForSession:self];
         _roomAccountDataUpdateDelegate = [MXRoomAccountDataUpdater roomAccountDataUpdaterForSession:self];
         globalEventListeners = [NSMutableArray array];
@@ -351,7 +351,7 @@ typedef void (^MXOnResumeDone)(void);
     self.roomListDataManager = [[MXSDKOptions.sharedInstance.roomListDataManagerClass alloc] init];
 
     NSDate *startDate = [NSDate date];
-    MXTaskProfile *taskProfile = [MXSDKOptions.sharedInstance.profiler startMeasuringTaskWithName:kMXAnalyticsStartupMountData category:kMXAnalyticsStartupCategory];
+    MXTaskProfile *taskProfile = [MXSDKOptions.sharedInstance.profiler startMeasuringTaskWithName:MXTaskProfileNameStartupMountData];
 
     MXWeakify(self);
     [self.store openWithCredentials:matrixRestClient.credentials onComplete:^{
@@ -405,23 +405,13 @@ typedef void (^MXOnResumeDone)(void);
 
                 // Load MXRoomSummaries from the store
                 NSDate *startDate2 = [NSDate date];
-                for (NSString *roomId in self.store.rooms)
-                {
-                    @autoreleasepool
-                    {
-                        MXRoomSummary *summary = [[MXRoomSummary alloc] initWithRoomId:roomId andMatrixSession:self];
-                        if (summary)
-                        {
-                            self->roomsSummaries[roomId] = summary;
-                        }
-                    }
-                }
-
-                MXLogDebug(@"[MXSession] Built %lu MXRoomSummaries in %.0fms", (unsigned long)self->roomsSummaries.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate2] * 1000);
+                NSArray<NSString*> *roomIds = self.store.roomSummaryStore.rooms;
+                
+                MXLogDebug(@"[MXSession] Read %lu room ids in %.0fms", (unsigned long)roomIds.count, [[NSDate date] timeIntervalSinceDate:startDate2] * 1000);
 
                 // Create MXRooms from their states stored in the store
                 NSDate *startDate3 = [NSDate date];
-                for (NSString *roomId in self.store.rooms)
+                for (NSString *roomId in roomIds)
                 {
                     [self loadRoom:roomId];
                 }
@@ -848,7 +838,7 @@ typedef void (^MXOnResumeDone)(void);
     [self setState:MXSessionStateSyncInProgress];
 
     // Can we resume from data available in the cache
-    if (self.store.isPermanent && self.isEventStreamInitialised && 0 < self.store.rooms.count)
+    if (self.store.isPermanent && self.isEventStreamInitialised && 0 < self.store.roomSummaryStore.countOfRooms)
     {
         // Resume the stream (presence will be retrieved during server sync)
         MXLogDebug(@"[MXSession] Resuming the events stream from %@...", self.store.eventStreamToken);
@@ -1165,11 +1155,11 @@ typedef void (^MXOnResumeDone)(void);
     [peekingRooms removeAllObjects];
 
     // Clean summaries
-    for (MXRoomSummary *summary in roomsSummaries.allValues)
+    for (MXRoomSummary *summary in roomSummaries.allValues)
     {
         [summary destroy];
     }
-    [roomsSummaries removeAllObjects];
+    [roomSummaries removeAllObjects];
 
     // Clean notification center
     [_notificationCenter removeAllListeners];
@@ -1368,8 +1358,8 @@ typedef void (^MXOnResumeDone)(void);
         if (!self->firstSyncDone)
         {
             BOOL isInitialSync = !self.isEventStreamInitialised;
-            syncTaskProfile = [MXSDKOptions.sharedInstance.profiler startMeasuringTaskWithName:isInitialSync ? kMXAnalyticsStartupInititialSync : kMXAnalyticsStartupIncrementalSync
-                                                            category:kMXAnalyticsStartupCategory];
+            MXTaskProfileName taskName = isInitialSync ? MXTaskProfileNameStartupInitialSync : MXTaskProfileNameStartupIncrementalSync;
+            syncTaskProfile = [MXSDKOptions.sharedInstance.profiler startMeasuringTaskWithName:taskName];
         }
         
         NSString * streamToken = self.store.eventStreamToken;
@@ -1402,10 +1392,10 @@ typedef void (^MXOnResumeDone)(void);
     }
     
     dispatch_group_notify(initialSyncDispatchGroup, dispatch_get_main_queue(), ^{
-        BOOL wasfirstSync = NO;
+        BOOL wasFirstSync = NO;
         if (!self->firstSyncDone && syncTaskProfile)
         {
-            wasfirstSync = YES;
+            wasFirstSync = YES;
             self->firstSyncDone = YES;
             
             // Contextualise the profiling with the amount of received information
@@ -1435,13 +1425,6 @@ typedef void (^MXOnResumeDone)(void);
         }
         
         [self handleSyncResponse:syncResponse completion:^{
-            
-            if (wasfirstSync)
-            {
-                [[MXSDKOptions sharedInstance].analyticsDelegate trackValue:@(self->rooms.count)
-                                                                   category:kMXAnalyticsStatsCategory
-                                                                       name:kMXAnalyticsStatsRooms];
-            }
             
             dispatch_group_t dispatchGroupLastMessage = dispatch_group_create();
             
@@ -1897,7 +1880,7 @@ typedef void (^MXOnResumeDone)(void);
             }
             else
             {
-                MXLogDebug(@"[MXSession] handleToDeviceEvents: Warning: Unable to decrypt to-device event: %@\nError: %@", event.wireContent[@"body"], event.decryptionError);
+                MXLogDebug(@"[MXSession] handleToDeviceEvents: Warning: Unable to decrypt to-device event: %@\nError: %@", event.wireContent[kMXMessageBodyKey], event.decryptionError);
             }
         }
         
@@ -1951,6 +1934,14 @@ typedef void (^MXOnResumeDone)(void);
 
 - (void)handleBackgroundSyncCacheIfRequiredWithCompletion:(void (^)(void))completion
 {
+    if (_state == MXSessionStateInitialSyncFailed)
+    {
+        if (completion)
+        {
+            completion();
+        }
+        return;
+    }
     NSParameterAssert(_state == MXSessionStateStoreDataReady || _state == MXSessionStatePaused);
     
     //  keep the old state to revert later
@@ -2142,6 +2133,7 @@ typedef void (^MXOnResumeDone)(void);
             // The first /sync response for this room may have happened before the
             // homeserver answer to the createRoom request.
             success(room);
+            [MXSDKOptions.sharedInstance.analyticsDelegate trackCreatedRoomAsDM:NO];
         }
         else
         {
@@ -2158,6 +2150,7 @@ typedef void (^MXOnResumeDone)(void);
                     
                     success(room);
                     [[NSNotificationCenter defaultCenter] removeObserver:initialSyncObserver];
+                    [MXSDKOptions.sharedInstance.analyticsDelegate trackCreatedRoomAsDM:NO];
                 }
             }];
         }
@@ -2208,6 +2201,7 @@ typedef void (^MXOnResumeDone)(void);
         
         // Tag the room as direct
         tagRoomAsDirectChat(room);
+        [MXSDKOptions.sharedInstance.analyticsDelegate trackCreatedRoomAsDM:YES];
     }
     else
     {
@@ -2227,6 +2221,7 @@ typedef void (^MXOnResumeDone)(void);
                 tagRoomAsDirectChat(room);
                 
                 [[NSNotificationCenter defaultCenter] removeObserver:initialSyncObserver];
+                [MXSDKOptions.sharedInstance.analyticsDelegate trackCreatedRoomAsDM:YES];
             }
         }];
     }
@@ -2323,6 +2318,8 @@ typedef void (^MXOnResumeDone)(void);
             // The /sync corresponding to this join may have happened before the
             // homeserver answer to the joinRoom request.
             success(room);
+            [MXSDKOptions.sharedInstance.analyticsDelegate trackJoinedRoomAsDM:room.summary.isDirect
+                                                                   memberCount:room.summary.membersCount.joined];
         }
         else
         {
@@ -2336,6 +2333,8 @@ typedef void (^MXOnResumeDone)(void);
                 {
                     success(room);
                     [[NSNotificationCenter defaultCenter] removeObserver:initialSyncObserver];
+                    [MXSDKOptions.sharedInstance.analyticsDelegate trackJoinedRoomAsDM:room.summary.isDirect
+                                                                           memberCount:room.summary.membersCount.joined];
                 }
             }];
         }
@@ -2573,11 +2572,12 @@ typedef void (^MXOnResumeDone)(void);
 
     if (alias)
     {
-        for (MXRoomSummary *summary in roomsSummaries.allValues)
+        for (MXRoom *room in self.rooms)
         {
+            MXRoomSummary *summary = room.summary;
             if (summary.aliases && NSNotFound != [summary.aliases indexOfObject:alias])
             {
-                theRoom = [self roomWithRoomId:summary.roomId];
+                theRoom = room;
                 break;
             }
         }
@@ -2801,7 +2801,20 @@ typedef void (^MXOnResumeDone)(void);
     {
         room = [self createRoom:roomId notify:notify];
     }
+    //  also create the room summary if needed
+    [self getOrCreateRoomSummary:roomId];
     return room;
+}
+
+- (MXRoomSummary *)getOrCreateRoomSummary:(NSString *)roomId
+{
+    // Create the room summary if does not exist yet
+    MXRoomSummary *summary = [self roomSummaryWithRoomId:roomId];
+    if (!summary)
+    {
+        summary = [self createRoomSummary:roomId];
+    }
+    return summary;
 }
 
 - (MXRoom *)createRoom:(NSString *)roomId notify:(BOOL)notify
@@ -2810,6 +2823,22 @@ typedef void (^MXOnResumeDone)(void);
     
     [self addRoom:room notify:notify];
     return room;
+}
+
+- (MXRoomSummary *)createRoomSummary:(NSString *)roomId
+{
+    MXRoomSummary *summary = [[MXRoomSummary alloc] initWithRoomId:roomId andMatrixSession:self];
+    roomSummaries[roomId] = summary;
+
+    // Update the summary if necessary
+    NSString *directUserId = [self directUserIdInRoom:roomId];
+    if (directUserId)
+    {
+        summary.directUserId = directUserId;
+        [summary save:YES];
+    }
+    
+    return summary;
 }
 
 - (void)addRoom:(MXRoom*)room notify:(BOOL)notify
@@ -2822,22 +2851,6 @@ typedef void (^MXOnResumeDone)(void);
 
     [rooms setObject:room forKey:room.roomId];
 
-    // Create the room summary if does not exist yet
-    MXRoomSummary *summary = roomsSummaries[room.roomId];
-    if (!summary)
-    {
-        summary = [[MXRoomSummary alloc] initWithRoomId:room.roomId andMatrixSession:self];
-        roomsSummaries[room.roomId] = summary;
-
-        // Update the summary if necessary
-        NSString *directUserId = [self directUserIdInRoom:room.roomId];
-        if (directUserId)
-        {
-            summary.directUserId = directUserId;
-            [summary save:YES];
-        }
-    }
-    
     if (room.accountData.virtualRoomInfo.isVirtual)
     {
         //  cache this info
@@ -2871,11 +2884,12 @@ typedef void (^MXOnResumeDone)(void);
 
         // Clean the store
         [self.store deleteRoom:roomId];
+        [self.store.roomSummaryStore removeSummaryOfRoom:roomId];
         [self.aggregations resetDataInRoom:roomId];
 
         // And remove the room and its summary from the list
         [rooms removeObjectForKey:roomId];
-        [roomsSummaries removeObjectForKey:roomId];
+        [roomSummaries removeObjectForKey:roomId];
 
         // Broadcast the left room
         [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDidLeaveRoomNotification
@@ -2995,25 +3009,32 @@ typedef void (^MXOnResumeDone)(void);
 
     if (roomId)
     {
-        roomSummary = roomsSummaries[roomId];
+        roomSummary = roomSummaries[roomId];
+        
+        if (roomSummary == nil)
+        {
+            //  summary not in the cache, try to load it from the store
+            id<MXRoomSummaryProtocol> roomSummaryProtocol = [self.store.roomSummaryStore summaryOfRoom:roomId];
+            if (roomSummaryProtocol)
+            {
+                roomSummary = [[MXRoomSummary alloc] initWithSummaryModel:roomSummaryProtocol];
+                [roomSummary setMatrixSession:self];
+                roomSummaries[roomId] = roomSummary;
+            }
+        }
     }
 
     return roomSummary;
-}
-
-- (NSArray<MXRoomSummary*>*)roomsSummaries
-{
-    return [roomsSummaries allValues];
 }
 
 -(void)resetRoomsSummariesLastMessage
 {
     MXLogDebug(@"[MXSession] resetRoomsSummariesLastMessage");
 
-    for (MXRoomSummary *summary in self.roomsSummaries)
+    for (MXRoom *room in self.rooms)
     {
-        [summary resetLastMessage:nil failure:^(NSError *error) {
-            MXLogDebug(@"[MXSession] Cannot reset last message for room %@", summary.roomId);
+        [room.summary resetLastMessage:nil failure:^(NSError *error) {
+            MXLogDebug(@"[MXSession] Cannot reset last message for room %@", room.roomId);
         } commit:NO];
     }
     
@@ -3052,8 +3073,15 @@ typedef void (^MXOnResumeDone)(void);
     
     dispatch_group_t dispatchGroup = dispatch_group_create();
     
-    for (MXRoomSummary *summary in self.roomsSummaries)
+    for (MXRoom *room in self.rooms)
     {
+        MXRoomSummary *summary = room.summary;
+        
+        if (summary == nil)
+        {
+            continue;
+        }
+        
         //  ignore this room if there is no change
         if (!force && summary.storedHash == summary.hash)
         {
@@ -3620,11 +3648,12 @@ typedef void (^MXOnResumeDone)(void);
     NSUInteger notificationCount = 0;
     
     // Sum here all the notification counts from room summaries.
-    for (MXRoomSummary *roomSummary in self.roomsSummaries)
+    for (MXRoom *room in self.rooms)
     {
-        if (roomSummary.notificationCount)
+        MXRoomSummary *summary = room.summary;
+        if (summary.notificationCount)
         {
-            notificationCount += roomSummary.notificationCount;
+            notificationCount += summary.notificationCount;
         }
     }
     
@@ -3636,9 +3665,9 @@ typedef void (^MXOnResumeDone)(void);
     NSUInteger roomCount = 0;
     
     // Sum here all the rooms with missed notifications.
-    for (MXRoomSummary *roomSummary in self.roomsSummaries)
+    for (MXRoom *room in self.rooms)
     {
-        if (roomSummary.notificationCount)
+        if (room.summary.notificationCount)
         {
             roomCount ++;
         }
@@ -3652,9 +3681,9 @@ typedef void (^MXOnResumeDone)(void);
     NSUInteger roomCount = 0;
     
     // Sum here all the rooms with unread highlighted messages.
-    for (MXRoomSummary *roomSummary in self.roomsSummaries)
+    for (MXRoom *room in self.rooms)
     {
-        if (roomSummary.highlightCount)
+        if (room.summary.highlightCount)
         {
             roomCount ++;
         }
@@ -3666,9 +3695,9 @@ typedef void (^MXOnResumeDone)(void);
 - (void)markAllMessagesAsRead
 {
     // Reset the unread count in all the existing room summaries.
-    for (MXRoomSummary *roomSummary in self.roomsSummaries)
+    for (MXRoom *room in self.rooms)
     {
-        [roomSummary markAllAsRead];
+        [room.summary markAllAsRead];
     }
 }
 
@@ -4806,7 +4835,7 @@ typedef void (^MXOnResumeDone)(void);
     
     [self.spaceService.ancestorsPerRoomId enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull roomId, NSSet<NSString *> * _Nonnull parentIds, BOOL * _Nonnull stop)
     {
-        self->roomsSummaries[roomId].parentSpaceIds = parentIds;
+        self->roomSummaries[roomId].parentSpaceIds = parentIds;
     }];
 }
 

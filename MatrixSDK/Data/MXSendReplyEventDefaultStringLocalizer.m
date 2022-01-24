@@ -23,6 +23,7 @@
 @property (nonatomic, strong) NSString *senderSentAnAudioFile;
 @property (nonatomic, strong) NSString *senderSentAVoiceMessage;
 @property (nonatomic, strong) NSString *senderSentAFile;
+@property (nonatomic, strong) NSString *senderSentTheirLocation;
 @property (nonatomic, strong) NSString *messageToReplyToPrefix;
 
 @end
@@ -38,6 +39,7 @@
         _senderSentAnAudioFile = @"sent an audio file.";
         _senderSentAVoiceMessage = @"sent a voice message.";
         _senderSentAFile = @"sent a file.";
+        _senderSentTheirLocation = @"has shared their location.";
         _messageToReplyToPrefix = @"In reply to";
     }
     return self;

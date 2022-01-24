@@ -36,10 +36,25 @@
 
 + (instancetype)modelFromJSON:(NSDictionary *)JSONDictionary
 {
-    NSDictionary *content = JSONDictionary[kMXMessageContentKeyExtensiblePollStart];
+    NSDictionary *content = JSONDictionary[kMXMessageContentKeyExtensiblePollStartMSC3381];
+    if (content == nil) {
+        content = JSONDictionary[kMXMessageContentKeyExtensiblePollStart];
+    }
     
-    NSString *question, *kind;
-    MXJSONModelSetString(question, content[kMXMessageContentKeyExtensiblePollQuestion][kMXMessageContentKeyExtensibleText]);
+    if (content == nil) {
+        return nil;
+    }
+    
+    NSString *question = content[kMXMessageContentKeyExtensiblePollQuestion][kMXMessageContentKeyExtensibleTextMSC1767];
+    if (question == nil) {
+        question = content[kMXMessageContentKeyExtensiblePollQuestion][kMXMessageContentKeyExtensibleText];
+    }
+    
+    if (question.length == 0) {
+        return nil;
+    }
+    
+    NSString *kind;
     MXJSONModelSetString(kind, content[kMXMessageContentKeyExtensiblePollKind]);
     
     NSNumber *maxSelections;
@@ -57,7 +72,7 @@
 {
     NSMutableDictionary *content = [NSMutableDictionary dictionary];
     
-    content[kMXMessageContentKeyExtensiblePollQuestion] = @{kMXMessageContentKeyExtensibleText: self.question};
+    content[kMXMessageContentKeyExtensiblePollQuestion] = @{kMXMessageContentKeyExtensibleTextMSC1767: self.question};
     content[kMXMessageContentKeyExtensiblePollKind] = self.kind;
     content[kMXMessageContentKeyExtensiblePollMaxSelections] = self.maxSelections;
     
@@ -69,7 +84,7 @@
     
     content[kMXMessageContentKeyExtensiblePollAnswers] = answerOptions;
     
-    return @{kMXMessageContentKeyExtensiblePollStart: content};
+    return @{kMXMessageContentKeyExtensiblePollStartMSC3381: content};
 }
 
 @end
@@ -90,9 +105,17 @@
 
 + (instancetype)modelFromJSON:(NSDictionary *)JSONDictionary
 {
-    NSString *uuid, *text;
+    NSString *uuid;
     MXJSONModelSetString(uuid, JSONDictionary[kMXMessageContentKeyExtensiblePollAnswerId]);
-    MXJSONModelSetString(text, JSONDictionary[kMXMessageContentKeyExtensibleText]);
+    
+    NSString *text = JSONDictionary[kMXMessageContentKeyExtensibleTextMSC1767];
+    if (text == nil) {
+        text = JSONDictionary[kMXMessageContentKeyExtensibleText];
+    }
+    
+    if (text.length == 0) {
+        return nil;
+    }
 
     return [[MXEventContentPollStartAnswerOption alloc] initWithUUID:uuid text:text];
 }
@@ -102,7 +125,7 @@
     NSMutableDictionary *JSONDictionary = [NSMutableDictionary dictionary];
     
     JSONDictionary[kMXMessageContentKeyExtensiblePollAnswerId] = self.uuid;
-    JSONDictionary[kMXMessageContentKeyExtensibleText] = self.text;
+    JSONDictionary[kMXMessageContentKeyExtensibleTextMSC1767] = self.text;
     
     return JSONDictionary;
 }
