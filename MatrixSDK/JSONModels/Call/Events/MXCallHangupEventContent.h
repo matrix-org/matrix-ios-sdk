@@ -20,6 +20,7 @@
 typedef NS_ENUM(NSInteger, MXCallHangupReason)
 {
     MXCallHangupReasonUserHangup,
+    MXCallHangupReasonUserBusy,
     MXCallHangupReasonIceFailed,
     MXCallHangupReasonInviteTimeout,
     MXCallHangupReasonIceTimeout,
@@ -32,6 +33,7 @@ typedef NSString * MXCallHangupReasonString NS_REFINED_FOR_SWIFT;
 NS_ASSUME_NONNULL_BEGIN
 
 FOUNDATION_EXPORT NSString *const kMXCallHangupReasonStringUserHangup;
+FOUNDATION_EXPORT NSString *const kMXCallHangupReasonStringUserBusy;
 FOUNDATION_EXPORT NSString *const kMXCallHangupReasonStringIceFailed;
 FOUNDATION_EXPORT NSString *const kMXCallHangupReasonStringInviteTimeout;
 FOUNDATION_EXPORT NSString *const kMXCallHangupReasonStringIceTimeout;
