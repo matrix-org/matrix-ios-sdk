@@ -2882,11 +2882,6 @@ typedef void (^MXOnResumeDone)(void);
             [listener removeSpiedRoom:room];
         }
 
-        // Clean the store
-        [self.store deleteRoom:roomId];
-        [self.store.roomSummaryStore removeSummaryOfRoom:roomId];
-        [self.aggregations resetDataInRoom:roomId];
-
         // And remove the room and its summary from the list
         [rooms removeObjectForKey:roomId];
         [roomSummaries removeObjectForKey:roomId];
@@ -2898,6 +2893,10 @@ typedef void (^MXOnResumeDone)(void);
                                                                      kMXSessionNotificationRoomIdKey: roomId
                                                                      }];
     }
+
+    // Clean the store
+    [self.aggregations resetDataInRoom:roomId];
+    [self.store deleteRoom:roomId];
 }
 
 
