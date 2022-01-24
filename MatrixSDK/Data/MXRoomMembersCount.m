@@ -15,7 +15,7 @@
  */
 
 #import "MXRoomMembersCount.h"
-
+#import "MatrixSDKSwiftHeader.h"
 @implementation MXRoomMembersCount
 
 - (instancetype)initWithMembers:(NSUInteger)members
@@ -59,6 +59,14 @@
     return roomMembersCount;
 }
 
+#pragma mark - CoreData Model
+
+- (instancetype)initWithManagedObject:(MXRoomMembersCountMO *)model
+{
+    return [self initWithMembers:model.s_members
+                          joined:model.s_joined
+                         invited:model.s_invited];
+}
 
 #pragma mark - NSCoding
 - (instancetype)initWithCoder:(NSCoder *)aDecoder

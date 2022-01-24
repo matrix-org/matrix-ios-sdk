@@ -27,8 +27,9 @@
 #import "MXSDKOptions.h"
 #import "MXTools.h"
 #import "MatrixSDKSwiftHeader.h"
+#import "MXFileRoomSummaryStore.h"
 
-static NSUInteger const kMXFileVersion = 77;
+static NSUInteger const kMXFileVersion = 78;
 
 static NSString *const kMXFileStoreFolder = @"MXFileStore";
 static NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
@@ -43,7 +44,6 @@ static NSString *const kMXFileStoreRoomsFolder = @"rooms";
 static NSString *const kMXFileStoreRoomMessagesFile = @"messages";
 static NSString *const kMXFileStoreRoomOutgoingMessagesFile = @"outgoingMessages";
 static NSString *const kMXFileStoreRoomStateFile = @"state";
-static NSString *const kMXFileStoreRoomSummaryFile = @"summary";
 static NSString *const kMXFileStoreRoomAccountDataFile = @"accountData";
 static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
 
@@ -61,8 +61,6 @@ static NSUInteger preloadOptions;
     NSMutableArray *roomsToCommitForOutgoingMessages;
 
     NSMutableDictionary *roomsToCommitForState;
-
-    NSMutableOrderedSet<NSString*> *roomsToCommitForSummary;
 
     NSMutableDictionary<NSString*, MXRoomAccountData*> *roomsToCommitForAccountData;
     
@@ -101,8 +99,7 @@ static NSUInteger preloadOptions;
     // when it will read rooms states.
     NSMutableDictionary<NSString*, NSArray*> *preloadedRoomsStates;
 
-    // Same kind of cache for room summary and room account data.
-    NSMutableDictionary<NSString*, id<MXRoomSummaryProtocol>> *roomSummaries;
+    // Same kind of cache for room account data.
     NSMutableDictionary<NSString*, MXRoomAccountData*> *preloadedRoomAccountData;
 
     // File reading and writing operations are dispatched to a separated thread.
@@ -127,13 +124,15 @@ static NSUInteger preloadOptions;
 
 @implementation MXFileStore
 
+@synthesize roomSummaryStore;
+
 + (void)initialize
 {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
 
         // By default, we do not need to preload rooms states now
-        preloadOptions = MXFileStorePreloadOptionRoomSummary | MXFileStorePreloadOptionRoomAccountData;
+        preloadOptions = MXFileStorePreloadOptionRoomAccountData;
     });
 }
 
@@ -145,7 +144,6 @@ static NSUInteger preloadOptions;
         roomsToCommitForMessages = [NSMutableArray array];
         roomsToCommitForOutgoingMessages = [NSMutableArray array];
         roomsToCommitForState = [NSMutableDictionary dictionary];
-        roomsToCommitForSummary = [NSMutableOrderedSet orderedSet];
         roomsToCommitForAccountData = [NSMutableDictionary dictionary];
         roomsToCommitForReceipts = [NSMutableArray array];
         roomsToCommitForDeletion = [NSMutableArray array];
@@ -153,7 +151,6 @@ static NSUInteger preloadOptions;
         groupsToCommit = [NSMutableDictionary dictionary];
         groupsToCommitForDeletion = [NSMutableArray array];
         preloadedRoomsStates = [NSMutableDictionary dictionary];
-        roomSummaries = [NSMutableDictionary dictionary];
         preloadedRoomAccountData = [NSMutableDictionary dictionary];
 
         metaDataHasChanged = NO;
@@ -171,14 +168,27 @@ static NSUInteger preloadOptions;
     if (self)
     {
         credentials = someCredentials;
+        [self setupRoomSummaryStore];
         [self setUpStoragePaths];
     }
     return self;
 }
 
+- (void)setupRoomSummaryStore
+{
+    NSParameterAssert(credentials);
+    
+    if (!roomSummaryStore)
+    {
+        roomSummaryStore = [[MXCoreDataRoomSummaryStore alloc] initWithCredentials:credentials];
+    }
+}
+
 - (void)openWithCredentials:(MXCredentials*)someCredentials onComplete:(void (^)(void))onComplete failure:(void (^)(NSError *))failure
 {
     credentials = someCredentials;
+    
+    [self setupRoomSummaryStore];
     
     // Create the file path where data will be stored for the user id passed in credentials
     [self setUpStoragePaths];
@@ -239,10 +249,6 @@ static NSUInteger preloadOptions;
                 {
                     [self preloadRoomsStates];
                 }
-                if (preloadOptions & MXFileStorePreloadOptionRoomSummary)
-                {
-                    [self preloadRoomsSummaries];
-                }
                 if (preloadOptions & MXFileStorePreloadOptionRoomAccountData)
                 {
                     [self preloadRoomsAccountData];
@@ -254,7 +260,7 @@ static NSUInteger preloadOptions;
                 [self loadUsers];
                 [self loadGroups];
 
-                taskProfile.units = self.rooms.count;
+                taskProfile.units = self.roomSummaryStore.countOfRooms;
                 [MXSDKOptions.sharedInstance.profiler stopMeasuringTaskWithProfile:taskProfile];
                 MXLogDebug(@"[MXFileStore] Data loaded from files in %.0fms", taskProfile.duration * 1000);
             }
@@ -375,7 +381,7 @@ static NSUInteger preloadOptions;
     // Remove this room identifier from the other arrays.
     [roomsToCommitForMessages removeObject:roomId];
     [roomsToCommitForState removeObjectForKey:roomId];
-    [roomsToCommitForSummary removeObject:roomId];
+    [roomSummaryStore removeSummaryOfRoom:roomId];
     [roomsToCommitForAccountData removeObjectForKey:roomId];
     [roomsToCommitForReceipts removeObject:roomId];
 }
@@ -405,11 +411,12 @@ static NSUInteger preloadOptions;
     [[NSFileManager defaultManager] createDirectoryAtPath:storeRoomsPath withIntermediateDirectories:YES attributes:nil error:nil];
     [[NSFileManager defaultManager] createDirectoryAtPath:storeUsersPath withIntermediateDirectories:YES attributes:nil error:nil];
     [[NSFileManager defaultManager] createDirectoryAtPath:storeGroupsPath withIntermediateDirectories:YES attributes:nil error:nil];
+    
+    [roomSummaryStore removeAllSummaries];
 
     // Reset data
     metaData = nil;
     [roomStores removeAllObjects];
-    [roomSummaries removeAllObjects];
     self.eventStreamToken = nil;
 }
 
@@ -787,7 +794,6 @@ static NSUInteger preloadOptions;
     [self saveRoomsMessages];
     [self saveRoomsOutgoingMessages];
     [self saveRoomsState];
-    [self saveRoomsSummaries];
     [self saveRoomsAccountData];
     [self saveReceipts];
     [self saveUsers];
@@ -953,6 +959,11 @@ static NSUInteger preloadOptions;
     // credentials must be set before this method starts execution
     NSParameterAssert(credentials);
     
+    if (storePath)
+    {
+        return;
+    }
+    
     NSString *cachePath = nil;
     
     NSString *applicationGroupIdentifier = [MXSDKOptions sharedInstance].applicationGroupIdentifier;
@@ -1022,11 +1033,6 @@ static NSUInteger preloadOptions;
 - (NSString*)stateFileForRoom:(NSString*)roomId forBackup:(BOOL)backup
 {
     return [[self folderForRoom:roomId forBackup:backup] stringByAppendingPathComponent:kMXFileStoreRoomStateFile];
-}
-
-- (NSString*)summaryFileForRoom:(NSString*)roomId forBackup:(BOOL)backup
-{
-    return [[self folderForRoom:roomId forBackup:backup] stringByAppendingPathComponent:kMXFileStoreRoomSummaryFile];
 }
 
 - (NSString*)accountDataFileForRoom:(NSString*)roomId forBackup:(BOOL)backup
@@ -1354,79 +1360,6 @@ static NSUInteger preloadOptions;
         });
     }
 }
-
-
-#pragma mark - Rooms summaries
-/**
- Preload summaries of all rooms.
-
- This operation must be called on the `dispatchQueue` thread to avoid blocking the main thread.
- */
-- (void)preloadRoomsSummaries
-{
-    NSArray<NSString *> *roomIDs = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:storeRoomsPath error:nil];
-    
-    NSDate *startDate = [NSDate date];
-
-    for (NSString *roomId in roomIDs)
-    {
-        id<MXRoomSummaryProtocol> summary = [self summaryOfRoom:roomId];
-        if (summary)
-        {
-            @synchronized (roomSummaries) {
-                roomSummaries[roomId] = summary;
-            }
-        }
-    }
-
-    MXLogDebug(@"[MXFileStore] Loaded rooms summaries data of %tu rooms in %.0fms", roomIDs.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
-}
-
-- (void)saveRoomsSummaries
-{
-    if (roomsToCommitForSummary.count)
-    {
-        // Take a snapshot of room ids to store to process them on the other thread
-        NSArray *roomsToCommit = [NSArray arrayWithArray:roomsToCommitForSummary.array];
-        [roomsToCommitForSummary removeAllObjects];
-#if DEBUG
-        MXLogDebug(@"[MXFileStore commit] queuing saveRoomsSummaries for %tu rooms", roomsToCommit.count);
-#endif
-        MXWeakify(self);
-        dispatch_async(dispatchQueue, ^(void){
-            MXStrongifyAndReturnIfNil(self);
-#if DEBUG
-            NSDate *startDate = [NSDate date];
-#endif
-            for (NSString *roomId in roomsToCommit)
-            {
-                MXRoomSummary *summary;
-                @synchronized (self->roomSummaries)
-                {
-                    summary = (MXRoomSummary *)self->roomSummaries[roomId];
-                }
-
-                NSString *file = [self summaryFileForRoom:roomId forBackup:NO];
-                NSString *backupFile = [self summaryFileForRoom:roomId forBackup:YES];
-
-                // Backup the file
-                if (backupFile && [[NSFileManager defaultManager] fileExistsAtPath:file])
-                {
-                    [self checkFolderExistenceForRoom:roomId forBackup:YES];
-                    [[NSFileManager defaultManager] moveItemAtPath:file toPath:backupFile error:nil];
-                }
-
-                // Store new data
-                [self checkFolderExistenceForRoom:roomId forBackup:NO];
-                [NSKeyedArchiver archiveRootObject:summary toFile:file];
-            }
-#if DEBUG
-            MXLogDebug(@"[MXFileStore commit] lasted %.0fms for summaries for %tu rooms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000, roomsToCommit.count);
-#endif
-        });
-    }
-}
-
 
 #pragma mark - Rooms account data
 /**
@@ -2176,25 +2109,6 @@ static NSUInteger preloadOptions;
     });
 }
 
-- (void)asyncRoomsSummaries:(void (^)(NSArray<id<MXRoomSummaryProtocol>> * _Nonnull))success
-                    failure:(nullable void (^)(NSError * _Nonnull))failure
-{
-    MXWeakify(self);
-    dispatch_async(dispatchQueue, ^{
-        MXStrongifyAndReturnIfNil(self);
-
-        [self preloadRoomsSummaries];
-
-        MXWeakify(self);
-        dispatch_async(dispatch_get_main_queue(), ^{
-            MXStrongifyAndReturnIfNil(self);
-            @synchronized (self->roomSummaries) {
-                success(self->roomSummaries.allValues);
-            }
-        });
-    });
-}
-
 - (void)asyncAccountDataOfRoom:(NSString *)roomId success:(void (^)(MXRoomAccountData * _Nonnull))success failure:(nullable void (^)(NSError * _Nonnull))failure
 {
     dispatch_async(dispatchQueue, ^{
@@ -2281,60 +2195,6 @@ static NSUInteger preloadOptions;
             });
         }
     });
-}
-
-#pragma mark - MXRoomSummaryStore
-
-- (NSArray<NSString *> *)rooms
-{
-    NSMutableArray<NSString *> *roomIDs = [NSMutableArray arrayWithArray:[[NSFileManager defaultManager] contentsOfDirectoryAtPath:storeRoomsPath error:nil]];
-    [roomIDs removeObjectsInArray:roomsToCommitForDeletion];
-    return roomIDs;
-}
-
-- (void)storeSummaryForRoom:(NSString *)roomId summary:(id<MXRoomSummaryProtocol>)summary
-{
-    @synchronized (roomSummaries)
-    {
-        roomSummaries[roomId] = summary;
-    }
-    
-    [roomsToCommitForSummary addObject:roomId];
-}
-
-- (id<MXRoomSummaryProtocol>)summaryOfRoom:(NSString *)roomId
-{
-    id<MXRoomSummaryProtocol> summary;
-    @synchronized (roomSummaries)
-    {
-        // First, try to get the data from the cache
-        summary = roomSummaries[roomId];
-    }
-    if (!summary)
-    {
-        NSString *summaryFile = [self summaryFileForRoom:roomId forBackup:NO];
-        if ([[NSFileManager defaultManager] fileExistsAtPath:summaryFile])
-        {
-            @try
-            {
-                NSDate *startDate = [NSDate date];
-                summary = [NSKeyedUnarchiver unarchiveObjectWithFile:summaryFile];
-                @synchronized (roomSummaries)
-                {
-                    roomSummaries[roomId] = summary;
-                }
-                if ([NSThread isMainThread])
-                {
-                    MXLogWarning(@"[MXFileStore] Loaded room summary of room: %@ in %.0fms, in main thread", roomId, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
-                }
-            }
-            @catch(NSException *exception)
-            {
-                MXLogError(@"[MXFileStore] Warning: room summary file for room %@ has been corrupted. Exception: %@", roomId, exception);
-            }
-        }
-    }
-    return summary;
 }
 
 @end
