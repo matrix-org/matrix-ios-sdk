@@ -18,6 +18,7 @@
 #import "MXTools.h"
 
 NSString *const kMXCallHangupReasonStringUserHangup = @"user_hangup";
+NSString *const kMXCallHangupReasonStringUserBusy = @"user_busy";
 NSString *const kMXCallHangupReasonStringIceFailed = @"ice_failed";
 NSString *const kMXCallHangupReasonStringInviteTimeout = @"invite_timeout";
 NSString *const kMXCallHangupReasonStringIceTimeout = @"ice_timeout";
