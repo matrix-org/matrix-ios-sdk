@@ -51,8 +51,7 @@ typedef BOOL (^MXHTTPClientOnUnrecognizedCertificate)(NSData *certificate);
 
 /**
  Block called when an authenticated request fails and is used  to validate the response error.
- It returns a BOOL to indicate wether the request needs to be retried after access token refresh.
- 
+
  @param error A request error.
  
  @return YES if the access token should be refreshed for the given error.
@@ -62,6 +61,7 @@ typedef BOOL (^MXHTTPClientTokenValidationResponseHandler)(NSError *error);
 /**
  Block called when an authenticated request requires an access token.
 
+ @param error  A request error. Passed if token provider is called as a result of `MXHTTPClientTokenValidationResponseHandler` returning true on after an access token error in a response.
  @param success A block object called when the operation succeeds. It provides the access token.
  @param failure A block object called when the operation fails.
  */
@@ -127,7 +127,7 @@ typedef NS_ENUM(NSUInteger, MXHTTPClientSSLPinningMode) {
 @property (nonatomic, copy) MXHTTPClientTokenValidationResponseHandler tokenValidationResponseHandler;
 
 /**
- Block called when a request fails and needs authentication to determine if the access token should be renewed.
+ Block called when an authenticated request requires an access token.
  */
 @property (nonatomic, copy) MXHTTPClientTokenProviderHandler tokenProviderHandler;
 

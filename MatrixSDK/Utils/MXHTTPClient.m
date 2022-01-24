@@ -78,9 +78,9 @@ static NSUInteger requestCount = 0;
     BOOL invalidatedSession;
 }
 
-///**
-// The access token used for authenticated requests.
-// */
+/**
+ The access token used for authenticated requests.
+ */
 @property (nonatomic) bool isAuthenticatedClient;
 
 /**

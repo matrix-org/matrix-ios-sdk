@@ -15,7 +15,7 @@
 //
 
 /**
- `MXRefreshTokenData` represents the response to a an auth refresh request.
+ `MXRefreshTokenData` used to update `MXCredentials` that it's token data has updated. see `MXCredentialsUpdateTokensNotification`.
  */
 @interface MXRefreshTokenData : NSObject
 

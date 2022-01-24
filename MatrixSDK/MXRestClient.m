@@ -80,7 +80,7 @@ NSString *const kMXCredentialsNewRefreshTokenDataKey = @"refresh_token_data";
 /**
  The time interval before the access token expires that we will start trying to refresh the token.
  This avoids us having to block other users requests while the token refreshes.
- Choosing a value larger than SERVER_TIMEOUT_MS guarantees we will at least have attempted to refresh before the server last timed out from a sync.
+ Choosing a value larger than SERVER_TIMEOUT_MS guarantees an authenticated request will be attempted(causing a refresh) before the token expires.
  */
 #define PREEMPT_REFRESH_EXPIRATION_INTERVAL 60000
 
@@ -228,7 +228,7 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
                 MXStrongifyAndReturnIfNil(self);
                 dispatch_async([MXRestClient refreshQueue], ^{
                     NSString *logId = [NSString stringWithFormat:@"%d-%@", [[NSProcessInfo processInfo] processIdentifier], [[NSUUID UUID] UUIDString]];
-                    MXLogDebug(@"[MXRestClient] tokenProviderHandler: %@ refreshQueue enter - %@ - %@", logId, self, [MXRestClient refreshDispatchGroup]);
+                    MXLogDebug(@"[MXRestClient] tokenProviderHandler: %@ refreshQueue enter - %@", logId, [MXRestClient refreshDispatchGroup]);
                     
                     // If refreshDispatchGroup is unmatched(a request for a new access token is in-flight) wait.
                     dispatch_group_wait([MXRestClient refreshDispatchGroup], DISPATCH_TIME_FOREVER);
@@ -345,11 +345,6 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
             MXLogDebug(@"[MXRestClient] %@: refreshQueue refresh token start", logId)
             MXWeakify(self);
             id operation = [self refreshAccessToken:self.credentials.refreshToken success:^(MXRefreshResponse *refreshResponse) {
-                if (!weakself) {
-                    shouldPersistCompletion(NO);
-                    refreshCompletion(nil);
-                }
-                MXStrongifyAndReturnIfNil(self);
                 MXLogDebug(@"[MXRestClient] %@: refreshQueue refresh token request success", logId)
                 uint64_t accessTokenExpiresAt = ((uint64_t)[NSDate date].timeIntervalSince1970 * 1000) + refreshResponse.expiresInMs;
                 MXRefreshTokenData *tokenData = [[MXRefreshTokenData alloc] initWithUserId:credential.userId
@@ -366,7 +361,7 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
                 credential.accessTokenExpiresAt = accessTokenExpiresAt;
                 shouldPersistCompletion(YES);
                 MXLogDebug(@"[MXRestClient] %@: refreshQueue refresh token success", logId)
-                refreshCompletion(self.credentials.accessToken);
+                refreshCompletion(refreshResponse.accessToken);
             } failure:^(NSError *error) {
                 if (!weakself) {
                     shouldPersistCompletion(NO);

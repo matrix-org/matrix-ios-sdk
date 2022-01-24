@@ -130,7 +130,7 @@ NSString *const MXIdentityServiceNotificationAccessTokenKey = @"accessToken";
 - (nullable MXHTTPOperation *)accessTokenWithSuccess:(void (^)(NSString * _Nullable accessToken))success
                                              failure:(void (^)(NSError *error))failure
 {
-    if(self.accessToken)
+    if (self.accessToken)
     {
         success(self.accessToken);
         return nil;
@@ -139,7 +139,6 @@ NSString *const MXIdentityServiceNotificationAccessTokenKey = @"accessToken";
         self.accessToken = accessToken;
         success(accessToken);
     } failure:failure];
-
 }
 
 #pragma mark Terms of Service

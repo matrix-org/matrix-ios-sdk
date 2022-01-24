@@ -112,11 +112,6 @@ NS_ASSUME_NONNULL_BEGIN
                 andDefaultCredentials:(nullable MXCredentials*)defaultCredentials;
 
 /**
- Clear tokens and expiry as they are no longer valid.
- */
-- (void)clearRefreshAuth;
-
-/**
  Returns suitable credentials for initial sync cache.
  
  @param credentials original credentials of a user

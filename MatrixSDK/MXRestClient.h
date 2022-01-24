@@ -125,7 +125,7 @@ typedef void(^MXRestClientUnauthenticatedHandler)(MXError *error, BOOL isSoftLog
 
 /**
  Block called when the rest client needs to check the persisted refresh token data is valid and optionally persist new refresh data to disk if it is not.
- @param handler A closure that accepts the current persisted credentials. These can be updated optionally saved by returning YES from the closure.
+ @param handler A closure that accepts the current persisted credentials. These can optionally be updated and saved back initWithCredentialsy returning YES from the closure.
  */
 typedef void (^MXRestClientPersistTokenDataHandler)(void (^handler)(NSArray <MXCredentials*> *credentials, void (^shouldPersistCompletion)(BOOL didUpdateCredentials)));
 
@@ -241,14 +241,14 @@ extern NSString *const kMXCredentialsNewRefreshTokenDataKey;
 /**
  Create an instance based on a matrix user account.
 
- @param inCredentials the response to a login or a register request.
+ @param credentials the response to a login or a register request.
  @param onUnrecognizedCertBlock the block called to handle unrecognized certificate (nil if unrecognized certificates are ignored).
  @param persistentTokenDataHandler the block called when the rest client needs to check the persisted refresh token data is valid and optionally persist new refresh data to disk if it is not.
  @param unauthenticatedHandler the block called when the rest client has become unauthenticated(E.g. refresh failed or server invalidated an access token).
  @return a MXRestClient instance.
  */
 
--(id)initWithCredentials:(MXCredentials*)inCredentials
+-(id)initWithCredentials:(MXCredentials*)credentials
 andOnUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock
 andPersistentTokenDataHandler: (MXRestClientPersistTokenDataHandler)persistentTokenDataHandler
 andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHandler

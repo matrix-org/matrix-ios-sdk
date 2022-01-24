@@ -107,13 +107,6 @@
     [self unregisterRestClientWillRefreshTokensNotification];
 }
 
-- (void)clearRefreshAuth
-{
-    _accessToken = nil;
-    _accessTokenExpiresAt = 0;
-    _refreshToken = nil;
-}
-
 + (instancetype)initialSyncCacheCredentialsFrom:(MXCredentials *)credentials
 {
     MXCredentials *result = [credentials copy];
@@ -199,7 +192,7 @@
     {
         self.refreshToken = tokenData.refreshToken;
         self.accessToken = tokenData.accessToken;
-        self.accessTokenExpiresAt = tokenData.expiresInMs;
+        self.accessTokenExpiresAt = ((uint64_t)[NSDate date].timeIntervalSince1970 * 1000) + tokenData.expiresInMs;
     }
 }
 

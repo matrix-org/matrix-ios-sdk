@@ -80,12 +80,12 @@ NS_ERROR_ENUM(MXIdentityServerRestClientErrorDomain)
 @property (nonatomic, strong, nullable) NSString *preferredAPIPathPrefix;
 
 /**
- Block called when a request needs authorization and access token should be renewed.
+ Block called when an authenticated request fails and is used  to validate the response error.
  */
 @property (nonatomic, copy) MXHTTPClientTokenValidationResponseHandler tokenValidationResponseHandler;
 
 /**
- Block called when a request fails and needs authorization to determine if the access token should be renewed.
+ Block called when an authenticated request requires an access token.
  */
 @property (nonatomic, copy) MXHTTPClientTokenProviderHandler tokenProviderHandler;
 
