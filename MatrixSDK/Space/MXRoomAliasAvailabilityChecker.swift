@@ -84,4 +84,17 @@ public extension String {
     func toValidAliasLocalPart() -> String {
         return lowercased().replacingOccurrences(of: " ", with: "-").filter { MXRoomAliasAvailabilityChecker.validAliasCharacters.contains($0) }
     }
+    
+    /// Extract the valid local alias part String of the string ((e.g. "my_alias" for the string "#my_alias:example.org")
+    /// - Returns:the valid local alias part extracted from the string.
+    func extractLocalAliasPart() -> String {
+        var aliasPart = self
+        while aliasPart.starts(with: "#") {
+            aliasPart.removeFirst()
+        }
+        if let index = aliasPart.firstIndex(of: ":") {
+            aliasPart.removeSubrange(index ..< aliasPart.endIndex)
+        }
+        return aliasPart
+    }
 }
