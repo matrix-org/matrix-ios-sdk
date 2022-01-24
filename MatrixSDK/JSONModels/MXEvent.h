@@ -211,6 +211,7 @@ FOUNDATION_EXPORT NSString *const kMXEventRelationRelatesToKey;
 FOUNDATION_EXPORT NSString *const MXEventRelationTypeAnnotation;    // Reactions
 FOUNDATION_EXPORT NSString *const MXEventRelationTypeReference;     // Reply
 FOUNDATION_EXPORT NSString *const MXEventRelationTypeReplace;       // Edition
+FOUNDATION_EXPORT NSString *const kMXMessageContentKeyNewContent;   // Edited content key
 FOUNDATION_EXPORT NSString *const MXEventRelationTypeThread;        // Thread
 
 /**
@@ -222,15 +223,20 @@ FOUNDATION_EXPORT NSString *const kMXEventLocalEventIdPrefix;
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyVoiceMessage;
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyVoiceMessageMSC2516;
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyVoiceMessageMSC3245;
+
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleAudio;
+FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleAudioMSC1767;
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleAudioDuration;
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleAudioWaveform;
 
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleText;
+FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleTextMSC1767;
 
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleTimestamp;
+FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleTimestampMSC3488;
 
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleFile;
+FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleFileMSC1767;
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleFileSize;
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleFileName;
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleFileURL;
@@ -238,8 +244,14 @@ FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleFileMimeType;
 
 // Polls
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensiblePollStart;
+FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensiblePollStartMSC3381;
+
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensiblePollResponse;
+FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensiblePollResponseMSC3381;
+
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensiblePollEnd;
+FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensiblePollEndMSC3381;
+
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensiblePollQuestion;
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensiblePollAnswers;
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensiblePollAnswerId;
@@ -253,6 +265,13 @@ FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleLocation;
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleLocationMSC3488;
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleLocationURI;
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleLocationDescription;
+
+// Assets
+
+FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleAsset;
+FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleAssetMSC3488;
+FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleAssetType;
+FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleAssetTypeUser;
 
 /**
  The internal event state used to handle the different steps of the event sending.
