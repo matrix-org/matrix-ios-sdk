@@ -20,7 +20,15 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+typedef NS_ENUM(NSUInteger, MXEventAssetType)
+{
+    MXEventAssetTypeUser,
+    MXEventAssetTypeGeneric
+};
+
 @interface MXEventContentLocation: MXJSONModel
+
+@property (nonatomic, readonly) MXEventAssetType assetType;
 
 @property (nonatomic, readonly) double latitude;
 
@@ -30,9 +38,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, readonly, nullable) NSString *locationDescription;
 
-- (instancetype)initWithLatitude:(double)latitude
-                       longitude:(double)longitude
-                     description:(nullable NSString *)description;
+- (instancetype)initWithAssetType:(MXEventAssetType)assetType
+                         latitude:(double)latitude
+                        longitude:(double)longitude
+                      description:(nullable NSString *)description;
 
 @end
 

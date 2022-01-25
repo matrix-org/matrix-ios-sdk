@@ -151,7 +151,7 @@
 
             self.displayname = displayname;
             self.avatarUrl = avatarUrl;
-            latestUpdateTS = [[NSDate date] timeIntervalSince1970] * 1000;
+            self->latestUpdateTS = [[NSDate date] timeIntervalSince1970] * 1000;
             success();
 
             [self notifyListeners:nil];

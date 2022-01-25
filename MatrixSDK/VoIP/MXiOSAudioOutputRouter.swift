@@ -93,7 +93,7 @@ public class MXiOSAudioOutputRouter: NSObject {
     }
     
     /// Attempt to override route type to given type.
-    /// - Parameter routeType: Desired route type. `external` is useless if no external device connected, then it would fallback to the default route type.
+    /// - Parameter route: Desired route. If `nil` passed, then it would fallback to the default route.
     public func changeCurrentRoute(to route: MXiOSAudioOutputRoute?) {
         if let route = route {
             updateRoute(to: route)

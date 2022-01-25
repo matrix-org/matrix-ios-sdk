@@ -3437,7 +3437,7 @@ MXAuthAction;
             MXJSONModelSetDictionary(join, rooms[@"join"]);
             MXJSONModelSetDictionary(invite, rooms[@"invite"]);
             MXJSONModelSetDictionary(leave, rooms[@"leave"]);
-            initialSyncRequestTaskProfile.units = join.count + invite.count + leave.count;
+            initialSyncRequestTaskProfile.units = join.count;
             
             [profiler stopMeasuringTaskWithProfile:initialSyncRequestTaskProfile];
         }
@@ -3458,7 +3458,7 @@ MXAuthAction;
                 if (initialSyncParsingTaskProfile)
                 {
                     // Contextualise the profiling with the amount of received information
-                    initialSyncParsingTaskProfile.units = syncResponse.rooms.join.count + syncResponse.rooms.invite.count + syncResponse.rooms.leave.count;
+                    initialSyncParsingTaskProfile.units = syncResponse.rooms.join.count;
                     
                     [profiler stopMeasuringTaskWithProfile:initialSyncParsingTaskProfile];
                 }
