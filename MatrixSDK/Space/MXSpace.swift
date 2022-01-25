@@ -89,9 +89,7 @@ public class MXSpace: NSObject {
 
         self.sdkProcessingQueue.async {
             room.state { [weak self] roomState in
-                guard let self = self else {
-                    return
-                }
+                guard let self = self else { return }
                 
                 self.processingQueue.async {
                     var childRoomIds: [String] = []
@@ -104,7 +102,12 @@ public class MXSpace: NSObject {
                     
                     self.sdkProcessingQueue.async {
                         room.members { [weak self] response in
-                            guard let self = self, let members = response.value as? MXRoomMembers else {
+                            guard let self = self else { return }
+                            
+                            guard let members = response.value as? MXRoomMembers else {
+                                self.completionQueue.async {
+                                    completion()
+                                }
                                 return
                             }
 
