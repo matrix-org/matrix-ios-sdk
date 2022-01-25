@@ -1,0 +1,1 @@
+MXCoreDataRoomSummaryStore: Use nested contexts to better manage main context updates.
