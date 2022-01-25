@@ -31,20 +31,43 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly) NSArray<NSString *> *rooms;
 
 /**
- Store the summary for a room.
- 
- @param roomId the id of the room.
- @param summary the room summary.
+ The count of rooms, in a more efficient way.
  */
-- (void)storeSummaryForRoom:(NSString*)roomId summary:(id<MXRoomSummaryProtocol>)summary;
+@property (nonatomic, readonly) NSUInteger countOfRooms;
 
 /**
- Get the summary a room.
+ Store the summary for a room.
+ 
+ @param summary the room summary.
+ */
+- (void)storeSummary:(id<MXRoomSummaryProtocol>)summary;
+
+/**
+ Get the summary of a room.
  
  @param roomId the id of the room.
  @return the user private data for this room.
  */
 - (id<MXRoomSummaryProtocol> _Nullable)summaryOfRoom:(NSString*)roomId;
+
+/**
+ Remove the summary of a room.
+ 
+ @param roomId the id of the room.
+ */
+- (void)removeSummaryOfRoom:(NSString*)roomId;
+
+/**
+ Remove all the room summaries.
+ */
+- (void)removeAllSummaries;
+
+/**
+ Fetch all summaries asynchoronously.
+ 
+ @param completion completion block containing summaries, to be called at the end of the process. Should be called on main thread.
+ */
+- (void)fetchAllSummaries:(void(^)(NSArray<id<MXRoomSummaryProtocol>>*))completion;
 
 @end
 
