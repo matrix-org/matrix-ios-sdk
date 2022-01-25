@@ -1399,7 +1399,7 @@ typedef void (^MXOnResumeDone)(void);
             self->firstSyncDone = YES;
             
             // Contextualise the profiling with the amount of received information
-            syncTaskProfile.units = syncResponse.rooms.join.count + syncResponse.rooms.invite.count + syncResponse.rooms.leave.count;
+            syncTaskProfile.units = syncResponse.rooms.join.count;
             
             [MXSDKOptions.sharedInstance.profiler stopMeasuringTaskWithProfile:syncTaskProfile];
         }
