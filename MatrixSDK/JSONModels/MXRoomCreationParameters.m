@@ -103,6 +103,10 @@
     {
         dictionary[@"power_level_content_override"] = [_powerLevelContentOverride JSONDictionary];
     }
+    if (_roomVersion)
+    {
+        dictionary[@"room_version"] = _roomVersion;
+    }
     
     return dictionary;
 }

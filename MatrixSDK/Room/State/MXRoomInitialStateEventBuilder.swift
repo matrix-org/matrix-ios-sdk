@@ -74,4 +74,19 @@ public class MXRoomInitialStateEventBuilder: NSObject {
                                       content: ["algorithm": algorithm])
         return event.jsonDictionary
     }
+    
+    /// Build join rule state event
+    /// - Parameter joinRule: The type of join rule
+    /// - Parameter allowedParentsList: list of allowed parent IDs (used for `restricted` join rule)
+    /// - Returns: State event dictionary
+    public func buildJoinRuleEvent(withJoinRule joinRule: MXRoomJoinRule, allowedParentsList: [String]? = nil) -> [String: Any] {
+        var content: [String: Any] = ["join_rule": joinRule.identifier]
+        if let allowedParentsList = allowedParentsList {
+            content["allow"] = allowedParentsList.map({ roomId in
+                ["type" : kMXEventTypeStringRoomMembership, "room_id": roomId]
+            })
+        }
+        let event = InitialStateEvent(type: MXEventType.roomJoinRules.identifier, content: content)
+        return event.jsonDictionary
+    }
 }
