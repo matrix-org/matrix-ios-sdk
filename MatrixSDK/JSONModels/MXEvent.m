@@ -176,6 +176,13 @@ NSString *const kMXMessageContentKeyExtensibleLocationMSC3488 = @"org.matrix.msc
 NSString *const kMXMessageContentKeyExtensibleLocationURI = @"uri";
 NSString *const kMXMessageContentKeyExtensibleLocationDescription = @"description";
 
+// Assets
+
+NSString *const kMXMessageContentKeyExtensibleAsset = @"m.asset";
+NSString *const kMXMessageContentKeyExtensibleAssetMSC3488 = @"org.matrix.msc3488.asset";
+NSString *const kMXMessageContentKeyExtensibleAssetType = @"type";
+NSString *const kMXMessageContentKeyExtensibleAssetTypeUser = @"m.self";
+
 #pragma mark - MXEvent
 @interface MXEvent ()
 {

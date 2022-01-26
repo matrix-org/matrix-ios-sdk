@@ -1,1 +1,0 @@
-MXCoreDataRoomListDataFetcher: Update fetchRequest if properties changed before fetching the first page.

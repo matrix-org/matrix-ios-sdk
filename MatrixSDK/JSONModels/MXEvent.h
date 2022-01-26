@@ -266,6 +266,13 @@ FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleLocationMSC3488;
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleLocationURI;
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleLocationDescription;
 
+// Assets
+
+FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleAsset;
+FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleAssetMSC3488;
+FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleAssetType;
+FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleAssetTypeUser;
+
 /**
  The internal event state used to handle the different steps of the event sending.
  */

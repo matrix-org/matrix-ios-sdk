@@ -2468,16 +2468,14 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                                       success:(void (^)(NSString *))success
                                       failure:(void (^)(NSError *))failure
 {
+    MXEventContentLocation *locationContent = [[MXEventContentLocation alloc] initWithAssetType:MXEventAssetTypeUser
+                                                                                       latitude:latitude
+                                                                                      longitude:longitude
+                                                                                    description:description];
+    
     NSMutableDictionary *content = [NSMutableDictionary dictionary];
-    content[kMXMessageTypeKey] = kMXMessageTypeLocation;
-    
-    MXEventContentLocation *locationContent = [[MXEventContentLocation alloc] initWithLatitude:latitude
-                                                                                     longitude:longitude
-                                                                                   description:description];
-    
-    content[kMXMessageContentKeyExtensibleLocationMSC3488] = locationContent.JSONDictionary;
-    
-    content[kMXMessageGeoURIKey] = locationContent.geoURI;
+
+    [content addEntriesFromDictionary:locationContent.JSONDictionary];
     
     NSString *fallbackText = [NSString stringWithFormat:@"%@ was at %@ as of %@", self.mxSession.myUser.displayname, locationContent.geoURI, NSDate.date];
     content[kMXMessageBodyKey] = fallbackText;

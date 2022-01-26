@@ -27,16 +27,16 @@ public class MXCoreDataRoomSummaryStore: NSObject {
     }
     
     private let credentials: MXCredentials
-    
-    private lazy var container: NSPersistentContainer = {
-        let result = NSPersistentContainer(name: Constants.modelName,
-                                           managedObjectModel: Self.managedObjectModel)
-        result.persistentStoreDescriptions.first?.url = storeURL
-        result.loadPersistentStores { description, error in
-            if let error = error {
-                MXLog.error("Failed to load store: \(error)")
-                abort()
-            }
+
+    private lazy var persistenceCoordinator: NSPersistentStoreCoordinator = {
+        let result = NSPersistentStoreCoordinator(managedObjectModel: Self.managedObjectModel)
+        do {
+            try result.addPersistentStore(ofType: NSSQLiteStoreType,
+                                          configurationName: nil,
+                                          at: storeURL,
+                                          options: nil)
+        } catch {
+            fatalError(error.localizedDescription)
         }
         return result
     }()
@@ -68,14 +68,20 @@ public class MXCoreDataRoomSummaryStore: NSObject {
     
     /// Managed object context to be used when inserting data, whose parent context is `mainMoc`.
     private lazy var backgroundMoc: NSManagedObjectContext = {
-        let result = container.newBackgroundContext()
-        result.automaticallyMergesChangesFromParent = true
+        let result = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
+        result.parent = mainMoc
         return result
     }()
     /// Managed object context to be used on main thread for fetching data, whose parent context is `persistentMoc`.
     private lazy var mainMoc: NSManagedObjectContext = {
-        let result = container.viewContext
-        result.automaticallyMergesChangesFromParent = true
+        let result = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
+        result.parent = persistentMoc
+        return result
+    }()
+    /// Managed object context bound to persistent store coordinator.
+    private lazy var persistentMoc: NSManagedObjectContext = {
+        let result = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
+        result.persistentStoreCoordinator = persistenceCoordinator
         return result
     }()
     
@@ -246,11 +252,23 @@ public class MXCoreDataRoomSummaryStore: NSObject {
         guard moc.hasChanges else {
             return
         }
+
+        var saved = false
         do {
             try moc.save()
+            saved = true
         } catch {
             moc.rollback()
             MXLog.error("[MXCoreDataRoomSummaryStore] saveIfNeeded failed: \(error)")
+        }
+
+        if saved {
+            //  save all parent contexts recursively
+            if let parent = moc.parent {
+                parent.perform {
+                    self.saveIfNeeded(parent)
+                }
+            }
         }
     }
     
@@ -261,11 +279,11 @@ public class MXCoreDataRoomSummaryStore: NSObject {
 extension MXCoreDataRoomSummaryStore: MXRoomSummaryStore {
     
     public var rooms: [String] {
-        return fetchRoomIds(in: backgroundMoc)
+        return fetchRoomIds(in: mainMoc)
     }
     
     public var countOfRooms: UInt {
-        return UInt(countRooms(in: backgroundMoc))
+        return UInt(countRooms(in: mainMoc))
     }
     
     public func storeSummary(_ summary: MXRoomSummaryProtocol) {
@@ -273,7 +291,7 @@ extension MXCoreDataRoomSummaryStore: MXRoomSummaryStore {
     }
     
     public func summary(ofRoom roomId: String) -> MXRoomSummaryProtocol? {
-        return fetchSummary(forRoomId: roomId, in: backgroundMoc)
+        return fetchSummary(forRoomId: roomId, in: mainMoc)
     }
     
     public func removeSummary(ofRoom roomId: String) {
