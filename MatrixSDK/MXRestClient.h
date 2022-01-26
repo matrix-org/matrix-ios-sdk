@@ -759,6 +759,7 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
  Send a generic non state event to a room.
 
  @param roomId the id of the room.
+ @param threadId the identifier of the thread for the event to be sent. If nil, the event will be sent to the room.
  @param eventTypeString the type of the event. @see MXEventType.
  @param content the content that will be sent to the server as a JSON object.
  @param txnId the transaction id to use. If nil, one will be generated.
@@ -769,6 +770,7 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)sendEventToRoom:(NSString*)roomId
+                           threadId:(NSString*)threadId
                           eventType:(MXEventTypeString)eventTypeString
                             content:(NSDictionary*)content
                               txnId:(NSString*)txnId
@@ -799,6 +801,7 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
  Send a message to a room
 
  @param roomId the id of the room.
+ @param threadId the identifier of the thread for the event to be sent. If nil, the event will be sent to the room.
  @param msgType the type of the message. @see MXMessageType.
  @param content the message content that will be sent to the server as a JSON object.
  @param success A block object called when the operation succeeds. It returns
@@ -808,6 +811,7 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)sendMessageToRoom:(NSString*)roomId
+                             threadId:(NSString*)threadId
                               msgType:(MXMessageType)msgType
                               content:(NSDictionary*)content
                               success:(void (^)(NSString *eventId))success
@@ -817,6 +821,7 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
  Send a text message to a room
 
  @param roomId the id of the room.
+ @param threadId the identifier of the thread for the event to be sent. If nil, the event will be sent to the room.
  @param text the text to send.
  @param success A block object called when the operation succeeds. It returns
  the event id of the event generated on the home server
@@ -825,6 +830,7 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)sendTextMessageToRoom:(NSString*)roomId
+                                 threadId:(NSString*)threadId
                                      text:(NSString*)text
                                   success:(void (^)(NSString *eventId))success
                                   failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
@@ -1274,7 +1280,7 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
 - (MXHTTPOperation*)messagesForRoom:(NSString*)roomId
                                from:(NSString*)from
                           direction:(MXTimelineDirection)direction
-                              limit:(NSUInteger)limit
+                              limit:(NSInteger)limit
                              filter:(MXRoomEventFilter*)roomEventFilter
                             success:(void (^)(MXPaginationResponse *paginatedResponse))success
                             failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
@@ -2776,9 +2782,9 @@ Note: Clients should consider avoiding this endpoint for URLs posted in encrypte
                          relationType:(NSString*)relationType
                             eventType:(NSString*)eventType
                                  from:(NSString*)from
-                                limit:(NSUInteger)limit
+                                limit:(NSInteger)limit
                               success:(void (^)(MXAggregationPaginatedResponse *paginatedResponse))success
-                              failure:(void (^)(NSError *error))failure;
+                              failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 #pragma mark - Spaces
 

@@ -794,7 +794,7 @@
  */
 - (void)createInviteByUserScenario:(MXRestClient*)bobRestClient inRoom:(NSString*)roomId inviteAlice:(BOOL)inviteAlice expectation:(XCTestExpectation*)expectation onComplete:(void(^)(void))onComplete
 {
-    [bobRestClient sendTextMessageToRoom:roomId text:@"Hello world" success:^(NSString *eventId) {
+    [bobRestClient sendTextMessageToRoom:roomId threadId:nil text:@"Hello world" success:^(NSString *eventId) {
 
         MXRestClient *bobRestClient2 = bobRestClient;
 
@@ -808,7 +808,7 @@
                     {
                         [bobRestClient2 inviteUser:matrixSDKTestsData.aliceCredentials.userId toRoom:roomId success:^{
 
-                            [bobRestClient2 sendTextMessageToRoom:roomId text:@"I wait for Alice" success:^(NSString *eventId) {
+                            [bobRestClient2 sendTextMessageToRoom:roomId threadId:nil text:@"I wait for Alice" success:^(NSString *eventId) {
 
                                 onComplete();
 
@@ -1216,9 +1216,9 @@
 
                 newRoomId = roomId;
 
-                [bobRestClient sendTextMessageToRoom:roomId text:@"Hi Alice!" success:^(NSString *eventId) {
+                [bobRestClient sendTextMessageToRoom:roomId threadId:nil text:@"Hi Alice!" success:^(NSString *eventId) {
 
-                    [bobRestClient sendTextMessageToRoom:roomId text:@"Hi Alice 2!" success:^(NSString *eventId) {
+                    [bobRestClient sendTextMessageToRoom:roomId threadId:nil text:@"Hi Alice 2!" success:^(NSString *eventId) {
 
                     } failure:^(NSError *error) {
                         XCTFail(@"Cannot set up intial test conditions - error: %@", error);

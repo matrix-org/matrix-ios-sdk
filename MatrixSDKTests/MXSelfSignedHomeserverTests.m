@@ -137,7 +137,7 @@
                 }];
             }];
 
-            [room sendTextMessage:@"Hello" success:nil failure:^(NSError *error) {
+            [room sendTextMessage:@"Hello" threadId:nil success:nil failure:^(NSError *error) {
                 XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                 [expectation fulfill];
             }];
@@ -176,7 +176,7 @@
                     }];
                 }];
 
-                [room sendTextMessage:@"Hello" success:nil failure:^(NSError *error) {
+                [room sendTextMessage:@"Hello" threadId:nil success:nil failure:^(NSError *error) {
                     XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                     [expectation fulfill];
                 }];
@@ -229,7 +229,7 @@
             CGSize size = CGSizeMake(100, 100);
             UIImage *image = [self anImageWithSize:size];
 
-            [room sendImage:UIImagePNGRepresentation(image) withImageSize:size mimeType:@"image/png" andThumbnail:nil localEcho:nil success:nil failure:^(NSError *error) {
+            [room sendImage:UIImagePNGRepresentation(image) withImageSize:size mimeType:@"image/png" andThumbnail:nil threadId:nil localEcho:nil success:nil failure:^(NSError *error) {
                 XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                 [expectation fulfill];
             }];
@@ -308,7 +308,7 @@
             CGSize size = CGSizeMake(100, 100);
             UIImage *image = [self anImageWithSize:size];
 
-            [room sendImage:UIImagePNGRepresentation(image) withImageSize:size mimeType:@"image/png" andThumbnail:nil localEcho:nil success:nil failure:^(NSError *error) {
+            [room sendImage:UIImagePNGRepresentation(image) withImageSize:size mimeType:@"image/png" andThumbnail:nil threadId:nil localEcho:nil success:nil failure:^(NSError *error) {
                 XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                 [expectation fulfill];
             }];

@@ -56,7 +56,7 @@
     [matrixSDKTestsData doTestWithAliceAndBobInARoom:self aliceStore:[[MXMemoryStore alloc] init] bobStore:[[MXMemoryStore alloc] init] readyToTest:^(MXSession *mxSession, MXSession *otherSession, NSString *roomId, XCTestExpectation *expectation) {
 
         MXRoom *room = [mxSession roomWithRoomId:roomId];
-        [room sendTextMessage:@"Hello" success:^(NSString *eventId) {
+        [room sendTextMessage:@"Hello" threadId:nil success:^(NSString *eventId) {
 
             [mxSession.aggregations addReaction:@"👍" forEvent:eventId inRoom:room.roomId success:^() {
 
@@ -152,7 +152,7 @@
     [matrixSDKTestsData doMXSessionTestWithBobAndARoom:self andStore:[[MXMemoryStore alloc] init] readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
 
         // - Send a message
-        [room sendTextMessage:@"Hello" success:^(NSString *eventId) {
+        [room sendTextMessage:@"Hello" threadId:nil success:^(NSString *eventId) {
 
             // - React on it
             [mxSession.aggregations addReaction:@"👍" forEvent:eventId inRoom:room.roomId success:^() {
@@ -482,7 +482,7 @@
     [matrixSDKTestsData doMXSessionTestWithBobAndARoom:self andStore:[[MXMemoryStore alloc] init] readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
 
         // - Send a message
-        [room sendTextMessage:@"Hello" success:^(NSString *eventId) {
+        [room sendTextMessage:@"Hello" threadId:nil success:^(NSString *eventId) {
 
             // - React on it
             [mxSession.aggregations addReaction:@"👍" forEvent:eventId inRoom:room.roomId success:^() {

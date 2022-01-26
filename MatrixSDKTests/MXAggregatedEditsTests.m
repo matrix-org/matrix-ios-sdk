@@ -64,7 +64,7 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
 {
     [matrixSDKTestsData doMXSessionTestWithBobAndARoom:self andStore:[[MXMemoryStore alloc] init] readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
 
-        [room sendTextMessage:kOriginalMessageText success:^(NSString *eventId) {
+        [room sendTextMessage:kOriginalMessageText threadId:nil success:^(NSString *eventId) {
             [mxSession eventWithEventId:eventId inRoom:room.roomId success:^(MXEvent *event) {
                 [mxSession.aggregations replaceTextMessageEvent:event withTextMessage:kEditedMessageText formattedText:nil localEchoBlock:nil success:^(NSString * _Nonnull editEventId) {
                     
@@ -93,7 +93,7 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
 {
     [matrixSDKTestsData doMXSessionTestWithBobAndARoom:self andStore:[[MXMemoryStore alloc] init] readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
         
-        [room sendTextMessage:kOriginalMarkdownMessageText success:^(NSString *eventId) {
+        [room sendTextMessage:kOriginalMarkdownMessageText threadId:nil success:^(NSString *eventId) {
             [mxSession eventWithEventId:eventId inRoom:room.roomId success:^(MXEvent *event) {
                 [mxSession.aggregations replaceTextMessageEvent:event withTextMessage:kEditedMarkdownMessageText formattedText:kEditedMarkdownMessageFormattedText localEchoBlock:nil success:^(NSString * _Nonnull editEventId) {
                     
@@ -125,7 +125,7 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
     [matrixSDKTestsData doMXSessionTestWithBobAndARoom:self andStore:[[MXMemoryStore alloc] init] readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
 
         // - Send a message
-        [room sendTextMessage:kOriginalMessageText success:^(NSString *eventId) {
+        [room sendTextMessage:kOriginalMessageText threadId:nil success:^(NSString *eventId) {
 
             [mxSession eventWithEventId:eventId inRoom:room.roomId success:^(MXEvent *event) {
 
@@ -171,7 +171,7 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
     [matrixSDKTestsData doMXSessionTestWithBobAndARoom:self andStore:[[MXMemoryStore alloc] init] readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
         
         // - Send a message
-        [room sendTextMessage:kOriginalMarkdownMessageText success:^(NSString *eventId) {
+        [room sendTextMessage:kOriginalMarkdownMessageText threadId:nil success:^(NSString *eventId) {
             
             [mxSession eventWithEventId:eventId inRoom:room.roomId success:^(MXEvent *event) {
                 
@@ -488,7 +488,7 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
 
         // - Send a message
         MXEvent *localEcho;
-        [room sendTextMessage:kOriginalMessageText formattedText:nil localEcho:&localEcho success:^(NSString *theEventId) {
+        [room sendTextMessage:kOriginalMessageText formattedText:nil threadId:nil localEcho:&localEcho success:^(NSString *theEventId) {
             eventId = theEventId;
         } failure:^(NSError *error) {
             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
@@ -562,7 +562,7 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
 
         MXRoom *room = [mxSession roomWithRoomId:roomId];
 
-        [room sendTextMessage:kOriginalMessageText success:^(NSString *eventId) {
+        [room sendTextMessage:kOriginalMessageText threadId:nil success:^(NSString *eventId) {
             [mxSession eventWithEventId:eventId inRoom:room.roomId success:^(MXEvent *event) {
                 [mxSession.aggregations replaceTextMessageEvent:event withTextMessage:kEditedMessageText formattedText:nil localEchoBlock:nil success:^(NSString * _Nonnull editEventId) {
 
@@ -598,7 +598,7 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
         MXRoom *room = [aliceSession roomWithRoomId:roomId];
 
         // - Send a message
-        [room sendTextMessage:kOriginalMessageText success:^(NSString *eventId) {
+        [room sendTextMessage:kOriginalMessageText threadId:nil success:^(NSString *eventId) {
 
             [aliceSession eventWithEventId:eventId inRoom:room.roomId success:^(MXEvent *event) {
 
@@ -710,7 +710,7 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
 
         // - Send a message
         MXEvent *localEcho;
-        [room sendTextMessage:kOriginalMessageText formattedText:nil localEcho:&localEcho success:^(NSString *theEventId) {
+        [room sendTextMessage:kOriginalMessageText formattedText:nil threadId:nil localEcho:&localEcho success:^(NSString *theEventId) {
             eventId = theEventId;
         } failure:^(NSError *error) {
             XCTFail(@"Cannot set up intial test conditions - error: %@", error);

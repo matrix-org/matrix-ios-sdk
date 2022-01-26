@@ -242,6 +242,7 @@ typedef void (^MXOnResumeDone)(void);
                                                  selector:@selector(spaceServiceDidBuildSpaceGraph:)
                                                      name:MXSpaceService.didBuildSpaceGraph
                                                    object:_spaceService];
+        _threadingService = [[MXThreadingService alloc] initWithSession:self];
         
         [self setIdentityServer:mxRestClient.identityServer andAccessToken:mxRestClient.credentials.identityServerAccessToken];
         

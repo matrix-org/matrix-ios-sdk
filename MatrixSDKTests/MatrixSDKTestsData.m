@@ -250,7 +250,7 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
             MXLogDebug(@"Created room %@ for %@", response.roomId, testCase.name);
 
             // Send the the message text in it
-            [bobRestClient sendTextMessageToRoom:response.roomId text:newTextMessage success:^(NSString *eventId) {
+            [bobRestClient sendTextMessageToRoom:response.roomId threadId:nil text:newTextMessage success:^(NSString *eventId) {
                 
                 readyToTest(bobRestClient, response.roomId, eventId, expectation);
                 
@@ -317,7 +317,7 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
     }
     else
     {
-        [mxRestClient2 sendTextMessageToRoom:roomId text:[NSString stringWithFormat:@"Fake message sent at %.0f ms", [[NSDate date] timeIntervalSinceDate:self.startDate] * 1000]
+        [mxRestClient2 sendTextMessageToRoom:roomId threadId:nil text:[NSString stringWithFormat:@"Fake message sent at %.0f ms", [[NSDate date] timeIntervalSinceDate:self.startDate] * 1000]
                            success:^(NSString *eventId) {
 
             // Send the next message

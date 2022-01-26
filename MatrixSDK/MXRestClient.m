@@ -23,6 +23,7 @@
 #import "MXJSONModel.h"
 #import "MXTools.h"
 #import "MXError.h"
+#import "MXEvent.h"
 
 #import "MXAllowedCertificates.h"
 
@@ -1432,6 +1433,7 @@ MXAuthAction;
 
 #pragma mark - Room operations
 - (MXHTTPOperation *)sendEventToRoom:(NSString *)roomId
+                            threadId:(NSString*)threadId
                            eventType:(MXEventTypeString)eventTypeString
                              content:(NSDictionary *)content
                                txnId:(NSString *)txnId
@@ -1450,11 +1452,32 @@ MXAuthAction;
                       roomId,
                       eventTypeString,
                       [MXTools encodeURIComponent:txnId]];
+    
+    NSDictionary *eventContent = content;
+    if (threadId)
+    {
+        // Add the thread id to the data to send
+        NSMutableDictionary *relatesDict;
+        if (content[kMXEventRelationRelatesToKey])
+        {
+            relatesDict = [NSMutableDictionary dictionaryWithDictionary:content[kMXEventRelationRelatesToKey]];
+        }
+        else
+        {
+            relatesDict = [NSMutableDictionary dictionary];
+        }
+        relatesDict[@"rel_type"] = MXEventRelationTypeThread;
+        relatesDict[@"event_id"] = threadId;
+        
+        NSMutableDictionary *newContent = [NSMutableDictionary dictionaryWithDictionary:content];
+        newContent[kMXEventRelationRelatesToKey] = relatesDict;
+        eventContent = newContent;
+    }
 
     MXWeakify(self);
     return [httpClient requestWithMethod:@"PUT"
                                     path:path
-                              parameters:content
+                              parameters:eventContent
                                  success:^(NSDictionary *JSONResponse) {
                                      MXStrongifyAndReturnIfNil(self);
 
@@ -1519,6 +1542,7 @@ MXAuthAction;
 }
 
 - (MXHTTPOperation*)sendMessageToRoom:(NSString*)roomId
+                             threadId:(NSString*)threadId
                               msgType:(MXMessageType)msgType
                               content:(NSDictionary*)content
                               success:(void (^)(NSString *eventId))success
@@ -1528,19 +1552,23 @@ MXAuthAction;
     NSMutableDictionary *eventContent = [NSMutableDictionary dictionaryWithDictionary:content];
     eventContent[kMXMessageTypeKey] = msgType;
     
-    return [self sendEventToRoom:roomId eventType:kMXEventTypeStringRoomMessage content:eventContent txnId:nil success:success failure:failure];
+    return [self sendEventToRoom:roomId threadId:threadId eventType:kMXEventTypeStringRoomMessage content:eventContent txnId:nil success:success failure:failure];
 }
 
 - (MXHTTPOperation*)sendTextMessageToRoom:(NSString*)roomId
+                                 threadId:(NSString*)threadId
                                      text:(NSString*)text
                                   success:(void (^)(NSString *eventId))success
                                   failure:(void (^)(NSError *error))failure
 {
-    return [self sendMessageToRoom:roomId msgType:kMXMessageTypeText
+    return [self sendMessageToRoom:roomId
+                          threadId:threadId
+                           msgType:kMXMessageTypeText
                            content:@{
                                kMXMessageBodyKey: text
                            }
-                           success:success failure:failure];
+                           success:success
+                           failure:failure];
 }
 
 
@@ -2276,7 +2304,7 @@ MXAuthAction;
 - (MXHTTPOperation*)messagesForRoom:(NSString*)roomId
                                from:(NSString*)from
                           direction:(MXTimelineDirection)direction
-                              limit:(NSUInteger)limit
+                              limit:(NSInteger)limit
                              filter:(MXRoomEventFilter*)roomEventFilter
                             success:(void (^)(MXPaginationResponse *paginatedResponse))success
                             failure:(void (^)(NSError *error))failure
@@ -5435,7 +5463,7 @@ MXAuthAction;
                          relationType:(NSString*)relationType
                             eventType:(NSString*)eventType
                                  from:(NSString*)from
-                                limit:(NSUInteger)limit
+                                limit:(NSInteger)limit
                               success:(void (^)(MXAggregationPaginatedResponse *paginatedResponse))success
                               failure:(void (^)(NSError *error))failure
 {

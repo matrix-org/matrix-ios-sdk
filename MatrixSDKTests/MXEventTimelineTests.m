@@ -53,7 +53,7 @@ NSString *theInitialEventMessage = @"The initial timelime event";
         [matrixSDKTestsData for:mxSession.matrixRestClient andRoom:room.roomId sendMessages:20 testCase:testCase success:^{
 
             // Add a text message that will be used as initial event
-            [room sendTextMessage:theInitialEventMessage success:^(NSString *eventId) {
+            [room sendTextMessage:theInitialEventMessage threadId:nil success:^(NSString *eventId) {
 
                 // Add 20 more messages
                 [matrixSDKTestsData for:mxSession.matrixRestClient andRoom:room.roomId sendMessages:20 testCase:testCase success:^{

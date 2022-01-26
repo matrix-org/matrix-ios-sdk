@@ -101,7 +101,7 @@ Common initial conditions:
                         [matrixSDKTestsData for:aliceRestClient andRoom:roomId sendMessages:50 testCase:self success:^{
 
                             // - Bob sends a message
-                            [roomFromBobPOV sendTextMessage:bobMessage success:^(NSString *eventId) {
+                            [roomFromBobPOV sendTextMessage:bobMessage threadId:nil success:^(NSString *eventId) {
 
                                 bobMessageEventId = eventId;
 
@@ -332,7 +332,7 @@ Common initial conditions:
             }];
 
             MXRoom *roomFromCharliePOV = [charlieSession roomWithRoomId:roomId];
-            [roomFromCharliePOV sendTextMessage:messageFromCharlie success:nil failure:^(NSError *error) {
+            [roomFromCharliePOV sendTextMessage:messageFromCharlie threadId:nil success:nil failure:^(NSError *error) {
                 XCTFail(@"The operation should not fail - NSError: %@", error);
                 [expectation fulfill];
             }];
@@ -1207,7 +1207,7 @@ Common initial conditions:
             MXRoomSummary *summary = [aliceSession roomSummaryWithRoomId:roomId];
             XCTAssertTrue(summary.isEncrypted);
 
-            [room sendTextMessage:messageFromAlice success:nil failure:^(NSError *error) {
+            [room sendTextMessage:messageFromAlice threadId:nil success:nil failure:^(NSError *error) {
                 XCTFail(@"The operation should not fail - NSError: %@", error);
                 [expectation fulfill];
             }];

@@ -64,6 +64,7 @@
         "MXResponseUnitTests",
         "MXStoreRoomListDataManagerUnitTests",
         "MXSyncResponseUnitTests",
+        "MXThreadingServiceUnitTests",
         "MXToolsUnitTests"
       ],
       "target" : {

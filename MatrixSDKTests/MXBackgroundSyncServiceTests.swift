@@ -1438,13 +1438,15 @@ extension MXBackgroundSyncServiceTests {
     }
 }
 
-private extension MXRoom {
+extension MXRoom {
     
     /// Send multiple text messages. If any of sending operations is failed, returns immediately with the error. Otherwise waits for all messages to be sent before calling the completion handler.
     /// - Parameters:
     ///   - messages: Messages to be sent
     ///   - completion: Completion block
-    func sendTextMessages(messages: [String], completion: @escaping (MXResponse<[String]>) -> Void) {
+    func sendTextMessages(messages: [String],
+                          threadId: String? = nil,
+                          completion: @escaping (MXResponse<[String]>) -> Void) {
         let dispatchGroup = DispatchGroup()
         var eventIDs: [String] = []
         var failed = false
@@ -1452,7 +1454,7 @@ private extension MXRoom {
         for message in messages {
             dispatchGroup.enter()
             var localEcho: MXEvent?
-            sendTextMessage(message, localEcho: &localEcho) { (response) in
+            sendTextMessage(message, threadId: threadId, localEcho: &localEcho) { (response) in
                 switch response {
                 case .success(let eventId):
                     if let eventId = eventId {

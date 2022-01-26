@@ -529,8 +529,8 @@
                             }
 
                             // Try with 2 more live events
-                            [room sendTextMessage:@"How is the pagination #2?" success:nil failure:nil];
-                            [room sendTextMessage:@"How is the pagination #3?" success:nil failure:nil];
+                            [room sendTextMessage:@"How is the pagination #2?" threadId:nil success:nil failure:nil];
+                            [room sendTextMessage:@"How is the pagination #3?" threadId:nil success:nil failure:nil];
 
                         } failure:^(NSError *error) {
                             XCTFail(@"The request should not fail - NSError: %@", error);
@@ -586,7 +586,7 @@
                 // Start checking pagination from the cache
                 [room2liveTimeline resetPagination];
 
-                [room sendTextMessage:@"How is the pagination #1?" success:nil failure:nil];
+                [room sendTextMessage:@"How is the pagination #1?" threadId:nil success:nil failure:nil];
 
             } failure:^(NSError *error) {
                 XCTFail(@"The request should not fail - NSError: %@", error);
@@ -858,7 +858,7 @@
                 // Make Bob the room
                 [room leave:^{
 
-                    [aliceRestClient sendTextMessageToRoom:roomId text:@"Hi bob"  success:^(NSString *eventId) {
+                    [aliceRestClient sendTextMessageToRoom:roomId threadId:nil text:@"Hi bob" success:^(NSString *eventId) {
 
                         aliceTextEventId = eventId;
 
@@ -992,7 +992,7 @@
         }];
     }];
 
-    [room sendTextMessage:@"This is text message" success:^(NSString *eventId) {
+    [room sendTextMessage:@"This is text message" threadId:nil success:^(NSString *eventId) {
 
         messageEventId = eventId;
 
@@ -1202,7 +1202,7 @@
                     // Create another random room to create more data server side
                     [bobRestClient createRoom:nil visibility:kMXRoomDirectoryVisibilityPrivate roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
 
-                        [bobRestClient sendTextMessageToRoom:response.roomId text:@"A Message" success:^(NSString *eventId) {
+                        [bobRestClient sendTextMessageToRoom:response.roomId threadId:nil text:@"A Message" success:^(NSString *eventId) {
 
                             // Do a 2nd [mxSession start] with the filled store
                             id<MXStore> store2 = [[mxStoreClass alloc] init];
@@ -1677,8 +1677,7 @@
                         id<MXStore> store2 = [[mxStoreClass alloc] init];
 
                         [store2 openWithCredentials:bobRestClient.credentials onComplete:^{
-
-                            MXRoomSummary *summary = [store2.roomSummaryStore summaryOfRoom:response.roomId];
+                            id<MXRoomSummaryProtocol> summary = [store2.roomSummaryStore summaryOfRoom:response.roomId];
 
                             XCTAssert(summary);
 
