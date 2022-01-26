@@ -1,3 +1,26 @@
+## Changes in 0.20.16 (2022-01-11)
+
+🙌 Improvements
+
+- MXResponse has been frozen for binary compatibility when building as an XCFramework. ([#1002](https://github.com/matrix-org/matrix-ios-sdk/pull/1002))
+- MXTaskProfile: Add an MXTaskProfileName enum instead of individual strings for Name and Category. ([#5035](https://github.com/vector-im/element-ios/issues/5035))
+
+⚠️ API Changes
+
+- MXAnalyticsDelegate: The generic methods have been replaced with type safe ones for each event tracked. ([#5035](https://github.com/vector-im/element-ios/issues/5035))
+
+
+## Changes in 0.20.15 (2021-12-14)
+
+🙌 Improvements
+
+- Expose missing Jingle headers in umbrella header ([#1308](https://github.com/matrix-org/matrix-ios-sdk/pull/1308))
+
+⚠️ API Changes
+
+- MXTools: Add an error parameter to the failure of +convertVideoAssetToMP4:withTargetFileSize:success:failure: ([#4749](https://github.com/vector-im/element-ios/issues/4749))
+
+
 ## Changes in 0.20.14 (2021-12-09)
 
 🐛 Bugfixes

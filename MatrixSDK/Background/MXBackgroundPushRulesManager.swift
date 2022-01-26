@@ -51,7 +51,7 @@ import Foundation
     private var permissionConditionChecker: MXPushRuleSenderNotificationPermissionConditionChecker
     
     /// Initializer.
-    /// - Parameter restClient: Rest client to fetch initial push rules.
+    /// - Parameter credentials: Credentials to use when fetching initial push rules.
     public init(withCredentials credentials: MXCredentials) {
         self.credentials = credentials
         eventMatchConditionChecker = MXPushRuleEventMatchConditionChecker()
