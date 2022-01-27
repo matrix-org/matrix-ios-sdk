@@ -262,6 +262,7 @@ NSString *const kMXMessageContentKeyExtensibleAssetTypeUser = @"m.self";
  */
 - (void)finalise
 {
+    _wireEventType = [MXTools eventType:_wireType];
     if (MXEventTypePresence == _wireEventType)
     {
         // Workaround: Presence events provided by the home server do not contain userId

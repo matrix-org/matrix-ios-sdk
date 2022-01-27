@@ -43,9 +43,20 @@
     BOOL match = NO;
     if (_eventTypes)
     {
-        if (NSNotFound != [_eventTypes indexOfObject:event.type])
+        if (event.type)
         {
-            match = YES;
+            if (NSNotFound != [_eventTypes indexOfObject:event.type])
+            {
+                match = YES;
+            }
+        }
+        else if (event.wireType)
+        {
+            //  no event type, this is probably a redacted event
+            if (NSNotFound != [_eventTypes indexOfObject:event.wireType])
+            {
+                match = YES;
+            }
         }
     }
     else

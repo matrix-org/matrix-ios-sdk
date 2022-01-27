@@ -85,7 +85,9 @@ public class MXThreadingService: NSObject {
                 }
                 handled = thread.addEvent(event)
                 saveThread(thread)
-                NotificationCenter.default.post(name: Self.newThreadCreated, object: thread, userInfo: nil)
+                DispatchQueue.main.async {
+                    NotificationCenter.default.post(name: Self.newThreadCreated, object: thread, userInfo: nil)
+                }
             }
             notifyDidUpdateThreads()
             return handled
@@ -101,6 +103,15 @@ public class MXThreadingService: NSObject {
                let thread = thread(withId: threadId),
                let newEvent = editedEvent.editedEvent(fromReplacementEvent: event) {
                 let handled = thread.replaceEvent(withId: editedEventId, with: newEvent)
+                notifyDidUpdateThreads()
+                return handled
+            }
+        } else if event.eventType == .roomRedaction && direction == .forwards {
+            if let redactedEventId = event.redacts,
+               let thread = thread(withId: redactedEventId),
+               let newEvent = session.store?.event(withEventId: redactedEventId,
+                                                   inRoom: event.roomId) {
+                let handled = thread.replaceEvent(withId: redactedEventId, with: newEvent)
                 notifyDidUpdateThreads()
                 return handled
             }
