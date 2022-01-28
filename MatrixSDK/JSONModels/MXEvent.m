@@ -679,6 +679,7 @@ NSString *const kMXMessageContentKeyExtensibleAssetTypeUser = @"m.self";
     MXEvent *event = self;
     NSDictionary *newContentDict;
     MXJSONModelSetDictionary(newContentDict, replaceEvent.content[@"m.new_content"])
+    NSDictionary *oldRelatesTo = self.relatesTo.JSONDictionary;
     
     MXEventDecryptionResult *replaceEventDecryptionResult;
 
@@ -689,6 +690,10 @@ NSString *const kMXMessageContentKeyExtensibleAssetTypeUser = @"m.self";
         editedEventDict = [event.JSONDictionary mutableCopy];
         NSMutableDictionary *editedEventContentDict = [replaceEvent.wireContent mutableCopy];
         [editedEventContentDict removeObjectForKey:kMXEventRelationRelatesToKey];
+        if (oldRelatesTo)
+        {
+            editedEventContentDict[kMXEventRelationRelatesToKey] = oldRelatesTo;
+        }
         editedEventDict[@"content"] = editedEventContentDict;
         
         // Reuse its decryption data
