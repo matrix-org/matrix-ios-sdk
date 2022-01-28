@@ -92,25 +92,34 @@ public class MXThreadingService: NSObject {
             notifyDidUpdateThreads()
             return handled
         } else if let thread = thread(withId: event.eventId) {
-            //  event is the root event of a thread
+            //  event is a thread root
             let handled = thread.addEvent(event)
             notifyDidUpdateThreads()
             return handled
         } else if event.isEdit() && direction == .forwards {
             let editedEventId = event.relatesTo.eventId
-            if let editedEvent = session.store?.event(withEventId: editedEventId, inRoom: event.roomId),
-               let threadId = editedEvent.threadId,
-               let thread = thread(withId: threadId),
+            if let editedEvent = session.store?.event(withEventId: editedEventId,
+                                                      inRoom: event.roomId),
                let newEvent = editedEvent.editedEvent(fromReplacementEvent: event) {
-                let handled = thread.replaceEvent(withId: editedEventId, with: newEvent)
-                notifyDidUpdateThreads()
-                return handled
+                if let threadId = editedEvent.threadId,
+                   let thread = thread(withId: threadId) {
+                    //  edited event is in a known thread
+                    let handled = thread.replaceEvent(withId: editedEventId, with: newEvent)
+                    notifyDidUpdateThreads()
+                    return handled
+                } else if let thread = thread(withId: editedEventId) {
+                    //  edited event is a thread root
+                    let handled = thread.replaceEvent(withId: editedEventId, with: newEvent)
+                    notifyDidUpdateThreads()
+                    return handled
+                }
             }
         } else if event.eventType == .roomRedaction && direction == .forwards {
             if let redactedEventId = event.redacts,
                let thread = thread(withId: redactedEventId),
                let newEvent = session.store?.event(withEventId: redactedEventId,
                                                    inRoom: event.roomId) {
+                //  event is a thread root
                 let handled = thread.replaceEvent(withId: redactedEventId, with: newEvent)
                 notifyDidUpdateThreads()
                 return handled
