@@ -402,6 +402,9 @@ NSCharacterSet *uriComponentCharset;
         case MXCallHangupReasonUserHangup:
             string = kMXCallHangupReasonStringUserHangup;
             break;
+        case MXCallHangupReasonUserBusy:
+            string = kMXCallHangupReasonStringUserBusy;
+            break;
         case MXCallHangupReasonIceFailed:
             string = kMXCallHangupReasonStringIceFailed;
             break;
