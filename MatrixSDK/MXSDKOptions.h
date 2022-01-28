@@ -182,6 +182,13 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @property (nonatomic, nullable) NSString *clientPermalinkBaseUrl;
 
+/**
+ Enable threading module and thread-specific replies to events.
+
+ @remark NO by default.
+ */
+@property (nonatomic) BOOL enableThreads;
+
 @end
 
 NS_ASSUME_NONNULL_END

@@ -780,7 +780,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                              failure:(void (^)(NSError *error))failure
 {
     NSDictionary *newContent = content;
-    if (threadId)
+    if (threadId && MXSDKOptions.sharedInstance.enableThreads)
     {
         NSMutableDictionary *mutableContent = [newContent mutableDeepCopy];
         BOOL isRealReply = content[kMXEventRelationRelatesToKey][@"m.in_reply_to"][@"event_id"] != nil;
