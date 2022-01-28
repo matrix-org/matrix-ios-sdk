@@ -56,7 +56,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  The refresh token, which can be used to obtain new access tokens. (optional)
 */
-@property (nonatomic) NSString *refreshToken;
+@property (nonatomic, nullable) NSString *refreshToken;
 
 /**
  The access token to create a MXIdentityServerRestClient

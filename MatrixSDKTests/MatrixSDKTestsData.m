@@ -30,7 +30,7 @@
 /*
  Out of the box, the tests are supposed to be run with the iOS simulator attacking
  a test home server running on the same Mac machine.
- The reason is that the simulator can access to the home server running on the Mac 
+ The reason is that the simulator can access to the home server running on the Mac
  via localhost. So everyone can use a localhost HS url that works everywhere.
  
  Here, we use one of the home servers launched by the ./demo/start.sh script
@@ -134,7 +134,7 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
     [self getBobCredentials:testCase readyToTest:^{
 
         MXRestClient *mxRestClient = [[MXRestClient alloc] initWithCredentials:self.bobCredentials
-                                             andOnUnrecognizedCertificateBlock:nil andPersistentTokenDataHandler:nil andUnauthenticatedHandler:nil];
+                                           andOnUnrecognizedCertificateBlock:nil];
         [self retain:mxRestClient];
 
         readyToTest(mxRestClient);
@@ -154,7 +154,7 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
     [self getBobCredentials:testCase readyToTest:^{
         
         MXRestClient *mxRestClient = [[MXRestClient alloc] initWithCredentials:self.bobCredentials
-                                             andOnUnrecognizedCertificateBlock:nil andPersistentTokenDataHandler:nil andUnauthenticatedHandler:nil];
+                                           andOnUnrecognizedCertificateBlock:nil];
         [self retain:mxRestClient];
 
         readyToTest(mxRestClient, expectation);
@@ -518,7 +518,7 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
     [self getAliceCredentials:testCase readyToTest:^{
         
         MXRestClient *aliceRestClient = [[MXRestClient alloc] initWithCredentials:self.aliceCredentials
-                                                andOnUnrecognizedCertificateBlock:nil andPersistentTokenDataHandler:nil andUnauthenticatedHandler:nil];
+                                                andOnUnrecognizedCertificateBlock:nil];
         [self retain:aliceRestClient];
 
         __block MXRestClient *aliceRestClient2 = aliceRestClient;
@@ -720,7 +720,7 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
     NSString *anUniqueUser = [NSString stringWithFormat:@"%@", [[NSUUID UUID] UUIDString]];
     MXHTTPOperation *operation = [aUserRestClient registerWithLoginType:kMXLoginFlowTypeDummy username:anUniqueUser password:@"123456" success:^(MXCredentials *credentials) {
 
-        aUserRestClient = [[MXRestClient alloc] initWithCredentials:credentials andOnUnrecognizedCertificateBlock:nil andPersistentTokenDataHandler:nil andUnauthenticatedHandler:nil];
+        aUserRestClient = [[MXRestClient alloc] initWithCredentials:credentials andOnUnrecognizedCertificateBlock:nil];
         [self retain:aUserRestClient];
 
         MXSession *aUserSession = [[MXSession alloc] initWithMatrixRestClient:aUserRestClient];
@@ -812,7 +812,7 @@ onUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecogn
         MXRestClient *restClient = [[MXRestClient alloc] initWithCredentials:self.bobCredentials
                                            andOnUnrecognizedCertificateBlock:^BOOL(NSData *certificate) {
                                                return YES;
-        } andPersistentTokenDataHandler:nil andUnauthenticatedHandler:nil];
+                                           }];
         [self retain:restClient];
 
         readyToTest(restClient, expectation);
@@ -872,7 +872,7 @@ onUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecogn
 
         [mxRestClient loginWithLoginType:kMXLoginFlowTypePassword username:userId password:password success:^(MXCredentials *credentials) {
 
-            MXRestClient *mxRestClient2 = [[MXRestClient alloc] initWithCredentials:credentials andOnUnrecognizedCertificateBlock:nil andPersistentTokenDataHandler:nil andUnauthenticatedHandler:nil];
+            MXRestClient *mxRestClient2 = [[MXRestClient alloc] initWithCredentials:credentials andOnUnrecognizedCertificateBlock:nil];
             [self retain:mxRestClient2];
 
             MXSession *newSession = [[MXSession alloc] initWithMatrixRestClient:mxRestClient2];
@@ -911,7 +911,7 @@ onUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecogn
 
         [mxRestClient loginWithLoginType:kMXLoginFlowTypePassword username:userId password:password success:^(MXCredentials *credentials) {
 
-            MXRestClient *mxRestClient2 = [[MXRestClient alloc] initWithCredentials:credentials andOnUnrecognizedCertificateBlock:nil andPersistentTokenDataHandler:nil andUnauthenticatedHandler:nil];
+            MXRestClient *mxRestClient2 = [[MXRestClient alloc] initWithCredentials:credentials andOnUnrecognizedCertificateBlock:nil];
             [self retain:mxRestClient2];
 
             MXSession *newSession = [[MXSession alloc] initWithMatrixRestClient:mxRestClient2];
@@ -966,7 +966,7 @@ onUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecogn
     
     [mxRestClient loginWithLoginType:kMXLoginFlowTypePassword username:credentials.userId password:password success:^(MXCredentials *credentials2) {
         
-        MXRestClient *mxRestClient2 = [[MXRestClient alloc] initWithCredentials:credentials2 andOnUnrecognizedCertificateBlock:nil andPersistentTokenDataHandler:nil andUnauthenticatedHandler:nil];
+        MXRestClient *mxRestClient2 = [[MXRestClient alloc] initWithCredentials:credentials2 andOnUnrecognizedCertificateBlock:nil];
         [self retain:mxRestClient2];
         
         MXSession *newSession = [[MXSession alloc] initWithMatrixRestClient:mxRestClient2];
@@ -1051,4 +1051,3 @@ onUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecogn
 @end
 
 #pragma clang diagnostic pop
-

@@ -146,11 +146,11 @@ typedef NS_ENUM(NSUInteger, MXHTTPClientSSLPinningMode) {
  MXHTTPClient will automatically add the access token to requested URLs
 
  @param baseURL the server URL from which requests will be done.
- @param authenticated wether the client is required make authenticated requests.
+ @param authenticated whether the client is required make authenticated requests.
  @param onUnrecognizedCertBlock the block called to handle unrecognised certificate (nil if unrecognised certificates are ignored).
  @return a MXHTTPClient instance.
  */
-- (id)initWithBaseURL:(NSString*)baseURL authenticated:(bool)authenticated andOnUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock;
+- (id)initWithBaseURL:(NSString*)baseURL authenticated:(BOOL)authenticated andOnUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock;
 
 /**
  Make a HTTP request to the server.

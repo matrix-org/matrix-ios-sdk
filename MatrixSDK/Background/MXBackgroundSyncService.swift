@@ -66,7 +66,7 @@ public enum MXBackgroundSyncServiceError: Error {
     
     /// Initializer
     /// - Parameter credentials: account credentials
-    public init(withCredentials credentials: MXCredentials, persistTokenDataHandler: MXRestClientPersistTokenDataHandler?, unauthenticatedHandler: MXRestClientUnauthenticatedHandler?) {
+    public init(withCredentials credentials: MXCredentials, persistTokenDataHandler: MXRestClientPersistTokenDataHandler? = nil, unauthenticatedHandler: MXRestClientUnauthenticatedHandler? = nil) {
         processingQueue = DispatchQueue(label: "MXBackgroundSyncServiceQueue-" + MXTools.generateSecret())
         self.credentials = credentials
         

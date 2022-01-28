@@ -81,7 +81,7 @@ static NSUInteger requestCount = 0;
 /**
  The access token used for authenticated requests.
  */
-@property (nonatomic) bool isAuthenticatedClient;
+@property (nonatomic) BOOL isAuthenticatedClient;
 
 /**
  The current background task id if any.
@@ -105,7 +105,7 @@ static NSUInteger requestCount = 0;
     return [self initWithBaseURL:baseURL authenticated:NO andOnUnrecognizedCertificateBlock:onUnrecognizedCertBlock];
 }
 
--(id)initWithBaseURL:(NSString *)baseURL authenticated:(bool)authenticated andOnUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock
+-(id)initWithBaseURL:(NSString *)baseURL authenticated:(BOOL)authenticated andOnUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock
 {
     self = [super init];
     if (self)
@@ -168,7 +168,7 @@ static NSUInteger requestCount = 0;
 - (MXHTTPOperation*)requestWithMethod:(NSString *)httpMethod
                                  path:(NSString *)path
                            parameters:(NSDictionary*)parameters
-                  needsAuthentication:(bool)needsAuthentication
+                  needsAuthentication:(BOOL)needsAuthentication
                               success:(void (^)(NSDictionary *JSONResponse))success
                               failure:(void (^)(NSError *error))failure
 {
@@ -178,7 +178,7 @@ static NSUInteger requestCount = 0;
 - (MXHTTPOperation*)requestWithMethod:(NSString *)httpMethod
                                  path:(NSString *)path
                            parameters:(NSDictionary*)parameters
-                  needsAuthentication:(bool)needsAuthentication
+                  needsAuthentication:(BOOL)needsAuthentication
                               timeout:(NSTimeInterval)timeoutInSeconds
                               success:(void (^)(NSDictionary *JSONResponse))success
                               failure:(void (^)(NSError *error))failure
@@ -202,7 +202,7 @@ static NSUInteger requestCount = 0;
 - (MXHTTPOperation*)requestWithMethod:(NSString *)httpMethod
                                  path:(NSString *)path
                            parameters:(NSDictionary*)parameters
-                  needsAuthentication:(bool)needsAuthentication
+                  needsAuthentication:(BOOL)needsAuthentication
                                  data:(NSData *)data
                               headers:(NSDictionary*)headers
                               timeout:(NSTimeInterval)timeoutInSeconds

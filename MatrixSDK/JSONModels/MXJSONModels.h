@@ -245,7 +245,7 @@ FOUNDATION_EXPORT NSString *const kMXLoginIdentifierTypePhone;
 @end
 
 /**
- `MXRefreshResponse` represents the response to a an auth refresh request.
+ `MXRefreshResponse` represents the response to an auth refresh request.
  */
 @interface MXRefreshResponse : MXJSONModel
     /**
