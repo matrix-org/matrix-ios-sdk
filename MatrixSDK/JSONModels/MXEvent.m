@@ -500,14 +500,14 @@ NSString *const kMXMessageContentKeyExtensibleAssetTypeUser = @"m.self";
 
 - (BOOL)isReplyEvent
 {
-    return self.eventType == MXEventTypeRoomMessage && self.content[kMXEventRelationRelatesToKey][@"m.in_reply_to"][@"event_id"] != nil &&
+    return self.eventType == MXEventTypeRoomMessage && self.relatesTo.inReplyTo.eventId != nil &&
     //  add condition after new thread event fallbacks
     (self.isInThread ? self.isReplyInThread : YES);
 }
 
 - (BOOL)isReplyInThread
 {
-    return [self.content[kMXEventRelationRelatesToKey][@"m.in_reply_to"][@"m.render_in"] containsObject:MXEventRelationTypeThread];
+    return [self.relatesTo.inReplyTo.renderIn containsObject:MXEventRelationTypeThread];
 }
 
 - (BOOL)isVoiceMessage

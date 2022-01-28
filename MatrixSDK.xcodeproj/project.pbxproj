@@ -1460,6 +1460,10 @@
 		EC5C560B2798CEA00014CBE9 /* NSDictionary+MutableDeepCopy.h in Headers */ = {isa = PBXBuildFile; fileRef = EC5C56082798CEA00014CBE9 /* NSDictionary+MutableDeepCopy.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		EC5C560C2798CEA00014CBE9 /* NSDictionary+MutableDeepCopy.m in Sources */ = {isa = PBXBuildFile; fileRef = EC5C56092798CEA00014CBE9 /* NSDictionary+MutableDeepCopy.m */; };
 		EC5C560D2798CEA00014CBE9 /* NSDictionary+MutableDeepCopy.m in Sources */ = {isa = PBXBuildFile; fileRef = EC5C56092798CEA00014CBE9 /* NSDictionary+MutableDeepCopy.m */; };
+		EC5C562827A36EDB0014CBE9 /* MXInReplyTo.h in Headers */ = {isa = PBXBuildFile; fileRef = EC5C562627A36EDB0014CBE9 /* MXInReplyTo.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EC5C562927A36EDB0014CBE9 /* MXInReplyTo.h in Headers */ = {isa = PBXBuildFile; fileRef = EC5C562627A36EDB0014CBE9 /* MXInReplyTo.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EC5C562A27A36EDB0014CBE9 /* MXInReplyTo.m in Sources */ = {isa = PBXBuildFile; fileRef = EC5C562727A36EDB0014CBE9 /* MXInReplyTo.m */; };
+		EC5C562B27A36EDB0014CBE9 /* MXInReplyTo.m in Sources */ = {isa = PBXBuildFile; fileRef = EC5C562727A36EDB0014CBE9 /* MXInReplyTo.m */; };
 		EC60ED5D265CFC2C00B39A4E /* MXSyncResponse.h in Headers */ = {isa = PBXBuildFile; fileRef = EC60ED5B265CFC2C00B39A4E /* MXSyncResponse.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		EC60ED5E265CFC2C00B39A4E /* MXSyncResponse.h in Headers */ = {isa = PBXBuildFile; fileRef = EC60ED5B265CFC2C00B39A4E /* MXSyncResponse.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		EC60ED5F265CFC2C00B39A4E /* MXSyncResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = EC60ED5C265CFC2C00B39A4E /* MXSyncResponse.m */; };
@@ -2487,6 +2491,8 @@
 		EC51019C26C41981007D6D88 /* MXSyncResponseUnitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXSyncResponseUnitTests.swift; sourceTree = "<group>"; };
 		EC5C56082798CEA00014CBE9 /* NSDictionary+MutableDeepCopy.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSDictionary+MutableDeepCopy.h"; sourceTree = "<group>"; };
 		EC5C56092798CEA00014CBE9 /* NSDictionary+MutableDeepCopy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSDictionary+MutableDeepCopy.m"; sourceTree = "<group>"; };
+		EC5C562627A36EDB0014CBE9 /* MXInReplyTo.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXInReplyTo.h; sourceTree = "<group>"; };
+		EC5C562727A36EDB0014CBE9 /* MXInReplyTo.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXInReplyTo.m; sourceTree = "<group>"; };
 		EC60ED5B265CFC2C00B39A4E /* MXSyncResponse.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXSyncResponse.h; sourceTree = "<group>"; };
 		EC60ED5C265CFC2C00B39A4E /* MXSyncResponse.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXSyncResponse.m; sourceTree = "<group>"; };
 		EC60ED65265CFC7200B39A4E /* MXPresenceSyncResponse.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXPresenceSyncResponse.h; sourceTree = "<group>"; };
@@ -3283,6 +3289,8 @@
 				327E9ADB2284804500A98BC1 /* MXEventRelations.m */,
 				B10AFB4122A970060092E6AF /* MXEventReplace.h */,
 				B10AFB4222A970060092E6AF /* MXEventReplace.m */,
+				EC5C562627A36EDB0014CBE9 /* MXInReplyTo.h */,
+				EC5C562727A36EDB0014CBE9 /* MXInReplyTo.m */,
 				327E9ABA2284521C00A98BC1 /* MXEventUnsignedData.h */,
 				327E9ABB2284521C00A98BC1 /* MXEventUnsignedData.m */,
 			);
@@ -4684,6 +4692,7 @@
 				B146D47421A5945800D8C2C6 /* MXAntivirusScanStatus.h in Headers */,
 				322691361E5EFF8700966A6E /* MXDeviceListOperationsPool.h in Headers */,
 				3281E8B719E42DFE00976E1A /* MXJSONModel.h in Headers */,
+				EC5C562827A36EDB0014CBE9 /* MXInReplyTo.h in Headers */,
 				EC8A539325B1BC77004E0802 /* MXCallSessionDescription.h in Headers */,
 				327E9AF62289D53800A98BC1 /* MXReactionCount.h in Headers */,
 				EC60EDA8265CFE3B00B39A4E /* MXRoomSyncTimeline.h in Headers */,
@@ -5068,6 +5077,7 @@
 				B14EF2C12397E90400758AF0 /* MXKeyBackup.h in Headers */,
 				B14EF2C22397E90400758AF0 /* MXCallKitConfiguration.h in Headers */,
 				B19A30BD2404268600FB6F35 /* MXQRCodeDataCoder.h in Headers */,
+				EC5C562927A36EDB0014CBE9 /* MXInReplyTo.h in Headers */,
 				B14EF2C32397E90400758AF0 /* MXFilterJSONModel.h in Headers */,
 				32CEEF5023B0AB030039BA98 /* MXCrossSigning.h in Headers */,
 				1838927F2702F553003F0C4F /* MXSendReplyEventDefaultStringLocalizer.h in Headers */,
@@ -5945,6 +5955,7 @@
 				ECCA02BE27348FE300B6F34F /* MXThread.swift in Sources */,
 				EC1848C72686174E00865E16 /* MXiOSAudioOutputRouteType.swift in Sources */,
 				3220093919EFA4C9008DE41D /* MXEventListener.m in Sources */,
+				EC5C562A27A36EDB0014CBE9 /* MXInReplyTo.m in Sources */,
 				C6481AF21F1678A9000DB8A0 /* MXSessionEventListener.swift in Sources */,
 				32A1514F1DAF897600400192 /* MXOlmSessionResult.m in Sources */,
 				ECF29BD3264194BB0053E6D6 /* MXCallAssertedIdentityEventContent.m in Sources */,
@@ -6442,6 +6453,7 @@
 				ECCA02BF27348FE300B6F34F /* MXThread.swift in Sources */,
 				320B3937239FA56900BE2C06 /* MXKeyVerificationByDMRequest.m in Sources */,
 				B14EF2832397E90400758AF0 /* MXRoomCreateContent.m in Sources */,
+				EC5C562B27A36EDB0014CBE9 /* MXInReplyTo.m in Sources */,
 				EC8A53B025B1BC77004E0802 /* MXCallAnswerEventContent.m in Sources */,
 				EC60ED7E265CFCD100B39A4E /* MXDeviceListResponse.m in Sources */,
 				323F879025553D84009E9E67 /* MXTaskProfile.m in Sources */,

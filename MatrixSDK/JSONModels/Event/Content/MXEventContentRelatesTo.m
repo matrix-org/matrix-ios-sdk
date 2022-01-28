@@ -16,6 +16,13 @@
 
 #import "MXEventContentRelatesTo.h"
 
+static NSString* const kJSONInReplyTo = @"m.in_reply_to";
+
+@interface MXEventContentRelatesTo()
+
+@property (nonatomic, readwrite, nullable) MXInReplyTo *inReplyTo;
+
+@end
 
 @implementation MXEventContentRelatesTo
 
@@ -53,6 +60,7 @@
         relatesTo->_eventId = eventId;
 
         MXJSONModelSetString(relatesTo->_key, JSONDictionary[@"key"]);
+        MXJSONModelSetMXJSONModel(relatesTo.inReplyTo, MXInReplyTo, JSONDictionary[kJSONInReplyTo]);
     }
 
     return relatesTo;
@@ -64,7 +72,15 @@
     
     JSONDictionary[@"rel_type"] = self.relationType;
     JSONDictionary[@"event_id"] = self.eventId;
-    JSONDictionary[@"key"] = self.key;
+
+    if (self.key)
+    {
+        JSONDictionary[@"key"] = self.key;
+    }
+    if (self.inReplyTo)
+    {
+        JSONDictionary[kJSONInReplyTo] = self.inReplyTo.JSONDictionary;
+    }
     
     return JSONDictionary;
 }
