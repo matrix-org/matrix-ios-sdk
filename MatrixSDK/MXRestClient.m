@@ -21,6 +21,7 @@
 
 #import "MXSDKOptions.h"
 #import "MXJSONModel.h"
+#import "MXRefreshResponse.h"
 #import "MXTools.h"
 #import "MXError.h"
 

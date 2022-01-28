@@ -223,23 +223,6 @@ NSString *const kMXLoginIdentifierTypePhone = @"m.id.phone";
 
 @end
 
-@implementation MXRefreshResponse
-
-+ (id)modelFromJSON:(NSDictionary *)JSONDictionary
-{
-    MXRefreshResponse *refreshResponse = [[MXRefreshResponse alloc] init];
-    if (refreshResponse)
-    {
-        MXJSONModelSetString(refreshResponse.accessToken, JSONDictionary[@"access_token"]);
-        MXJSONModelSetUInt64(refreshResponse.expiresInMs, JSONDictionary[@"expires_in_ms"]);
-        MXJSONModelSetString(refreshResponse.refreshToken, JSONDictionary[@"refresh_token"]);
-    }
-
-    return refreshResponse;
-}
-
-@end
-
 @implementation MXThirdPartyIdentifier
 
 + (id)modelFromJSON:(NSDictionary *)JSONDictionary

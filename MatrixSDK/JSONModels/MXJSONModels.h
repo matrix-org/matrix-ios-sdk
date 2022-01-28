@@ -245,27 +245,6 @@ FOUNDATION_EXPORT NSString *const kMXLoginIdentifierTypePhone;
 @end
 
 /**
- `MXRefreshResponse` represents the response to an auth refresh request.
- */
-@interface MXRefreshResponse : MXJSONModel
-    /**
-     The access token to create a MXRestClient
-     */
-    @property (nonatomic) NSString *accessToken;
-
-    /**
-     The lifetime in milliseconds of the access token. (optional)
-     */
-    @property (nonatomic) uint64_t expiresInMs;
-
-    /**
-     The refresh token, which can be used to obtain new access tokens. (optional)
-    */
-    @property (nonatomic) NSString *refreshToken;
-
-@end
-
-/**
  `MXThirdPartyIdentifier` represents the response to /account/3pid GET request.
  */
 @interface MXThirdPartyIdentifier : MXJSONModel
