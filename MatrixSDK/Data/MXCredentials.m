@@ -190,7 +190,9 @@
     if(tokenData && tokenData.userId && self.userId && [self.userId isEqualToString:tokenData.userId]
        && tokenData.homeserver && self.homeServer && [tokenData.homeserver isEqualToString:self.homeServer])
     {
-        self.refreshToken = tokenData.refreshToken;
+        if (tokenData.refreshToken) {
+            self.refreshToken = tokenData.refreshToken;
+        }
         self.accessToken = tokenData.accessToken;
         self.accessTokenExpiresAt = tokenData.accessTokenExpiresAt;
     }

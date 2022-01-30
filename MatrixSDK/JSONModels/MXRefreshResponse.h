@@ -23,7 +23,7 @@
     /**
      The access token to create a MXRestClient
      */
-    @property (nonatomic) NSString *accessToken;
+    @property (nonatomic, nonnull) NSString *accessToken;
 
     /**
      The lifetime in milliseconds of the access token. (optional)
@@ -33,6 +33,6 @@
     /**
      The refresh token, which can be used to obtain new access tokens. (optional)
     */
-    @property (nonatomic) NSString *refreshToken;
+    @property (nonatomic, nullable) NSString *refreshToken;
 
 @end

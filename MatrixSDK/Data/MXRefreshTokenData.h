@@ -43,7 +43,7 @@
 /**
  The refresh token, which can be used to obtain new access tokens. (optional)
 */
-@property (nonatomic, readonly, nonnull) NSString *refreshToken;
+@property (nonatomic, readonly, nullable) NSString *refreshToken;
 
 - (instancetype _Nonnull)initWithUserId:(NSString*_Nonnull)userId
                     homeserver:(NSString*_Nonnull)homeserver
