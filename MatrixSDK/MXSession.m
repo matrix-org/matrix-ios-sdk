@@ -893,13 +893,6 @@ typedef void (^MXOnResumeDone)(void);
 
                 MXLogError(@"[MXSession] Crypto failed to start. Error: %@", error);
                 
-                // Check whether the token is valid
-                if ([self isUnknownTokenError:error])
-                {
-                    // Do nothing more because without a valid access_token, the session is useless
-                    return;
-                }
-
                 [self setState:MXSessionStateInitialSyncFailed];
                 failure(error);
 
@@ -909,12 +902,6 @@ typedef void (^MXOnResumeDone)(void);
             
             MXLogError(@"[MXSession] Get the user's profile information failed with error %@", error);
             
-            // Check whether the token is valid
-            if ([self isUnknownTokenError:error])
-            {
-                // Do nothing more because without a valid access_token, the session is useless
-                return;
-            }
             [self setState:MXSessionStateInitialSyncFailed];
             failure(error);
             
@@ -1244,37 +1231,6 @@ typedef void (^MXOnResumeDone)(void);
     return (self.store.eventStreamToken != nil);
 }
 
-#pragma mark - Invalid Token handling
-
-- (BOOL)isUnknownTokenError:(NSError *)error
-{
-    // Detect invalidated access token
-    // This can happen when the user made a forget password request for example
-    if ([MXError isMXError:error])
-    {
-        MXError *mxError = [[MXError alloc] initWithNSError:error];
-        if ([mxError.errcode isEqualToString:kMXErrCodeStringUnknownToken])
-        {
-            MXLogDebug(@"[MXSession] isUnknownTokenError: The access token is no more valid.");
-
-            if (mxError.httpResponse.statusCode == 401
-                && [mxError.userInfo[kMXErrorSoftLogoutKey] isEqual:@(YES)])
-            {
-                MXLogDebug(@"[MXSession] isUnknownTokenError: Go to MXSessionStateSoftLogout state.");
-                [self setState:MXSessionStateSoftLogout];
-            }
-            else
-            {
-                MXLogDebug(@"[MXSession] isUnknownTokenError: Go to MXSessionStateUnknownToken state.");
-                [self setState:MXSessionStateUnknownToken];
-            }
-
-            return YES;
-        }
-    }
-    return NO;
-}
-
 #pragma mark - MXSession pause prevention
 - (void)retainPreventPause
 {
@@ -1539,13 +1495,6 @@ typedef void (^MXOnResumeDone)(void);
     // Make sure [MXSession close] or [MXSession pause] has not been called before the server response
     if (!self->eventStreamRequest)
     {
-        return;
-    }
-
-    // Check whether the token is valid
-    if ([self isUnknownTokenError:error])
-    {
-        // Do nothing more because without a valid access_token, the session is useless
         return;
     }
 

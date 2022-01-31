@@ -223,6 +223,16 @@ FOUNDATION_EXPORT NSString *const kMXLoginIdentifierTypePhone;
     @property (nonatomic) NSString *accessToken;
 
     /**
+     The lifetime in milliseconds of the access token. (optional)
+     */
+    @property (nonatomic) uint64_t expiresInMs;
+
+    /**
+     The refresh token, which can be used to obtain new access tokens. (optional)
+    */
+    @property (nonatomic) NSString *refreshToken;
+
+    /**
      The device id.
      */
     @property (nonatomic) NSString *deviceId;
@@ -233,7 +243,6 @@ FOUNDATION_EXPORT NSString *const kMXLoginIdentifierTypePhone;
     @property (nonatomic) MXWellKnown *wellknown;
 
 @end
-
 
 /**
  `MXThirdPartyIdentifier` represents the response to /account/3pid GET request.
@@ -261,7 +270,6 @@ FOUNDATION_EXPORT NSString *const kMXLoginIdentifierTypePhone;
     @property (nonatomic) uint64_t addedAt;
 
 @end
-
 
 /**
  `MXCreateRoomResponse` represents the response to createRoom request.

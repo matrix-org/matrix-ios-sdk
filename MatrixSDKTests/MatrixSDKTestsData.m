@@ -30,7 +30,7 @@
 /*
  Out of the box, the tests are supposed to be run with the iOS simulator attacking
  a test home server running on the same Mac machine.
- The reason is that the simulator can access to the home server running on the Mac 
+ The reason is that the simulator can access to the home server running on the Mac
  via localhost. So everyone can use a localhost HS url that works everywhere.
  
  Here, we use one of the home servers launched by the ./demo/start.sh script
@@ -1051,4 +1051,3 @@ onUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecogn
 @end
 
 #pragma clang diagnostic pop
-
