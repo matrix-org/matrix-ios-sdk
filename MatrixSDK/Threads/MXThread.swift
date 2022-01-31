@@ -61,10 +61,6 @@ public class MXThread: NSObject {
     /// - Returns: true if handled, false otherwise
     @discardableResult
     internal func addEvent(_ event: MXEvent) -> Bool {
-        guard eventsMap[event.eventId] == nil else {
-            //  do not re-add the event
-            return false
-        }
         eventsMap[event.eventId] = event
         updateNotificationsCount()
         if event.sender == session?.myUserId {
@@ -77,6 +73,10 @@ public class MXThread: NSObject {
     @discardableResult
     internal func replaceEvent(withId oldEventId: String, with newEvent: MXEvent) -> Bool {
         guard eventsMap[oldEventId] != nil else {
+            return false
+        }
+        if newEvent.isEncrypted && newEvent.clear == nil {
+            //  do not replace the event if the new event is not decrypted
             return false
         }
         eventsMap[oldEventId] = newEvent
