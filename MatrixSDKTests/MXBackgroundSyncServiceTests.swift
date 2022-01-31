@@ -678,7 +678,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                                 self.bgSyncService?.event(withEventId: "aRandomEventId", inRoom: roomId) { _ in
                                     
                                     // -> MXBackgroundSyncService should have detected that the MXSession ran in parallel.
-                                    //    It must have reset its cache. syncResponseStore.prevBatch must not be the same                                    
+                                    //    It must have reset its cache. syncResponseStore.prevBatch must not be the same
                                     XCTAssertNotEqual(syncResponseStoreSyncToken, syncResponseStoreManager.syncToken())
 
                                     expectation?.fulfill()

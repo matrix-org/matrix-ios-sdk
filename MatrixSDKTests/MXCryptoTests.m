@@ -2749,7 +2749,7 @@
                     XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messageFromAlice senderSession:aliceSession2]);
 
                     // 5 - Instantiante a MXRestclient, alice1MatrixRestClient
-                    MXRestClient *alice1MatrixRestClient = [[MXRestClient alloc] initWithCredentials:alice1Credentials andOnUnrecognizedCertificateBlock:nil];
+                    MXRestClient *alice1MatrixRestClient = [[MXRestClient alloc] initWithCredentials:alice1Credentials andOnUnrecognizedCertificateBlock:nil andPersistentTokenDataHandler:nil andUnauthenticatedHandler:nil];
                     [matrixSDKTestsData retain:alice1MatrixRestClient];
 
                     // 6 - Make alice1MatrixRestClient make a fake room key request for the message sent at step #4

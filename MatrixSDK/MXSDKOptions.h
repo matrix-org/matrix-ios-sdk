@@ -182,6 +182,13 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @property (nonatomic, nullable) NSString *clientPermalinkBaseUrl;
 
+/**
+ Use refresh tokens and expiring access tokens as the auth mechanism as opposed to long-lived access tokens.
+ 
+ @remark NO by default.
+ */
+@property (nonatomic, assign) BOOL authEnableRefreshTokens;
+
 @end
 
 NS_ASSUME_NONNULL_END

@@ -96,7 +96,7 @@
 
             XCTFail(@"We have already accepted the certificate. We should not be asked again");
             return NO;
-        }];
+        } andPersistentTokenDataHandler:nil andUnauthenticatedHandler:nil];
 
         [matrixSDKTestsData retain:mxRestClient];
 
