@@ -78,7 +78,8 @@
                 {
                     _displayname = roomMemberPrevContent.displayname;
                 }
-                if(!_avatarUrl) {
+                if (!_avatarUrl) 
+                {
                     _avatarUrl = roomMemberPrevContent.avatarUrl;
                 }
             }
