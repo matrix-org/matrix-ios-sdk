@@ -31,6 +31,7 @@ class MXThreadingServiceUnitTests: XCTestCase {
     
     override class func setUp() {
         MXRealmCryptoStore.deleteAllStores()
+        MXSDKOptions.sharedInstance().enableThreads = true
     }
     
     func testInitialization() {

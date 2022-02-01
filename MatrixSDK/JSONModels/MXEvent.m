@@ -386,7 +386,7 @@ NSString *const kMXMessageContentKeyExtensibleAssetTypeUser = @"m.self";
     MXEventContentRelatesTo *relatesTo;
     if (self.wireContent[kMXEventRelationRelatesToKey])
     {
-        MXJSONModelSetMXJSONModel(relatesTo, MXEventContentRelatesTo, self.content[kMXEventRelationRelatesToKey])
+        MXJSONModelSetMXJSONModel(relatesTo, MXEventContentRelatesTo, self.wireContent[kMXEventRelationRelatesToKey])
     }
     return relatesTo;
 }

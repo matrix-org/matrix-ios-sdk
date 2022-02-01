@@ -30,6 +30,7 @@ class MXThreadEventTimelineUnitTests: XCTestCase {
     
     override class func setUp() {
         MXRealmCryptoStore.deleteAllStores()
+        MXSDKOptions.sharedInstance().enableThreads = true
     }
     
     func testLiveTimelineProperties() {

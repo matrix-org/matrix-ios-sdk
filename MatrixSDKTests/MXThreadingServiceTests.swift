@@ -22,6 +22,7 @@ class MXThreadingServiceTests: XCTestCase {
     
     override func setUp() {
         testData = MatrixSDKTestsData()
+        MXSDKOptions.sharedInstance().enableThreads = true
     }
 
     override func tearDown() {
