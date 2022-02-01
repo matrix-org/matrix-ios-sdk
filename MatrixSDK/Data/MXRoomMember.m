@@ -73,12 +73,16 @@
                 MXRoomMemberEventContent *roomMemberPrevContent = [MXRoomMemberEventContent modelFromJSON:roomMemberEvent.prevContent];
                 // If defined, keep the previous membership information
                 _prevMembership = [MXTools membership:roomMemberPrevContent.membership];
-                // Also take displayname and avatarUrl from prevContent if not already set
-                if (!_displayname) {
-                    _displayname = roomMemberPrevContent.displayname;
-                }
-                if(!_avatarUrl) {
-                    _avatarUrl = roomMemberPrevContent.avatarUrl;
+                if (_membership == MXMembershipLeave) {
+                    // If user left use last known displayname and avatar from prevContent
+                    if (!_displayname)
+                    {
+                        _displayname = roomMemberPrevContent.displayname;
+                    }
+                    if(!_avatarUrl)
+                    {
+                        _avatarUrl = roomMemberPrevContent.avatarUrl;
+                    }
                 }
             }
             else
