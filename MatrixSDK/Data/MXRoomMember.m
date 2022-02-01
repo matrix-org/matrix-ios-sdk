@@ -74,7 +74,8 @@
                 // If defined, keep the previous membership information
                 _prevMembership = [MXTools membership:roomMemberPrevContent.membership];
                 // Also take displayname and avatarUrl from prevContent if not already set
-                if (!_displayname) {
+                if (!_displayname) 
+                {
                     _displayname = roomMemberPrevContent.displayname;
                 }
                 if(!_avatarUrl) {
