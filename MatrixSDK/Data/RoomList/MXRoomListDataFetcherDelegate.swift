@@ -22,5 +22,6 @@ public protocol MXRoomListDataFetcherDelegate: AnyObject {
     
     /// Delegate method to be called when fetched data updated
     /// - Parameter fetcher: fetcher
-    func fetcherDidChangeData(_ fetcher: MXRoomListDataFetcher)
+    /// - Parameter totalCountsChanged true if the total counts changed or pagination disabled
+    func fetcherDidChangeData(_ fetcher: MXRoomListDataFetcher, totalCountsChanged: Bool)
 }
