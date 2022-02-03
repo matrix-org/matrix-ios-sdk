@@ -139,7 +139,6 @@ public class PollAggregator {
             let eventTypes = [kMXEventTypeStringPollResponse, kMXEventTypeStringPollResponseMSC3381, kMXEventTypeStringPollEnd, kMXEventTypeStringPollEndMSC3381]
             self.referenceEventsListener = self.room.listen(toEventsOfTypes: eventTypes) { [weak self] event, direction, state in
                 guard let self = self,
-                      let event = event,
                       let relatedEventId = event.relatesTo?.eventId,
                       relatedEventId == self.pollStartEventId else {
                     return

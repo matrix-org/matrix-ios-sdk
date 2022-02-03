@@ -144,7 +144,7 @@
     [matrixSDKTestsData doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXSession *mxSession, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
         MXRoom *room = [mxSession roomWithRoomId:roomId];
-        [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+        [room liveTimeline:^(id<MXEventTimeline> liveTimeline) {
 
             [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 

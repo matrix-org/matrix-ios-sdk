@@ -430,7 +430,7 @@
         XCTAssert(roomFromAlicePOV.summary.isEncrypted);
 
         // Check the echo from hs of a post message is correct
-        [roomFromAlicePOV liveTimeline:^(MXEventTimeline *liveTimeline) {
+        [roomFromAlicePOV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
 
             [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
@@ -472,7 +472,7 @@
                 XCTAssert(roomFromAlicePOV.summary.isEncrypted);
 
                 // Check the echo from hs of a post message is correct
-                [roomFromAlicePOV liveTimeline:^(MXEventTimeline *liveTimeline) {
+                [roomFromAlicePOV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
 
                     XCTAssert(liveTimeline.state.isEncrypted);
 
@@ -514,7 +514,7 @@
         XCTAssert(roomFromBobPOV.summary.isEncrypted);
         XCTAssert(roomFromAlicePOV.summary.isEncrypted);
 
-        [roomFromBobPOV liveTimeline:^(MXEventTimeline *liveTimeline) {
+        [roomFromBobPOV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
 
             [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
@@ -545,7 +545,7 @@
         XCTAssert(roomFromBobPOV.summary.isEncrypted);
         XCTAssert(roomFromAlicePOV.summary.isEncrypted);
 
-        [roomFromBobPOV liveTimeline:^(MXEventTimeline *liveTimeline) {
+        [roomFromBobPOV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
             [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                 if ([event.sender isEqualToString:bobSession.myUser.userId])
@@ -578,7 +578,7 @@
             }];
         }];
 
-        [roomFromAlicePOV liveTimeline:^(MXEventTimeline *liveTimeline) {
+        [roomFromAlicePOV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
             [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                 if ([event.sender isEqualToString:aliceSession.myUser.userId])
@@ -624,7 +624,7 @@
 
                 MXRoom *roomFromBobPOV = [bobSession roomWithRoomId:roomId];
 
-                [roomFromBobPOV liveTimeline:^(MXEventTimeline *liveTimeline) {
+                [roomFromBobPOV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
 
                     [liveTimeline resetPagination];
                     [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
@@ -693,7 +693,7 @@
 
         MXRoom *roomFromBobPOV = [bobSession roomWithRoomId:roomId];
 
-        [roomFromBobPOV liveTimeline:^(MXEventTimeline *liveTimeline) {
+        [roomFromBobPOV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
 
             [liveTimeline resetPagination];
 
@@ -757,7 +757,7 @@
         // Internally, events of this timeline will be fetched on the homeserver
         // which is the use case of this test
         NSString *lastEventId = roomFromBobPOV.summary.lastMessage.eventId;
-        MXEventTimeline *timeline = [roomFromBobPOV timelineOnEvent:lastEventId];
+        id<MXEventTimeline> timeline = [roomFromBobPOV timelineOnEvent:lastEventId];
 
         [timeline resetPagination];
 
@@ -822,7 +822,7 @@
 
         __block NSUInteger messageCount = 0;
 
-        [roomFromBobPOV liveTimeline:^(MXEventTimeline *liveTimeline) {
+        [roomFromBobPOV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
 
             [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomEncrypted, kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
@@ -932,7 +932,7 @@
 
             NSString *messageFromAlice = @"Hello I'm still Alice!";
 
-            [roomFromBobPOV liveTimeline:^(MXEventTimeline *liveTimeline) {
+            [roomFromBobPOV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
                 [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage, kMXEventTypeStringRoomEncrypted] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                     XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messageFromAlice senderSession:aliceSession2]);
@@ -959,7 +959,7 @@
         MXRoom *roomFromAlicePOV = [aliceSession roomWithRoomId:roomId];
         MXRoom *roomFromBobPOV = [bobSession roomWithRoomId:roomId];
 
-        [roomFromBobPOV liveTimeline:^(MXEventTimeline *liveTimeline) {
+        [roomFromBobPOV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
             [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage, kMXEventTypeStringRoomEncrypted] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                 NSString *messageFromAlice = @"Hello I'm still Alice!";
@@ -971,7 +971,7 @@
 
                     MXRoom *roomFromBob2POV = [bobSession2 roomWithRoomId:roomId];
 
-                    [roomFromBob2POV liveTimeline:^(MXEventTimeline *liveTimeline) {
+                    [roomFromBob2POV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
                         [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage, kMXEventTypeStringRoomEncrypted] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                             XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messageFromAlice senderSession:aliceSession]);
@@ -1039,7 +1039,7 @@
 
                     NSString *messageFromAlice = @"Hello I'm still Alice!";
 
-                    [roomFromBob2POV liveTimeline:^(MXEventTimeline *liveTimeline) {
+                    [roomFromBob2POV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
                         [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage, kMXEventTypeStringRoomEncrypted] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                             XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messageFromAlice senderSession:aliceSession2]);
@@ -1081,7 +1081,7 @@
 
         __block NSUInteger messageCount = 0;
 
-        [roomFromBobPOV liveTimeline:^(MXEventTimeline *liveTimeline) {
+        [roomFromBobPOV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
             [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage, kMXEventTypeStringRoomEncrypted] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                 switch (messageCount++)
@@ -1204,7 +1204,7 @@
         __block NSUInteger bobMessageCount = 1;
         __block NSUInteger samMessageCount = 1;
 
-        [roomFromBobPOV liveTimeline:^(MXEventTimeline *liveTimeline) {
+        [roomFromBobPOV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
             [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage, kMXEventTypeStringRoomEncrypted] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                 switch (bobMessageCount++)
@@ -1242,7 +1242,7 @@
             }];
         }];
 
-        [roomFromSamPOV liveTimeline:^(MXEventTimeline *liveTimeline) {
+        [roomFromSamPOV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
             [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage, kMXEventTypeStringRoomEncrypted] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
 
@@ -1301,7 +1301,7 @@
 
 
             __block NSUInteger aliceMessageCount = 1;
-            [roomFromAlicePOV liveTimeline:^(MXEventTimeline *liveTimeline) {
+            [roomFromAlicePOV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
                 [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                     switch (aliceMessageCount++)
@@ -1777,7 +1777,7 @@
         XCTAssert(roomFromBobPOV.summary.isEncrypted);
         XCTAssert(roomFromAlicePOV.summary.isEncrypted);
 
-        [roomFromBobPOV liveTimeline:^(MXEventTimeline *liveTimeline) {
+        [roomFromBobPOV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
             [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                 // Try to decrypt the event again
@@ -1825,7 +1825,7 @@
         }];
 
 
-        [roomFromBobPOV liveTimeline:^(MXEventTimeline *liveTimeline) {
+        [roomFromBobPOV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
             [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                 XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messageFromAlice senderSession:aliceSession]);
@@ -1882,7 +1882,7 @@
             toDeviceEvent = notif.userInfo[kMXSessionNotificationEventKey];
         }];
 
-        [roomFromBobPOV liveTimeline:^(MXEventTimeline *liveTimeline) {
+        [roomFromBobPOV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
             [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                 XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messageFromAlice senderSession:aliceSession]);
@@ -2078,7 +2078,7 @@
 
                 __block BOOL testDone = NO;
 
-                [roomFromBobPOV liveTimeline:^(MXEventTimeline *liveTimeline) {
+                [roomFromBobPOV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
                     [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                         XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messageFromAlice senderSession:aliceSession]);
@@ -2117,7 +2117,7 @@
 
                 [bobSession joinRoom:roomFromAlicePOV.roomId viaServers:nil success:^(MXRoom *roomFromBobPOV) {
 
-                    [roomFromBobPOV liveTimeline:^(MXEventTimeline *liveTimeline) {
+                    [roomFromBobPOV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
                         [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                             [liveTimeline removeAllListeners];
@@ -2139,7 +2139,7 @@
                                         [bobSession2 joinRoom:roomFromAlicePOV.roomId viaServers:nil success:^(MXRoom *roomFromBobPOV2) {
 
                                             // Bob should be able to receive the message from Alice
-                                            [roomFromBobPOV2 liveTimeline:^(MXEventTimeline *liveTimeline) {
+                                            [roomFromBobPOV2 liveTimeline:^(id<MXEventTimeline> liveTimeline) {
                                                 [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage, kMXEventTypeStringRoomEncrypted] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                                                     XCTAssert(event.clearEvent, @"Bob must be able to decrypt this new message on his new device");
@@ -2236,7 +2236,7 @@
 
                                 NSString *messageFromBob = @"Hello Alice with new device!";
 
-                                [roomFromAlice2POV liveTimeline:^(MXEventTimeline *liveTimeline) {
+                                [roomFromAlice2POV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
                                     [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage, kMXEventTypeStringRoomEncrypted] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                                         XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:newRoomId clearMessage:messageFromBob senderSession:bobSession]);
@@ -2323,7 +2323,7 @@
                             // Turn the crypto ON in the room
                             [roomFromAlicePOV enableEncryptionWithAlgorithm:kMXCryptoMegolmAlgorithm success:^{
 
-                                [roomFromNewBobPOV liveTimeline:^(MXEventTimeline *liveTimeline) {
+                                [roomFromNewBobPOV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
                                     [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage, kMXEventTypeStringRoomEncrypted] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                                         XCTAssert(event.clearEvent, @"Bob must be able to decrypt message from his new device after the crypto is ON");
@@ -2533,7 +2533,7 @@
 
                     NSMutableArray *encryptedEvents = [NSMutableArray array];
 
-                    [roomFromBobPOV liveTimeline:^(MXEventTimeline *liveTimeline) {
+                    [roomFromBobPOV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
                         [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomEncrypted] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                             [encryptedEvents addObject:event];
@@ -2614,7 +2614,7 @@
 
                     NSMutableArray *encryptedEvents = [NSMutableArray array];
 
-                    [roomFromBobPOV liveTimeline:^(MXEventTimeline *liveTimeline) {
+                    [roomFromBobPOV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
                         [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomEncrypted] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                             [encryptedEvents addObject:event];
@@ -2743,7 +2743,7 @@
                 [expectation fulfill];
             }];
 
-            [roomFromAlice2POV liveTimeline:^(MXEventTimeline *liveTimeline) {
+            [roomFromAlice2POV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
                 [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage, kMXEventTypeStringRoomEncrypted] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                     XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messageFromAlice senderSession:aliceSession2]);
@@ -2859,7 +2859,7 @@
         XCTAssert(roomFromAlicePOV.summary.isEncrypted);
 
         __block NSUInteger messageCount = 0;
-        [roomFromAlicePOV liveTimeline:^(MXEventTimeline *liveTimeline) {
+        [roomFromAlicePOV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
 
             [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
@@ -3085,7 +3085,7 @@
             
             [roomFromAlicePOV removeListener:listener];
             
-            [roomFromAlicePOV liveTimeline:^(MXEventTimeline *liveTimeline) {
+            [roomFromAlicePOV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
                 
                 // -> The room should be still marked as encrypted
                 XCTAssertTrue(liveTimeline.state.isEncrypted);

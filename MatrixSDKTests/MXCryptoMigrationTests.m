@@ -115,7 +115,7 @@
                     XCTAssert(roomFromBobPOV.summary.isEncrypted);
                     XCTAssert(roomFromAlicePOV.summary.isEncrypted);
                     
-                    [roomFromBobPOV liveTimeline:^(MXEventTimeline *liveTimeline) {
+                    [roomFromBobPOV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
                         
                         [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
                             

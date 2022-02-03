@@ -668,7 +668,7 @@
 // Check we get valid reaction (from the HS) when paginating
 - (void)checkReactionsWhenPaginating:(MXSession*)mxSession room:(MXRoom*)room event:(NSString*)eventId expectation:(XCTestExpectation*)expectation
 {
-    [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+    [room liveTimeline:^(id<MXEventTimeline> liveTimeline) {
         [liveTimeline resetPagination];
         [liveTimeline paginate:100 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
 
@@ -713,7 +713,7 @@
 // Check we get valid reaction (from the HS) when paginating
 - (void)checkReactionsOnPermalink:(MXSession*)mxSession room:(MXRoom*)room event:(NSString*)eventId expectation:(XCTestExpectation*)expectation
 {
-    MXEventTimeline *timeline = [room timelineOnEvent:eventId];
+    id<MXEventTimeline> timeline = [room timelineOnEvent:eventId];
     [timeline resetPaginationAroundInitialEventWithLimit:0 success:^{
 
         // Random usage to keep a strong reference on timeline

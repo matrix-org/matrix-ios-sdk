@@ -30,7 +30,6 @@
 #import "MXError.h"
 #import "MXRoomEventFilter.h"
 #import "MXInvite3PID.h"
-#import "MXEventTimeline.h"
 #import "MXJSONModels.h"
 #import "MXFilterJSONModel.h"
 #import "MXMatrixVersions.h"
@@ -43,6 +42,8 @@
 #import "MXTurnServerResponse.h"
 #import "MXSpaceChildrenResponse.h"
 #import "MXURLPreview.h"
+#import "MXTaggedEvents.h"
+#import "MXCredentials.h"
 
 @class MXThirdpartyProtocolsResponse;
 @class MXThirdPartyUsersResponse;

@@ -31,6 +31,7 @@ class MXThreadingServiceUnitTests: XCTestCase {
     
     override class func setUp() {
         MXRealmCryptoStore.deleteAllStores()
+        MXSDKOptions.sharedInstance().enableThreads = true
     }
     
     func testInitialization() {
@@ -77,7 +78,7 @@ class MXThreadingServiceUnitTests: XCTestCase {
             return
         }
         
-        threadingService.handleEvent(event)
+        threadingService.handleEvent(event, direction: .forwards)
         
         guard let thread = threadingService.thread(withId: threadId) else {
             XCTFail("Thread not created after handling event")
@@ -146,8 +147,8 @@ class MXThreadingServiceUnitTests: XCTestCase {
         }
         
         //  handle events backwards
-        threadingService.handleEvent(eventNew)
-        threadingService.handleEvent(eventOld)
+        threadingService.handleEvent(eventNew, direction: .forwards)
+        threadingService.handleEvent(eventOld, direction: .forwards)
         
         guard let thread = threadingService.thread(withId: threadId) else {
             XCTFail("Thread not created after handling events")
@@ -201,7 +202,7 @@ class MXThreadingServiceUnitTests: XCTestCase {
         }
         
         let store = MXMemoryStore()
-        store.storeEvent(forRoom: roomId, event: rootEvent, direction: MXTimelineDirection.forwards.identifier)
+        store.storeEvent(forRoom: roomId, event: rootEvent, direction: .forwards)
         
         let restClient = MXRestClient(credentials: Constants.credentials, unrecognizedCertificateHandler: nil)
         guard let session = MXSession(matrixRestClient: restClient) else {
@@ -218,7 +219,7 @@ class MXThreadingServiceUnitTests: XCTestCase {
                         session.close()
                     }
                     
-                    threadingService.handleEvent(event)
+                    threadingService.handleEvent(event, direction: .forwards)
                     
                     guard let thread = threadingService.thread(withId: threadId) else {
                         XCTFail("Thread not created after handling event")
@@ -287,8 +288,8 @@ class MXThreadingServiceUnitTests: XCTestCase {
             session.close()
         }
         
-        threadingService.handleEvent(event)
-        threadingService.handleEvent(rootEvent)
+        threadingService.handleEvent(event, direction: .forwards)
+        threadingService.handleEvent(rootEvent, direction: .forwards)
         
         guard let thread = threadingService.thread(withId: threadId) else {
             XCTFail("Thread not created after handling event")
@@ -300,6 +301,22 @@ class MXThreadingServiceUnitTests: XCTestCase {
         XCTAssertEqual(thread.lastMessage, event, "Thread last message must be kept")
         XCTAssertEqual(thread.rootMessage, rootEvent, "Thread must have the root event")
         XCTAssertEqual(thread.numberOfReplies, 1, "Thread must have only 1 reply")
+    }
+    
+    func testTemporaryThreads() {
+        let restClient = MXRestClient(credentials: Constants.credentials, unrecognizedCertificateHandler: nil)
+        guard let session = MXSession(matrixRestClient: restClient) else {
+            XCTFail("Failed to setup test conditions")
+            return
+        }
+        let threadingService = session.threadingService
+        
+        let threadId = "temp_thread_id"
+        let roomId = "temp_room_id"
+        _ = threadingService.createTempThread(withId: threadId, roomId: roomId)
+        XCTAssertNil(threadingService.thread(withId:threadId), "Temporary threads must not be stored in the service")
+        
+        session.close()
     }
     
     private func wait(_ timeout: TimeInterval = 0.5, _ block: @escaping (XCTestExpectation) -> Void) {

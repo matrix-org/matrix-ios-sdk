@@ -262,6 +262,7 @@ NSString *const kMXMessageContentKeyExtensibleAssetTypeUser = @"m.self";
  */
 - (void)finalise
 {
+    _wireEventType = [MXTools eventType:_wireType];
     if (MXEventTypePresence == _wireEventType)
     {
         // Workaround: Presence events provided by the home server do not contain userId
@@ -385,7 +386,7 @@ NSString *const kMXMessageContentKeyExtensibleAssetTypeUser = @"m.self";
     MXEventContentRelatesTo *relatesTo;
     if (self.wireContent[kMXEventRelationRelatesToKey])
     {
-        MXJSONModelSetMXJSONModel(relatesTo, MXEventContentRelatesTo, self.content[kMXEventRelationRelatesToKey])
+        MXJSONModelSetMXJSONModel(relatesTo, MXEventContentRelatesTo, self.wireContent[kMXEventRelationRelatesToKey])
     }
     return relatesTo;
 }
@@ -499,7 +500,14 @@ NSString *const kMXMessageContentKeyExtensibleAssetTypeUser = @"m.self";
 
 - (BOOL)isReplyEvent
 {
-    return self.eventType == MXEventTypeRoomMessage && self.content[kMXEventRelationRelatesToKey][@"m.in_reply_to"][@"event_id"] != nil;
+    return self.eventType == MXEventTypeRoomMessage && self.relatesTo.inReplyTo.eventId != nil &&
+    //  add condition after new thread event fallbacks
+    (self.isInThread ? self.isReplyInThread : YES);
+}
+
+- (BOOL)isReplyInThread
+{
+    return [self.relatesTo.inReplyTo.renderIn containsObject:MXEventRelationTypeThread];
 }
 
 - (BOOL)isVoiceMessage
@@ -671,6 +679,7 @@ NSString *const kMXMessageContentKeyExtensibleAssetTypeUser = @"m.self";
     MXEvent *event = self;
     NSDictionary *newContentDict;
     MXJSONModelSetDictionary(newContentDict, replaceEvent.content[@"m.new_content"])
+    NSDictionary *oldRelatesTo = self.relatesTo.JSONDictionary;
     
     MXEventDecryptionResult *replaceEventDecryptionResult;
 
@@ -681,6 +690,10 @@ NSString *const kMXMessageContentKeyExtensibleAssetTypeUser = @"m.self";
         editedEventDict = [event.JSONDictionary mutableCopy];
         NSMutableDictionary *editedEventContentDict = [replaceEvent.wireContent mutableCopy];
         [editedEventContentDict removeObjectForKey:kMXEventRelationRelatesToKey];
+        if (oldRelatesTo)
+        {
+            editedEventContentDict[kMXEventRelationRelatesToKey] = oldRelatesTo;
+        }
         editedEventDict[@"content"] = editedEventContentDict;
         
         // Reuse its decryption data
@@ -917,8 +930,7 @@ NSString *const kMXMessageContentKeyExtensibleAssetTypeUser = @"m.self";
 
 - (BOOL)isInThread
 {
-    return self.eventType == MXEventTypeRoomMessage
-        && [self.relatesTo.relationType isEqualToString:MXEventRelationTypeThread];
+    return [self.relatesTo.relationType isEqualToString:MXEventRelationTypeThread];
 }
 
 - (NSString *)threadId

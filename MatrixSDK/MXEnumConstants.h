@@ -202,7 +202,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomMessageFormatHTML;
 /**
  The direction of an event in the timeline.
  */
-typedef enum : NSUInteger
+typedef NS_ENUM(NSUInteger, MXTimelineDirection)
 {
     // Forwards when the event is added to the end of the timeline.
     // These events come from the /sync stream or from forwards pagination.
@@ -211,7 +211,7 @@ typedef enum : NSUInteger
     // Backwards when the event is added to the start of the timeline.
     // These events come from a back pagination.
     MXTimelineDirectionBackwards
-} MXTimelineDirection NS_REFINED_FOR_SWIFT;
+};
 
 /**
  The matrix.to base URL.

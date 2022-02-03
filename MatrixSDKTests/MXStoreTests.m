@@ -275,7 +275,7 @@
 
     __block NSUInteger eventCount = 0;
 
-    [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+    [room liveTimeline:^(id<MXEventTimeline> liveTimeline) {
 
         [liveTimeline listenToEventsOfTypes:eventsFilterForMessages onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
@@ -308,7 +308,7 @@
 
     __block NSUInteger eventCount = 0;
 
-    [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+    [room liveTimeline:^(id<MXEventTimeline> liveTimeline) {
 
         [liveTimeline listenToEventsOfTypes:eventsFilterForMessages onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
@@ -345,7 +345,7 @@
 
     __block uint64_t prev_ts = -1;
 
-    [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+    [room liveTimeline:^(id<MXEventTimeline> liveTimeline) {
 
         [liveTimeline listenToEventsOfTypes:eventsFilterForMessages onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
@@ -374,7 +374,7 @@
 {
     __block NSUInteger eventCount = 0;
     __block NSMutableArray *events = [NSMutableArray array];
-    [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+    [room liveTimeline:^(id<MXEventTimeline> liveTimeline) {
 
         [liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
@@ -403,7 +403,7 @@
 - (void)checkSeveralPaginateBacks:(MXRoom*)room
 {
     __block NSMutableArray *roomEvents = [NSMutableArray array];
-    [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+    [room liveTimeline:^(id<MXEventTimeline> liveTimeline) {
         [liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
             [roomEvents addObject:event];
@@ -417,7 +417,7 @@
 
             __block NSMutableArray *room2Events = [NSMutableArray array];
 
-            [room2 liveTimeline:^(MXEventTimeline *room2LiveTimeline) {
+            [room2 liveTimeline:^(id<MXEventTimeline> room2LiveTimeline) {
 
                 [room2LiveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
@@ -494,7 +494,7 @@
     MXRoom *room2 = [[MXRoom alloc] initWithRoomId:room.roomId andMatrixSession:mxSession];
 
     __block NSMutableArray *room2Events = [NSMutableArray array];
-    [room2 liveTimeline:^(MXEventTimeline *room2liveTimeline) {
+    [room2 liveTimeline:^(id<MXEventTimeline> room2liveTimeline) {
 
         [room2liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
@@ -506,7 +506,7 @@
 
         __block NSUInteger liveEvents = 0;
 
-        [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+        [room liveTimeline:^(id<MXEventTimeline> liveTimeline) {
 
             [liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
@@ -599,7 +599,7 @@
 
 - (void)checkCanPaginateFromHomeServer:(MXRoom*)room
 {
-    [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+    [room liveTimeline:^(id<MXEventTimeline> liveTimeline) {
         [liveTimeline resetPagination];
         XCTAssertTrue([liveTimeline canPaginate:MXTimelineDirectionBackwards], @"We can always paginate at the beginning");
 
@@ -626,7 +626,7 @@
 
 - (void)checkCanPaginateFromMXStore:(MXRoom*)room
 {
-    [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+    [room liveTimeline:^(id<MXEventTimeline> liveTimeline) {
 
         [liveTimeline resetPagination];
         XCTAssertTrue([liveTimeline canPaginate:MXTimelineDirectionBackwards], @"We can always paginate at the beginning");
@@ -660,7 +660,7 @@
         
         XCTAssertEqual(lastMessage.eventType, MXEventTypeRoomMessage);
 
-        [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+        [room liveTimeline:^(id<MXEventTimeline> liveTimeline) {
 
             [liveTimeline resetPagination];
             XCTAssertEqualObjects(room.summary.lastMessage.eventId, lastMessage.eventId,  @"The last message should stay the same");
@@ -692,7 +692,7 @@
         XCTAssertNotNil(lastMessage);
         XCTAssertEqual(lastMessage.eventType, MXEventTypeRoomMessage);
 
-        [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+        [room liveTimeline:^(id<MXEventTimeline> liveTimeline) {
             [liveTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                 // The room summary is handled afterwards
@@ -744,7 +744,7 @@
         MXRoomSummaryUpdater *updater = [MXRoomSummaryUpdater roomSummaryUpdaterForSession:room.mxSession];
         updater.lastMessageEventTypesAllowList = @[kMXEventTypeStringRoomMessage];
 
-        [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+        [room liveTimeline:^(id<MXEventTimeline> liveTimeline) {
             [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                 [room.mxSession eventWithEventId:room.summary.lastMessage.eventId
@@ -812,7 +812,7 @@
                     [room2 join:^{
 
                         NSMutableArray *events = [NSMutableArray array];
-                        [room2 liveTimeline:^(MXEventTimeline *liveTimeline) {
+                        [room2 liveTimeline:^(id<MXEventTimeline> liveTimeline) {
                             [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                                 if (direction == MXTimelineDirectionBackwards)
@@ -895,7 +895,7 @@
 - (void)checkPaginateWhenReachingTheExactBeginningOfTheRoom:(MXRoom*)room
 {
     __block NSUInteger eventCount = 0;
-    [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+    [room liveTimeline:^(id<MXEventTimeline> liveTimeline) {
         [liveTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
             if (direction == MXTimelineDirectionBackwards)
@@ -950,7 +950,7 @@
 {
     __block NSString *messageEventId;
 
-    [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+    [room liveTimeline:^(id<MXEventTimeline> liveTimeline) {
         [liveTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
             if (MXEventTypeRoomMessage == event.eventType)
@@ -1411,7 +1411,7 @@
 
                 MXRoom *room = [mxSession roomWithRoomId:roomId];
 
-                [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+                [room liveTimeline:^(id<MXEventTimeline> liveTimeline) {
                     [liveTimeline resetPagination];
                     [liveTimeline paginate:10 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
 

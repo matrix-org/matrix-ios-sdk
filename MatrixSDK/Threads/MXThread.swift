@@ -29,7 +29,14 @@ public class MXThread: NSObject {
     /// Identifier of the room that the thread is in.
     public let roomId: String
     
+    private var liveTimeline: MXEventTimeline?
     private var eventsMap: [String: MXEvent] = [:]
+    private var liveTimelineOperationQueue: OperationQueue = {
+        let queue = OperationQueue()
+        queue.maxConcurrentOperationCount = 1
+        queue.isSuspended = true
+        return queue
+    }()
     
     internal init(withSession session: MXSession,
                   identifier: String,
@@ -49,13 +56,40 @@ public class MXThread: NSObject {
         super.init()
     }
     
-    internal func addEvent(_ event: MXEvent) {
-        guard eventsMap[event.eventId] == nil else {
-            //  do not re-add the event
-            return
-        }
+    /// Add an event to the thread
+    /// - Parameter event: Event
+    /// - Returns: true if handled, false otherwise
+    @discardableResult
+    internal func addEvent(_ event: MXEvent) -> Bool {
         eventsMap[event.eventId] = event
+        updateNotificationsCount()
+        if let sender = event.sender,
+           let session = session,
+           sender == session.myUserId {
+            //  the user sent a message to the thread, so mark the thread as read
+            markAsRead()
+        }
+        return true
     }
+
+    @discardableResult
+    internal func replaceEvent(withId oldEventId: String, with newEvent: MXEvent) -> Bool {
+        guard eventsMap[oldEventId] != nil else {
+            return false
+        }
+        if newEvent.isEncrypted && newEvent.clear == nil {
+            //  do not replace the event if the new event is not decrypted
+            return false
+        }
+        eventsMap[oldEventId] = newEvent
+        return true
+    }
+    
+    /// Number of notifications in the thread
+    public private(set) var notificationCount: UInt = 0
+    
+    /// Number of highlights in the thread
+    public private(set) var highlightCount: UInt = 0
     
     /// Flag indicating the current user participated in the thread
     public var isParticipated: Bool {
@@ -81,6 +115,34 @@ public class MXThread: NSObject {
         return eventsMap.filter({ $0 != id && $1.isInThread() }).count
     }
     
+    /// The live events timeline
+    /// - Parameter completion: Completion block
+    public func liveTimeline(_ completion: @escaping (MXEventTimeline) -> Void) {
+        if let liveTimeline = liveTimeline {
+            liveTimelineOperationQueue.addOperation {
+                DispatchQueue.main.async {
+                    completion(liveTimeline)
+                }
+            }
+        } else if let session = session {
+            liveTimeline = MXThreadEventTimeline(thread: self, andInitialEventId: nil)
+            MXRoomState.load(from: session.store, withRoomId: self.roomId, matrixSession: session) { roomState in
+                self.liveTimeline?.state = roomState
+                self.liveTimelineOperationQueue.isSuspended = false
+                if let timeline = self.liveTimeline {
+                    completion(timeline)
+                }
+            }
+        }
+    }
+    
+    /// Timeline on a specific event
+    /// - Parameter eventId: Event identifier
+    /// - Returns: The timeline
+    public func timelineOnEvent(_ eventId: String) -> MXEventTimeline {
+        return MXThreadEventTimeline(thread: self, andInitialEventId: eventId)
+    }
+    
     /// Fetches all replies in a thread. Not used right now
     /// - Parameter completion: Completion block to be called at the end of the progress
     public func allReplies(completion: @escaping (MXResponse<[MXEvent]>) -> Void) {
@@ -103,7 +165,59 @@ public class MXThread: NSObject {
             }
         }
     }
+    
+    /// Mark all messages of thread as read
+    internal func markAsRead() {
+        notificationCount = 0
+        highlightCount = 0
+    }
+    
+    private func updateNotificationsCount() {
+        guard let session = session, let store = session.store else {
+            return
+        }
+        
+        notificationCount = store.localUnreadEventCount(roomId, threadId: id, withTypeIn: session.unreadEventTypes)
+        guard let readReceipt = store.getReceiptInRoom(roomId, forUserId: session.myUserId) else {
+            return
+        }
+        highlightCount = UInt(eventsMap.values
+                                .filter { $0.originServerTs > readReceipt.ts }
+                                .filter { shouldHighlight(event: $0, in: session) }
+                                .count)
+    }
+
+    private func shouldHighlight(event: MXEvent, in session: MXSession) -> Bool {
+        let displayNameChecker = MXPushRuleDisplayNameCondtionChecker(matrixSession: session,
+                                                                      currentUserDisplayName: nil)
+
+        if displayNameChecker.isCondition(nil, satisfiedBy: event, roomState: nil, withJsonDict: nil) {
+            return true
+        }
+        guard let rule = session.notificationCenter.rule(matching: event, roomState: nil) else {
+            return false
+        }
+
+        var isHighlighted = false
+
+        // Check whether is there an highlight tweak on it
+        for ruleAction in rule.actions ?? [] {
+            guard let action = ruleAction as? MXPushRuleAction else { continue }
+            guard action.actionType == MXPushRuleActionTypeSetTweak else { continue }
+            guard action.parameters["set_tweak"] as? String == "highlight" else { continue }
+            // Check the highlight tweak "value"
+            // If not present, highlight. Else check its value before highlighting
+            if nil == action.parameters["value"] || true == (action.parameters["value"] as? Bool) {
+                isHighlighted = true
+                break
+            }
+        }
+
+        return isHighlighted
+    }
 }
+
+//  MARK: - Identifiable
 
 extension MXThread: Identifiable {}
 
@@ -145,7 +259,7 @@ extension MXEvent: Comparable {
     ///   - rhs: Right operand
     /// - Returns: true if the left operand is newer than the right one, false otherwise
     public static func < (lhs: MXEvent, rhs: MXEvent) -> Bool {
-        if lhs.originServerTs != NSNotFound && rhs.originServerTs != NSNotFound {
+        if lhs.originServerTs != kMXUndefinedTimestamp && rhs.originServerTs != kMXUndefinedTimestamp {
             //  higher originServerTs means more recent event
             return lhs.originServerTs > rhs.originServerTs
         }

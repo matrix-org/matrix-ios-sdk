@@ -61,35 +61,42 @@ public class MXThreadingService: NSObject {
     
     /// Adds event to the related thread instance
     /// - Parameter event: event to be handled
-    public func handleEvent(_ event: MXEvent) {
+    /// - Returns: true if the event handled, false otherwise
+    @discardableResult
+    public func handleEvent(_ event: MXEvent, direction: MXTimelineDirection) -> Bool {
+        guard MXSDKOptions.sharedInstance().enableThreads else {
+            //  threads disabled in the SDK
+            return false
+        }
         guard let session = session else {
             //  session closed
-            return
+            return false
         }
-        if let threadId = event.threadId {
+        if event.isInThread() {
             //  event is in a thread
-            if let thread = thread(withId: threadId) {
-                //  add event to the thread if found
-                thread.addEvent(event)
-            } else {
-                //  create the thread for the first time
-                let thread: MXThread
-                //  try to find the root event in the session store
-                if let rootEvent = session.store?.event(withEventId: threadId, inRoom: event.roomId) {
-                    thread = MXThread(withSession: session, rootEvent: rootEvent)
-                } else {
-                    thread = MXThread(withSession: session, identifier: threadId, roomId: event.roomId)
-                }
-                thread.addEvent(event)
-                saveThread(thread)
-                NotificationCenter.default.post(name: Self.newThreadCreated, object: thread, userInfo: nil)
-            }
-            notifyDidUpdateThreads()
+            return handleInThreadEvent(event, direction: direction, session: session)
         } else if let thread = thread(withId: event.eventId) {
-            //  event is the root event of a thread
-            thread.addEvent(event)
-            notifyDidUpdateThreads()
+            //  event is a thread root
+            if thread.addEvent(event) {
+                notifyDidUpdateThreads()
+                return true
+            }
+        } else if event.isEdit() {
+            return handleEditEvent(event, direction: direction, session: session)
+        } else if event.eventType == .roomRedaction {
+            return handleRedactionEvent(event, direction: direction, session: session)
         }
+        return false
+    }
+    
+    /// Get notifications count of threads in a room
+    /// - Parameter roomId: Room identifier
+    /// - Returns: Notifications count
+    public func notificationsCount(forRoom roomId: String) -> MXThreadNotificationsCount {
+        let notified = unsortedParticipatedThreads(inRoom: roomId).filter { $0.notificationCount > 0 }.count
+        let highlighted = unsortedThreads(inRoom: roomId).filter { $0.highlightCount > 0 }.count
+        return MXThreadNotificationsCount(numberOfNotifiedThreads: UInt(notified),
+                                          numberOfHighlightedThreads: UInt(highlighted))
     }
     
     /// Method to check an event is a thread root or not
@@ -109,20 +116,122 @@ public class MXThreadingService: NSObject {
         return result
     }
     
+    public func createTempThread(withId identifier: String, roomId: String) -> MXThread {
+        guard let session = session else {
+            fatalError("Session must be available")
+        }
+        return MXThread(withSession: session, identifier: identifier, roomId: roomId)
+    }
+    
     /// Get threads in a room
     /// - Parameter roomId: room identifier
     /// - Returns: thread list in given room
     public func threads(inRoom roomId: String) -> [MXThread] {
         //  sort threads so that the newer is the first
-        return Array(threads.values).filter({ $0.roomId == roomId }).sorted(by: <)
+        return unsortedThreads(inRoom: roomId).sorted(by: <)
     }
     
     /// Get participated threads in a room
     /// - Parameter roomId: room identifier
     /// - Returns: participated thread list in given room
     public func participatedThreads(inRoom roomId: String) -> [MXThread] {
-        //  filter only participated threads
-        return threads(inRoom: roomId).filter({ $0.isParticipated })
+        //  filter only participated threads and then sort threads so that the newer is the first
+        return unsortedParticipatedThreads(inRoom: roomId).sorted(by: <)
+    }
+    
+    /// Mark a thread as read
+    /// - Parameter threadId: Thread id
+    public func markThreadAsRead(_ threadId: String) {
+        guard let thread = thread(withId: threadId) else {
+            return
+        }
+        thread.markAsRead()
+        notifyDidUpdateThreads()
+    }
+
+    //  MARK: - Private
+
+    @discardableResult
+    private func handleInThreadEvent(_ event: MXEvent, direction: MXTimelineDirection, session: MXSession) -> Bool {
+        guard let threadId = event.threadId else {
+            return false
+        }
+        let handled: Bool
+        if let thread = thread(withId: threadId) {
+            //  add event to the thread if found
+            handled = thread.addEvent(event)
+        } else {
+            //  create the thread for the first time
+            let thread: MXThread
+            //  try to find the root event in the session store
+            if let rootEvent = session.store?.event(withEventId: threadId, inRoom: event.roomId) {
+                thread = MXThread(withSession: session, rootEvent: rootEvent)
+            } else {
+                thread = MXThread(withSession: session, identifier: threadId, roomId: event.roomId)
+            }
+            handled = thread.addEvent(event)
+            saveThread(thread)
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(name: Self.newThreadCreated, object: thread, userInfo: nil)
+            }
+        }
+        notifyDidUpdateThreads()
+        return handled
+    }
+
+    @discardableResult
+    private func handleEditEvent(_ event: MXEvent, direction: MXTimelineDirection, session: MXSession) -> Bool {
+        guard let editedEventId = event.relatesTo?.eventId else {
+            return false
+        }
+        guard let editedEvent = session.store?.event(withEventId: editedEventId,
+                                                  inRoom: event.roomId) else {
+            return false
+        }
+
+        handleEvent(editedEvent, direction: direction)
+
+        guard let newEvent = editedEvent.editedEvent(fromReplacementEvent: event) else {
+            return false
+        }
+        if let threadId = editedEvent.threadId,
+           let thread = thread(withId: threadId) {
+            //  edited event is in a known thread
+            let handled = thread.replaceEvent(withId: editedEventId, with: newEvent)
+            notifyDidUpdateThreads()
+            return handled
+        } else if let thread = thread(withId: editedEventId) {
+            //  edited event is a thread root
+            let handled = thread.replaceEvent(withId: editedEventId, with: newEvent)
+            notifyDidUpdateThreads()
+            return handled
+        }
+        return false
+    }
+
+    @discardableResult
+    private func handleRedactionEvent(_ event: MXEvent, direction: MXTimelineDirection, session: MXSession) -> Bool {
+        guard direction == .forwards else {
+            return false
+        }
+        if let redactedEventId = event.redacts,
+           let thread = thread(withId: redactedEventId),
+           let newEvent = session.store?.event(withEventId: redactedEventId,
+                                               inRoom: event.roomId) {
+            //  event is a thread root
+            let handled = thread.replaceEvent(withId: redactedEventId, with: newEvent)
+            notifyDidUpdateThreads()
+            return handled
+        }
+        return false
+    }
+    
+    private func unsortedThreads(inRoom roomId: String) -> [MXThread] {
+        return Array(threads.values).filter({ $0.roomId == roomId })
+    }
+    
+    private func unsortedParticipatedThreads(inRoom roomId: String) -> [MXThread] {
+        return Array(threads.values).filter({ $0.roomId == roomId && $0.isParticipated })
     }
     
     private func saveThread(_ thread: MXThread) {
