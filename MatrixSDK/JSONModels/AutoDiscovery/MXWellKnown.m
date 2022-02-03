@@ -94,7 +94,7 @@ static NSString *const kMXTileServerMSC3488Key = @"org.matrix.msc3488.tile_serve
     [aCoder encodeObject:_homeServer forKey:kMXHomeServerKey];
     [aCoder encodeObject:_identityServer forKey:kMXIdentityServerKey];
     [aCoder encodeObject:_integrations forKey:kMXIntegrationsKey];
-    [aCoder encodeObject:_integrations forKey:kMXTileServerKey];
+    [aCoder encodeObject:_tileServer forKey:kMXTileServerKey];
     [aCoder encodeObject:JSONDictionary forKey:@"JSONDictionary"];
 }
 
