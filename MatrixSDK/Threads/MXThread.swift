@@ -29,7 +29,7 @@ public class MXThread: NSObject {
     /// Identifier of the room that the thread is in.
     public let roomId: String
     
-    private var _liveTimeline: MXEventTimeline?
+    private var liveTimeline: MXEventTimeline?
     private var eventsMap: [String: MXEvent] = [:]
     private var liveTimelineOperationQueue: OperationQueue = {
         let queue = OperationQueue()
@@ -63,7 +63,9 @@ public class MXThread: NSObject {
     internal func addEvent(_ event: MXEvent) -> Bool {
         eventsMap[event.eventId] = event
         updateNotificationsCount()
-        if event.sender == session?.myUserId {
+        if let sender = event.sender,
+           let session = session,
+           sender == session.myUserId {
             //  the user sent a message to the thread, so mark the thread as read
             markAsRead()
         }
@@ -116,18 +118,18 @@ public class MXThread: NSObject {
     /// The live events timeline
     /// - Parameter completion: Completion block
     public func liveTimeline(_ completion: @escaping (MXEventTimeline) -> Void) {
-        if let timeline = _liveTimeline {
+        if let liveTimeline = liveTimeline {
             liveTimelineOperationQueue.addOperation {
                 DispatchQueue.main.async {
-                    completion(timeline)
+                    completion(liveTimeline)
                 }
             }
         } else if let session = session {
-            _liveTimeline = MXThreadEventTimeline(thread: self, andInitialEventId: nil)
+            liveTimeline = MXThreadEventTimeline(thread: self, andInitialEventId: nil)
             MXRoomState.load(from: session.store, withRoomId: self.roomId, matrixSession: session) { roomState in
-                self._liveTimeline?.state = roomState
+                self.liveTimeline?.state = roomState
                 self.liveTimelineOperationQueue.isSuspended = false
-                if let timeline = self._liveTimeline {
+                if let timeline = self.liveTimeline {
                     completion(timeline)
                 }
             }
