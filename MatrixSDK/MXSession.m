@@ -2908,10 +2908,7 @@ typedef void (^MXOnResumeDone)(void);
         if (failure)
         {
             MXError *error = [[MXError alloc] initWithErrorCode:kMXErrCodeStringNotFound
-                                                          error:@"Could not find event (null)"
-                                                       userInfo:@{
-                                                           NSLocalizedDescriptionKey: @"Request failed: not found (404)"
-                                                       }];
+                                                          error:@"Could not find event (null)"];
             dispatch_async(dispatch_get_main_queue(), ^{
                 failure(error.createNSError);
             });
