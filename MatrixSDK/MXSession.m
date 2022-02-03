@@ -522,6 +522,7 @@ typedef void (^MXOnResumeDone)(void);
                                     dispatch_group_leave(dispatchGroup);
                                 }
                             } failure:^(NSError *error) {
+                                MXLogError(@"[MXSession] handleSyncResponse: event fetch failed: %@", error);
                                 dispatch_group_leave(dispatchGroup);
                             }];
                         }
@@ -3092,6 +3093,7 @@ typedef void (^MXOnResumeDone)(void);
                 }
                 
             } failure:^(NSError *error) {
+                MXLogError(@"[MXSession] fixRoomsSummariesLastMessage: event fetch failed: %@", error);
                 dispatch_group_leave(dispatchGroup);
             }];
         }
@@ -4615,7 +4617,9 @@ typedef void (^MXOnResumeDone)(void);
             {
                 [summary resetLastMessage:nil failure:nil commit:YES];
             }
-        } failure:nil];
+        } failure:^(NSError *error) {
+            MXLogError(@"[MXSession] onDidDecryptEvent: event fetch failed: %@", error);
+        }];
     }
 }
 

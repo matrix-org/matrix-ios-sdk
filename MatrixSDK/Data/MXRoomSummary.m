@@ -500,7 +500,9 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
                                      success:^(MXEvent *event) {
                 MXEvent *editedEvent = [event editedEventFromReplacementEvent:replaceEvent];
                 [self handleEvent:editedEvent];
-            } failure:nil];
+            } failure:^(NSError *error) {
+                MXLogError(@"[MXRoomSummary] registerEventEditsListener: event fetch failed: %@", error);
+            }];
         }
     }];
 }
