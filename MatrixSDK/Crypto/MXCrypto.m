@@ -1881,7 +1881,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 - (BOOL)isRoomEncrypted:(NSString *)roomId
 {
 #ifdef MX_CRYPTO
-    return [_store algorithmForRoom:roomId] != NULL;
+    return [_store algorithmForRoom:roomId] != nil;
 #else
     return NO;
 #endif
