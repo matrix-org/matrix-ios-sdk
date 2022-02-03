@@ -76,6 +76,7 @@ public class MXCoreDataRoomSummaryStore: NSObject {
     private lazy var mainMoc: NSManagedObjectContext = {
         let result = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
         result.parent = persistentMoc
+        result.automaticallyMergesChangesFromParent = true
         return result
     }()
     /// Managed object context bound to persistent store coordinator.
