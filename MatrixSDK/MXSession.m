@@ -2902,6 +2902,21 @@ typedef void (^MXOnResumeDone)(void);
                              success:(void (^)(MXEvent *event))success
                              failure:(void (^)(NSError *error))failure
 {
+    if (eventId == nil)
+    {
+        if (failure)
+        {
+            MXError *error = [[MXError alloc] initWithErrorCode:kMXErrCodeStringNotFound
+                                                          error:@"Could not find event (null)"
+                                                       userInfo:@{
+                                                           NSLocalizedDescriptionKey: @"Request failed: not found (404)"
+                                                       }];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                failure(error.createNSError);
+            });
+        }
+        return nil;
+    }
     MXHTTPOperation *operation;
 
     void (^decryptIfNeeded)(MXEvent *event) = ^(MXEvent *event) {
