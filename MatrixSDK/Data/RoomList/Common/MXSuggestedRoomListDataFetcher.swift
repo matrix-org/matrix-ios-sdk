@@ -74,7 +74,7 @@ internal class MXSuggestedRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
     }
     
     internal func notifyDataChange() {
-        multicastDelegate.invoke({ $0.fetcherDidChangeData(self) })
+        multicastDelegate.invoke({ $0.fetcherDidChangeData(self, totalCountsChanged: true) })
     }
     
     //  MARK: - Data Observers

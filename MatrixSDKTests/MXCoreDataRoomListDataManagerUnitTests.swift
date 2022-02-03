@@ -250,7 +250,7 @@ fileprivate class MockRoomListDataFetcherDelegate: MXRoomListDataFetcherDelegate
         self.block = block
     }
     
-    func fetcherDidChangeData(_ fetcher: MXRoomListDataFetcher) {
+    func fetcherDidChangeData(_ fetcher: MXRoomListDataFetcher, totalCountsChanged: Bool) {
         self.block()
     }
     
