@@ -590,7 +590,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
 
     // Check whether the content must be encrypted before sending
     if (mxSession.crypto
-        && self.summary.isEncrypted
+        && [mxSession.crypto isRoomEncrypted:self.summary.roomId]
         && [self isEncryptionRequiredForEventType:eventTypeString])
     {
         // Check whether the provided content is already encrypted
@@ -952,7 +952,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     double endRange = 1.0;
     
     // Check whether the content must be encrypted before sending
-    if (mxSession.crypto && self.summary.isEncrypted) endRange = 0.9;
+    if (mxSession.crypto && [mxSession.crypto isRoomEncrypted:self.summary.roomId]) endRange = 0.9;
     
     // Use the uploader id as fake URL for this image data
     // The URL does not need to be valid as the MediaManager will get the data
@@ -1037,7 +1037,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     };
     
     // Add a local echo for this message during the sending process.
-    MXEventSentState initialSentState = (mxSession.crypto && self.summary.isEncrypted) ? MXEventSentStateEncrypting : MXEventSentStateUploading;
+    MXEventSentState initialSentState = (mxSession.crypto && [mxSession.crypto isRoomEncrypted:self.summary.roomId]) ? MXEventSentStateEncrypting : MXEventSentStateUploading;
     event = [self addLocalEchoForMessageContent:msgContent eventType:kMXEventTypeStringRoomMessage withState:initialSentState threadId:threadId];
     
     if (localEcho)
@@ -1051,7 +1051,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
         MXStrongifyAndReturnIfNil(self);
 
         // Check whether the content must be encrypted before sending
-        if (self.mxSession.crypto && self.summary.isEncrypted)
+        if (self.mxSession.crypto && [self.mxSession.crypto isRoomEncrypted:self.summary.roomId])
         {
             // Add uploader observer to update the event state
             MXWeakify(self);
@@ -1306,7 +1306,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
             msgContent[@"info"][@"h"] = @(size.height);
             msgContent[@"info"][@"duration"] = @((int)floor(durationInMs));
 
-            if (self.mxSession.crypto && self.summary.isEncrypted)
+            if (self.mxSession.crypto && [mxSession.crypto isRoomEncrypted:self.summary.roomId])
             {
                 [MXEncryptedAttachments encryptAttachment:thumbUploader data:videoThumbnailData success:^(MXEncryptedContentFile *result) {
 
@@ -1655,7 +1655,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     };
     
     // Add a local echo for this message during the sending process.
-    MXEventSentState initialSentState = (mxSession.crypto && self.summary.isEncrypted) ? MXEventSentStateEncrypting : MXEventSentStateUploading;
+    MXEventSentState initialSentState = (mxSession.crypto && [mxSession.crypto isRoomEncrypted:self.summary.roomId]) ? MXEventSentStateEncrypting : MXEventSentStateUploading;
     event = [self addLocalEchoForMessageContent:msgContent eventType:kMXEventTypeStringRoomMessage withState:initialSentState threadId:threadId];
     
     if (localEcho)
@@ -1666,7 +1666,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
 
     roomOperation = [self preserveOperationOrder:event block:^{
 
-        if (self.mxSession.crypto && self.summary.isEncrypted)
+        if (self.mxSession.crypto && [mxSession.crypto isRoomEncrypted:self.summary.roomId])
         {
             // Register uploader observer
             MXWeakify(self);
@@ -3505,7 +3505,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
 {
     MXCrypto *crypto = mxSession.crypto;
     
-    if (crypto && self.summary.isEncrypted)
+    if (crypto && [mxSession.crypto isRoomEncrypted:self.summary.roomId])
     {
         [self members:^(MXRoomMembers *roomMembers) {
             
