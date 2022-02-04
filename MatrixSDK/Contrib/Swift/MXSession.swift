@@ -12,6 +12,11 @@ import Foundation
 
 public extension MXSession {
     
+    /// Module that manages threads
+    var threadingService: MXThreadingService {
+        return __threadingService
+    }
+    
     /**
      Start fetching events from the home server.
      
@@ -358,7 +363,7 @@ public extension MXSession {
     @nonobjc func listenToEvents(_ types: [MXEventType]? = nil, _ block: @escaping MXOnSessionEvent) -> Any {
         let legacyBlock: __MXOnSessionEvent = { (event, direction, customObject) in
             guard let event = event else { return }
-            block(event, MXTimelineDirection(identifer: direction), customObject)
+            block(event, direction, customObject)
         }
         
         if let types = types {

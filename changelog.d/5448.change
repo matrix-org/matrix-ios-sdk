@@ -1,0 +1,1 @@
+MXRoomListDataFetcherDelegate: Add `totalCountsChanged` parameter to delegate method.

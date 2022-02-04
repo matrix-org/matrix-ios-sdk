@@ -1,4 +1,4 @@
-// 
+//
 // Copyright 2021 The Matrix.org Foundation C.I.C
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -250,7 +250,7 @@ fileprivate class MockRoomListDataFetcherDelegate: MXRoomListDataFetcherDelegate
         self.block = block
     }
     
-    func fetcherDidChangeData(_ fetcher: MXRoomListDataFetcher) {
+    func fetcherDidChangeData(_ fetcher: MXRoomListDataFetcher, totalCountsChanged: Bool) {
         self.block()
     }
     

@@ -1,1 +1,0 @@
-Allow editing poll start events.

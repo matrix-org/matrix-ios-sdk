@@ -1,12 +1,12 @@
 /*
  Copyright 2014 OpenMarket Ltd
- 
+
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
- 
+
  http://www.apache.org/licenses/LICENSE-2.0
- 
+
  Unless required by applicable law or agreed to in writing, software
  distributed under the License is distributed on an "AS IS" BASIS,
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -36,14 +36,14 @@
     if (self)
     {
         NSParameterAssert(roomMemberEvent.eventType == MXEventTypeRoomMember);
-        
+
         // Check if there is information about user membership
         if (nil == roomMemberEventContent || 0 == roomMemberEventContent.count)
         {
             // No. The user is not part of the room
             return nil;
         }
-        
+
         // Use MXRoomMemberEventContent to parse the JSON event content
         MXRoomMemberEventContent *roomMemberContent = [MXRoomMemberEventContent modelFromJSON:roomMemberEventContent];
         _displayname = roomMemberContent.displayname;
@@ -62,17 +62,28 @@
         {
             _userId = roomMemberEvent.sender;
         }
-        
+
         if (roomMemberEventContent == roomMemberEvent.content)
         {
             // The user who made the last membership change is the event user id
             _originUserId = roomMemberEvent.sender;
-            
-            // If defined, keep the previous membership information
+
             if (roomMemberEvent.prevContent)
             {
                 MXRoomMemberEventContent *roomMemberPrevContent = [MXRoomMemberEventContent modelFromJSON:roomMemberEvent.prevContent];
+                // If defined, keep the previous membership information
                 _prevMembership = [MXTools membership:roomMemberPrevContent.membership];
+                if (_membership == MXMembershipLeave) {
+                    // If user left use last known displayname and avatar from prevContent
+                    if (!_displayname)
+                    {
+                        _displayname = roomMemberPrevContent.displayname;
+                    }
+                    if(!_avatarUrl)
+                    {
+                        _avatarUrl = roomMemberPrevContent.avatarUrl;
+                    }
+                }
             }
             else
             {

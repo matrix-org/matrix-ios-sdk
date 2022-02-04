@@ -24,7 +24,7 @@
 #pragma mark - Constant definition
 static NSString *const kWellKnowPath = @".well-known/matrix/client";
 static NSString *const kVersionPath = @"_matrix/client/versions";
-static NSString *const kIdendityServerPingPath = @"_matrix/identity/api/v1";
+static NSString *const kIdentityServerPingPath = @"_matrix/identity/api/v1";
 
 @interface MXAutoDiscoveryTests : XCTestCase
 @end
@@ -260,7 +260,7 @@ static NSString *const kIdendityServerPingPath = @"_matrix/identity/api/v1";
                                         };
     [self stubRequestsContaining:kWellKnowPath withJSONResponse:mockBody statusCode:200];
     [self stubRequestsContaining:kVersionPath withJSONResponse:hsVersionResponse statusCode:200];
-    [self stubRequestsContaining:kIdendityServerPingPath withResponse:nil statusCode:404];
+    [self stubRequestsContaining:kIdentityServerPingPath withResponse:nil statusCode:404];
 
     [self doFindClientConfig:^(XCTestExpectation *expectation, MXDiscoveredClientConfig * _Nonnull discoveredClientConfig) {
 
@@ -292,7 +292,7 @@ static NSString *const kIdendityServerPingPath = @"_matrix/identity/api/v1";
     NSDictionary *identityServerResponse = @{};
     [self stubRequestsContaining:kWellKnowPath withJSONResponse:mockBody statusCode:200];
     [self stubRequestsContaining:kVersionPath withJSONResponse:hsVersionResponse statusCode:200];
-    [self stubRequestsContaining:kIdendityServerPingPath withJSONResponse:identityServerResponse statusCode:202];
+    [self stubRequestsContaining:kIdentityServerPingPath withJSONResponse:identityServerResponse statusCode:202];
 
     [self doFindClientConfig:^(XCTestExpectation *expectation, MXDiscoveredClientConfig * _Nonnull discoveredClientConfig) {
 
@@ -330,7 +330,7 @@ static NSString *const kIdendityServerPingPath = @"_matrix/identity/api/v1";
     // Do no return a content type
     [self stubRequestsContaining:kWellKnowPath withResponse:[MXTools serialiseJSONObject:mockBody] statusCode:200 headers:nil];
     [self stubRequestsContaining:kVersionPath withJSONResponse:hsVersionResponse statusCode:200];
-    [self stubRequestsContaining:kIdendityServerPingPath withJSONResponse:identityServerResponse statusCode:202];
+    [self stubRequestsContaining:kIdentityServerPingPath withJSONResponse:identityServerResponse statusCode:202];
 
     [self doFindClientConfig:^(XCTestExpectation *expectation, MXDiscoveredClientConfig * _Nonnull discoveredClientConfig) {
 
@@ -347,14 +347,18 @@ static NSString *const kIdendityServerPingPath = @"_matrix/identity/api/v1";
 - (void)testAutoDiscoveryWellKnownJSONDictionary
 {
     NSString *baseURL = @"https://myhs.org";
+    NSString *tileServerMapStyleURL = @"https://your.tileserver.org/style.json";
     
     NSDictionary *mockBody = @{
                                @"m.homeserver": @{
                                        @"base_url" : baseURL
                                        },
+                               @"m.tile_server": @{
+                                       @"map_style_url": tileServerMapStyleURL
+                                       },
                                @"im.vector.riot.e2ee": @{
                                        @"default": @(NO)
-                                   }
+                                       }
                                };
     NSDictionary *hsVersionResponse = @{
                                         @"versions": @[@"r0.4.0"],
@@ -368,6 +372,7 @@ static NSString *const kIdendityServerPingPath = @"_matrix/identity/api/v1";
     [self doFindClientConfig:^(XCTestExpectation *expectation, MXDiscoveredClientConfig * _Nonnull discoveredClientConfig) {
         
         XCTAssertEqualObjects(discoveredClientConfig.wellKnown.JSONDictionary, mockBody);
+        XCTAssertEqualObjects(discoveredClientConfig.wellKnown.tileServer.mapStyleURLString, tileServerMapStyleURL);
         
         // Check parsing
         BOOL isE2EByDefaultEnabledByHSAdmin = YES;

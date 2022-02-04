@@ -37,7 +37,14 @@ internal class MXCoreDataRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
                 return
             }
             if data != oldValue {
-                notifyDataChange()
+                let totalCountsChanged: Bool
+                if fetchOptions.paginationOptions == .none {
+                    //  pagination disabled, we don't need to track number of rooms in this case
+                    totalCountsChanged = true
+                } else {
+                    totalCountsChanged = oldValue?.counts.total?.numberOfRooms != data.counts.total?.numberOfRooms
+                }
+                notifyDataChange(totalCountsChanged: totalCountsChanged)
             }
         }
     }
@@ -187,8 +194,9 @@ internal class MXCoreDataRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
         }
     }
     
-    private func notifyDataChange() {
-        multicastDelegate.invoke({ $0.fetcherDidChangeData(self) })
+    private func notifyDataChange(totalCountsChanged: Bool) {
+        multicastDelegate.invoke({ $0.fetcherDidChangeData(self,
+                                                           totalCountsChanged: totalCountsChanged) })
     }
     
     /// Recompute data with the same number of rooms of the given `data`

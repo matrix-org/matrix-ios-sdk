@@ -96,7 +96,7 @@
 
             XCTFail(@"We have already accepted the certificate. We should not be asked again");
             return NO;
-        }];
+        } andPersistentTokenDataHandler:nil andUnauthenticatedHandler:nil];
 
         [matrixSDKTestsData retain:mxRestClient];
 
@@ -127,7 +127,7 @@
 
             XCTAssertNotNil(room);
 
-            [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+            [room liveTimeline:^(id<MXEventTimeline> liveTimeline) {
                 [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                     XCTAssertEqual(direction, MXTimelineDirectionForwards);
@@ -137,7 +137,7 @@
                 }];
             }];
 
-            [room sendTextMessage:@"Hello" success:nil failure:^(NSError *error) {
+            [room sendTextMessage:@"Hello" threadId:nil success:nil failure:^(NSError *error) {
                 XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                 [expectation fulfill];
             }];
@@ -164,7 +164,7 @@
 
             [room enableEncryptionWithAlgorithm:kMXCryptoMegolmAlgorithm success:^{
 
-                [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+                [room liveTimeline:^(id<MXEventTimeline> liveTimeline) {
 
                     [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
@@ -176,7 +176,7 @@
                     }];
                 }];
 
-                [room sendTextMessage:@"Hello" success:nil failure:^(NSError *error) {
+                [room sendTextMessage:@"Hello" threadId:nil success:nil failure:^(NSError *error) {
                     XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                     [expectation fulfill];
                 }];
@@ -203,7 +203,7 @@
 
             XCTAssertNotNil(room);
 
-            [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+            [room liveTimeline:^(id<MXEventTimeline> liveTimeline) {
 
                 [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
@@ -229,7 +229,7 @@
             CGSize size = CGSizeMake(100, 100);
             UIImage *image = [self anImageWithSize:size];
 
-            [room sendImage:UIImagePNGRepresentation(image) withImageSize:size mimeType:@"image/png" andThumbnail:nil localEcho:nil success:nil failure:^(NSError *error) {
+            [room sendImage:UIImagePNGRepresentation(image) withImageSize:size mimeType:@"image/png" andThumbnail:nil threadId:nil localEcho:nil success:nil failure:^(NSError *error) {
                 XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                 [expectation fulfill];
             }];
@@ -273,7 +273,7 @@
 
             XCTAssertNotNil(room);
 
-            [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+            [room liveTimeline:^(id<MXEventTimeline> liveTimeline) {
 
                 [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
@@ -308,7 +308,7 @@
             CGSize size = CGSizeMake(100, 100);
             UIImage *image = [self anImageWithSize:size];
 
-            [room sendImage:UIImagePNGRepresentation(image) withImageSize:size mimeType:@"image/png" andThumbnail:nil localEcho:nil success:nil failure:^(NSError *error) {
+            [room sendImage:UIImagePNGRepresentation(image) withImageSize:size mimeType:@"image/png" andThumbnail:nil threadId:nil localEcho:nil success:nil failure:^(NSError *error) {
                 XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                 [expectation fulfill];
             }];

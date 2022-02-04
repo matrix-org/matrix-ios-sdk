@@ -1,1 +1,1 @@
-Added static location sharing sending and rendering support.
+Add .well-known parsing for tile server / map style configurations.

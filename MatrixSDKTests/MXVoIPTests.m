@@ -100,7 +100,7 @@
             [expectation fulfill];
         }];
 
-        [aliceRestClient sendEventToRoom:roomId eventType:kMXEventTypeStringCallInvite content:content txnId:nil success:nil failure:^(NSError *error) {
+        [aliceRestClient sendEventToRoom:roomId threadId:nil eventType:kMXEventTypeStringCallInvite content:content txnId:nil success:nil failure:^(NSError *error) {
             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
             [expectation fulfill];
         }];
