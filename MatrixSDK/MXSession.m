@@ -1990,13 +1990,24 @@ typedef void (^MXOnResumeDone)(void);
         
         //  revert to old state
         [self setState:oldState];
-        
-        if (completion)
-        {
-            completion();
-        }
-        
+
         taskCompleted();
+
+        if (self.hasAnyBackgroundCachedSyncResponses)
+        {
+            //  if there are new sync responses, also process them
+            [self handleBackgroundSyncCacheIfRequiredWithCompletion:completion];
+        }
+        else
+        {
+            //  trigger delete all data here, just to clean up resources
+            [syncResponseStore deleteData];
+
+            if (completion)
+            {
+                completion();
+            }
+        }
     }];
 }
 
