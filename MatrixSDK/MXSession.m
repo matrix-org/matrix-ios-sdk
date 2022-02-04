@@ -2938,6 +2938,7 @@ typedef void (^MXOnResumeDone)(void);
 {
     if (eventId == nil)
     {
+        MXLogError(@"[MXSession] eventWithEventId called with no eventId. Call stack: %@", [NSThread callStackSymbols]);
         if (failure)
         {
             MXError *error = [[MXError alloc] initWithErrorCode:kMXErrCodeStringNotFound
