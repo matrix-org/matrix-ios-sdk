@@ -17,6 +17,10 @@
 		02CAD43B217DD12F0074700B /* MXContentScanEncryptedBody.h in Headers */ = {isa = PBXBuildFile; fileRef = 02CAD437217DD12F0074700B /* MXContentScanEncryptedBody.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		0696FFB36962606A28BEC38E /* libPods-MatrixSDK-MatrixSDK-iOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B57EF0A39A7649D55CA1208A /* libPods-MatrixSDK-MatrixSDK-iOS.a */; };
 		15C934E526232442DE7A79DE /* libPods-MatrixSDKTests-iOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7290AD6ED063E2E323E9485C /* libPods-MatrixSDKTests-iOS.a */; };
+		180F858427A2AF3000F4E5A5 /* MXWellKnownTileServerConfig.h in Headers */ = {isa = PBXBuildFile; fileRef = 180F858227A2AF3000F4E5A5 /* MXWellKnownTileServerConfig.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		180F858527A2AF3000F4E5A5 /* MXWellKnownTileServerConfig.h in Headers */ = {isa = PBXBuildFile; fileRef = 180F858227A2AF3000F4E5A5 /* MXWellKnownTileServerConfig.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		180F858627A2AF3000F4E5A5 /* MXWellKnownTileServerConfig.m in Sources */ = {isa = PBXBuildFile; fileRef = 180F858327A2AF3000F4E5A5 /* MXWellKnownTileServerConfig.m */; };
+		180F858727A2AF3000F4E5A5 /* MXWellKnownTileServerConfig.m in Sources */ = {isa = PBXBuildFile; fileRef = 180F858327A2AF3000F4E5A5 /* MXWellKnownTileServerConfig.m */; };
 		18121F75273E6D2400B68ADF /* MXPollBuilderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18121F73273E6CED00B68ADF /* MXPollBuilderTests.swift */; };
 		18121F76273E6D2400B68ADF /* MXPollBuilderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18121F73273E6CED00B68ADF /* MXPollBuilderTests.swift */; };
 		18121F78273E6E1E00B68ADF /* PollBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18121F77273E6E1E00B68ADF /* PollBuilder.swift */; };
@@ -1742,6 +1746,8 @@
 		02CAD436217DD12F0074700B /* MXContentScanEncryptedBody.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXContentScanEncryptedBody.m; sourceTree = "<group>"; };
 		02CAD437217DD12F0074700B /* MXContentScanEncryptedBody.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXContentScanEncryptedBody.h; sourceTree = "<group>"; };
 		15D7F292D95EB58AEE801C4E /* libPods-MatrixSDKTests-macOS.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-MatrixSDKTests-macOS.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		180F858227A2AF3000F4E5A5 /* MXWellKnownTileServerConfig.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXWellKnownTileServerConfig.h; sourceTree = "<group>"; };
+		180F858327A2AF3000F4E5A5 /* MXWellKnownTileServerConfig.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXWellKnownTileServerConfig.m; sourceTree = "<group>"; };
 		18121F73273E6CED00B68ADF /* MXPollBuilderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXPollBuilderTests.swift; sourceTree = "<group>"; };
 		18121F77273E6E1E00B68ADF /* PollBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PollBuilder.swift; sourceTree = "<group>"; };
 		18121F7C273E835D00B68ADF /* PollModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PollModels.swift; sourceTree = "<group>"; };
@@ -2987,12 +2993,14 @@
 		323547D12226D3F500F15F94 /* AutoDiscovery */ = {
 			isa = PBXGroup;
 			children = (
+				323547D32226D3F500F15F94 /* MXWellKnown.h */,
+				323547D22226D3F500F15F94 /* MXWellKnown.m */,
 				323547D62226D5D600F15F94 /* MXWellKnownBaseConfig.h */,
 				323547D72226D5D600F15F94 /* MXWellKnownBaseConfig.m */,
 				32CF439B2371AF9500907C56 /* MXWellknownIntegrations.h */,
 				32CF439C2371AF9500907C56 /* MXWellknownIntegrations.m */,
-				323547D32226D3F500F15F94 /* MXWellKnown.h */,
-				323547D22226D3F500F15F94 /* MXWellKnown.m */,
+				180F858227A2AF3000F4E5A5 /* MXWellKnownTileServerConfig.h */,
+				180F858327A2AF3000F4E5A5 /* MXWellKnownTileServerConfig.m */,
 			);
 			path = AutoDiscovery;
 			sourceTree = "<group>";
@@ -4768,6 +4776,7 @@
 				32637ED41E5B00400011E20D /* MXDeviceList.h in Headers */,
 				3245A7501AF7B2930001D8A7 /* MXCall.h in Headers */,
 				EC60ED7B265CFCD100B39A4E /* MXDeviceListResponse.h in Headers */,
+				180F858427A2AF3000F4E5A5 /* MXWellKnownTileServerConfig.h in Headers */,
 				02CAD43B217DD12F0074700B /* MXContentScanEncryptedBody.h in Headers */,
 				EC8A53B125B1BC77004E0802 /* MXCallReplacesEventContent.h in Headers */,
 				32D2CC0423422462002BD8CA /* MX3PidAddManager.h in Headers */,
@@ -5200,6 +5209,7 @@
 				EC60ED90265CFD3B00B39A4E /* MXRoomSync.h in Headers */,
 				B14EF3042397E90400758AF0 /* MXKeyVerificationTransaction.h in Headers */,
 				B14EF3052397E90400758AF0 /* MXIdentityServerHashDetails.h in Headers */,
+				180F858527A2AF3000F4E5A5 /* MXWellKnownTileServerConfig.h in Headers */,
 				324AAC7D2399143400380A66 /* MXKeyVerificationAccept.h in Headers */,
 				B14EF3072397E90400758AF0 /* MXScanManager.h in Headers */,
 				B14EF3082397E90400758AF0 /* MXFilter.h in Headers */,
@@ -5992,6 +6002,7 @@
 				B17982FA2119E4A2001FD722 /* MXRoomCreateContent.m in Sources */,
 				32A9E8261EF4026E0081358A /* MXUIKitBackgroundModeHandler.m in Sources */,
 				B19A30D024042F0800FB6F35 /* MXSelfVerifyingMasterKeyTrustedQRCodeData.m in Sources */,
+				180F858627A2AF3000F4E5A5 /* MXWellKnownTileServerConfig.m in Sources */,
 				B18B0E6725FBDC3000E32151 /* MXSpace.swift in Sources */,
 				B146D4F721A5BB9F00D8C2C6 /* MXRealmMediaScanStore.m in Sources */,
 				32999DE422DCD1AD004FF987 /* MXPusherData.m in Sources */,
@@ -6492,6 +6503,7 @@
 				B14EF2882397E90400758AF0 /* MXOlmDevice.m in Sources */,
 				B14766BA23D9D9420091F721 /* MXUsersTrustLevelSummary.m in Sources */,
 				B14EF2892397E90400758AF0 /* MXKeyBackupPassword.m in Sources */,
+				180F858727A2AF3000F4E5A5 /* MXWellKnownTileServerConfig.m in Sources */,
 				3A108A9B25810F62005EEBE9 /* MXAesKeyData.m in Sources */,
 				B14EF28A2397E90400758AF0 /* MXTools.m in Sources */,
 				B14EF28B2397E90400758AF0 /* MXRoomSummaryUpdater.m in Sources */,
