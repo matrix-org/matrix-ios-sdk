@@ -927,18 +927,35 @@ typedef void (^MXOnResumeDone)(void);
 
 - (BOOL)isPauseable
 {
-    return _state == MXSessionStateSyncInProgress
-        || _state == MXSessionStateRunning
-        || _state == MXSessionStateBackgroundSyncInProgress
-        || _state == MXSessionStatePauseRequested;
+    switch (_state)
+    {
+        case MXSessionStateSyncInProgress:
+        case MXSessionStateRunning:
+        case MXSessionStateBackgroundSyncInProgress:
+        case MXSessionStatePauseRequested:
+        case MXSessionStateSyncError:
+        case MXSessionStateHomeserverNotReachable:
+            return YES;
+        default:
+            return NO;
+    }
 }
 
 - (BOOL)isResumable
 {
-    return !eventStreamRequest ||
-        (_state == MXSessionStateBackgroundSyncInProgress
-        || _state == MXSessionStatePauseRequested
-        || _state == MXSessionStatePaused);
+    if (!eventStreamRequest)
+    {
+        return YES;
+    }
+    switch (_state)
+    {
+        case MXSessionStateBackgroundSyncInProgress:
+        case MXSessionStatePauseRequested:
+        case MXSessionStatePaused:
+            return YES;
+        default:
+            return NO;
+    }
 }
 
 - (MXAggregations *)aggregations
