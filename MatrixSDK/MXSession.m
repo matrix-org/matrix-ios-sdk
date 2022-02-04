@@ -1942,8 +1942,11 @@ typedef void (^MXOnResumeDone)(void);
     NSString *syncResponseStoreSyncToken = syncResponseStoreManager.syncToken;
     NSString *eventStreamToken = self.store.eventStreamToken;
 
-    NSMutableArray<NSString *> *outdatedSyncResponseIds = [syncResponseStore.outdatedSyncResponseIds mutableCopy];
-    NSArray<NSString *> *syncResponseIds = syncResponseStore.syncResponseIds;
+    NSMutableArray<NSString *> *outdatedSyncResponseIds = syncResponseStore.outdatedSyncResponseIds.mutableCopy;
+    NSArray<NSString *> *syncResponseIds = syncResponseStore.syncResponseIds.copy;
+
+    NSMutableArray<NSString*> *syncResponseIdsToBeDeleted = syncResponseStore.outdatedSyncResponseIds.mutableCopy;
+    [syncResponseIdsToBeDeleted addObjectsFromArray:syncResponseIds.copy];
 
     MXLogDebug(@"[MXSession] handleBackgroundSyncCacheIfRequired: state %tu. outdatedSyncResponseIds: %@. syncResponseIds: %@. syncResponseStoreSyncToken: %@",
           _state, @(outdatedSyncResponseIds.count), @(syncResponseIds.count) , syncResponseStoreSyncToken);
@@ -2000,7 +2003,8 @@ typedef void (^MXOnResumeDone)(void);
     }];
     
     [asyncTaskQueue asyncWithExecute:^(void (^ taskCompleted)(void)) {
-        [syncResponseStore deleteData];
+        //  do not delete all the data here, as we may have received some new data while we're processing the old one
+        [syncResponseStore deleteSyncResponsesWithIds:syncResponseIdsToBeDeleted];
         
         //  revert to old state
         [self setState:oldState];
