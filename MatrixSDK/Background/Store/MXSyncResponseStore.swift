@@ -31,6 +31,7 @@ public enum MXSyncResponseStoreError: Error {
     func syncResponseSize(withId id: String) -> Int
     func updateSyncResponse(withId id: String, syncResponse: MXCachedSyncResponse)
     func deleteSyncResponse(withId id: String)
+    func deleteSyncResponses(withIds ids: [String])
     
     /// All ids of valid stored sync responses.
     /// Sync responses are stored in chunks to save RAM when processing it

@@ -183,6 +183,13 @@ public class MXSyncResponseFileStore: NSObject {
         metadata.outdatedSyncResponseIds.removeAll(where: { $0 == id })
         saveMetaData(metadata)
     }
+
+    private func deleteSyncResponseIds(ids: [String]) {
+        var metadata = readMetaData()
+        metadata.syncResponseIds.removeAll(where: { ids.contains($0) })
+        metadata.outdatedSyncResponseIds.removeAll(where: { ids.contains($0) })
+        saveMetaData(metadata)
+    }
 }
 
 //  MARK: - MXSyncResponseStore
@@ -218,6 +225,13 @@ extension MXSyncResponseFileStore: MXSyncResponseStore {
     public func deleteSyncResponse(withId id: String) {
         saveSyncResponse(path: syncResponsePath(withId: id), syncResponse: nil)
         deleteSyncResponseId(id: id)
+    }
+
+    public func deleteSyncResponses(withIds ids: [String]) {
+        for id in ids {
+            saveSyncResponse(path: syncResponsePath(withId: id), syncResponse: nil)
+        }
+        deleteSyncResponseIds(ids: ids)
     }
     
     public var syncResponseIds: [String] {
