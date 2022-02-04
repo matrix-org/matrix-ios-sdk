@@ -1544,18 +1544,7 @@ typedef void (^MXOnResumeDone)(void);
         int32_t code = (int32_t)error.code;
 
         if ([error.domain isEqualToString:NSURLErrorDomain]
-            && code == kCFURLErrorCancelled)
-        {
-            MXLogDebug(@"[MXSession] The connection has been cancelled in state: %@", [MXTools readableSessionState:_state]);
-
-            // This happens when the SDK cannot make any more requests because the app is in background
-            // and the background task is expired or going to expire.
-            // The app should have paused the SDK before but it did not. So, pause the SDK ourselves.
-            MXLogDebug(@"[MXSession] -> Go to pause");
-            [self pause];
-        }
-        else if ([error.domain isEqualToString:NSURLErrorDomain]
-                 && code == kCFURLErrorTimedOut && serverTimeout == 0)
+            && code == kCFURLErrorTimedOut && serverTimeout == 0)
         {
             MXLogError(@"[MXSession] The connection has been timeout.");
             // The reconnection attempt failed on timeout: there is no data to retrieve from server
