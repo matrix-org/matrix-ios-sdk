@@ -1883,6 +1883,14 @@ typedef void (^MXOnResumeDone)(void);
     return roomsInSyncResponse;
 }
 
+- (BOOL)hasAnyBackgroundCachedSyncResponses
+{
+    MXSyncResponseFileStore *syncResponseStore = [[MXSyncResponseFileStore alloc] initWithCredentials:self.credentials];
+
+    return syncResponseStore.outdatedSyncResponseIds.count > 0
+        || syncResponseStore.syncResponseIds.count > 0;
+}
+
 - (void)handleBackgroundSyncCacheIfRequiredWithCompletion:(void (^)(void))completion
 {
     if (_state == MXSessionStateInitialSyncFailed)
@@ -1894,6 +1902,17 @@ typedef void (^MXOnResumeDone)(void);
         return;
     }
     NSParameterAssert(_state == MXSessionStateStoreDataReady || _state == MXSessionStatePaused);
+
+    if (!self.hasAnyBackgroundCachedSyncResponses)
+    {
+        //  if no cached data, do not make back and forth with the session state
+        MXLogDebug(@"[MXSession] handleBackgroundSyncCacheIfRequired: no cached data, in state: %@", [MXTools readableSessionState:_state]);
+        if (completion)
+        {
+            completion();
+        }
+        return;
+    }
     
     //  keep the old state to revert later
     MXSessionState oldState = self.state;
