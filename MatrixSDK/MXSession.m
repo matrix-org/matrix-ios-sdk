@@ -1910,14 +1910,6 @@ typedef void (^MXOnResumeDone)(void);
 
 - (void)handleBackgroundSyncCacheIfRequiredWithCompletion:(void (^)(void))completion
 {
-    if (_state == MXSessionStateInitialSyncFailed)
-    {
-        if (completion)
-        {
-            completion();
-        }
-        return;
-    }
     NSParameterAssert(_state == MXSessionStateStoreDataReady || _state == MXSessionStatePaused);
 
     if (!self.hasAnyBackgroundCachedSyncResponses)
@@ -1948,8 +1940,8 @@ typedef void (^MXOnResumeDone)(void);
     NSMutableArray<NSString*> *syncResponseIdsToBeDeleted = syncResponseStore.outdatedSyncResponseIds.mutableCopy;
     [syncResponseIdsToBeDeleted addObjectsFromArray:syncResponseIds.copy];
 
-    MXLogDebug(@"[MXSession] handleBackgroundSyncCacheIfRequired: state %tu. outdatedSyncResponseIds: %@. syncResponseIds: %@. syncResponseStoreSyncToken: %@",
-          _state, @(outdatedSyncResponseIds.count), @(syncResponseIds.count) , syncResponseStoreSyncToken);
+    MXLogDebug(@"[MXSession] handleBackgroundSyncCacheIfRequired: state: %@. outdatedSyncResponseIds: %@. syncResponseIds: %@. syncResponseStoreSyncToken: %@",
+          [MXTools readableSessionState:_state], @(outdatedSyncResponseIds.count), @(syncResponseIds.count) , syncResponseStoreSyncToken);
     
     if (![syncResponseStoreSyncToken isEqualToString:eventStreamToken])
     {
@@ -1957,21 +1949,10 @@ typedef void (^MXOnResumeDone)(void);
         [outdatedSyncResponseIds addObjectsFromArray:syncResponseIds];
         syncResponseIds = @[];
     }
-    
-    if (outdatedSyncResponseIds.count == 0 && syncResponseIds.count == 0)
-    {
-        //  revert to old state
-        [self setState:oldState];
-        
-        if (completion)
-        {
-            completion();
-        }
-        return;
-    }
-    
+
     [asyncTaskQueue asyncWithExecute:^(void (^ taskCompleted)(void)) {
-        [syncResponseStoreManager mergedSyncResponseFromSyncResponseIds:outdatedSyncResponseIds completion:^(MXCachedSyncResponse * _Nullable outdatedCachedSyncResponse) {
+        [syncResponseStoreManager mergedSyncResponseFromSyncResponseIds:outdatedSyncResponseIds
+                                                             completion:^(MXCachedSyncResponse * _Nullable outdatedCachedSyncResponse) {
             if (outdatedCachedSyncResponse)
             {
                 [self handleOutdatedSyncResponse:outdatedCachedSyncResponse.syncResponse
@@ -1987,7 +1968,8 @@ typedef void (^MXOnResumeDone)(void);
     }];
     
     [asyncTaskQueue asyncWithExecute:^(void (^ taskCompleted)(void)) {
-        [syncResponseStoreManager mergedSyncResponseFromSyncResponseIds:syncResponseIds completion:^(MXCachedSyncResponse * _Nullable cachedSyncResponse) {
+        [syncResponseStoreManager mergedSyncResponseFromSyncResponseIds:syncResponseIds
+                                                             completion:^(MXCachedSyncResponse * _Nullable cachedSyncResponse) {
             if (cachedSyncResponse)
             {
                 [self handleSyncResponse:cachedSyncResponse.syncResponse
