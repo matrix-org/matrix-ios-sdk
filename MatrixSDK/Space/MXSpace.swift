@@ -223,6 +223,48 @@ public class MXSpace: NSObject {
         return childRoomIds.contains(roomId)
     }
     
+    /// Check if the current user has enough power level to add room to this space
+    /// - Parameters:
+    ///   - completion: A closure called when the operation completes.
+    ///   - canAddRoom: Indicates wether the user has right or not to add rooms to this space
+    public func canAddRoom(completion: @escaping (_ canAddRoom: Bool) -> Void) {
+        guard let userId = session.myUserId else {
+            MXLog.warning("[MXSpace] canAddRoom: user ID not found")
+            completion(false)
+            return
+        }
+        
+        guard let summary = self.summary else {
+            MXLog.warning("[MXSpace] canAddRoom: summary not found")
+            completion(false)
+            return
+        }
+        
+        guard let room = self.room else {
+            MXLog.warning("[MXSpace] canAddRoom: room not found")
+            completion(false)
+            return
+        }
+        
+        guard summary.membership == .join else {
+            completion(false)
+            return
+        }
+        
+        room.state({ roomState in
+            guard let powerLevels = roomState?.powerLevels else {
+                MXLog.warning("[MXSpace] canAddRoom: space power levels not found")
+                completion(false)
+                return
+            }
+            let userPowerLevel = powerLevels.powerLevelOfUser(withUserID: userId)
+            let minimumPowerLevel = powerLevels.events["m.space.child"] as? Int ?? powerLevels.stateDefault
+            let canAddRoom = userPowerLevel >= minimumPowerLevel
+            
+            completion(canAddRoom)
+        })
+    }
+    
     // MARK: - Private
     
     private func updateChildRooms(from space: MXSpace, with directRoomsPerMember: [String : [String]]) {

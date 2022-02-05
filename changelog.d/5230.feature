@@ -1,0 +1,1 @@
+MXSpace: added canAddRoom() method
