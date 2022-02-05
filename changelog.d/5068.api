@@ -1,0 +1,1 @@
+MXRestClient & MXRoom: Introduce `threadId` parameters for event sending methods.

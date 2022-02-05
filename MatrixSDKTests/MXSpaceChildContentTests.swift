@@ -434,7 +434,7 @@ class MXSpaceChildContentTests: XCTestCase {
                                                 // Checking the visibility of the room from Alice's POV
                                                 aliceSession.checkVisibilityOf(of: createdRoom, in: spaceFromAlice, expectedCount: expectedCount) {
                                                     if testRemoveRoom {
-                                                        //Rremove the room from the space
+                                                        //Remove the room from the space
                                                         createdSpace?.removeChild(roomId: createdRoom.roomId, completion: { response in
                                                             switch response {
                                                             case .success:

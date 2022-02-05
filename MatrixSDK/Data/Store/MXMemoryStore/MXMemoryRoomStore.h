@@ -93,13 +93,14 @@
 - (id<MXEventsEnumerator>)enumeratorForMessagesWithTypeIn:(NSArray*)types;
 
 /**
-  Get all events newer than the event with the passed id.
+ Get all events newer than the event with the passed id.
 
-  @param eventId the event id to find.
-  @param types a set of event types strings (MXEventTypeString).
-  @return the messages events after an event Id
+ @param eventId the event id to find.
+ @param threadId the thread id to find events in. Pass nil not to use any filtering.
+ @param types a set of event types strings (MXEventTypeString).
+ @return the messages events after an event Id
  */
-- (NSArray*)eventsAfter:(NSString *)eventId except:(NSString*)userId withTypeIn:(NSSet*)types;
+- (NSArray*)eventsAfter:(NSString *)eventId threadId:(NSString*)threadId except:(NSString*)userId withTypeIn:(NSSet*)types;
 
 /**
  Get events related to a specific event.

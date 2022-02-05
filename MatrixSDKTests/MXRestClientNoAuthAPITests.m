@@ -453,7 +453,6 @@
 
         // Result must be returned on the main queue by default
         XCTAssert([[NSThread currentThread] isMainThread]);
-        XCTAssertEqual(dispatch_get_current_queue(), dispatch_get_main_queue());
 
         [expectation fulfill];
 
@@ -477,7 +476,7 @@
     MXHTTPOperation *operation = [client publicRoomsOnServer:nil limit:-1 since:nil filter:nil thirdPartyInstanceId:nil includeAllNetworks:NO success:^(MXPublicRoomsResponse *publicRoomsResponse) {
 
         XCTAssertFalse([[NSThread currentThread] isMainThread]);
-        XCTAssertEqual(dispatch_get_current_queue(), client.completionQueue);
+        XCTAssertEqual(dispatch_queue_get_label(DISPATCH_CURRENT_QUEUE_LABEL), "aQueueFromAnotherThread");
 
         [expectation fulfill];
 
@@ -507,7 +506,7 @@
     } failure:^(NSError *error) {
 
         XCTAssertFalse([[NSThread currentThread] isMainThread]);
-        XCTAssertEqual(dispatch_get_current_queue(), client.completionQueue);
+        XCTAssertEqual(dispatch_queue_get_label(DISPATCH_CURRENT_QUEUE_LABEL), "aQueueFromAnotherThread");
 
         [expectation fulfill];
     }];

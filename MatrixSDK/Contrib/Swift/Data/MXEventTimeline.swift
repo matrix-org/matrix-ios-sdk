@@ -16,36 +16,7 @@
 
 import Foundation
 
-/**
- Block called when an event of the registered types has been handled in the timeline.
- This is a specialisation of the `MXOnEvent` block.
- 
- - parameters:
-    - event: the new event.
-    - direction: the origin of the event.
-    - roomState: the room state right before the event.
- */
-public typealias MXOnRoomEvent = (_ event: MXEvent, _ direction: MXTimelineDirection, _ roomState: MXRoomState) -> Void
-
 public extension MXEventTimeline {
-    
-    /**
-     Check if this timelime can be extended.
-     
-     This returns true if we either have more events, or if we have a pagination
-     token which means we can paginate in that direction. It does not necessarily
-     mean that there are more events available in that direction at this time.
-     
-     `canPaginate` in forward direction has no meaning for a live timeline.
-     
-     - parameter direction: The direction to check
-     
-     - returns: `true` if we can paginate in the given direction.
-     */
-    @nonobjc func canPaginate(_ direction: MXTimelineDirection) -> Bool {
-        return __canPaginate(direction.identifier)
-    }
-    
     
     /**
      Reset the pagination timelime and start loading the context around its `initialEventId`.
@@ -58,7 +29,7 @@ public extension MXEventTimeline {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func resetPaginationAroundInitialEvent(withLimit limit: UInt, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
+    @discardableResult func resetPaginationAroundInitialEvent(withLimit limit: UInt, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
         return __resetPaginationAroundInitialEvent(withLimit: limit, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -77,8 +48,8 @@ public extension MXEventTimeline {
      
      - returns: a MXHTTPOperation instance. This instance can be nil if no request to the homeserver is required.
      */
-    @nonobjc @discardableResult func paginate(_ numItems: UInt, direction: MXTimelineDirection, onlyFromStore: Bool, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
-        return __paginate(numItems, direction: direction.identifier, onlyFromStore: onlyFromStore, complete: currySuccess(completion), failure: curryFailure(completion))
+    @discardableResult func paginate(_ numItems: UInt, direction: MXTimelineDirection, onlyFromStore: Bool, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+        return __paginate(numItems, direction: direction, onlyFromStore: onlyFromStore, complete: currySuccess(completion), failure: curryFailure(completion))
     }
     
     
@@ -91,18 +62,13 @@ public extension MXEventTimeline {
         - block: the block that will called once a new event has been handled.
      - returns: a reference to use to unregister the listener
      */
-    @nonobjc func listenToEvents(_ types: [MXEventType]? = nil, _ block: @escaping MXOnRoomEvent) -> Any {
-        
-        let legacyBlock: __MXOnRoomEvent = { (event, direction, state) in
-            guard let event = event, let state = state else { return }
-            block(event, MXTimelineDirection(identifer: direction), state)
-        }
+    func listenToEvents(_ types: [MXEventType]? = nil, _ block: @escaping MXOnRoomEvent) -> Any {
         
         if let types = types {
             let typeStrings = types.map({ return $0.identifier })
-            return __listen(toEventsOfTypes: typeStrings, onEvent: legacyBlock)
+            return __listen(toEventsOfTypes: typeStrings, onEvent: block)
         } else {
-            return __listen(toEvents: legacyBlock)
+            return __listen(toEvents: block)
         }
     }
 }

@@ -21,14 +21,16 @@
 
 #import "MXSDKOptions.h"
 #import "MXJSONModel.h"
+#import "MXRefreshResponse.h"
 #import "MXTools.h"
 #import "MXError.h"
+#import "MXEvent.h"
 
 #import "MXAllowedCertificates.h"
 
 #import "MXThirdpartyProtocolsResponse.h"
 #import "MXThirdPartyUsersResponse.h"
-
+#import "MXRefreshTokenData.h"
 #import "MatrixSDKSwiftHeader.h"
 
 #pragma mark - Constants definitions
@@ -36,6 +38,7 @@
  Prefix used in path of home server API requests.
  */
 NSString *const kMXAPIPrefixPathR0 = @"_matrix/client/r0";
+NSString *const kMXAPIPrefixPathV1 = @"_matrix/client/v1";
 NSString *const kMXAPIPrefixPathUnstable = @"_matrix/client/unstable";
 
 /**
@@ -74,6 +77,15 @@ NSString *const kMXMembersOfRoomParametersAt            = @"at";
 NSString *const kMXMembersOfRoomParametersMembership    = @"membership";
 NSString *const kMXMembersOfRoomParametersNotMembership = @"not_membership";
 
+NSString *const MXCredentialsUpdateTokensNotification = @"MXCredentialsUpdateTokensNotification";
+NSString *const kMXCredentialsNewRefreshTokenDataKey = @"refresh_token_data";
+/**
+ The time interval before the access token expires that we will start trying to refresh the token.
+ This avoids us having to block other users requests while the token refreshes.
+ Choosing a value larger than SERVER_TIMEOUT_MS guarantees an authenticated request will be attempted(causing a refresh) before the token expires.
+ */
+#define PREEMPT_REFRESH_EXPIRATION_INTERVAL 60000
+
 /**
  Authentication flow: register or login
  */
@@ -109,15 +121,50 @@ MXAuthAction;
 @implementation MXRestClient
 @synthesize credentials, apiPathPrefix, contentPathPrefix, completionQueue, antivirusServerPathPrefix;
 
++ (dispatch_queue_t)refreshQueue
+{
+    static dispatch_once_t pred = 0;
+    static id _refreshQueue = nil;
+    dispatch_once(&pred, ^{
+        _refreshQueue = dispatch_queue_create("MXRestClient.refreshQueue", DISPATCH_QUEUE_SERIAL);
+    });
+    return _refreshQueue;
+    
+}
+
++ (dispatch_group_t)refreshDispatchGroup
+{
+    static dispatch_once_t pred = 0;
+    static id _refreshDispatchGroup = nil;
+    dispatch_once(&pred, ^{
+        _refreshDispatchGroup = dispatch_group_create();
+    });
+    return _refreshDispatchGroup;
+}
+
 -(id)initWithHomeServer:(NSString *)homeserver andOnUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock
 {
     MXCredentials *credentials = [MXCredentials new];
     credentials.homeServer = homeserver;
 
-    return [self initWithCredentials:credentials andOnUnrecognizedCertificateBlock:onUnrecognizedCertBlock];
+    return [self initWithCredentials:credentials andOnUnrecognizedCertificateBlock:onUnrecognizedCertBlock andPersistentTokenDataHandler:nil andUnauthenticatedHandler:nil];
 }
 
--(id)initWithCredentials:(MXCredentials*)inCredentials andOnUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock
+-(id)initWithCredentials:(MXCredentials*)inCredentials
+andOnUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock
+{
+    return [self initWithCredentials:credentials andOnUnrecognizedCertificateBlock:onUnrecognizedCertBlock andPersistentTokenDataHandler:nil andUnauthenticatedHandler:nil];
+}
+
+-(id)initWithCredentials:(MXCredentials*)inCredentials
+{
+    return [self initWithCredentials:inCredentials andOnUnrecognizedCertificateBlock:nil andPersistentTokenDataHandler:nil andUnauthenticatedHandler:nil];
+}
+
+-(id)initWithCredentials:(MXCredentials*)inCredentials
+andOnUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock
+andPersistentTokenDataHandler: (MXRestClientPersistTokenDataHandler)persistentTokenDataHandler
+andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHandler
 {
     self = [super init];
     if (self)
@@ -128,61 +175,255 @@ MXAuthAction;
         
         credentials = inCredentials;
         _identityServer = credentials.identityServer;
-
+        _unauthenticatedHandler = unauthenticatedHandler;
+        _persistTokenDataHandler = persistentTokenDataHandler;
         if (credentials.homeServer)
         {
             httpClient = [[MXHTTPClient alloc] initWithBaseURL:credentials.homeServer
-                                                   accessToken:credentials.accessToken
+                                                 authenticated: credentials.accessToken != nil
                              andOnUnrecognizedCertificateBlock:^BOOL(NSData *certificate)
                           {
-
-                              // Check whether the provided certificate has been already trusted
-                              if ([[MXAllowedCertificates sharedInstance] isCertificateAllowed:certificate])
-                              {
-                                  return YES;
-                              }
-
-                              // Check whether the provided certificate is the already trusted by the user.
-                              if (inCredentials.allowedCertificate && [inCredentials.allowedCertificate isEqualToData:certificate])
-                              {
-                                  // Store the allowed certificate for further requests (from MXMediaManager)
-                                  [[MXAllowedCertificates sharedInstance] addCertificate:certificate];
-                                  return YES;
-                              }
-
-                              // Check whether the user has already ignored this certificate change.
-                              if (inCredentials.ignoredCertificate && [inCredentials.ignoredCertificate isEqualToData:certificate])
-                              {
-                                  return NO;
-                              }
-
-                              // Let the app ask the end user to verify it
-                              if (onUnrecognizedCertBlock)
-                              {
-                                  BOOL allowed = onUnrecognizedCertBlock(certificate);
-
-                                  if (allowed)
-                                  {
-                                      // Store the allowed certificate for further requests
-                                      [[MXAllowedCertificates sharedInstance] addCertificate:certificate];
-                                  }
-
-                                  return allowed;
-                              }
-                              else
-                              {
-                                  return NO;
-                              }
-                          }];
+                
+                // Check whether the provided certificate has been already trusted
+                if ([[MXAllowedCertificates sharedInstance] isCertificateAllowed:certificate])
+                {
+                    return YES;
+                }
+                
+                // Check whether the provided certificate is the already trusted by the user.
+                if (inCredentials.allowedCertificate && [inCredentials.allowedCertificate isEqualToData:certificate])
+                {
+                    // Store the allowed certificate for further requests (from MXMediaManager)
+                    [[MXAllowedCertificates sharedInstance] addCertificate:certificate];
+                    return YES;
+                }
+                
+                // Check whether the user has already ignored this certificate change.
+                if (inCredentials.ignoredCertificate && [inCredentials.ignoredCertificate isEqualToData:certificate])
+                {
+                    return NO;
+                }
+                
+                // Let the app ask the end user to verify it
+                if (onUnrecognizedCertBlock)
+                {
+                    BOOL allowed = onUnrecognizedCertBlock(certificate);
+                    
+                    if (allowed)
+                    {
+                        // Store the allowed certificate for further requests
+                        [[MXAllowedCertificates sharedInstance] addCertificate:certificate];
+                    }
+                    
+                    return allowed;
+                }
+                else
+                {
+                    return NO;
+                }
+            }];
+            
+            httpClient.tokenValidationResponseHandler = ^BOOL(NSError *error) {
+                if (![MXError isMXError:error])
+                {
+                    return NO;
+                }
+                MXError *mxError = [[MXError alloc] initWithNSError:error];
+                return [mxError.errcode isEqualToString:kMXErrCodeStringUnknownToken];
+            };
+            MXWeakify(self);
+            httpClient.tokenProviderHandler = ^(NSError *error, void (^success)(NSString *accessToken), void (^failure)(NSError *error)) {
+                MXStrongifyAndReturnIfNil(self);
+                dispatch_async([MXRestClient refreshQueue], ^{
+                    NSString *logId = [NSString stringWithFormat:@"%d-%@", [[NSProcessInfo processInfo] processIdentifier], [[NSUUID UUID] UUIDString]];
+                    MXLogDebug(@"[MXRestClient] tokenProviderHandler: %@ refreshQueue enter - %@", logId, [MXRestClient refreshDispatchGroup]);
+                    
+                    // If refreshDispatchGroup is unmatched(a request for a new access token is in-flight) wait.
+                    dispatch_group_wait([MXRestClient refreshDispatchGroup], DISPATCH_TIME_FOREVER);
+                    if(!weakself.completionQueue) {
+                        MXLogError(@"[MXRestClient] tokenProviderHandler: %@ Client closed, exit tokenProviderHandler early", logId);
+                        return;
+                    }
+                    MXLogDebug(@"[MXRestClient] tokenProviderHandler: %@ Wait finished", logId);
+                    if(self.credentials.accessTokenExpiresAt)
+                    {
+                        NSDate *expiry = [NSDate dateWithTimeIntervalSince1970:self.credentials.accessTokenExpiresAt/1000];
+                        NSDate *preemptiveExpiry = [NSDate dateWithTimeIntervalSince1970:(self.credentials.accessTokenExpiresAt - PREEMPT_REFRESH_EXPIRATION_INTERVAL)/1000];
+                        MXLogDebug(@"[MXRestClient] tokenProviderHandler: %@ - server expiry: %@ preemptive expiry %@", logId, expiry, preemptiveExpiry);
+                    }
+                    MXError *mxError = [[MXError alloc] initWithNSError:error];
+                    BOOL isTokenUnknownResponse = mxError && [mxError.errcode isEqualToString:kMXErrCodeStringUnknownToken];
+                    if(!self.credentials.refreshToken && isTokenUnknownResponse)
+                    {
+                        // non-refresh token auth failed
+                        dispatch_async(self.completionQueue, ^{
+                            BOOL isSoftLogout = [MXRestClient isSoftLogout:mxError];
+                            MXLogDebug(@"[MXRestClient] tokenProviderHandler: %@: non-refresh(access token) token auth failed", logId);
+                            self.unauthenticatedHandler(mxError, isSoftLogout, NO, ^{
+                                failure(error);
+                            });
+                        });
+                        return;
+                    }
+                    if (!self.credentials.refreshToken || (!isTokenUnknownResponse && (!self.credentials.accessTokenExpiresAt || [NSDate date].timeIntervalSince1970 * 1000 < (self.credentials.accessTokenExpiresAt - PREEMPT_REFRESH_EXPIRATION_INTERVAL)))) {
+                        // If it's non-refresh token auth return the access token,
+                        // or if it is refresh token auth and access token is valid also return it.
+                        MXLogDebug(@"[MXRestClient] tokenProviderHandler: %@ success token %@, %tu", logId, self.credentials.refreshToken, (NSUInteger)self.credentials.accessTokenExpiresAt)
+                        dispatch_async(self.completionQueue, ^{
+                            success(self.credentials.accessToken);
+                        });
+                        return;
+                    }
+                    
+                    // Continue with token refresh if access token is not valid(indicated by server response or the expiry date)
+                    NSAssert(self.persistTokenDataHandler, @"If we are attempting to refresh there must be a way to persist the tokens to share across processes.");
+                    
+                    dispatch_group_enter([MXRestClient refreshDispatchGroup]);
+                    
+                    MXWeakify(self);
+                    [self startTokenRefreshWithLogId:logId andRefreshCompletion:^(NSString *accessToken) {
+                        if(!weakself || !weakself.completionQueue) {
+                            dispatch_group_leave([MXRestClient refreshDispatchGroup]);
+                            MXLogWarning(@"[MXRestClient] tokenProviderHandler: %@ Client closed, exit tokenProviderHandler early.", logId);
+                            return;
+                        }
+                        MXStrongifyAndReturnIfNil(self);
+                        dispatch_group_leave([MXRestClient refreshDispatchGroup]);
+                        dispatch_async(self.completionQueue, ^{
+                            if(accessToken)
+                            {
+                                success(self.credentials.accessToken);
+                            }
+                            else
+                            {
+                                MXError *mxError = [[MXError alloc] initWithErrorCode:kMXErrCodeStringClientError error: @"Token refresh failed"];
+                                failure(mxError.createNSError);
+                            }
+                        });
+                    }];
+                });
+            };
         }
-
+        
         completionQueue = dispatch_get_main_queue();
-
+        
         processingQueue = dispatch_queue_create("MXRestClient", DISPATCH_QUEUE_SERIAL);
     }
     return self;
 }
 
+
+- (void)startTokenRefreshWithLogId:(NSString*)logId andRefreshCompletion:(void (^)(NSString *accessToken))refreshCompletion
+{
+    MXWeakify(self);
+    // check persisted credentials (could have been updated in another process)
+    self.persistTokenDataHandler(^(NSArray<MXCredentials *> *credentials, void (^shouldPersistCompletion)(BOOL didUpdateCredentials)) {
+        if(!weakself || !weakself.completionQueue) {
+            shouldPersistCompletion(NO);
+            refreshCompletion(nil);
+            MXLogWarning(@"[MXRestClient] %@: Client closed, exit tokenProviderHandler early.", logId);
+            return;
+        }
+        MXStrongifyAndReturnIfNil(self);
+        
+        MXCredentials *credential = [MXRestClient findMatchingCredential:self.credentials inCredentials:credentials];
+        if (!credential) {
+            MXLogWarning(@"[MXRestClient] %@: Could not find rest client credential in persisted credentials.", logId);
+            shouldPersistCompletion(NO);
+            refreshCompletion(nil);
+            return;
+        }
+        // We found the matching, persisted credential.
+        if([NSDate date].timeIntervalSince1970 * 1000 < (credential.accessTokenExpiresAt - PREEMPT_REFRESH_EXPIRATION_INTERVAL)) {
+            MXLogDebug(@"[MXRestClient] %@: found valid persisted token, using.", logId)
+            // There exists a persisted credential that is not expired, use it.
+            MXRefreshTokenData *tokenData = [[MXRefreshTokenData alloc] initWithUserId:credential.userId
+                                                                            homeserver:credential.homeServer
+                                                                           accessToken:credential.accessToken
+                                                                          refreshToken:credential.refreshToken
+                                                                  accessTokenExpiresAt:credential.accessTokenExpiresAt
+                                             ];
+            [[NSNotificationCenter defaultCenter] postNotificationName:MXCredentialsUpdateTokensNotification object:nil userInfo:@{
+                kMXCredentialsNewRefreshTokenDataKey: tokenData
+            }];
+            shouldPersistCompletion(NO);
+            refreshCompletion(credential.accessToken);
+        } else {
+            // refresh token and use the new values.
+            MXLogDebug(@"[MXRestClient] %@: refreshQueue refresh token start", logId)
+            MXWeakify(self);
+            id operation = [self refreshAccessToken:self.credentials.refreshToken success:^(MXRefreshResponse *refreshResponse) {
+                MXLogDebug(@"[MXRestClient] %@: refreshQueue refresh token request success", logId)
+                uint64_t accessTokenExpiresAt = ((uint64_t)[NSDate date].timeIntervalSince1970 * 1000) + refreshResponse.expiresInMs;
+                MXRefreshTokenData *tokenData = [[MXRefreshTokenData alloc] initWithUserId:credential.userId
+                                                                                homeserver:credential.homeServer
+                                                                               accessToken:refreshResponse.accessToken
+                                                                              refreshToken:refreshResponse.refreshToken
+                                                                      accessTokenExpiresAt:accessTokenExpiresAt
+                                                 ];
+                [[NSNotificationCenter defaultCenter] postNotificationName:MXCredentialsUpdateTokensNotification object:nil userInfo:@{
+                    kMXCredentialsNewRefreshTokenDataKey: tokenData
+                }];
+                credential.accessToken = refreshResponse.accessToken;
+                credential.refreshToken = refreshResponse.refreshToken;
+                credential.accessTokenExpiresAt = accessTokenExpiresAt;
+                shouldPersistCompletion(YES);
+                MXLogDebug(@"[MXRestClient] %@: refreshQueue refresh token success", logId)
+                refreshCompletion(refreshResponse.accessToken);
+            } failure:^(NSError *error) {
+                if (!weakself) {
+                    shouldPersistCompletion(NO);
+                    refreshCompletion(nil);
+                }
+                MXStrongifyAndReturnIfNil(self);
+                MXLogDebug(@"[MXRestClient] %@: refreshQueue refresh token request failure", logId)
+                shouldPersistCompletion(NO);
+                MXError *mxError = [[MXError alloc] initWithNSError:error];
+                if (self.unauthenticatedHandler &&
+                    ([mxError.errcode isEqualToString:kMXErrCodeStringForbidden] ||
+                    [mxError.errcode isEqualToString:kMXErrCodeStringUnknownToken]))
+                {
+                    dispatch_async(self.completionQueue, ^{
+                        BOOL isSoftLogout = [MXRestClient isSoftLogout:mxError];
+                        MXLogDebug(@"[MXRestClient] %@: refreshQueue unauthenticatedHandler", logId)
+                        self.unauthenticatedHandler(mxError, isSoftLogout, YES,^{
+                            refreshCompletion(nil);
+                        });
+                    });
+                } else {
+                    refreshCompletion(nil);
+                }
+            }];
+            
+            if(!operation)
+            {
+                MXLogWarning(@"[MXRestClient] %@: Did not start refresh as http client was nil", logId);
+                shouldPersistCompletion(NO);
+                refreshCompletion(nil);
+            }
+        }
+        
+    });
+}
+
++ (BOOL)isSoftLogout:(MXError*)error
+{
+    return error.httpResponse.statusCode == 401
+    && [error.userInfo[kMXErrorSoftLogoutKey] isEqual:@(YES)];
+}
+
++ (MXCredentials*)findMatchingCredential:(MXCredentials*)credential inCredentials:(NSArray<MXCredentials *> *)credentials
+{
+    for (MXCredentials *nextCredential in credentials)
+    {
+        if (nextCredential.homeServer && [nextCredential.homeServer isEqualToString:credential.homeServer]
+            && nextCredential.userId && [nextCredential.userId isEqualToString:credential.userId] ) {
+            return nextCredential;
+        }
+    }
+    return nil;
+}
+    
 - (void)close
 {
     credentials = nil;
@@ -707,6 +948,15 @@ MXAuthAction;
             parameters = newParameters;
         }
     }
+    
+    if (MXSDKOptions.sharedInstance.authEnableRefreshTokens)
+    {
+        NSMutableDictionary *paramsWithRefresh = [NSMutableDictionary dictionaryWithDictionary:parameters];
+        paramsWithRefresh[@"refresh_token"] = @(YES);
+
+        parameters = paramsWithRefresh;
+    }
+
 
     MXWeakify(self);
     return [httpClient requestWithMethod:@"POST"
@@ -743,6 +993,35 @@ MXAuthAction;
                                      MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
+}
+
+- (MXHTTPOperation*)refreshAccessToken:(NSString*)refreshToken
+                               success:(void (^)(MXRefreshResponse *refreshResponse))success
+                               failure:(void (^)(NSError *error))failure
+
+{
+    NSDictionary *jsonBodyParameters = @{
+        @"refresh_token": refreshToken,
+    };
+
+    NSData *payloadData = [NSJSONSerialization dataWithJSONObject:jsonBodyParameters options:0 error:nil];
+    return [httpClient requestWithMethod:@"POST"
+                                    path:[NSString stringWithFormat:@"%@/refresh", kMXAPIPrefixPathV1]
+                              parameters:nil
+                     needsAuthentication:NO
+                                    data:payloadData
+                                 headers:@{@"Content-Type": @"application/json"}
+                                 timeout:-1
+                          uploadProgress:nil
+                                 success:^(NSDictionary *JSONResponse) {
+        MXRefreshResponse *refreshResponse;
+        MXJSONModelSetMXJSONModel(refreshResponse, MXRefreshResponse, JSONResponse);
+        if (success)
+        {
+            success(refreshResponse);
+        }
+    }
+                                 failure:failure];
 }
 
 - (MXHTTPOperation*)deactivateAccountWithAuthParameters:(NSDictionary*)authParameters
@@ -1432,6 +1711,7 @@ MXAuthAction;
 
 #pragma mark - Room operations
 - (MXHTTPOperation *)sendEventToRoom:(NSString *)roomId
+                            threadId:(NSString*)threadId
                            eventType:(MXEventTypeString)eventTypeString
                              content:(NSDictionary *)content
                                txnId:(NSString *)txnId
@@ -1450,11 +1730,32 @@ MXAuthAction;
                       roomId,
                       eventTypeString,
                       [MXTools encodeURIComponent:txnId]];
+    
+    NSDictionary *eventContent = content;
+    if (threadId)
+    {
+        // Add the thread id to the data to send
+        NSMutableDictionary *relatesDict;
+        if (content[kMXEventRelationRelatesToKey])
+        {
+            relatesDict = [NSMutableDictionary dictionaryWithDictionary:content[kMXEventRelationRelatesToKey]];
+        }
+        else
+        {
+            relatesDict = [NSMutableDictionary dictionary];
+        }
+        relatesDict[@"rel_type"] = MXEventRelationTypeThread;
+        relatesDict[@"event_id"] = threadId;
+        
+        NSMutableDictionary *newContent = [NSMutableDictionary dictionaryWithDictionary:content];
+        newContent[kMXEventRelationRelatesToKey] = relatesDict;
+        eventContent = newContent;
+    }
 
     MXWeakify(self);
     return [httpClient requestWithMethod:@"PUT"
                                     path:path
-                              parameters:content
+                              parameters:eventContent
                                  success:^(NSDictionary *JSONResponse) {
                                      MXStrongifyAndReturnIfNil(self);
 
@@ -1519,6 +1820,7 @@ MXAuthAction;
 }
 
 - (MXHTTPOperation*)sendMessageToRoom:(NSString*)roomId
+                             threadId:(NSString*)threadId
                               msgType:(MXMessageType)msgType
                               content:(NSDictionary*)content
                               success:(void (^)(NSString *eventId))success
@@ -1528,19 +1830,23 @@ MXAuthAction;
     NSMutableDictionary *eventContent = [NSMutableDictionary dictionaryWithDictionary:content];
     eventContent[kMXMessageTypeKey] = msgType;
     
-    return [self sendEventToRoom:roomId eventType:kMXEventTypeStringRoomMessage content:eventContent txnId:nil success:success failure:failure];
+    return [self sendEventToRoom:roomId threadId:threadId eventType:kMXEventTypeStringRoomMessage content:eventContent txnId:nil success:success failure:failure];
 }
 
 - (MXHTTPOperation*)sendTextMessageToRoom:(NSString*)roomId
+                                 threadId:(NSString*)threadId
                                      text:(NSString*)text
                                   success:(void (^)(NSString *eventId))success
                                   failure:(void (^)(NSError *error))failure
 {
-    return [self sendMessageToRoom:roomId msgType:kMXMessageTypeText
+    return [self sendMessageToRoom:roomId
+                          threadId:threadId
+                           msgType:kMXMessageTypeText
                            content:@{
                                kMXMessageBodyKey: text
                            }
-                           success:success failure:failure];
+                           success:success
+                           failure:failure];
 }
 
 
@@ -2319,7 +2625,7 @@ MXAuthAction;
 - (MXHTTPOperation*)messagesForRoom:(NSString*)roomId
                                from:(NSString*)from
                           direction:(MXTimelineDirection)direction
-                              limit:(NSUInteger)limit
+                              limit:(NSInteger)limit
                              filter:(MXRoomEventFilter*)roomEventFilter
                             success:(void (^)(MXPaginationResponse *paginatedResponse))success
                             failure:(void (^)(NSError *error))failure
@@ -3510,7 +3816,7 @@ MXAuthAction;
             MXJSONModelSetDictionary(join, rooms[@"join"]);
             MXJSONModelSetDictionary(invite, rooms[@"invite"]);
             MXJSONModelSetDictionary(leave, rooms[@"leave"]);
-            initialSyncRequestTaskProfile.units = join.count + invite.count + leave.count;
+            initialSyncRequestTaskProfile.units = join.count;
             
             [profiler stopMeasuringTaskWithProfile:initialSyncRequestTaskProfile];
         }
@@ -3531,7 +3837,7 @@ MXAuthAction;
                 if (initialSyncParsingTaskProfile)
                 {
                     // Contextualise the profiling with the amount of received information
-                    initialSyncParsingTaskProfile.units = syncResponse.rooms.join.count + syncResponse.rooms.invite.count + syncResponse.rooms.leave.count;
+                    initialSyncParsingTaskProfile.units = syncResponse.rooms.join.count;
                     
                     [profiler stopMeasuringTaskWithProfile:initialSyncParsingTaskProfile];
                 }
@@ -5508,7 +5814,7 @@ MXAuthAction;
                          relationType:(NSString*)relationType
                             eventType:(NSString*)eventType
                                  from:(NSString*)from
-                                limit:(NSUInteger)limit
+                                limit:(NSInteger)limit
                               success:(void (^)(MXAggregationPaginatedResponse *paginatedResponse))success
                               failure:(void (^)(NSError *error))failure
 {

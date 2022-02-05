@@ -242,6 +242,7 @@ typedef void (^MXOnResumeDone)(void);
                                                  selector:@selector(spaceServiceDidBuildSpaceGraph:)
                                                      name:MXSpaceService.didBuildSpaceGraph
                                                    object:_spaceService];
+        _threadingService = [[MXThreadingService alloc] initWithSession:self];
         
         [self setIdentityServer:mxRestClient.identityServer andAccessToken:mxRestClient.credentials.identityServerAccessToken];
         
@@ -900,13 +901,6 @@ typedef void (^MXOnResumeDone)(void);
 
                 MXLogError(@"[MXSession] Crypto failed to start. Error: %@", error);
                 
-                // Check whether the token is valid
-                if ([self isUnknownTokenError:error])
-                {
-                    // Do nothing more because without a valid access_token, the session is useless
-                    return;
-                }
-
                 [self setState:MXSessionStateInitialSyncFailed];
                 failure(error);
 
@@ -916,12 +910,6 @@ typedef void (^MXOnResumeDone)(void);
             
             MXLogError(@"[MXSession] Get the user's profile information failed with error %@", error);
             
-            // Check whether the token is valid
-            if ([self isUnknownTokenError:error])
-            {
-                // Do nothing more because without a valid access_token, the session is useless
-                return;
-            }
             [self setState:MXSessionStateInitialSyncFailed];
             failure(error);
             
@@ -1251,37 +1239,6 @@ typedef void (^MXOnResumeDone)(void);
     return (self.store.eventStreamToken != nil);
 }
 
-#pragma mark - Invalid Token handling
-
-- (BOOL)isUnknownTokenError:(NSError *)error
-{
-    // Detect invalidated access token
-    // This can happen when the user made a forget password request for example
-    if ([MXError isMXError:error])
-    {
-        MXError *mxError = [[MXError alloc] initWithNSError:error];
-        if ([mxError.errcode isEqualToString:kMXErrCodeStringUnknownToken])
-        {
-            MXLogDebug(@"[MXSession] isUnknownTokenError: The access token is no more valid.");
-
-            if (mxError.httpResponse.statusCode == 401
-                && [mxError.userInfo[kMXErrorSoftLogoutKey] isEqual:@(YES)])
-            {
-                MXLogDebug(@"[MXSession] isUnknownTokenError: Go to MXSessionStateSoftLogout state.");
-                [self setState:MXSessionStateSoftLogout];
-            }
-            else
-            {
-                MXLogDebug(@"[MXSession] isUnknownTokenError: Go to MXSessionStateUnknownToken state.");
-                [self setState:MXSessionStateUnknownToken];
-            }
-
-            return YES;
-        }
-    }
-    return NO;
-}
-
 #pragma mark - MXSession pause prevention
 - (void)retainPreventPause
 {
@@ -1407,7 +1364,7 @@ typedef void (^MXOnResumeDone)(void);
             self->firstSyncDone = YES;
             
             // Contextualise the profiling with the amount of received information
-            syncTaskProfile.units = syncResponse.rooms.join.count + syncResponse.rooms.invite.count + syncResponse.rooms.leave.count;
+            syncTaskProfile.units = syncResponse.rooms.join.count;
             
             [MXSDKOptions.sharedInstance.profiler stopMeasuringTaskWithProfile:syncTaskProfile];
         }
@@ -1546,13 +1503,6 @@ typedef void (^MXOnResumeDone)(void);
     // Make sure [MXSession close] or [MXSession pause] has not been called before the server response
     if (!self->eventStreamRequest)
     {
-        return;
-    }
-
-    // Check whether the token is valid
-    if ([self isUnknownTokenError:error])
-    {
-        // Do nothing more because without a valid access_token, the session is useless
         return;
     }
 
@@ -2890,11 +2840,6 @@ typedef void (^MXOnResumeDone)(void);
             [listener removeSpiedRoom:room];
         }
 
-        // Clean the store
-        [self.store deleteRoom:roomId];
-        [self.store.roomSummaryStore removeSummaryOfRoom:roomId];
-        [self.aggregations resetDataInRoom:roomId];
-
         // And remove the room and its summary from the list
         [rooms removeObjectForKey:roomId];
         [roomSummaries removeObjectForKey:roomId];
@@ -2906,6 +2851,10 @@ typedef void (^MXOnResumeDone)(void);
                                                                      kMXSessionNotificationRoomIdKey: roomId
                                                                      }];
     }
+
+    // Clean the store
+    [self.aggregations resetDataInRoom:roomId];
+    [self.store deleteRoom:roomId];
 }
 
 
@@ -2938,7 +2887,7 @@ typedef void (^MXOnResumeDone)(void);
         if (room)
         {
             dispatch_group_enter(group);
-            [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+            [room liveTimeline:^(id<MXEventTimeline> liveTimeline) {
                 dispatch_group_leave(group);
             }];
         }

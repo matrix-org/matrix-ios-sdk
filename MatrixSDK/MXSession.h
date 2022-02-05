@@ -123,25 +123,7 @@ typedef NS_ENUM(NSUInteger, MXSessionState)
      @discussion
      The Matrix session will stay in this state until a new call of [MXSession start:failure:].
      */
-    MXSessionStateInitialSyncFailed,
-
-    /**
-     The access token is no more valid.
-
-     @discussion
-     This can happen when the user made a forget password request for example.
-     The Matrix session is no more usable. The user must log in again.
-     */
-    MXSessionStateUnknownToken,
-
-    /**
-     The user is logged out (invalid token) but they still have their local storage.
-     The user should log back in to rehydrate the client.
-
-     @discussion
-     This happens when the homeserver admin has signed the user out.
-     */
-    MXSessionStateSoftLogout
+    MXSessionStateInitialSyncFailed
 
 };
 
@@ -364,6 +346,7 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
 
 @class MXSpaceService;
 @class MXHomeserverCapabilitiesService;
+@class MXThreadingService;
 
 #pragma mark - MXSession
 /**
@@ -503,6 +486,11 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
  Capabilities of the current homeserver
  */
 @property (nonatomic, readonly) MXHomeserverCapabilitiesService *homeserverCapabilities;
+
+/**
+ The module that manages threads.
+ */
+@property (nonatomic, readonly) MXThreadingService *threadingService NS_REFINED_FOR_SWIFT;
 
 /**
  Flag indicating the session can be paused.

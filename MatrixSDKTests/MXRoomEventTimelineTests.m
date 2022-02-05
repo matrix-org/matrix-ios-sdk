@@ -21,7 +21,7 @@
 
 #import "MXSession.h"
 
-@interface MXEventTimelineTests : XCTestCase
+@interface MXRoomEventTimelineTests : XCTestCase
 {
     MatrixSDKTestsData *matrixSDKTestsData;
 }
@@ -29,7 +29,7 @@
 
 NSString *theInitialEventMessage = @"The initial timelime event";
 
-@implementation MXEventTimelineTests
+@implementation MXRoomEventTimelineTests
 
 - (void)setUp
 {
@@ -53,7 +53,7 @@ NSString *theInitialEventMessage = @"The initial timelime event";
         [matrixSDKTestsData for:mxSession.matrixRestClient andRoom:room.roomId sendMessages:20 testCase:testCase success:^{
 
             // Add a text message that will be used as initial event
-            [room sendTextMessage:theInitialEventMessage success:^(NSString *eventId) {
+            [room sendTextMessage:theInitialEventMessage threadId:nil success:^(NSString *eventId) {
 
                 // Add 20 more messages
                 [matrixSDKTestsData for:mxSession.matrixRestClient andRoom:room.roomId sendMessages:20 testCase:testCase success:^{
@@ -74,7 +74,7 @@ NSString *theInitialEventMessage = @"The initial timelime event";
 {
     [self doTestWithARoomOf41Messages:self readyToTest:^(MXRoom *room, XCTestExpectation *expectation, NSString *initialEventId) {
 
-        MXEventTimeline *eventTimeline = [room timelineOnEvent:initialEventId];
+        id<MXEventTimeline> eventTimeline = [room timelineOnEvent:initialEventId];
 
         NSMutableArray *events = [NSMutableArray array];
         [eventTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
@@ -125,7 +125,7 @@ NSString *theInitialEventMessage = @"The initial timelime event";
 {
     [self doTestWithARoomOf41Messages:self readyToTest:^(MXRoom *room, XCTestExpectation *expectation, NSString *initialEventId) {
 
-        MXEventTimeline *eventTimeline = [room timelineOnEvent:initialEventId];
+        id<MXEventTimeline> eventTimeline = [room timelineOnEvent:initialEventId];
 
         NSMutableArray *events = [NSMutableArray array];
         [eventTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
@@ -187,7 +187,7 @@ NSString *theInitialEventMessage = @"The initial timelime event";
 {
     [self doTestWithARoomOf41Messages:self readyToTest:^(MXRoom *room, XCTestExpectation *expectation, NSString *initialEventId) {
 
-        MXEventTimeline *eventTimeline = [room timelineOnEvent:initialEventId];
+        id<MXEventTimeline> eventTimeline = [room timelineOnEvent:initialEventId];
 
         NSMutableArray *events = [NSMutableArray array];
         [eventTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
@@ -281,7 +281,7 @@ NSString *theInitialEventMessage = @"The initial timelime event";
 {
     [self doTestWithARoomOf41Messages:self readyToTest:^(MXRoom *room, XCTestExpectation *expectation, NSString *initialEventId) {
 
-        MXEventTimeline *eventTimeline = [room timelineOnEvent:initialEventId];
+        id<MXEventTimeline> eventTimeline = [room timelineOnEvent:initialEventId];
 
         NSMutableArray *events = [NSMutableArray array];
         [eventTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
@@ -380,7 +380,7 @@ NSString *theInitialEventMessage = @"The initial timelime event";
     // - Run the initial condition scenario
     [self doTestWithARoomOf41Messages:self readyToTest:^(MXRoom *room, XCTestExpectation *expectation, NSString *initialEventId) {
 
-        [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+        [room liveTimeline:^(id<MXEventTimeline> liveTimeline) {
 
             __block NSUInteger eventCount = 0;
 

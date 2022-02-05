@@ -362,7 +362,7 @@
     // - Have Alice with an encrypted message
     [matrixSDKTestsE2EData doE2ETestWithAliceInARoom:self readyToTest:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
         MXRoom *roomFromAlicePOV = [aliceSession roomWithRoomId:roomId];
-        [roomFromAlicePOV sendTextMessage:message success:^(NSString *eventId) {
+        [roomFromAlicePOV sendTextMessage:message threadId:nil success:^(NSString *eventId) {
 
             // - Get the event content using MXSession.event(withEventId:)
             [aliceSession eventWithEventId:eventId inRoom:nil success:^(MXEvent *event) {
@@ -430,7 +430,7 @@
         XCTAssert(roomFromAlicePOV.summary.isEncrypted);
 
         // Check the echo from hs of a post message is correct
-        [roomFromAlicePOV liveTimeline:^(MXEventTimeline *liveTimeline) {
+        [roomFromAlicePOV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
 
             [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
@@ -440,7 +440,7 @@
             }];
         }];
 
-        [roomFromAlicePOV sendTextMessage:message success:nil failure:^(NSError *error) {
+        [roomFromAlicePOV sendTextMessage:message threadId:nil success:nil failure:^(NSError *error) {
             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
             [expectation fulfill];
         }];
@@ -472,7 +472,7 @@
                 XCTAssert(roomFromAlicePOV.summary.isEncrypted);
 
                 // Check the echo from hs of a post message is correct
-                [roomFromAlicePOV liveTimeline:^(MXEventTimeline *liveTimeline) {
+                [roomFromAlicePOV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
 
                     XCTAssert(liveTimeline.state.isEncrypted);
 
@@ -483,7 +483,7 @@
                         [expectation fulfill];
                     }];
 
-                    [roomFromAlicePOV sendTextMessage:message success:nil failure:^(NSError *error) {
+                    [roomFromAlicePOV sendTextMessage:message threadId:nil success:nil failure:^(NSError *error) {
                         XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                         [expectation fulfill];
                     }];
@@ -514,7 +514,7 @@
         XCTAssert(roomFromBobPOV.summary.isEncrypted);
         XCTAssert(roomFromAlicePOV.summary.isEncrypted);
 
-        [roomFromBobPOV liveTimeline:^(MXEventTimeline *liveTimeline) {
+        [roomFromBobPOV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
 
             [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
@@ -524,7 +524,7 @@
             }];
         }];
 
-        [roomFromAlicePOV sendTextMessage:messageFromAlice success:nil failure:^(NSError *error) {
+        [roomFromAlicePOV sendTextMessage:messageFromAlice threadId:nil success:nil failure:^(NSError *error) {
             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
             [expectation fulfill];
         }];
@@ -545,7 +545,7 @@
         XCTAssert(roomFromBobPOV.summary.isEncrypted);
         XCTAssert(roomFromAlicePOV.summary.isEncrypted);
 
-        [roomFromBobPOV liveTimeline:^(MXEventTimeline *liveTimeline) {
+        [roomFromBobPOV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
             [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                 if ([event.sender isEqualToString:bobSession.myUser.userId])
@@ -560,9 +560,9 @@
                     case 1:
                     {
                         // Send messages in expected order
-                        [roomFromBobPOV sendTextMessage:matrixSDKTestsE2EData.messagesFromBob[0] success:^(NSString *eventId) {
-                            [roomFromBobPOV sendTextMessage:matrixSDKTestsE2EData.messagesFromBob[1] success:^(NSString *eventId) {
-                                [roomFromBobPOV sendTextMessage:matrixSDKTestsE2EData.messagesFromBob[2] success:nil failure:nil];
+                        [roomFromBobPOV sendTextMessage:matrixSDKTestsE2EData.messagesFromBob[0] threadId:nil success:^(NSString *eventId) {
+                            [roomFromBobPOV sendTextMessage:matrixSDKTestsE2EData.messagesFromBob[1] threadId:nil success:^(NSString *eventId) {
+                                [roomFromBobPOV sendTextMessage:matrixSDKTestsE2EData.messagesFromBob[2] threadId:nil success:nil failure:nil];
                             } failure:nil];
                         } failure:nil];
 
@@ -578,7 +578,7 @@
             }];
         }];
 
-        [roomFromAlicePOV liveTimeline:^(MXEventTimeline *liveTimeline) {
+        [roomFromAlicePOV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
             [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                 if ([event.sender isEqualToString:aliceSession.myUser.userId])
@@ -590,12 +590,12 @@
 
                 if (receivedMessagesFromBob == 3)
                 {
-                    [roomFromAlicePOV sendTextMessage:matrixSDKTestsE2EData.messagesFromAlice[1] success:nil failure:nil];
+                    [roomFromAlicePOV sendTextMessage:matrixSDKTestsE2EData.messagesFromAlice[1] threadId:nil success:nil failure:nil];
                 }
             }];
         }];
 
-        [roomFromAlicePOV sendTextMessage:matrixSDKTestsE2EData.messagesFromAlice[0] success:nil failure:^(NSError *error) {
+        [roomFromAlicePOV sendTextMessage:matrixSDKTestsE2EData.messagesFromAlice[0] threadId:nil success:nil failure:^(NSError *error) {
             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
             [expectation fulfill];
         }];
@@ -624,7 +624,7 @@
 
                 MXRoom *roomFromBobPOV = [bobSession roomWithRoomId:roomId];
 
-                [roomFromBobPOV liveTimeline:^(MXEventTimeline *liveTimeline) {
+                [roomFromBobPOV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
 
                     [liveTimeline resetPagination];
                     [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
@@ -693,7 +693,7 @@
 
         MXRoom *roomFromBobPOV = [bobSession roomWithRoomId:roomId];
 
-        [roomFromBobPOV liveTimeline:^(MXEventTimeline *liveTimeline) {
+        [roomFromBobPOV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
 
             [liveTimeline resetPagination];
 
@@ -757,7 +757,7 @@
         // Internally, events of this timeline will be fetched on the homeserver
         // which is the use case of this test
         NSString *lastEventId = roomFromBobPOV.summary.lastMessage.eventId;
-        MXEventTimeline *timeline = [roomFromBobPOV timelineOnEvent:lastEventId];
+        id<MXEventTimeline> timeline = [roomFromBobPOV timelineOnEvent:lastEventId];
 
         [timeline resetPagination];
 
@@ -822,7 +822,7 @@
 
         __block NSUInteger messageCount = 0;
 
-        [roomFromBobPOV liveTimeline:^(MXEventTimeline *liveTimeline) {
+        [roomFromBobPOV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
 
             [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomEncrypted, kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
@@ -839,7 +839,7 @@
                         XCTAssertEqual(event.decryptionError.code, MXDecryptingErrorEncryptionNotEnabledCode);
                         XCTAssertEqualObjects(event.decryptionError.localizedDescription, MXDecryptingErrorEncryptionNotEnabledReason);
 
-                        [roomFromBobPOV sendTextMessage:@"Hello I'm Bob!" success:nil failure:nil];
+                        [roomFromBobPOV sendTextMessage:@"Hello I'm Bob!" threadId:nil success:nil failure:nil];
                         break;
                     }
 
@@ -859,7 +859,7 @@
 
         }];
 
-        [roomFromAlicePOV sendTextMessage:messageFromAlice success:nil failure:^(NSError *error) {
+        [roomFromAlicePOV sendTextMessage:messageFromAlice threadId:nil success:nil failure:^(NSError *error) {
             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
             [expectation fulfill];
         }];
@@ -879,7 +879,7 @@
 
         MXRoom *roomFromAlicePOV = [aliceSession roomWithRoomId:roomId];
 
-        [roomFromAlicePOV sendTextMessage:message success:^(NSString *eventId) {
+        [roomFromAlicePOV sendTextMessage:message threadId:nil success:^(NSString *eventId) {
 
             // Relog alice to simulate a new device
             [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
@@ -932,7 +932,7 @@
 
             NSString *messageFromAlice = @"Hello I'm still Alice!";
 
-            [roomFromBobPOV liveTimeline:^(MXEventTimeline *liveTimeline) {
+            [roomFromBobPOV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
                 [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage, kMXEventTypeStringRoomEncrypted] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                     XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messageFromAlice senderSession:aliceSession2]);
@@ -942,7 +942,7 @@
                 }];
             }];
 
-            [roomFromAlice2POV sendTextMessage:messageFromAlice success:nil failure:^(NSError *error) {
+            [roomFromAlice2POV sendTextMessage:messageFromAlice threadId:nil success:nil failure:^(NSError *error) {
                 XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                 [expectation fulfill];
             }];
@@ -959,7 +959,7 @@
         MXRoom *roomFromAlicePOV = [aliceSession roomWithRoomId:roomId];
         MXRoom *roomFromBobPOV = [bobSession roomWithRoomId:roomId];
 
-        [roomFromBobPOV liveTimeline:^(MXEventTimeline *liveTimeline) {
+        [roomFromBobPOV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
             [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage, kMXEventTypeStringRoomEncrypted] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                 NSString *messageFromAlice = @"Hello I'm still Alice!";
@@ -971,7 +971,7 @@
 
                     MXRoom *roomFromBob2POV = [bobSession2 roomWithRoomId:roomId];
 
-                    [roomFromBob2POV liveTimeline:^(MXEventTimeline *liveTimeline) {
+                    [roomFromBob2POV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
                         [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage, kMXEventTypeStringRoomEncrypted] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                             XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messageFromAlice senderSession:aliceSession]);
@@ -986,7 +986,7 @@
                 // We wait until Alice receives the new device information event. This cannot be more accurate.
                 observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionOnToDeviceEventNotification object:aliceSession queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
 
-                    [roomFromAlicePOV sendTextMessage:messageFromAlice success:nil failure:^(NSError *error) {
+                    [roomFromAlicePOV sendTextMessage:messageFromAlice threadId:nil success:nil failure:^(NSError *error) {
                         XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                         [expectation fulfill];
                     }];
@@ -996,7 +996,7 @@
         }];
 
         // 1st message to Bob and his single device
-        [roomFromAlicePOV sendTextMessage:@"Hello I'm Alice!" success:nil failure:^(NSError *error) {
+        [roomFromAlicePOV sendTextMessage:@"Hello I'm Alice!" threadId:nil success:nil failure:^(NSError *error) {
             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
             [expectation fulfill];
         }];
@@ -1039,7 +1039,7 @@
 
                     NSString *messageFromAlice = @"Hello I'm still Alice!";
 
-                    [roomFromBob2POV liveTimeline:^(MXEventTimeline *liveTimeline) {
+                    [roomFromBob2POV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
                         [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage, kMXEventTypeStringRoomEncrypted] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                             XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messageFromAlice senderSession:aliceSession2]);
@@ -1049,7 +1049,7 @@
                         }];
                     }];
 
-                    [roomFromAlice2POV sendTextMessage:messageFromAlice success:nil failure:^(NSError *error) {
+                    [roomFromAlice2POV sendTextMessage:messageFromAlice threadId:nil success:nil failure:^(NSError *error) {
                         XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                         [expectation fulfill];
                     }];
@@ -1081,7 +1081,7 @@
 
         __block NSUInteger messageCount = 0;
 
-        [roomFromBobPOV liveTimeline:^(MXEventTimeline *liveTimeline) {
+        [roomFromBobPOV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
             [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage, kMXEventTypeStringRoomEncrypted] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                 switch (messageCount++)
@@ -1097,7 +1097,7 @@
                                                            success:
                          ^{
 
-                             [roomFromAlicePOV sendTextMessage:aliceMessages[1] success:nil failure:^(NSError *error) {
+                             [roomFromAlicePOV sendTextMessage:aliceMessages[1] threadId:nil success:nil failure:^(NSError *error) {
                                  XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                                  [expectation fulfill];
                              }];
@@ -1122,7 +1122,7 @@
                                                          forDevice:bobSession.matrixRestClient.credentials.deviceId
                                                             ofUser:bobSession.myUser.userId success:
                          ^{
-                             [roomFromAlicePOV sendTextMessage:aliceMessages[2] success:nil failure:^(NSError *error) {
+                             [roomFromAlicePOV sendTextMessage:aliceMessages[2] threadId:nil success:nil failure:^(NSError *error) {
                                  XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                                  [expectation fulfill];
                              }];
@@ -1151,7 +1151,7 @@
         }];
 
         // 1st message to Bob
-        [roomFromAlicePOV sendTextMessage:aliceMessages[0] success:nil failure:^(NSError *error) {
+        [roomFromAlicePOV sendTextMessage:aliceMessages[0] threadId:nil success:nil failure:^(NSError *error) {
             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
             [expectation fulfill];
         }];
@@ -1204,7 +1204,7 @@
         __block NSUInteger bobMessageCount = 1;
         __block NSUInteger samMessageCount = 1;
 
-        [roomFromBobPOV liveTimeline:^(MXEventTimeline *liveTimeline) {
+        [roomFromBobPOV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
             [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage, kMXEventTypeStringRoomEncrypted] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                 switch (bobMessageCount++)
@@ -1242,7 +1242,7 @@
             }];
         }];
 
-        [roomFromSamPOV liveTimeline:^(MXEventTimeline *liveTimeline) {
+        [roomFromSamPOV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
             [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage, kMXEventTypeStringRoomEncrypted] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
 
@@ -1285,7 +1285,7 @@
         }];
 
         // Let alice sends messages and control this test flow
-        [roomFromAlicePOV sendTextMessage:aliceMessages[0] success:^(NSString *eventId) {
+        [roomFromAlicePOV sendTextMessage:aliceMessages[0] threadId:nil success:^(NSString *eventId) {
 
             XCTFail(@"Sending of message #0 should fail due to unkwnown devices");
             [expectation fulfill];
@@ -1301,7 +1301,7 @@
 
 
             __block NSUInteger aliceMessageCount = 1;
-            [roomFromAlicePOV liveTimeline:^(MXEventTimeline *liveTimeline) {
+            [roomFromAlicePOV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
                 [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                     switch (aliceMessageCount++)
@@ -1311,7 +1311,7 @@
                             // Alice blacklists the unverified devices
                             aliceSession.crypto.globalBlacklistUnverifiedDevices = YES;
 
-                            [roomFromAlicePOV sendTextMessage:aliceMessages[2] success:nil failure:^(NSError *error) {
+                            [roomFromAlicePOV sendTextMessage:aliceMessages[2] threadId:nil success:nil failure:^(NSError *error) {
                                 XCTFail(@"Alice should be able to send message #2 - error: %@", error);
                                 [expectation fulfill];
                             }];
@@ -1324,7 +1324,7 @@
                             // Alice unblacklists the unverified devices
                             aliceSession.crypto.globalBlacklistUnverifiedDevices = NO;
 
-                            [roomFromAlicePOV sendTextMessage:aliceMessages[3] success:nil failure:^(NSError *error) {
+                            [roomFromAlicePOV sendTextMessage:aliceMessages[3] threadId:nil success:nil failure:^(NSError *error) {
                                 XCTFail(@"Alice should be able to send message #3 - error: %@", error);
                                 [expectation fulfill];
                             }];
@@ -1342,7 +1342,7 @@
                             NSString *bobDeviceId = [unknownDevices deviceIdsForUser:bobSession.myUser.userId][0];
                             [aliceSession.crypto setDeviceVerification:MXDeviceVerified forDevice:bobDeviceId ofUser:bobSession.myUser.userId success:^{
 
-                                [roomFromAlicePOV sendTextMessage:aliceMessages[4] success:nil failure:^(NSError *error) {
+                                [roomFromAlicePOV sendTextMessage:aliceMessages[4] threadId:nil success:nil failure:^(NSError *error) {
                                     XCTFail(@"Alice should be able to send message #4 - error: %@", error);
                                     [expectation fulfill];
                                 }];
@@ -1362,7 +1362,7 @@
                             [aliceSession.crypto setBlacklistUnverifiedDevicesInRoom:roomId blacklist:NO];
                             XCTAssertFalse([aliceSession.crypto isBlacklistUnverifiedDevicesInRoom:roomId]);
 
-                            [roomFromAlicePOV sendTextMessage:aliceMessages[5] success:nil failure:^(NSError *error) {
+                            [roomFromAlicePOV sendTextMessage:aliceMessages[5] threadId:nil success:nil failure:^(NSError *error) {
                                 XCTFail(@"Alice should be able to send message #5 - error: %@", error);
                                 [expectation fulfill];
                             }];
@@ -1381,7 +1381,7 @@
             // Alice marks the Bob and Sam devices as known (UNVERIFIED)
             [aliceSession.crypto setDevicesKnown:unknownDevices complete:^{
 
-                [roomFromAlicePOV sendTextMessage:aliceMessages[1] success:nil failure:^(NSError *error) {
+                [roomFromAlicePOV sendTextMessage:aliceMessages[1] threadId:nil success:nil failure:^(NSError *error) {
                     XCTFail(@"Alice should be able to send message #1 - error: %@", error);
                     [expectation fulfill];
                 }];
@@ -1455,8 +1455,8 @@
                 
                 NSString *secondEventBody = localEchoEvent.content[kMXMessageBodyKey];
                 NSString *secondEventFormattedBody = localEchoEvent.content[@"formatted_body"];
-                NSString *secondEventRelatesToEventId = localEchoEvent.content[@"m.relates_to"][@"m.in_reply_to"][@"event_id"];
-                NSString *secondWiredEventRelatesToEventId = localEchoEvent.wireContent[@"m.relates_to"][@"m.in_reply_to"][@"event_id"];
+                NSString *secondEventRelatesToEventId = localEchoEvent.content[kMXEventRelationRelatesToKey][@"m.in_reply_to"][@"event_id"];
+                NSString *secondWiredEventRelatesToEventId = localEchoEvent.wireContent[kMXEventRelationRelatesToKey][@"m.in_reply_to"][@"event_id"];
                 
                 NSString *permalinkToUser = [MXTools permalinkToUserWithUserId:firstEventSender];
                 NSString *permalinkToEvent = [MXTools permalinkToEvent:firstEventId inRoom:roomId];
@@ -1488,8 +1488,8 @@
                 
                 NSString *thirdEventBody = localEchoEvent.content[kMXMessageBodyKey];
                 NSString *thirdEventFormattedBody = localEchoEvent.content[@"formatted_body"];
-                NSString *thirdEventRelatesToEventId = localEchoEvent.content[@"m.relates_to"][@"m.in_reply_to"][@"event_id"];
-                NSString *thirdWiredEventRelatesToEventId = localEchoEvent.wireContent[@"m.relates_to"][@"m.in_reply_to"][@"event_id"];
+                NSString *thirdEventRelatesToEventId = localEchoEvent.content[kMXEventRelationRelatesToKey][@"m.in_reply_to"][@"event_id"];
+                NSString *thirdWiredEventRelatesToEventId = localEchoEvent.wireContent[kMXEventRelationRelatesToKey][@"m.in_reply_to"][@"event_id"];
                 
                 NSString *permalinkToUser = [MXTools permalinkToUserWithUserId:secondEventSender];
                 NSString *permalinkToEvent = [MXTools permalinkToEvent:secondEventId inRoom:roomId];
@@ -1523,13 +1523,13 @@
             else if (messageCountFromAlice == 2)
             {
                 secondEventId = event.eventId;
-                NSString *secondWiredEventRelatesToEventId = event.wireContent[@"m.relates_to"][@"m.in_reply_to"][@"event_id"];
+                NSString *secondWiredEventRelatesToEventId = event.wireContent[kMXEventRelationRelatesToKey][@"m.in_reply_to"][@"event_id"];
 
                 XCTAssertEqualObjects(secondWiredEventRelatesToEventId, firstEventId);
             }
             else
             {
-                NSString *thirdWiredEventRelatesToEventId = event.wireContent[@"m.relates_to"][@"m.in_reply_to"][@"event_id"];
+                NSString *thirdWiredEventRelatesToEventId = event.wireContent[kMXEventRelationRelatesToKey][@"m.in_reply_to"][@"event_id"];
 
                 XCTAssertEqualObjects(thirdWiredEventRelatesToEventId, secondEventId);
                 
@@ -1538,7 +1538,7 @@
         }];
         
         // Send first message
-        [roomFromBobPOV sendTextMessage:firstMessage formattedText:firstFormattedMessage localEcho:nil success:^(NSString *eventId) {
+        [roomFromBobPOV sendTextMessage:firstMessage formattedText:firstFormattedMessage threadId:nil localEcho:nil success:^(NSString *eventId) {
             MXLogDebug(@"Send first message with success");
         } failure:^(NSError *error) {
             XCTFail(@"The request should not fail - NSError: %@", error);
@@ -1560,7 +1560,7 @@
         [aliceSession.matrixRestClient setRoomHistoryVisibility:roomId historyVisibility:kMXRoomHistoryVisibilityInvited success:^{
             
             // Send a first message whereas Bob is invited
-            [roomFromAlicePOV sendTextMessage:messageFromAlice success:nil failure:^(NSError *error) {
+            [roomFromAlicePOV sendTextMessage:messageFromAlice threadId:nil success:nil failure:^(NSError *error) {
                 XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                 [expectation fulfill];
             }];
@@ -1602,12 +1602,12 @@
         [aliceSession.matrixRestClient setRoomHistoryVisibility:roomId historyVisibility:kMXRoomHistoryVisibilityJoined success:^{
 
             // Send a first message whereas Bob is invited
-            [roomFromAlicePOV sendTextMessage:messageFromAlice success:^(NSString *eventId) {
+            [roomFromAlicePOV sendTextMessage:messageFromAlice threadId:nil success:^(NSString *eventId) {
 
                 // Make sure Bob joins room after the first message was sent.
                 [bobSession joinRoom:roomId viaServers:nil success:^(MXRoom *room) {
                     // Send a second message to Bob who just joins the room
-                    [roomFromAlicePOV sendTextMessage:message2FromAlice success:nil failure:^(NSError *error) {
+                    [roomFromAlicePOV sendTextMessage:message2FromAlice threadId:nil success:nil failure:^(NSError *error) {
                         XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                         [expectation fulfill];
                     }];
@@ -1660,7 +1660,7 @@
             [bobSession pause];
             
             // - Alice sends a message
-            [roomFromAlicePOV sendTextMessage:messageFromAlice success:^(NSString *eventId) {
+            [roomFromAlicePOV sendTextMessage:messageFromAlice threadId:nil success:^(NSString *eventId) {
                 
                 // - Bob can get the message using /event API
                 [bobSession eventWithEventId:eventId inRoom:roomId success:^(MXEvent *event) {
@@ -1777,7 +1777,7 @@
         XCTAssert(roomFromBobPOV.summary.isEncrypted);
         XCTAssert(roomFromAlicePOV.summary.isEncrypted);
 
-        [roomFromBobPOV liveTimeline:^(MXEventTimeline *liveTimeline) {
+        [roomFromBobPOV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
             [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                 // Try to decrypt the event again
@@ -1801,7 +1801,7 @@
             }];
         }];
 
-        [roomFromAlicePOV sendTextMessage:messageFromAlice success:nil failure:^(NSError *error) {
+        [roomFromAlicePOV sendTextMessage:messageFromAlice threadId:nil success:nil failure:^(NSError *error) {
             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
             [expectation fulfill];
         }];
@@ -1825,7 +1825,7 @@
         }];
 
 
-        [roomFromBobPOV liveTimeline:^(MXEventTimeline *liveTimeline) {
+        [roomFromBobPOV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
             [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                 XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messageFromAlice senderSession:aliceSession]);
@@ -1859,7 +1859,7 @@
             }];
         }];
 
-        [roomFromAlicePOV sendTextMessage:messageFromAlice success:nil failure:^(NSError *error) {
+        [roomFromAlicePOV sendTextMessage:messageFromAlice threadId:nil success:nil failure:^(NSError *error) {
             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
             [expectation fulfill];
         }];
@@ -1882,7 +1882,7 @@
             toDeviceEvent = notif.userInfo[kMXSessionNotificationEventKey];
         }];
 
-        [roomFromBobPOV liveTimeline:^(MXEventTimeline *liveTimeline) {
+        [roomFromBobPOV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
             [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                 XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messageFromAlice senderSession:aliceSession]);
@@ -1918,7 +1918,7 @@
             }];
         }];
 
-        [roomFromAlicePOV sendTextMessage:messageFromAlice success:nil failure:^(NSError *error) {
+        [roomFromAlicePOV sendTextMessage:messageFromAlice threadId:nil success:nil failure:^(NSError *error) {
             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
             [expectation fulfill];
         }];
@@ -1946,7 +1946,7 @@
         
         // - Alice sends a 1st message with a 1st megolm session
         MXRoom *roomFromAlicePOV = [aliceSession roomWithRoomId:roomId];
-        [roomFromAlicePOV sendTextMessage:@"0" success:^(NSString *eventId) {
+        [roomFromAlicePOV sendTextMessage:@"0" threadId:nil success:^(NSString *eventId) {
             
             //  - Store the olm session between A&B devices
             // Let us pickle our session with bob here so we can later unpickle it
@@ -1965,7 +1965,7 @@
             
                     // - Alice sends a 2nd message with a 2nd megolm session
                     MXRoom *roomFromAlicePOV1 = [aliceSession1 roomWithRoomId:roomId];
-                    [roomFromAlicePOV1 sendTextMessage:@"11" success:^(NSString *eventId) {
+                    [roomFromAlicePOV1 sendTextMessage:@"11" threadId:nil success:^(NSString *eventId) {
                         
                         
                         // - Simulate Alice using a backup of her OS and make her crypto state like after the first message
@@ -1983,7 +1983,7 @@
                                 
                                 // - Alice sends a 3rd message with a 3rd megolm session but a wedged olm session
                                 MXRoom *roomFromAlicePOV2 = [aliceSession2 roomWithRoomId:roomId];
-                                [roomFromAlicePOV2 sendTextMessage:@"222" success:nil failure:^(NSError *error) {
+                                [roomFromAlicePOV2 sendTextMessage:@"222" threadId:nil success:nil failure:^(NSError *error) {
                                     XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                                     [expectation fulfill];
                                 }];
@@ -2074,11 +2074,11 @@
         dispatch_async(dispatch_get_main_queue(), ^{
             [bobSession pause];
 
-            [roomFromAlicePOV sendTextMessage:messageFromAlice success:^(NSString *eventId) {
+            [roomFromAlicePOV sendTextMessage:messageFromAlice threadId:nil success:^(NSString *eventId) {
 
                 __block BOOL testDone = NO;
 
-                [roomFromBobPOV liveTimeline:^(MXEventTimeline *liveTimeline) {
+                [roomFromBobPOV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
                     [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                         XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messageFromAlice senderSession:aliceSession]);
@@ -2117,7 +2117,7 @@
 
                 [bobSession joinRoom:roomFromAlicePOV.roomId viaServers:nil success:^(MXRoom *roomFromBobPOV) {
 
-                    [roomFromBobPOV liveTimeline:^(MXEventTimeline *liveTimeline) {
+                    [roomFromBobPOV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
                         [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                             [liveTimeline removeAllListeners];
@@ -2139,7 +2139,7 @@
                                         [bobSession2 joinRoom:roomFromAlicePOV.roomId viaServers:nil success:^(MXRoom *roomFromBobPOV2) {
 
                                             // Bob should be able to receive the message from Alice
-                                            [roomFromBobPOV2 liveTimeline:^(MXEventTimeline *liveTimeline) {
+                                            [roomFromBobPOV2 liveTimeline:^(id<MXEventTimeline> liveTimeline) {
                                                 [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage, kMXEventTypeStringRoomEncrypted] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                                                     XCTAssert(event.clearEvent, @"Bob must be able to decrypt this new message on his new device");
@@ -2151,7 +2151,7 @@
                                                 }];
                                             }];
 
-                                            [roomFromAlicePOV sendTextMessage:message2FromAlice success:nil failure:^(NSError *error) {
+                                            [roomFromAlicePOV sendTextMessage:message2FromAlice threadId:nil success:nil failure:^(NSError *error) {
                                                 XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                                                 [expectation fulfill];
                                             }];
@@ -2176,7 +2176,7 @@
                         }];
                     }];
 
-                    [roomFromAlicePOV sendTextMessage:messageFromAlice success:nil failure:^(NSError *error) {
+                    [roomFromAlicePOV sendTextMessage:messageFromAlice threadId:nil success:nil failure:^(NSError *error) {
                         XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                         [expectation fulfill];
                     }];
@@ -2236,7 +2236,7 @@
 
                                 NSString *messageFromBob = @"Hello Alice with new device!";
 
-                                [roomFromAlice2POV liveTimeline:^(MXEventTimeline *liveTimeline) {
+                                [roomFromAlice2POV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
                                     [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage, kMXEventTypeStringRoomEncrypted] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                                         XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:newRoomId clearMessage:messageFromBob senderSession:bobSession]);
@@ -2246,7 +2246,7 @@
                                     }];
                                 }];
 
-                                [roomFromBobPOV sendTextMessage:messageFromBob success:nil failure:^(NSError *error) {
+                                [roomFromBobPOV sendTextMessage:messageFromBob threadId:nil success:nil failure:^(NSError *error) {
                                     XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                                     [expectation fulfill];
                                 }];
@@ -2303,7 +2303,7 @@
 
             [bobSession joinRoom:roomFromAlicePOV.roomId viaServers:nil success:^(MXRoom *room) {
 
-                [roomFromAlicePOV sendTextMessage:messageFromAlice success:^(NSString *eventId) {
+                [roomFromAlicePOV sendTextMessage:messageFromAlice threadId:nil success:^(NSString *eventId) {
 
                     // Make Bob come back to the room with a new device
                     // Clear his crypto store
@@ -2323,7 +2323,7 @@
                             // Turn the crypto ON in the room
                             [roomFromAlicePOV enableEncryptionWithAlgorithm:kMXCryptoMegolmAlgorithm success:^{
 
-                                [roomFromNewBobPOV liveTimeline:^(MXEventTimeline *liveTimeline) {
+                                [roomFromNewBobPOV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
                                     [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage, kMXEventTypeStringRoomEncrypted] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                                         XCTAssert(event.clearEvent, @"Bob must be able to decrypt message from his new device after the crypto is ON");
@@ -2339,7 +2339,7 @@
                                 }];
 
                                 // Post an encrypted message
-                                [roomFromAlicePOV sendTextMessage:encryptedMessageFromAlice success:nil failure:^(NSError *error) {
+                                [roomFromAlicePOV sendTextMessage:encryptedMessageFromAlice threadId:nil success:nil failure:^(NSError *error) {
                                     XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                                     [expectation fulfill];
                                 }];
@@ -2533,7 +2533,7 @@
 
                     NSMutableArray *encryptedEvents = [NSMutableArray array];
 
-                    [roomFromBobPOV liveTimeline:^(MXEventTimeline *liveTimeline) {
+                    [roomFromBobPOV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
                         [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomEncrypted] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                             [encryptedEvents addObject:event];
@@ -2614,7 +2614,7 @@
 
                     NSMutableArray *encryptedEvents = [NSMutableArray array];
 
-                    [roomFromBobPOV liveTimeline:^(MXEventTimeline *liveTimeline) {
+                    [roomFromBobPOV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
                         [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomEncrypted] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                             [encryptedEvents addObject:event];
@@ -2738,18 +2738,18 @@
 
             // 4 - Send a message to a room with aliceSession2
             NSString *messageFromAlice = @"Hello I'm still Alice!";
-            [roomFromAlice2POV sendTextMessage:messageFromAlice success:nil failure:^(NSError *error) {
+            [roomFromAlice2POV sendTextMessage:messageFromAlice threadId:nil success:nil failure:^(NSError *error) {
                 XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                 [expectation fulfill];
             }];
 
-            [roomFromAlice2POV liveTimeline:^(MXEventTimeline *liveTimeline) {
+            [roomFromAlice2POV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
                 [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage, kMXEventTypeStringRoomEncrypted] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                     XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messageFromAlice senderSession:aliceSession2]);
 
                     // 5 - Instantiante a MXRestclient, alice1MatrixRestClient
-                    MXRestClient *alice1MatrixRestClient = [[MXRestClient alloc] initWithCredentials:alice1Credentials andOnUnrecognizedCertificateBlock:nil];
+                    MXRestClient *alice1MatrixRestClient = [[MXRestClient alloc] initWithCredentials:alice1Credentials andOnUnrecognizedCertificateBlock:nil andPersistentTokenDataHandler:nil andUnauthenticatedHandler:nil];
                     [matrixSDKTestsData retain:alice1MatrixRestClient];
 
                     // 6 - Make alice1MatrixRestClient make a fake room key request for the message sent at step #4
@@ -2853,14 +2853,13 @@
 
         NSString *message = @"message";
         NSString *message2 = @"message2";
-        NSString *message3 = @"message3";
 
         MXRoom *roomFromAlicePOV = [aliceSession roomWithRoomId:roomId];
 
         XCTAssert(roomFromAlicePOV.summary.isEncrypted);
 
         __block NSUInteger messageCount = 0;
-        [roomFromAlicePOV liveTimeline:^(MXEventTimeline *liveTimeline) {
+        [roomFromAlicePOV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
 
             [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
@@ -2875,7 +2874,7 @@
                         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0.5 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
 
                             // - 3- Alice sends a second message
-                            [roomFromAlicePOV sendTextMessage:message2 success:nil failure:^(NSError *error) {
+                            [roomFromAlicePOV sendTextMessage:message2 threadId:nil success:nil failure:^(NSError *error) {
                                 XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                                 [expectation fulfill];
                             }];
@@ -2902,7 +2901,7 @@
         }];
 
         // - 1- Alice sends a message in a room
-        [roomFromAlicePOV sendTextMessage:message success:nil failure:^(NSError *error) {
+        [roomFromAlicePOV sendTextMessage:message threadId:nil success:nil failure:^(NSError *error) {
             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
             [expectation fulfill];
         }];
@@ -3086,7 +3085,7 @@
             
             [roomFromAlicePOV removeListener:listener];
             
-            [roomFromAlicePOV liveTimeline:^(MXEventTimeline *liveTimeline) {
+            [roomFromAlicePOV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
                 
                 // -> The room should be still marked as encrypted
                 XCTAssertTrue(liveTimeline.state.isEncrypted);
@@ -3094,7 +3093,7 @@
                 XCTAssertTrue(roomFromAlicePOV.summary.isEncrypted);
                 
                 // -> It must be impossible to send a messages (because the algorithm is not supported)
-                [roomFromAlicePOV sendTextMessage:@"An encrypted message" success:^(NSString *eventId) {
+                [roomFromAlicePOV sendTextMessage:@"An encrypted message" threadId:nil success:^(NSString *eventId) {
                     XCTFail(@"It should not possible to send encrypted message anymore");
                 } failure:^(NSError *error) {
 
@@ -3107,7 +3106,7 @@
                         XCTAssertTrue(roomFromAlicePOV.summary.isEncrypted);
                         
                         // -> It must be possible to send message again
-                        [roomFromAlicePOV sendTextMessage:@"An encrypted message" success:nil failure:^(NSError *error) {
+                        [roomFromAlicePOV sendTextMessage:@"An encrypted message" threadId:nil success:nil failure:^(NSError *error) {
                             XCTFail(@"The request should not fail - NSError: %@", error);
                             [expectation fulfill];
                         }];

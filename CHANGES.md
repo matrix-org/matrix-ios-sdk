@@ -1,3 +1,23 @@
+## Changes in 0.21.0 (2022-01-25)
+
+✨ Features
+
+- MXRoomSummaryStore & MXRoomListDataManager: Implementation with Core Data. ([#4384](https://github.com/vector-im/element-ios/issues/4384))
+- Allow editing poll start events. ([#5114](https://github.com/vector-im/element-ios/issues/5114))
+- Added static location sharing sending and rendering support. ([#5298](https://github.com/vector-im/element-ios/issues/5298))
+
+🙌 Improvements
+
+- MXCoreDataRoomSummaryStore: Use nested contexts to better manage main context updates. ([#5412](https://github.com/vector-im/element-ios/issues/5412))
+- Only count joined rooms when profiling sync performance. ([#5429](https://github.com/vector-im/element-ios/issues/5429))
+
+🐛 Bugfixes
+
+- Fixes DTMF(dial tones) during voice calls. ([#5375](https://github.com/vector-im/element-ios/issues/5375))
+- MXCoreDataRoomListDataFetcher: Update fetchRequest if properties changed before fetching the first page. ([#5377](https://github.com/vector-im/element-ios/issues/5377))
+- MXSession: Fix remove room race case. ([#5412](https://github.com/vector-im/element-ios/issues/5412))
+
+
 ## Changes in 0.20.16 (2022-01-11)
 
 🙌 Improvements

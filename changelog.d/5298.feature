@@ -1,0 +1,1 @@
+Add .well-known parsing for tile server / map style configurations.

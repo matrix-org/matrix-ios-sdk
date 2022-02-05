@@ -18,6 +18,7 @@
 #import <Foundation/Foundation.h>
 
 @class MXLoginResponse;
+@class MXRefreshResponse;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -46,6 +47,16 @@ NS_ASSUME_NONNULL_BEGIN
  The access token to create a MXRestClient
  */
 @property (nonatomic, nullable) NSString *accessToken;
+
+/**
+ The timestamp in milliseconds for when the access token will expire
+ */
+@property (nonatomic) uint64_t accessTokenExpiresAt;
+
+/**
+ The refresh token, which can be used to obtain new access tokens. (optional)
+*/
+@property (nonatomic, nullable) NSString *refreshToken;
 
 /**
  The access token to create a MXIdentityServerRestClient

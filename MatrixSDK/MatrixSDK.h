@@ -98,7 +98,8 @@ FOUNDATION_EXPORT NSString *MatrixSDKVersion;
 #import "MXEventAnnotationChunk.h"
 #import "MXEventAnnotation.h"
 #import "MXEventReferenceChunk.h"
-
+#import "MXEventReplace.h"
+#import "MXInReplyTo.h"
 
 #import "MXReplyEventParser.h"
 

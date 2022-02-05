@@ -46,7 +46,7 @@
     return self;
 }
 
-- (NSArray<MXEvent *> *)nextEventsBatch:(NSUInteger)eventsCount
+- (NSArray<MXEvent *> *)nextEventsBatch:(NSUInteger)eventsCount threadId:(NSString *)threadId
 {
     NSMutableArray *nextEvents;
     MXEvent *event;
