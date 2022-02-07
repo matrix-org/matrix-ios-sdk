@@ -1544,7 +1544,15 @@ typedef void (^MXOnResumeDone)(void);
         int32_t code = (int32_t)error.code;
 
         if ([error.domain isEqualToString:NSURLErrorDomain]
-            && code == kCFURLErrorTimedOut && serverTimeout == 0)
+            && code == kCFURLErrorCancelled)
+        {
+            // Individual requests sometimes get correctly cancelled (e.g. the screen which initiated it is deallocated),
+            // and such cancellation should not alter the session in any way, nor re-trigger the sync (as with other error types).
+            // It is still useful to log the cancellation though.
+            MXLogDebug(@"[MXSession] A single request has been cancelled in state: %@", [MXTools readableSessionState:_state]);
+        }
+        else if ([error.domain isEqualToString:NSURLErrorDomain]
+                 && code == kCFURLErrorTimedOut && serverTimeout == 0)
         {
             MXLogError(@"[MXSession] The connection has been timeout.");
             // The reconnection attempt failed on timeout: there is no data to retrieve from server
