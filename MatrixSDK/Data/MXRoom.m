@@ -2713,7 +2713,9 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
         {
             [self.summary resetLastMessage:nil failure:nil commit:YES];
         }
-    } failure:nil];
+    } failure:^(NSError *error) {
+        MXLogError(@"[MXRoom] removeAllOutgoingMessages: event fetch failed: %@", error);
+    }];
 }
 
 - (void)removeOutgoingMessage:(NSString*)outgoingMessageEventId
