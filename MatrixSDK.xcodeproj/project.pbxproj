@@ -731,6 +731,10 @@
 		9274AFE81EE580240009BEB6 /* MXCallKitAdapter.h in Headers */ = {isa = PBXBuildFile; fileRef = 9274AFE61EE580240009BEB6 /* MXCallKitAdapter.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		9274AFE91EE580240009BEB6 /* MXCallKitAdapter.m in Sources */ = {isa = PBXBuildFile; fileRef = 9274AFE71EE580240009BEB6 /* MXCallKitAdapter.m */; };
 		9CC8EFC1457B94FB58DFF1F7 /* libPods-MatrixSDK-MatrixSDK-macOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FA84A2BE7767F3645CAEC2AF /* libPods-MatrixSDK-MatrixSDK-macOS.a */; };
+		A780624E27B2CE74005780C0 /* FileManager+Backup.swift in Sources */ = {isa = PBXBuildFile; fileRef = A780624C27B2CE74005780C0 /* FileManager+Backup.swift */; };
+		A780624F27B2CE74005780C0 /* FileManager+Backup.swift in Sources */ = {isa = PBXBuildFile; fileRef = A780624C27B2CE74005780C0 /* FileManager+Backup.swift */; };
+		A780625027B2CE74005780C0 /* FileManager+AppGroupContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A780624D27B2CE74005780C0 /* FileManager+AppGroupContainer.swift */; };
+		A780625127B2CE74005780C0 /* FileManager+AppGroupContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A780624D27B2CE74005780C0 /* FileManager+AppGroupContainer.swift */; };
 		A816247C25F60C7700A46F05 /* MXDeviceListOperationsPoolUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A816247B25F60C7700A46F05 /* MXDeviceListOperationsPoolUnitTests.swift */; };
 		A816248525F60D0300A46F05 /* MXDeviceListOperationsPoolUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A816247B25F60C7700A46F05 /* MXDeviceListOperationsPoolUnitTests.swift */; };
 		B105CD9D261E0B70006EB204 /* MXSpaceChildrenSummary.swift in Sources */ = {isa = PBXBuildFile; fileRef = B105CD9C261E0B70006EB204 /* MXSpaceChildrenSummary.swift */; };
@@ -2299,6 +2303,8 @@
 		92634B811EF2E3C400DB9F60 /* MXCallKitConfiguration.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXCallKitConfiguration.m; sourceTree = "<group>"; };
 		9274AFE61EE580240009BEB6 /* MXCallKitAdapter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXCallKitAdapter.h; sourceTree = "<group>"; };
 		9274AFE71EE580240009BEB6 /* MXCallKitAdapter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXCallKitAdapter.m; sourceTree = "<group>"; };
+		A780624C27B2CE74005780C0 /* FileManager+Backup.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "FileManager+Backup.swift"; sourceTree = "<group>"; };
+		A780624D27B2CE74005780C0 /* FileManager+AppGroupContainer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "FileManager+AppGroupContainer.swift"; sourceTree = "<group>"; };
 		A816247B25F60C7700A46F05 /* MXDeviceListOperationsPoolUnitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXDeviceListOperationsPoolUnitTests.swift; sourceTree = "<group>"; };
 		B105CD9C261E0B70006EB204 /* MXSpaceChildrenSummary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXSpaceChildrenSummary.swift; sourceTree = "<group>"; };
 		B105CDD4261F54C8006EB204 /* MXSpaceChildContent.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXSpaceChildContent.h; sourceTree = "<group>"; };
@@ -4647,6 +4653,8 @@
 				321CFDED225264C4004D31DF /* NSArray+MatrixSDK.m */,
 				EC11658B270F3ABF0089FA56 /* RLMRealm+MatrixSDK.h */,
 				EC11658C270F3ABF0089FA56 /* RLMRealm+MatrixSDK.m */,
+				A780624D27B2CE74005780C0 /* FileManager+AppGroupContainer.swift */,
+				A780624C27B2CE74005780C0 /* FileManager+Backup.swift */,
 			);
 			path = Categories;
 			sourceTree = "<group>";
@@ -5838,6 +5846,7 @@
 				32D2CC0323422462002BD8CA /* MX3PidAddSession.m in Sources */,
 				3283F7791EAF30F700C1688C /* MXBugReportRestClient.m in Sources */,
 				32B0E33B23A2989A0054FF1A /* MXEventReferenceChunk.m in Sources */,
+				A780625027B2CE74005780C0 /* FileManager+AppGroupContainer.swift in Sources */,
 				9274AFE91EE580240009BEB6 /* MXCallKitAdapter.m in Sources */,
 				3274538C23FD918800438328 /* MXKeyVerificationByToDeviceRequest.m in Sources */,
 				ECB6FA952683811800A941E4 /* MXiOSAudioOutputRouter.swift in Sources */,
@@ -6023,6 +6032,7 @@
 				C6F9358B1E5B3BE600FC34BF /* MXJSONModels.swift in Sources */,
 				EC8A539725B1BC77004E0802 /* MXCallReplacesEventContent.m in Sources */,
 				32FA10C21FA1C9EE00E54233 /* MXOutgoingRoomKeyRequestManager.m in Sources */,
+				A780624E27B2CE74005780C0 /* FileManager+Backup.swift in Sources */,
 				323547D42226D3F500F15F94 /* MXWellKnown.m in Sources */,
 				320DFDE519DD99B60068622A /* MXRestClient.m in Sources */,
 			);
@@ -6339,6 +6349,7 @@
 				EC1165B727107E330089FA56 /* MXStoreRoomListDataCounts.swift in Sources */,
 				B14EF2392397E90400758AF0 /* MXMediaManager.m in Sources */,
 				B14EF23A2397E90400758AF0 /* MXHTTPOperation.m in Sources */,
+				A780625127B2CE74005780C0 /* FileManager+AppGroupContainer.swift in Sources */,
 				B14EF23B2397E90400758AF0 /* MXKeyBackupData.m in Sources */,
 				B14EF23C2397E90400758AF0 /* MXJSONModels.m in Sources */,
 				EC8A538E25B1BC77004E0802 /* MXCallSessionDescription.m in Sources */,
@@ -6524,6 +6535,7 @@
 				B14EF2912397E90400758AF0 /* MXOutgoingRoomKeyRequestManager.m in Sources */,
 				B14EF2922397E90400758AF0 /* MXWellKnown.m in Sources */,
 				B1A026F926161EF5001AADFF /* MXSpaceChildSummaryResponse.m in Sources */,
+				A780624F27B2CE74005780C0 /* FileManager+Backup.swift in Sources */,
 				B14EF2932397E90400758AF0 /* MXRestClient.m in Sources */,
 				EC60EDD3265CFECC00B39A4E /* MXRoomSyncSummary.m in Sources */,
 			);

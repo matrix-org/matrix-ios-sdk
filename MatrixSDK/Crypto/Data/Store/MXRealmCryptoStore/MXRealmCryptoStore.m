@@ -1802,7 +1802,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
     if (![NSFileManager.defaultManager fileExistsAtPath:fileFolderURL.path])
     {
         MXLogDebug(@"[MXRealmCryptoStore] ensurePathExistenceForFileAtFileURL: Create full path hierarchy for %@", fileURL);
-        [[NSFileManager defaultManager] createDirectoryExcludedFromBackupAtPath:fileFolderURL.path error:nil ];
+        [[NSFileManager defaultManager] createDirectoryExcludedFromBackupAtPath:fileFolderURL.path error:nil];
     }
 }
 
