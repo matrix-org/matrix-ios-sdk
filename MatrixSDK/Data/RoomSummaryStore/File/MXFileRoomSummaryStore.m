@@ -15,7 +15,6 @@
 //
 
 #import "MXFileRoomSummaryStore.h"
-#import "MXSDKOptions.h"
 #import "MXTools.h"
 #import "MatrixSDKSwiftHeader.h"
 

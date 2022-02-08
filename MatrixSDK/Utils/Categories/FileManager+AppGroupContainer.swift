@@ -16,7 +16,7 @@
 
 import Foundation
 
-internal extension FileManager {
+public extension FileManager {
     
     /**
      Get the url of the primary Matrix application group container.
