@@ -46,13 +46,13 @@ public class MXCoreDataRoomSummaryStore: NSObject {
         }
         
         var cachePath: URL!
-        if let appGroupIdentifier = MXSDKOptions.sharedInstance().applicationGroupIdentifier {
-            cachePath = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupIdentifier)
+        if let container = FileManager.default.applicationGroupContainerURL() {
+            cachePath = container
         } else {
             cachePath = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first
         }
         let folderUrl = cachePath.appendingPathComponent(Constants.folderName).appendingPathComponent(userId)
-        try? FileManager.default.createDirectory(at: folderUrl, withIntermediateDirectories: true, attributes: nil)
+        try? FileManager.default.createDirectoryExcludedFromBackup(at: folderUrl)
         return folderUrl.appendingPathComponent(Constants.storeFileName)
     }()
     private static var managedObjectModel: NSManagedObjectModel = {
