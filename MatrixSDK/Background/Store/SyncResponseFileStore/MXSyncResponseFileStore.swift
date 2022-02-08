@@ -178,10 +178,7 @@ public class MXSyncResponseFileStore: NSObject {
     }
     
     private func deleteSyncResponseId(id: String) {
-        var metadata = readMetaData()
-        metadata.syncResponseIds.removeAll(where: { $0 == id })
-        metadata.outdatedSyncResponseIds.removeAll(where: { $0 == id })
-        saveMetaData(metadata)
+        deleteSyncResponseIds(ids: [id])
     }
 
     private func deleteSyncResponseIds(ids: [String]) {
