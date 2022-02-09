@@ -153,7 +153,7 @@ MXAuthAction;
 -(id)initWithCredentials:(MXCredentials*)inCredentials
 andOnUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock
 {
-    return [self initWithCredentials:credentials andOnUnrecognizedCertificateBlock:onUnrecognizedCertBlock andPersistentTokenDataHandler:nil andUnauthenticatedHandler:nil];
+    return [self initWithCredentials:inCredentials andOnUnrecognizedCertificateBlock:onUnrecognizedCertBlock andPersistentTokenDataHandler:nil andUnauthenticatedHandler:nil];
 }
 
 -(id)initWithCredentials:(MXCredentials*)inCredentials
