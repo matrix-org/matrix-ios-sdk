@@ -99,6 +99,7 @@ internal class MXCoreDataRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
             properties.append(property)
         }
         request.propertiesToFetch = properties
+        //  when specific properties set, use dictionary result type for issues seen mostly on iOS 12 devices
         request.resultType = .dictionaryResultType
         var result: MXRoomListDataCounts? = nil
         do {

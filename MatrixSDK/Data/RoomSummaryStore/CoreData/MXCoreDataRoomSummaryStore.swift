@@ -121,6 +121,7 @@ public class MXCoreDataRoomSummaryStore: NSObject {
         request.includesSubentities = false
         //  only fetch room identifiers
         request.propertiesToFetch = [property]
+        //  when specific properties set, use dictionary result type for issues seen mostly on iOS 12 devices
         request.resultType = .dictionaryResultType
         var result: [String] = []
         moc.performAndWait {
