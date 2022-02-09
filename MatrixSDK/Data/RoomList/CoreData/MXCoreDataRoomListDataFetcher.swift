@@ -17,6 +17,11 @@
 import Foundation
 import CoreData
 
+private let kPropertyNameDataTypesInt: String = "s_dataTypesInt"
+private let kPropertyNameSentStatusInt: String = "s_sentStatusInt"
+private let kPropertyNameNotificationCount: String = "s_notificationCount"
+private let kPropertyNameHighlightCount: String = "s_highlightCount"
+
 internal typealias MXRoomSummaryCoreDataContextableStore = MXRoomSummaryStore & CoreDataContextable
 
 @objcMembers
@@ -77,13 +82,13 @@ internal class MXCoreDataRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
         guard fetchOptions.paginationOptions != .none else {
             return nil
         }
-        let request = MXRoomSummaryMO.typedFetchRequest()
+        let request = MXRoomSummaryMO.genericFetchRequest()
         request.predicate = filterPredicate(for: filterOptions)
         let propertyNames: [String] = [
-            "s_dataTypesInt",
-            "s_sentStatusInt",
-            "s_notificationCount",
-            "s_highlightCount"
+            kPropertyNameDataTypesInt,
+            kPropertyNameSentStatusInt,
+            kPropertyNameNotificationCount,
+            kPropertyNameHighlightCount
         ]
         var properties: [NSPropertyDescription] = []
         
@@ -94,14 +99,19 @@ internal class MXCoreDataRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
             properties.append(property)
         }
         request.propertiesToFetch = properties
+        //  when specific properties set, use dictionary result type for issues seen mostly on iOS 12 devices
+        request.resultType = .dictionaryResultType
+        var result: MXRoomListDataCounts? = nil
         do {
-            let summaries = try store.mainManagedObjectContext.fetch(request)
-            return MXStoreRoomListDataCounts(withRooms: summaries,
-                                             total: nil)
+            if let dictionaries = try store.mainManagedObjectContext.fetch(request) as? [[String: Any]] {
+                let summaries = dictionaries.map { RoomSummaryForTotalCounts(withDictionary: $0) }
+                result = MXStoreRoomListDataCounts(withRooms: summaries,
+                                                   total: nil)
+            }
         } catch let error {
             MXLog.error("[MXCoreDataRoomListDataFetcher] failed to calculate total counts: \(error)")
-            return nil
         }
+        return result
     }
     
     internal init(session: MXSession?,
@@ -379,4 +389,71 @@ extension MXCoreDataRoomListDataFetcher: NSFetchedResultsControllerDelegate {
         }
     }
     
+}
+
+//  MARK: - RoomSummaryForTotalCounts
+
+/// Room summary implementation specific to total counts calculation.
+private class RoomSummaryForTotalCounts: NSObject, MXRoomSummaryProtocol {
+
+    var roomId: String = ""
+    var roomTypeString: String?
+    var roomType: MXRoomType = .room
+    var avatar: String?
+    var displayname: String?
+    var topic: String?
+    var creatorUserId: String = ""
+    var aliases: [String] = []
+    var joinRule: String? = kMXRoomJoinRuleInvite
+    var membership: MXMembership = .unknown
+    var membershipTransitionState: MXMembershipTransitionState = .unknown
+    var membersCount: MXRoomMembersCount = MXRoomMembersCount(members: 0, joined: 0, invited: 0)
+    var isConferenceUserRoom: Bool = false
+    var hiddenFromUser: Bool = false
+    var storedHash: UInt = 0
+    var lastMessage: MXRoomLastMessage?
+    var isEncrypted: Bool = false
+    var trust: MXUsersTrustLevelSummary?
+    var localUnreadEventCount: UInt = 0
+    var notificationCount: UInt
+    var highlightCount: UInt
+    var hasAnyUnread: Bool {
+        return localUnreadEventCount > 0
+    }
+    var hasAnyNotification: Bool {
+        return notificationCount > 0
+    }
+    var hasAnyHighlight: Bool {
+        return highlightCount > 0
+    }
+    var isDirect: Bool {
+        return isTyped(.direct)
+    }
+    var directUserId: String?
+    var others: [String: NSCoding]?
+    var favoriteTagOrder: String?
+    var dataTypes: MXRoomSummaryDataTypes
+
+    func isTyped(_ types: MXRoomSummaryDataTypes) -> Bool {
+        return (dataTypes.rawValue & types.rawValue) != 0
+    }
+
+    var sentStatus: MXRoomSummarySentStatus
+    var spaceChildInfo: MXSpaceChildInfo?
+    var parentSpaceIds: Set<String> = []
+
+    /// Initializer with a dictionary obtained by a fetch request, with result type `.dictionaryResultType`. Only parses some properties.
+    /// - Parameter dictionary: Dictionary object representing an `MXRoomSummaryMO` instance
+    init(withDictionary dictionary: [String: Any]) {
+        dataTypes = MXRoomSummaryDataTypes(rawValue: Int(dictionary[kPropertyNameDataTypesInt] as? Int64 ?? 0))
+        sentStatus = MXRoomSummarySentStatus(rawValue: UInt(dictionary[kPropertyNameSentStatusInt] as? Int16 ?? 0)) ?? .ok
+        notificationCount = UInt(dictionary[kPropertyNameNotificationCount] as? Int16 ?? 0)
+        highlightCount = UInt(dictionary[kPropertyNameHighlightCount] as? Int16 ?? 0)
+        super.init()
+    }
+
+    override var description: String {
+        return "<RoomSummaryForTotalCounts: \(roomId) \(String(describing: displayname))>"
+    }
+
 }
