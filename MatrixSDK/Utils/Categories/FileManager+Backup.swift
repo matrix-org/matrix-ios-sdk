@@ -25,7 +25,7 @@ public extension FileManager {
      */
     @objc func createDirectoryExcludedFromBackup(at url: URL) throws {
         try createDirectory(at: url, withIntermediateDirectories: true, attributes: nil)
-        try excludeFromBackup(url: url)
+        try excludeItemFromBackup(at: url)
     }
     
     /**
@@ -44,7 +44,7 @@ public extension FileManager {
      Note: some directories are excluded automatically if they are nested within `<AppHome>/Library/Caches/` or `<AppHome>/tmp/`
      see [details](https://developer.apple.com/documentation/foundation/optimizing_app_data_for_icloud_backup).
      */
-    @objc func excludeFromBackup(url: URL) throws {
+    @objc func excludeItemFromBackup(at url: URL) throws {
         try (url as NSURL).setResourceValue(true, forKey: .isExcludedFromBackupKey)
     }
     
@@ -64,7 +64,7 @@ public extension FileManager {
         
         for url in urls {
             do {
-                try excludeFromBackup(url: url)
+                try excludeItemFromBackup(at: url)
             } catch {
                 MXLog.debug("[FileManager+Backup]: Cannot exclude url from backup: \(error.localizedDescription)")
             }
@@ -94,7 +94,7 @@ public extension FileManager {
         
         for url in urls where isWritableFile(atPath: url.path) {
             do {
-                try excludeFromBackup(url: url)
+                try excludeItemFromBackup(at: url)
             } catch {
                 MXLog.debug("[FileManager+Backup]: Cannot exclude url from backup: \(error.localizedDescription)")
             }
