@@ -50,10 +50,7 @@ public class MXSpaceService: NSObject {
 
     // MARK: - Properties
 
-    private let spacesPerIdReadWriteQueue: DispatchQueue = {
-      let label = "org.matrix.sdk.MXSpaceService.spacesPerIdReadWriteQueue"
-      return DispatchQueue(label: label, attributes: .concurrent)
-    }()
+    private let spacesPerIdReadWriteQueue: DispatchQueue
 
     private unowned let session: MXSession
     
@@ -122,7 +119,11 @@ public class MXSpaceService: NSObject {
         self.processingQueue = DispatchQueue(label: "org.matrix.sdk.MXSpaceService.processingQueue", attributes: .concurrent)
         self.completionQueue = DispatchQueue.main
         self.sdkProcessingQueue = DispatchQueue.main
-        
+        self.spacesPerIdReadWriteQueue = DispatchQueue(
+          label: "org.matrix.sdk.MXSpaceService.spacesPerIdReadWriteQueue",
+          attributes: .concurrent
+        )
+
         super.init()
         
         self.registerNotificationObservers()
@@ -257,7 +258,7 @@ public class MXSpaceService: NSObject {
     /// - Returns: A MXSpace with the associated roomId or null if room doesn't exists or the room type is not space.
     public func getSpace(withId spaceId: String) -> MXSpace? {
         var space: MXSpace?
-        spacesPerIdReadWriteQueue.sync(flags: .barrier) {
+        spacesPerIdReadWriteQueue.sync {
            space = self.spacesPerId[spaceId]
         }
         if space == nil, let newSpace = self.session.room(withRoomId: spaceId)?.toSpace() {
@@ -513,7 +514,7 @@ public class MXSpaceService: NSObject {
                 }
 
                 var space: MXSpace?
-                self.spacesPerIdReadWriteQueue.sync(flags: .barrier) {
+                self.spacesPerIdReadWriteQueue.sync {
                     space = self.spacesPerId[room.roomId] ?? room.toSpace()
                 }
                 
