@@ -444,10 +444,10 @@ private class RoomSummaryForTotalCounts: NSObject, MXRoomSummaryProtocol {
     /// Initializer with a dictionary obtained by a fetch request, with result type `.dictionaryResultType`. Only parses some properties.
     /// - Parameter dictionary: Dictionary object representing an `MXRoomSummaryMO` instance
     init(withDictionary dictionary: [String: Any]) {
-        dataTypes = MXRoomSummaryDataTypes(rawValue: dictionary[kPropertyNameDataTypesInt] as? Int ?? 0)
-        sentStatus = MXRoomSummarySentStatus(rawValue: dictionary[kPropertyNameSentStatusInt] as? UInt ?? 0) ?? .ok
-        notificationCount = dictionary[kPropertyNameNotificationCount] as? UInt ?? 0
-        highlightCount = dictionary[kPropertyNameHighlightCount] as? UInt ?? 0
+        dataTypes = MXRoomSummaryDataTypes(rawValue: Int(dictionary[kPropertyNameDataTypesInt] as? Int64 ?? 0))
+        sentStatus = MXRoomSummarySentStatus(rawValue: UInt(dictionary[kPropertyNameSentStatusInt] as? Int16 ?? 0)) ?? .ok
+        notificationCount = UInt(dictionary[kPropertyNameNotificationCount] as? Int16 ?? 0)
+        highlightCount = UInt(dictionary[kPropertyNameHighlightCount] as? Int16 ?? 0)
         super.init()
     }
 
