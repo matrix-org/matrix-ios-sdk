@@ -262,6 +262,7 @@ NSString *const kMXMessageContentKeyExtensibleAssetTypeUser = @"m.self";
  */
 - (void)finalise
 {
+    _wireEventType = [MXTools eventType:_wireType];
     if (MXEventTypePresence == _wireEventType)
     {
         // Workaround: Presence events provided by the home server do not contain userId
@@ -383,9 +384,9 @@ NSString *const kMXMessageContentKeyExtensibleAssetTypeUser = @"m.self";
 - (MXEventContentRelatesTo *)relatesTo
 {
     MXEventContentRelatesTo *relatesTo;
-    if (self.content[@"m.relates_to"])
+    if (self.wireContent[kMXEventRelationRelatesToKey])
     {
-        MXJSONModelSetMXJSONModel(relatesTo, MXEventContentRelatesTo, self.content[@"m.relates_to"])
+        MXJSONModelSetMXJSONModel(relatesTo, MXEventContentRelatesTo, self.wireContent[kMXEventRelationRelatesToKey])
     }
     return relatesTo;
 }
@@ -499,7 +500,14 @@ NSString *const kMXMessageContentKeyExtensibleAssetTypeUser = @"m.self";
 
 - (BOOL)isReplyEvent
 {
-    return self.eventType == MXEventTypeRoomMessage && self.content[@"m.relates_to"][@"m.in_reply_to"][@"event_id"] != nil;
+    return self.eventType == MXEventTypeRoomMessage && self.relatesTo.inReplyTo.eventId != nil &&
+    //  add condition after new thread event fallbacks
+    (self.isInThread ? self.isReplyInThread : YES);
+}
+
+- (BOOL)isReplyInThread
+{
+    return [self.relatesTo.inReplyTo.renderIn containsObject:MXEventRelationTypeThread];
 }
 
 - (BOOL)isVoiceMessage
@@ -671,6 +679,7 @@ NSString *const kMXMessageContentKeyExtensibleAssetTypeUser = @"m.self";
     MXEvent *event = self;
     NSDictionary *newContentDict;
     MXJSONModelSetDictionary(newContentDict, replaceEvent.content[@"m.new_content"])
+    NSDictionary *oldRelatesTo = self.relatesTo.JSONDictionary;
     
     MXEventDecryptionResult *replaceEventDecryptionResult;
 
@@ -680,7 +689,11 @@ NSString *const kMXMessageContentKeyExtensibleAssetTypeUser = @"m.self";
         // For e2e, use the encrypted content from the replace event
         editedEventDict = [event.JSONDictionary mutableCopy];
         NSMutableDictionary *editedEventContentDict = [replaceEvent.wireContent mutableCopy];
-        [editedEventContentDict removeObjectForKey:@"m.relates_to"];
+        [editedEventContentDict removeObjectForKey:kMXEventRelationRelatesToKey];
+        if (oldRelatesTo)
+        {
+            editedEventContentDict[kMXEventRelationRelatesToKey] = oldRelatesTo;
+        }
         editedEventDict[@"content"] = editedEventContentDict;
         
         // Reuse its decryption data
@@ -917,11 +930,10 @@ NSString *const kMXMessageContentKeyExtensibleAssetTypeUser = @"m.self";
 
 - (BOOL)isInThread
 {
-    return self.eventType == MXEventTypeRoomMessage
-        && [self.relatesTo.relationType isEqualToString:MXEventRelationTypeThread];
+    return [self.relatesTo.relationType isEqualToString:MXEventRelationTypeThread];
 }
 
-- (NSString *)threadIdentifier
+- (NSString *)threadId
 {
     if (self.isInThread)
     {
@@ -952,7 +964,7 @@ NSString *const kMXMessageContentKeyExtensibleAssetTypeUser = @"m.self";
         MXJSONModelSetDictionary(clearEventJSON, decryptionResult.clearEvent);
         MXJSONModelSetDictionary(clearEventJSONContent, clearEventJSON[@"content"]);
 
-        if (clearEventJSONContent[@"m.new_content"] && !_wireContent[@"m.relates_to"])
+        if (clearEventJSONContent[@"m.new_content"] && !_wireContent[kMXEventRelationRelatesToKey])
         {
             // If the event has been edited, use the new content
             // This can be done only on client side
@@ -970,7 +982,7 @@ NSString *const kMXMessageContentKeyExtensibleAssetTypeUser = @"m.self";
 
         NSDictionary *decryptionClearEventJSON;
         NSDictionary *encryptedContentRelatesToJSON;
-        MXJSONModelSetDictionary(encryptedContentRelatesToJSON, _wireContent[@"m.relates_to"]);
+        MXJSONModelSetDictionary(encryptedContentRelatesToJSON, _wireContent[kMXEventRelationRelatesToKey]);
         
         // Add "m.relates_to" data from e2e event to the unencrypted content event
         if (encryptedContentRelatesToJSON)
@@ -978,7 +990,7 @@ NSString *const kMXMessageContentKeyExtensibleAssetTypeUser = @"m.self";
             NSMutableDictionary *decryptionClearEventUpdatedJSON = [clearEventJSON mutableCopy];
             NSMutableDictionary *clearEventContentUpdatedJSON = [decryptionClearEventUpdatedJSON[@"content"] mutableCopy];
             
-            clearEventContentUpdatedJSON[@"m.relates_to"] = encryptedContentRelatesToJSON;
+            clearEventContentUpdatedJSON[kMXEventRelationRelatesToKey] = encryptedContentRelatesToJSON;
             decryptionClearEventUpdatedJSON[@"content"] = [clearEventContentUpdatedJSON copy];
             decryptionClearEventJSON = [decryptionClearEventUpdatedJSON copy];
         }

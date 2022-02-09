@@ -266,7 +266,7 @@
     return nil;
 }
 
-- (NSUInteger)localUnreadEventCount:(NSString*)roomId withTypeIn:(NSArray*)types
+- (NSUInteger)localUnreadEventCount:(NSString*)roomId threadId:(NSString *)threadId withTypeIn:(NSArray*)types
 {
     // @TODO: This method is only logic which could be moved to MXRoom
     MXMemoryRoomStore* store = [self getOrCreateRoomStore:roomId];
@@ -280,12 +280,12 @@
         if (data)
         {
             // Check the current stored events (by ignoring oneself events)
-            NSArray *array = [store eventsAfter:data.eventId except:credentials.userId withTypeIn:[NSSet setWithArray:types]];
+            NSArray *array = [store eventsAfter:data.eventId threadId:threadId except:credentials.userId withTypeIn:[NSSet setWithArray:types]];
             
             // Check whether these unread events have not been redacted.
             for (MXEvent *event in array)
             {
-                if (event.redactedBecause == nil)
+                if (!event.isRedactedEvent)
                 {
                     count ++;
                 }

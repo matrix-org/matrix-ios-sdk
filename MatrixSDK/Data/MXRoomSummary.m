@@ -333,7 +333,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
 - (MXHTTPOperation *)fetchLastMessageWithMaxServerPaginationCount:(NSUInteger)maxServerPaginationCount
                                                        onComplete:(void (^)(void))onComplete
                                                           failure:(void (^)(NSError *))failure
-                                                         timeline:(MXEventTimeline *)timeline
+                                                         timeline:(id<MXEventTimeline>)timeline
                                                         operation:(MXHTTPOperation *)operation commit:(BOOL)commit
 {
     // Sanity checks
@@ -356,9 +356,9 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     // Get the room timeline
     if (!timeline)
     {
-        [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+        [room liveTimeline:^(id<MXEventTimeline> liveTimeline) {
             // Use a copy of the live timeline to avoid any conflicts with listeners to the unique live timeline
-            MXEventTimeline *timeline = [liveTimeline copy];
+            id<MXEventTimeline> timeline = [liveTimeline copyWithZone:nil];
             [timeline resetPagination];
             [self fetchLastMessageWithMaxServerPaginationCount:maxServerPaginationCount onComplete:onComplete failure:failure timeline:timeline operation:operation commit:commit];
         }];
@@ -387,7 +387,10 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     {
         // First, for performance reason, read messages only from the store
         // Do it one by one to decrypt the minimal number of events.
-        MXHTTPOperation *newOperation = [timeline paginate:1 direction:MXTimelineDirectionBackwards onlyFromStore:YES complete:^{
+        MXHTTPOperation *newOperation = [timeline paginate:1
+                                                 direction:MXTimelineDirectionBackwards
+                                             onlyFromStore:YES
+                                                  complete:^{
             if (lastMessageUpdated)
             {
                 // We are done
@@ -411,7 +414,10 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
         NSUInteger paginationCount = MIN(maxServerPaginationCount, MXRoomSummaryPaginationChunkSize);
         MXLogDebug(@"[MXRoomSummary] fetchLastMessage: paginate %@ (%@) messages from the server in %@", @(paginationCount), @(maxServerPaginationCount), _roomId);
         
-        MXHTTPOperation *newOperation = [timeline paginate:paginationCount direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
+        MXHTTPOperation *newOperation = [timeline paginate:paginationCount
+                                                 direction:MXTimelineDirectionBackwards
+                                             onlyFromStore:NO
+                                                  complete:^{
             if (lastMessageUpdated)
             {
                 // We are done
@@ -494,7 +500,9 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
                                      success:^(MXEvent *event) {
                 MXEvent *editedEvent = [event editedEventFromReplacementEvent:replaceEvent];
                 [self handleEvent:editedEvent];
-            } failure:nil];
+            } failure:^(NSError *error) {
+                MXLogError(@"[MXRoomSummary] registerEventEditsListener: event fetch failed: %@", error);
+            }];
         }
     }];
 }
@@ -746,7 +754,9 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
 {
     BOOL updated = NO;
 
-    NSUInteger localUnreadEventCount = [self.mxSession.store localUnreadEventCount:self.room.roomId withTypeIn:self.mxSession.unreadEventTypes];
+    NSUInteger localUnreadEventCount = [self.mxSession.store localUnreadEventCount:self.room.roomId
+                                                                          threadId:nil
+                                                                        withTypeIn:self.mxSession.unreadEventTypes];
     
     if (self.localUnreadEventCount != localUnreadEventCount)
     {

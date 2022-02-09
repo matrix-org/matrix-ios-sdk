@@ -39,7 +39,7 @@
                                              kMXMessageBodyKey: body,
                                              @"formatted_body": formattedBody,
                                              @"format": @"org.matrix.custom.html",
-                                             @"m.relates_to": @{
+                                             kMXEventRelationRelatesToKey: @{
                                                      @"m.in_reply_to": @{
                                                              @"event_id": @"$1561994860861855MtlYo:matrix.org"
                                                              }

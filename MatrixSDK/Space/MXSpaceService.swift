@@ -49,7 +49,9 @@ extension MXSpaceService {
 public class MXSpaceService: NSObject {
 
     // MARK: - Properties
-    
+
+    private let spacesPerIdReadWriteQueue: DispatchQueue
+
     private unowned let session: MXSession
     
     private lazy var stateEventBuilder: MXRoomInitialStateEventBuilder = {
@@ -70,7 +72,9 @@ public class MXSpaceService: NSObject {
                     spacesPerId[spaceId] = space
                 }
             }
-            self.spacesPerId = spacesPerId
+            spacesPerIdReadWriteQueue.sync(flags: .barrier) {
+                self.spacesPerId = spacesPerId
+            }
         }
     }
     private var spacesPerId: [String:MXSpace] = [:]
@@ -115,7 +119,11 @@ public class MXSpaceService: NSObject {
         self.processingQueue = DispatchQueue(label: "org.matrix.sdk.MXSpaceService.processingQueue", attributes: .concurrent)
         self.completionQueue = DispatchQueue.main
         self.sdkProcessingQueue = DispatchQueue.main
-        
+        self.spacesPerIdReadWriteQueue = DispatchQueue(
+          label: "org.matrix.sdk.MXSpaceService.spacesPerIdReadWriteQueue",
+          attributes: .concurrent
+        )
+
         super.init()
         
         self.registerNotificationObservers()
@@ -249,10 +257,15 @@ public class MXSpaceService: NSObject {
     /// - Parameter spaceId: The id of the space.
     /// - Returns: A MXSpace with the associated roomId or null if room doesn't exists or the room type is not space.
     public func getSpace(withId spaceId: String) -> MXSpace? {
-        var space = self.spacesPerId[spaceId]
+        var space: MXSpace?
+        spacesPerIdReadWriteQueue.sync {
+           space = self.spacesPerId[spaceId]
+        }
         if space == nil, let newSpace = self.session.room(withRoomId: spaceId)?.toSpace() {
             space = newSpace
-            self.spacesPerId[spaceId] = newSpace
+            spacesPerIdReadWriteQueue.sync(flags: .barrier) {
+                self.spacesPerId[spaceId] = newSpace
+            }
         }
         return space
     }
@@ -499,8 +512,11 @@ public class MXSpaceService: NSObject {
                     self.prepareData(with: roomIds, index: index+1, output: output, completion: completion)
                     return
                 }
-                
-                let space = self.spacesPerId[room.roomId] ?? room.toSpace()
+
+                var space: MXSpace?
+                self.spacesPerIdReadWriteQueue.sync {
+                    space = self.spacesPerId[room.roomId] ?? room.toSpace()
+                }
                 
                 self.prepareData(with: roomIds, index: index, output: output, room: room, space: space, isRoomDirect: room.isDirect, directUserId: room.directUserId, completion: completion)
             }

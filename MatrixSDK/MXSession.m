@@ -242,6 +242,7 @@ typedef void (^MXOnResumeDone)(void);
                                                  selector:@selector(spaceServiceDidBuildSpaceGraph:)
                                                      name:MXSpaceService.didBuildSpaceGraph
                                                    object:_spaceService];
+        _threadingService = [[MXThreadingService alloc] initWithSession:self];
         
         [self setIdentityServer:mxRestClient.identityServer andAccessToken:mxRestClient.credentials.identityServerAccessToken];
         
@@ -521,6 +522,7 @@ typedef void (^MXOnResumeDone)(void);
                                     dispatch_group_leave(dispatchGroup);
                                 }
                             } failure:^(NSError *error) {
+                                MXLogError(@"[MXSession] handleSyncResponse: event fetch failed: %@", error);
                                 dispatch_group_leave(dispatchGroup);
                             }];
                         }
@@ -892,13 +894,6 @@ typedef void (^MXOnResumeDone)(void);
 
                 MXLogError(@"[MXSession] Crypto failed to start. Error: %@", error);
                 
-                // Check whether the token is valid
-                if ([self isUnknownTokenError:error])
-                {
-                    // Do nothing more because without a valid access_token, the session is useless
-                    return;
-                }
-
                 [self setState:MXSessionStateInitialSyncFailed];
                 failure(error);
 
@@ -908,12 +903,6 @@ typedef void (^MXOnResumeDone)(void);
             
             MXLogError(@"[MXSession] Get the user's profile information failed with error %@", error);
             
-            // Check whether the token is valid
-            if ([self isUnknownTokenError:error])
-            {
-                // Do nothing more because without a valid access_token, the session is useless
-                return;
-            }
             [self setState:MXSessionStateInitialSyncFailed];
             failure(error);
             
@@ -938,18 +927,35 @@ typedef void (^MXOnResumeDone)(void);
 
 - (BOOL)isPauseable
 {
-    return _state == MXSessionStateSyncInProgress
-        || _state == MXSessionStateRunning
-        || _state == MXSessionStateBackgroundSyncInProgress
-        || _state == MXSessionStatePauseRequested;
+    switch (_state)
+    {
+        case MXSessionStateSyncInProgress:
+        case MXSessionStateRunning:
+        case MXSessionStateBackgroundSyncInProgress:
+        case MXSessionStatePauseRequested:
+        case MXSessionStateSyncError:
+        case MXSessionStateHomeserverNotReachable:
+            return YES;
+        default:
+            return NO;
+    }
 }
 
 - (BOOL)isResumable
 {
-    return !eventStreamRequest ||
-        (_state == MXSessionStateBackgroundSyncInProgress
-        || _state == MXSessionStatePauseRequested
-        || _state == MXSessionStatePaused);
+    if (!eventStreamRequest)
+    {
+        return YES;
+    }
+    switch (_state)
+    {
+        case MXSessionStateBackgroundSyncInProgress:
+        case MXSessionStatePauseRequested:
+        case MXSessionStatePaused:
+            return YES;
+        default:
+            return NO;
+    }
 }
 
 - (MXAggregations *)aggregations
@@ -1243,37 +1249,6 @@ typedef void (^MXOnResumeDone)(void);
     return (self.store.eventStreamToken != nil);
 }
 
-#pragma mark - Invalid Token handling
-
-- (BOOL)isUnknownTokenError:(NSError *)error
-{
-    // Detect invalidated access token
-    // This can happen when the user made a forget password request for example
-    if ([MXError isMXError:error])
-    {
-        MXError *mxError = [[MXError alloc] initWithNSError:error];
-        if ([mxError.errcode isEqualToString:kMXErrCodeStringUnknownToken])
-        {
-            MXLogDebug(@"[MXSession] isUnknownTokenError: The access token is no more valid.");
-
-            if (mxError.httpResponse.statusCode == 401
-                && [mxError.userInfo[kMXErrorSoftLogoutKey] isEqual:@(YES)])
-            {
-                MXLogDebug(@"[MXSession] isUnknownTokenError: Go to MXSessionStateSoftLogout state.");
-                [self setState:MXSessionStateSoftLogout];
-            }
-            else
-            {
-                MXLogDebug(@"[MXSession] isUnknownTokenError: Go to MXSessionStateUnknownToken state.");
-                [self setState:MXSessionStateUnknownToken];
-            }
-
-            return YES;
-        }
-    }
-    return NO;
-}
-
 #pragma mark - MXSession pause prevention
 - (void)retainPreventPause
 {
@@ -1541,13 +1516,6 @@ typedef void (^MXOnResumeDone)(void);
         return;
     }
 
-    // Check whether the token is valid
-    if ([self isUnknownTokenError:error])
-    {
-        // Do nothing more because without a valid access_token, the session is useless
-        return;
-    }
-
     // Handle failure during catch up first
     if (self->onBackgroundSyncFail)
     {
@@ -1596,13 +1564,10 @@ typedef void (^MXOnResumeDone)(void);
         if ([error.domain isEqualToString:NSURLErrorDomain]
             && code == kCFURLErrorCancelled)
         {
-            MXLogDebug(@"[MXSession] The connection has been cancelled in state: %@", [MXTools readableSessionState:_state]);
-
-            // This happens when the SDK cannot make any more requests because the app is in background
-            // and the background task is expired or going to expire.
-            // The app should have paused the SDK before but it did not. So, pause the SDK ourselves.
-            MXLogDebug(@"[MXSession] -> Go to pause");
-            [self pause];
+            // Individual requests sometimes get correctly cancelled (e.g. the screen which initiated it is deallocated),
+            // and such cancellation should not alter the session in any way, nor re-trigger the sync (as with other error types).
+            // It is still useful to log the cancellation though.
+            MXLogDebug(@"[MXSession] A single request has been cancelled in state: %@", [MXTools readableSessionState:_state]);
         }
         else if ([error.domain isEqualToString:NSURLErrorDomain]
                  && code == kCFURLErrorTimedOut && serverTimeout == 0)
@@ -1932,17 +1897,28 @@ typedef void (^MXOnResumeDone)(void);
     return roomsInSyncResponse;
 }
 
+- (BOOL)hasAnyBackgroundCachedSyncResponses
+{
+    MXSyncResponseFileStore *syncResponseStore = [[MXSyncResponseFileStore alloc] initWithCredentials:self.credentials];
+
+    return syncResponseStore.outdatedSyncResponseIds.count > 0
+        || syncResponseStore.syncResponseIds.count > 0;
+}
+
 - (void)handleBackgroundSyncCacheIfRequiredWithCompletion:(void (^)(void))completion
 {
-    if (_state == MXSessionStateInitialSyncFailed)
+    NSParameterAssert(_state == MXSessionStateStoreDataReady || _state == MXSessionStatePaused);
+
+    if (!self.hasAnyBackgroundCachedSyncResponses)
     {
+        //  if no cached data, do not make back and forth with the session state
+        MXLogDebug(@"[MXSession] handleBackgroundSyncCacheIfRequired: no cached data, in state: %@", [MXTools readableSessionState:_state]);
         if (completion)
         {
             completion();
         }
         return;
     }
-    NSParameterAssert(_state == MXSessionStateStoreDataReady || _state == MXSessionStatePaused);
     
     //  keep the old state to revert later
     MXSessionState oldState = self.state;
@@ -1955,11 +1931,14 @@ typedef void (^MXOnResumeDone)(void);
     NSString *syncResponseStoreSyncToken = syncResponseStoreManager.syncToken;
     NSString *eventStreamToken = self.store.eventStreamToken;
 
-    NSMutableArray<NSString *> *outdatedSyncResponseIds = [syncResponseStore.outdatedSyncResponseIds mutableCopy];
-    NSArray<NSString *> *syncResponseIds = syncResponseStore.syncResponseIds;
+    NSMutableArray<NSString *> *outdatedSyncResponseIds = syncResponseStore.outdatedSyncResponseIds.mutableCopy;
+    NSArray<NSString *> *syncResponseIds = syncResponseStore.syncResponseIds.copy;
 
-    MXLogDebug(@"[MXSession] handleBackgroundSyncCacheIfRequired: state %tu. outdatedSyncResponseIds: %@. syncResponseIds: %@. syncResponseStoreSyncToken: %@",
-          _state, @(outdatedSyncResponseIds.count), @(syncResponseIds.count) , syncResponseStoreSyncToken);
+    NSMutableArray<NSString*> *syncResponseIdsToBeDeleted = syncResponseStore.outdatedSyncResponseIds.mutableCopy;
+    [syncResponseIdsToBeDeleted addObjectsFromArray:syncResponseIds.copy];
+
+    MXLogDebug(@"[MXSession] handleBackgroundSyncCacheIfRequired: state: %@. outdatedSyncResponseIds: %@. syncResponseIds: %@. syncResponseStoreSyncToken: %@",
+          [MXTools readableSessionState:_state], @(outdatedSyncResponseIds.count), @(syncResponseIds.count) , syncResponseStoreSyncToken);
     
     if (![syncResponseStoreSyncToken isEqualToString:eventStreamToken])
     {
@@ -1967,21 +1946,10 @@ typedef void (^MXOnResumeDone)(void);
         [outdatedSyncResponseIds addObjectsFromArray:syncResponseIds];
         syncResponseIds = @[];
     }
-    
-    if (outdatedSyncResponseIds.count == 0 && syncResponseIds.count == 0)
-    {
-        //  revert to old state
-        [self setState:oldState];
-        
-        if (completion)
-        {
-            completion();
-        }
-        return;
-    }
-    
+
     [asyncTaskQueue asyncWithExecute:^(void (^ taskCompleted)(void)) {
-        [syncResponseStoreManager mergedSyncResponseFromSyncResponseIds:outdatedSyncResponseIds completion:^(MXCachedSyncResponse * _Nullable outdatedCachedSyncResponse) {
+        [syncResponseStoreManager mergedSyncResponseFromSyncResponseIds:outdatedSyncResponseIds
+                                                             completion:^(MXCachedSyncResponse * _Nullable outdatedCachedSyncResponse) {
             if (outdatedCachedSyncResponse)
             {
                 [self handleOutdatedSyncResponse:outdatedCachedSyncResponse.syncResponse
@@ -1997,7 +1965,8 @@ typedef void (^MXOnResumeDone)(void);
     }];
     
     [asyncTaskQueue asyncWithExecute:^(void (^ taskCompleted)(void)) {
-        [syncResponseStoreManager mergedSyncResponseFromSyncResponseIds:syncResponseIds completion:^(MXCachedSyncResponse * _Nullable cachedSyncResponse) {
+        [syncResponseStoreManager mergedSyncResponseFromSyncResponseIds:syncResponseIds
+                                                             completion:^(MXCachedSyncResponse * _Nullable cachedSyncResponse) {
             if (cachedSyncResponse)
             {
                 [self handleSyncResponse:cachedSyncResponse.syncResponse
@@ -2013,17 +1982,29 @@ typedef void (^MXOnResumeDone)(void);
     }];
     
     [asyncTaskQueue asyncWithExecute:^(void (^ taskCompleted)(void)) {
-        [syncResponseStore deleteData];
+        //  do not delete all the data here, as we may have received some new data while we're processing the old one
+        [syncResponseStore deleteSyncResponsesWithIds:syncResponseIdsToBeDeleted];
         
         //  revert to old state
         [self setState:oldState];
-        
-        if (completion)
-        {
-            completion();
-        }
-        
+
         taskCompleted();
+
+        if (self.hasAnyBackgroundCachedSyncResponses)
+        {
+            //  if there are new sync responses, also process them
+            [self handleBackgroundSyncCacheIfRequiredWithCompletion:completion];
+        }
+        else
+        {
+            //  trigger delete all data here, just to clean up resources
+            [syncResponseStore deleteData];
+
+            if (completion)
+            {
+                completion();
+            }
+        }
     }];
 }
 
@@ -2929,7 +2910,7 @@ typedef void (^MXOnResumeDone)(void);
         if (room)
         {
             dispatch_group_enter(group);
-            [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+            [room liveTimeline:^(id<MXEventTimeline> liveTimeline) {
                 dispatch_group_leave(group);
             }];
         }
@@ -2952,6 +2933,19 @@ typedef void (^MXOnResumeDone)(void);
                              success:(void (^)(MXEvent *event))success
                              failure:(void (^)(NSError *error))failure
 {
+    if (eventId == nil)
+    {
+        MXLogError(@"[MXSession] eventWithEventId called with no eventId. Call stack: %@", [NSThread callStackSymbols]);
+        if (failure)
+        {
+            MXError *error = [[MXError alloc] initWithErrorCode:kMXErrCodeStringNotFound
+                                                          error:@"Could not find event (null)"];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                failure(error.createNSError);
+            });
+        }
+        return nil;
+    }
     MXHTTPOperation *operation;
 
     void (^decryptIfNeeded)(MXEvent *event) = ^(MXEvent *event) {
@@ -3127,6 +3121,7 @@ typedef void (^MXOnResumeDone)(void);
                 }
                 
             } failure:^(NSError *error) {
+                MXLogError(@"[MXSession] fixRoomsSummariesLastMessage: event fetch failed: %@", error);
                 dispatch_group_leave(dispatchGroup);
             }];
         }
@@ -4650,7 +4645,9 @@ typedef void (^MXOnResumeDone)(void);
             {
                 [summary resetLastMessage:nil failure:nil commit:YES];
             }
-        } failure:nil];
+        } failure:^(NSError *error) {
+            MXLogError(@"[MXSession] onDidDecryptEvent: event fetch failed: %@", error);
+        }];
     }
 }
 
