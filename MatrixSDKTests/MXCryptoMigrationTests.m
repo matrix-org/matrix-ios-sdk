@@ -115,7 +115,7 @@
                     XCTAssert(roomFromBobPOV.summary.isEncrypted);
                     XCTAssert(roomFromAlicePOV.summary.isEncrypted);
                     
-                    [roomFromBobPOV liveTimeline:^(MXEventTimeline *liveTimeline) {
+                    [roomFromBobPOV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
                         
                         [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
                             
@@ -127,7 +127,7 @@
                         }];
                     }];
                     
-                    [roomFromAlicePOV sendTextMessage:messageFromAlice success:nil failure:^(NSError *error) {
+                    [roomFromAlicePOV sendTextMessage:messageFromAlice threadId:nil success:nil failure:^(NSError *error) {
                         XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                         [expectation fulfill];
                     }];

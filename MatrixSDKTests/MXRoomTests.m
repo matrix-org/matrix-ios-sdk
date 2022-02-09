@@ -68,7 +68,7 @@
         };
         
         // Register the listener
-        [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+        [room liveTimeline:^(id<MXEventTimeline> liveTimeline) {
 
             [liveTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
@@ -87,7 +87,7 @@
         // Populate a text message in parallel
         [matrixSDKTestsData doMXRestClientTestWithBobAndThePublicRoom:nil readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation2) {
             
-            [bobRestClient sendTextMessageToRoom:roomId text:@"Hello listeners!" success:^(NSString *eventId) {
+            [bobRestClient sendTextMessageToRoom:roomId threadId:nil text:@"Hello listeners!" success:^(NSString *eventId) {
                 
                 NSAssert(nil != eventId, @"Cannot set up intial test conditions");
                 
@@ -123,7 +123,7 @@
         };
         
         // Register the listener for m.room.message.only
-        [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+        [room liveTimeline:^(id<MXEventTimeline> liveTimeline) {
 
             [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage]
                                         onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
@@ -143,7 +143,7 @@
         // Populate a text message in parallel
         [matrixSDKTestsData doMXRestClientTestWithBobAndThePublicRoom:nil readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation2) {
             
-            [bobRestClient sendTextMessageToRoom:roomId text:@"Hello listeners!" success:^(NSString *eventId) {
+            [bobRestClient sendTextMessageToRoom:roomId threadId:nil text:@"Hello listeners!" success:^(NSString *eventId) {
                 
                 NSAssert(nil != eventId, @"Cannot set up intial test conditions");
                 
@@ -167,7 +167,7 @@
         NSString *roomId = room.roomId;
 
         __block MXMembership lastKnownMembership = MXMembershipUnknown;
-        [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+        [room liveTimeline:^(id<MXEventTimeline> liveTimeline) {
             [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                 lastKnownMembership = liveTimeline.state.membership;
@@ -247,7 +247,7 @@
 
             MXRoom *room = [mxSession roomWithRoomId:roomId];
 
-            [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+            [room liveTimeline:^(id<MXEventTimeline> liveTimeline) {
                 [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomPowerLevels] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                     XCTAssertEqual([liveTimeline.state.powerLevels powerLevelOfUserWithUserID:aliceRestClient.credentials.userId], 36);
@@ -282,7 +282,7 @@
             MXRoom *room = [mxSession roomWithRoomId:roomId];
 
             __block NSUInteger eventCount = 0;
-            [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+            [room liveTimeline:^(id<MXEventTimeline> liveTimeline) {
                 [liveTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                     eventCount++;
@@ -327,7 +327,7 @@
 
             XCTAssertEqual(room.typingUsers.count, 0);
 
-            [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+            [room liveTimeline:^(id<MXEventTimeline> liveTimeline) {
                 [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringTypingNotification] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                     XCTAssertEqual(room.typingUsers.count, 1);
@@ -361,7 +361,7 @@
         __block NSUInteger tagEventUpdata = 0;
 
         // Wait for the m.tag event to get the room tags update
-        [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+        [room liveTimeline:^(id<MXEventTimeline> liveTimeline) {
             [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomTag] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                 if (++tagEventUpdata == 1)
@@ -408,7 +408,7 @@
         NSString *newTagOrder = nil;
 
         // Wait for the m.tag event that corresponds to "newTag"
-        [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+        [room liveTimeline:^(id<MXEventTimeline> liveTimeline) {
             [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomTag] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                 MXRoomTag *newRoomTag = room.accountData.tags[newTag];
@@ -450,7 +450,7 @@
             MXRoom *room = [mxSession roomWithRoomId:roomId];
             
             // Wait for the m.tagged_events event
-            [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+            [room liveTimeline:^(id<MXEventTimeline> liveTimeline) {
                 [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringTaggedEvents] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
                     
                     XCTAssertEqual(event.eventType, MXEventTypeTaggedEvents);
@@ -494,7 +494,7 @@
             __block MXEvent *taggedEvent;
             
             // Wait for the m.tagged_events event
-            [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+            [room liveTimeline:^(id<MXEventTimeline> liveTimeline) {
                 [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringTaggedEvents] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
                     
                     XCTAssertEqual(event.eventType, MXEventTypeTaggedEvents);
@@ -551,7 +551,7 @@
             __block MXEvent *taggedEvent;
             
             // Wait for the m.tagged_events event
-            [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+            [room liveTimeline:^(id<MXEventTimeline> liveTimeline) {
                 [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringTaggedEvents] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
                     
                     XCTAssertEqual(event.eventType, MXEventTypeTaggedEvents);
@@ -735,7 +735,7 @@
                 
                 NSString *secondEventBody = localEchoEvent.content[kMXMessageBodyKey];
                 NSString *secondEventFormattedBody = localEchoEvent.content[@"formatted_body"];
-                NSString *secondEventRelatesToEventId = localEchoEvent.content[@"m.relates_to"][@"m.in_reply_to"][@"event_id"];
+                NSString *secondEventRelatesToEventId = localEchoEvent.content[kMXEventRelationRelatesToKey][@"m.in_reply_to"][@"event_id"];
 
                 NSString *permalinkToUser = [MXTools permalinkToUserWithUserId:firstEventSender];
                 NSString *permalinkToEvent = [MXTools permalinkToEvent:firstEventId inRoom:roomId];
@@ -767,7 +767,7 @@
                 
                 NSString *thirdEventBody = localEchoEvent.content[kMXMessageBodyKey];
                 NSString *thirdEventFormattedBody = localEchoEvent.content[@"formatted_body"];
-                NSString *thirdEventRelatesToEventId = localEchoEvent.content[@"m.relates_to"][@"m.in_reply_to"][@"event_id"];
+                NSString *thirdEventRelatesToEventId = localEchoEvent.content[kMXEventRelationRelatesToKey][@"m.in_reply_to"][@"event_id"];
                 
                 NSString *permalinkToUser = [MXTools permalinkToUserWithUserId:secondEventSender];
                 NSString *permalinkToEvent = [MXTools permalinkToEvent:secondEventId inRoom:roomId];
@@ -786,7 +786,7 @@
         }];
         
         // Send first message
-        [room sendTextMessage:firstMessage formattedText:firstFormattedMessage localEcho:nil success:^(NSString *eventId) {
+        [room sendTextMessage:firstMessage formattedText:firstFormattedMessage threadId:nil localEcho:nil success:^(NSString *eventId) {
             MXLogDebug(@"Send first message with success");
         } failure:^(NSError *error) {
             XCTFail(@"The request should not fail - NSError: %@", error);

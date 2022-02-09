@@ -83,11 +83,11 @@
 
         // - Bob sends messages
         MXRoom *roomFromBobPOV = [bobSession roomWithRoomId:roomId];
-        [roomFromBobPOV sendTextMessage:messages[0] success:^(NSString *eventId) {
-            [roomFromBobPOV sendTextMessage:messages[1] success:^(NSString *eventId) {
-                [roomFromBobPOV sendTextMessage:messages[2] success:^(NSString *eventId) {
-                    [roomFromBobPOV sendTextMessage:messages[3] success:^(NSString *eventId) {
-                        [roomFromBobPOV sendTextMessage:messages[4] success:nil failure:nil];
+        [roomFromBobPOV sendTextMessage:messages[0] threadId:nil success:^(NSString *eventId) {
+            [roomFromBobPOV sendTextMessage:messages[1] threadId:nil success:^(NSString *eventId) {
+                [roomFromBobPOV sendTextMessage:messages[2] threadId:nil success:^(NSString *eventId) {
+                    [roomFromBobPOV sendTextMessage:messages[3] threadId:nil success:^(NSString *eventId) {
+                        [roomFromBobPOV sendTextMessage:messages[4] threadId:nil success:nil failure:nil];
                     } failure:nil];
                 } failure:nil];
             } failure:nil];
@@ -99,7 +99,7 @@
         // - Alice gets them decrypted
         MXRoom *roomFromAlicePOV = [aliceSession roomWithRoomId:roomId];
         __block NSUInteger messagesCount = 0;
-        [roomFromAlicePOV liveTimeline:^(MXEventTimeline *liveTimeline) {
+        [roomFromAlicePOV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
             [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                 if (++messagesCount == messages.count)
@@ -150,7 +150,7 @@
             
             // - Alice2 paginates in the room
             MXRoom *roomFromAlice2POV = [aliceSession2 roomWithRoomId:roomId];
-            [roomFromAlice2POV liveTimeline:^(MXEventTimeline *liveTimeline) {
+            [roomFromAlice2POV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
                 [liveTimeline resetPagination];
                 [liveTimeline paginate:10 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
                     
@@ -211,7 +211,7 @@
                     
                     // - Alice2 pagingates in the room
                     MXRoom *roomFromAlice2POV = [aliceSession2 roomWithRoomId:roomId];
-                    [roomFromAlice2POV liveTimeline:^(MXEventTimeline *liveTimeline) {
+                    [roomFromAlice2POV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
                         [liveTimeline resetPagination];
                         [liveTimeline paginate:10 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
                             
@@ -286,7 +286,7 @@
                     
                     // - Alice2 pagingates in the room
                     MXRoom *roomFromAlice2POV = [aliceSession2 roomWithRoomId:roomId];
-                    [roomFromAlice2POV liveTimeline:^(MXEventTimeline *liveTimeline) {
+                    [roomFromAlice2POV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
                         [liveTimeline resetPagination];
                         [liveTimeline paginate:10 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
                             
@@ -364,7 +364,7 @@
                         
                         // - Alice2 pagingates in the room
                         MXRoom *roomFromAlice2POV = [aliceSession2 roomWithRoomId:roomId];
-                        [roomFromAlice2POV liveTimeline:^(MXEventTimeline *liveTimeline) {
+                        [roomFromAlice2POV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
                             [liveTimeline resetPagination];
                             [liveTimeline paginate:10 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
                                 
@@ -454,7 +454,7 @@
 
         // - Make Alice paginate back in the room
         MXRoom *roomFromAlicePOV = [aliceSession roomWithRoomId:roomId];
-        [roomFromAlicePOV liveTimeline:^(MXEventTimeline *liveTimeline) {
+        [roomFromAlicePOV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
 
             [liveTimeline resetPagination];
             [liveTimeline paginate:30 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{

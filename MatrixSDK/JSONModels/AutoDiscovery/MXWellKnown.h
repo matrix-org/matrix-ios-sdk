@@ -19,6 +19,7 @@
 #import "MXJSONModel.h"
 #import "MXWellKnownBaseConfig.h"
 #import "MXWellknownIntegrations.h"
+#import "MXWellKnownTileServerConfig.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -41,6 +42,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, nullable) MXWellKnownBaseConfig *identityServer;
 
 @property (nonatomic, nullable) MXWellknownIntegrations *integrations;
+
+@property (nonatomic, nullable) MXWellKnownTileServerConfig *tileServer;
 
 @end
 

@@ -59,7 +59,7 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
                                                        kMXMessageBodyKey: kEditedMessageText,
                                                        kMXMessageTypeKey: @"m.text"
                                                        },
-                                               @"m.relates_to": @{
+                                               kMXEventRelationRelatesToKey: @{
                                                        @"event_id": @"$messageeventid:matrix.org",
                                                        @"rel_type": @"m.replace"
                                                        },
@@ -117,7 +117,7 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
                                                        @"format": kMXRoomMessageFormatHTML,
                                                        kMXMessageTypeKey: @"m.text"
                                                        },
-                                               @"m.relates_to": @{
+                                               kMXEventRelationRelatesToKey: @{
                                                        @"event_id": @"$messageeventid:matrix.org",
                                                        @"rel_type": @"m.replace"
                                                        },

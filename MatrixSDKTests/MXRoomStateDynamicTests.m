@@ -58,16 +58,16 @@
 {
     __block MXRestClient *bobRestClient2 = bobRestClient;
     
-    [bobRestClient sendTextMessageToRoom:roomId text:@"Hello world" success:^(NSString *eventId) {
+    [bobRestClient sendTextMessageToRoom:roomId threadId:nil text:@"Hello world" success:^(NSString *eventId) {
         
         [bobRestClient setRoomTopic:roomId topic:@"Topic #1" success:^{
             
-            [bobRestClient2 sendTextMessageToRoom:roomId text:@"Hola" success:^(NSString *eventId) {
+            [bobRestClient2 sendTextMessageToRoom:roomId threadId:nil text:@"Hola" success:^(NSString *eventId) {
                 
                 __block MXRestClient *bobRestClient3 = bobRestClient2;
                 [bobRestClient2 setRoomTopic:roomId topic:@"Topic #2" success:^{
                     
-                    [bobRestClient3 sendTextMessageToRoom:roomId text:@"Bonjour" success:^(NSString *eventId) {
+                    [bobRestClient3 sendTextMessageToRoom:roomId threadId:nil text:@"Bonjour" success:^(NSString *eventId) {
                         
                         onComplete();
                         
@@ -111,7 +111,7 @@
                 MXRoom *room = [mxSession roomWithRoomId:roomId];
                 
                 __block NSUInteger eventCount = 0;
-                [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+                [room liveTimeline:^(id<MXEventTimeline> liveTimeline) {
                     [liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                         // Check each expected event and their roomState contect
@@ -198,7 +198,7 @@
             MXRoom *room = [mxSession roomWithRoomId:roomId];
             
             __block NSUInteger eventCount = 0;
-            [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+            [room liveTimeline:^(id<MXEventTimeline> liveTimeline) {
                 [liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                     // Check each expected event and their roomState contect
@@ -300,27 +300,27 @@
  */
 - (void)createScenario2:(MXRestClient*)bobRestClient inRoom:(NSString*)roomId expectation:(XCTestExpectation*)expectation onComplete:(void(^)(MXRestClient *aliceRestClient))onComplete
 {
-    [bobRestClient sendTextMessageToRoom:roomId text:@"Hello world" success:^(NSString *eventId) {
+    [bobRestClient sendTextMessageToRoom:roomId threadId:nil text:@"Hello world" success:^(NSString *eventId) {
 
         [matrixSDKTestsData doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
             
             [bobRestClient inviteUser:matrixSDKTestsData.aliceCredentials.userId toRoom:roomId success:^{
                 
-                [bobRestClient sendTextMessageToRoom:roomId text:@"I wait for Alice" success:^(NSString *eventId) {
+                [bobRestClient sendTextMessageToRoom:roomId threadId:nil text:@"I wait for Alice" success:^(NSString *eventId) {
                     
                     [aliceRestClient joinRoom:roomId viaServers:nil withThirdPartySigned:nil success:^(NSString *roomName){
                         
-                        [aliceRestClient sendTextMessageToRoom:roomId text:@"Hi" success:^(NSString *eventId) {
+                        [aliceRestClient sendTextMessageToRoom:roomId threadId:nil text:@"Hi" success:^(NSString *eventId) {
 
                             MXRestClient *aliceRestClient2 = aliceRestClient;
 
                             [aliceRestClient setDisplayName:@"Alice in Wonderland" success:^{
                                 
-                                [aliceRestClient2 sendTextMessageToRoom:roomId text:@"What's going on?" success:^(NSString *eventId) {
+                                [aliceRestClient2 sendTextMessageToRoom:roomId threadId:nil text:@"What's going on?" success:^(NSString *eventId) {
                                     
                                     [bobRestClient leaveRoom:roomId success:^{
                                         
-                                        [aliceRestClient2 sendTextMessageToRoom:roomId text:@"Good bye" success:^(NSString *eventId) {
+                                        [aliceRestClient2 sendTextMessageToRoom:roomId threadId:nil text:@"Good bye" success:^(NSString *eventId) {
                                             
                                             onComplete(aliceRestClient2);
                                             

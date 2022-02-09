@@ -21,7 +21,15 @@ internal let StringArrayDelimiter: String = ";"
 
 @objc(MXRoomSummaryMO)
 public class MXRoomSummaryMO: NSManagedObject {
-    
+
+    /// Fetch request to be used with any kind of result type
+    /// - Returns: NSFetchRequest instance with an abstract result type
+    internal static func genericFetchRequest() -> NSFetchRequest<NSFetchRequestResult> {
+        return NSFetchRequest<NSFetchRequestResult>(entityName: entityName)
+    }
+
+    /// Fetch request to be used with object result type
+    /// - Returns: NSFetchRequest instance with `MXRoomSummaryMO` result type
     internal static func typedFetchRequest() -> NSFetchRequest<MXRoomSummaryMO> {
         return NSFetchRequest<MXRoomSummaryMO>(entityName: entityName)
     }

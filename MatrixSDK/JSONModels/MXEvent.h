@@ -611,10 +611,10 @@ extern NSString *const kMXEventIdentifierKey;
 - (BOOL)isInThread;
 
 /**
- Thread identifier for the event. This is actually the eventId of the thread's root event.
+ Thread id for the event. This is actually the eventId of the thread's root event.
  nil if the event is not in a thread.
  */
-@property (nonatomic, readonly) NSString *threadIdentifier;
+@property (nonatomic, readonly) NSString *threadId;
 
 #pragma mark - Crypto
 

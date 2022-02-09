@@ -30,7 +30,6 @@
 #import "MXError.h"
 #import "MXRoomEventFilter.h"
 #import "MXInvite3PID.h"
-#import "MXEventTimeline.h"
 #import "MXJSONModels.h"
 #import "MXFilterJSONModel.h"
 #import "MXMatrixVersions.h"
@@ -43,6 +42,8 @@
 #import "MXTurnServerResponse.h"
 #import "MXSpaceChildrenResponse.h"
 #import "MXURLPreview.h"
+#import "MXTaggedEvents.h"
+#import "MXCredentials.h"
 
 @class MXThirdpartyProtocolsResponse;
 @class MXThirdPartyUsersResponse;
@@ -116,6 +117,18 @@ FOUNDATION_EXPORT NSString *const kMXMembersOfRoomParametersNotMembership;
  */
 typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^success)(NSString *accessToken), void (^failure)(NSError *error));
 
+/**
+ Block called when the rest client has become unauthenticated(E.g. refresh failed or server invalidated an access token).
+
+ @param error The error from the failed refresh.
+ */
+typedef void(^MXRestClientUnauthenticatedHandler)(MXError *error, BOOL isSoftLogout, BOOL isRefreshTokenAuth, void (^completion)(void));
+
+/**
+ Block called when the rest client needs to check the persisted refresh token data is valid and optionally persist new refresh data to disk if it is not.
+ @param handler A closure that accepts the current persisted credentials. These can optionally be updated and saved back initWithCredentials returning YES from the closure.
+ */
+typedef void (^MXRestClientPersistTokenDataHandler)(void (^handler)(NSArray <MXCredentials*> *credentials, void (^shouldPersistCompletion)(BOOL didUpdateCredentials)));
 
 /**
  `MXRestClient` makes requests to Matrix servers.
@@ -128,9 +141,29 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
 @interface MXRestClient : NSObject
 
 /**
+ Notification name sent when the refresh/access tokens should be updated in the credential. userInfo contains 'kMXCredentialsNewRefreshTokenDataKey'.
+ */
+extern NSString *const MXCredentialsUpdateTokensNotification;
+
+/**
+ A key for getting the refresh response from `MXCredentialsWillUpdateTokensNotification` userInfo.
+ */
+extern NSString *const kMXCredentialsNewRefreshTokenDataKey;
+
+/**
  Credentials for the Matrix Client-Server API.
  */
 @property (nonatomic, readonly) MXCredentials *credentials;
+
+/**
+ Block called when the rest client failed to refresh it's tokens and session is now unauthenticated.
+ */
+@property (nonatomic, copy) MXRestClientUnauthenticatedHandler unauthenticatedHandler;
+
+/**
+ Block called when the rest client needs to check the persisted refresh token data is valid and optionally persist new data to disk if it is not.
+ */
+@property (nonatomic, copy) MXRestClientPersistTokenDataHandler persistTokenDataHandler;
 
 /**
  The homeserver URL.
@@ -213,7 +246,26 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
  @param onUnrecognizedCertBlock the block called to handle unrecognized certificate (nil if unrecognized certificates are ignored).
  @return a MXRestClient instance.
  */
--(id)initWithCredentials:(MXCredentials*)credentials andOnUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock NS_REFINED_FOR_SWIFT;
+
+-(id)initWithCredentials:(MXCredentials*)credentials
+andOnUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock
+NS_REFINED_FOR_SWIFT;
+
+/**
+ Create an instance based on a matrix user account.
+
+ @param credentials the response to a login or a register request.
+ @param onUnrecognizedCertBlock the block called to handle unrecognized certificate (nil if unrecognized certificates are ignored).
+ @param persistentTokenDataHandler the block called when the rest client needs to check the persisted refresh token data is valid and optionally persist new refresh data to disk if it is not.
+ @param unauthenticatedHandler the block called when the rest client has become unauthenticated(E.g. refresh failed or server invalidated an access token).
+ @return a MXRestClient instance.
+ */
+
+-(id)initWithCredentials:(MXCredentials*)credentials
+andOnUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock
+andPersistentTokenDataHandler: (MXRestClientPersistTokenDataHandler)persistentTokenDataHandler
+andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHandler
+NS_REFINED_FOR_SWIFT;
 
 - (void)close;
 
@@ -759,6 +811,7 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
  Send a generic non state event to a room.
 
  @param roomId the id of the room.
+ @param threadId the identifier of the thread for the event to be sent. If nil, the event will be sent to the room.
  @param eventTypeString the type of the event. @see MXEventType.
  @param content the content that will be sent to the server as a JSON object.
  @param txnId the transaction id to use. If nil, one will be generated.
@@ -769,6 +822,7 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)sendEventToRoom:(NSString*)roomId
+                           threadId:(NSString*)threadId
                           eventType:(MXEventTypeString)eventTypeString
                             content:(NSDictionary*)content
                               txnId:(NSString*)txnId
@@ -799,6 +853,7 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
  Send a message to a room
 
  @param roomId the id of the room.
+ @param threadId the identifier of the thread for the event to be sent. If nil, the event will be sent to the room.
  @param msgType the type of the message. @see MXMessageType.
  @param content the message content that will be sent to the server as a JSON object.
  @param success A block object called when the operation succeeds. It returns
@@ -808,6 +863,7 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)sendMessageToRoom:(NSString*)roomId
+                             threadId:(NSString*)threadId
                               msgType:(MXMessageType)msgType
                               content:(NSDictionary*)content
                               success:(void (^)(NSString *eventId))success
@@ -817,6 +873,7 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
  Send a text message to a room
 
  @param roomId the id of the room.
+ @param threadId the identifier of the thread for the event to be sent. If nil, the event will be sent to the room.
  @param text the text to send.
  @param success A block object called when the operation succeeds. It returns
  the event id of the event generated on the home server
@@ -825,6 +882,7 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)sendTextMessageToRoom:(NSString*)roomId
+                                 threadId:(NSString*)threadId
                                      text:(NSString*)text
                                   success:(void (^)(NSString *eventId))success
                                   failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
@@ -1274,7 +1332,7 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
 - (MXHTTPOperation*)messagesForRoom:(NSString*)roomId
                                from:(NSString*)from
                           direction:(MXTimelineDirection)direction
-                              limit:(NSUInteger)limit
+                              limit:(NSInteger)limit
                              filter:(MXRoomEventFilter*)roomEventFilter
                             success:(void (^)(MXPaginationResponse *paginatedResponse))success
                             failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
@@ -2776,9 +2834,9 @@ Note: Clients should consider avoiding this endpoint for URLs posted in encrypte
                          relationType:(NSString*)relationType
                             eventType:(NSString*)eventType
                                  from:(NSString*)from
-                                limit:(NSUInteger)limit
+                                limit:(NSInteger)limit
                               success:(void (^)(MXAggregationPaginatedResponse *paginatedResponse))success
-                              failure:(void (^)(NSError *error))failure;
+                              failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 #pragma mark - Spaces
 

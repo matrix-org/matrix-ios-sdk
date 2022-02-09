@@ -1,32 +1,35 @@
-/*
- Copyright 2016 OpenMarket Ltd
- Copyright 2019 The Matrix.org Foundation C.I.C
-
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
- http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
- */
+// 
+// Copyright 2021 The Matrix.org Foundation C.I.C
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
 
 #import <Foundation/Foundation.h>
 
-#import "MXEvent.h"
-#import "MXRoomEventFilter.h"
-#import "MXJSONModels.h"
-#import "MXRoomState.h"
 #import "MXHTTPOperation.h"
+#import "MXEventListener.h"
 
-/**
- Prefix used to build fake invite event.
- */
-FOUNDATION_EXPORT NSString *const kMXRoomInviteStateEventIdPrefix;
+@class MXRoom;
+@class MXRoomState;
+@class MXRoomSync;
+@class MXInvitedRoomSync;
+@class MXRoomEventFilter;
+@protocol MXStore;
+
+#ifndef MXEventTimeline_h
+#define MXEventTimeline_h
+
+NS_ASSUME_NONNULL_BEGIN
 
 /**
  Block called when an event of the registered types has been handled in the timeline.
@@ -36,10 +39,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomInviteStateEventIdPrefix;
  @param direction the origin of the event.
  @param roomState the room state right before the event.
  */
-typedef void (^MXOnRoomEvent)(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) NS_REFINED_FOR_SWIFT;
-
-@class MXRoom;
-@protocol MXStore;
+typedef void (^MXOnRoomEvent)(MXEvent *event, MXTimelineDirection direction, MXRoomState *_Nullable roomState);
 
 /**
  A `MXEventTimeline` instance represents a contiguous sequence of events in a room.
@@ -47,7 +47,7 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXTimelineDirection direction, MXR
  There are two kinds of timeline:
 
     - live timelines: they receive live events from the events stream. You can paginate
-      backwards but not forwards. 
+      backwards but not forwards.
       All (live or backwards) events they receive are stored in the store of the current
       MXSession.
 
@@ -55,7 +55,7 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXTimelineDirection direction, MXR
       with events on calls of [MXEventTimeline paginate] in backwards or forwards direction.
       Events are stored in a in-memory store (MXMemoryStore) (@TODO: To be confirmed once they will be implemented). So, they are not permanent.
  */
-@interface MXEventTimeline : NSObject <NSCopying>
+@protocol MXEventTimeline <NSObject, NSCopying>
 
 /**
  The id of this timeline.
@@ -66,7 +66,7 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXTimelineDirection direction, MXR
  The initial event id used to initialise the timeline.
  Nil in case of live timeline.
  */
-@property (nonatomic, readonly) NSString *initialEventId;
+@property (nonatomic, nullable, readonly) NSString *initialEventId;
 
 /**
  Indicate if this timeline is a live one.
@@ -81,36 +81,15 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXTimelineDirection direction, MXR
  The filter can be modified but only before starting paginating, ie before calling one
  the resetPagination methods.
  */
-@property (nonatomic, copy) MXRoomEventFilter *roomEventFilter;
+@property (nonatomic, nullable, copy) MXRoomEventFilter *roomEventFilter;
 
 /**
  The state of the room at the top most recent event of the timeline.
  */
-@property (nonatomic, readonly) MXRoomState *state;
+@property (nonatomic, nullable) MXRoomState *state;
 
 
 #pragma mark - Initialisation
-/**
- Create a timeline instance for a room.
-
- If the timeline is live, the events will be stored to the MXSession instance store.
- Else, they will be only stored in memory and released on [MXEventTimeline destroy].
-
- @param room the room associated to the timeline
- @param initialEventId the initial event for the timeline. A nil value will create a live timeline.
- @return a MXEventTimeline instance.
- */
-- (instancetype)initWithRoom:(MXRoom*)room andInitialEventId:(NSString*)initialEventId;
-
-/**
- Create a timeline instance for a room and force it to use the given MXStore to store events.
-
- @param room the room associated to the timeline
- @param initialEventId the initial event for the timeline. A nil value will create a live timeline.
- @param store the store to use to store timeline events.
- @return a MXEventTimeline instance.
- */
-- (instancetype)initWithRoom:(MXRoom*)room initialEventId:(NSString*)initialEventId andStore:(id<MXStore>)store;
 
 /**
  Initialise the room evenTimeline state.
@@ -118,13 +97,6 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXTimelineDirection direction, MXR
  @param stateEvents the state event.
  */
 - (void)initialiseState:(NSArray<MXEvent*> *)stateEvents;
-
-/**
- Reset the room evenTimeline state.
-
- @param roomState the new state to use.
- */
-- (void)setState:(MXRoomState *)roomState;
 
 /**
  Release RAM memory used by the timeline.
@@ -146,7 +118,7 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXTimelineDirection direction, MXR
                   MXTimelineDirectionForwards to check if we can go forwards.
  @return true if we can paginate in the given direction.
  */
-- (BOOL)canPaginate:(MXTimelineDirection)direction NS_REFINED_FOR_SWIFT;
+- (BOOL)canPaginate:(MXTimelineDirection)direction;
 
 /**
  Reset the pagination so that future calls to paginate start from the most recent
@@ -232,7 +204,7 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXTimelineDirection direction, MXR
  @param onEvent the block that will called once a new event has been handled.
  @return a reference to use to unregister the listener
  */
-- (id)listenToEvents:(MXOnRoomEvent)onEvent NS_REFINED_FOR_SWIFT;
+- (MXEventListener *)listenToEvents:(MXOnRoomEvent)onEvent NS_REFINED_FOR_SWIFT;
 
 /**
  Register a listener for some types of events.
@@ -241,14 +213,14 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXTimelineDirection direction, MXR
  @param onEvent the block that will called once a new event has been handled.
  @return a reference to use to unregister the listener
  */
-- (id)listenToEventsOfTypes:(NSArray<MXEventTypeString> *)types onEvent:(MXOnRoomEvent)onEvent NS_REFINED_FOR_SWIFT;
+- (MXEventListener *)listenToEventsOfTypes:(nullable NSArray<MXEventTypeString> *)types onEvent:(MXOnRoomEvent)onEvent NS_REFINED_FOR_SWIFT;
 
 /**
  Unregister a listener.
 
  @param listener the reference of the listener to remove.
  */
-- (void)removeListener:(id)listener;
+- (void)removeListener:(MXEventListener *)listener;
 
 /**
  Unregister all listeners.
@@ -264,3 +236,7 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXTimelineDirection direction, MXR
 - (void)notifyListeners:(MXEvent*)event direction:(MXTimelineDirection)direction;
 
 @end
+
+NS_ASSUME_NONNULL_END
+
+#endif /* MXEventTimeline_h */

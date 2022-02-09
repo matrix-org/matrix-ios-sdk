@@ -17,6 +17,7 @@
 #import <Foundation/Foundation.h>
 
 #import "MXJSONModel.h"
+#import "MXInReplyTo.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -25,9 +26,10 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @interface MXEventContentRelatesTo : MXJSONModel
 
-@property (nonatomic, readonly) NSString *relationType;     // Ex: MXEventRelationTypeAnnotation
-@property (nonatomic, readonly) NSString *eventId;
+@property (nonatomic, readonly, nullable) NSString *relationType;     // Ex: MXEventRelationTypeAnnotation
+@property (nonatomic, readonly, nullable) NSString *eventId;
 @property (nonatomic, readonly, nullable) NSString *key;
+@property (nonatomic, readonly, nullable) MXInReplyTo *inReplyTo;
 
 - (instancetype)initWithRelationType:(NSString *)relationType
                              eventId:(NSString *)eventId;
