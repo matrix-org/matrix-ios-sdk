@@ -1,1 +1,0 @@
-🐛 Protect the spacesPerId variable by a barrier - Fixes Thread 1: EXC_BAD_ACCESS crash that would occur whenever multiple concurrent threads would attempt to mutate spacesPerId at the same time
