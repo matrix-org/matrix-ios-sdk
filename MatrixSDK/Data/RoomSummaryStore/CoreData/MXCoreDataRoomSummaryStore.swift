@@ -99,8 +99,6 @@ public class MXCoreDataRoomSummaryStore: NSObject {
         let request = MXRoomSummaryMO.typedFetchRequest()
         request.includesSubentities = false
         request.includesPropertyValues = false
-        //  fetch nothing
-        request.propertiesToFetch = []
         request.resultType = .countResultType
         var result = 0
         moc.performAndWait {
@@ -119,16 +117,18 @@ public class MXCoreDataRoomSummaryStore: NSObject {
         guard let property = MXRoomSummaryMO.entity().propertiesByName[propertyName] else {
             fatalError("[MXCoreDataRoomSummaryStore] Couldn't find \(propertyName) on entity \(String(describing: MXRoomSummaryMO.self)), probably property name changed")
         }
-        let request = MXRoomSummaryMO.typedFetchRequest()
+        let request = MXRoomSummaryMO.genericFetchRequest()
         request.includesSubentities = false
         //  only fetch room identifiers
         request.propertiesToFetch = [property]
+        request.resultType = .dictionaryResultType
         var result: [String] = []
         moc.performAndWait {
             do {
-                let results = try moc.fetch(request)
-                //  do not attempt to access other properties from the results
-                result = results.map({ $0.s_identifier })
+                if let dictionaries = try moc.fetch(request) as? [[String: Any]] {
+                    //  other properties than 'propertyName' won't exist in the dictionary
+                    result = dictionaries.compactMap({ $0[propertyName] as? String })
+                }
             } catch {
                 MXLog.error("[MXCoreDataRoomSummaryStore] fetchRoomIds failed: \(error)")
             }
