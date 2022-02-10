@@ -123,22 +123,6 @@ public class MXThreadingService: NSObject {
         return MXThread(withSession: session, identifier: identifier, roomId: roomId)
     }
     
-    /// Get threads in a room
-    /// - Parameter roomId: room identifier
-    /// - Returns: thread list in given room
-    public func threads(inRoom roomId: String) -> [MXThreadProtocol] {
-        //  sort threads so that the newer is the first
-        return unsortedThreads(inRoom: roomId).sorted(by: <)
-    }
-    
-    /// Get participated threads in a room
-    /// - Parameter roomId: room identifier
-    /// - Returns: participated thread list in given room
-    public func participatedThreads(inRoom roomId: String) -> [MXThreadProtocol] {
-        //  filter only participated threads and then sort threads so that the newer is the first
-        return unsortedParticipatedThreads(inRoom: roomId).sorted(by: <)
-    }
-    
     /// Mark a thread as read
     /// - Parameter threadId: Thread id
     public func markThreadAsRead(_ threadId: String) {
