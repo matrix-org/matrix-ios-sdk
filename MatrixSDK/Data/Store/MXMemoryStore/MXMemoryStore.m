@@ -268,32 +268,41 @@
 
 - (NSUInteger)localUnreadEventCount:(NSString*)roomId threadId:(NSString *)threadId withTypeIn:(NSArray*)types
 {
-    // @TODO: This method is only logic which could be moved to MXRoom
+    NSArray<MXEvent*> *newEvents = [self newIncomingEventsInRoom:roomId threadId:threadId withTypeIn:types];
+    __block NSUInteger result = 0;
+    // Check whether these unread events have not been redacted.
+    [newEvents enumerateObjectsUsingBlock:^(MXEvent * _Nonnull event, NSUInteger idx, BOOL * _Nonnull stop)
+    {
+        if (!event.isRedactedEvent)
+        {
+            result++;
+        }
+    }];
+    return result;
+}
+
+- (NSArray<MXEvent *> *)newIncomingEventsInRoom:(NSString *)roomId
+                                       threadId:(NSString *)threadId
+                                     withTypeIn:(NSArray<MXEventTypeString> *)types
+{
     MXMemoryRoomStore* store = [self getOrCreateRoomStore:roomId];
     RoomReceiptsStore *receiptsStore = [self getOrCreateRoomReceiptsStore:roomId];
-    NSUInteger count = 0;
-    
+
     if (store && receiptsStore)
     {
         MXReceiptData* data = [receiptsStore objectForKey:credentials.userId];
-        
+
         if (data)
         {
             // Check the current stored events (by ignoring oneself events)
-            NSArray *array = [store eventsAfter:data.eventId threadId:threadId except:credentials.userId withTypeIn:[NSSet setWithArray:types]];
-            
-            // Check whether these unread events have not been redacted.
-            for (MXEvent *event in array)
-            {
-                if (!event.isRedactedEvent)
-                {
-                    count ++;
-                }
-            }
+            return [store eventsAfter:data.eventId
+                             threadId:threadId
+                               except:credentials.userId
+                           withTypeIn:[NSSet setWithArray:types]];
         }
     }
-   
-    return count;
+
+    return @[];
 }
 
 - (void)storeHomeserverWellknown:(nonnull MXWellKnown *)wellknown

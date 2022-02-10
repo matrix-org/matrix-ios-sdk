@@ -412,6 +412,11 @@
     return 0;
 }
 
+- (NSArray<MXEvent *> *)newIncomingEventsInRoom:(NSString *)roomId threadId:(NSString *)threadId withTypeIn:(NSArray<MXEventTypeString> *)types
+{
+    return @[];
+}
+
 - (MXWellKnown *)homeserverWellknown
 {
     return nil;

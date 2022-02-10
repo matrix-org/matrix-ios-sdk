@@ -231,6 +231,10 @@ class MXBackgroundStore: NSObject, MXStore {
     func localUnreadEventCount(_ roomId: String, threadId: String?, withTypeIn types: [Any]?) -> UInt {
         return 0
     }
+
+    func newIncomingEvents(inRoom roomId: String, threadId: String?, withTypeIn types: [String]?) -> [MXEvent] {
+        return []
+    }
     
     var homeserverWellknown: MXWellKnown?
     

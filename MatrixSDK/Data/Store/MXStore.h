@@ -295,6 +295,21 @@
 - (NSUInteger)localUnreadEventCount:(nonnull NSString*)roomId threadId:(nullable NSString*)threadId withTypeIn:(nullable NSArray*)types;
 
 /**
+ Incoming events since the last user receipt data.
+
+ @discussion: The returned count is relative to the local storage. The actual unread messages
+ for a room may be higher than the returned value.
+
+ @param roomId the room id.
+ @param threadId the thread id to consider events in. Pass nil not to filter by any thread.
+ @param types an array of event types strings to consider
+ @return Filtered events came after the user receipt.
+ */
+- (nonnull NSArray<MXEvent*>*)newIncomingEventsInRoom:(nonnull NSString*)roomId
+                                             threadId:(nullable NSString*)threadId
+                                           withTypeIn:(nullable NSArray<MXEventTypeString>*)types;
+
+/**
  Indicate if the MXStore implementation stores data permanently.
  Permanent storage allows the SDK to make less requests at the startup.
  */
