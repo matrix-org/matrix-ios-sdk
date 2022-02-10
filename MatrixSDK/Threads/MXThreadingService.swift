@@ -126,7 +126,7 @@ public class MXThreadingService: NSObject {
     /// Get threads in a room
     /// - Parameter roomId: room identifier
     /// - Returns: thread list in given room
-    public func threads(inRoom roomId: String) -> [MXThread] {
+    public func threads(inRoom roomId: String) -> [MXThreadProtocol] {
         //  sort threads so that the newer is the first
         return unsortedThreads(inRoom: roomId).sorted(by: <)
     }
@@ -134,7 +134,7 @@ public class MXThreadingService: NSObject {
     /// Get participated threads in a room
     /// - Parameter roomId: room identifier
     /// - Returns: participated thread list in given room
-    public func participatedThreads(inRoom roomId: String) -> [MXThread] {
+    public func participatedThreads(inRoom roomId: String) -> [MXThreadProtocol] {
         //  filter only participated threads and then sort threads so that the newer is the first
         return unsortedParticipatedThreads(inRoom: roomId).sorted(by: <)
     }
@@ -149,7 +149,71 @@ public class MXThreadingService: NSObject {
         notifyDidUpdateThreads()
     }
 
+    @discardableResult
+    public func allThreads(inRoom roomId: String,
+                           onlyParticipated: Bool = false,
+                           completion: @escaping (MXResponse<[MXThreadProtocol]>) -> Void) -> MXHTTPOperation? {
+        guard let session = session else {
+            DispatchQueue.main.async {
+                completion(.failure(MXThreadingServiceError.sessionNotFound))
+            }
+            return nil
+        }
+
+        let filter = MXRoomEventFilter()
+        filter.relationTypes = [MXEventRelationTypeThread]
+        if onlyParticipated {
+            filter.relationSenders = [session.myUserId]
+        }
+        return session.matrixRestClient.messages(forRoom: roomId,
+                                                 from: "",
+                                                 direction: .backwards,
+                                                 limit: nil,
+                                                 filter: filter) { response in
+            switch response {
+            case .success(let paginationResponse):
+                guard let rootEvents = paginationResponse.chunk else {
+                    completion(.success([]))
+                    return
+                }
+
+                let threads = rootEvents.map { self.thread(forRootEvent: $0, session: session) }.sorted(by: <)
+                completion(.success(threads))
+            case .failure(let error):
+                completion(.failure(error))
+            }
+        }
+    }
+
     //  MARK: - Private
+
+    private func thread(forRootEvent rootEvent: MXEvent, session: MXSession) -> MXThreadModel {
+        let notificationCount: UInt
+        let highlightCount: UInt
+        if let store = session.store {
+            notificationCount = store.localUnreadEventCount(rootEvent.roomId,
+                                                            threadId: rootEvent.eventId,
+                                                            withTypeIn: session.unreadEventTypes)
+            let newEvents = store.newIncomingEvents(inRoom: rootEvent.roomId,
+                                                    threadId: rootEvent.eventId,
+                                                    withTypeIn: session.unreadEventTypes)
+            highlightCount = UInt(newEvents.filter { $0.shouldBeHighlighted(inSession: session) }.count)
+        } else {
+            notificationCount = 0
+            highlightCount = 0
+        }
+        let thread = MXThreadModel(withRootEvent: rootEvent,
+                                   notificationCount: notificationCount,
+                                   highlightCount: highlightCount)
+        //  workaround for https://github.com/matrix-org/synapse/issues/11753. Can be removed when that's fixed.
+        if thread.numberOfReplies == 0, let localThread = self.thread(withId: rootEvent.eventId) {
+            if let lastMessage = localThread.lastMessage {
+                thread.updateLastMessage(lastMessage)
+            }
+            thread.updateNumberOfReplies(localThread.numberOfReplies)
+        }
+        return thread
+    }
 
     @discardableResult
     private func handleInThreadEvent(_ event: MXEvent, direction: MXTimelineDirection, session: MXSession) -> Bool {

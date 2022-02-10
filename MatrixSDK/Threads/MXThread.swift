@@ -18,7 +18,7 @@ import Foundation
 
 @objcMembers
 /// Thread instance. Use `MXThreadingService` to access threads.
-public class MXThread: NSObject {
+public class MXThread: NSObject, MXThreadProtocol {
     
     /// Session instance
     public private(set) weak var session: MXSession?
@@ -178,42 +178,11 @@ public class MXThread: NSObject {
         }
         
         notificationCount = store.localUnreadEventCount(roomId, threadId: id, withTypeIn: session.unreadEventTypes)
-        guard let readReceipt = store.getReceiptInRoom(roomId, forUserId: session.myUserId) else {
-            return
+        let newEvents = store.newIncomingEvents(inRoom: roomId, threadId: id, withTypeIn: session.unreadEventTypes)
+        let highlightCount = UInt(newEvents.filter { $0.shouldBeHighlighted(inSession: session) }.count)
+        if highlightCount > 0 {
+            self.highlightCount = highlightCount
         }
-        highlightCount = UInt(eventsMap.values
-                                .filter { $0.originServerTs > readReceipt.ts }
-                                .filter { shouldHighlight(event: $0, in: session) }
-                                .count)
-    }
-
-    private func shouldHighlight(event: MXEvent, in session: MXSession) -> Bool {
-        let displayNameChecker = MXPushRuleDisplayNameCondtionChecker(matrixSession: session,
-                                                                      currentUserDisplayName: nil)
-
-        if displayNameChecker.isCondition(nil, satisfiedBy: event, roomState: nil, withJsonDict: nil) {
-            return true
-        }
-        guard let rule = session.notificationCenter.rule(matching: event, roomState: nil) else {
-            return false
-        }
-
-        var isHighlighted = false
-
-        // Check whether is there an highlight tweak on it
-        for ruleAction in rule.actions ?? [] {
-            guard let action = ruleAction as? MXPushRuleAction else { continue }
-            guard action.actionType == MXPushRuleActionTypeSetTweak else { continue }
-            guard action.parameters["set_tweak"] as? String == "highlight" else { continue }
-            // Check the highlight tweak "value"
-            // If not present, highlight. Else check its value before highlighting
-            if nil == action.parameters["value"] || true == (action.parameters["value"] as? Bool) {
-                isHighlighted = true
-                break
-            }
-        }
-
-        return isHighlighted
     }
 }
 

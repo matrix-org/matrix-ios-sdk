@@ -1671,6 +1671,12 @@
 		ECDA762B27B28F3B000C48CF /* MXEventRelationThread.h in Headers */ = {isa = PBXBuildFile; fileRef = ECDA762827B28F3B000C48CF /* MXEventRelationThread.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		ECDA762C27B28F3B000C48CF /* MXEventRelationThread.m in Sources */ = {isa = PBXBuildFile; fileRef = ECDA762927B28F3B000C48CF /* MXEventRelationThread.m */; };
 		ECDA762D27B28F3B000C48CF /* MXEventRelationThread.m in Sources */ = {isa = PBXBuildFile; fileRef = ECDA762927B28F3B000C48CF /* MXEventRelationThread.m */; };
+		ECDA762F27B292B5000C48CF /* MXThreadModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECDA762E27B292B5000C48CF /* MXThreadModel.swift */; };
+		ECDA763027B292B5000C48CF /* MXThreadModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECDA762E27B292B5000C48CF /* MXThreadModel.swift */; };
+		ECDA763227B293D9000C48CF /* MXThreadProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECDA763127B293D9000C48CF /* MXThreadProtocol.swift */; };
+		ECDA763327B293D9000C48CF /* MXThreadProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECDA763127B293D9000C48CF /* MXThreadProtocol.swift */; };
+		ECDA763527B527BA000C48CF /* MXEvent+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECDA763427B527BA000C48CF /* MXEvent+Extensions.swift */; };
+		ECDA763627B527BA000C48CF /* MXEvent+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECDA763427B527BA000C48CF /* MXEvent+Extensions.swift */; };
 		ECE3DF842707370000FB4C96 /* MXRoomListDataPaginationOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECE3DF832707370000FB4C96 /* MXRoomListDataPaginationOptions.swift */; };
 		ECE3DF852707370000FB4C96 /* MXRoomListDataPaginationOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECE3DF832707370000FB4C96 /* MXRoomListDataPaginationOptions.swift */; };
 		ECE3DF9D270C660900FB4C96 /* MXMulticastDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECE3DF9C270C660900FB4C96 /* MXMulticastDelegate.swift */; };
@@ -2619,6 +2625,9 @@
 		ECD289C32701DADA00F268CF /* MXTools.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXTools.swift; sourceTree = "<group>"; };
 		ECDA762827B28F3B000C48CF /* MXEventRelationThread.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXEventRelationThread.h; sourceTree = "<group>"; };
 		ECDA762927B28F3B000C48CF /* MXEventRelationThread.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXEventRelationThread.m; sourceTree = "<group>"; };
+		ECDA762E27B292B5000C48CF /* MXThreadModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXThreadModel.swift; sourceTree = "<group>"; };
+		ECDA763127B293D9000C48CF /* MXThreadProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXThreadProtocol.swift; sourceTree = "<group>"; };
+		ECDA763427B527BA000C48CF /* MXEvent+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MXEvent+Extensions.swift"; sourceTree = "<group>"; };
 		ECE3DF7E2707299C00FB4C96 /* MXSuggestedRoomListDataFetcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXSuggestedRoomListDataFetcher.swift; sourceTree = "<group>"; };
 		ECE3DF8027072BE500FB4C96 /* MXSuggestedRoomListDataCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXSuggestedRoomListDataCache.swift; sourceTree = "<group>"; };
 		ECE3DF832707370000FB4C96 /* MXRoomListDataPaginationOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXRoomListDataPaginationOptions.swift; sourceTree = "<group>"; };
@@ -3233,6 +3242,7 @@
 				3259D01A2603731A00C365DB /* MXKeysQueryResponse+Extensions.swift */,
 				EC5C56082798CEA00014CBE9 /* NSDictionary+MutableDeepCopy.h */,
 				EC5C56092798CEA00014CBE9 /* NSDictionary+MutableDeepCopy.m */,
+				ECDA763427B527BA000C48CF /* MXEvent+Extensions.swift */,
 			);
 			path = Categories;
 			sourceTree = "<group>";
@@ -4570,6 +4580,8 @@
 			children = (
 				ECCA02BA273485B200B6F34F /* MXThreadingService.swift */,
 				ECCA02BD27348FE300B6F34F /* MXThread.swift */,
+				ECDA762E27B292B5000C48CF /* MXThreadModel.swift */,
+				ECDA763127B293D9000C48CF /* MXThreadProtocol.swift */,
 				EC131B092758D56600712964 /* MXThreadNotificationsCount.swift */,
 			);
 			path = Threads;
@@ -5676,6 +5688,7 @@
 				EC8A53E625B1BCC6004E0802 /* MXThirdPartyProtocol.m in Sources */,
 				32999DE022DCD183004FF987 /* MXPusher.m in Sources */,
 				F03EF4FF1DF014D9009DF592 /* MXMediaLoader.m in Sources */,
+				ECDA763227B293D9000C48CF /* MXThreadProtocol.swift in Sources */,
 				320A8841217F4E3F002EA952 /* MXMegolmBackupAuthData.m in Sources */,
 				B1A0270226162110001AADFF /* MXSpaceChildrenResponse.m in Sources */,
 				66398BA527A4085B00466E89 /* MXRefreshResponse.m in Sources */,
@@ -5833,6 +5846,7 @@
 				32114A901A262ECB00FF2EC4 /* MXNoStore.m in Sources */,
 				B19A30C02404268600FB6F35 /* MXQRCodeDataCoder.m in Sources */,
 				3297913023AA126500F7BB9B /* MXKeyVerificationStatusResolver.m in Sources */,
+				ECDA762F27B292B5000C48CF /* MXThreadModel.swift in Sources */,
 				3A59A49F25A7A16F00DDA1FC /* MXOlmOutboundGroupSession.m in Sources */,
 				B146D4F221A5AF7F00D8C2C6 /* MXRealmEventScanMapper.m in Sources */,
 				B11BD45A22CB58850064D8B0 /* MXReplyEventFormattedBodyParts.m in Sources */,
@@ -5978,6 +5992,7 @@
 				32720D9D222EAA6F0086FFF5 /* MXDiscoveredClientConfig.m in Sources */,
 				EC5C560C2798CEA00014CBE9 /* NSDictionary+MutableDeepCopy.m in Sources */,
 				ECD2897926E8EE9300F268CF /* MXRoomListDataSortOptions.swift in Sources */,
+				ECDA763527B527BA000C48CF /* MXEvent+Extensions.swift in Sources */,
 				B146D4F321A5AF7F00D8C2C6 /* MXRealmEventScan.m in Sources */,
 				B14EECD92577DE7A00448735 /* MXLoginSSOIdentityProvider.m in Sources */,
 				32B090E2261F709B002924AA /* MXAsyncTaskQueue.swift in Sources */,
@@ -6178,6 +6193,7 @@
 				B14EF1DE2397E90400758AF0 /* MXRealmAggregationsMapper.m in Sources */,
 				3274538723FD69D600438328 /* MXKeyVerificationRequestByToDeviceJSONModel.m in Sources */,
 				B14EF1DF2397E90400758AF0 /* MXAggregatedEditsUpdater.m in Sources */,
+				ECDA763327B293D9000C48CF /* MXThreadProtocol.swift in Sources */,
 				B14EF1E02397E90400758AF0 /* MXRealmCryptoStore.m in Sources */,
 				B14EF1E12397E90400758AF0 /* MXRoomSummary.m in Sources */,
 				66398BA627A4085B00466E89 /* MXRefreshResponse.m in Sources */,
@@ -6335,6 +6351,7 @@
 				B14EF22F2397E90400758AF0 /* (null) in Sources */,
 				B14EF2302397E90400758AF0 /* MXDeviceListOperation.m in Sources */,
 				32C78B6B256CFC4D008130B1 /* MXCryptoMigration.m in Sources */,
+				ECDA763027B292B5000C48CF /* MXThreadModel.swift in Sources */,
 				B14EF2312397E90400758AF0 /* MX3PidAddSession.m in Sources */,
 				B14EF2322397E90400758AF0 /* MXBugReportRestClient.m in Sources */,
 				B14EF2342397E90400758AF0 /* MXCallKitAdapter.m in Sources */,
@@ -6480,6 +6497,7 @@
 				B14EF27B2397E90400758AF0 /* MXOlmSessionResult.m in Sources */,
 				EC5C560D2798CEA00014CBE9 /* NSDictionary+MutableDeepCopy.m in Sources */,
 				323F877E25546170009E9E67 /* MXBaseProfiler.m in Sources */,
+				ECDA763627B527BA000C48CF /* MXEvent+Extensions.swift in Sources */,
 				3AC135DC2640335100EE1E74 /* MXDehydrationService.m in Sources */,
 				B14EF27C2397E90400758AF0 /* MXRestClient.swift in Sources */,
 				32AF929A24115D8B0008A0FD /* MXPendingSecretShareRequest.m in Sources */,
