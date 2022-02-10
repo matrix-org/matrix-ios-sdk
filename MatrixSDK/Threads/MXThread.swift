@@ -58,14 +58,16 @@ public class MXThread: NSObject, MXThreadProtocol {
     
     /// Add an event to the thread
     /// - Parameter event: Event
+    /// - Parameter direction: Direction of the event
     /// - Returns: true if handled, false otherwise
     @discardableResult
-    internal func addEvent(_ event: MXEvent) -> Bool {
+    internal func addEvent(_ event: MXEvent, direction: MXTimelineDirection) -> Bool {
         eventsMap[event.eventId] = event
         updateNotificationsCount()
         if let sender = event.sender,
            let session = session,
-           sender == session.myUserId {
+           sender == session.myUserId,
+           direction == .forwards {
             //  the user sent a message to the thread, so mark the thread as read
             markAsRead()
         }

@@ -77,7 +77,7 @@ public class MXThreadingService: NSObject {
             return handleInThreadEvent(event, direction: direction, session: session)
         } else if let thread = thread(withId: event.eventId) {
             //  event is a thread root
-            if thread.addEvent(event) {
+            if thread.addEvent(event, direction: direction) {
                 notifyDidUpdateThreads()
                 return true
             }
@@ -223,7 +223,7 @@ public class MXThreadingService: NSObject {
         let handled: Bool
         if let thread = thread(withId: threadId) {
             //  add event to the thread if found
-            handled = thread.addEvent(event)
+            handled = thread.addEvent(event, direction: direction)
         } else {
             //  create the thread for the first time
             let thread: MXThread
@@ -233,7 +233,7 @@ public class MXThreadingService: NSObject {
             } else {
                 thread = MXThread(withSession: session, identifier: threadId, roomId: event.roomId)
             }
-            handled = thread.addEvent(event)
+            handled = thread.addEvent(event, direction: direction)
             saveThread(thread)
             DispatchQueue.main.async {
                 NotificationCenter.default.post(name: Self.newThreadCreated, object: thread, userInfo: nil)
