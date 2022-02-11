@@ -353,7 +353,7 @@ public class MXThreadEventTimeline: NSObject, MXEventTimeline {
         for event in response.chunk {
             addEvent(event, direction: direction, fromStore: false)
         }
-        if let rootEvent = response.originalEvent {
+        if let rootEvent = response.originalEvent, response.nextBatch == nil {
             addEvent(rootEvent, direction: direction, fromStore: false)
         }
         
