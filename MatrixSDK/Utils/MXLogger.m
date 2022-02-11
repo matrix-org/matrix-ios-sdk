@@ -18,6 +18,7 @@
 #import "MXLogger.h"
 
 #import "MatrixSDK.h"
+#import "MatrixSDKSwiftHeader.h"
 
 // stderr so it can be restored
 int stderrSave = 0;
@@ -302,10 +303,9 @@ static NSString* crashLogPath(void)
 {
     NSString *logsFolderPath = nil;
 
-    NSString *applicationGroupIdentifier = [MXSDKOptions sharedInstance].applicationGroupIdentifier;
-    if (applicationGroupIdentifier)
+    NSURL *sharedContainerURL = [[NSFileManager defaultManager] applicationGroupContainerURL];
+    if (sharedContainerURL)
     {
-        NSURL *sharedContainerURL = [[NSFileManager defaultManager] containerURLForSecurityApplicationGroupIdentifier:applicationGroupIdentifier];
         logsFolderPath = [sharedContainerURL path];
     }
     else
