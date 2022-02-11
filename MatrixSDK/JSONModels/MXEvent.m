@@ -166,7 +166,10 @@ NSString *const kMXMessageContentKeyExtensiblePollAnswers = @"answers";
 NSString *const kMXMessageContentKeyExtensiblePollAnswerId = @"id";
 NSString *const kMXMessageContentKeyExtensiblePollMaxSelections = @"max_selections";
 NSString *const kMXMessageContentKeyExtensiblePollKind = @"kind";
+
+NSString *const kMXMessageContentKeyExtensiblePollKindDisclosedMSC3381 = @"org.matrix.msc3381.poll.disclosed";
 NSString *const kMXMessageContentKeyExtensiblePollKindDisclosed = @"m.poll.disclosed";
+NSString *const kMXMessageContentKeyExtensiblePollKindUndisclosedMSC3381 = @"org.matrix.msc3381.poll.undisclosed";
 NSString *const kMXMessageContentKeyExtensiblePollKindUndisclosed = @"m.poll.undisclosed";
 
 // Location
