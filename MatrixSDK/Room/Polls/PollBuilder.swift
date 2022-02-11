@@ -29,7 +29,15 @@ struct PollBuilder {
         
         poll.text = pollStartEventContent.question
         poll.maxAllowedSelections = max(1, pollStartEventContent.maxSelections.uintValue)
-        poll.kind = (pollStartEventContent.kind == kMXMessageContentKeyExtensiblePollKindUndisclosed ? .undisclosed : .disclosed)
+        
+        switch pollStartEventContent.kind {
+        case kMXMessageContentKeyExtensiblePollKindUndisclosedMSC3381, kMXMessageContentKeyExtensiblePollKindUndisclosed:
+            poll.kind = .undisclosed
+        case kMXMessageContentKeyExtensiblePollKindDisclosedMSC3381, kMXMessageContentKeyExtensiblePollKindDisclosed:
+            poll.kind = .disclosed
+        default:
+            poll.kind = .undisclosed
+        }
         
         var answerOptionIdentifiers = [String]()
         poll.answerOptions = pollStartEventContent.answerOptions.prefix(Constants.maxAnswerOptionCount).map { answerOption in
