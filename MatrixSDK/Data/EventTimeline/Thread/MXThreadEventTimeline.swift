@@ -167,19 +167,27 @@ public class MXThreadEventTimeline: NSObject, MXEventTimeline {
                 self.resetPagination()
                 
                 var events: [MXEvent] = []
-                events.append(contentsOf: context.eventsBefore)
+                if let eventsBefore = context.eventsBefore {
+                    events.append(contentsOf: eventsBefore)
+                }
                 events.append(context.event)
-                events.append(contentsOf: context.eventsAfter)
+                if let eventsAfter = context.eventsAfter {
+                    events.append(contentsOf: eventsAfter)
+                }
                 
                 self.decryptEvents(events) {
                     self.addEvent(context.event, direction: .forwards, fromStore: false)
-                    
-                    for event in context.eventsBefore {
-                        self.addEvent(event, direction: .backwards, fromStore: false)
+
+                    if let eventsBefore = context.eventsBefore {
+                        for event in eventsBefore {
+                            self.addEvent(event, direction: .backwards, fromStore: false)
+                        }
                     }
-                    
-                    for event in context.eventsAfter {
-                        self.addEvent(event, direction: .forwards, fromStore: false)
+
+                    if let eventsAfter = context.eventsAfter {
+                        for event in eventsAfter {
+                            self.addEvent(event, direction: .forwards, fromStore: false)
+                        }
                     }
                     
                     self.backwardsPaginationToken = context.start
