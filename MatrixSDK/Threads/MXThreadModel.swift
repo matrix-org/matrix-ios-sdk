@@ -35,9 +35,9 @@ public class MXThreadModel: NSObject, MXThreadProtocol {
 
     public private(set) var numberOfReplies: Int
 
-    internal init(withRootEvent rootEvent: MXEvent,
-                  notificationCount: UInt = 0,
-                  highlightCount: UInt = 0) {
+    public init(withRootEvent rootEvent: MXEvent,
+                notificationCount: UInt = 0,
+                highlightCount: UInt = 0) {
         self.id = rootEvent.eventId
         self.roomId = rootEvent.roomId
         self.notificationCount = notificationCount
