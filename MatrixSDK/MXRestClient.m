@@ -5741,6 +5741,7 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
                          relationType:(NSString*)relationType
                             eventType:(NSString*)eventType
                                  from:(NSString*)from
+                            direction:(MXTimelineDirection)direction
                                 limit:(NSInteger)limit
                               success:(void (^)(MXAggregationPaginatedResponse *paginatedResponse))success
                               failure:(void (^)(NSError *error))failure
@@ -5765,6 +5766,14 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
     if (from)
     {
         parameters[@"from"] = from;
+    }
+    if (direction == MXTimelineDirectionForwards)
+    {
+        parameters[@"dir"] = @"f";
+    }
+    else
+    {
+        parameters[@"dir"] = @"b";
     }
 
     if (-1 != limit)

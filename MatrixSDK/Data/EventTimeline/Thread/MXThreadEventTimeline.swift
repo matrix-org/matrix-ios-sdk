@@ -265,6 +265,7 @@ public class MXThreadEventTimeline: NSObject, MXEventTimeline {
                                                             relationType: MXEventRelationTypeThread,
                                                             eventType: nil,
                                                             from: paginationToken,
+                                                            direction: direction,
                                                             limit: remainingNumItems,
                                                             completion: { [weak self] response in
                                                                 guard let self = self else { return }

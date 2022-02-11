@@ -1912,6 +1912,7 @@ public extension MXRestClient {
                                                relationType: String?,
                                                eventType: String?,
                                                from: String?,
+                                               direction: MXTimelineDirection,
                                                limit: UInt?,
                                                completion: @escaping (_ response: MXResponse<MXAggregationPaginatedResponse>) -> Void) -> MXHTTPOperation {
         let _limit: Int
@@ -1920,7 +1921,7 @@ public extension MXRestClient {
         } else {
             _limit = -1
         }
-        return __relations(forEvent: eventId, inRoom: roomId, relationType: relationType, eventType: eventType, from: from, limit: _limit, success: currySuccess(completion), failure: curryFailure(completion))
+        return __relations(forEvent: eventId, inRoom: roomId, relationType: relationType, eventType: eventType, from: from, direction: direction, limit: _limit, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
 }

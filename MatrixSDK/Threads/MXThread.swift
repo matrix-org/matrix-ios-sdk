@@ -158,6 +158,7 @@ public class MXThread: NSObject, MXThreadProtocol {
                                            relationType: MXEventRelationTypeThread,
                                            eventType: nil,
                                            from: nil,
+                                           direction: .backwards,
                                            limit: nil) { response in
             switch response {
             case .success(let aggregatedResponse):
