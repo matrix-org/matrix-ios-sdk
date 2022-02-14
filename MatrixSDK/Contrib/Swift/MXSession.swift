@@ -299,4 +299,11 @@ public extension MXSession {
             return __listen(toEvents: legacyBlock)
         }
     }
+
+    //  MARK: - Homeserver Information
+
+    /// The homeserver capabilities
+    var homeserverCapabilities: MXCapabilities? {
+        return __homeserverCapabilities
+    }
 }
