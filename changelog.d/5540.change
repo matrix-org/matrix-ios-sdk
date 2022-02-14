@@ -1,1 +1,1 @@
-MXThreadingService: Implement thread list api.
+MXSession & MXThreadingService: Implement server capabilities api & implement thread list api according to server capabilities.
