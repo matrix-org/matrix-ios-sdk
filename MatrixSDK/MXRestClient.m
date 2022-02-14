@@ -39,6 +39,7 @@
  */
 NSString *const kMXAPIPrefixPathR0 = @"_matrix/client/r0";
 NSString *const kMXAPIPrefixPathV1 = @"_matrix/client/v1";
+NSString *const kMXAPIPrefixPathV3 = @"_matrix/client/v3";
 NSString *const kMXAPIPrefixPathUnstable = @"_matrix/client/unstable";
 
 /**
@@ -527,6 +528,35 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
                                                                    MXJSONModelSetMXJSONModel(wellKnown, MXWellKnown, JSONResponse);
                                                                } andCompletion:^{
                                                                    success(wellKnown);
+                                                               }];
+                                                           }
+                                                       }
+                                                       failure:^(NSError *error) {
+                                                           MXStrongifyAndReturnIfNil(self);
+                                                           [self dispatchFailure:error inBlock:failure];
+                                                       }];
+    return operation;
+}
+
+- (MXHTTPOperation *)capabilities:(void (^)(MXCapabilities *))success
+                          failure:(void (^)(NSError *))failure
+{
+    NSString *path = [NSString stringWithFormat:@"%@/capabilities", kMXAPIPrefixPathV3];
+
+    MXWeakify(self);
+    MXHTTPOperation *operation = [httpClient requestWithMethod:@"GET"
+                                                          path:path
+                                                    parameters:nil
+                                                       success:^(NSDictionary *JSONResponse) {
+                                                           MXStrongifyAndReturnIfNil(self);
+
+                                                           if (success)
+                                                           {
+                                                               __block MXCapabilities *capabilities;
+                                                               [self dispatchProcessing:^{
+                                                                   MXJSONModelSetMXJSONModel(capabilities, MXCapabilities, JSONResponse);
+                                                               } andCompletion:^{
+                                                                   success(capabilities);
                                                                }];
                                                            }
                                                        }
