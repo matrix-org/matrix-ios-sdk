@@ -425,6 +425,14 @@
 {
 }
 
+- (MXCapabilities *)homeserverCapabilities
+{
+    return nil;
+}
+- (void)storeHomeserverCapabilities:(MXCapabilities *)homeserverCapabilities
+{
+}
+
 - (NSInteger)maxUploadSize
 {
     return -1;

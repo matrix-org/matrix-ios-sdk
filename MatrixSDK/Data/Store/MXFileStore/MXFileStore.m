@@ -477,6 +477,20 @@ static NSUInteger preloadOptions;
     }
 }
 
+- (MXCapabilities *)homeserverCapabilities
+{
+    return metaData.homeserverCapabilities;
+}
+
+- (void)storeHomeserverCapabilities:(MXCapabilities *)capabilities
+{
+    if (metaData)
+    {
+        metaData.homeserverCapabilities = capabilities;
+        metaDataHasChanged = YES;
+    }
+}
+
 - (NSInteger)maxUploadSize
 {
     return metaData.maxUploadSize;

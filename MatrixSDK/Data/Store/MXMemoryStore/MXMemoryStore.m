@@ -39,6 +39,7 @@
 @synthesize roomSummaryStore;
 
 @synthesize storeService, eventStreamToken, userAccountData, syncFilterId, homeserverWellknown, areAllIdentityServerTermsAgreed;
+@synthesize homeserverCapabilities;
 
 - (instancetype)init
 {
@@ -308,6 +309,11 @@
 - (void)storeHomeserverWellknown:(nonnull MXWellKnown *)wellknown
 {
     homeserverWellknown = wellknown;
+}
+
+- (void)storeHomeserverCapabilities:(MXCapabilities *)capabilities
+{
+    homeserverCapabilities = capabilities;
 }
 
 - (NSInteger)maxUploadSize

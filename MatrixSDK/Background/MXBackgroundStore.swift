@@ -240,6 +240,10 @@ class MXBackgroundStore: NSObject, MXStore {
     
     func storeHomeserverWellknown(_ homeserverWellknown: MXWellKnown) {
     }
+
+    var homeserverCapabilities: MXCapabilities?
+    func storeHomeserverCapabilities(_ homeserverCapabilities: MXCapabilities) {
+    }
     
     func loadRoomMessages(forRoom roomId: String, completion: (() -> Void)? = nil) {
         DispatchQueue.main.async {

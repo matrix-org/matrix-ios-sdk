@@ -32,6 +32,7 @@
 
 @class MXSpaceGraphData;
 @class MXStoreService;
+@class MXCapabilities;
 
 /**
  The `MXStore` protocol defines an interface that must be implemented in order to store
@@ -335,6 +336,18 @@
  @param homeserverWellknown the .well-known data to store.
  */
 - (void)storeHomeserverWellknown:(nonnull MXWellKnown*)homeserverWellknown;
+
+/**
+ The homeserver capabilities.
+ */
+@property (nonatomic, readonly) MXCapabilities * _Nullable homeserverCapabilities;
+
+/**
+ Store the homeserver capabilities.
+
+ @param homeserverCapabilities the homeserver capabilities to store.
+ */
+- (void)storeHomeserverCapabilities:(nonnull MXCapabilities*)homeserverCapabilities;
 
 #pragma mark - Room Messages
 
