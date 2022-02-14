@@ -144,32 +144,57 @@ public class MXThreadingService: NSObject {
             return nil
         }
 
-        let filter = MXRoomEventFilter()
-        filter.relationTypes = [MXEventRelationTypeThread]
-        if onlyParticipated {
-            filter.relationSenders = [session.myUserId]
-        }
-        return session.matrixRestClient.messages(forRoom: roomId,
-                                                 from: "",
-                                                 direction: .backwards,
-                                                 limit: nil,
-                                                 filter: filter) { response in
-            switch response {
-            case .success(let paginationResponse):
-                guard let rootEvents = paginationResponse.chunk else {
-                    completion(.success([]))
-                    return
-                }
-
-                let threads = rootEvents.map { self.thread(forRootEvent: $0, session: session) }.sorted(by: <)
-                completion(.success(threads))
-            case .failure(let error):
-                completion(.failure(error))
+        if session.homeserverCapabilities?.threads?.isEnabled == true {
+            //  homeserver supports threads
+            let filter = MXRoomEventFilter()
+            filter.relationTypes = [MXEventRelationTypeThread]
+            if onlyParticipated {
+                filter.relationSenders = [session.myUserId]
             }
+            return session.matrixRestClient.messages(forRoom: roomId,
+                                                     from: "",
+                                                     direction: .backwards,
+                                                     limit: nil,
+                                                     filter: filter) { response in
+                switch response {
+                case .success(let paginationResponse):
+                    guard let rootEvents = paginationResponse.chunk else {
+                        completion(.success([]))
+                        return
+                    }
+
+                    let threads = rootEvents.map { self.thread(forRootEvent: $0, session: session) }.sorted(by: <)
+                    completion(.success(threads))
+                case .failure(let error):
+                    completion(.failure(error))
+                }
+            }
+        } else {
+            //  use local implementation
+            if onlyParticipated {
+                DispatchQueue.main.async {
+                    completion(.success(self.localThreads(inRoom: roomId)))
+                }
+            } else {
+                DispatchQueue.main.async {
+                    completion(.success(self.localParticipatedThreads(inRoom: roomId)))
+                }
+            }
+            return nil
         }
     }
 
     //  MARK: - Private
+
+    private func localThreads(inRoom roomId: String) -> [MXThreadProtocol] {
+        //  sort threads so that the newer is the first
+        return unsortedThreads(inRoom: roomId).sorted(by: <)
+    }
+
+    private func localParticipatedThreads(inRoom roomId: String) -> [MXThreadProtocol] {
+        //  filter only participated threads and then sort threads so that the newer is the first
+        return unsortedParticipatedThreads(inRoom: roomId).sorted(by: <)
+    }
 
     private func thread(forRootEvent rootEvent: MXEvent, session: MXSession) -> MXThreadModel {
         let notificationCount: UInt
