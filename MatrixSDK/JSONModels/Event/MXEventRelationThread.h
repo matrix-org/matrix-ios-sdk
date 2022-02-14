@@ -21,8 +21,8 @@ NS_ASSUME_NONNULL_BEGIN
 @interface MXEventRelationThread : MXJSONModel
 
 @property (nonatomic, readonly) MXEvent *latestEvent;
-@property (nonatomic, readonly) NSUInteger numberOfReplies;;
-@property (nonatomic, readonly, getter=isParticipated) BOOL participated;
+@property (nonatomic, readonly) NSUInteger numberOfReplies;
+@property (nonatomic, readonly, getter=hasParticipated) BOOL participated;
 
 @end
 

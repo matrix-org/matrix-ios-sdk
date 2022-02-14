@@ -45,7 +45,7 @@ public class MXThreadModel: NSObject, MXThreadProtocol {
         self.rootMessage = rootEvent
         if let thread = rootEvent.unsignedData?.relations?.thread {
             self.lastMessage = thread.latestEvent
-            isParticipated = thread.isParticipated
+            isParticipated = thread.hasParticipated
             numberOfReplies = Int(thread.numberOfReplies)
         } else {
             self.lastMessage = nil

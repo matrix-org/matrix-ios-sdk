@@ -52,7 +52,7 @@ static NSString* const kJSONKeyParticipated = @"current_user_participated";
 
     result[kJSONKeyLatestEvent] = self.latestEvent.JSONDictionary;
     result[kJSONKeyCount] = @(self.numberOfReplies);
-    result[kJSONKeyParticipated] = @(self.isParticipated);
+    result[kJSONKeyParticipated] = @(self.hasParticipated);
 
     return result;
 }

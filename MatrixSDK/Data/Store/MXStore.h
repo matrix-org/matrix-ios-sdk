@@ -304,7 +304,7 @@
  @param roomId the room id.
  @param threadId the thread id to consider events in. Pass nil not to filter by any thread.
  @param types an array of event types strings to consider
- @return Filtered events came after the user receipt.
+ @return Filtered events that came after the user receipt.
  */
 - (nonnull NSArray<MXEvent*>*)newIncomingEventsInRoom:(nonnull NSString*)roomId
                                              threadId:(nullable NSString*)threadId

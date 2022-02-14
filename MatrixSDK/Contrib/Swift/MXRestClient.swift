@@ -1904,6 +1904,7 @@ public extension MXRestClient {
     ///   - relationType: Optional. The type of relation
     ///   - eventType: Optional. Event type to filter by
     ///   - from: Optional. The token to start getting results from
+    ///   - direction: direction from the token
     ///   - limit: Optional. The maximum number of messages to return
     ///   - completion: A closure called when the operation completes.
     /// - Returns: a `MXHTTPOperation` instance.

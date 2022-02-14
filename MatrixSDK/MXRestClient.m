@@ -78,6 +78,12 @@ NSString *const kMXMembersOfRoomParametersAt            = @"at";
 NSString *const kMXMembersOfRoomParametersMembership    = @"membership";
 NSString *const kMXMembersOfRoomParametersNotMembership = @"not_membership";
 
+/**
+ Timeline direction constants can be used in `-[MXRestClient messagesForRoom:...]` or `-[MXRestClient relationsForEvent:...]` methods.
+ */
+NSString *const kMXTimelineDirectionForwards            = @"f";
+NSString *const kMXTimelineDirectionBackwards           = @"b";
+
 NSString *const MXCredentialsUpdateTokensNotification = @"MXCredentialsUpdateTokensNotification";
 NSString *const kMXCredentialsNewRefreshTokenDataKey = @"refresh_token_data";
 /**
@@ -2626,11 +2632,11 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
 
     if (direction == MXTimelineDirectionForwards)
     {
-        parameters[@"dir"] = @"f";
+        parameters[@"dir"] = kMXTimelineDirectionForwards;
     }
     else
     {
-        parameters[@"dir"] = @"b";
+        parameters[@"dir"] = kMXTimelineDirectionBackwards;
     }
     if (-1 != limit)
     {
@@ -5799,11 +5805,11 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
     }
     if (direction == MXTimelineDirectionForwards)
     {
-        parameters[@"dir"] = @"f";
+        parameters[@"dir"] = kMXTimelineDirectionForwards;
     }
     else
     {
-        parameters[@"dir"] = @"b";
+        parameters[@"dir"] = kMXTimelineDirectionBackwards;
     }
 
     if (-1 != limit)
