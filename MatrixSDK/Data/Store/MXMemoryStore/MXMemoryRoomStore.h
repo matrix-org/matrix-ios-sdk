@@ -100,7 +100,7 @@
  @param types a set of event types strings (MXEventTypeString).
  @return the messages events after an event Id
  */
-- (NSArray*)eventsAfter:(NSString *)eventId threadId:(NSString*)threadId except:(NSString*)userId withTypeIn:(NSSet*)types;
+- (NSArray<MXEvent*>*)eventsAfter:(NSString *)eventId threadId:(NSString*)threadId except:(NSString*)userId withTypeIn:(NSSet<MXEventTypeString>*)types;
 
 /**
  Get events related to a specific event.

@@ -911,6 +911,9 @@ typedef void (^MXOnResumeDone)(void);
 
     // Refresh wellknown data
     [self refreshHomeserverWellknown:nil failure:nil];
+
+    // Refresh homeserver capabilities
+    [self refreshHomeserverCapabilities:nil failure:nil];
     
     // Get the maximum file size allowed for uploading media
     [self.matrixRestClient maxUploadSize:^(NSInteger maxUploadSize) {
@@ -4403,6 +4406,34 @@ typedef void (^MXOnResumeDone)(void);
         if (success)
         {
             success(wellKnown);
+        }
+    } failure:failure];
+}
+
+#pragma mark - Homeserver capabilities
+
+- (MXCapabilities *)homeserverCapabilities
+{
+    return self.store.homeserverCapabilities;
+}
+
+- (MXHTTPOperation *)refreshHomeserverCapabilities:(void (^)(MXCapabilities *))success
+                                           failure:(void (^)(NSError *))failure
+{
+    MXLogDebug(@"[MXSession] refreshHomeserverCapabilities");
+
+    MXWeakify(self);
+    return [self.matrixRestClient capabilities:^(MXCapabilities *capabilities) {
+        MXStrongifyAndReturnIfNil(self);
+
+        if (capabilities)
+        {
+            [self.store storeHomeserverCapabilities:capabilities];
+        }
+
+        if (success)
+        {
+            success(capabilities);
         }
     } failure:failure];
 }
