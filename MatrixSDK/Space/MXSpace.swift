@@ -251,7 +251,7 @@ public class MXSpace: NSObject {
             return
         }
         
-        room.state({ roomState in
+        room.state { roomState in
             guard let powerLevels = roomState?.powerLevels else {
                 MXLog.warning("[MXSpace] canAddRoom: space power levels not found")
                 completion(false)
@@ -262,7 +262,7 @@ public class MXSpace: NSObject {
             let canAddRoom = userPowerLevel >= minimumPowerLevel
             
             completion(canAddRoom)
-        })
+        }
     }
     
     // MARK: - Private
