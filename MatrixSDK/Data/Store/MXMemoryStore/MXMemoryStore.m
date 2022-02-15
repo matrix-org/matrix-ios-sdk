@@ -286,24 +286,26 @@
                                        threadId:(NSString *)threadId
                                      withTypeIn:(NSArray<MXEventTypeString> *)types
 {
-    MXMemoryRoomStore* store = [self getOrCreateRoomStore:roomId];
+    MXMemoryRoomStore *store = [self getOrCreateRoomStore:roomId];
     RoomReceiptsStore *receiptsStore = [self getOrCreateRoomReceiptsStore:roomId];
 
-    if (store && receiptsStore)
+    if (store == nil || receiptsStore == nil)
     {
-        MXReceiptData* data = [receiptsStore objectForKey:credentials.userId];
-
-        if (data)
-        {
-            // Check the current stored events (by ignoring oneself events)
-            return [store eventsAfter:data.eventId
-                             threadId:threadId
-                               except:credentials.userId
-                           withTypeIn:[NSSet setWithArray:types]];
-        }
+        return @[];
     }
 
-    return @[];
+    MXReceiptData *data = [receiptsStore objectForKey:credentials.userId];
+
+    if (data == nil)
+    {
+        return @[];
+    }
+
+    // Check the current stored events (by ignoring oneself events)
+    return [store eventsAfter:data.eventId
+                     threadId:threadId
+                       except:credentials.userId
+                   withTypeIn:[NSSet setWithArray:types]];
 }
 
 - (void)storeHomeserverWellknown:(nonnull MXWellKnown *)wellknown
