@@ -3128,6 +3128,49 @@
     }];
 }
 
+// Check MXRoom.checkEncryptionState can autofix the disabling of E2E encryption
+// - Alice is in an encrypted room
+// - Try to corrupt summary.isEncrypted
+// - Send a message
+// -> The message must be e2e encrypted
+- (void)testBadSummaryIsEncryptedState
+{
+    // - Alice is in an encrypted room
+    [matrixSDKTestsE2EData doE2ETestWithAliceInARoom:self readyToTest:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
+        
+        NSString *message = @"Hello myself!";
+        
+        MXRoom *roomFromAlicePOV = [aliceSession roomWithRoomId:roomId];
+        
+        XCTAssert(roomFromAlicePOV.summary.isEncrypted);
+        
+        // - Try to corrupt summary.isEncrypted
+        roomFromAlicePOV.summary.isEncrypted = NO;
+        [roomFromAlicePOV.summary save:YES];
+        
+        // - Send a message
+        // Add some delay because there are some dispatch_asyncs in the crypto code
+        // This is a hole but a matter of few ms. This should be fine for real life
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0.1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+            [roomFromAlicePOV sendTextMessage:message threadId:nil success:nil failure:^(NSError *error) {
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
+            }];
+        });
+        
+        /// -> The message must be e2e encrypted
+        [roomFromAlicePOV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
+            
+            [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+                
+                XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:message senderSession:aliceSession]);
+                
+                [expectation fulfill];
+            }];
+        }];
+    }];
+}
+
 @end
 
 #pragma clang diagnostic pop
