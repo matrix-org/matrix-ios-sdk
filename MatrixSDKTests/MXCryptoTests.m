@@ -3129,6 +3129,8 @@
 }
 
 // Check MXRoom.checkEncryptionState can autofix the disabling of E2E encryption
+// For dev purpose, it is interesting to comment https://github.com/matrix-org/matrix-ios-sdk/blob/610db96cf8e470770f92d6afc40bc4332b240da4/MatrixSDK/Data/MXRoomSummary.m#L552
+//
 // - Alice is in an encrypted room
 // - Try to corrupt summary.isEncrypted
 // - Send a message
