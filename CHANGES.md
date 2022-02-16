@@ -1,3 +1,10 @@
+## Changes in 0.22.1 (2022-02-16)
+
+🐛 Bugfixes
+
+- Fix e2ee regression introduced by #1358 ([#5564](https://github.com/vector-im/element-ios/issues/5564))
+
+
 ## Changes in 0.22.0 (2022-02-09)
 
 ✨ Features
