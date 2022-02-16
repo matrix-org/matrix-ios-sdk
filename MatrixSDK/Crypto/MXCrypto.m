@@ -488,7 +488,13 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
                 {
                     // If the crypto has been enabled after the initialSync (the global one or the one for this room),
                     // the algorithm has not been initialised yet. So, do it now from room state information
-                    algorithm = [self->_store algorithmForRoom:room.roomId];
+                    algorithm = roomState.encryptionAlgorithm;
+                    if (!algorithm)
+                    {
+                        algorithm = [self->_store algorithmForRoom:room.roomId];
+                        MXLogWarning(@"[MXCrypto] encryptEventContent: roomState.encryptionAlgorithm is nil for room %@. Try to use algorithm in the crypto store: %@", room.roomId, algorithm);
+                    }
+                    
                     if (algorithm)
                     {
                         [self setEncryptionInRoom:room.roomId withMembers:userIds algorithm:algorithm inhibitDeviceQuery:NO];
