@@ -1737,6 +1737,17 @@ typedef void (^MXOnResumeDone)(void);
                     NSMutableSet<NSString*> *directRoomIds = [NSMutableSet set];
                     [directRoomIds unionSet:[self directRoomIds]];
 
+                    NSMutableDictionary<NSString*, NSArray<NSString*>*> *_directRooms;
+                    _directRooms = [directRooms mutableCopy];
+                    /// fixes Thread 1: "*** -[NSMutableSet addObjectsFromArray:]: array argument is not an NSArray" error
+                    for (NSString* key in directRooms) {
+                        /// the check for class kind is needed when event.content has exactly one direct room and MXJSONModelSetDictionary converts it to an NSString and not an NSArray. Ideally the server would always send an array even with one direct room, but that's not always the case, ergo the sanity check on client side.
+                        if ([directRooms[key] isKindOfClass:[NSString class]]) {
+                            _directRooms[key] = @[directRooms[key]];
+                        }
+                    }
+                    directRooms = [_directRooms copy];
+
                     self.directRooms = directRooms;
 
                     // And collect current ones
