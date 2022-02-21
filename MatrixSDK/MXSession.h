@@ -347,6 +347,7 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
 @class MXSpaceService;
 @class MXHomeserverCapabilitiesService;
 @class MXThreadingService;
+@class MXCapabilities;
 
 #pragma mark - MXSession
 /**
@@ -485,7 +486,7 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
 /**
  Capabilities of the current homeserver
  */
-@property (nonatomic, readonly) MXHomeserverCapabilitiesService *homeserverCapabilities;
+@property (nonatomic, readonly) MXHomeserverCapabilitiesService *homeserverCapabilitiesService;
 
 /**
  The module that manages threads.
@@ -1484,6 +1485,12 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 - (MXHTTPOperation*)refreshHomeserverWellknown:(void (^)(MXWellKnown *homeserverWellknown))success
                                        failure:(void (^)(NSError *error))failure;
 
+#pragma mark - Homeserver capabilities
+
+/**
+ The homeserver capabilities.
+ */
+@property (nonatomic, readonly) MXCapabilities *homeserverCapabilities NS_REFINED_FOR_SWIFT;
 
 #pragma mark - Matrix filters
 /**
