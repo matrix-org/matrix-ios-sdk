@@ -587,6 +587,8 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
 
         [self handleNextOperationAfter:roomOperation];
     };
+    
+    [self checkEncryptionState];
 
     // Check whether the content must be encrypted before sending
     if (mxSession.crypto
@@ -948,6 +950,8 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                       failure:(void (^)(NSError *error))failure
 {
     __block MXRoomOperation *roomOperation;
+    
+    [self checkEncryptionState];
 
     double endRange = 1.0;
     
@@ -1051,7 +1055,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
         MXStrongifyAndReturnIfNil(self);
 
         // Check whether the content must be encrypted before sending
-        if (self.mxSession.crypto && self.summary.isEncrypted)
+        if (self.mxSession.crypto && [self.mxSession.crypto isRoomEncrypted:self.summary.roomId])
         {
             // Add uploader observer to update the event state
             MXWeakify(self);
@@ -1207,6 +1211,8 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     [newRep setSize:[videoThumbnail size]];
     NSData *videoThumbnailData = [newRep representationUsingType:NSJPEGFileType properties: @{NSImageCompressionFactor: @0.8}];
 #endif
+    
+    [self checkEncryptionState];
     
     // Use the uploader id as fake URL for this image data
     // The URL does not need to be valid as the MediaManager will get the data
@@ -1556,6 +1562,8 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
            keepActualFilename:(BOOL)keepActualName
 {
     __block MXRoomOperation *roomOperation;
+    
+    [self checkEncryptionState];
     
     NSData *fileData = [NSData dataWithContentsOfFile:fileLocalURL.path];
     
@@ -2720,7 +2728,9 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
         {
             [self.summary resetLastMessage:nil failure:nil commit:YES];
         }
-    } failure:nil];
+    } failure:^(NSError *error) {
+        MXLogError(@"[MXRoom] removeAllOutgoingMessages: event fetch failed: %@", error);
+    }];
 }
 
 - (void)removeOutgoingMessage:(NSString*)outgoingMessageEventId
@@ -3506,6 +3516,27 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     }
 
     return isEncryptionRequired;
+}
+
+
+/**
+ Make sure that summary.isEncrypted is correct.
+ 
+ @discussion
+ There is a bug where e2e encryption can be disabled. We do not know yet the reasons. This is probably due to a bad
+ room state change.
+ This method ensures that the MXCryptoStore and the MXStore are aligned. If the bug happens, it should be autofixed
+ by this code.
+ */
+- (void)checkEncryptionState
+{
+    if ([mxSession.crypto isRoomEncrypted:self.roomId]
+            && !self.summary.isEncrypted)
+    {
+        MXLogError(@"[MXRoom] checkEncryptionState: summary.isEncrypted is wrong for room %@. Fix it.", self.roomId);
+        self.summary.isEncrypted = YES;
+        [self.summary save:YES];
+    }
 }
 
 - (void)membersTrustLevelSummaryWithForceDownload:(BOOL)forceDownload success:(void (^)(MXUsersTrustLevelSummary *usersTrustLevelSummary))success failure:(void (^)(NSError *error))failure

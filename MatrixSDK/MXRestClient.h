@@ -50,6 +50,7 @@
 @class MXSyncResponse;
 @class MXDeviceListResponse;
 @class MXSpaceChildrenRequestParameters;
+@class MXCapabilities;
 
 #pragma mark - Constants definitions
 /**
@@ -295,6 +296,17 @@ NS_REFINED_FOR_SWIFT;
 - (MXHTTPOperation*)wellKnow:(void (^)(MXWellKnown *wellKnown))success
                      failure:(void (^)(NSError *error))failure;
 
+/**
+ Get the capabilities of the homeserver.
+
+ @param success A block object called when the operation succeeds. It provides
+                the capabilities.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)capabilities:(void (^)(MXCapabilities *capabilities))success
+                         failure:(void (^)(NSError *error))failure;
 
 #pragma mark - Registration operations
 /**
@@ -2856,6 +2868,7 @@ Note: Clients should consider avoiding this endpoint for URLs posted in encrypte
  @param relationType (optional) the type of relation.
  @param eventType (optional) event type to filter by.
  @param from the token to start getting results from.
+ @param direction direction from the token.
  @param limit (optional, use -1 to not defined this value) the maximum number of messages to return.
 
  @param success A block object called when the operation succeeds. It provides a `MXAggregationPaginatedResponse` object.
@@ -2868,6 +2881,7 @@ Note: Clients should consider avoiding this endpoint for URLs posted in encrypte
                          relationType:(NSString*)relationType
                             eventType:(NSString*)eventType
                                  from:(NSString*)from
+                            direction:(MXTimelineDirection)direction
                                 limit:(NSInteger)limit
                               success:(void (^)(MXAggregationPaginatedResponse *paginatedResponse))success
                               failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;

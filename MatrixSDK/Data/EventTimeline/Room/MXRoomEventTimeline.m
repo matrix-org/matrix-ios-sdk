@@ -792,7 +792,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 
         // Retrieve the event from the HS to check whether the redacted event is a state event or not
         MXWeakify(self);
-        httpOperation = [room.mxSession.matrixRestClient eventWithEventId:redactionEvent.redacts inRoom:room.roomId success:^(MXEvent *event) {
+        httpOperation = [room.mxSession eventWithEventId:redactionEvent.redacts inRoom:room.roomId success:^(MXEvent *event) {
             MXStrongifyAndReturnIfNil(self);
 
             if (event.isState)
@@ -822,7 +822,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 
             self->httpOperation = nil;
 
-            MXLogDebug(@"[MXRoomEventTimeline] handleRedaction: failed to retrieved the redacted event");
+            MXLogError(@"[MXRoomEventTimeline] handleRedaction: failed to retrieve the redacted event: %@", error);
         }];
     }
 }

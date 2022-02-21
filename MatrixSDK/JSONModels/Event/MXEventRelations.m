@@ -19,6 +19,7 @@
 #import "MXEventAnnotationChunk.h"
 #import "MXEventReferenceChunk.h"
 #import "MXEventReplace.h"
+#import "MXEventRelationThread.h"
 #import "MXEvent.h"
 
 @implementation MXEventRelations
@@ -35,16 +36,19 @@
     MXEventReferenceChunk *reference;
     MXJSONModelSetMXJSONModel(reference, MXEventReferenceChunk, JSONDictionary[@"m.reference"]);
 
-    
     MXEventReplace *eventReplace;
     MXJSONModelSetMXJSONModel(eventReplace, MXEventReplace, JSONDictionary[MXEventRelationTypeReplace]);
 
-    if (annotation || reference || eventReplace)
+    MXEventRelationThread *thread;
+    MXJSONModelSetMXJSONModel(thread, MXEventRelationThread, JSONDictionary[MXEventRelationTypeThread]);
+
+    if (annotation || reference || eventReplace || thread)
     {
         relations = [MXEventRelations new];
         relations->_annotation = annotation;
         relations->_reference = reference;
         relations->_replace = eventReplace;
+        relations->_thread = thread;
     }
 
     return relations;
@@ -68,6 +72,11 @@
         if (_replace)
         {
             JSONDictionary[MXEventRelationTypeReplace] = _replace.JSONDictionary;
+        }
+
+        if (_thread)
+        {
+            JSONDictionary[MXEventRelationTypeThread] = _thread.JSONDictionary;
         }
     }
 

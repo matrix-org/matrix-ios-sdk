@@ -206,7 +206,7 @@ class MXHomeserverCapabilitiesTests: XCTestCase {
                 return
             }
             
-            guard let service = session.homeserverCapabilities, service.isInitialised else {
+            guard let service = session.homeserverCapabilitiesService, service.isInitialised else {
                 XCTFail("homeServerCapabilities should be initialised")
                 expectation?.fulfill()
                 return

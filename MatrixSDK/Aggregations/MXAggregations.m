@@ -98,7 +98,8 @@
                                                        inRoom:roomId
                                                  relationType:MXEventRelationTypeAnnotation
                                                     eventType:kMXEventTypeStringReaction
-                                                         from:from                                                    
+                                                         from:from
+                                                    direction:MXTimelineDirectionBackwards
                                                         limit:limit
                                                       success:success
                                                       failure:failure];
@@ -131,7 +132,15 @@
                                   failure:(void (^)(NSError *error))failure
 {
     NSString *eventType = isEncrypted ? kMXEventTypeStringRoomEncrypted : kMXEventTypeStringRoomMessage;
-    return [self.mxSession.matrixRestClient relationsForEvent:eventId inRoom:roomId relationType:MXEventRelationTypeReplace eventType:eventType from:from limit:limit success:success failure:failure];
+    return [self.mxSession.matrixRestClient relationsForEvent:eventId
+                                                       inRoom:roomId
+                                                 relationType:MXEventRelationTypeReplace
+                                                    eventType:eventType
+                                                         from:from
+                                                    direction:MXTimelineDirectionBackwards
+                                                        limit:limit
+                                                      success:success
+                                                      failure:failure];
 }
 
 - (MXHTTPOperation*)referenceEventsForEvent:(NSString*)eventId
@@ -183,7 +192,14 @@
     
     if (!event)
     {
-        operation = [self.mxSession.matrixRestClient relationsForEvent:eventId inRoom:roomId relationType:MXEventRelationTypeReference eventType:nil from:from limit:limit success:^(MXAggregationPaginatedResponse *paginatedResponse) {
+        operation = [self.mxSession.matrixRestClient relationsForEvent:eventId
+                                                                inRoom:roomId
+                                                          relationType:MXEventRelationTypeReference
+                                                             eventType:nil
+                                                                  from:from
+                                                             direction:MXTimelineDirectionBackwards
+                                                                 limit:limit
+                                                               success:^(MXAggregationPaginatedResponse *paginatedResponse) {
             processPaginatedResponse(paginatedResponse);
         } failure:failure];
     }

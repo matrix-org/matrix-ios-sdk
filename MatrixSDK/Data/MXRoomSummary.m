@@ -500,7 +500,9 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
                                      success:^(MXEvent *event) {
                 MXEvent *editedEvent = [event editedEventFromReplacementEvent:replaceEvent];
                 [self handleEvent:editedEvent];
-            } failure:nil];
+            } failure:^(NSError *error) {
+                MXLogError(@"[MXRoomSummary] registerEventEditsListener: event fetch failed: %@", error);
+            }];
         }
     }];
 }
@@ -543,6 +545,13 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
 
 - (void)setIsEncrypted:(BOOL)isEncrypted
 {
+    // This should never happen
+    if (_isEncrypted && !isEncrypted)
+    {
+        MXLogError(@"[MXRoomSummary] setIsEncrypted: Attempt to reset isEncrypted for room %@. Ignote it. Call stack: %@", self.roomId, [NSThread callStackSymbols]);
+        return;
+    }
+    
     _isEncrypted = isEncrypted;
     
     if (_isEncrypted && [MXSDKOptions sharedInstance].computeE2ERoomSummaryTrust)
@@ -752,7 +761,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
 {
     BOOL updated = NO;
 
-    NSUInteger localUnreadEventCount = [self.mxSession.store localUnreadEventCount:self.room.roomId
+    NSUInteger localUnreadEventCount = [self.mxSession.store localUnreadEventCount:self.roomId
                                                                           threadId:nil
                                                                         withTypeIn:self.mxSession.unreadEventTypes];
     
