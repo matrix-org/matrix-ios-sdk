@@ -187,7 +187,7 @@ public class MXSpaceService: NSObject {
     /// Returns the set of direct parent IDs of the given room for which the room is suggested or not according to the request.
     /// - Parameters:
     ///   - roomId: ID of the room
-    ///   - suggested: If `true` the method will return the parent ID if the room is suggested. If `false`  the method will return the parent ID if the room is NOT suggested
+    ///   - suggested: If `true` the method will return the parent IDs where the room is suggested. If `false`  the method will return the parent IDs where the room is NOT suggested
     /// - Returns: set of direct parent IDs of the given room. Empty set if the room has no parent.
     public func directParentIds(ofRoomWithId roomId: String, isRoomSuggested suggested: Bool) -> Set<String> {
         return directParentIds(ofRoomWithId: roomId).filter { spaceId in
