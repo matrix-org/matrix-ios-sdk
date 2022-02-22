@@ -16,6 +16,10 @@
 
 import Foundation
 
+enum MXThreadEventTimelineError: Error {
+    case initialEventNotFound
+}
+
 @objcMembers
 public class MXThreadEventTimeline: NSObject, MXEventTimeline {
     
@@ -152,58 +156,53 @@ public class MXThreadEventTimeline: NSObject, MXEventTimeline {
         hasReachedHomeServerBackwardsPaginationEnd = false
         hasReachedHomeServerForwardsPaginationEnd = false
         
-        guard let session = thread.session else {
+        guard thread.session != nil else {
             return MXHTTPOperation()
         }
-        
-        return session.matrixRestClient.context(ofEvent: initialEventId,
-                                                inRoom: thread.roomId,
-                                                limit: limit,
-                                                filter: threadEventFilter) { [weak self] response in
-            guard let self = self else { return }
-            switch response {
-            case .success(let context):
-                // Reset pagination state from here
-                self.resetPagination()
-                
-                var events: [MXEvent] = []
-                if let eventsBefore = context.eventsBefore {
-                    events.append(contentsOf: eventsBefore)
-                }
-                events.append(context.event)
-                if let eventsAfter = context.eventsAfter {
-                    events.append(contentsOf: eventsAfter)
-                }
-                
-                self.decryptEvents(events) {
-                    self.addEvent(context.event, direction: .forwards, fromStore: false)
 
-                    if let eventsBefore = context.eventsBefore {
-                        for event in eventsBefore {
-                            self.addEvent(event, direction: .backwards, fromStore: false)
-                        }
-                    }
+        //  We cannot use /context api here, like in a room timeline.
+        //  This is due to https://github.com/vector-im/element-meta/issues/150
+        //  So we're paginating with /relations api until we find the specified event.
+        //  Can be replaced by the old /context implementation when we have the fix in backend.
 
-                    if let eventsAfter = context.eventsAfter {
-                        for event in eventsAfter {
-                            self.addEvent(event, direction: .forwards, fromStore: false)
-                        }
+        var eventFound: Bool = false
+        var paginationError: Error? = nil
+        let dispatchGroup = DispatchGroup()
+        var paginationBlock: () -> Void = {}
+        let result = MXHTTPOperation()
+
+        paginationBlock = {
+            dispatchGroup.enter()
+            let newRequest = self.paginate(limit, direction: .backwards, onlyFromStore: false) { response in
+                switch response {
+                case .success:
+                    if self.store.eventExists(withEventId: initialEventId, inRoom: self.thread.roomId) {
+                        eventFound = true
+                    } else if self.canPaginate(.backwards) {
+                        paginationBlock()
+                    } else {
+                        paginationError = MXThreadEventTimelineError.initialEventNotFound
                     }
-                    
-                    self.backwardsPaginationToken = context.start
-                    self.forwardsPaginationToken = context.end
-                    //  TODO: We cannot paginate backward/forward on this point, because /relations api is not capable
-                    //  to paginate with these pagination tokens.
-                    self.hasReachedHomeServerBackwardsPaginationEnd = true
-                    self.hasReachedHomeServerForwardsPaginationEnd = true
-                    
-                    success()
+                case .failure(let error):
+                    paginationError = error
                 }
-            case .failure(let error):
-                MXLog.error("[MXThreadEventTimeline][\(self.timelineId)] resetPaginationAroundInitialEvent failed: \(error)")
-                failure(error)
+                dispatchGroup.leave()
+            }
+            result.mutate(to: newRequest)
+        }
+
+        paginationBlock()
+
+        dispatchGroup.notify(queue: .main) {
+            if eventFound {
+                success()
+            } else if let paginationError = paginationError {
+                MXLog.error("[MXThreadEventTimeline][\(self.timelineId)] resetPaginationAroundInitialEvent failed: \(paginationError)")
+                failure(paginationError)
             }
         }
+
+        return result
     }
     
     public func __paginate(_ numItems: UInt, direction: MXTimelineDirection, onlyFromStore: Bool, complete: @escaping () -> Void, failure: @escaping (Error) -> Void) -> MXHTTPOperation {
