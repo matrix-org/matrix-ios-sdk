@@ -212,8 +212,9 @@ public class MXSpace: NSObject {
     ///   - newRoomId: The new room id of the child space or child room.
     ///   - completion: A closure called when the operation completes. Provides the event id of the event generated on the home server on success.
     ///   - response: reponse of the request
-    public func moveChild(withRoomId roomId: String, to newRoomId: String,
-                         completion: @escaping (_ response: MXResponse<String?>) -> Void) {
+    public func moveChild(withRoomId roomId: String,
+                          to newRoomId: String,
+                          completion: @escaping (_ response: MXResponse<String?>) -> Void) {
         guard let room = self.room else {
             completion(.failure(MXSpaceError.spaceRoomNotFound))
             return
