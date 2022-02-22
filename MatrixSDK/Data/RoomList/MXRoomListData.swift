@@ -80,6 +80,12 @@ open class MXRoomListData: NSObject {
         result = prime * result + Int64(paginationOptions.rawValue)
         if let total = counts.total {
             result = prime * result + Int64(total.numberOfRooms)
+            result = prime * result + Int64(total.numberOfUnsentRooms)
+            result = prime * result + Int64(total.numberOfNotifiedRooms)
+            result = prime * result + Int64(total.numberOfHighlightedRooms)
+            result = prime * result + Int64(total.numberOfNotifications)
+            result = prime * result + Int64(total.numberOfHighlights)
+            result = prime * result + Int64(total.numberOfInvitedRooms)
         }
         
         return String(result).hash

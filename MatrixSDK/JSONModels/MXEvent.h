@@ -257,8 +257,12 @@ FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensiblePollAnswers;
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensiblePollAnswerId;
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensiblePollMaxSelections;
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensiblePollKind;
+
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensiblePollKindDisclosed;
+FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensiblePollKindDisclosedMSC3381;
+
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensiblePollKindUndisclosed;
+FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensiblePollKindUndisclosedMSC3381;
 
 // Location
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleLocation;

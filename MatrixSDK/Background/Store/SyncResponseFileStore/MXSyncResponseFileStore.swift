@@ -50,8 +50,8 @@ public class MXSyncResponseFileStore: NSObject {
         }
         var cachePath: URL!
         
-        if let appGroupIdentifier = MXSDKOptions.sharedInstance().applicationGroupIdentifier {
-            cachePath = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupIdentifier)
+        if let container = FileManager.default.applicationGroupContainerURL() {
+            cachePath = container
         } else {
             cachePath = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first
         }
@@ -70,9 +70,7 @@ public class MXSyncResponseFileStore: NSObject {
         fileOperationQueue = DispatchQueue(label: "MXSyncResponseFileStore-" + MXTools.generateSecret())
 
         fileOperationQueue.async {
-            try? FileManager.default.createDirectory(at: syncResponsesFolderPath,
-                                                     withIntermediateDirectories: true,
-                                                     attributes: nil)
+            try? FileManager.default.createDirectoryExcludedFromBackup(at: syncResponsesFolderPath)
             
             // Clean the single cache file used for "v0"
             // TODO: Remove it at some point

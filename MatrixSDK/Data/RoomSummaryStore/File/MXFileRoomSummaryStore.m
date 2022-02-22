@@ -15,7 +15,6 @@
 //
 
 #import "MXFileRoomSummaryStore.h"
-#import "MXSDKOptions.h"
 #import "MXTools.h"
 #import "MatrixSDKSwiftHeader.h"
 
@@ -54,10 +53,9 @@ static NSString *const kMXFileRoomSummaryStoreFolder = @"MXFileRoomSummaryStore"
     
     NSString *cachePath = nil;
     
-    NSString *applicationGroupIdentifier = [MXSDKOptions sharedInstance].applicationGroupIdentifier;
-    if (applicationGroupIdentifier)
+    NSURL *sharedContainerURL = [[NSFileManager defaultManager] applicationGroupContainerURL];
+    if (sharedContainerURL)
     {
-        NSURL *sharedContainerURL = [[NSFileManager defaultManager] containerURLForSecurityApplicationGroupIdentifier:applicationGroupIdentifier];
         cachePath = [sharedContainerURL path];
     }
     else
@@ -74,10 +72,7 @@ static NSString *const kMXFileRoomSummaryStoreFolder = @"MXFileRoomSummaryStore"
     NSString *folder = storePath;
     if (![NSFileManager.defaultManager fileExistsAtPath:folder])
     {
-        [[NSFileManager defaultManager] createDirectoryAtPath:folder
-                                  withIntermediateDirectories:YES
-                                                   attributes:nil
-                                                        error:nil];
+        [[NSFileManager defaultManager] createDirectoryExcludedFromBackupAtPath:folder error:nil];
     }
 }
 

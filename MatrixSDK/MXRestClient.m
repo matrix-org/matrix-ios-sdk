@@ -39,6 +39,7 @@
  */
 NSString *const kMXAPIPrefixPathR0 = @"_matrix/client/r0";
 NSString *const kMXAPIPrefixPathV1 = @"_matrix/client/v1";
+NSString *const kMXAPIPrefixPathV3 = @"_matrix/client/v3";
 NSString *const kMXAPIPrefixPathUnstable = @"_matrix/client/unstable";
 
 /**
@@ -76,6 +77,12 @@ NSString *const kMXRestClientErrorDomain = @"kMXRestClientErrorDomain";
 NSString *const kMXMembersOfRoomParametersAt            = @"at";
 NSString *const kMXMembersOfRoomParametersMembership    = @"membership";
 NSString *const kMXMembersOfRoomParametersNotMembership = @"not_membership";
+
+/**
+ Timeline direction constants can be used in `-[MXRestClient messagesForRoom:...]` or `-[MXRestClient relationsForEvent:...]` methods.
+ */
+NSString *const kMXTimelineDirectionForwards            = @"f";
+NSString *const kMXTimelineDirectionBackwards           = @"b";
 
 NSString *const MXCredentialsUpdateTokensNotification = @"MXCredentialsUpdateTokensNotification";
 NSString *const kMXCredentialsNewRefreshTokenDataKey = @"refresh_token_data";
@@ -527,6 +534,35 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
                                                                    MXJSONModelSetMXJSONModel(wellKnown, MXWellKnown, JSONResponse);
                                                                } andCompletion:^{
                                                                    success(wellKnown);
+                                                               }];
+                                                           }
+                                                       }
+                                                       failure:^(NSError *error) {
+                                                           MXStrongifyAndReturnIfNil(self);
+                                                           [self dispatchFailure:error inBlock:failure];
+                                                       }];
+    return operation;
+}
+
+- (MXHTTPOperation *)capabilities:(void (^)(MXCapabilities *))success
+                          failure:(void (^)(NSError *))failure
+{
+    NSString *path = [NSString stringWithFormat:@"%@/capabilities", kMXAPIPrefixPathV3];
+
+    MXWeakify(self);
+    MXHTTPOperation *operation = [httpClient requestWithMethod:@"GET"
+                                                          path:path
+                                                    parameters:nil
+                                                       success:^(NSDictionary *JSONResponse) {
+                                                           MXStrongifyAndReturnIfNil(self);
+
+                                                           if (success)
+                                                           {
+                                                               __block MXCapabilities *capabilities;
+                                                               [self dispatchProcessing:^{
+                                                                   MXJSONModelSetMXJSONModel(capabilities, MXCapabilities, JSONResponse);
+                                                               } andCompletion:^{
+                                                                   success(capabilities);
                                                                }];
                                                            }
                                                        }
@@ -2596,11 +2632,11 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
 
     if (direction == MXTimelineDirectionForwards)
     {
-        parameters[@"dir"] = @"f";
+        parameters[@"dir"] = kMXTimelineDirectionForwards;
     }
     else
     {
-        parameters[@"dir"] = @"b";
+        parameters[@"dir"] = kMXTimelineDirectionBackwards;
     }
     if (-1 != limit)
     {
@@ -5741,6 +5777,7 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
                          relationType:(NSString*)relationType
                             eventType:(NSString*)eventType
                                  from:(NSString*)from
+                            direction:(MXTimelineDirection)direction
                                 limit:(NSInteger)limit
                               success:(void (^)(MXAggregationPaginatedResponse *paginatedResponse))success
                               failure:(void (^)(NSError *error))failure
@@ -5765,6 +5802,14 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
     if (from)
     {
         parameters[@"from"] = from;
+    }
+    if (direction == MXTimelineDirectionForwards)
+    {
+        parameters[@"dir"] = kMXTimelineDirectionForwards;
+    }
+    else
+    {
+        parameters[@"dir"] = kMXTimelineDirectionBackwards;
     }
 
     if (-1 != limit)

@@ -39,6 +39,7 @@
 @synthesize roomSummaryStore;
 
 @synthesize storeService, eventStreamToken, userAccountData, syncFilterId, homeserverWellknown, areAllIdentityServerTermsAgreed;
+@synthesize homeserverCapabilities;
 
 - (instancetype)init
 {
@@ -268,37 +269,53 @@
 
 - (NSUInteger)localUnreadEventCount:(NSString*)roomId threadId:(NSString *)threadId withTypeIn:(NSArray*)types
 {
-    // @TODO: This method is only logic which could be moved to MXRoom
-    MXMemoryRoomStore* store = [self getOrCreateRoomStore:roomId];
-    RoomReceiptsStore *receiptsStore = [self getOrCreateRoomReceiptsStore:roomId];
-    NSUInteger count = 0;
-    
-    if (store && receiptsStore)
+    NSArray<MXEvent*> *newEvents = [self newIncomingEventsInRoom:roomId threadId:threadId withTypeIn:types];
+    __block NSUInteger result = 0;
+    // Check whether these unread events have not been redacted.
+    [newEvents enumerateObjectsUsingBlock:^(MXEvent * _Nonnull event, NSUInteger idx, BOOL * _Nonnull stop)
     {
-        MXReceiptData* data = [receiptsStore objectForKey:credentials.userId];
-        
-        if (data)
+        if (!event.isRedactedEvent)
         {
-            // Check the current stored events (by ignoring oneself events)
-            NSArray *array = [store eventsAfter:data.eventId threadId:threadId except:credentials.userId withTypeIn:[NSSet setWithArray:types]];
-            
-            // Check whether these unread events have not been redacted.
-            for (MXEvent *event in array)
-            {
-                if (!event.isRedactedEvent)
-                {
-                    count ++;
-                }
-            }
+            result++;
         }
+    }];
+    return result;
+}
+
+- (NSArray<MXEvent *> *)newIncomingEventsInRoom:(NSString *)roomId
+                                       threadId:(NSString *)threadId
+                                     withTypeIn:(NSArray<MXEventTypeString> *)types
+{
+    MXMemoryRoomStore *store = [self getOrCreateRoomStore:roomId];
+    RoomReceiptsStore *receiptsStore = [self getOrCreateRoomReceiptsStore:roomId];
+
+    if (store == nil || receiptsStore == nil)
+    {
+        return @[];
     }
-   
-    return count;
+
+    MXReceiptData *data = [receiptsStore objectForKey:credentials.userId];
+
+    if (data == nil)
+    {
+        return @[];
+    }
+
+    // Check the current stored events (by ignoring oneself events)
+    return [store eventsAfter:data.eventId
+                     threadId:threadId
+                       except:credentials.userId
+                   withTypeIn:[NSSet setWithArray:types]];
 }
 
 - (void)storeHomeserverWellknown:(nonnull MXWellKnown *)wellknown
 {
     homeserverWellknown = wellknown;
+}
+
+- (void)storeHomeserverCapabilities:(MXCapabilities *)capabilities
+{
+    homeserverCapabilities = capabilities;
 }
 
 - (NSInteger)maxUploadSize

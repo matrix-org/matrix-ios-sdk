@@ -95,7 +95,7 @@
     return [[MXEventsByTypesEnumeratorOnArray alloc] initWithMessages:messages andTypesIn:types];
 }
 
-- (NSArray*)eventsAfter:(NSString *)eventId threadId:(NSString *)threadId except:(NSString *)userId withTypeIn:(NSSet *)types
+- (NSArray<MXEvent*>*)eventsAfter:(NSString *)eventId threadId:(NSString *)threadId except:(NSString *)userId withTypeIn:(NSSet<MXEventTypeString>*)types
 {
     NSMutableArray* list = [[NSMutableArray alloc] init];
 

@@ -32,6 +32,7 @@
 
 @class MXSpaceGraphData;
 @class MXStoreService;
+@class MXCapabilities;
 
 /**
  The `MXStore` protocol defines an interface that must be implemented in order to store
@@ -295,6 +296,21 @@
 - (NSUInteger)localUnreadEventCount:(nonnull NSString*)roomId threadId:(nullable NSString*)threadId withTypeIn:(nullable NSArray*)types;
 
 /**
+ Incoming events since the last user receipt data.
+
+ @discussion: The returned count is relative to the local storage. The actual unread messages
+ for a room may be higher than the returned value.
+
+ @param roomId the room id.
+ @param threadId the thread id to consider events in. Pass nil not to filter by any thread.
+ @param types an array of event types strings to consider
+ @return Filtered events that came after the user receipt.
+ */
+- (nonnull NSArray<MXEvent*>*)newIncomingEventsInRoom:(nonnull NSString*)roomId
+                                             threadId:(nullable NSString*)threadId
+                                           withTypeIn:(nullable NSArray<MXEventTypeString>*)types;
+
+/**
  Indicate if the MXStore implementation stores data permanently.
  Permanent storage allows the SDK to make less requests at the startup.
  */
@@ -320,6 +336,18 @@
  @param homeserverWellknown the .well-known data to store.
  */
 - (void)storeHomeserverWellknown:(nonnull MXWellKnown*)homeserverWellknown;
+
+/**
+ The homeserver capabilities.
+ */
+@property (nonatomic, readonly) MXCapabilities * _Nullable homeserverCapabilities;
+
+/**
+ Store the homeserver capabilities.
+
+ @param homeserverCapabilities the homeserver capabilities to store.
+ */
+- (void)storeHomeserverCapabilities:(nonnull MXCapabilities*)homeserverCapabilities;
 
 #pragma mark - Room Messages
 
