@@ -247,7 +247,8 @@ public class MXSpace: NSObject {
     ///   - suggested: If `true` the room will be seen as suggested.,`false` otherwise.
     ///   - completion: A closure called when the operation completes. Provides the event id of the event generated on the home server on success.
     ///   - response: reponse of the request
-    public func setChild(withRoomId roomId: String, suggested: Bool,
+    public func setChild(withRoomId roomId: String,
+                         suggested: Bool,
                          completion: @escaping (_ response: MXResponse<String?>) -> Void) {
         guard let room = self.room else {
             completion(.failure(MXSpaceError.spaceRoomNotFound))
