@@ -1,3 +1,22 @@
+## Changes in 0.22.2 (2022-02-22)
+
+🙌 Improvements
+
+- Added support for unstable poll prefixes. ([#5114](https://github.com/vector-im/element-ios/issues/5114))
+- Exclude all files and directories from iCloud and iTunes backup ([#5498](https://github.com/vector-im/element-ios/issues/5498))
+- MXSession & MXThreadingService: Implement server capabilities api & implement thread list api according to server capabilities. ([#5540](https://github.com/vector-im/element-ios/issues/5540))
+- MXThreadEventTimeline: Replace context api with relations api. ([#5629](https://github.com/vector-im/element-ios/issues/5629))
+
+🐛 Bugfixes
+
+- Settings: fix phone number validation through custom URL ([#3562](https://github.com/vector-im/element-ios/issues/3562))
+- MXRoomListData: Consider all properties when comparing room list data. ([#5537](https://github.com/vector-im/element-ios/issues/5537))
+
+🧱 Build
+
+- Use the --no-rate-limit flag as mentioned in the README ([#1352](https://github.com/vector-im/element-ios/issues/1352))
+
+
 ## Changes in 0.22.1 (2022-02-16)
 
 🐛 Bugfixes
