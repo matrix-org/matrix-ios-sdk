@@ -206,7 +206,7 @@ public class MXSpace: NSObject {
         return self.room?.sendStateEvent(.spaceChild, content: [:], stateKey: roomId, completion: completion)
     }
     
-    /// Add the new child with the child with the properties of the old child then remove the old room from the children list. This is used after room upgrade.
+    /// Add the new child with the properties of the old child then remove the old room from the children list. This is used after room upgrade.
     /// - Parameters:
     ///   - roomId: The room id of the child space or child room.
     ///   - newRoomId: The new room id of the child space or child room.
