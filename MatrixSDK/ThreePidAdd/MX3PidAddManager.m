@@ -28,6 +28,11 @@ NSString *const MX3PidAddManagerErrorDomain = @"org.matrix.sdk.MX3PidAddManagerE
     BOOL doesServerSupportSeparateAddAndBind;
 }
 
+/**
+ HTTP client dedicated to sending MSISDN token to custom URLs.
+ */
+@property (nonatomic, strong) MXHTTPClient *msisdnSubmissionHttpClient;
+
 @end
 
 @implementation MX3PidAddManager
@@ -570,14 +575,22 @@ NSString *const MX3PidAddManagerErrorDomain = @"org.matrix.sdk.MX3PidAddManagerE
                                  @"token": token
                                  };
 
-   MXHTTPClient *httpClient = [[MXHTTPClient alloc] initWithBaseURL:nil andOnUnrecognizedCertificateBlock:nil];
-   return [httpClient requestWithMethod:@"POST"
-                                    path:url
-                              parameters:parameters
-                                 success:^(NSDictionary *JSONResponse) {
-                                     success();
-                                 }
-                                 failure:failure];
+    self.msisdnSubmissionHttpClient = [[MXHTTPClient alloc] initWithBaseURL:nil andOnUnrecognizedCertificateBlock:nil];
+
+    MXWeakify(self);
+    return [self.msisdnSubmissionHttpClient requestWithMethod:@"POST"
+                                                  path:url
+                                            parameters:parameters
+                                               success:^(NSDictionary *JSONResponse) {
+        success();
+        MXStrongifyAndReturnIfNil(self);
+        self.msisdnSubmissionHttpClient = nil;
+    }
+                                               failure:^(NSError *error) {
+        failure(error);
+        MXStrongifyAndReturnIfNil(self);
+        self.msisdnSubmissionHttpClient = nil;
+    }];
 }
 
 /**

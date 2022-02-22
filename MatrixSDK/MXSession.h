@@ -346,6 +346,7 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
 
 @class MXSpaceService;
 @class MXThreadingService;
+@class MXCapabilities;
 
 #pragma mark - MXSession
 /**
@@ -1478,6 +1479,12 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 - (MXHTTPOperation*)refreshHomeserverWellknown:(void (^)(MXWellKnown *homeserverWellknown))success
                                        failure:(void (^)(NSError *error))failure;
 
+#pragma mark - Homeserver capabilities
+
+/**
+ The homeserver capabilities.
+ */
+@property (nonatomic, readonly) MXCapabilities *homeserverCapabilities NS_REFINED_FOR_SWIFT;
 
 #pragma mark - Matrix filters
 /**

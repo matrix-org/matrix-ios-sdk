@@ -77,7 +77,7 @@ public class MXThreadingService: NSObject {
             return handleInThreadEvent(event, direction: direction, session: session)
         } else if let thread = thread(withId: event.eventId) {
             //  event is a thread root
-            if thread.addEvent(event) {
+            if thread.addEvent(event, direction: direction) {
                 notifyDidUpdateThreads()
                 return true
             }
@@ -123,22 +123,6 @@ public class MXThreadingService: NSObject {
         return MXThread(withSession: session, identifier: identifier, roomId: roomId)
     }
     
-    /// Get threads in a room
-    /// - Parameter roomId: room identifier
-    /// - Returns: thread list in given room
-    public func threads(inRoom roomId: String) -> [MXThread] {
-        //  sort threads so that the newer is the first
-        return unsortedThreads(inRoom: roomId).sorted(by: <)
-    }
-    
-    /// Get participated threads in a room
-    /// - Parameter roomId: room identifier
-    /// - Returns: participated thread list in given room
-    public func participatedThreads(inRoom roomId: String) -> [MXThread] {
-        //  filter only participated threads and then sort threads so that the newer is the first
-        return unsortedParticipatedThreads(inRoom: roomId).sorted(by: <)
-    }
-    
     /// Mark a thread as read
     /// - Parameter threadId: Thread id
     public func markThreadAsRead(_ threadId: String) {
@@ -149,7 +133,96 @@ public class MXThreadingService: NSObject {
         notifyDidUpdateThreads()
     }
 
+    @discardableResult
+    public func allThreads(inRoom roomId: String,
+                           onlyParticipated: Bool = false,
+                           completion: @escaping (MXResponse<[MXThreadProtocol]>) -> Void) -> MXHTTPOperation? {
+        guard let session = session else {
+            DispatchQueue.main.async {
+                completion(.failure(MXThreadingServiceError.sessionNotFound))
+            }
+            return nil
+        }
+
+        if session.homeserverCapabilities?.threads?.isEnabled == true {
+            //  homeserver supports threads
+            let filter = MXRoomEventFilter()
+            filter.relationTypes = [MXEventRelationTypeThread]
+            if onlyParticipated {
+                filter.relationSenders = [session.myUserId]
+            }
+            return session.matrixRestClient.messages(forRoom: roomId,
+                                                     from: "",
+                                                     direction: .backwards,
+                                                     limit: nil,
+                                                     filter: filter) { response in
+                switch response {
+                case .success(let paginationResponse):
+                    guard let rootEvents = paginationResponse.chunk else {
+                        completion(.success([]))
+                        return
+                    }
+
+                    let threads = rootEvents.map { self.thread(forRootEvent: $0, session: session) }.sorted(by: <)
+                    completion(.success(threads))
+                case .failure(let error):
+                    completion(.failure(error))
+                }
+            }
+        } else {
+            //  use local implementation
+            if onlyParticipated {
+                DispatchQueue.main.async {
+                    completion(.success(self.localParticipatedThreads(inRoom: roomId)))
+                }
+            } else {
+                DispatchQueue.main.async {
+                    completion(.success(self.localThreads(inRoom: roomId)))
+                }
+            }
+            return nil
+        }
+    }
+
     //  MARK: - Private
+
+    private func localThreads(inRoom roomId: String) -> [MXThreadProtocol] {
+        //  sort threads so that the newer is the first
+        return unsortedThreads(inRoom: roomId).sorted(by: <)
+    }
+
+    private func localParticipatedThreads(inRoom roomId: String) -> [MXThreadProtocol] {
+        //  filter only participated threads and then sort threads so that the newer is the first
+        return unsortedParticipatedThreads(inRoom: roomId).sorted(by: <)
+    }
+
+    private func thread(forRootEvent rootEvent: MXEvent, session: MXSession) -> MXThreadModel {
+        let notificationCount: UInt
+        let highlightCount: UInt
+        if let store = session.store {
+            notificationCount = store.localUnreadEventCount(rootEvent.roomId,
+                                                            threadId: rootEvent.eventId,
+                                                            withTypeIn: session.unreadEventTypes)
+            let newEvents = store.newIncomingEvents(inRoom: rootEvent.roomId,
+                                                    threadId: rootEvent.eventId,
+                                                    withTypeIn: session.unreadEventTypes)
+            highlightCount = UInt(newEvents.filter { $0.shouldBeHighlighted(inSession: session) }.count)
+        } else {
+            notificationCount = 0
+            highlightCount = 0
+        }
+        let thread = MXThreadModel(withRootEvent: rootEvent,
+                                   notificationCount: notificationCount,
+                                   highlightCount: highlightCount)
+        //  workaround for https://github.com/matrix-org/synapse/issues/11753. Can be removed when that's fixed.
+        if thread.numberOfReplies == 0, let localThread = self.thread(withId: rootEvent.eventId) {
+            if let lastMessage = localThread.lastMessage {
+                thread.updateLastMessage(lastMessage)
+            }
+            thread.updateNumberOfReplies(localThread.numberOfReplies)
+        }
+        return thread
+    }
 
     @discardableResult
     private func handleInThreadEvent(_ event: MXEvent, direction: MXTimelineDirection, session: MXSession) -> Bool {
@@ -159,7 +232,7 @@ public class MXThreadingService: NSObject {
         let handled: Bool
         if let thread = thread(withId: threadId) {
             //  add event to the thread if found
-            handled = thread.addEvent(event)
+            handled = thread.addEvent(event, direction: direction)
         } else {
             //  create the thread for the first time
             let thread: MXThread
@@ -169,7 +242,7 @@ public class MXThreadingService: NSObject {
             } else {
                 thread = MXThread(withSession: session, identifier: threadId, roomId: event.roomId)
             }
-            handled = thread.addEvent(event)
+            handled = thread.addEvent(event, direction: direction)
             saveThread(thread)
             DispatchQueue.main.async {
                 NotificationCenter.default.post(name: Self.newThreadCreated, object: thread, userInfo: nil)

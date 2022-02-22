@@ -761,7 +761,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
 {
     BOOL updated = NO;
 
-    NSUInteger localUnreadEventCount = [self.mxSession.store localUnreadEventCount:self.room.roomId
+    NSUInteger localUnreadEventCount = [self.mxSession.store localUnreadEventCount:self.roomId
                                                                           threadId:nil
                                                                         withTypeIn:self.mxSession.unreadEventTypes];
     

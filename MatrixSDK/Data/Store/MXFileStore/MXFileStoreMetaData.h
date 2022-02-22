@@ -17,6 +17,7 @@
 #import <Foundation/Foundation.h>
 
 #import "MXWellKnown.h"
+#import "MXCapabilities.h"
 
 @interface MXFileStoreMetaData : NSObject <NSCoding, NSCopying>
 
@@ -60,6 +61,11 @@
  The homeserver .well-known.
  */
 @property (nonatomic) MXWellKnown *homeserverWellknown;
+
+/**
+ The homeserver capabilities.
+ */
+@property (nonatomic) MXCapabilities *homeserverCapabilities;
 
 /**
  The maximum size an upload can be in bytes.
