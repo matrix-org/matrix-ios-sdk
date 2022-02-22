@@ -43,6 +43,9 @@ public struct MXRoomListDataFilterOptions: Equatable {
     /// Flag to hide any rooms where the user's membership is unknown. This has no effect when `onlySuggested` is `true`.
     /// When set to `false`, rooms that have been cached during peeking may be included in the filtered results.
     public let hideUnknownMembershipRooms: Bool
+
+    /// Flag to show only rooms that matches all the provided `dataTypes`. This has no effect when `onlySuggested` is `true`
+    public let strictMatches: Bool
     
     /// Initializer
     /// - Parameters:
@@ -52,13 +55,16 @@ public struct MXRoomListDataFilterOptions: Equatable {
     ///   - query: search query
     ///   - space: active space
     ///   - showAllRoomsInHomeSpace: flag to show all rooms in home space (when `space` is not provided)
+    ///   - hideUnknownMembershipRooms: flag to hide any rooms where the user's membership is unknown
+    ///   - strictMatches: flag to show only rooms that matches all the provided data types
     public init(dataTypes: MXRoomSummaryDataTypes = MXRoomListDataFilterOptions.emptyDataTypes,
                 notDataTypes: MXRoomSummaryDataTypes = [.hidden, .conferenceUser, .space],
                 onlySuggested: Bool = false,
                 query: String? = nil,
                 space: MXSpace? = nil,
                 showAllRoomsInHomeSpace: Bool,
-                hideUnknownMembershipRooms: Bool = true) {
+                hideUnknownMembershipRooms: Bool = true,
+                strictMatches: Bool = false) {
         self.dataTypes = dataTypes
         self.notDataTypes = notDataTypes
         self.onlySuggested = onlySuggested
@@ -66,5 +72,6 @@ public struct MXRoomListDataFilterOptions: Equatable {
         self.space = space
         self.showAllRoomsInHomeSpace = showAllRoomsInHomeSpace
         self.hideUnknownMembershipRooms = hideUnknownMembershipRooms
+        self.strictMatches = strictMatches
     }
 }
