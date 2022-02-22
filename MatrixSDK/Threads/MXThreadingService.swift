@@ -173,11 +173,11 @@ public class MXThreadingService: NSObject {
             //  use local implementation
             if onlyParticipated {
                 DispatchQueue.main.async {
-                    completion(.success(self.localThreads(inRoom: roomId)))
+                    completion(.success(self.localParticipatedThreads(inRoom: roomId)))
                 }
             } else {
                 DispatchQueue.main.async {
-                    completion(.success(self.localParticipatedThreads(inRoom: roomId)))
+                    completion(.success(self.localThreads(inRoom: roomId)))
                 }
             }
             return nil
