@@ -46,6 +46,7 @@ public class MXThreadingService: NSObject {
     
     private weak var session: MXSession?
     
+    private let lockThreads = NSRecursiveLock()
     private var threads: [String: MXThread] = [:]
     private let multicastDelegate: MXMulticastDelegate<MXThreadingServiceDelegate> = MXMulticastDelegate()
     
@@ -110,10 +111,9 @@ public class MXThreadingService: NSObject {
     /// - Parameter identifier: identifier of a thread
     /// - Returns: thread instance if found, nil otherwise
     public func thread(withId identifier: String) -> MXThread? {
-        objc_sync_enter(threads)
-        let result = threads[identifier]
-        objc_sync_exit(threads)
-        return result
+        lockThreads.lock()
+        defer { lockThreads.unlock() }
+        return threads[identifier]
     }
     
     public func createTempThread(withId identifier: String, roomId: String) -> MXThread {
@@ -308,9 +308,9 @@ public class MXThreadingService: NSObject {
     }
     
     private func saveThread(_ thread: MXThread) {
-        objc_sync_enter(threads)
+        lockThreads.lock()
+        defer { lockThreads.unlock() }
         threads[thread.id] = thread
-        objc_sync_exit(threads)
     }
     
     //  MARK: - Delegate
