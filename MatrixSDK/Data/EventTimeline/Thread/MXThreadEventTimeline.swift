@@ -55,6 +55,7 @@ public class MXThreadEventTimeline: NSObject, MXEventTimeline {
     
     /// The current pending request
     private var currentHttpOperation: MXHTTPOperation?
+    private let lockListeners = NSRecursiveLock()
     
     private lazy var threadEventFilter: MXRoomEventFilter = {
         let filter = MXRoomEventFilter()
@@ -439,9 +440,9 @@ public class MXThreadEventTimeline: NSObject, MXEventTimeline {
     
     /// Thread safe access to listeners array
     private func synchronizeListeners(_ block: () -> Void) {
-        objc_sync_enter(listeners)
+        lockListeners.lock()
+        defer { lockListeners.unlock() }
         block()
-        objc_sync_exit(listeners)
     }
     
     private func fixRoomId(inEvents events: [MXEvent]) {
