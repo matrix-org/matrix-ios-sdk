@@ -1,3 +1,10 @@
+## Changes in 0.22.3 (2022-02-24)
+
+🐛 Bugfixes
+
+- Thread Safety: Replace all objc_sync_enter/exit methods with recursive locks. ([#5675](https://github.com/vector-im/element-ios/issues/5675))
+
+
 ## Changes in 0.22.2 (2022-02-22)
 
 🙌 Improvements
