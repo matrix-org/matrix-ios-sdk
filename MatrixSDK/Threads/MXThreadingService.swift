@@ -37,7 +37,13 @@ extension MXThreadingServiceError: CustomNSError {
 
 @objc
 public protocol MXThreadingServiceDelegate: AnyObject {
-    func threadingServiceDidUpdateThreads(_ service: MXThreadingService)
+    /// Delegate method to be called when thread are updated in any way.
+    @objc optional func threadingServiceDidUpdateThreads(_ service: MXThreadingService)
+
+    /// Delegate method to be called when a new local thread is created
+    @objc optional func threadingService(_ service: MXThreadingService,
+                                         didCreateNewThread thread: MXThread,
+                                         direction: MXTimelineDirection)
 }
 
 @objcMembers
@@ -49,10 +55,7 @@ public class MXThreadingService: NSObject {
     private let lockThreads = NSRecursiveLock()
     private var threads: [String: MXThread] = [:]
     private let multicastDelegate: MXMulticastDelegate<MXThreadingServiceDelegate> = MXMulticastDelegate()
-    
-    /// Notification to be posted when a new thread is created.
-    public static let newThreadCreated = Notification.Name("MXThreadingService.newThreadCreated")
-    
+
     /// Initializer
     /// - Parameter session: session instance
     public init(withSession session: MXSession) {
@@ -244,9 +247,7 @@ public class MXThreadingService: NSObject {
             }
             handled = thread.addEvent(event, direction: direction)
             saveThread(thread)
-            DispatchQueue.main.async {
-                NotificationCenter.default.post(name: Self.newThreadCreated, object: thread, userInfo: nil)
-            }
+            notifyDidCreateThread(thread, direction: direction)
         }
         notifyDidUpdateThreads()
         return handled
@@ -333,7 +334,11 @@ public class MXThreadingService: NSObject {
     }
     
     private func notifyDidUpdateThreads() {
-        multicastDelegate.invoke({ $0.threadingServiceDidUpdateThreads(self) })
+        multicastDelegate.invoke({ $0.threadingServiceDidUpdateThreads?(self) })
+    }
+
+    private func notifyDidCreateThread(_ thread: MXThread, direction: MXTimelineDirection) {
+        multicastDelegate.invoke({ $0.threadingService?(self, didCreateNewThread: thread, direction: direction) })
     }
     
 }
