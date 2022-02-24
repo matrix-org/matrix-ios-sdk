@@ -22,6 +22,7 @@ public class MXMulticastDelegate <T: AnyObject> {
     /// Weakly referenced delegates
     private let delegates: NSHashTable<T> = NSHashTable.weakObjects()
     private let dispatchQueue: DispatchQueue
+    private let lockDelegates = NSRecursiveLock()
     
     /// Initializer
     /// - Parameter dispatchQueue: Queue to invoke delegate methods
@@ -70,9 +71,9 @@ public class MXMulticastDelegate <T: AnyObject> {
     
     /// Thread safe access to delegates array
     private func synchronizeDelegates(_ block: () -> Void) {
-        objc_sync_enter(delegates)
+        lockDelegates.lock()
+        defer { lockDelegates.unlock() }
         block()
-        objc_sync_exit(delegates)
     }
     
     deinit {
