@@ -1,1 +1,0 @@
-Thread Safety: Replace all objc_sync_enter/exit methods with recursive locks.
