@@ -290,7 +290,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     [self paginateFromStore:numItems direction:direction onComplete:^(NSArray<MXEvent *> *eventsFromStore) {
         MXStrongifyAndReturnIfNil(self);
         
-        NSUInteger remainingNumItems = numItems;
+        NSInteger remainingNumItems = numItems;
         NSUInteger eventsFromStoreCount = eventsFromStore.count;
 
         if (direction == MXTimelineDirectionBackwards)
