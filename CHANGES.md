@@ -1,3 +1,10 @@
+## Changes in 0.22.4 (2022-02-25)
+
+🙌 Improvements
+
+- MXThreadingService: Add thread creation delegate method. ([#5694](https://github.com/vector-im/element-ios/issues/5694))
+
+
 ## Changes in 0.22.3 (2022-02-24)
 
 🐛 Bugfixes
