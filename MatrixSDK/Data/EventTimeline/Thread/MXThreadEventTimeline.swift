@@ -216,8 +216,8 @@ public class MXThreadEventTimeline: NSObject, MXEventTimeline {
         paginateFromStore(numberOfItems: numItems, direction: direction) { [weak self] eventsFromStore in
             guard let self = self else { return }
             
-            var remainingNumItems = numItems
-            let eventsFromStoreCount = UInt(eventsFromStore.count)
+            var remainingNumItems = Int(numItems)
+            let eventsFromStoreCount = eventsFromStore.count
             
             if direction == .backwards {
                 // messagesFromStore are in chronological order
@@ -237,7 +237,7 @@ public class MXThreadEventTimeline: NSObject, MXEventTimeline {
                     return
                 }
                 
-                if remainingNumItems <= 0 && self.hasReachedHomeServerBackwardsPaginationEnd {
+                if remainingNumItems <= 0 || self.hasReachedHomeServerBackwardsPaginationEnd {
                     DispatchQueue.main.async {
                         // Nothing more to do
                         MXLog.debug("[MXThreadEventTimeline][\(self.timelineId)] paginate: is done from the store")
@@ -276,7 +276,7 @@ public class MXThreadEventTimeline: NSObject, MXEventTimeline {
                                                             eventType: nil,
                                                             from: paginationToken,
                                                             direction: direction,
-                                                            limit: remainingNumItems,
+                                                            limit: UInt(remainingNumItems),
                                                             completion: { [weak self] response in
                                                                 guard let self = self else { return }
                                                                 switch response {
