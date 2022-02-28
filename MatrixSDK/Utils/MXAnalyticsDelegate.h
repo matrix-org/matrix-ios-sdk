@@ -86,9 +86,12 @@ NS_ASSUME_NONNULL_BEGIN
  Report that a room was joined.
  
  @param isDM Whether the room is direct or not.
+ @param isSpace Whether the room is a space or not.
  @param memberCount The number of members in the room.
  */
-- (void)trackJoinedRoomAsDM:(BOOL)isDM memberCount:(NSUInteger)memberCount;
+- (void)trackJoinedRoomAsDM:(BOOL)isDM
+                    isSpace:(BOOL)isSpace
+                memberCount:(NSUInteger)memberCount;
 
 /**
  Report whether the user granted or rejected access to their contacts.
