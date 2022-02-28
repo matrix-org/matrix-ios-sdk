@@ -105,7 +105,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Report that an event composed.
 
- @param inThread flag indicating the event was senf in a thread
+ @param inThread flag indicating the event was sent in a thread
  @param isEditing flag indicating the event was an edit
  @param isReply flag indicating the event was a reply
  @param startsThread flag indicating the event starts a thread
