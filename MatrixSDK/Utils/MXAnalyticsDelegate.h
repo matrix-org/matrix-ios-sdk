@@ -97,6 +97,21 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void)trackContactsAccessGranted:(BOOL)granted;
 
+#pragma mark - Threads
+
+/**
+ Report that an event composed.
+
+ @param inThread flag indicating the event was senf in a thread
+ @param isEditing flag indicating the event was an edit
+ @param isReply flag indicating the event was a reply
+ @param startsThread flag indicating the event starts a thread
+ */
+- (void)trackEventComposedInThread:(BOOL)inThread
+                         isEditing:(BOOL)isEditing
+                           isReply:(BOOL)isReply
+                      startsThread:(BOOL)startsThread;
+
 @end
 
 NS_ASSUME_NONNULL_END
