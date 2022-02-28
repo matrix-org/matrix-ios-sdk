@@ -782,37 +782,66 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                              failure:(void (^)(NSError *error))failure
 {
     NSDictionary *newContent = content;
-    if (threadId && MXSDKOptions.sharedInstance.enableThreads)
+    BOOL inThread = NO;
+    BOOL startsThread = NO;
+    BOOL isReply = content[kMXEventRelationRelatesToKey][@"m.in_reply_to"][@"event_id"] != nil;
+    BOOL isEditing = [content[kMXEventRelationRelatesToKey][@"rel_type"] isEqualToString:MXEventRelationTypeReplace];
+    if (MXSDKOptions.sharedInstance.enableThreads)
     {
-        NSMutableDictionary *mutableContent = [newContent mutableDeepCopy];
-        BOOL isRealReply = content[kMXEventRelationRelatesToKey][@"m.in_reply_to"][@"event_id"] != nil;
-        if (isRealReply)
+        if (threadId)
         {
-            mutableContent[kMXEventRelationRelatesToKey][@"m.in_reply_to"][@"m.render_in"] = @[MXEventRelationTypeThread];
-        }
-        else
-        {
-            NSString *lastEventId = [mxSession.threadingService threadWithId:threadId].lastMessage.eventId;
-            NSString *replyToEventId = lastEventId ?: threadId;
-
-            if (mutableContent[kMXEventRelationRelatesToKey])
+            inThread = YES;
+            NSMutableDictionary *mutableContent = [newContent mutableDeepCopy];
+            if (isReply)
             {
-                mutableContent[kMXEventRelationRelatesToKey][@"m.in_reply_to"] = @{
-                    @"event_id": replyToEventId
-                };
+                //  this will be a real in-thread reply
+                mutableContent[kMXEventRelationRelatesToKey][@"m.in_reply_to"][@"m.render_in"] = @[MXEventRelationTypeThread];
             }
             else
             {
-                mutableContent[kMXEventRelationRelatesToKey] = @{
-                    @"m.in_reply_to": @{
+                //  this will look like a reply, but only an in-thread event
+                NSString *lastEventId = [mxSession.threadingService threadWithId:threadId].lastMessage.eventId;
+                startsThread = lastEventId == nil;
+                NSString *replyToEventId = lastEventId ?: threadId;
+
+                if (mutableContent[kMXEventRelationRelatesToKey])
+                {
+                    mutableContent[kMXEventRelationRelatesToKey][@"m.in_reply_to"] = @{
+                        @"event_id": replyToEventId
+                    };
+                }
+                else
+                {
+                    mutableContent[kMXEventRelationRelatesToKey] = @{
+                        @"m.in_reply_to": @{
                             @"event_id": replyToEventId
-                    }
-                };
+                        }
+                    };
+                }
             }
+            newContent = mutableContent;
         }
-        newContent = mutableContent;
+        else if (isEditing)
+        {
+            //  detect in-thread edits
+            NSString *editedEventId = content[kMXEventRelationRelatesToKey][@"event_id"];
+            MXEvent *editedEvent = [self.mxSession.store eventWithEventId:editedEventId inRoom:self.roomId];
+            inThread = editedEvent.isInThread;
+        }
     }
-    return [mxSession.matrixRestClient sendEventToRoom:self.roomId threadId:threadId eventType:eventTypeString content:newContent txnId:txnId success:success failure:failure];
+    return [mxSession.matrixRestClient sendEventToRoom:self.roomId threadId:threadId eventType:eventTypeString content:newContent txnId:txnId success:^(NSString *eventId) {
+
+        //  track event composed
+        [MXSDKOptions.sharedInstance.analyticsDelegate trackEventComposedInThread:inThread
+                                                                        isEditing:isEditing
+                                                                          isReply:isReply
+                                                                     startsThread:startsThread];
+
+        if (success)
+        {
+            success(eventId);
+        }
+    } failure:failure];
 }
 
 - (MXHTTPOperation*)sendStateEventOfType:(MXEventTypeString)eventTypeString
