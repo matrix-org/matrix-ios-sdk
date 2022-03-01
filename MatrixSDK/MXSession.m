@@ -2302,7 +2302,9 @@ typedef void (^MXOnResumeDone)(void);
             // The /sync corresponding to this join may have happened before the
             // homeserver answer to the joinRoom request.
             success(room);
+            BOOL isSpace = room.summary.roomType == MXRoomTypeSpace;
             [MXSDKOptions.sharedInstance.analyticsDelegate trackJoinedRoomAsDM:room.summary.isDirect
+                                                                       isSpace:isSpace
                                                                    memberCount:room.summary.membersCount.joined];
         }
         else
@@ -2317,7 +2319,9 @@ typedef void (^MXOnResumeDone)(void);
                 {
                     success(room);
                     [[NSNotificationCenter defaultCenter] removeObserver:initialSyncObserver];
+                    BOOL isSpace = room.summary.roomType == MXRoomTypeSpace;
                     [MXSDKOptions.sharedInstance.analyticsDelegate trackJoinedRoomAsDM:room.summary.isDirect
+                                                                               isSpace:isSpace
                                                                            memberCount:room.summary.membersCount.joined];
                 }
             }];
