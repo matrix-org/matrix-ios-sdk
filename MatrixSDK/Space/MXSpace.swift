@@ -18,7 +18,9 @@ import Foundation
 
 /// MXSpace operation error
 public enum MXSpaceError: Int, Error {
+    case spaceRoomNotFound
     case homeserverNameNotFound
+    case validStateEventNotFound
     case unknown
 }
 
@@ -59,7 +61,8 @@ public class MXSpace: NSObject {
     public private(set) var childSpaces: [MXSpace] = []
     public private(set) var childRoomIds: [String] = []
     public private(set) var otherMembersId: [String] = []
-    
+    public private(set) var suggestedRoomIds: Set<String> = Set()
+
     private let processingQueue: DispatchQueue
     private let sdkProcessingQueue: DispatchQueue
     private let completionQueue: DispatchQueue
@@ -93,18 +96,26 @@ public class MXSpace: NSObject {
                 
                 self.processingQueue.async {
                     var childRoomIds: [String] = []
+                    var suggestedRoomIds: Set<String> = Set()
                     roomState?.stateEvents(with: .spaceChild)?.forEach({ event in
                         if let content = event.wireContent, !content.isEmpty {
                             if !childRoomIds.contains(event.stateKey) {
                                 childRoomIds.append(event.stateKey)
                             }
+                            if let suggested = content[kMXEventTypeStringSuggestedKey] as? Bool, suggested {
+                                suggestedRoomIds.insert(event.stateKey)
+                            } else {
+                                suggestedRoomIds.remove(event.stateKey)
+                            }
                         } else {
                             if let index = childRoomIds.firstIndex(of: event.stateKey) {
                                 childRoomIds.remove(at: index)
+                                suggestedRoomIds.remove(event.stateKey)
                             }
                         }
                     })
                     self.childRoomIds = childRoomIds
+                    self.suggestedRoomIds = suggestedRoomIds
                     
                     self.sdkProcessingQueue.async {
                         room.members { [weak self] response in
@@ -195,6 +206,67 @@ public class MXSpace: NSObject {
         return self.room?.sendStateEvent(.spaceChild, content: [:], stateKey: roomId, completion: completion)
     }
     
+    /// Add the new child with the properties of the old child then remove the old room from the children list. This is used after room upgrade.
+    /// - Parameters:
+    ///   - roomId: The room id of the child space or child room.
+    ///   - newRoomId: The new room id of the child space or child room.
+    ///   - completion: A closure called when the operation completes. Provides the event id of the event generated on the home server on success.
+    ///   - response: reponse of the request
+    public func moveChild(withRoomId roomId: String,
+                          to newRoomId: String,
+                          completion: @escaping (_ response: MXResponse<String?>) -> Void) {
+        guard let room = self.room else {
+            completion(.failure(MXSpaceError.spaceRoomNotFound))
+            return
+        }
+        
+        room.state { roomState in
+            let eventContent = roomState?.stateEvents(with: .spaceChild)?.last { $0.stateKey == roomId }?.wireContent ?? [:]
+            guard !eventContent.isEmpty else {
+                completion(.failure(MXSpaceError.validStateEventNotFound))
+                return
+            }
+            
+            room.sendStateEvent(.spaceChild, content: eventContent, stateKey: newRoomId, completion: { response in
+                switch response {
+                case .success:
+                    room.sendStateEvent(.spaceChild, content: [:], stateKey: roomId, completion: completion)
+                case .failure(let error):
+                    completion(.failure(error))
+                }
+            })
+        }
+    }
+    
+    /// Suggest or unsuggest a child room with the given room ID.
+    ///
+    /// Note that the room has to be already a child of this space otherwise a failure will be raised.
+    ///
+    /// - Parameters:
+    ///   - roomId: The room id of the child space or child room.
+    ///   - suggested: If `true` the room will be seen as suggested.,`false` otherwise.
+    ///   - completion: A closure called when the operation completes. Provides the event id of the event generated on the home server on success.
+    ///   - response: reponse of the request
+    public func setChild(withRoomId roomId: String,
+                         suggested: Bool,
+                         completion: @escaping (_ response: MXResponse<String?>) -> Void) {
+        guard let room = self.room else {
+            completion(.failure(MXSpaceError.spaceRoomNotFound))
+            return
+        }
+        
+        room.state { roomState in
+            var eventContent = roomState?.stateEvents(with: .spaceChild)?.last { $0.stateKey == roomId }?.wireContent ?? [:]
+            guard !eventContent.isEmpty else {
+                completion(.failure(MXSpaceError.validStateEventNotFound))
+                return
+            }
+            
+            eventContent[kMXEventTypeStringSuggestedKey] = suggested
+            room.sendStateEvent(.spaceChild, content: eventContent, stateKey: roomId, completion: completion)
+        }
+    }
+
     /// Update child spaces using the list of spaces
     /// - Parameters:
     ///   - spacesPerId: complete list of spaces by space ID

@@ -1603,6 +1603,21 @@ NS_REFINED_FOR_SWIFT;
                             success:(void (^)(MXPublicRoom *room))success
                             failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
+/**
+ Upgrade a room to a new version
+ 
+ @param roomId the id of the room.
+ @param roomVersion the new room version
+ @param success A block object called when the operation succeeds. It provides the ID of the replacement room.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)upgradeRoomWithId:(NSString*)roomId
+                                   to:(NSString*)roomVersion
+                              success:(void (^)(NSString *replacementRoomId))success
+                              failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
 #pragma mark - Room tags operations
 /**
  List the tags of a room.

@@ -1242,6 +1242,21 @@ public extension MXRestClient {
     @nonobjc @discardableResult func roomSummary(with roomIdOrAlias: String, via: [String], completion: @escaping (_ response: MXResponse<MXPublicRoom>) -> Void) -> MXHTTPOperation {
         return __roomSummary(with: roomIdOrAlias, via: via, success: currySuccess(completion), failure: curryFailure(completion))
     }
+    
+    /**
+     Upgrade a room to a new version
+     
+     - parameters:
+        - roomId: the id of the room.
+        - roomVersion: the new room version
+        - completion: A block object called when the operation completes.
+        - response: Provides the ID of the replacement room on success.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func upgradeRoom(withId roomId: String, to roomVersion: String, completion: @escaping (_ response: MXResponse<String>) -> Void) -> MXHTTPOperation {
+        return __upgradeRoom(withId: roomId, to: roomVersion, success: currySuccess(completion), failure: curryFailure(completion))
+    }
 
     // MARK: - Room tags operations
     
