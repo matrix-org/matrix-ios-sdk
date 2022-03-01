@@ -79,27 +79,22 @@ class MXThreadingServiceTests: XCTestCase {
                     initialRoom.sendTextMessage("Thread message", threadId: threadId, localEcho: &localEcho) { response2 in
                         switch response2 {
                         case .success(let eventId):
-                            var observer: NSObjectProtocol?
-                            observer = NotificationCenter.default.addObserver(forName: MXThreadingService.newThreadCreated,
-                                                                              object: nil,
-                                                                              queue: .main) { notification in
-                                if let observer = observer {
-                                    NotificationCenter.default.removeObserver(observer)
-                                }
+                            threadingService.addDelegate(MockThreadingServiceDelegate(withNewThreadBlock: { _ in
+                                threadingService.removeAllDelegates()
                                 guard let thread = threadingService.thread(withId: threadId) else {
                                     XCTFail("Thread must be created")
                                     expectation.fulfill()
                                     return
                                 }
-                                
+
                                 XCTAssertEqual(thread.id, threadId, "Thread must have the correct id")
                                 XCTAssertEqual(thread.roomId, initialRoom.roomId, "Thread must have the correct room id")
                                 XCTAssertEqual(thread.lastMessage?.eventId, eventId, "Thread last message must have the correct event id")
                                 XCTAssertNotNil(thread.rootMessage, "Thread must have the root event")
                                 XCTAssertEqual(thread.numberOfReplies, 1, "Thread must have only 1 reply")
-                                
+
                                 expectation.fulfill()
-                            }
+                            }))
                         case .failure(let error):
                             XCTFail("Failed to setup test conditions: \(error)")
                             expectation.fulfill()
@@ -151,13 +146,8 @@ class MXThreadingServiceTests: XCTestCase {
                                                 localEcho: &localEcho) { response2 in
                         switch response2 {
                         case .success:
-                            var observer: NSObjectProtocol?
-                            observer = NotificationCenter.default.addObserver(forName: MXThreadingService.newThreadCreated,
-                                                                              object: nil,
-                                                                              queue: .main) { notification in
-                                if let observer = observer {
-                                    NotificationCenter.default.removeObserver(observer)
-                                }
+                            threadingService.addDelegate(MockThreadingServiceDelegate(withNewThreadBlock: { _ in
+                                threadingService.removeAllDelegates()
                                 guard let thread = threadingService.thread(withId: threadId) else {
                                     XCTFail("Thread must be created")
                                     expectation.fulfill()
@@ -189,7 +179,7 @@ class MXThreadingServiceTests: XCTestCase {
                                         expectation.fulfill()
                                     }
                                 }
-                            }
+                            }))
                         case .failure(let error):
                             XCTFail("Failed to setup test conditions: \(error)")
                             expectation.fulfill()
@@ -237,13 +227,8 @@ class MXThreadingServiceTests: XCTestCase {
                     initialRoom.sendTextMessage("Thread message", threadId: threadId, localEcho: &localEcho) { response2 in
                         switch response2 {
                         case .success(let lastEventId):
-                            var observer: NSObjectProtocol?
-                            observer = NotificationCenter.default.addObserver(forName: MXThreadingService.newThreadCreated,
-                                                                              object: nil,
-                                                                              queue: .main) { notification in
-                                if let observer = observer {
-                                    NotificationCenter.default.removeObserver(observer)
-                                }
+                            threadingService.addDelegate(MockThreadingServiceDelegate(withNewThreadBlock: { _ in
+                                threadingService.removeAllDelegates()
                                 guard let thread = threadingService.thread(withId: threadId),
                                       let lastMessage = thread.lastMessage else {
                                     XCTFail("Thread must be created with a last message")
@@ -269,14 +254,15 @@ class MXThreadingServiceTests: XCTestCase {
                                             }
                                             
                                             XCTAssertEqual(replyEvent.threadId, threadId, "Reply must also be in the thread")
-                                            
-                                            guard let relatesTo = replyEvent.content[kMXEventRelationRelatesToKey] as? [String: Any],
-                                                  let inReplyTo = relatesTo["m.in_reply_to"] as? [String: String] else {
-                                                XCTFail("Reply event must have a reply-to dictionary in the content")
-                                                expectation.fulfill()
-                                                return
-                                            }
-                                            XCTAssertEqual(inReplyTo["event_id"], lastEventId, "Reply must point to the last message event")
+
+                                            XCTAssertEqual(replyEvent.relatesTo?.inReplyTo?.eventId, lastEventId, "Reply must point to the last message event")
+//                                            guard let relatesTo = replyEvent.content[kMXEventRelationRelatesToKey] as? [String: Any],
+//                                                  let inReplyTo = relatesTo["m.in_reply_to"] as? [String: Any] else {
+//                                                XCTFail("Reply event must have a reply-to dictionary in the content")
+//                                                expectation.fulfill()
+//                                                return
+//                                            }
+//                                            XCTAssertEqual(inReplyTo["event_id"] as? String, lastEventId, "Reply must point to the last message event")
                                             
                                             expectation.fulfill()
                                         }
@@ -285,7 +271,7 @@ class MXThreadingServiceTests: XCTestCase {
                                         expectation.fulfill()
                                     }
                                 }
-                            }
+                            }))
                         case .failure(let error):
                             XCTFail("Failed to setup test conditions: \(error)")
                             expectation.fulfill()
@@ -335,13 +321,8 @@ class MXThreadingServiceTests: XCTestCase {
                     initialRoom.sendTextMessage("Thread message", threadId: threadId, localEcho: &localEcho) { response2 in
                         switch response2 {
                         case .success(let eventId):
-                            var observer: NSObjectProtocol?
-                            observer = NotificationCenter.default.addObserver(forName: MXThreadingService.newThreadCreated,
-                                                                              object: nil,
-                                                                              queue: .main) { notification in
-                                if let observer = observer {
-                                    NotificationCenter.default.removeObserver(observer)
-                                }
+                            threadingService.addDelegate(MockThreadingServiceDelegate(withNewThreadBlock: { _ in
+                                threadingService.removeAllDelegates()
                                 threadingService.allThreads(inRoom: initialRoom.roomId) { response in
                                     switch response {
                                     case .success(let threads):
@@ -362,7 +343,7 @@ class MXThreadingServiceTests: XCTestCase {
                                     }
                                     expectation.fulfill()
                                 }
-                            }
+                            }))
                         case .failure(let error):
                             XCTFail("Failed to setup test conditions: \(error)")
                             expectation.fulfill()
@@ -417,13 +398,8 @@ class MXThreadingServiceTests: XCTestCase {
                     initialRoom.sendTextMessage("Thread message 1", threadId: threadId1, localEcho: &localEcho) { response2 in
                         switch response2 {
                         case .success:
-                            var observer: NSObjectProtocol?
-                            observer = NotificationCenter.default.addObserver(forName: MXThreadingService.newThreadCreated,
-                                                                              object: nil,
-                                                                              queue: .main) { notification in
-                                if let observer = observer {
-                                    NotificationCenter.default.removeObserver(observer)
-                                }
+                            threadingService.addDelegate(MockThreadingServiceDelegate(withNewThreadBlock: { _ in
+                                threadingService.removeAllDelegates()
                                 
                                 initialRoom.sendTextMessage("Root message 2",
                                                             threadId: nil,
@@ -439,40 +415,35 @@ class MXThreadingServiceTests: XCTestCase {
                                         initialRoom.sendTextMessage("Thread message 2", threadId: threadId2, localEcho: &localEcho) { response2 in
                                             switch response2 {
                                             case .success:
-                                                var observer: NSObjectProtocol?
-                                                observer = NotificationCenter.default.addObserver(forName: MXThreadingService.newThreadCreated,
-                                                                                                  object: nil,
-                                                                                                  queue: .main) { notification in
-                                                    if let observer = observer {
-                                                        NotificationCenter.default.removeObserver(observer)
+                                                threadingService.addDelegate(MockThreadingServiceDelegate(withNewThreadBlock: { _ in
+                                                    threadingService.removeAllDelegates()
 
-                                                        threadingService.allThreads(inRoom: initialRoom.roomId) { response in
-                                                            switch response {
-                                                            case .success(let threads):
-                                                                XCTAssertEqual(threads.count, 2, "Must have 2 threads")
-                                                                XCTAssertEqual(threads.first?.id, threadId2, "Latest thread must be in the first position")
-                                                                XCTAssertEqual(threads.last?.id, threadId1, "Older thread must be in the last position")
+                                                    threadingService.allThreads(inRoom: initialRoom.roomId) { response in
+                                                        switch response {
+                                                        case .success(let threads):
+                                                            XCTAssertEqual(threads.count, 2, "Must have 2 threads")
+                                                            XCTAssertEqual(threads.first?.id, threadId2, "Latest thread must be in the first position")
+                                                            XCTAssertEqual(threads.last?.id, threadId1, "Older thread must be in the last position")
 
-                                                                threadingService.allThreads(inRoom: initialRoom.roomId, onlyParticipated: true) { response2 in
-                                                                    switch response2 {
-                                                                    case .success(let participatedThreads):
-                                                                        XCTAssertEqual(participatedThreads.count, 2, "Must have 2 participated threads")
-                                                                        XCTAssertEqual(participatedThreads.first?.id, threadId2, "Latest thread must be in the first position")
-                                                                        XCTAssertEqual(participatedThreads.last?.id, threadId1, "Older thread must be in the last position")
-                                                                        
-                                                                        expectation.fulfill()
-                                                                    case .failure(let error):
-                                                                        XCTFail("Failed to setup test conditions: \(error)")
-                                                                        expectation.fulfill()
-                                                                    }
+                                                            threadingService.allThreads(inRoom: initialRoom.roomId, onlyParticipated: true) { response2 in
+                                                                switch response2 {
+                                                                case .success(let participatedThreads):
+                                                                    XCTAssertEqual(participatedThreads.count, 2, "Must have 2 participated threads")
+                                                                    XCTAssertEqual(participatedThreads.first?.id, threadId2, "Latest thread must be in the first position")
+                                                                    XCTAssertEqual(participatedThreads.last?.id, threadId1, "Older thread must be in the last position")
+
+                                                                    expectation.fulfill()
+                                                                case .failure(let error):
+                                                                    XCTFail("Failed to setup test conditions: \(error)")
+                                                                    expectation.fulfill()
                                                                 }
-                                                            case .failure(let error):
-                                                                XCTFail("Failed to setup test conditions: \(error)")
-                                                                expectation.fulfill()
                                                             }
+                                                        case .failure(let error):
+                                                            XCTFail("Failed to setup test conditions: \(error)")
+                                                            expectation.fulfill()
                                                         }
                                                     }
-                                                }
+                                                }))
                                             case .failure(let error):
                                                 XCTFail("Failed to setup test conditions: \(error)")
                                                 expectation.fulfill()
@@ -485,7 +456,7 @@ class MXThreadingServiceTests: XCTestCase {
                                 }
                                 
                                 expectation.fulfill()
-                            }
+                            }))
                         case .failure(let error):
                             XCTFail("Failed to setup test conditions: \(error)")
                             expectation.fulfill()
@@ -498,4 +469,23 @@ class MXThreadingServiceTests: XCTestCase {
             }
         }
     }
+}
+
+private class MockThreadingServiceDelegate: MXThreadingServiceDelegate {
+
+    private let newThreadBlock: ((MXThread) -> Void)
+    private static var instance: MockThreadingServiceDelegate?
+
+    init(withNewThreadBlock newThreadBlock: @escaping (MXThread) -> Void) {
+        self.newThreadBlock = newThreadBlock
+        //  do not allow this to be deallocated
+        Self.instance = self
+    }
+
+    func threadingService(_ service: MXThreadingService,
+                          didCreateNewThread thread: MXThread,
+                          direction: MXTimelineDirection) {
+        newThreadBlock(thread)
+    }
+
 }
