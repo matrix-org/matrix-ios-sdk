@@ -110,7 +110,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param isReply flag indicating the event was a reply
  @param startsThread flag indicating the event starts a thread
  */
-- (void)trackEventComposedInThread:(BOOL)inThread
+- (void)trackComposerEventInThread:(BOOL)inThread
                          isEditing:(BOOL)isEditing
                            isReply:(BOOL)isReply
                       startsThread:(BOOL)startsThread;

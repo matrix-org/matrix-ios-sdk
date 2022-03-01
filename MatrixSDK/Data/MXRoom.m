@@ -832,7 +832,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     return [mxSession.matrixRestClient sendEventToRoom:self.roomId threadId:threadId eventType:eventTypeString content:newContent txnId:txnId success:^(NSString *eventId) {
 
         //  track event composed
-        [MXSDKOptions.sharedInstance.analyticsDelegate trackEventComposedInThread:inThread
+        [MXSDKOptions.sharedInstance.analyticsDelegate trackComposerEventInThread:inThread
                                                                         isEditing:isEditing
                                                                           isReply:isReply
                                                                      startsThread:startsThread];
