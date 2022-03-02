@@ -489,6 +489,12 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
                     // If the crypto has been enabled after the initialSync (the global one or the one for this room),
                     // the algorithm has not been initialised yet. So, do it now from room state information
                     algorithm = roomState.encryptionAlgorithm;
+                    if (!algorithm)
+                    {
+                        algorithm = [self->_store algorithmForRoom:room.roomId];
+                        MXLogWarning(@"[MXCrypto] encryptEventContent: roomState.encryptionAlgorithm is nil for room %@. Try to use algorithm in the crypto store: %@", room.roomId, algorithm);
+                    }
+                    
                     if (algorithm)
                     {
                         [self setEncryptionInRoom:room.roomId withMembers:userIds algorithm:algorithm inhibitDeviceQuery:NO];
@@ -1878,6 +1884,15 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 #endif
 }
 
+- (BOOL)isRoomEncrypted:(NSString *)roomId
+{
+#ifdef MX_CRYPTO
+    return [_store algorithmForRoom:roomId] != nil;
+#else
+    return NO;
+#endif
+}
+
 - (void)setBlacklistUnverifiedDevicesInRoom:(NSString *)roomId blacklist:(BOOL)blacklist
 {
 #ifdef MX_CRYPTO
@@ -1915,7 +1930,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
         _deviceList = [[MXDeviceList alloc] initWithCrypto:self];
 
         // Use our own REST client that answers on the crypto thread
-        _matrixRestClient = [[MXRestClient alloc] initWithCredentials:_mxSession.matrixRestClient.credentials andOnUnrecognizedCertificateBlock:nil];
+        _matrixRestClient = [[MXRestClient alloc] initWithCredentials:_mxSession.matrixRestClient.credentials andOnUnrecognizedCertificateBlock:nil andPersistentTokenDataHandler:_mxSession.matrixRestClient.persistTokenDataHandler andUnauthenticatedHandler:_mxSession.matrixRestClient.unauthenticatedHandler];
         _matrixRestClient.completionQueue = _cryptoQueue;
 
         roomEncryptors = [NSMutableDictionary dictionary];

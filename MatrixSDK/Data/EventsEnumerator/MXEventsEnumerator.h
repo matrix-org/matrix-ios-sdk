@@ -31,10 +31,11 @@
 /**
  Return next events in the enumerator.
  
- @eventsCount the number of events to get.
- @return an array of events in chronological order. Nil if there is no more events.
+ @param eventsCount the number of events to get.
+ @param threadId identifier of the thread, to get next events from. Pass nil not to filter by a thread.
+ @return an array of events in chronological order. Nil if there is no more events. Number of returned events may be higher than `eventsCount` if `threadId` not provided.
  */
-- (NSArray<MXEvent*>*)nextEventsBatch:(NSUInteger)eventsCount;
+- (NSArray<MXEvent*>*)nextEventsBatch:(NSUInteger)eventsCount threadId:(NSString *)threadId;
 
 /**
  The next event in the enumerator.

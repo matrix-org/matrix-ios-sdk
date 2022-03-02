@@ -21,6 +21,7 @@
 @class MXEventAnnotationChunk;
 @class MXEventReplace;
 @class MXEventReferenceChunk;
+@class MXEventRelationThread;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -32,6 +33,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly, nullable) MXEventAnnotationChunk *annotation;
 @property (nonatomic, readonly, nullable) MXEventReferenceChunk *reference;
 @property (nonatomic, readonly, nullable) MXEventReplace *replace;
+@property (nonatomic, readonly, nullable) MXEventRelationThread *thread;
 
 @end
 

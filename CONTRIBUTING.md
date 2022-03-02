@@ -60,6 +60,7 @@ following:
 - `i18n` for translations
 - `build` for changes related to build, tools, CI/CD
 - `doc` for updates to the documentation
+- `wip` for anything that isn't ready to ship and will be enabled at a later date
 - `misc` for other changes
 
 This file will become part of our [changelog](CHANGES.md) at the next

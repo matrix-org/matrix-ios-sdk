@@ -92,9 +92,7 @@ public class MXSpace: NSObject {
 
         self.sdkProcessingQueue.async {
             room.state { [weak self] roomState in
-                guard let self = self else {
-                    return
-                }
+                guard let self = self else { return }
                 
                 self.processingQueue.async {
                     var childRoomIds: [String] = []
@@ -121,7 +119,12 @@ public class MXSpace: NSObject {
                     
                     self.sdkProcessingQueue.async {
                         room.members { [weak self] response in
-                            guard let self = self, let members = response.value as? MXRoomMembers else {
+                            guard let self = self else { return }
+                            
+                            guard let members = response.value as? MXRoomMembers else {
+                                self.completionQueue.async {
+                                    completion()
+                                }
                                 return
                             }
 
@@ -203,14 +206,15 @@ public class MXSpace: NSObject {
         return self.room?.sendStateEvent(.spaceChild, content: [:], stateKey: roomId, completion: completion)
     }
     
-    /// Add the new child with the child with the properties of the old child then remove the old room from the children list. This is used after room upgrade.
+    /// Add the new child with the properties of the old child then remove the old room from the children list. This is used after room upgrade.
     /// - Parameters:
     ///   - roomId: The room id of the child space or child room.
     ///   - newRoomId: The new room id of the child space or child room.
     ///   - completion: A closure called when the operation completes. Provides the event id of the event generated on the home server on success.
     ///   - response: reponse of the request
-    public func moveChild(withRoomId roomId: String, to newRoomId: String,
-                         completion: @escaping (_ response: MXResponse<String?>) -> Void) {
+    public func moveChild(withRoomId roomId: String,
+                          to newRoomId: String,
+                          completion: @escaping (_ response: MXResponse<String?>) -> Void) {
         guard let room = self.room else {
             completion(.failure(MXSpaceError.spaceRoomNotFound))
             return
@@ -243,7 +247,8 @@ public class MXSpace: NSObject {
     ///   - suggested: If `true` the room will be seen as suggested.,`false` otherwise.
     ///   - completion: A closure called when the operation completes. Provides the event id of the event generated on the home server on success.
     ///   - response: reponse of the request
-    public func setChild(withRoomId roomId: String, suggested: Bool,
+    public func setChild(withRoomId roomId: String,
+                         suggested: Bool,
                          completion: @escaping (_ response: MXResponse<String?>) -> Void) {
         guard let room = self.room else {
             completion(.failure(MXSpaceError.spaceRoomNotFound))
@@ -288,6 +293,48 @@ public class MXSpace: NSObject {
     /// - Returns: `true` if the room identified is a child, `false` atherwise
     public func isRoomAChild(roomId: String) -> Bool {
         return childRoomIds.contains(roomId)
+    }
+    
+    /// Check if the current user has enough power level to add room to this space
+    /// - Parameters:
+    ///   - completion: A closure called when the operation completes.
+    ///   - canAddRoom: Indicates wether the user has right or not to add rooms to this space
+    public func canAddRoom(completion: @escaping (_ canAddRoom: Bool) -> Void) {
+        guard let userId = session.myUserId else {
+            MXLog.warning("[MXSpace] canAddRoom: user ID not found")
+            completion(false)
+            return
+        }
+        
+        guard let summary = self.summary else {
+            MXLog.warning("[MXSpace] canAddRoom: summary not found")
+            completion(false)
+            return
+        }
+        
+        guard let room = self.room else {
+            MXLog.warning("[MXSpace] canAddRoom: room not found")
+            completion(false)
+            return
+        }
+        
+        guard summary.membership == .join else {
+            completion(false)
+            return
+        }
+        
+        room.state { roomState in
+            guard let powerLevels = roomState?.powerLevels else {
+                MXLog.warning("[MXSpace] canAddRoom: space power levels not found")
+                completion(false)
+                return
+            }
+            let userPowerLevel = powerLevels.powerLevelOfUser(withUserID: userId)
+            let minimumPowerLevel = powerLevels.events["m.space.child"] as? Int ?? powerLevels.stateDefault
+            let canAddRoom = userPowerLevel >= minimumPowerLevel
+            
+            completion(canAddRoom)
+        }
     }
     
     // MARK: - Private

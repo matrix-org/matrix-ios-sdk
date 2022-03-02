@@ -12,6 +12,11 @@ import Foundation
 
 public extension MXSession {
     
+    /// Module that manages threads
+    var threadingService: MXThreadingService {
+        return __threadingService
+    }
+    
     /**
      Start fetching events from the home server.
      
@@ -180,13 +185,13 @@ public extension MXSession {
             let historyVisibilityStateEvent = stateEventBuilder.buildHistoryVisibilityEvent(withVisibility: .shared)
             parameters.addOrUpdateInitialStateEvent(historyVisibilityStateEvent)
             
-            let joinRuleSupportType = homeserverCapabilities.isFeatureSupported(.restricted)
+            let joinRuleSupportType = homeserverCapabilitiesService.isFeatureSupported(.restricted)
             if joinRuleSupportType == .supported || joinRuleSupportType == .supportedUnstable {
                 guard let parentRoomId = parentRoomId else {
                     fatalError("[MXSession] createRoom: parentRoomId is required for restricted room")
                 }
                 
-                parameters.roomVersion = homeserverCapabilities.versionOverrideForFeature(.restricted)
+                parameters.roomVersion = homeserverCapabilitiesService.versionOverrideForFeature(.restricted)
                 let joinRuleStateEvent = stateEventBuilder.buildJoinRuleEvent(withJoinRule: .restricted, allowedParentsList: [parentRoomId])
                 parameters.addOrUpdateInitialStateEvent(joinRuleStateEvent)
             } else {
@@ -358,7 +363,7 @@ public extension MXSession {
     @nonobjc func listenToEvents(_ types: [MXEventType]? = nil, _ block: @escaping MXOnSessionEvent) -> Any {
         let legacyBlock: __MXOnSessionEvent = { (event, direction, customObject) in
             guard let event = event else { return }
-            block(event, MXTimelineDirection(identifer: direction), customObject)
+            block(event, direction, customObject)
         }
         
         if let types = types {
@@ -367,5 +372,12 @@ public extension MXSession {
         } else {
             return __listen(toEvents: legacyBlock)
         }
+    }
+
+    //  MARK: - Homeserver Information
+
+    /// The homeserver capabilities
+    var homeserverCapabilities: MXCapabilities? {
+        return __homeserverCapabilities
     }
 }

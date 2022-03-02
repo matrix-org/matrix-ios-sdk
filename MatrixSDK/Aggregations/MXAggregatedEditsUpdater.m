@@ -136,10 +136,10 @@
     
     content[@"m.new_content"] = newContent;
     
-    content[@"m.relates_to"] = @{
-                                 @"rel_type" : @"m.replace",
-                                 @"event_id": event.eventId
-                                 };
+    content[kMXEventRelationRelatesToKey] = @{
+        @"rel_type" : @"m.replace",
+        @"event_id": event.eventId
+    };
     
     MXHTTPOperation *operation;
     MXEvent *localEcho;
@@ -170,13 +170,13 @@
         if (localEchoBlock)
         {
             // Build a temporary local echo
-            localEcho = [room fakeEventWithEventId:nil eventType:kMXEventTypeStringRoomMessage andContent:content];
+            localEcho = [room fakeEventWithEventId:nil eventType:kMXEventTypeStringRoomMessage andContent:content threadId:nil];
             localEcho.sentState = event.sentState;
         }
     }
     else
     {
-        operation = [room sendEventOfType:kMXEventTypeStringRoomMessage content:content localEcho:&localEcho success:success failure:failure];
+        operation = [room sendEventOfType:kMXEventTypeStringRoomMessage content:content threadId:nil localEcho:&localEcho success:success failure:failure];
     }
 
     if (localEchoBlock && localEcho)

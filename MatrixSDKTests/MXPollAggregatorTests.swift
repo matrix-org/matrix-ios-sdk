@@ -35,13 +35,13 @@ class MXPollAggregatorTest: XCTestCase {
         
     func testAggregations() {
         self.createScenarioForBobAndAlice { bobSession, aliceSession, bobRoom, aliceRoom, pollStartEvent, expectation in
-            self.pollAggregator = try! PollAggregator(session: bobSession, room: bobRoom, pollStartEvent: pollStartEvent)
+            self.pollAggregator = try! PollAggregator(session: bobSession, room: bobRoom, pollStartEventId: pollStartEvent.eventId)
             
             let dispatchGroup = DispatchGroup()
             
             for _ in 1...5 {
                 dispatchGroup.enter()
-                bobRoom.sendPollResponse(for: pollStartEvent, withAnswerIdentifiers: ["2"], localEcho: nil) { _ in
+                bobRoom.sendPollResponse(for: pollStartEvent, withAnswerIdentifiers: ["2"], threadId:nil, localEcho: nil) { _ in
                     dispatchGroup.leave()
                 } failure: { error in
                     XCTFail("The operation should not fail - NSError: \(String(describing: error))")
@@ -49,7 +49,7 @@ class MXPollAggregatorTest: XCTestCase {
             }
             
             dispatchGroup.enter()
-            bobRoom.sendPollResponse(for: pollStartEvent, withAnswerIdentifiers: ["1"], localEcho: nil) { _ in
+            bobRoom.sendPollResponse(for: pollStartEvent, withAnswerIdentifiers: ["1"], threadId:nil, localEcho: nil) { _ in
                 dispatchGroup.leave()
             } failure: { error in
                 XCTFail("The operation should not fail - NSError: \(String(describing: error))")
@@ -68,7 +68,7 @@ class MXPollAggregatorTest: XCTestCase {
     
     func testSessionPausing() {
         self.createScenarioForBobAndAlice { bobSession, aliceSession, bobRoom, aliceRoom, pollStartEvent, expectation in
-            self.pollAggregator = try! PollAggregator(session: bobSession, room: bobRoom, pollStartEvent: pollStartEvent)
+            self.pollAggregator = try! PollAggregator(session: bobSession, room: bobRoom, pollStartEventId: pollStartEvent.eventId)
             
             XCTAssertEqual(self.pollAggregator.poll.answerOptions.first!.count, 1) // One from Alice
             XCTAssertEqual(self.pollAggregator.poll.answerOptions.last!.count, 0)
@@ -80,7 +80,7 @@ class MXPollAggregatorTest: XCTestCase {
                 XCTAssertEqual(self.pollAggregator.poll.answerOptions.last!.count, 0)
             })
             
-            bobRoom.sendPollResponse(for: pollStartEvent, withAnswerIdentifiers: ["1"], localEcho: nil) { _ in
+            bobRoom.sendPollResponse(for: pollStartEvent, withAnswerIdentifiers: ["1"], threadId:nil, localEcho: nil) { _ in
                 bobSession.resume {
                     expectation.fulfill()
                 }
@@ -92,7 +92,7 @@ class MXPollAggregatorTest: XCTestCase {
     
     func testGappySync() {
         self.createScenarioForBobAndAlice { bobSession, aliceSession, bobRoom, aliceRoom, pollStartEvent, expectation in
-            self.pollAggregator = try! PollAggregator(session: bobSession, room: bobRoom, pollStartEvent: pollStartEvent)
+            self.pollAggregator = try! PollAggregator(session: bobSession, room: bobRoom, pollStartEventId: pollStartEvent.eventId)
             
             XCTAssertEqual(self.pollAggregator.poll.answerOptions.first!.count, 1) // One from Alice
             XCTAssertEqual(self.pollAggregator.poll.answerOptions.last!.count, 0)
@@ -100,8 +100,8 @@ class MXPollAggregatorTest: XCTestCase {
             bobSession.pause()
             
             self.matrixSDKTestsData.for(bobSession.matrixRestClient, andRoom: bobRoom.roomId, sendMessages: 50, testCase: self) {
-                bobRoom.sendPollResponse(for: pollStartEvent, withAnswerIdentifiers: ["1"], localEcho: nil) { _ in
-                    aliceRoom.sendPollResponse(for: pollStartEvent, withAnswerIdentifiers: ["1", "2"], localEcho: nil) { _ in
+                bobRoom.sendPollResponse(for: pollStartEvent, withAnswerIdentifiers: ["1"], threadId:nil, localEcho: nil) { _ in
+                    aliceRoom.sendPollResponse(for: pollStartEvent, withAnswerIdentifiers: ["1", "2"], threadId:nil, localEcho: nil) { _ in
                         self.matrixSDKTestsData.for(aliceSession.matrixRestClient, andRoom: aliceRoom.roomId, sendMessages: 50, testCase: self) {
                             
                             self.pollAggregator.delegate = PollAggregatorBlockWrapper(dataUpdateCallback: {
@@ -125,6 +125,34 @@ class MXPollAggregatorTest: XCTestCase {
         }
     }
     
+    func testEditing() {
+        self.createScenarioForBobAndAlice { bobSession, aliceSession, bobRoom, aliceRoom, pollStartEvent, expectation in
+            self.pollAggregator = try! PollAggregator(session: bobSession, room: bobRoom, pollStartEventId: pollStartEvent.eventId)
+            
+            let oldContent = MXEventContentPollStart(fromJSON: pollStartEvent.content)!
+            let newContent = MXEventContentPollStart(question: "Some other question",
+                                                     kind: oldContent.kind,
+                                                     maxSelections: oldContent.maxSelections,
+                                                     answerOptions: [])
+            
+            self.pollAggregator.delegate = PollAggregatorBlockWrapper(dataUpdateCallback: {
+                
+                XCTAssertEqual(self.pollAggregator.poll.text, "Some other question")
+                XCTAssertEqual(self.pollAggregator.poll.answerOptions.count, 0)
+                XCTAssertTrue(self.pollAggregator.poll.hasBeenEdited)
+                
+                expectation.fulfill()
+                self.pollAggregator.delegate = nil
+            })
+            
+            bobRoom.sendPollUpdate(for: pollStartEvent, oldContent: oldContent, newContent: newContent, localEcho: nil) { result in
+                
+            } failure: { error in
+                XCTFail("The operation should not fail - NSError: \(String(describing: error))")
+            }
+        }
+    }
+    
     // MARK: - Private
     
     func createScenarioForBobAndAlice(_ readyToTest: @escaping (MXSession, MXSession, MXRoom, MXRoom, MXEvent, XCTestExpectation) -> Void) {
@@ -138,10 +166,10 @@ class MXPollAggregatorTest: XCTestCase {
             
             let pollStartContent = MXEventContentPollStart(question: "Question", kind: kMXMessageContentKeyExtensiblePollKindDisclosed, maxSelections: 100, answerOptions: answerOptions)
             
-            bobRoom?.sendPollStart(withContent: pollStartContent, localEcho: nil, success: { pollStartEventId in
+            bobRoom?.sendPollStart(withContent: pollStartContent, threadId:nil, localEcho: nil, success: { pollStartEventId in
                 bobSession?.event(withEventId: pollStartEventId, inRoom: roomId, success: { pollStartEvent in
                     let aliceRoom = aliceSession?.room(withRoomId: roomId)
-                    aliceRoom?.sendPollResponse(for: pollStartEvent, withAnswerIdentifiers: [pollStartContent.answerOptions.first!.uuid], localEcho: nil, success: { _ in
+                    aliceRoom?.sendPollResponse(for: pollStartEvent, withAnswerIdentifiers: [pollStartContent.answerOptions.first!.uuid], threadId:nil, localEcho: nil, success: { _ in
                         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                             readyToTest(bobSession!, aliceSession!, bobRoom!, aliceRoom!, pollStartEvent!, expectation!)
                         }

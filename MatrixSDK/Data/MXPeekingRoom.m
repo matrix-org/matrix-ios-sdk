@@ -71,7 +71,7 @@
         }
         self->httpOperation = nil;
 
-        [self liveTimeline:^(MXEventTimeline *liveTimeline) {
+        [self liveTimeline:^(id<MXEventTimeline> liveTimeline) {
             [liveTimeline initialiseState:roomInitialSync.state];
 
             // @TODO: start the events stream

@@ -94,7 +94,7 @@ jobs:
           source .synapse/bin/activate
           pip install synapse matrix-synapse
           curl -sL https://raw.githubusercontent.com/matrix-org/synapse/develop/demo/start.sh \
-            | sed s/127.0.0.1/0.0.0.0/g | bash
+            | sed s/127.0.0.1/0.0.0.0/g | bash -s -- "--no-rate-limit"
 
       - name: Bundle install
         run: |

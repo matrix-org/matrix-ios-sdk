@@ -1751,12 +1751,10 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
 
 + (NSURL*)storeFolderURL
 {
-    // Check for a potential application group id.
-    NSString *applicationGroupIdentifier = [MXSDKOptions sharedInstance].applicationGroupIdentifier;
-    if (applicationGroupIdentifier)
+    // Check for a potential application group container
+    NSURL *sharedContainerURL = [[NSFileManager defaultManager] applicationGroupContainerURL];
+    if (sharedContainerURL)
     {
-        // Use the shared db file URL.
-        NSURL *sharedContainerURL = [[NSFileManager defaultManager] containerURLForSecurityApplicationGroupIdentifier:applicationGroupIdentifier];
         return [sharedContainerURL URLByAppendingPathComponent:kMXRealmCryptoStoreFolder];
     }
     else
@@ -1804,7 +1802,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
     if (![NSFileManager.defaultManager fileExistsAtPath:fileFolderURL.path])
     {
         MXLogDebug(@"[MXRealmCryptoStore] ensurePathExistenceForFileAtFileURL: Create full path hierarchy for %@", fileURL);
-        [[NSFileManager defaultManager] createDirectoryAtPath:fileFolderURL.path withIntermediateDirectories:YES attributes:nil error:nil];
+        [[NSFileManager defaultManager] createDirectoryExcludedFromBackupAtPath:fileFolderURL.path error:nil];
     }
 }
 

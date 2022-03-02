@@ -27,16 +27,16 @@ public class MXCoreDataRoomSummaryStore: NSObject {
     }
     
     private let credentials: MXCredentials
-    
-    private lazy var container: NSPersistentContainer = {
-        let result = NSPersistentContainer(name: Constants.modelName,
-                                           managedObjectModel: Self.managedObjectModel)
-        result.persistentStoreDescriptions.first?.url = storeURL
-        result.loadPersistentStores { description, error in
-            if let error = error {
-                MXLog.error("Failed to load store: \(error)")
-                abort()
-            }
+
+    private lazy var persistenceCoordinator: NSPersistentStoreCoordinator = {
+        let result = NSPersistentStoreCoordinator(managedObjectModel: Self.managedObjectModel)
+        do {
+            try result.addPersistentStore(ofType: NSSQLiteStoreType,
+                                          configurationName: nil,
+                                          at: storeURL,
+                                          options: nil)
+        } catch {
+            fatalError(error.localizedDescription)
         }
         return result
     }()
@@ -46,13 +46,13 @@ public class MXCoreDataRoomSummaryStore: NSObject {
         }
         
         var cachePath: URL!
-        if let appGroupIdentifier = MXSDKOptions.sharedInstance().applicationGroupIdentifier {
-            cachePath = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupIdentifier)
+        if let container = FileManager.default.applicationGroupContainerURL() {
+            cachePath = container
         } else {
             cachePath = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first
         }
         let folderUrl = cachePath.appendingPathComponent(Constants.folderName).appendingPathComponent(userId)
-        try? FileManager.default.createDirectory(at: folderUrl, withIntermediateDirectories: true, attributes: nil)
+        try? FileManager.default.createDirectoryExcludedFromBackup(at: folderUrl)
         return folderUrl.appendingPathComponent(Constants.storeFileName)
     }()
     private static var managedObjectModel: NSManagedObjectModel = {
@@ -68,14 +68,21 @@ public class MXCoreDataRoomSummaryStore: NSObject {
     
     /// Managed object context to be used when inserting data, whose parent context is `mainMoc`.
     private lazy var backgroundMoc: NSManagedObjectContext = {
-        let result = container.newBackgroundContext()
-        result.automaticallyMergesChangesFromParent = true
+        let result = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
+        result.parent = mainMoc
         return result
     }()
     /// Managed object context to be used on main thread for fetching data, whose parent context is `persistentMoc`.
     private lazy var mainMoc: NSManagedObjectContext = {
-        let result = container.viewContext
+        let result = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
+        result.parent = persistentMoc
         result.automaticallyMergesChangesFromParent = true
+        return result
+    }()
+    /// Managed object context bound to persistent store coordinator.
+    private lazy var persistentMoc: NSManagedObjectContext = {
+        let result = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
+        result.persistentStoreCoordinator = persistenceCoordinator
         return result
     }()
     
@@ -92,8 +99,6 @@ public class MXCoreDataRoomSummaryStore: NSObject {
         let request = MXRoomSummaryMO.typedFetchRequest()
         request.includesSubentities = false
         request.includesPropertyValues = false
-        //  fetch nothing
-        request.propertiesToFetch = []
         request.resultType = .countResultType
         var result = 0
         moc.performAndWait {
@@ -112,16 +117,19 @@ public class MXCoreDataRoomSummaryStore: NSObject {
         guard let property = MXRoomSummaryMO.entity().propertiesByName[propertyName] else {
             fatalError("[MXCoreDataRoomSummaryStore] Couldn't find \(propertyName) on entity \(String(describing: MXRoomSummaryMO.self)), probably property name changed")
         }
-        let request = MXRoomSummaryMO.typedFetchRequest()
+        let request = MXRoomSummaryMO.genericFetchRequest()
         request.includesSubentities = false
         //  only fetch room identifiers
         request.propertiesToFetch = [property]
+        //  when specific properties set, use dictionary result type for issues seen mostly on iOS 12 devices
+        request.resultType = .dictionaryResultType
         var result: [String] = []
         moc.performAndWait {
             do {
-                let results = try moc.fetch(request)
-                //  do not attempt to access other properties from the results
-                result = results.map({ $0.s_identifier })
+                if let dictionaries = try moc.fetch(request) as? [[String: Any]] {
+                    //  other properties than 'propertyName' won't exist in the dictionary
+                    result = dictionaries.compactMap({ $0[propertyName] as? String })
+                }
             } catch {
                 MXLog.error("[MXCoreDataRoomSummaryStore] fetchRoomIds failed: \(error)")
             }
@@ -246,11 +254,23 @@ public class MXCoreDataRoomSummaryStore: NSObject {
         guard moc.hasChanges else {
             return
         }
+
+        var saved = false
         do {
             try moc.save()
+            saved = true
         } catch {
             moc.rollback()
             MXLog.error("[MXCoreDataRoomSummaryStore] saveIfNeeded failed: \(error)")
+        }
+
+        if saved {
+            //  save all parent contexts recursively
+            if let parent = moc.parent {
+                parent.perform {
+                    self.saveIfNeeded(parent)
+                }
+            }
         }
     }
     
@@ -261,11 +281,11 @@ public class MXCoreDataRoomSummaryStore: NSObject {
 extension MXCoreDataRoomSummaryStore: MXRoomSummaryStore {
     
     public var rooms: [String] {
-        return fetchRoomIds(in: backgroundMoc)
+        return fetchRoomIds(in: mainMoc)
     }
     
     public var countOfRooms: UInt {
-        return UInt(countRooms(in: backgroundMoc))
+        return UInt(countRooms(in: mainMoc))
     }
     
     public func storeSummary(_ summary: MXRoomSummaryProtocol) {
@@ -273,7 +293,7 @@ extension MXCoreDataRoomSummaryStore: MXRoomSummaryStore {
     }
     
     public func summary(ofRoom roomId: String) -> MXRoomSummaryProtocol? {
-        return fetchSummary(forRoomId: roomId, in: backgroundMoc)
+        return fetchSummary(forRoomId: roomId, in: mainMoc)
     }
     
     public func removeSummary(ofRoom roomId: String) {

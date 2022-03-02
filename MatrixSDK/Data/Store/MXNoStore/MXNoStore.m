@@ -407,9 +407,14 @@
     }
 }
 
-- (NSUInteger)localUnreadEventCount:(NSString*)roomId withTypeIn:(NSArray*)types
+- (NSUInteger)localUnreadEventCount:(NSString *)roomId threadId:(NSString *)threadId withTypeIn:(NSArray *)types
 {
     return 0;
+}
+
+- (NSArray<MXEvent *> *)newIncomingEventsInRoom:(NSString *)roomId threadId:(NSString *)threadId withTypeIn:(NSArray<MXEventTypeString> *)types
+{
+    return @[];
 }
 
 - (MXWellKnown *)homeserverWellknown
@@ -417,6 +422,14 @@
     return nil;
 }
 - (void)storeHomeserverWellknown:(nonnull MXWellKnown *)homeserverWellknown
+{
+}
+
+- (MXCapabilities *)homeserverCapabilities
+{
+    return nil;
+}
+- (void)storeHomeserverCapabilities:(MXCapabilities *)homeserverCapabilities
 {
 }
 

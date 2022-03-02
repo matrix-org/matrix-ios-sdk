@@ -124,7 +124,7 @@ class MXBackgroundStore: NSObject, MXStore {
     func open(with credentials: MXCredentials, onComplete: (() -> Void)?, failure: ((Error?) -> Void)? = nil) {
     }
     
-    func storeEvent(forRoom roomId: String, event: MXEvent, direction: __MXTimelineDirection) {
+    func storeEvent(forRoom roomId: String, event: MXEvent, direction: MXTimelineDirection) {
     }
     
     func replace(_ event: MXEvent, inRoom roomId: String) {
@@ -228,13 +228,21 @@ class MXBackgroundStore: NSObject, MXStore {
         }
     }
     
-    func localUnreadEventCount(_ roomId: String, withTypeIn types: [Any]?) -> UInt {
+    func localUnreadEventCount(_ roomId: String, threadId: String?, withTypeIn types: [Any]?) -> UInt {
         return 0
+    }
+
+    func newIncomingEvents(inRoom roomId: String, threadId: String?, withTypeIn types: [String]?) -> [MXEvent] {
+        return []
     }
     
     var homeserverWellknown: MXWellKnown?
     
     func storeHomeserverWellknown(_ homeserverWellknown: MXWellKnown) {
+    }
+
+    var homeserverCapabilities: MXCapabilities?
+    func storeHomeserverCapabilities(_ homeserverCapabilities: MXCapabilities) {
     }
     
     func loadRoomMessages(forRoom roomId: String, completion: (() -> Void)? = nil) {

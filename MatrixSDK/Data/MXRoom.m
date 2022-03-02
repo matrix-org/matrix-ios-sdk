@@ -23,6 +23,7 @@
 #import "MXTools.h"
 #import "NSData+MatrixSDK.h"
 #import "MXDecryptionResult.h"
+#import "MXRoomEventTimeline.h"
 
 #import "MXEncryptedAttachments.h"
 #import "MXEncryptedContentFile.h"
@@ -37,6 +38,8 @@
 
 #import "MXEventContentPollStart.h"
 #import "MXEventContentLocation.h"
+#import "MatrixSDKSwiftHeader.h"
+#import "NSDictionary+MutableDeepCopy.h"
 
 NSString *const kMXRoomDidFlushDataNotification = @"kMXRoomDidFlushDataNotification";
 NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotification";
@@ -55,7 +58,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
      The liveTimeline instance.
      Its data is loaded only when [self liveTimeline:] is called.
      */
-    MXEventTimeline *liveTimeline;
+    id<MXEventTimeline> liveTimeline;
 
     /**
      Flag to indicate that the data for `_liveTimeline` must be loaded before use.
@@ -65,7 +68,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     /**
      FIFO queue of objects waiting for [self liveTimeline:]. 
      */
-    NSMutableArray<void (^)(MXEventTimeline *)> *pendingLiveTimelineRequesters;
+    NSMutableArray<void (^)(id<MXEventTimeline>)> *pendingLiveTimelineRequesters;
 
     /**
      FIFO queue of success blocks waiting for [self members:].
@@ -115,12 +118,12 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
 
         if (store)
         {
-            liveTimeline = [[MXEventTimeline alloc] initWithRoom:self initialEventId:nil andStore:store];
+            liveTimeline = [[MXRoomEventTimeline alloc] initWithRoom:self initialEventId:nil andStore:store];
         }
         else
         {
             // Let the timeline use the session store
-            liveTimeline = [[MXEventTimeline alloc] initWithRoom:self andInitialEventId:nil];
+            liveTimeline = [[MXRoomEventTimeline alloc] initWithRoom:self andInitialEventId:nil];
         }
         
         //  Update the stored outgoing messages, by removing the sent messages and tagging as failed the others.
@@ -164,7 +167,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     return [mxSession roomSummaryWithRoomId:_roomId];
 }
 
-- (void)liveTimeline:(void (^)(MXEventTimeline *))onComplete
+- (void)liveTimeline:(void (^)(id<MXEventTimeline>))onComplete
 {
     // Is timelime ready?
     if (needToLoadLiveTimeline || pendingLiveTimelineRequesters)
@@ -184,10 +187,10 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                     [self->liveTimeline setState:roomState];
 
                     // Provide the timelime to pending requesters
-                    NSArray<void (^)(MXEventTimeline *)> *liveTimelineRequesters = [self->pendingLiveTimelineRequesters copy];
+                    NSArray<void (^)(id<MXEventTimeline>)> *liveTimelineRequesters = [self->pendingLiveTimelineRequesters copy];
                     self->pendingLiveTimelineRequesters = nil;
 
-                    for (void (^onRequesterComplete)(MXEventTimeline *) in liveTimelineRequesters)
+                    for (void (^onRequesterComplete)(id<MXEventTimeline>) in liveTimelineRequesters)
                     {
                         onRequesterComplete(self->liveTimeline);
                     }
@@ -208,7 +211,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
 
 - (void)state:(void (^)(MXRoomState *))onComplete
 {
-    [self liveTimeline:^(MXEventTimeline *theLiveTimeline) {
+    [self liveTimeline:^(id<MXEventTimeline> theLiveTimeline) {
         onComplete(theLiveTimeline.state);
     }];
 }
@@ -229,7 +232,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     MXHTTPOperation *operation = [[MXHTTPOperation alloc] init];
 
     MXWeakify(self);
-    [self liveTimeline:^(MXEventTimeline *liveTimeline) {
+    [self liveTimeline:^(id<MXEventTimeline> liveTimeline) {
         MXStrongifyAndReturnIfNil(self);
 
         // Return directly liveTimeline.state.members if we have already all of them
@@ -382,7 +385,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
 - (void)handleJoinedRoomSync:(MXRoomSync *)roomSync onComplete:(void (^)(void))onComplete
 {
     MXWeakify(self);
-    [self liveTimeline:^(MXEventTimeline *liveTimeline) {
+    [self liveTimeline:^(id<MXEventTimeline> liveTimeline) {
         MXStrongifyAndReturnIfNil(self);
 
         // Start with ephemeral events
@@ -400,7 +403,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     }];
 }
 
-- (void)handleEphemeralEvents:(NSArray<MXEvent*>*)events inLiveTimeline:(MXEventTimeline *)liveTimeline
+- (void)handleEphemeralEvents:(NSArray<MXEvent*>*)events inLiveTimeline:(id<MXEventTimeline>)liveTimeline
 {
     for (MXEvent *event in events)
     {
@@ -426,7 +429,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
 
 - (void)handleInvitedRoomSync:(MXInvitedRoomSync *)invitedRoomSync onComplete:(void (^)(void))onComplete
 {
-    [self liveTimeline:^(MXEventTimeline *theLiveTimeline) {
+    [self liveTimeline:^(id<MXEventTimeline> theLiveTimeline) {
 
         // Let the live timeline handle live events
         [theLiveTimeline handleInvitedRoomSync:invitedRoomSync onComplete:^{
@@ -473,7 +476,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
  @param accountDataEvents the events to handle.
  @param direction the process direction: MXTimelineDirectionSync or MXTimelineDirectionForwards. MXTimelineDirectionBackwards is not applicable here.
  */
-- (void)handleAccountDataEvents:(NSArray<MXEvent*>*)accountDataEvents liveTimeline:(MXEventTimeline*)theLiveTimeline direction:(MXTimelineDirection)direction
+- (void)handleAccountDataEvents:(NSArray<MXEvent*>*)accountDataEvents liveTimeline:(id<MXEventTimeline>)theLiveTimeline direction:(MXTimelineDirection)direction
 {
     for (MXEvent *event in accountDataEvents)
     {
@@ -520,6 +523,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
 #pragma mark - Room operations
 - (MXHTTPOperation*)sendEventOfType:(MXEventTypeString)eventTypeString
                             content:(NSDictionary*)content
+                           threadId:(NSString*)threadId
                           localEcho:(MXEvent**)localEcho
                             success:(void (^)(NSString *eventId))success
                             failure:(void (^)(NSError *error))failure
@@ -583,6 +587,8 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
 
         [self handleNextOperationAfter:roomOperation];
     };
+    
+    [self checkEncryptionState];
 
     // Check whether the content must be encrypted before sending
     if (mxSession.crypto
@@ -603,7 +609,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
             }
 
             roomOperation = [self preserveOperationOrder:event block:^{
-                MXHTTPOperation *operation = [self _sendEventOfType:eventTypeString content:contentCopy txnId:event.eventId success:onSuccess failure:onFailure];
+                MXHTTPOperation *operation = [self _sendEventOfType:eventTypeString content:contentCopy txnId:event.eventId threadId:threadId success:onSuccess failure:onFailure];
                 [roomOperation.operation mutateTo:operation];
             }];
         }
@@ -621,6 +627,14 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                 updatedContent[kMXEventRelationRelatesToKey] = nil;
                 contentCopyToEncrypt = [updatedContent copy];
             }
+            else if (threadId)
+            {
+                relatesToJSON = @{
+                    @"rel_type": MXEventRelationTypeThread,
+                    @"event_id": threadId
+                };
+                contentCopyToEncrypt = contentCopy;
+            }
             else
             {
                 contentCopyToEncrypt = contentCopy;
@@ -633,7 +647,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                 if (!event)
                 {
                     // Add a local echo for this message during the sending process.
-                    event = [self addLocalEchoForMessageContent:contentCopy eventType:eventTypeString withState:MXEventSentStateEncrypting];
+                    event = [self addLocalEchoForMessageContent:contentCopy eventType:eventTypeString withState:MXEventSentStateEncrypting threadId:threadId];
 
                     if (localEcho)
                     {
@@ -680,7 +694,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                     if (event)
                     {
                         // Encapsulate the resulting event in a fake encrypted event
-                        MXEvent *clearEvent = [self fakeEventWithEventId:event.eventId eventType:eventTypeString andContent:event.content];
+                        MXEvent *clearEvent = [self fakeEventWithEventId:event.eventId eventType:eventTypeString andContent:event.content threadId:threadId];
 
                         event.wireType = encryptedEventType;
                         event.wireContent = finalEncryptedContent;
@@ -700,7 +714,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                     }
 
                     // Send the encrypted content
-                    MXHTTPOperation *operation2 = [self _sendEventOfType:encryptedEventType content:finalEncryptedContent txnId:event.eventId success:^(NSString *eventId) {
+                    MXHTTPOperation *operation2 = [self _sendEventOfType:encryptedEventType content:finalEncryptedContent txnId:event.eventId threadId:threadId success:^(NSString *eventId) {
 
                         MXLogDebug(@"[MXRoom] sendEventOfType(MXCrypto): Send event %@ -> DONE. Final event id: %@", event.eventId, eventId);
                         onSuccess(eventId);
@@ -733,7 +747,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
             if (!event)
             {
                 // Add a local echo for this message during the sending process.
-                event = [self addLocalEchoForMessageContent:contentCopy eventType:eventTypeString withState:MXEventSentStateSending];
+                event = [self addLocalEchoForMessageContent:contentCopy eventType:eventTypeString withState:MXEventSentStateSending threadId:threadId];
 
                 if (localEcho)
                 {
@@ -752,7 +766,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
         }
 
         roomOperation = [self preserveOperationOrder:event block:^{
-            MXHTTPOperation *operation = [self _sendEventOfType:eventTypeString content:contentCopy txnId:event.eventId success:onSuccess failure:onFailure];
+            MXHTTPOperation *operation = [self _sendEventOfType:eventTypeString content:contentCopy txnId:event.eventId threadId:threadId success:onSuccess failure:onFailure];
             [roomOperation.operation mutateTo:operation];
         }];
     }
@@ -761,12 +775,44 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
 }
 
 - (MXHTTPOperation*)_sendEventOfType:(MXEventTypeString)eventTypeString
-                            content:(NSDictionary*)content
-                            txnId:(NSString*)txnId
-                            success:(void (^)(NSString *eventId))success
-                            failure:(void (^)(NSError *error))failure
+                             content:(NSDictionary*)content
+                               txnId:(NSString*)txnId
+                            threadId:(NSString*)threadId
+                             success:(void (^)(NSString *eventId))success
+                             failure:(void (^)(NSError *error))failure
 {
-    return [mxSession.matrixRestClient sendEventToRoom:self.roomId eventType:eventTypeString content:content txnId:txnId success:success failure:failure];
+    NSDictionary *newContent = content;
+    if (threadId && MXSDKOptions.sharedInstance.enableThreads)
+    {
+        NSMutableDictionary *mutableContent = [newContent mutableDeepCopy];
+        BOOL isRealReply = content[kMXEventRelationRelatesToKey][@"m.in_reply_to"][@"event_id"] != nil;
+        if (isRealReply)
+        {
+            mutableContent[kMXEventRelationRelatesToKey][@"m.in_reply_to"][@"m.render_in"] = @[MXEventRelationTypeThread];
+        }
+        else
+        {
+            NSString *lastEventId = [mxSession.threadingService threadWithId:threadId].lastMessage.eventId;
+            NSString *replyToEventId = lastEventId ?: threadId;
+
+            if (mutableContent[kMXEventRelationRelatesToKey])
+            {
+                mutableContent[kMXEventRelationRelatesToKey][@"m.in_reply_to"] = @{
+                    @"event_id": replyToEventId
+                };
+            }
+            else
+            {
+                mutableContent[kMXEventRelationRelatesToKey] = @{
+                    @"m.in_reply_to": @{
+                            @"event_id": replyToEventId
+                    }
+                };
+            }
+        }
+        newContent = mutableContent;
+    }
+    return [mxSession.matrixRestClient sendEventToRoom:self.roomId threadId:threadId eventType:eventTypeString content:newContent txnId:txnId success:success failure:failure];
 }
 
 - (MXHTTPOperation*)sendStateEventOfType:(MXEventTypeString)eventTypeString
@@ -779,15 +825,17 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
 }
 
 - (MXHTTPOperation*)sendMessageWithContent:(NSDictionary*)content
+                                  threadId:(NSString*)threadId
                                  localEcho:(MXEvent**)localEcho
                                    success:(void (^)(NSString *eventId))success
                                    failure:(void (^)(NSError *error))failure
 {
-    return [self sendEventOfType:kMXEventTypeStringRoomMessage content:content localEcho:localEcho success:success failure:failure];
+    return [self sendEventOfType:kMXEventTypeStringRoomMessage content:content threadId:threadId localEcho:localEcho success:success failure:failure];
 }
 
 - (MXHTTPOperation*)sendTextMessage:(NSString*)text
                       formattedText:(NSString*)formattedText
+                           threadId:(NSString*)threadId
                           localEcho:(MXEvent**)localEcho
                             success:(void (^)(NSString *eventId))success
                             failure:(void (^)(NSError *error))failure
@@ -814,20 +862,23 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     }
     
     return [self sendMessageWithContent:msgContent
+                               threadId:threadId
                               localEcho:localEcho
                                 success:success
                                 failure:failure];
 }
 
 - (MXHTTPOperation *)sendTextMessage:(NSString *)text
+                            threadId:(NSString*)threadId
                              success:(void (^)(NSString *))success
                              failure:(void (^)(NSError *))failure
 {
-    return [self sendTextMessage:text formattedText:nil localEcho:nil success:success failure:failure];
+    return [self sendTextMessage:text formattedText:nil threadId:threadId localEcho:nil success:success failure:failure];
 }
 
 - (MXHTTPOperation*)sendEmote:(NSString*)emoteBody
                 formattedText:(NSString*)formattedBody
+                     threadId:(NSString*)threadId
                     localEcho:(MXEvent**)localEcho
                       success:(void (^)(NSString *eventId))success
                       failure:(void (^)(NSError *error))failure
@@ -854,6 +905,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     }
     
     return [self sendMessageWithContent:msgContent
+                               threadId:threadId
                               localEcho:localEcho
                                 success:success
                                 failure:failure];
@@ -867,6 +919,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
 #elif TARGET_OS_OSX
                  andThumbnail:(NSImage*)thumbnail
 #endif
+                     threadId:(NSString*)threadId
                     localEcho:(MXEvent**)localEcho
                       success:(void (^)(NSString *eventId))success
                       failure:(void (^)(NSError *error))failure
@@ -876,6 +929,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                   mimeType:mimetype
               andThumbnail:thumbnail
                   blurHash:nil
+                  threadId:threadId
                  localEcho:localEcho
                    success:success
                    failure:failure];
@@ -890,11 +944,14 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                  andThumbnail:(NSImage*)thumbnail
 #endif
                      blurHash:(NSString*)blurhash
+                     threadId:(NSString*)threadId
                     localEcho:(MXEvent**)localEcho
                       success:(void (^)(NSString *eventId))success
                       failure:(void (^)(NSError *error))failure
 {
     __block MXRoomOperation *roomOperation;
+    
+    [self checkEncryptionState];
 
     double endRange = 1.0;
     
@@ -985,7 +1042,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     
     // Add a local echo for this message during the sending process.
     MXEventSentState initialSentState = (mxSession.crypto && self.summary.isEncrypted) ? MXEventSentStateEncrypting : MXEventSentStateUploading;
-    event = [self addLocalEchoForMessageContent:msgContent eventType:kMXEventTypeStringRoomMessage withState:initialSentState];
+    event = [self addLocalEchoForMessageContent:msgContent eventType:kMXEventTypeStringRoomMessage withState:initialSentState threadId:threadId];
     
     if (localEcho)
     {
@@ -998,7 +1055,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
         MXStrongifyAndReturnIfNil(self);
 
         // Check whether the content must be encrypted before sending
-        if (self.mxSession.crypto && self.summary.isEncrypted)
+        if (self.mxSession.crypto && [self.mxSession.crypto isRoomEncrypted:self.summary.roomId])
         {
             // Add uploader observer to update the event state
             MXWeakify(self);
@@ -1045,7 +1102,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                     }
 
                     // Send this content (the sent state of the local echo will be updated, its local storage too).
-                    MXHTTPOperation *operation2 = [self sendMessageWithContent:msgContent localEcho:&event success:onSuccess failure:onFailure];
+                    MXHTTPOperation *operation2 = [self sendMessageWithContent:msgContent threadId:threadId localEcho:&event success:onSuccess failure:onFailure];
 
                     // Retrieve the MXRoomOperation just created for operation2
                     // And use it as the current operation
@@ -1104,7 +1161,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                 msgContent[@"url"] = url;
 
                 // Make the final request that posts the image event (the sent state of the local echo will be updated, its local storage too).
-                MXHTTPOperation *operation2 = [self sendMessageWithContent:msgContent localEcho:&event success:onSuccess failure:onFailure];
+                MXHTTPOperation *operation2 = [self sendMessageWithContent:msgContent threadId:threadId localEcho:&event success:onSuccess failure:onFailure];
 
                 // Retrieve the MXRoomOperation just created for operation2
                 // And use it as the current operation
@@ -1124,12 +1181,13 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
 #elif TARGET_OS_OSX
                 withThumbnail:(NSImage*)videoThumbnail
 #endif
+                     threadId:(NSString*)threadId
                     localEcho:(MXEvent**)localEcho
                       success:(void (^)(NSString *eventId))success
                       failure:(void (^)(NSError *error))failure
 {
     AVURLAsset *videoAsset = [AVURLAsset assetWithURL:videoLocalURL];
-    return [self sendVideoAsset:videoAsset withThumbnail:videoThumbnail localEcho:localEcho success:success failure:failure];
+    return [self sendVideoAsset:videoAsset withThumbnail:videoThumbnail threadId:threadId localEcho:localEcho success:success failure:failure];
 }
 
 - (MXHTTPOperation*)sendVideoAsset:(AVAsset*)videoAsset
@@ -1138,6 +1196,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
 #elif TARGET_OS_OSX
                      withThumbnail:(NSImage*)videoThumbnail
 #endif
+                          threadId:(NSString*)threadId
                          localEcho:(MXEvent**)localEcho
                            success:(void (^)(NSString *eventId))success
                            failure:(void (^)(NSError *error))failure
@@ -1152,6 +1211,8 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     [newRep setSize:[videoThumbnail size]];
     NSData *videoThumbnailData = [newRep representationUsingType:NSJPEGFileType properties: @{NSImageCompressionFactor: @0.8}];
 #endif
+    
+    [self checkEncryptionState];
     
     // Use the uploader id as fake URL for this image data
     // The URL does not need to be valid as the MediaManager will get the data
@@ -1224,7 +1285,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     };
     
     // Add a local echo for this message during the sending process.
-    event = [self addLocalEchoForMessageContent:msgContent eventType:kMXEventTypeStringRoomMessage withState:MXEventSentStatePreparing];
+    event = [self addLocalEchoForMessageContent:msgContent eventType:kMXEventTypeStringRoomMessage withState:MXEventSentStatePreparing threadId:threadId];
     
     if (localEcho)
     {
@@ -1312,7 +1373,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                         msgContent[@"file"] = result.JSONDictionary;
 
                         // Send this content (the sent state of the local echo will be updated, its local storage too).
-                        MXHTTPOperation *operation2 = [self sendMessageWithContent:msgContent localEcho:&event success:onSuccess failure:onFailure];
+                        MXHTTPOperation *operation2 = [self sendMessageWithContent:msgContent threadId:threadId localEcho:&event success:onSuccess failure:onFailure];
 
                         // Retrieve the MXRoomOperation just created for operation2
                         // And use it as the current operation
@@ -1377,7 +1438,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                             msgContent[@"url"] = videoUrl;
 
                             // And send the Matrix room message video event to the homeserver (the sent state of the local echo will be updated, its local storage too).
-                            MXHTTPOperation *operation2 = [self sendMessageWithContent:msgContent localEcho:&event success:onSuccess failure:onFailure];
+                            MXHTTPOperation *operation2 = [self sendMessageWithContent:msgContent threadId:threadId localEcho:&event success:onSuccess failure:onFailure];
 
                             // Retrieve the MXRoomOperation just created for operation2
                             // And use it as the current operation
@@ -1401,37 +1462,41 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
 
 - (MXHTTPOperation*)sendFile:(NSURL*)fileLocalURL
                     mimeType:(NSString*)mimeType
+                    threadId:(NSString*)threadId
                    localEcho:(MXEvent**)localEcho
                      success:(void (^)(NSString *eventId))success
                      failure:(void (^)(NSError *error))failure
 {
-    return [self sendFile:fileLocalURL mimeType:mimeType localEcho:localEcho success:success failure:failure keepActualFilename:YES];
+    return [self sendFile:fileLocalURL mimeType:mimeType threadId:threadId localEcho:localEcho success:success failure:failure keepActualFilename:YES];
 }
 
 - (MXHTTPOperation*)sendFile:(NSURL*)fileLocalURL
                     mimeType:(NSString*)mimeType
+                    threadId:(NSString*)threadId
                    localEcho:(MXEvent**)localEcho
                      success:(void (^)(NSString *eventId))success
                      failure:(void (^)(NSError *error))failure
           keepActualFilename:(BOOL)keepActualName
 {
-    return [self sendFile:fileLocalURL msgType:kMXMessageTypeFile mimeType:mimeType localEcho:localEcho success:success failure:failure keepActualFilename:keepActualName];
+    return [self sendFile:fileLocalURL msgType:kMXMessageTypeFile mimeType:mimeType threadId:threadId localEcho:localEcho success:success failure:failure keepActualFilename:keepActualName];
 }
 
 - (MXHTTPOperation*)sendAudioFile:(NSURL*)fileLocalURL
                          mimeType:(NSString*)mimeType
+                         threadId:(NSString*)threadId
                         localEcho:(MXEvent**)localEcho
                           success:(void (^)(NSString *eventId))success
                           failure:(void (^)(NSError *error))failure
                keepActualFilename:(BOOL)keepActualName
 {
-    return [self sendFile:fileLocalURL msgType:kMXMessageTypeAudio mimeType:mimeType localEcho:localEcho success:success failure:failure keepActualFilename:keepActualName];
+    return [self sendFile:fileLocalURL msgType:kMXMessageTypeAudio mimeType:mimeType threadId:threadId localEcho:localEcho success:success failure:failure keepActualFilename:keepActualName];
 }
 
 - (MXHTTPOperation*)sendVoiceMessage:(NSURL*)fileLocalURL
                             mimeType:(NSString*)mimeType
                             duration:(NSUInteger)duration
                              samples:(NSArray<NSNumber *> *)samples
+                            threadId:(NSString*)threadId
                            localEcho:(MXEvent**)localEcho
                              success:(void (^)(NSString *eventId))success
                              failure:(void (^)(NSError *error))failure
@@ -1457,8 +1522,9 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     return [self _sendFile:fileLocalURL
                    msgType:kMXMessageTypeAudio
            additionalTypes:@{kMXMessageContentKeyVoiceMessageMSC3245 : @{},
-                             kMXMessageContentKeyExtensibleAudio: extensibleAudioContent}
+                             kMXMessageContentKeyExtensibleAudioMSC1767: extensibleAudioContent}
                   mimeType:(mimeType ?: @"audio/ogg")
+                  threadId:threadId
                  localEcho:localEcho
                    success:success
                    failure:failure
@@ -1468,6 +1534,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
 - (MXHTTPOperation*)sendFile:(NSURL*)fileLocalURL
                      msgType:(NSString*)msgType
                     mimeType:(NSString*)mimeType
+                    threadId:(NSString*)threadId
                    localEcho:(MXEvent**)localEcho
                      success:(void (^)(NSString *eventId))success
                      failure:(void (^)(NSError *error))failure
@@ -1477,6 +1544,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                    msgType:msgType
            additionalTypes:nil
                   mimeType:mimeType
+                  threadId:threadId
                  localEcho:localEcho
                    success:success
                    failure:failure
@@ -1487,12 +1555,15 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                       msgType:(NSString*)msgType
               additionalTypes:(NSDictionary *)additionalTypes
                      mimeType:(NSString*)mimeType
+                     threadId:(NSString*)threadId
                     localEcho:(MXEvent**)localEcho
                       success:(void (^)(NSString *eventId))success
                       failure:(void (^)(NSError *error))failure
            keepActualFilename:(BOOL)keepActualName
 {
     __block MXRoomOperation *roomOperation;
+    
+    [self checkEncryptionState];
     
     NSData *fileData = [NSData dataWithContentsOfFile:fileLocalURL.path];
     
@@ -1534,8 +1605,8 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                 @"mimetype": mimeType,
                 @"size": @(fileData.length)
         },
-        kMXMessageContentKeyExtensibleText: filename,
-        kMXMessageContentKeyExtensibleFile: @{
+        kMXMessageContentKeyExtensibleTextMSC1767: filename,
+        kMXMessageContentKeyExtensibleFileMSC1767: @{
                 kMXMessageContentKeyExtensibleFileSize: @(fileData.length),
                 kMXMessageContentKeyExtensibleFileName: filename,
                 kMXMessageContentKeyExtensibleFileURL: fakeMediaURI,
@@ -1593,7 +1664,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     
     // Add a local echo for this message during the sending process.
     MXEventSentState initialSentState = (mxSession.crypto && self.summary.isEncrypted) ? MXEventSentStateEncrypting : MXEventSentStateUploading;
-    event = [self addLocalEchoForMessageContent:msgContent eventType:kMXEventTypeStringRoomMessage withState:initialSentState];
+    event = [self addLocalEchoForMessageContent:msgContent eventType:kMXEventTypeStringRoomMessage withState:initialSentState threadId:threadId];
     
     if (localEcho)
     {
@@ -1645,10 +1716,10 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                 }
 
                 msgContent[@"url"] = nil;
-                msgContent[kMXMessageContentKeyExtensibleFile][kMXMessageContentKeyExtensibleFileURL] = nil;
+                msgContent[kMXMessageContentKeyExtensibleFileMSC1767][kMXMessageContentKeyExtensibleFileURL] = nil;
                 msgContent[@"file"] = result.JSONDictionary;
 
-                MXHTTPOperation *operation2 = [self sendMessageWithContent:msgContent localEcho:&event success:onSuccess failure:onFailure];
+                MXHTTPOperation *operation2 = [self sendMessageWithContent:msgContent threadId:threadId localEcho:&event success:onSuccess failure:onFailure];
 
                 // Retrieve the MXRoomOperation just created for operation2
                 // And use it as the current operation
@@ -1676,10 +1747,10 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
 
                 // Update the message content with the mxc:// of the media on the homeserver
                 msgContent[@"url"] = url;
-                msgContent[kMXMessageContentKeyExtensibleFile][kMXMessageContentKeyExtensibleFileURL] = url;
+                msgContent[kMXMessageContentKeyExtensibleFileMSC1767][kMXMessageContentKeyExtensibleFileURL] = url;
 
                 // Make the final request that posts the image event
-                MXHTTPOperation *operation2 = [self sendMessageWithContent:msgContent localEcho:&event success:onSuccess failure:onFailure];
+                MXHTTPOperation *operation2 = [self sendMessageWithContent:msgContent threadId:threadId localEcho:&event success:onSuccess failure:onFailure];
 
                 // Retrieve the MXRoomOperation just created for operation2
                 // And use it as the current operation
@@ -1944,27 +2015,12 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     {
         NSString *eventId = eventToReply.eventId;
         
-        NSDictionary *relatesToDict = nil;
-        if (eventToReply.threadIdentifier)
-        {
-            relatesToDict = @{
-                @"rel_type": MXEventRelationTypeThread,
-                @"event_id" : eventToReply.threadIdentifier,
-                @"m.in_reply_to" :
-                    @{
-                        @"event_id" : eventId
-                    }
-            };
-        }
-        else
-        {
-            relatesToDict = @{
-                @"m.in_reply_to" :
-                    @{
-                        @"event_id" : eventId
-                    }
-            };
-        }
+        NSDictionary *relatesToDict = @{
+            @"m.in_reply_to" :
+                @{
+                    @"event_id" : eventId
+                }
+        };
         
         NSMutableDictionary *msgContent = [NSMutableDictionary dictionary];
         
@@ -1975,6 +2031,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
         msgContent[kMXEventRelationRelatesToKey] = relatesToDict;
         
         operation = [self sendMessageWithContent:msgContent
+                                        threadId:eventToReply.threadId  //  reply in the same thread
                                        localEcho:localEcho
                                          success:success
                                          failure:failure];
@@ -2313,6 +2370,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
 #pragma mark - Polls
 
 - (MXHTTPOperation *)sendPollStartWithContent:(MXEventContentPollStart *)content
+                                     threadId:(NSString*)threadId
                                     localEcho:(MXEvent **)localEcho
                                       success:(void (^)(NSString *))success
                                       failure:(void (^)(NSError *))failure
@@ -2338,11 +2396,12 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
         }
     }
 
-    return [self sendEventOfType:[MXTools eventTypeString:MXEventTypePollStart] content:content.JSONDictionary localEcho:localEcho success:success failure:failure];
+    return [self sendEventOfType:[MXTools eventTypeString:MXEventTypePollStart] content:content.JSONDictionary threadId:threadId localEcho:localEcho success:success failure:failure];
 }
 
 - (MXHTTPOperation *)sendPollResponseForEvent:(MXEvent *)pollStartEvent
                         withAnswerIdentifiers:(NSArray<NSString *> *)answerIdentifiers
+                                     threadId:(NSString*)threadId
                                     localEcho:(MXEvent **)localEcho
                                       success:(void (^)(NSString *))success
                                       failure:(void (^)(NSError *))failure
@@ -2364,13 +2423,14 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     
     NSDictionary *content = @{
         kMXEventRelationRelatesToKey: relatesTo.JSONDictionary,
-        kMXMessageContentKeyExtensiblePollResponse: @{ kMXMessageContentKeyExtensiblePollAnswers: answerIdentifiers }
+        kMXMessageContentKeyExtensiblePollResponseMSC3381: @{ kMXMessageContentKeyExtensiblePollAnswers: answerIdentifiers }
     };
     
-    return [self sendEventOfType:[MXTools eventTypeString:MXEventTypePollResponse] content:content localEcho:localEcho success:success failure:failure];
+    return [self sendEventOfType:[MXTools eventTypeString:MXEventTypePollResponse] content:content threadId:threadId localEcho:localEcho success:success failure:failure];
 }
 
 - (MXHTTPOperation *)sendPollEndForEvent:(MXEvent *)pollStartEvent
+                                threadId:(NSString*)threadId
                                localEcho:(MXEvent **)localEcho
                                  success:(void (^)(NSString *))success
                                  failure:(void (^)(NSError *))failure
@@ -2383,10 +2443,34 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     
     NSDictionary *content = @{
         kMXEventRelationRelatesToKey: relatesTo.JSONDictionary,
-        kMXMessageContentKeyExtensiblePollEnd: @{}
+        kMXMessageContentKeyExtensiblePollEndMSC3381: @{}
     };
     
-    return [self sendEventOfType:[MXTools eventTypeString:MXEventTypePollEnd] content:content localEcho:localEcho success:success failure:failure];
+    return [self sendEventOfType:[MXTools eventTypeString:MXEventTypePollEnd] content:content threadId:threadId localEcho:localEcho success:success failure:failure];
+}
+
+- (MXHTTPOperation *)sendPollUpdateForEvent:(MXEvent *)pollStartEvent
+                                 oldContent:(MXEventContentPollStart *)oldContent
+                                 newContent:(MXEventContentPollStart *)newContent
+                                  localEcho:(MXEvent **)localEcho
+                                    success:(void (^)(NSString *))success
+                                    failure:(void (^)(NSError *))failure
+{
+    NSParameterAssert(oldContent);
+    NSParameterAssert(newContent);
+    
+    NSMutableDictionary *content = [NSMutableDictionary dictionary];
+    
+    [content addEntriesFromDictionary:oldContent.JSONDictionary];
+    
+    MXEventContentRelatesTo *relatesTo = [[MXEventContentRelatesTo alloc] initWithRelationType:MXEventRelationTypeReplace
+                                                                                       eventId:pollStartEvent.eventId];
+    
+    [content setObject:relatesTo.JSONDictionary forKey:kMXEventRelationRelatesToKey];
+    
+    [content setObject:newContent.JSONDictionary forKey:kMXMessageContentKeyNewContent];
+    
+    return [self sendEventOfType:[MXTools eventTypeString:MXEventTypePollStart] content:content threadId:pollStartEvent.threadId localEcho:localEcho success:success failure:failure];
 }
 
 #pragma mark - Location sharing
@@ -2394,29 +2478,29 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
 - (MXHTTPOperation *)sendLocationWithLatitude:(double)latitude
                                     longitude:(double)longitude
                                   description:(NSString *)description
+                                     threadId:(NSString*)threadId
                                     localEcho:(MXEvent **)localEcho
                                       success:(void (^)(NSString *))success
                                       failure:(void (^)(NSError *))failure
 {
+    MXEventContentLocation *locationContent = [[MXEventContentLocation alloc] initWithAssetType:MXEventAssetTypeUser
+                                                                                       latitude:latitude
+                                                                                      longitude:longitude
+                                                                                    description:description];
+    
     NSMutableDictionary *content = [NSMutableDictionary dictionary];
-    content[kMXMessageTypeKey] = kMXMessageTypeLocation;
-    
-    MXEventContentLocation *locationContent = [[MXEventContentLocation alloc] initWithLatitude:latitude
-                                                                                     longitude:longitude
-                                                                                   description:description];
-    
-    content[kMXMessageContentKeyExtensibleLocationMSC3488] = locationContent.JSONDictionary;
-    
-    content[kMXMessageGeoURIKey] = locationContent.geoURI;
+
+    [content addEntriesFromDictionary:locationContent.JSONDictionary];
     
     NSString *fallbackText = [NSString stringWithFormat:@"%@ was at %@ as of %@", self.mxSession.myUser.displayname, locationContent.geoURI, NSDate.date];
     content[kMXMessageBodyKey] = fallbackText;
-    content[kMXMessageContentKeyExtensibleText] = fallbackText;
+    content[kMXMessageContentKeyExtensibleTextMSC1767] = fallbackText;
     
     NSInteger timestamp = NSDate.date.timeIntervalSince1970 * 1000; // milliseconds since UNIX epoch
-    content[kMXMessageContentKeyExtensibleTimestamp] = @(timestamp);
+    content[kMXMessageContentKeyExtensibleTimestampMSC3488] = @(timestamp);
     
     return [self sendMessageWithContent:content
+                               threadId:threadId
                               localEcho:localEcho
                                 success:success
                                 failure:failure];
@@ -2576,14 +2660,14 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
 
 
 #pragma mark - Events timeline
-- (MXEventTimeline*)timelineOnEvent:(NSString*)eventId;
+- (id<MXEventTimeline>)timelineOnEvent:(NSString*)eventId;
 {
-    return [[MXEventTimeline alloc] initWithRoom:self andInitialEventId:eventId];
+    return [[MXRoomEventTimeline alloc] initWithRoom:self andInitialEventId:eventId];
 }
 
 
 #pragma mark - Fake event objects creation
-- (MXEvent*)fakeEventWithEventId:(NSString*)eventId eventType:(NSString*)eventType andContent:(NSDictionary*)content
+- (MXEvent*)fakeEventWithEventId:(NSString*)eventId eventType:(NSString*)eventType andContent:(NSDictionary*)content threadId:(NSString*)threadId
 {
     if (!eventId)
     {
@@ -2596,14 +2680,26 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     event.wireType = eventType;
     event.originServerTs = (uint64_t) ([[NSDate date] timeIntervalSince1970] * 1000);
     event.sender = mxSession.myUserId;
-    event.wireContent = content;
+    if (threadId)
+    {
+        NSMutableDictionary *newContent = [NSMutableDictionary dictionaryWithDictionary:content];
+        newContent[kMXEventRelationRelatesToKey] = @{
+            @"rel_type": MXEventRelationTypeThread,
+            @"event_id": threadId
+        };
+        event.wireContent = newContent;
+    }
+    else
+    {
+        event.wireContent = content;
+    }
     
     return event;
 }
 
-- (MXEvent*)fakeRoomMessageEventWithEventId:(NSString*)eventId andContent:(NSDictionary<NSString*, id>*)content
+- (MXEvent*)fakeRoomMessageEventWithEventId:(NSString*)eventId andContent:(NSDictionary<NSString*, id>*)content threadId:(NSString*)threadId
 {
-    return [self fakeEventWithEventId:eventId eventType:kMXEventTypeStringRoomMessage andContent:content];
+    return [self fakeEventWithEventId:eventId eventType:kMXEventTypeStringRoomMessage andContent:content threadId:threadId];
 }
 
 #pragma mark - Outgoing events management
@@ -2632,7 +2728,9 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
         {
             [self.summary resetLastMessage:nil failure:nil commit:YES];
         }
-    } failure:nil];
+    } failure:^(NSError *error) {
+        MXLogError(@"[MXRoom] removeAllOutgoingMessages: event fetch failed: %@", error);
+    }];
 }
 
 - (void)removeOutgoingMessage:(NSString*)outgoingMessageEventId
@@ -2703,10 +2801,13 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
 
 #pragma mark - Local echo handling
 
-- (MXEvent*)addLocalEchoForMessageContent:(NSDictionary*)msgContent eventType:(MXEventTypeString)eventType withState:(MXEventSentState)eventState
+- (MXEvent*)addLocalEchoForMessageContent:(NSDictionary*)msgContent
+                                eventType:(MXEventTypeString)eventType
+                                withState:(MXEventSentState)eventState
+                                 threadId:(NSString*)threadId
 {
     // Create a room message event.
-    MXEvent *localEcho = [self fakeEventWithEventId:nil eventType:eventType andContent:msgContent];
+    MXEvent *localEcho = [self fakeEventWithEventId:nil eventType:eventType andContent:msgContent threadId:threadId];
     localEcho.sentState = eventState;
 
     // Register the echo as pending for its future deletion
@@ -2915,7 +3016,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
  @param liveTimeline the live timeline of this room.
  @param direction the timeline direction.
  */
-- (BOOL)handleReceiptEvent:(MXEvent *)event inLiveTimeline:(MXEventTimeline *)liveTimeline direction:(MXTimelineDirection)direction
+- (BOOL)handleReceiptEvent:(MXEvent *)event inLiveTimeline:(id<MXEventTimeline>)liveTimeline direction:(MXTimelineDirection)direction
 {
     BOOL managedEvents = false;
     
@@ -3202,7 +3303,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                                            }
                                    }];
 
-        [self liveTimeline:^(MXEventTimeline *theLiveTimeline) {
+        [self liveTimeline:^(id<MXEventTimeline> theLiveTimeline) {
             [theLiveTimeline notifyListeners:receiptEvent direction:MXTimelineDirectionForwards];
         }];
     }
@@ -3415,6 +3516,27 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     }
 
     return isEncryptionRequired;
+}
+
+
+/**
+ Make sure that summary.isEncrypted is correct.
+ 
+ @discussion
+ There is a bug where e2e encryption can be disabled. We do not know yet the reasons. This is probably due to a bad
+ room state change.
+ This method ensures that the MXCryptoStore and the MXStore are aligned. If the bug happens, it should be autofixed
+ by this code.
+ */
+- (void)checkEncryptionState
+{
+    if ([mxSession.crypto isRoomEncrypted:self.roomId]
+            && !self.summary.isEncrypted)
+    {
+        MXLogError(@"[MXRoom] checkEncryptionState: summary.isEncrypted is wrong for room %@. Fix it.", self.roomId);
+        self.summary.isEncrypted = YES;
+        [self.summary save:YES];
+    }
 }
 
 - (void)membersTrustLevelSummaryWithForceDownload:(BOOL)forceDownload success:(void (^)(MXUsersTrustLevelSummary *usersTrustLevelSummary))success failure:(void (^)(NSError *error))failure

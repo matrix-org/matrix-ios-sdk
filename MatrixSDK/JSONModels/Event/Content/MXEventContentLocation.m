@@ -19,12 +19,14 @@
 
 @implementation MXEventContentLocation
 
-- (instancetype)initWithLatitude:(double)latitude
-                       longitude:(double)longitude
-                     description:(NSString *)description
+- (instancetype)initWithAssetType:(MXEventAssetType)assetType
+                         latitude:(double)latitude
+                        longitude:(double)longitude
+                      description:(NSString *)description
 {
     if (self = [super init])
     {
+        _assetType = assetType;
         _latitude = latitude;
         _longitude = longitude;
         _locationDescription = description;
@@ -36,45 +38,73 @@
 
 + (instancetype)modelFromJSON:(NSDictionary *)JSONDictionary
 {
-    NSDictionary *locationContent = JSONDictionary[kMXMessageContentKeyExtensibleLocationMSC3488];
-    if (locationContent == nil)
+    NSString *description;
+    NSString *geoURIString;
+    MXEventAssetType assetType = MXEventAssetTypeUser;
+    
+    NSDictionary *locationDictionary = JSONDictionary[kMXMessageContentKeyExtensibleLocationMSC3488];
+    if (locationDictionary == nil)
     {
-        locationContent = JSONDictionary[kMXMessageContentKeyExtensibleLocation];
+        locationDictionary = JSONDictionary[kMXMessageContentKeyExtensibleLocation];
     }
     
-    if  (locationContent == nil) {
+    if (locationDictionary)
+    {
+        MXJSONModelSetString(geoURIString, locationDictionary[kMXMessageContentKeyExtensibleLocationURI]);
+        MXJSONModelSetString(description, locationDictionary[kMXMessageContentKeyExtensibleLocationDescription]);
+    }
+    else if ([JSONDictionary[kMXMessageTypeKey] isEqualToString:kMXMessageTypeLocation])
+    {
+        MXJSONModelSetString(geoURIString, JSONDictionary[kMXMessageGeoURIKey]);
+    }
+    else
+    {
         return nil;
     }
     
-    NSString *description;
-    MXJSONModelSetString(description, locationContent[kMXMessageContentKeyExtensibleLocationDescription]);
+    NSDictionary *assetDictionary = JSONDictionary[kMXMessageContentKeyExtensibleAssetMSC3488];
+    if (assetDictionary == nil)
+    {
+        assetDictionary = JSONDictionary[kMXMessageContentKeyExtensibleAsset];
+    }
     
-    NSString *geoURIString;
-    MXJSONModelSetString(geoURIString, locationContent[kMXMessageContentKeyExtensibleLocationURI]);
+    if (assetDictionary)
+    {
+        if (![assetDictionary[kMXMessageContentKeyExtensibleAssetType] isEqualToString:kMXMessageContentKeyExtensibleAssetTypeUser]) {
+            assetType = MXEventAssetTypeGeneric;
+        }
+    }
     
     NSString *locationString = [[geoURIString componentsSeparatedByString:@":"].lastObject componentsSeparatedByString:@";"].firstObject;
-    
     NSArray *locationComponents = [locationString componentsSeparatedByString:@","];
     
-    if (locationComponents.count != 2) {
+    if (locationComponents.count != 2)
+    {
         return nil;
     }
     
     double latitude = [locationComponents.firstObject doubleValue];
     double longitude = [locationComponents.lastObject doubleValue];
     
-    return [[MXEventContentLocation alloc] initWithLatitude:latitude
-                                                  longitude:longitude
-                                                description:description];
+    return [[MXEventContentLocation alloc] initWithAssetType:assetType
+                                                    latitude:latitude
+                                                   longitude:longitude
+                                                 description:description];
 }
 
 - (NSDictionary *)JSONDictionary
 {
     NSMutableDictionary *content = [NSMutableDictionary dictionary];
     
-    content[kMXMessageContentKeyExtensibleLocationURI] = self.geoURI;
+    NSMutableDictionary *locationContent = [NSMutableDictionary dictionary];
+    locationContent[kMXMessageContentKeyExtensibleLocationURI] = self.geoURI;
+    locationContent[kMXMessageContentKeyExtensibleLocationDescription] = self.locationDescription;
+    content[kMXMessageContentKeyExtensibleLocationMSC3488] = locationContent;
     
-    content[kMXMessageContentKeyExtensibleLocationDescription] = self.locationDescription;
+    content[kMXMessageContentKeyExtensibleAssetMSC3488] = @{ kMXMessageContentKeyExtensibleAssetType: kMXMessageContentKeyExtensibleAssetTypeUser };
+    
+    content[kMXMessageTypeKey] = kMXMessageTypeLocation;
+    content[kMXMessageGeoURIKey] = self.geoURI;
     
     return content;
 }

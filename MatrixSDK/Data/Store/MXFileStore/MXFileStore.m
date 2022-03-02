@@ -407,10 +407,10 @@ static NSUInteger preloadOptions;
     [[NSFileManager defaultManager] removeItemAtPath:storePath error:&error];
 
     // And create folders back
-    [[NSFileManager defaultManager] createDirectoryAtPath:storePath withIntermediateDirectories:YES attributes:nil error:nil];
-    [[NSFileManager defaultManager] createDirectoryAtPath:storeRoomsPath withIntermediateDirectories:YES attributes:nil error:nil];
-    [[NSFileManager defaultManager] createDirectoryAtPath:storeUsersPath withIntermediateDirectories:YES attributes:nil error:nil];
-    [[NSFileManager defaultManager] createDirectoryAtPath:storeGroupsPath withIntermediateDirectories:YES attributes:nil error:nil];
+    [[NSFileManager defaultManager] createDirectoryExcludedFromBackupAtPath:storePath error:nil];
+    [[NSFileManager defaultManager] createDirectoryExcludedFromBackupAtPath:storeRoomsPath error:nil];
+    [[NSFileManager defaultManager] createDirectoryExcludedFromBackupAtPath:storeUsersPath error:nil];
+    [[NSFileManager defaultManager] createDirectoryExcludedFromBackupAtPath:storeGroupsPath error:nil];
     
     [roomSummaryStore removeAllSummaries];
 
@@ -473,6 +473,20 @@ static NSUInteger preloadOptions;
     if (metaData)
     {
         metaData.homeserverWellknown = wellknown;
+        metaDataHasChanged = YES;
+    }
+}
+
+- (MXCapabilities *)homeserverCapabilities
+{
+    return metaData.homeserverCapabilities;
+}
+
+- (void)storeHomeserverCapabilities:(MXCapabilities *)capabilities
+{
+    if (metaData)
+    {
+        metaData.homeserverCapabilities = capabilities;
         metaDataHasChanged = YES;
     }
 }
@@ -966,10 +980,9 @@ static NSUInteger preloadOptions;
     
     NSString *cachePath = nil;
     
-    NSString *applicationGroupIdentifier = [MXSDKOptions sharedInstance].applicationGroupIdentifier;
-    if (applicationGroupIdentifier)
+    NSURL *sharedContainerURL = [[NSFileManager defaultManager] applicationGroupContainerURL];
+    if (sharedContainerURL)
     {
-        NSURL *sharedContainerURL = [[NSFileManager defaultManager] containerURLForSecurityApplicationGroupIdentifier:applicationGroupIdentifier];
         cachePath = [sharedContainerURL path];
     }
     else
@@ -1016,7 +1029,7 @@ static NSUInteger preloadOptions;
     NSString *roomFolder = [self folderForRoom:roomId forBackup:backup];
     if (![NSFileManager.defaultManager fileExistsAtPath:roomFolder])
     {
-        [[NSFileManager defaultManager] createDirectoryAtPath:roomFolder withIntermediateDirectories:YES attributes:nil error:nil];
+        [[NSFileManager defaultManager] createDirectoryExcludedFromBackupAtPath:roomFolder error:nil];
     }
 }
 
@@ -1100,7 +1113,7 @@ static NSUInteger preloadOptions;
             NSString *groupBackupFolder = [[storeBackupPath stringByAppendingPathComponent:backupEventStreamToken] stringByAppendingPathComponent:kMXFileStoreGroupsFolder];
             if (![NSFileManager.defaultManager fileExistsAtPath:groupBackupFolder])
             {
-                [[NSFileManager defaultManager] createDirectoryAtPath:groupBackupFolder withIntermediateDirectories:YES attributes:nil error:nil];
+                [[NSFileManager defaultManager] createDirectoryExcludedFromBackupAtPath:groupBackupFolder error:nil];
             }
             
             return [groupBackupFolder stringByAppendingPathComponent:groupId];
@@ -1447,7 +1460,7 @@ static NSUInteger preloadOptions;
                     // Make sure the backup folder exists
                     if (![NSFileManager.defaultManager fileExistsAtPath:self.storeBackupRoomsPath])
                     {
-                        [[NSFileManager defaultManager] createDirectoryAtPath:self.storeBackupRoomsPath withIntermediateDirectories:YES attributes:nil error:nil];
+                        [[NSFileManager defaultManager] createDirectoryExcludedFromBackupAtPath:self.storeBackupRoomsPath error:nil];
                     }
 
                     // Remove the room folder by trashing it into the backup folder
@@ -1602,7 +1615,7 @@ static NSUInteger preloadOptions;
                 NSString *storeBackupMetaDataPath = [self->storeBackupPath stringByAppendingPathComponent:self->backupEventStreamToken];
                 if (![NSFileManager.defaultManager fileExistsAtPath:storeBackupMetaDataPath])
                 {
-                    [[NSFileManager defaultManager] createDirectoryAtPath:storeBackupMetaDataPath withIntermediateDirectories:YES attributes:nil error:nil];
+                    [[NSFileManager defaultManager] createDirectoryExcludedFromBackupAtPath:storeBackupMetaDataPath error:nil];
                 }
                 
                 [[NSFileManager defaultManager] moveItemAtPath:file toPath:backupFile error:nil];
@@ -1655,7 +1668,7 @@ static NSUInteger preloadOptions;
                 NSString *storeBackupMetaDataPath = [self->storeBackupPath stringByAppendingPathComponent:self->backupEventStreamToken];
                 if (![NSFileManager.defaultManager fileExistsAtPath:storeBackupMetaDataPath])
                 {
-                    [[NSFileManager defaultManager] createDirectoryAtPath:storeBackupMetaDataPath withIntermediateDirectories:YES attributes:nil error:nil];
+                    [[NSFileManager defaultManager] createDirectoryExcludedFromBackupAtPath:storeBackupMetaDataPath error:nil];
                 }
 
                 [[NSFileManager defaultManager] moveItemAtPath:file toPath:backupFile error:nil];

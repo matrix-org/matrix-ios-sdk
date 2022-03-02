@@ -95,7 +95,7 @@
     return [[MXEventsByTypesEnumeratorOnArray alloc] initWithMessages:messages andTypesIn:types];
 }
 
-- (NSArray*)eventsAfter:(NSString *)eventId except:(NSString*)userId withTypeIn:(NSSet*)types
+- (NSArray<MXEvent*>*)eventsAfter:(NSString *)eventId threadId:(NSString *)threadId except:(NSString *)userId withTypeIn:(NSSet<MXEventTypeString>*)types
 {
     NSMutableArray* list = [[NSMutableArray alloc] init];
 
@@ -109,7 +109,10 @@
             if (NO == [event.eventId isEqualToString:eventId])
             {
                 // Keep events matching filters
-                if ((!types || [types containsObject:event.type]) && ![event.sender isEqualToString:userId])
+                BOOL typeAllowed = !types || [types containsObject:event.type];
+                BOOL threadAllowed = !threadId || [event.threadId isEqualToString:threadId];
+                BOOL senderAllowed = ![event.sender isEqualToString:userId];
+                if (typeAllowed && threadAllowed && senderAllowed)
                 {
                     [list insertObject:event atIndex:0];
                 }

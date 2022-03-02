@@ -44,27 +44,51 @@
     return self;
 }
 
-- (NSArray *)nextEventsBatch:(NSUInteger)eventsCount
+- (NSArray *)nextEventsBatch:(NSUInteger)eventsCount threadId:(NSString *)threadId
 {
-    NSArray *batch;
-
-    if (0 < paginationPosition)
+    if (paginationPosition <= 0)
     {
-        if (eventsCount < paginationPosition)
-        {
-            // Return a slice of messages
-            batch = [messages subarrayWithRange:NSMakeRange(paginationPosition - eventsCount, eventsCount)];
-            paginationPosition -= eventsCount;
-        }
-        else
-        {
-            // Return the last slice of messages
-            batch = [messages subarrayWithRange:NSMakeRange(0, paginationPosition)];
-            paginationPosition = 0;
-        }
+        //  there is not any events left
+        return nil;
     }
 
-    return batch;
+    if (paginationPosition <= eventsCount)
+    {
+        //  there is not enough events, return them all
+        NSArray *result = [messages subarrayWithRange:NSMakeRange(0, paginationPosition)];
+        paginationPosition = 0;
+        return result;
+    }
+
+    if (threadId)
+    {
+        NSMutableArray *result = [NSMutableArray arrayWithCapacity:eventsCount];
+        MXEvent *event;
+        while ((event = self.nextEvent) && result.count < eventsCount)
+        {
+            if ([event.threadId isEqualToString:threadId] || [event.eventId isEqualToString:threadId])
+            {
+                [result addObject:event];
+            }
+        }
+        return [result.reverseObjectEnumerator allObjects];
+    }
+    else
+    {
+        NSMutableArray *result = [NSMutableArray arrayWithCapacity:eventsCount];
+        MXEvent *event;
+        NSUInteger count = 0;
+        while ((event = self.nextEvent) && count < eventsCount)
+        {
+            //  do not count in-thread events
+            if (!event.isInThread)
+            {
+                count++;
+            }
+            [result addObject:event];
+        }
+        return [result.reverseObjectEnumerator allObjects];
+    }
 }
 
 - (MXEvent *)nextEvent

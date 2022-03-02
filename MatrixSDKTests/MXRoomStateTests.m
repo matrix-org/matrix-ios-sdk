@@ -123,7 +123,7 @@
             MXRoom *room = [mxSession roomWithRoomId:roomId];
 
             // Listen to live event. We should receive only one: a m.room.topic event
-            [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+            [room liveTimeline:^(id<MXEventTimeline> liveTimeline) {
 
                 XCTAssertNil(liveTimeline.state.topic, @"There must be no room topic yet. Found: %@", liveTimeline.state.topic);
 
@@ -206,7 +206,7 @@
             MXRoom *room = [mxSession roomWithRoomId:roomId];
 
             // Listen to live event. We should receive only one: a m.room.avatar event
-            [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+            [room liveTimeline:^(id<MXEventTimeline> liveTimeline) {
 
                 XCTAssertNil(liveTimeline.state.avatar, @"There must be no room avatar yet. Found: %@", liveTimeline.state.avatar);
 
@@ -288,7 +288,7 @@
             MXRoom *room = [mxSession roomWithRoomId:roomId];
 
             // Listen to live event. We should receive only one: a m.room.name event
-            [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+            [room liveTimeline:^(id<MXEventTimeline> liveTimeline) {
 
                 XCTAssertNil(liveTimeline.state.name, @"There must be no room name yet. Found: %@", liveTimeline.state.name);
 
@@ -370,7 +370,7 @@
             MXRoom *room = [mxSession roomWithRoomId:roomId];
 
             // Listen to live event. We should receive only one: a m.room.name event
-            [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+            [room liveTimeline:^(id<MXEventTimeline> liveTimeline) {
 
                 XCTAssertEqualObjects(liveTimeline.state.historyVisibility, kMXRoomHistoryVisibilityShared, @"The default room history visibility should be shared");
 
@@ -452,7 +452,7 @@
             MXRoom *room = [mxSession roomWithRoomId:roomId];
 
             // Listen to live event. We should receive only one: a m.room.name event
-            [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+            [room liveTimeline:^(id<MXEventTimeline> liveTimeline) {
 
                 XCTAssertEqualObjects(liveTimeline.state.joinRule, kMXRoomJoinRuleInvite, @"The default room join rule should be invite");
 
@@ -534,7 +534,7 @@
             MXRoom *room = [mxSession roomWithRoomId:roomId];
 
             // Listen to live event. We should receive only one: a m.room.name event
-            [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+            [room liveTimeline:^(id<MXEventTimeline> liveTimeline) {
 
                 XCTAssertEqualObjects(liveTimeline.state.guestAccess, kMXRoomGuestAccessCanJoin, @"The default room guest access should be forbidden");
 
@@ -635,7 +635,7 @@
             NSString *roomAlias = [NSString stringWithFormat:@"#%@%@", globallyUniqueString, bobRestClient.homeserverSuffix];
             
             // Listen to live event. We should receive only: a m.room.aliases and m.room.canonical_alias events
-            [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+            [room liveTimeline:^(id<MXEventTimeline> liveTimeline) {
 
                 XCTAssertNil(liveTimeline.state.aliases);
                 XCTAssertNil(liveTimeline.state.canonicalAlias);
@@ -794,7 +794,7 @@
  */
 - (void)createInviteByUserScenario:(MXRestClient*)bobRestClient inRoom:(NSString*)roomId inviteAlice:(BOOL)inviteAlice expectation:(XCTestExpectation*)expectation onComplete:(void(^)(void))onComplete
 {
-    [bobRestClient sendTextMessageToRoom:roomId text:@"Hello world" success:^(NSString *eventId) {
+    [bobRestClient sendTextMessageToRoom:roomId threadId:nil text:@"Hello world" success:^(NSString *eventId) {
 
         MXRestClient *bobRestClient2 = bobRestClient;
 
@@ -808,7 +808,7 @@
                     {
                         [bobRestClient2 inviteUser:matrixSDKTestsData.aliceCredentials.userId toRoom:roomId success:^{
 
-                            [bobRestClient2 sendTextMessageToRoom:roomId text:@"I wait for Alice" success:^(NSString *eventId) {
+                            [bobRestClient2 sendTextMessageToRoom:roomId threadId:nil text:@"I wait for Alice" success:^(NSString *eventId) {
 
                                 onComplete();
 
@@ -983,7 +983,7 @@
                     
                     MXRoom *newRoom = [mxSession roomWithRoomId:roomId];
 
-                    [newRoom liveTimeline:^(MXEventTimeline *liveTimeline) {
+                    [newRoom liveTimeline:^(id<MXEventTimeline> liveTimeline) {
                         [liveTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
                             if (MXTimelineDirectionForwards == event)
                             {
@@ -1216,9 +1216,9 @@
 
                 newRoomId = roomId;
 
-                [bobRestClient sendTextMessageToRoom:roomId text:@"Hi Alice!" success:^(NSString *eventId) {
+                [bobRestClient sendTextMessageToRoom:roomId threadId:nil text:@"Hi Alice!" success:^(NSString *eventId) {
 
-                    [bobRestClient sendTextMessageToRoom:roomId text:@"Hi Alice 2!" success:^(NSString *eventId) {
+                    [bobRestClient sendTextMessageToRoom:roomId threadId:nil text:@"Hi Alice 2!" success:^(NSString *eventId) {
 
                     } failure:^(NSError *error) {
                         XCTFail(@"Cannot set up intial test conditions - error: %@", error);

@@ -46,7 +46,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param failure A block object called when the operation fails.
  */
 - (void)addReaction:(NSString*)reaction
-        forEvent:(NSString*)eventId
+           forEvent:(NSString*)eventId
              inRoom:(NSString*)roomId
             success:(void (^)(void))success
             failure:(void (^)(NSError *error))failure;
