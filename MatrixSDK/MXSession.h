@@ -347,6 +347,7 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
 @class MXSpaceService;
 @class MXThreadingService;
 @class MXCapabilities;
+@class MXEventStreamService;
 
 #pragma mark - MXSession
 /**
@@ -486,6 +487,11 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
  The module that manages threads.
  */
 @property (nonatomic, readonly) MXThreadingService *threadingService NS_REFINED_FOR_SWIFT;
+
+/**
+ Service to observe  events.
+ */
+@property (nonatomic, readonly) MXEventStreamService *eventStreamService;
 
 /**
  Flag indicating the session can be paused.

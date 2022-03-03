@@ -51,6 +51,7 @@
 
 #import "MXDeviceListResponse.h"
 
+#import "MatrixSDKSwiftHeader.h"
 /**
  The store to use for crypto.
  */
@@ -816,6 +817,24 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 
 #endif
 }
+
+- (void)handleToDeviceEvent:(MXEvent *)event onComplete:(void (^)(void))onComplete
+{
+    switch (event.eventType)
+    {
+        case MXEventTypeRoomKey:
+        {
+            [self handleRoomKeyEvent:event onComplete:onComplete];
+            break;
+        }
+            
+        default:
+            onComplete();
+            break;
+    }
+    [self.mxSession.eventStreamService dispatchOnLiveToDeviceWithEvent:event];
+}
+
 
 - (void)handleRoomKeyEvent:(MXEvent*)event onComplete:(void (^)(void))onComplete
 {

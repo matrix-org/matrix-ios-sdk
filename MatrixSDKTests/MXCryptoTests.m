@@ -1843,7 +1843,7 @@
                 newContent[@"session_key"] = sessionInfo.session.sessionKey;
                 toDeviceEvent.clearEvent.wireContent = newContent;
 
-                [bobSession.crypto handleRoomKeyEvent:toDeviceEvent onComplete:^{}];
+                [bobSession.crypto handleToDeviceEvent:toDeviceEvent onComplete:^{}];
 
                 // We still must be able to decrypt the event
                 // ie, the implementation must have ignored the new room key with the advanced outbound group
@@ -1913,7 +1913,7 @@
                     }];
                     
                     // Reinject the m.room_key event. This mimics a room_key event that arrives after message events.
-                    [bobSession.crypto handleRoomKeyEvent:toDeviceEvent onComplete:^{}];
+                    [bobSession.crypto handleToDeviceEvent:toDeviceEvent onComplete:^{}];
                 }];
             }];
         }];

@@ -24,6 +24,7 @@
 #import "MXCryptoAlgorithms.h"
 #import "MXCrypto_Private.h"
 #import "MXTools.h"
+#import "MatrixSDKSwiftHeader.h"
 
 @interface MXMegolmDecryption ()
 {
@@ -108,9 +109,11 @@
         result.senderCurve25519Key = olmResult.senderKey;
         result.claimedEd25519Key = olmResult.keysClaimed[@"ed25519"];
         result.forwardingCurve25519KeyChain = olmResult.forwardingCurve25519KeyChain;
+        [crypto.mxSession.eventStreamService dispatchLiveEventDecryptedWithEvent:event result:result];
     }
     else
     {
+        [crypto.mxSession.eventStreamService dispatchLiveEventDecryptionFailedWithEvent:event error:olmError];
         if ([olmError.domain isEqualToString:OLMErrorDomain])
         {
             // Manage OLMKit error
