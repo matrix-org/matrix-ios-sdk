@@ -40,6 +40,7 @@
 
 @synthesize storeService, eventStreamToken, userAccountData, syncFilterId, homeserverWellknown, areAllIdentityServerTermsAgreed;
 @synthesize homeserverCapabilities;
+@synthesize supportedMatrixVersions;
 
 - (instancetype)init
 {
@@ -316,6 +317,11 @@
 - (void)storeHomeserverCapabilities:(MXCapabilities *)capabilities
 {
     homeserverCapabilities = capabilities;
+}
+
+- (void)storeSupportedMatrixVersions:(MXMatrixVersions *)supportedMatrixVersions
+{
+    supportedMatrixVersions = supportedMatrixVersions;
 }
 
 - (NSInteger)maxUploadSize

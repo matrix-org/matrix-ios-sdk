@@ -17,6 +17,7 @@
 #import "MXFileStoreMetaData.h"
 
 static NSString* const kEncodingKeyCapabilities = @"capabilities";
+static NSString* const kEncodingKeySupportedMatrixVersions = @"supportedMatrixVersions";
 
 @implementation MXFileStoreMetaData
 
@@ -40,6 +41,7 @@ static NSString* const kEncodingKeyCapabilities = @"capabilities";
 
         _homeserverWellknown = dict[@"wellknown"];
         _homeserverCapabilities = dict[kEncodingKeyCapabilities];
+        _supportedMatrixVersions = dict[kEncodingKeySupportedMatrixVersions];
         
         NSNumber *maxUploadSize = dict[@"maxUploadSize"];
         _maxUploadSize = [maxUploadSize integerValue] ?: -1;
@@ -80,6 +82,10 @@ static NSString* const kEncodingKeyCapabilities = @"capabilities";
     {
         dict[kEncodingKeyCapabilities] = _homeserverCapabilities;
     }
+    if (_supportedMatrixVersions)
+    {
+        dict[kEncodingKeySupportedMatrixVersions] = _supportedMatrixVersions;
+    }
 
     [aCoder encodeObject:dict forKey:@"dict"];
 }
@@ -96,6 +102,7 @@ static NSString* const kEncodingKeyCapabilities = @"capabilities";
     metaData->_areAllIdentityServerTermsAgreed = _areAllIdentityServerTermsAgreed;
     metaData->_maxUploadSize = _maxUploadSize;
     metaData->_homeserverCapabilities = _homeserverCapabilities;
+    metaData->_supportedMatrixVersions = _supportedMatrixVersions;
  
     return metaData;
 }
