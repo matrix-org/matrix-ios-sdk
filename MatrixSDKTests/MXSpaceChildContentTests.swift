@@ -472,7 +472,7 @@ class MXSpaceChildContentTests: XCTestCase {
             }
             
             // Create space with default parameters
-            bobSession.spaceService.createSpace(withName: spaceName, topic: topic, isPublic: true, aliasLocalPart: "\(spaceName.toValidAliasLocalPart())-\(NSUUID().uuidString)", inviteArray: [aliceSession.myUserId]) { response in
+            bobSession.spaceService.createSpace(withName: spaceName, topic: topic, isPublic: true, aliasLocalPart: "\(MXTools.validAliasLocalPart(from: spaceName))-\(NSUUID().uuidString)", inviteArray: [aliceSession.myUserId]) { response in
                 switch response {
                 case .success(let space):
                     guard space.room != nil else {

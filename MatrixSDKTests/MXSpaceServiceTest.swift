@@ -61,7 +61,7 @@ class MXSpaceServiceTest: XCTestCase {
         for spaceName in spaceNames {
             
             dispatchGroup.enter()
-            let alias = "\(spaceName.toValidAliasLocalPart())-\(NSUUID().uuidString)"
+            let alias = "\(MXTools.validAliasLocalPart(from: spaceName))-\(NSUUID().uuidString)"
             
             spaceService.createSpace(withName: spaceName, topic: nil, isPublic: true, aliasLocalPart: alias, inviteArray: nil) { (response) in
                                 
@@ -176,7 +176,7 @@ class MXSpaceServiceTest: XCTestCase {
             
             let expectedSpaceName = "mxSpace \(NSUUID().uuidString)"
             let expectedSpaceTopic = "Space topic"
-            let alias = expectedSpaceName.toValidAliasLocalPart()
+            let alias = MXTools.validAliasLocalPart(from: expectedSpaceName)
             
             // Create a public space
             spaceService.createSpace(withName: expectedSpaceName, topic: expectedSpaceTopic, isPublic: true, aliasLocalPart: alias, inviteArray: nil) { (response) in
