@@ -48,7 +48,7 @@ public class MXRoomAliasAvailabilityChecker {
             return nil
         }
         
-        let fullAlias = aliasLocalPart.fullLocalAlias(with: session)
+        let fullAlias = MXTools.fullLocalAlias(from: aliasLocalPart, with: session)
         guard aliasLocalPart.filter({ !validAliasCharacters.contains($0) }).count == 0 else {
             completion(.invalid)
             return nil
@@ -66,29 +66,34 @@ public class MXRoomAliasAvailabilityChecker {
     }
 }
 
-public extension String {
+public extension MXTools {
     /// Generates a full local alias String (e.g. "#my_alias:example.org" for the string "my_alias")
     /// - Parameters:
+    ///   - string: based string
     ///   - session: session used to retrieve the homeserver suffix
     /// - Returns:the full local alias String without checking the validity of the alias local part
-    func fullLocalAlias(with session: MXSession) -> String {
+    static func fullLocalAlias(from string: String, with session: MXSession) -> String {
         guard let homeserverSuffix = session.matrixRestClient.homeserverSuffix else {
-            return self
+            return string
         }
         
-        return "#\(self)\(homeserverSuffix)"
+        return "#\(string)\(homeserverSuffix)"
     }
     
     /// Generates a valid local alias part String by replacing unauthorised characters
+    /// - Parameters:
+    ///   - string: based string
     /// - Returns:a valid local alias part.
-    func toValidAliasLocalPart() -> String {
-        return lowercased().replacingOccurrences(of: " ", with: "-").filter { MXRoomAliasAvailabilityChecker.validAliasCharacters.contains($0) }
+    static func validAliasLocalPart(from string: String) -> String {
+        return string.lowercased().replacingOccurrences(of: " ", with: "-").filter { MXRoomAliasAvailabilityChecker.validAliasCharacters.contains($0) }
     }
     
     /// Extract the valid local alias part String of the string ((e.g. "my_alias" for the string "#my_alias:example.org")
+    /// - Parameters:
+    ///   - string: based string
     /// - Returns:the valid local alias part extracted from the string.
-    func extractLocalAliasPart() -> String {
-        var aliasPart = self
+    static func extractLocalAliasPart(from string: String) -> String {
+        var aliasPart = string
         while aliasPart.starts(with: "#") {
             aliasPart.removeFirst()
         }
