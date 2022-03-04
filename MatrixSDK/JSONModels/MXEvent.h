@@ -278,6 +278,12 @@ FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleAssetMSC3488;
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleAssetType;
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleAssetTypeUser;
 
+// Join Rules
+
+FOUNDATION_EXPORT NSString *const kMXJoinRulesContentKeyAllow;
+FOUNDATION_EXPORT NSString *const kMXJoinRulesContentKeyType;
+FOUNDATION_EXPORT NSString *const kMXJoinRulesContentKeyRoomId;
+
 /**
  The internal event state used to handle the different steps of the event sending.
  */

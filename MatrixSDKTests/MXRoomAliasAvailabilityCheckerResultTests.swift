@@ -15,6 +15,7 @@
 //
 
 import XCTest
+import MatrixSDK
 
 class MXRoomAliasAvailabilityCheckerResultTests: XCTestCase {
     
@@ -59,19 +60,19 @@ class MXRoomAliasAvailabilityCheckerResultTests: XCTestCase {
             }
             
             let aliasLocalPart = UUID().uuidString
-            var validAliasLocalPart = aliasLocalPart.toValidAliasLocalPart()
+            var validAliasLocalPart = MXTools.validAliasLocalPart(from: aliasLocalPart)
             
             XCTAssertEqual(aliasLocalPart.lowercased(), validAliasLocalPart)
             
-            var fullAlias = validAliasLocalPart.fullLocalAlias(with: session)
+            var fullAlias = MXTools.fullLocalAlias(from: validAliasLocalPart, with: session)
             XCTAssertEqual(fullAlias, "#\(validAliasLocalPart)\(session.matrixRestClient.homeserverSuffix!)")
             
             let invalidAliasLocalPart = "Some Invalid al;i{a|s"
-            validAliasLocalPart = invalidAliasLocalPart.toValidAliasLocalPart()
+            validAliasLocalPart = MXTools.validAliasLocalPart(from: invalidAliasLocalPart)
             
             XCTAssertEqual(validAliasLocalPart, "some-invalid-alias")
             
-            fullAlias = validAliasLocalPart.fullLocalAlias(with: session)
+            fullAlias = MXTools.fullLocalAlias(from: validAliasLocalPart, with: session)
             XCTAssertEqual(fullAlias, "#\(validAliasLocalPart)\(session.matrixRestClient.homeserverSuffix!)")
 
             expectation?.fulfill()
