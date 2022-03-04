@@ -187,6 +187,12 @@ NSString *const kMXMessageContentKeyExtensibleAssetMSC3488 = @"org.matrix.msc348
 NSString *const kMXMessageContentKeyExtensibleAssetType = @"type";
 NSString *const kMXMessageContentKeyExtensibleAssetTypeUser = @"m.self";
 
+// Join Rules
+
+NSString *const kMXJoinRulesContentKeyAllow = @"allow";
+NSString *const kMXJoinRulesContentKeyType = @"type";
+NSString *const kMXJoinRulesContentKeyRoomId = @"room_id";
+
 #pragma mark - MXEvent
 @interface MXEvent ()
 {
