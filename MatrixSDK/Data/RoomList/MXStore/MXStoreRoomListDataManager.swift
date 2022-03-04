@@ -31,6 +31,7 @@ public class MXStoreRoomListDataManager: NSObject, MXRoomListDataManager {
                 fatalError("[MXStoreRoomListDataManager] Session has no spaceService")
             }
             return MXSuggestedRoomListDataFetcher(fetchOptions: options,
+                                                  session: session,
                                                   spaceService: spaceService)
         }
         guard let store = session?.store else {
