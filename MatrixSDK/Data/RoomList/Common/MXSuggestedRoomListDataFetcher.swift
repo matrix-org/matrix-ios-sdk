@@ -20,7 +20,7 @@ import Foundation
 internal class MXSuggestedRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
     
     internal let fetchOptions: MXRoomListDataFetchOptions
-    private let session: MXSession?
+    private weak var session: MXSession?
     private let spaceService: MXSpaceService
     private let cache: MXSuggestedRoomListDataCache
     
@@ -52,7 +52,7 @@ internal class MXSuggestedRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
     }
     
     internal init(fetchOptions: MXRoomListDataFetchOptions,
-                  session: MXSession?,
+                  session: MXSession,
                   spaceService: MXSpaceService,
                   cache: MXSuggestedRoomListDataCache = .shared) {
         self.fetchOptions = fetchOptions
@@ -94,7 +94,7 @@ internal class MXSuggestedRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
             }
             self.refresh()
         })
-        sessionDidSyncObserver = NotificationCenter.default.addObserver(forName: NSNotification.Name.mxSessionDidSync, object: nil, queue: OperationQueue.main) { [weak self] notification in
+        sessionDidSyncObserver = NotificationCenter.default.addObserver(forName: .mxSessionDidSync, object: nil, queue: OperationQueue.main) { [weak self] notification in
             self?.updateData()
         }
     }
