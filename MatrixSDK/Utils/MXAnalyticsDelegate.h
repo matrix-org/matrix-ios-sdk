@@ -86,9 +86,12 @@ NS_ASSUME_NONNULL_BEGIN
  Report that a room was joined.
  
  @param isDM Whether the room is direct or not.
+ @param isSpace Whether the room is a space or not.
  @param memberCount The number of members in the room.
  */
-- (void)trackJoinedRoomAsDM:(BOOL)isDM memberCount:(NSUInteger)memberCount;
+- (void)trackJoinedRoomAsDM:(BOOL)isDM
+                    isSpace:(BOOL)isSpace
+                memberCount:(NSUInteger)memberCount;
 
 /**
  Report whether the user granted or rejected access to their contacts.
@@ -96,6 +99,21 @@ NS_ASSUME_NONNULL_BEGIN
  @param granted YES if access was granted, NO if it was rejected.
  */
 - (void)trackContactsAccessGranted:(BOOL)granted;
+
+#pragma mark - Threads
+
+/**
+ Report that an event composed.
+
+ @param inThread flag indicating the event was sent in a thread
+ @param isEditing flag indicating the event was an edit
+ @param isReply flag indicating the event was a reply
+ @param startsThread flag indicating the event starts a thread
+ */
+- (void)trackComposerEventInThread:(BOOL)inThread
+                         isEditing:(BOOL)isEditing
+                           isReply:(BOOL)isReply
+                      startsThread:(BOOL)startsThread;
 
 @end
 

@@ -57,11 +57,20 @@ extension MXRoomListDataFilterable {
                                                   MXMembership.unknown.rawValue)
                 predicates.append(memberPredicate)
             }
-            
+
             if !filterOptions.dataTypes.isEmpty {
-                let predicate = NSPredicate(format: "(%K & %d) != 0",
+                let predicate: NSPredicate
+                if filterOptions.strictMatches {
+                    predicate = NSPredicate(format: "(%K & %d) == %d",
+                                            #keyPath(MXRoomSummaryProtocol.dataTypes),
+                                            filterOptions.dataTypes.rawValue,
+                                            filterOptions.dataTypes.rawValue)
+
+                } else {
+                    predicate = NSPredicate(format: "(%K & %d) != 0",
                                             #keyPath(MXRoomSummaryProtocol.dataTypes),
                                             filterOptions.dataTypes.rawValue)
+                }
                 predicates.append(predicate)
             }
             
