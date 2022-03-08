@@ -1798,7 +1798,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func sendDirectToDevice(eventType: String, contentMap: MXUsersDevicesMap<NSDictionary>, txnId: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
+    @nonobjc @discardableResult func sendDirectToDevice(eventType: String, contentMap: MXUsersDevicesMap<NSDictionary>, txnId: String?, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
         return __send(toDevice: eventType, contentMap: contentMap, txnId: txnId, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
