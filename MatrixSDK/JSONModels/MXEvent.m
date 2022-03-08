@@ -505,12 +505,7 @@ NSString *const kMXMessageContentKeyExtensibleAssetTypeUser = @"m.self";
 {
     return self.eventType == MXEventTypeRoomMessage && self.relatesTo.inReplyTo.eventId != nil &&
     //  add condition after new thread event fallbacks
-    (self.isInThread ? self.isReplyInThread : YES);
-}
-
-- (BOOL)isReplyInThread
-{
-    return [self.relatesTo.inReplyTo.renderIn containsObject:MXEventRelationTypeThread];
+    (self.isInThread ? self.relatesTo.displayReplyFallback : YES);
 }
 
 - (BOOL)isVoiceMessage

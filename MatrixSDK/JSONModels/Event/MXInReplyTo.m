@@ -17,12 +17,10 @@
 #import "MXInReplyTo.h"
 
 static NSString* const kJSONInReplyToEventId = @"event_id";
-static NSString* const kJSONInReplyToRenderIn = @"m.render_in";
 
 @interface MXInReplyTo()
 
 @property (nonatomic, readwrite) NSString *eventId;
-@property (nonatomic, readwrite, nullable) NSArray<NSString*> *renderIn;
 
 @end
 
@@ -37,7 +35,6 @@ static NSString* const kJSONInReplyToRenderIn = @"m.render_in";
         result = [MXInReplyTo new];
 
         MXJSONModelSetString(result.eventId, JSONDictionary[kJSONInReplyToEventId]);
-        MXJSONModelSetArray(result.renderIn, JSONDictionary[kJSONInReplyToRenderIn]);
     }
 
     return result;
@@ -48,11 +45,6 @@ static NSString* const kJSONInReplyToRenderIn = @"m.render_in";
     NSMutableDictionary *JSONDictionary = [NSMutableDictionary dictionary];
 
     JSONDictionary[kJSONInReplyToEventId] = _eventId;
-
-    if (self.renderIn)
-    {
-        JSONDictionary[kJSONInReplyToRenderIn] = self.renderIn;
-    }
 
     return JSONDictionary;
 }
