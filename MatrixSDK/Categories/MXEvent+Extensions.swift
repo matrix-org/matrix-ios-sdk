@@ -23,6 +23,11 @@ public extension MXEvent {
     /// - Parameter session: session instance to read notification rules from
     /// - Returns: true if clients should highlight the receiver event
     func shouldBeHighlighted(inSession session: MXSession) -> Bool {
+        if sender == session.myUserId {
+            //  do not highlight any event that the current user sent
+            return false
+        }
+
         let displayNameChecker = MXPushRuleDisplayNameCondtionChecker(matrixSession: session,
                                                                       currentUserDisplayName: nil)
 

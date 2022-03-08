@@ -306,9 +306,18 @@ extension MXCoreDataRoomListDataFetcher: MXRoomListDataFilterable {
             
             //  data types
             if !filterOptions.dataTypes.isEmpty {
-                let predicate = NSPredicate(format: "(%K & %d) != 0",
+                let predicate: NSPredicate
+                if filterOptions.strictMatches {
+                    predicate = NSPredicate(format: "(%K & %d) == %d",
+                                            #keyPath(MXRoomSummaryMO.s_dataTypesInt),
+                                            filterOptions.dataTypes.rawValue,
+                                            filterOptions.dataTypes.rawValue)
+
+                } else {
+                    predicate = NSPredicate(format: "(%K & %d) != 0",
                                             #keyPath(MXRoomSummaryMO.s_dataTypesInt),
                                             filterOptions.dataTypes.rawValue)
+                }
                 predicates.append(predicate)
             }
             
