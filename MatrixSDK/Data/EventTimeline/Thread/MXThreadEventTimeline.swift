@@ -59,7 +59,7 @@ public class MXThreadEventTimeline: NSObject, MXEventTimeline {
     
     private lazy var threadEventFilter: MXRoomEventFilter = {
         let filter = MXRoomEventFilter()
-        filter.relationTypes = [MXEventRelationTypeThread]
+        filter.relatedByTypes = [MXEventRelationTypeThread]
         return filter
     }()
     
