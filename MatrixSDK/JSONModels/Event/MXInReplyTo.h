@@ -25,8 +25,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, readonly) NSString *eventId;
 
-@property (nonatomic, readonly, nullable) NSArray<NSString*> *renderIn;
-
 @end
 
 NS_ASSUME_NONNULL_END

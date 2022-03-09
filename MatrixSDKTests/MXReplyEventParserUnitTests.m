@@ -17,6 +17,7 @@
 #import <XCTest/XCTest.h>
 
 #import "MXReplyEventParser.h"
+#import "MXEnumConstants.h"
 
 @interface MXReplyEventParserUnitTests : XCTestCase
 
@@ -35,26 +36,26 @@
 - (MXEvent*)fakeReplyEventWithBody:(NSString*)body andFormattedBody:(NSString*)formattedBody
 {
     NSDictionary *replyEventDict = @{
-                                     @"content": @{
-                                             kMXMessageBodyKey: body,
-                                             @"formatted_body": formattedBody,
-                                             @"format": @"org.matrix.custom.html",
-                                             kMXEventRelationRelatesToKey: @{
-                                                     @"m.in_reply_to": @{
-                                                             @"event_id": @"$1561994860861855MtlYo:matrix.org"
-                                                             }
-                                                     },
-                                             kMXMessageTypeKey: @"m.text"
-                                             },
-                                     @"event_id": @"$eventid:matrix.org",
-                                     @"origin_server_ts": @(1560254175300),
-                                     @"sender": @"@user:matrix.org",
-                                     @"type": @"m.room.message",
-                                     @"unsigned": @{
-                                             @"age": @(5328779)
-                                             },
-                                     @"room_id": @"!roomid:matrix.org"
-                                     };
+        @"content": @{
+            kMXMessageBodyKey: body,
+            @"formatted_body": formattedBody,
+            @"format": kMXRoomMessageFormatHTML,
+            kMXEventRelationRelatesToKey: @{
+                kMXEventContentRelatesToKeyInReplyTo: @{
+                    kMXEventContentRelatesToKeyEventId: @"$1561994860861855MtlYo:matrix.org"
+                }
+            },
+            kMXMessageTypeKey: kMXMessageTypeText
+        },
+        @"event_id": @"$eventid:matrix.org",
+        @"origin_server_ts": @(1560254175300),
+        @"sender": @"@user:matrix.org",
+        @"type": kMXEventTypeStringRoomMessage,
+        @"unsigned": @{
+            @"age": @(5328779)
+        },
+        @"room_id": @"!roomid:matrix.org"
+    };
     
     MXEvent *replyEvent = [MXEvent modelFromJSON:replyEventDict];
     return replyEvent;

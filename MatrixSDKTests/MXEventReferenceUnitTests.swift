@@ -21,14 +21,14 @@ class MXEventReferenceUnitTests: XCTestCase {
 
     let eventJSON: [String : Any] = [
         "event_id": "$eventId",
-        "type": "m.room.message",
+        "type": kMXEventTypeStringRoomMessage,
         "origin_server_ts": 0,
         "unsigned": [
             "m.relations": [
-                "m.reference": [
+                MXEventRelationTypeReference: [
                     "chunk": [
                         [
-                            "type": "m.room.message",
+                            "type": kMXEventTypeStringRoomMessage,
                             "event_id": "$some_event_id"
                         ]
                     ],

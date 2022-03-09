@@ -1780,8 +1780,8 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
         {
             relatesDict = [NSMutableDictionary dictionary];
         }
-        relatesDict[@"rel_type"] = MXEventRelationTypeThread;
-        relatesDict[@"event_id"] = threadId;
+        relatesDict[kMXEventContentRelatesToKeyRelationType] = MXEventRelationTypeThread;
+        relatesDict[kMXEventContentRelatesToKeyEventId] = threadId;
         
         NSMutableDictionary *newContent = [NSMutableDictionary dictionaryWithDictionary:content];
         newContent[kMXEventRelationRelatesToKey] = relatesDict;
