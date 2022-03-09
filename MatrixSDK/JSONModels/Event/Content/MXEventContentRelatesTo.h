@@ -21,6 +21,12 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+extern NSString *const kMXEventContentRelatesToKeyRelationType;
+extern NSString *const kMXEventContentRelatesToKeyEventId;
+extern NSString *const kMXEventContentRelatesToKeyKey;
+extern NSString *const kMXEventContentRelatesToKeyDisplayReplyFallback;
+extern NSString *const kMXEventContentRelatesToKeyInReplyTo;
+
 /**
  JSON model for MXEvent.content.relates_to.
  */

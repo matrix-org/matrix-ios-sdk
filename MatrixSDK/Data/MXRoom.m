@@ -795,7 +795,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
             if (isReply)
             {
                 //  this will be a real in-thread reply
-                mutableContent[kMXEventRelationRelatesToKey][@"io.element.display_reply_fallback"] = @(YES);
+                mutableContent[kMXEventRelationRelatesToKey][kMXEventContentRelatesToKeyDisplayReplyFallback] = @(YES);
             }
             else
             {

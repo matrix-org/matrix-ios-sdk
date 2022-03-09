@@ -16,11 +16,11 @@
 
 #import "MXEventContentRelatesTo.h"
 
-static NSString* const kJSONRelationType = @"rel_type";
-static NSString* const kJSONEventId = @"event_id";
-static NSString* const kJSONKey = @"key";
-static NSString* const kJSONKeyDisplayReplyFallback = @"io.element.display_reply_fallback";
-static NSString* const kJSONInReplyTo = @"m.in_reply_to";
+NSString *const kMXEventContentRelatesToKeyRelationType = @"rel_type";
+NSString *const kMXEventContentRelatesToKeyEventId = @"event_id";
+NSString *const kMXEventContentRelatesToKeyKey = @"key";
+NSString *const kMXEventContentRelatesToKeyDisplayReplyFallback = @"io.element.display_reply_fallback";
+NSString *const kMXEventContentRelatesToKeyInReplyTo = @"m.in_reply_to";
 
 @interface MXEventContentRelatesTo()
 
@@ -58,11 +58,11 @@ static NSString* const kJSONInReplyTo = @"m.in_reply_to";
 {
     MXEventContentRelatesTo *relatesTo = [MXEventContentRelatesTo new];
 
-    MXJSONModelSetString(relatesTo.relationType, JSONDictionary[kJSONRelationType]);
-    MXJSONModelSetString(relatesTo.eventId, JSONDictionary[kJSONEventId]);
-    MXJSONModelSetString(relatesTo.key, JSONDictionary[kJSONKey]);
-    MXJSONModelSetBoolean(relatesTo.displayReplyFallback, JSONDictionary[kJSONKeyDisplayReplyFallback]);
-    MXJSONModelSetMXJSONModel(relatesTo.inReplyTo, MXInReplyTo, JSONDictionary[kJSONInReplyTo]);
+    MXJSONModelSetString(relatesTo.relationType, JSONDictionary[kMXEventContentRelatesToKeyRelationType]);
+    MXJSONModelSetString(relatesTo.eventId, JSONDictionary[kMXEventContentRelatesToKeyEventId]);
+    MXJSONModelSetString(relatesTo.key, JSONDictionary[kMXEventContentRelatesToKeyKey]);
+    MXJSONModelSetBoolean(relatesTo.displayReplyFallback, JSONDictionary[kMXEventContentRelatesToKeyDisplayReplyFallback]);
+    MXJSONModelSetMXJSONModel(relatesTo.inReplyTo, MXInReplyTo, JSONDictionary[kMXEventContentRelatesToKeyInReplyTo]);
 
     if (relatesTo.relationType || relatesTo.eventId || relatesTo.key || relatesTo.inReplyTo)
     {
@@ -78,20 +78,20 @@ static NSString* const kJSONInReplyTo = @"m.in_reply_to";
 
     if (self.relationType)
     {
-        JSONDictionary[kJSONRelationType] = self.relationType;
+        JSONDictionary[kMXEventContentRelatesToKeyRelationType] = self.relationType;
     }
     if (self.eventId)
     {
-        JSONDictionary[kJSONEventId] = self.eventId;
+        JSONDictionary[kMXEventContentRelatesToKeyEventId] = self.eventId;
     }
     if (self.key)
     {
-        JSONDictionary[kJSONKey] = self.key;
+        JSONDictionary[kMXEventContentRelatesToKeyKey] = self.key;
     }
-    JSONDictionary[kJSONKeyDisplayReplyFallback] = @(self.displayReplyFallback);
+    JSONDictionary[kMXEventContentRelatesToKeyDisplayReplyFallback] = @(self.displayReplyFallback);
     if (self.inReplyTo)
     {
-        JSONDictionary[kJSONInReplyTo] = self.inReplyTo.JSONDictionary;
+        JSONDictionary[kMXEventContentRelatesToKeyInReplyTo] = self.inReplyTo.JSONDictionary;
     }
     
     return JSONDictionary;
