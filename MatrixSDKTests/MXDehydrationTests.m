@@ -323,7 +323,7 @@
                                     
                                     NSString *messageFromBob = @"Hello I'm Bob!";
                                     
-                                    [roomFromAlice3POV liveTimeline:^(MXEventTimeline *liveTimeline) {
+                                    [roomFromAlice3POV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
                                         // -> Alice must be able to receive and decrypt the message sent by Bob
                                         [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage, kMXEventTypeStringRoomEncrypted] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
                                             
@@ -335,7 +335,7 @@
                                     }];
                                     
                                     // - Bob sends a message
-                                    [roomFromBobPOV sendTextMessage:messageFromBob success:nil failure:^(NSError *error) {
+                                    [roomFromBobPOV sendTextMessage:messageFromBob threadId:nil success:nil failure:^(NSError *error) {
                                         XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                                         [expectation fulfill];
                                     }];
@@ -388,7 +388,7 @@
                         // - Alice sends a message
                         NSString *message = @"Hello I'm Alice!";
                         MXRoom *roomFromAlicePOV = [aliceSession roomWithRoomId:roomId];
-                        [roomFromAlicePOV sendTextMessage:message success:^(NSString *eventId) {
+                        [roomFromAlicePOV sendTextMessage:message threadId:nil success:^(NSString *eventId) {
                             
                             // - Bob logs in on a new device
                             [self.matrixSDKTestsData loginUserOnANewDevice:self credentials:bobCredentials withPassword:MXTESTS_BOB_PWD sessionToLogout:nil newSessionStore:nil startNewSession:NO e2e:YES onComplete:^(MXSession *bobSession2) {
@@ -413,7 +413,7 @@
                                             
                                             XCTAssertEqual(event.wireEventType, MXEventTypeRoomEncrypted);
                                             XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
-                                            XCTAssertEqualObjects(event.content[@"body"], message);
+                                            XCTAssertEqualObjects(event.content[kMXMessageBodyKey], message);
                                             XCTAssertNil(event.decryptionError);
                                             
                                             [expectation fulfill];
@@ -500,7 +500,7 @@
 
     // Check raw event (encrypted) data as sent by the hs
     XCTAssertEqual(event.wireEventType, MXEventTypeRoomEncrypted);
-    XCTAssertNil(event.wireContent[@"body"], @"No body field in an encrypted content");
+    XCTAssertNil(event.wireContent[kMXMessageBodyKey], @"No body field in an encrypted content");
     XCTAssertEqualObjects(event.wireContent[@"algorithm"], kMXCryptoMegolmAlgorithm);
     XCTAssertNotNil(event.wireContent[@"ciphertext"]);
     XCTAssertNotNil(event.wireContent[@"session_id"]);
@@ -512,7 +512,7 @@
     XCTAssertEqualObjects(event.roomId, roomId);
     XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
     XCTAssertLessThan(event.age, 10000);
-    XCTAssertEqualObjects(event.content[@"body"], clearMessage);
+    XCTAssertEqualObjects(event.content[kMXMessageBodyKey], clearMessage);
     XCTAssertEqualObjects(event.sender, senderSession.myUser.userId);
     XCTAssertNil(event.decryptionError);
 

@@ -233,7 +233,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
         
         // Build the corresponding the event
         MXRoom *room = [self.crypto.mxSession roomWithRoomId:roomId];
-        MXEvent *event = [room fakeRoomMessageEventWithEventId:eventId andContent:request.JSONDictionary];
+        MXEvent *event = [room fakeRoomMessageEventWithEventId:eventId andContent:request.JSONDictionary threadId:nil];
         
         MXKeyVerificationRequest *request = [self verificationRequestInDMEvent:event];
         [request updateState:MXKeyVerificationRequestStatePending notifiy:YES];
@@ -559,7 +559,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
 
     // Original event or one of the thread?
     if (event.eventType == MXEventTypeRoomMessage
-        && [event.content[@"msgtype"] isEqualToString:kMXMessageTypeKeyVerificationRequest])
+        && [event.content[kMXMessageTypeKey] isEqualToString:kMXMessageTypeKeyVerificationRequest])
     {
         keyVerificationId = event.eventId;
     }
@@ -1360,10 +1360,10 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
 {
     NSMutableDictionary *eventContent = [content mutableCopy];
 
-    eventContent[@"m.relates_to"] = @{
-                                      @"rel_type": MXEventRelationTypeReference,
-                                      @"event_id": relatedTo,
-                                      };
+    eventContent[kMXEventRelationRelatesToKey] = @{
+        @"rel_type": MXEventRelationTypeReference,
+        @"event_id": relatedTo,
+    };
 
     [eventContent removeObjectForKey:@"transaction_id"];
 
@@ -1383,7 +1383,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
 
     [_crypto.mxSession listenToEventsOfTypes:types onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
         if (direction == MXTimelineDirectionForwards
-            && [event.content[@"msgtype"] isEqualToString:kMXMessageTypeKeyVerificationRequest])
+            && [event.content[kMXMessageTypeKey] isEqualToString:kMXMessageTypeKeyVerificationRequest])
         {
             MXKeyVerificationByDMRequest *requestByDM = [[MXKeyVerificationByDMRequest alloc] initWithEvent:event andManager:self];
             if (requestByDM)
@@ -1484,7 +1484,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
     }
 
     MXHTTPOperation *operation = [MXHTTPOperation new];
-    operation = [room sendEventOfType:eventType content:content localEcho:nil success:success failure:^(NSError *error) {
+    operation = [room sendEventOfType:eventType content:content threadId:nil localEcho:nil success:success failure:^(NSError *error) {
 
         if ([error.domain isEqualToString:MXEncryptingErrorDomain] &&
             error.code == MXEncryptingErrorUnknownDeviceCode)
@@ -1493,7 +1493,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
             MXUsersDevicesMap<MXDeviceInfo *> *unknownDevices = error.userInfo[MXEncryptingErrorUnknownDeviceDevicesKey];
             [self.crypto setDevicesKnown:unknownDevices complete:^{
                 // And retry
-                MXHTTPOperation *operation2 = [room sendEventOfType:eventType content:content localEcho:nil success:success failure:failure];
+                MXHTTPOperation *operation2 = [room sendEventOfType:eventType content:content threadId:nil localEcho:nil success:success failure:failure];
                 [operation mutateTo:operation2];
             }];
         }
@@ -1635,7 +1635,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
 - (nullable MXKeyVerificationByDMRequest*)verificationRequestInDMEvent:(MXEvent*)event
 {
     MXKeyVerificationByDMRequest *request;
-    if ([event.content[@"msgtype"] isEqualToString:kMXMessageTypeKeyVerificationRequest])
+    if ([event.content[kMXMessageTypeKey] isEqualToString:kMXMessageTypeKeyVerificationRequest])
     {
         request = [[MXKeyVerificationByDMRequest alloc] initWithEvent:event andManager:self];
     }

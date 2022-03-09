@@ -144,7 +144,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
         MXRoomSummaryUpdater *updater = [MXRoomSummaryUpdater roomSummaryUpdaterForSession:session];
         updated = [updater session:session updateRoomSummary:summary withLastEvent:event eventState:eventState roomState:roomState];
 
-        summary.lastMessage.text = event.content[@"body"];
+        summary.lastMessage.text = event.content[kMXMessageBodyKey];
     }
     else if ([self.description containsString:@"testLateRoomKey"])
     {
@@ -158,7 +158,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
         }
         else
         {
-            summary.lastMessage.text = event.content[@"body"];
+            summary.lastMessage.text = event.content[kMXMessageBodyKey];
         }
     }
     else
@@ -237,7 +237,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
             [expectation fulfill];
         }];
 
-        [room sendTextMessage:@"new message" success:^(NSString *eventId) {
+        [room sendTextMessage:@"new message" threadId:nil success:^(NSString *eventId) {
             lastEventId = eventId;
         } failure:^(NSError *error) {
             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
@@ -264,7 +264,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
             [expectation fulfill];
         }];
 
-        [room sendTextMessage:@"new message" success:nil failure:^(NSError *error) {
+        [room sendTextMessage:@"new message" threadId:nil success:nil failure:^(NSError *error) {
             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
             [expectation fulfill];
         }];
@@ -536,7 +536,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
 
         XCTAssertEqual(room.summary.membership, MXMembershipJoin);
 
-        [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+        [room liveTimeline:^(id<MXEventTimeline> liveTimeline) {
             [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                 if (direction == MXTimelineDirectionForwards)
@@ -568,7 +568,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
 
         [matrixSDKTestsData doMXSessionTestWithAlice:nil readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation2) {
 
-            [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+            [room liveTimeline:^(id<MXEventTimeline> liveTimeline) {
                 [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                     if (direction == MXTimelineDirectionForwards)
@@ -762,7 +762,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
             
         }];
 
-        [room sendTextMessage:@"new message" formattedText:nil localEcho:&localEcho success:^(NSString *eventId) {
+        [room sendTextMessage:@"new message" formattedText:nil threadId:nil localEcho:&localEcho success:^(NSString *eventId) {
             lastEventId = eventId;
         } failure:^(NSError *error) {
             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
@@ -819,7 +819,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
             
         }];
 
-        MXHTTPOperation *operation = [room sendTextMessage:@"new message" formattedText:nil localEcho:&localEcho success:^(NSString *eventId) {
+        MXHTTPOperation *operation = [room sendTextMessage:@"new message" formattedText:nil threadId:nil localEcho:&localEcho success:^(NSString *eventId) {
             XCTFail(@"Cannot set up intial test conditions");
             [expectation fulfill];
         } failure:nil];
@@ -925,7 +925,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
             }
         }];
 
-        [room sendTextMessage:@"new message" success:^(NSString *eventId) {
+        [room sendTextMessage:@"new message" threadId:nil success:^(NSString *eventId) {
 
             newEventId = eventId;
 
@@ -1196,8 +1196,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
                         [aliceSession2 setStore:[[MXFileStore alloc] init] success:^{
 
                             [aliceSession2 start:^{
-
-                                MXRoomSummary *summary2 = [aliceSession2.store summaryOfRoom:roomId];
+                                id<MXRoomSummaryProtocol> summary2 = [aliceSession2.store.roomSummaryStore summaryOfRoom:roomId];
 
                                 XCTAssert(summary2.isEncrypted);
                                 XCTAssertEqualObjects(summary2.lastMessage.eventId, lastMessageEventId);
@@ -1231,7 +1230,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
             }];
         }];
 
-        [room sendTextMessage:message formattedText:nil localEcho:&localEcho success:^(NSString *eventId) {
+        [room sendTextMessage:message formattedText:nil threadId:nil localEcho:&localEcho success:^(NSString *eventId) {
             lastMessageEventId = eventId;
         } failure:^(NSError *error) {
             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
@@ -1265,7 +1264,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
                 XCTAssertEqualObjects(event.eventId, lastMessageEventId);
                 XCTAssert(event.clearEvent, @"The event must have been decrypted by MXRoomSummary.lastMessageEvent");
                 XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
-                XCTAssertEqualObjects(event.content[@"body"], message);
+                XCTAssertEqualObjects(event.content[kMXMessageBodyKey], message);
 
                 // Use dispatch_async for not closing the session in the middle of stg
                 dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0.1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
@@ -1294,7 +1293,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
                                 XCTAssertEqualObjects(event2.eventId, lastMessageEventId);
                                 XCTAssert(event2.clearEvent, @"The event must have been decrypted by MXRoomSummary.lastMessageEvent");
                                 XCTAssertEqual(event2.eventType, MXEventTypeRoomMessage);
-                                XCTAssertEqualObjects(event2.content[@"body"], message);
+                                XCTAssertEqualObjects(event2.content[kMXMessageBodyKey], message);
 
                                 [expectation fulfill];
                                 
@@ -1321,7 +1320,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
             
         }];
 
-        [room sendTextMessage:message formattedText:nil localEcho:&localEcho success:^(NSString *eventId) {
+        [room sendTextMessage:message formattedText:nil threadId:nil localEcho:&localEcho success:^(NSString *eventId) {
             lastMessageEventId = eventId;
         } failure:^(NSError *error) {
             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
@@ -1355,7 +1354,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
             toDeviceEvent = notif.userInfo[kMXSessionNotificationEventKey];
         }];
 
-        [roomFromBobPOV liveTimeline:^(MXEventTimeline *liveTimeline) {
+        [roomFromBobPOV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
             
             [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
@@ -1428,7 +1427,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
             
         }];
 
-        [roomFromAlicePOV sendTextMessage:messageFromAlice success:^(NSString *eventId) {
+        [roomFromAlicePOV sendTextMessage:messageFromAlice threadId:nil success:^(NSString *eventId) {
             lastMessageEventId = eventId;
         } failure:^(NSError *error) {
             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
@@ -1471,7 +1470,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
 
         // 2 - Alice sends a message
         NSString *message = [NSString stringWithFormat:@"%@: Hello", bobSession.myUser.userId];
-        [aliceRestClient sendTextMessageToRoom:roomId text:message success:^(NSString *eventId) {
+        [aliceRestClient sendTextMessageToRoom:roomId threadId:nil text:message success:^(NSString *eventId) {
             lastMessageEventId = eventId;
         } failure:^(NSError *error) {
             XCTFail(@"Cannot set up intial test conditions - error: %@", error);

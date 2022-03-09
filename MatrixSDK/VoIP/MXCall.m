@@ -126,7 +126,10 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
     {
         callManager = theCallManager;
 
-        _room = [callManager.mxSession roomWithRoomId:roomId];
+        // PSTN calls received in the terminated app state(with the room automatically created
+        // and joined server-side) will not necessarily be synced and stored locally yet.
+        _room = [callManager.mxSession getOrCreateRoom: roomId];
+        
         _callSignalingRoom = [callManager.mxSession roomWithRoomId:callSignalingRoomId];
 
         _callId = [[NSUUID UUID] UUIDString];
@@ -269,11 +272,9 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
 
     [self setState:MXCallStateWaitLocalMedia reason:nil];
     
-    NSString *eventName = _isConferenceCall ? kMXAnalyticsVoipNamePlaceConferenceCall : kMXAnalyticsVoipNamePlaceCall;
-    
-    [[MXSDKOptions sharedInstance].analyticsDelegate trackValue:@(video)
-                                                       category:kMXAnalyticsVoipCategory
-                                                           name:eventName];
+    [MXSDKOptions.sharedInstance.analyticsDelegate trackCallStartedWithVideo:self.isVideoCall
+                                                        numberOfParticipants:self.room.summary.membersCount.joined
+                                                                    incoming:self.isIncoming];
 
     MXWeakify(self);
     [callStackCallOperationQueue addOperationWithBlock:^{
@@ -315,7 +316,7 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
                 }
                 
                 MXWeakify(self);
-                [self.callSignalingRoom sendEventOfType:kMXEventTypeStringCallInvite content:content localEcho:nil success:^(NSString *eventId) {
+                [self.callSignalingRoom sendEventOfType:kMXEventTypeStringCallInvite content:content threadId:nil localEcho:nil success:^(NSString *eventId) {
 
                     self->callInviteEventContent = [MXCallInviteEventContent modelFromJSON:content];
                     [self setState:MXCallStateInviteSent reason:nil];
@@ -394,7 +395,7 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
                     
                     MXWeakify(self);
                     
-                    [self.callSignalingRoom sendEventOfType:kMXEventTypeStringCallAnswer content:content localEcho:nil success:^(NSString *eventId){
+                    [self.callSignalingRoom sendEventOfType:kMXEventTypeStringCallAnswer content:content threadId:nil localEcho:nil success:^(NSString *eventId){
                         //  assume for now, this is the selected answer
                         self.selectedAnswer = [MXEvent modelFromJSON:@{
                             @"event_id": eventId,
@@ -500,7 +501,7 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
         {
             // Send the reject event
             MXWeakify(self);
-            [_callSignalingRoom sendEventOfType:kMXEventTypeStringCallReject content:content localEcho:nil success:^(NSString *eventId) {
+            [_callSignalingRoom sendEventOfType:kMXEventTypeStringCallReject content:content threadId:nil localEcho:nil success:^(NSString *eventId) {
                 terminateBlock();
             } failure:^(NSError *error) {
                 MXStrongifyAndReturnIfNil(self);
@@ -540,10 +541,11 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
         {
             //  Send the hangup event
             MXWeakify(self);
-            [_callSignalingRoom sendEventOfType:kMXEventTypeStringCallHangup content:content localEcho:nil success:^(NSString *eventId) {
-                [[MXSDKOptions sharedInstance].analyticsDelegate trackValue:@(reason)
-                                                                   category:kMXAnalyticsVoipCategory
-                                                                       name:kMXAnalyticsVoipNameCallHangup];
+            [_callSignalingRoom sendEventOfType:kMXEventTypeStringCallHangup content:content threadId:nil localEcho:nil success:^(NSString *eventId) {
+                [MXSDKOptions.sharedInstance.analyticsDelegate trackCallEndedWithDuration:self.duration
+                                                                                    video:self.isVideoCall
+                                                                     numberOfParticipants:self.room.summary.membersCount.joined
+                                                                                 incoming:self.isIncoming];
                 
                 terminateBlock();
             } failure:^(NSError *error) {
@@ -627,7 +629,7 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
             } mutableCopy];
             
             MXWeakify(self);
-            [self.callSignalingRoom sendEventOfType:kMXEventTypeStringCallNegotiate content:content localEcho:nil success:^(NSString *eventId) {
+            [self.callSignalingRoom sendEventOfType:kMXEventTypeStringCallNegotiate content:content threadId:nil localEcho:nil success:^(NSString *eventId) {
 
                 if (hold)
                 {
@@ -715,6 +717,7 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
     MXWeakify(self);
     [self.callSignalingRoom sendEventOfType:kMXEventTypeStringCallReplaces
                                     content:content.JSONDictionary
+                                   threadId:nil
                                   localEcho:nil
                                     success:^(NSString *eventId) {
         MXStrongifyAndReturnIfNil(self);
@@ -744,10 +747,8 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
 }
 
 - (BOOL)sendDTMF:(NSString * _Nonnull)tones
-        duration:(NSUInteger)duration
-    interToneGap:(NSUInteger)interToneGap
 {
-    return [callStackCall sendDTMF:tones duration:duration interToneGap:interToneGap];
+    return [callStackCall sendDTMF:tones];
 }
 
 #pragma mark - Properties
@@ -807,9 +808,10 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
         // Store the total duration
         totalCallDuration = self.duration;
         
-        [[MXSDKOptions sharedInstance].analyticsDelegate trackValue:@(_endReason)
-                                                           category:kMXAnalyticsVoipCategory
-                                                               name:kMXAnalyticsVoipNameCallEnded];
+        [MXSDKOptions.sharedInstance.analyticsDelegate trackCallEndedWithDuration:self.duration
+                                                                            video:self.isVideoCall
+                                                             numberOfParticipants:self.room.summary.membersCount.joined
+                                                                         incoming:self.isIncoming];
         
         // Terminate the call at the stack level
         [callStackCall end];
@@ -1022,7 +1024,7 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
                                   };
 
         MXWeakify(self);
-        [_callSignalingRoom sendEventOfType:kMXEventTypeStringCallCandidates content:content localEcho:nil success:nil failure:^(NSError *error) {
+        [_callSignalingRoom sendEventOfType:kMXEventTypeStringCallCandidates content:content threadId:nil localEcho:nil success:nil failure:^(NSError *error) {
             MXStrongifyAndReturnIfNil(self);
             
             MXLogError(@"[MXCall][%@] onICECandidate: Warning: Cannot send m.call.candidates event.", self.callId);
@@ -1112,9 +1114,9 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
     // Store if it is voice or video call
     self.isVideoCall = callInviteEventContent.isVideoCall;
     
-    [[MXSDKOptions sharedInstance].analyticsDelegate trackValue:@(_isVideoCall)
-                                                       category:kMXAnalyticsVoipCategory
-                                                           name:kMXAnalyticsVoipNameReceiveCall];
+    [MXSDKOptions.sharedInstance.analyticsDelegate trackCallStartedWithVideo:self.isVideoCall
+                                                        numberOfParticipants:self.room.summary.membersCount.joined
+                                                                    incoming:self.isIncoming];
 
     [self setState:MXCallStateWaitLocalMedia reason:nil];
     
@@ -1226,6 +1228,7 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
             MXWeakify(self);
             [self.callSignalingRoom sendEventOfType:kMXEventTypeStringCallSelectAnswer
                                             content:selectAnswerContent
+                                           threadId:nil
                                           localEcho:nil
                                             success:^(NSString *eventId) {
                 
@@ -1348,6 +1351,7 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
             MXWeakify(self);
             [self.callSignalingRoom sendEventOfType:kMXEventTypeStringCallSelectAnswer
                                             content:selectAnswerContent
+                                           threadId:nil
                                           localEcho:nil
                                             success:^(NSString *eventId) {
                 
@@ -1419,7 +1423,7 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
                     };
                     
                     MXWeakify(self);
-                    [self.callSignalingRoom sendEventOfType:kMXEventTypeStringCallNegotiate content:content localEcho:nil success:nil failure:^(NSError *error) {
+                    [self.callSignalingRoom sendEventOfType:kMXEventTypeStringCallNegotiate content:content threadId:nil localEcho:nil success:nil failure:^(NSError *error) {
                         MXStrongifyAndReturnIfNil(self);
                         
                         MXLogError(@"[MXCall][%@] handleCallNegotiate: negotiate answer: ERROR: Cannot send m.call.negotiate event.", self.callId);
@@ -1654,10 +1658,10 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
     if ([_delegate respondsToSelector:@selector(call:didEncounterError:reason:)])
     {
         [_delegate call:self didEncounterError:error reason:reason];
-        
-        [[MXSDKOptions sharedInstance].analyticsDelegate trackValue:@(reason)
-                                                           category:kMXAnalyticsVoipCategory
-                                                               name:kMXAnalyticsVoipNameCallError];
+        [MXSDKOptions.sharedInstance.analyticsDelegate trackCallErrorWithReason:reason
+                                                                          video:self.isVideoCall
+                                                           numberOfParticipants:self.room.summary.membersCount.joined
+                                                                       incoming:self.isIncoming];
     }
     else
     {

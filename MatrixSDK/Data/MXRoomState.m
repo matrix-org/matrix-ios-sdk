@@ -77,7 +77,9 @@
         
         stateEvents = [NSMutableDictionary dictionary];
         _members = [[MXRoomMembers alloc] initWithRoomState:self andMatrixSession:mxSession];
-        _membersCount = [MXRoomMembersCount new];
+        _membersCount = [[MXRoomMembersCount alloc] initWithMembers:_members.members.count
+                                                             joined:_members.joinedMembers.count
+                                                            invited:[_members membersWithMembership:MXMembershipInvite].count];
         roomAliases = [NSMutableDictionary dictionary];
         thirdPartyInvites = [NSMutableDictionary dictionary];
         membersWithThirdPartyInviteTokenCache = [NSMutableDictionary dictionary];
@@ -358,7 +360,7 @@
 
 - (BOOL)isEncrypted
 {
-    return (0 != self.encryptionAlgorithm.length);
+    return stateEvents[kMXEventTypeStringRoomEncryption] != nil;
 }
 
 - (NSArray<NSString *> *)pinnedEvents

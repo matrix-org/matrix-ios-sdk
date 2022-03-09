@@ -73,6 +73,10 @@ public enum MXEventType: Equatable, Hashable {
     case keyVerificationDone
     case taggedEvents
     case spaceChild
+    
+    case pollStart
+    case pollResponse
+    case pollEnd
 
     case custom(String)
     
@@ -123,6 +127,10 @@ public enum MXEventType: Equatable, Hashable {
         case .taggedEvents: return kMXEventTypeStringTaggedEvents
         case .spaceChild: return kMXEventTypeStringSpaceChild
             
+        case .pollStart: return kMXEventTypeStringPollStartMSC3381
+        case .pollResponse: return kMXEventTypeStringPollResponseMSC3381
+        case .pollEnd: return kMXEventTypeStringPollEndMSC3381
+            
         // Swift converts any constant with the suffix "Notification" as the type `Notification.Name`
         // The original value can be reached using the `rawValue` property.
         case .typing: return NSNotification.Name.mxEventTypeStringTyping.rawValue
@@ -130,10 +138,23 @@ public enum MXEventType: Equatable, Hashable {
         case .custom(let string): return string
         }
     }
-
+    
     public init(identifier: String) {
-        let events: [MXEventType] = [.roomName, .roomTopic, .roomAvatar, .roomMember, .roomCreate, .roomJoinRules, .roomPowerLevels, .roomAliases, .roomCanonicalAlias, .roomEncrypted, .roomEncryption, .roomGuestAccess, .roomHistoryVisibility, .roomKey, .roomForwardedKey, .roomKeyRequest, .roomMessage, .roomMessageFeedback, .roomRedaction, .roomThirdPartyInvite, .roomTag, .presence, .typing, .callInvite, .callCandidates, .callAnswer, .callSelectAnswer, .callHangup, .callReject, .callNegotiate, .callReplaces, .callRejectReplacement, .callAssertedIdentity, .callAssertedIdentityUnstable, .receipt, .roomTombStone, .taggedEvents]
-        self = events.first(where: { $0.identifier == identifier }) ?? .custom(identifier)
+        let events: [MXEventType] = [.roomName, .roomTopic, .roomAvatar, .roomMember, .roomCreate, .roomJoinRules, .roomPowerLevels, .roomAliases, .roomCanonicalAlias, .roomEncrypted, .roomEncryption, .roomGuestAccess, .roomHistoryVisibility, .roomKey, .roomForwardedKey, .roomKeyRequest, .roomMessage, .roomMessageFeedback, .roomRedaction, .roomThirdPartyInvite, .roomTag, .presence, .typing, .callInvite, .callCandidates, .callAnswer, .callSelectAnswer, .callHangup, .callReject, .callNegotiate, .callReplaces, .callRejectReplacement, .callAssertedIdentity, .callAssertedIdentityUnstable, .reaction, .receipt, .roomTombStone, .keyVerificationStart, .keyVerificationAccept, .keyVerificationKey, .keyVerificationMac, .keyVerificationCancel, .keyVerificationDone, .taggedEvents, .spaceChild, .pollStart, .pollResponse, .pollEnd]
+        
+        if let type = events.first(where: { $0.identifier == identifier }) {
+            self = type
+        } else {
+            if identifier == kMXEventTypeStringPollStart {
+                self = .pollStart
+            } else if identifier == kMXEventTypeStringPollResponse {
+                self = .pollResponse
+            } else if identifier == kMXEventTypeStringPollEnd {
+                self = .pollEnd
+            } else {
+                self = .custom(identifier)
+            }
+        }
     }
 }
 

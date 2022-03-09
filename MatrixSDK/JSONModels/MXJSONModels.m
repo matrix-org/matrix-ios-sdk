@@ -204,6 +204,8 @@ NSString *const kMXLoginIdentifierTypePhone = @"m.id.phone";
         MXJSONModelSetString(loginResponse.homeserver, JSONDictionary[@"home_server"]);
         MXJSONModelSetString(loginResponse.userId, JSONDictionary[@"user_id"]);
         MXJSONModelSetString(loginResponse.accessToken, JSONDictionary[@"access_token"]);
+        MXJSONModelSetUInt64(loginResponse.expiresInMs, JSONDictionary[@"expires_in_ms"]);
+        MXJSONModelSetString(loginResponse.refreshToken, JSONDictionary[@"refresh_token"]);
         MXJSONModelSetString(loginResponse.deviceId, JSONDictionary[@"device_id"]);
         MXJSONModelSetMXJSONModel(loginResponse.wellknown, MXWellKnown, JSONDictionary[@"well_known"]);
         

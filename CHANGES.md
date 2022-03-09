@@ -1,3 +1,180 @@
+## Changes in 0.22.5 (2022-03-08)
+
+🙌 Improvements
+
+- Room data filters: strict matches support ([#1379](https://github.com/matrix-org/matrix-ios-sdk/pull/1379))
+- Analytics: Add event composition tracking and isSpace for joined room events. ([#5365](https://github.com/vector-im/element-ios/issues/5365))
+- MXEvent+Extensions: Do not highlight any event that the current user sent. ([#5552](https://github.com/vector-im/element-ios/issues/5552))
+
+🐛 Bugfixes
+
+- Room: fix crash on members count not being always properly set ([#4949](https://github.com/vector-im/element-ios/issues/4949))
+- MXSuggestedRoomListDataFetcher: hide suggested rooms that a user is already part of ([#5276](https://github.com/vector-im/element-ios/issues/5276))
+- MXFileStore: Do not reuse room files if the room is marked for deletion ([#5717](https://github.com/vector-im/element-ios/issues/5717))
+
+
+## Changes in 0.22.4 (2022-02-25)
+
+🙌 Improvements
+
+- MXThreadingService: Add thread creation delegate method. ([#5694](https://github.com/vector-im/element-ios/issues/5694))
+
+
+## Changes in 0.22.3 (2022-02-24)
+
+🐛 Bugfixes
+
+- Thread Safety: Replace all objc_sync_enter/exit methods with recursive locks. ([#5675](https://github.com/vector-im/element-ios/issues/5675))
+
+
+## Changes in 0.22.2 (2022-02-22)
+
+🙌 Improvements
+
+- Added support for unstable poll prefixes. ([#5114](https://github.com/vector-im/element-ios/issues/5114))
+- Exclude all files and directories from iCloud and iTunes backup ([#5498](https://github.com/vector-im/element-ios/issues/5498))
+- MXSession & MXThreadingService: Implement server capabilities api & implement thread list api according to server capabilities. ([#5540](https://github.com/vector-im/element-ios/issues/5540))
+- MXThreadEventTimeline: Replace context api with relations api. ([#5629](https://github.com/vector-im/element-ios/issues/5629))
+
+🐛 Bugfixes
+
+- Settings: fix phone number validation through custom URL ([#3562](https://github.com/vector-im/element-ios/issues/3562))
+- MXRoomListData: Consider all properties when comparing room list data. ([#5537](https://github.com/vector-im/element-ios/issues/5537))
+
+🧱 Build
+
+- Use the --no-rate-limit flag as mentioned in the README ([#1352](https://github.com/vector-im/element-ios/issues/1352))
+
+
+## Changes in 0.22.1 (2022-02-16)
+
+🐛 Bugfixes
+
+- Fix e2ee regression introduced by #1358 ([#5564](https://github.com/vector-im/element-ios/issues/5564))
+
+
+## Changes in 0.22.0 (2022-02-09)
+
+✨ Features
+
+- Add .well-known parsing for tile server / map style configurations. ([#5298](https://github.com/vector-im/element-ios/issues/5298))
+
+🙌 Improvements
+
+- Introduce `MXThreadingService` and `MXThread` classes. ([#5068](https://github.com/vector-im/element-ios/issues/5068))
+- MXThreadingService: Expose threads of a room. ([#5092](https://github.com/vector-im/element-ios/issues/5092))
+- Threads: Include redacted root events into threads. ([#5119](https://github.com/vector-im/element-ios/issues/5119))
+- MXSession: Avoid event/null requests and reprocess bg sync cache if received when processing. ([#5426](https://github.com/vector-im/element-ios/issues/5426))
+- MXRoomListDataFetcherDelegate: Add `totalCountsChanged` parameter to delegate method. ([#5448](https://github.com/vector-im/element-ios/issues/5448))
+
+🐛 Bugfixes
+
+- 🐛 Protect the spacesPerId variable by a barrier - Fixes Thread 1: EXC_BAD_ACCESS crash that would occur whenever multiple concurrent threads would attempt to mutate spacesPerId at the same time ([#1350](https://github.com/vector-im/element-ios/issues/1350))
+- Fix for display name and avatar shown incorrectly for users that have left the room. ([#2827](https://github.com/vector-im/element-ios/issues/2827))
+- Protect against encryption state loss ([#5184](https://github.com/vector-im/element-ios/issues/5184))
+- MXSpace: fix space invites blocks space graph build ([#5432](https://github.com/vector-im/element-ios/issues/5432))
+- MXCoreDataRoomSummaryStore: Fix main context merges from persistent store. ([#5462](https://github.com/vector-im/element-ios/issues/5462))
+- MXSession: Do not pause the session if a sync fails due to cancellation. ([#5509](https://github.com/vector-im/element-ios/issues/5509))
+- CoreData: Fix fetch requests fetching only specific properties. ([#5519](https://github.com/vector-im/element-ios/issues/5519))
+
+⚠️ API Changes
+
+- MXRestClient & MXRoom: Introduce `threadId` parameters for event sending methods. ([#5068](https://github.com/vector-im/element-ios/issues/5068))
+
+🧱 Build
+
+- Update Fastfile to use Xcode 13.2 on CI. ([#4883](https://github.com/vector-im/element-ios/issues/4883))
+
+Others
+
+- Add WIP to towncrier. ([#1349](https://github.com/matrix-org/matrix-ios-sdk/pull/1349))
+
+
+## Changes in 0.21.0 (2022-01-25)
+
+✨ Features
+
+- MXRoomSummaryStore & MXRoomListDataManager: Implementation with Core Data. ([#4384](https://github.com/vector-im/element-ios/issues/4384))
+- Allow editing poll start events. ([#5114](https://github.com/vector-im/element-ios/issues/5114))
+- Added static location sharing sending and rendering support. ([#5298](https://github.com/vector-im/element-ios/issues/5298))
+
+🙌 Improvements
+
+- MXCoreDataRoomSummaryStore: Use nested contexts to better manage main context updates. ([#5412](https://github.com/vector-im/element-ios/issues/5412))
+- Only count joined rooms when profiling sync performance. ([#5429](https://github.com/vector-im/element-ios/issues/5429))
+
+🐛 Bugfixes
+
+- Fixes DTMF(dial tones) during voice calls. ([#5375](https://github.com/vector-im/element-ios/issues/5375))
+- MXCoreDataRoomListDataFetcher: Update fetchRequest if properties changed before fetching the first page. ([#5377](https://github.com/vector-im/element-ios/issues/5377))
+- MXSession: Fix remove room race case. ([#5412](https://github.com/vector-im/element-ios/issues/5412))
+
+
+## Changes in 0.20.16 (2022-01-11)
+
+🙌 Improvements
+
+- MXResponse has been frozen for binary compatibility when building as an XCFramework. ([#1002](https://github.com/matrix-org/matrix-ios-sdk/pull/1002))
+- MXTaskProfile: Add an MXTaskProfileName enum instead of individual strings for Name and Category. ([#5035](https://github.com/vector-im/element-ios/issues/5035))
+
+⚠️ API Changes
+
+- MXAnalyticsDelegate: The generic methods have been replaced with type safe ones for each event tracked. ([#5035](https://github.com/vector-im/element-ios/issues/5035))
+
+
+## Changes in 0.20.15 (2021-12-14)
+
+🙌 Improvements
+
+- Expose missing Jingle headers in umbrella header ([#1308](https://github.com/matrix-org/matrix-ios-sdk/pull/1308))
+
+⚠️ API Changes
+
+- MXTools: Add an error parameter to the failure of +convertVideoAssetToMP4:withTargetFileSize:success:failure: ([#4749](https://github.com/vector-im/element-ios/issues/4749))
+
+
+## Changes in 0.20.14 (2021-12-09)
+
+🐛 Bugfixes
+
+- Sending blank m.room.encryption on iOS will disable encryption ([Security advisory](https://github.com/matrix-org/matrix-ios-sdk/security/advisories/GHSA-fxvm-7vhj-wj98))
+
+## Changes in 0.20.13 (2021-12-06)
+
+Others
+
+- Replace semantic imports with classic ones to enable use of the SDK in Kotlin Multiplatform Mobile projects ([#5046](https://github.com/vector-im/element-ios/issues/5046))
+
+
+## Changes in 0.20.12 (2021-12-06)
+
+🐛 Bugfixes
+
+- Fix release 0.20.11 ([#5247](https://github.com/vector-im/element-ios/issues/5247))
+
+
+## Changes in 0.20.11 (2021-12-03)
+
+✨ Features
+
+- Moved from /space to /hierarchy API to support pagination ([#4893](https://github.com/vector-im/element-ios/issues/4893))
+- Adds clientPermalinkBaseUrl for a custom permalink base url. ([#4981](https://github.com/vector-im/element-ios/issues/4981))
+- Added poll specific event sending methods, event aggregator and model builder. ([#5114](https://github.com/vector-im/element-ios/issues/5114))
+
+🐛 Bugfixes
+
+- Initialize imagesCacheLruCache before caching - caching operations would fail silently because cache was not initialized ([#1281](https://github.com/vector-im/element-ios/issues/1281))
+- MXRoom: Fix reply event content for just thread-aware clients. ([#5007](https://github.com/vector-im/element-ios/issues/5007))
+- Add ability to get roomAccountData from MXBackgroundSyncService to fix badge bug from virtual rooms. ([#5155](https://github.com/vector-im/element-ios/issues/5155))
+- Fixed duplicated children ids in MXSpaces ([#5181](https://github.com/vector-im/element-ios/issues/5181))
+- Do not expose headers that should be use privately inside the framework. ([#5194](https://github.com/vector-im/element-ios/issues/5194))
+- Fix for the in-call screen freezing on a new PSTN call. ([#5223](https://github.com/vector-im/element-ios/issues/5223))
+
+🧱 Build
+
+- Build: Update to Xcode 12.5 in the Fastfile and macOS 11 in the GitHub actions. ([#5195](https://github.com/vector-im/element-ios/issues/5195))
+
+
 ## Changes in 0.20.10 (2021-11-17)
 
 🙌 Improvements

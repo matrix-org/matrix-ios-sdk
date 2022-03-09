@@ -489,6 +489,12 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
                     // If the crypto has been enabled after the initialSync (the global one or the one for this room),
                     // the algorithm has not been initialised yet. So, do it now from room state information
                     algorithm = roomState.encryptionAlgorithm;
+                    if (!algorithm)
+                    {
+                        algorithm = [self->_store algorithmForRoom:room.roomId];
+                        MXLogWarning(@"[MXCrypto] encryptEventContent: roomState.encryptionAlgorithm is nil for room %@. Try to use algorithm in the crypto store: %@", room.roomId, algorithm);
+                    }
+                    
                     if (algorithm)
                     {
                         [self setEncryptionInRoom:room.roomId withMembers:userIds algorithm:algorithm inhibitDeviceQuery:NO];
@@ -1878,6 +1884,15 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 #endif
 }
 
+- (BOOL)isRoomEncrypted:(NSString *)roomId
+{
+#ifdef MX_CRYPTO
+    return [_store algorithmForRoom:roomId] != nil;
+#else
+    return NO;
+#endif
+}
+
 - (void)setBlacklistUnverifiedDevicesInRoom:(NSString *)roomId blacklist:(BOOL)blacklist
 {
 #ifdef MX_CRYPTO
@@ -1915,7 +1930,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
         _deviceList = [[MXDeviceList alloc] initWithCrypto:self];
 
         // Use our own REST client that answers on the crypto thread
-        _matrixRestClient = [[MXRestClient alloc] initWithCredentials:_mxSession.matrixRestClient.credentials andOnUnrecognizedCertificateBlock:nil];
+        _matrixRestClient = [[MXRestClient alloc] initWithCredentials:_mxSession.matrixRestClient.credentials andOnUnrecognizedCertificateBlock:nil andPersistentTokenDataHandler:_mxSession.matrixRestClient.persistTokenDataHandler andUnauthenticatedHandler:_mxSession.matrixRestClient.unauthenticatedHandler];
         _matrixRestClient.completionQueue = _cryptoQueue;
 
         roomEncryptors = [NSMutableDictionary dictionary];
@@ -2039,19 +2054,21 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 
 - (BOOL)setEncryptionInRoom:(NSString*)roomId withMembers:(NSArray<NSString*>*)members algorithm:(NSString*)algorithm inhibitDeviceQuery:(BOOL)inhibitDeviceQuery
 {
-    // If we already have encryption in this room, we should ignore this event
-    // (for now at least. Maybe we should alert the user somehow?)
     NSString *existingAlgorithm = [_store algorithmForRoom:roomId];
     if (existingAlgorithm && ![existingAlgorithm isEqualToString:algorithm])
     {
-        MXLogDebug(@"[MXCrypto] setEncryptionInRoom: Ignoring m.room.encryption event which requests a change of config in %@", roomId);
-        return NO;
+        MXLogWarning(@"[MXCrypto] setEncryptionInRoom: New m.room.encryption event in %@ with an algorithm change from %@ to %@", roomId, existingAlgorithm, algorithm);
+        
+        // Reset the current encryption in this room.
+        // If the new algo is supported, it will be used
+        // Else, encryption and sending will be no more possible in this room
+        [roomEncryptors removeObjectForKey:roomId];
     }
 
     Class encryptionClass = [[MXCryptoAlgorithms sharedAlgorithms] encryptorClassForAlgorithm:algorithm];
     if (!encryptionClass)
     {
-        MXLogDebug(@"[MXCrypto] setEncryptionInRoom: Unable to encrypt with %@", algorithm);
+        MXLogError(@"[MXCrypto] setEncryptionInRoom: Unable to encrypt with %@", algorithm);
         return NO;
     }
 

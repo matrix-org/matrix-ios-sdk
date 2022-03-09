@@ -1059,7 +1059,7 @@
                         // - Post a message to have a new megolm session
                         aliceSession2.crypto.warnOnUnknowDevices = NO;
                         MXRoom *room2 = [aliceSession2 roomWithRoomId:roomId];
-                        [room2 sendTextMessage:@"New keys" success:^(NSString *eventId) {
+                        [room2 sendTextMessage:@"New keys" threadId:nil success:^(NSString *eventId) {
 
                             // - Try to backup all
                             [aliceSession2.crypto.backup backupAllGroupSessions:^{

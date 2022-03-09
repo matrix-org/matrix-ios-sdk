@@ -66,7 +66,7 @@ public enum MXBackgroundSyncServiceError: Error {
     
     /// Initializer
     /// - Parameter credentials: account credentials
-    public init(withCredentials credentials: MXCredentials) {
+    public init(withCredentials credentials: MXCredentials, persistTokenDataHandler: MXRestClientPersistTokenDataHandler? = nil, unauthenticatedHandler: MXRestClientUnauthenticatedHandler? = nil) {
         processingQueue = DispatchQueue(label: "MXBackgroundSyncServiceQueue-" + MXTools.generateSecret())
         self.credentials = credentials
         
@@ -76,7 +76,7 @@ public enum MXBackgroundSyncServiceError: Error {
         let syncResponseStore = MXSyncResponseFileStore(withCredentials: credentials)
         syncResponseStoreManager = MXSyncResponseStoreManager(syncResponseStore: syncResponseStore)
         
-        restClient = MXRestClient(credentials: credentials, unrecognizedCertificateHandler: nil)
+        restClient = MXRestClient(credentials: credentials, unrecognizedCertificateHandler: nil, persistentTokenDataHandler: persistTokenDataHandler, unauthenticatedHandler: unauthenticatedHandler)
         restClient.completionQueue = processingQueue
         store = MXBackgroundStore(withCredentials: credentials)
         // We can flush any crypto data if our sync response store is empty
@@ -179,7 +179,7 @@ public enum MXBackgroundSyncServiceError: Error {
     /// - Parameter roomId: The room identifier to fetch.
     /// - Returns: Summary of room.
     public func roomSummary(forRoomId roomId: String) -> MXRoomSummaryProtocol? {
-        let summary = store.summary(ofRoom: roomId)
+        let summary = store.roomSummaryStore.summary(ofRoom: roomId)
         return syncResponseStoreManager.roomSummary(forRoomId: roomId, using: summary)
     }
     
@@ -453,7 +453,7 @@ public enum MXBackgroundSyncServiceError: Error {
     
     private func decryptMessageWithOlm(message: [AnyHashable: Any], theirDeviceIdentityKey: String) -> String? {
         let sessionIds = olmDevice.sessionIds(forDevice: theirDeviceIdentityKey)
-        let messageBody = message["body"] as? String
+        let messageBody = message[kMXMessageBodyKey] as? String
         let messageType = message["type"] as? UInt ?? 0
         
         for sessionId in sessionIds ?? [] {

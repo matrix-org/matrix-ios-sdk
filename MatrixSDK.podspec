@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
 
   s.name         = "MatrixSDK"
-  s.version      = "0.20.10"
+  s.version      = "0.22.5"
   s.summary      = "The iOS SDK to build apps compatible with Matrix (https://www.matrix.org)"
 
   s.description  = <<-DESC
@@ -22,17 +22,19 @@ Pod::Spec.new do |s|
   s.requires_arc  = true
   s.swift_versions = ['5.1', '5.2']
   
-  s.ios.deployment_target = "9.0"
-  s.osx.deployment_target = "10.10"
+  s.ios.deployment_target = "10.0"
+  s.osx.deployment_target = "10.12"
   
   s.default_subspec = 'Core'
   s.subspec 'Core' do |ss|
-      ss.ios.deployment_target = "9.0"
-      ss.osx.deployment_target = "10.10"
+      ss.ios.deployment_target = "10.0"
+      ss.osx.deployment_target = "10.12"
       
       ss.source_files = "MatrixSDK", "MatrixSDK/**/*.{h,m}", "MatrixSDK/**/*.{swift}"
       ss.osx.exclude_files = "MatrixSDK/VoIP/MXiOSAudioOutputRoute*.swift"
       ss.private_header_files = ['MatrixSDK/MatrixSDKSwiftHeader.h', "MatrixSDK/**/*_Private.h"]
+      ss.resources = "MatrixSDK/**/*.{xcdatamodeld}"
+      ss.frameworks = "CoreData"
 
       ss.dependency 'AFNetworking', '~> 4.0.0'
       ss.dependency 'GZIP', '~> 1.3.0'

@@ -16,6 +16,19 @@
 
 #import "MXEventContentRelatesTo.h"
 
+static NSString* const kJSONRelationType = @"rel_type";
+static NSString* const kJSONEventId = @"event_id";
+static NSString* const kJSONKey = @"key";
+static NSString* const kJSONInReplyTo = @"m.in_reply_to";
+
+@interface MXEventContentRelatesTo()
+
+@property (nonatomic, readwrite, nullable) NSString *relationType;
+@property (nonatomic, readwrite, nullable) NSString *eventId;
+@property (nonatomic, readwrite, nullable) NSString *key;
+@property (nonatomic, readwrite, nullable) MXInReplyTo *inReplyTo;
+
+@end
 
 @implementation MXEventContentRelatesTo
 
@@ -26,7 +39,8 @@
 
 - (instancetype)initWithRelationType:(NSString *)relationType eventId:(NSString *)eventId key:(NSString *)key
 {
-    if (self = [super init]) {
+    if (self = [super init])
+    {
         _relationType = relationType;
         _eventId = eventId;
         _key = key;
@@ -39,32 +53,41 @@
 
 + (id)modelFromJSON:(NSDictionary *)JSONDictionary
 {
-    MXEventContentRelatesTo *relatesTo;
+    MXEventContentRelatesTo *relatesTo = [MXEventContentRelatesTo new];
 
-    NSString *relationType;
-    NSString *eventId;
-    MXJSONModelSetString(relationType, JSONDictionary[@"rel_type"]);
-    MXJSONModelSetString(eventId, JSONDictionary[@"event_id"]);
+    MXJSONModelSetString(relatesTo.relationType, JSONDictionary[kJSONRelationType]);
+    MXJSONModelSetString(relatesTo.eventId, JSONDictionary[kJSONEventId]);
+    MXJSONModelSetString(relatesTo.key, JSONDictionary[kJSONKey]);
+    MXJSONModelSetMXJSONModel(relatesTo.inReplyTo, MXInReplyTo, JSONDictionary[kJSONInReplyTo]);
 
-    if (relationType && eventId)
+    if (relatesTo.relationType || relatesTo.eventId || relatesTo.key || relatesTo.inReplyTo)
     {
-        relatesTo = [MXEventContentRelatesTo new];
-        relatesTo->_relationType = relationType;
-        relatesTo->_eventId = eventId;
-
-        MXJSONModelSetString(relatesTo->_key, JSONDictionary[@"key"]);
+        return relatesTo;
     }
 
-    return relatesTo;
+    return nil;
 }
 
 - (NSDictionary *)JSONDictionary
 {
     NSMutableDictionary *JSONDictionary = [NSMutableDictionary dictionary];
-    
-    JSONDictionary[@"rel_type"] = self.relationType;
-    JSONDictionary[@"event_id"] = self.eventId;
-    JSONDictionary[@"key"] = self.key;
+
+    if (self.relationType)
+    {
+        JSONDictionary[kJSONRelationType] = self.relationType;
+    }
+    if (self.eventId)
+    {
+        JSONDictionary[kJSONEventId] = self.eventId;
+    }
+    if (self.key)
+    {
+        JSONDictionary[kJSONKey] = self.key;
+    }
+    if (self.inReplyTo)
+    {
+        JSONDictionary[kJSONInReplyTo] = self.inReplyTo.JSONDictionary;
+    }
     
     return JSONDictionary;
 }

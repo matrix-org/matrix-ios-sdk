@@ -36,15 +36,15 @@
 {
     NSDictionary *replyEventDict = @{
                                      @"content": @{
-                                             @"body": body,
+                                             kMXMessageBodyKey: body,
                                              @"formatted_body": formattedBody,
                                              @"format": @"org.matrix.custom.html",
-                                             @"m.relates_to": @{
+                                             kMXEventRelationRelatesToKey: @{
                                                      @"m.in_reply_to": @{
                                                              @"event_id": @"$1561994860861855MtlYo:matrix.org"
                                                              }
                                                      },
-                                             @"msgtype": @"m.text"
+                                             kMXMessageTypeKey: @"m.text"
                                              },
                                      @"event_id": @"$eventid:matrix.org",
                                      @"origin_server_ts": @(1560254175300),

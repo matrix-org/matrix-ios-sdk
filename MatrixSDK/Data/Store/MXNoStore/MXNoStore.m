@@ -18,6 +18,7 @@
 #import "MXNoStore.h"
 
 #import "MXEventsEnumeratorOnArray.h"
+#import "MXVoidRoomSummaryStore.h"
 
 @interface MXNoStore ()
 {
@@ -55,6 +56,8 @@
 
 @implementation MXNoStore
 
+@synthesize roomSummaryStore;
+
 @synthesize eventStreamToken, userAccountData, syncFilterId;
 
 - (instancetype)init
@@ -71,6 +74,7 @@
         partialTextMessages = [NSMutableDictionary dictionary];
         users = [NSMutableDictionary dictionary];
         groups = [NSMutableDictionary dictionary];
+        roomSummaryStore = [[MXVoidRoomSummaryStore alloc] init];
     }
     return self;
 }
@@ -164,6 +168,7 @@
     {
         [partialTextMessages removeObjectForKey:roomId];
     }
+    [roomSummaryStore removeSummaryOfRoom:roomId];
 }
 
 - (void)deleteAllData
@@ -175,6 +180,7 @@
     [hasLoadedAllRoomMembersForRooms removeAllObjects];
     [lastMessages removeAllObjects];
     [partialTextMessages removeAllObjects];
+    [roomSummaryStore removeAllSummaries];
 }
 
 - (void)storePaginationTokenOfRoom:(NSString*)roomId andToken:(NSString*)token
@@ -401,9 +407,14 @@
     }
 }
 
-- (NSUInteger)localUnreadEventCount:(NSString*)roomId withTypeIn:(NSArray*)types
+- (NSUInteger)localUnreadEventCount:(NSString *)roomId threadId:(NSString *)threadId withTypeIn:(NSArray *)types
 {
     return 0;
+}
+
+- (NSArray<MXEvent *> *)newIncomingEventsInRoom:(NSString *)roomId threadId:(NSString *)threadId withTypeIn:(NSArray<MXEventTypeString> *)types
+{
+    return @[];
 }
 
 - (MXWellKnown *)homeserverWellknown
@@ -411,6 +422,14 @@
     return nil;
 }
 - (void)storeHomeserverWellknown:(nonnull MXWellKnown *)homeserverWellknown
+{
+}
+
+- (MXCapabilities *)homeserverCapabilities
+{
+    return nil;
+}
+- (void)storeHomeserverCapabilities:(MXCapabilities *)homeserverCapabilities
 {
 }
 
@@ -433,23 +452,6 @@
     [partialTextMessages removeAllObjects];
     [users removeAllObjects];
     [groups removeAllObjects];
-}
-
-#pragma mark - MXRoomSummaryStore
-
-- (NSArray<NSString *> *)rooms
-{
-    return @[];
-}
-
-- (void)storeSummaryForRoom:(NSString *)roomId summary:(id<MXRoomSummaryProtocol>)summary
-{
-    
-}
-
-- (id<MXRoomSummaryProtocol>)summaryOfRoom:(NSString *)roomId
-{
-    return nil;
 }
 
 @end

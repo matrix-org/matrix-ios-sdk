@@ -45,6 +45,7 @@
         "MXAsyncTaskQueueUnitTests",
         "MXAuthenticationSessionUnitTests",
         "MXBackgroundTaskUnitTests",
+        "MXCoreDataRoomListDataManagerUnitTests",
         "MXCredentialsUnitTests",
         "MXDeviceListOperationsPoolUnitTests",
         "MXErrorUnitTests",
@@ -61,8 +62,10 @@
         "MXQRCodeDataUnitTests",
         "MXReplyEventParserUnitTests",
         "MXResponseUnitTests",
-        "MXRoomListDataManagerUnitTests",
+        "MXStoreRoomListDataManagerUnitTests",
         "MXSyncResponseUnitTests",
+        "MXThreadEventTimelineUnitTests",
+        "MXThreadingServiceUnitTests",
         "MXToolsUnitTests"
       ],
       "target" : {

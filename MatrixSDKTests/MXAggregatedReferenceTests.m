@@ -61,18 +61,18 @@ static NSString* const kThreadedMessage1Text = @"Morning!";
 {
     [matrixSDKTestsData doMXSessionTestWithBobAndARoom:self andStore:[[MXMemoryStore alloc] init] readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
 
-        [room sendTextMessage:kOriginalMessageText success:^(NSString *eventId) {
+        [room sendTextMessage:kOriginalMessageText threadId:nil success:^(NSString *eventId) {
 
             NSDictionary *eventContent = @{
-                                           @"msgtype": kMXMessageTypeText,
-                                           @"body": kThreadedMessage1Text,
-                                           @"m.relates_to":  @{
-                                              @"rel_type": MXEventRelationTypeReference,
-                                              @"event_id": eventId,
-                                              }
-                                           };
+                kMXMessageTypeKey: kMXMessageTypeText,
+                kMXMessageBodyKey: kThreadedMessage1Text,
+                kMXEventRelationRelatesToKey:  @{
+                        @"rel_type": MXEventRelationTypeReference,
+                        @"event_id": eventId,
+                }
+            };
 
-            [room sendEventOfType:kMXEventTypeStringRoomMessage content:eventContent localEcho:nil success:^(NSString *referenceEventId) {
+            [room sendEventOfType:kMXEventTypeStringRoomMessage content:eventContent threadId:nil localEcho:nil success:^(NSString *referenceEventId) {
 
                 dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
                     readyToTest(mxSession, room, expectation, eventId, referenceEventId);
@@ -209,12 +209,12 @@ static NSString* const kThreadedMessage1Text = @"Morning!";
             XCTAssertNil(paginatedResponse.nextBatch);
 
             XCTAssertEqualObjects(paginatedResponse.chunk.firstObject.eventId, referenceEventId);
-            XCTAssertEqualObjects(paginatedResponse.chunk.firstObject.content[@"body"], kThreadedMessage1Text);
+            XCTAssertEqualObjects(paginatedResponse.chunk.firstObject.content[kMXMessageBodyKey], kThreadedMessage1Text);
 
             // -> We must get the original event
             XCTAssertNotNil(paginatedResponse.originalEvent);
             XCTAssertEqualObjects(paginatedResponse.originalEvent.eventId, eventId);
-            XCTAssertEqualObjects(paginatedResponse.originalEvent.content[@"body"], kOriginalMessageText);
+            XCTAssertEqualObjects(paginatedResponse.originalEvent.content[kMXMessageBodyKey], kOriginalMessageText);
             
             [expectation fulfill];
 
@@ -232,21 +232,21 @@ static NSString* const kThreadedMessage1Text = @"Morning!";
 - (void)createE2EScenario:(void(^)(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation, NSString *eventId, NSString *editEventId))readyToTest
 {
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:NO aliceStore:[[MXMemoryStore alloc] init] bobStore:[[MXMemoryStore alloc] init] readyToTest:^(MXSession *mxSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
-
+        
         MXRoom *room = [mxSession roomWithRoomId:roomId];
 
-        [room sendTextMessage:kOriginalMessageText success:^(NSString *eventId) {
+        [room sendTextMessage:kOriginalMessageText threadId:nil success:^(NSString *eventId) {
 
             NSDictionary *eventContent = @{
-                                           @"msgtype": kMXMessageTypeText,
-                                           @"body": kThreadedMessage1Text,
-                                           @"m.relates_to":  @{
-                                                   @"rel_type": MXEventRelationTypeReference,
-                                                   @"event_id": eventId,
-                                                   }
-                                           };
+                kMXMessageTypeKey: kMXMessageTypeText,
+                kMXMessageBodyKey: kThreadedMessage1Text,
+                kMXEventRelationRelatesToKey:  @{
+                        @"rel_type": MXEventRelationTypeReference,
+                        @"event_id": eventId,
+                }
+            };
 
-            [room sendEventOfType:kMXEventTypeStringRoomMessage content:eventContent localEcho:nil success:^(NSString *referenceEventId) {
+            [room sendEventOfType:kMXEventTypeStringRoomMessage content:eventContent threadId:nil localEcho:nil success:^(NSString *referenceEventId) {
 
                 dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
                     readyToTest(mxSession, room, expectation, eventId, referenceEventId);
@@ -289,12 +289,12 @@ static NSString* const kThreadedMessage1Text = @"Morning!";
             XCTAssertNil(paginatedResponse.nextBatch);
 
             XCTAssertEqualObjects(paginatedResponse.chunk.firstObject.eventId, referenceEventId);
-            XCTAssertEqualObjects(paginatedResponse.chunk.firstObject.content[@"body"], kThreadedMessage1Text);
+            XCTAssertEqualObjects(paginatedResponse.chunk.firstObject.content[kMXMessageBodyKey], kThreadedMessage1Text);
 
             // -> We must get the original event
             XCTAssertNotNil(paginatedResponse.originalEvent);
             XCTAssertEqualObjects(paginatedResponse.originalEvent.eventId, eventId);
-            XCTAssertEqualObjects(paginatedResponse.originalEvent.content[@"body"], kOriginalMessageText);
+            XCTAssertEqualObjects(paginatedResponse.originalEvent.content[kMXMessageBodyKey], kOriginalMessageText);
 
             [expectation fulfill];
 

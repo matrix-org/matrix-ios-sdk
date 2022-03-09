@@ -68,13 +68,13 @@
     // This test on sendTextMessage validates sendMessage and sendEvent too
     [self.matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
-        [bobRestClient sendTextMessageToRoom:roomId text:@"This is text message" success:^(NSString *eventId) {
+        [bobRestClient sendTextMessageToRoom:roomId threadId:nil text:@"This is text message" success:^(NSString *eventId) {
 
             XCTAssertNotNil(eventId);
 
             [bobRestClient close];
 
-            MXHTTPOperation *operation = [bobRestClient sendTextMessageToRoom:roomId text:@"This is text message" success:^(NSString *eventId) {
+            MXHTTPOperation *operation = [bobRestClient sendTextMessageToRoom:roomId threadId:nil text:@"This is text message" success:^(NSString *eventId) {
 
                 XCTFail(@"The request should have not been sent");
                 [expectation fulfill];
@@ -103,7 +103,7 @@
     // This test on sendTextMessage validates sendMessage and sendEvent too
     [self.matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
-        [bobRestClient sendTextMessageToRoom:roomId text:@"This is text message" success:^(NSString *eventId) {
+        [bobRestClient sendTextMessageToRoom:roomId threadId:nil text:@"This is text message" success:^(NSString *eventId) {
             
             XCTAssertNotNil(eventId);
             XCTAssertGreaterThan(eventId.length, 0, @"The eventId string must not be empty");
@@ -815,7 +815,7 @@
 {
     [self.matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
-        [bobRestClient sendTextMessageToRoom:roomId text:@"This is text message" success:^(NSString *eventId) {
+        [bobRestClient sendTextMessageToRoom:roomId threadId:nil text:@"This is text message" success:^(NSString *eventId) {
 
             [bobRestClient redactEvent:eventId inRoom:roomId reason:@"No reason" success:^{
 
@@ -875,7 +875,7 @@
 
         NSString *message = @"This is text message";
 
-        [bobRestClient sendTextMessageToRoom:roomId text:message success:^(NSString *eventId) {
+        [bobRestClient sendTextMessageToRoom:roomId threadId:nil text:message success:^(NSString *eventId) {
 
             XCTAssertNotNil(eventId);
 
@@ -885,7 +885,7 @@
 
                 XCTAssertEqualObjects(event.eventId, eventId);
                 XCTAssertEqualObjects(event.type, kMXEventTypeStringRoomMessage);
-                XCTAssertEqualObjects(event.content[@"body"], message);
+                XCTAssertEqualObjects(event.content[kMXMessageBodyKey], message);
 
                 [expectation fulfill];
 
@@ -907,7 +907,7 @@
 
         NSString *message = @"This is text message";
 
-        [bobRestClient sendTextMessageToRoom:roomId text:message success:^(NSString *eventId) {
+        [bobRestClient sendTextMessageToRoom:roomId threadId:nil text:message success:^(NSString *eventId) {
 
             XCTAssertNotNil(eventId);
 
@@ -917,7 +917,7 @@
 
                 XCTAssertEqualObjects(event.eventId, eventId);
                 XCTAssertEqualObjects(event.type, kMXEventTypeStringRoomMessage);
-                XCTAssertEqualObjects(event.content[@"body"], message);
+                XCTAssertEqualObjects(event.content[kMXMessageBodyKey], message);
 
                 [expectation fulfill];
 
@@ -1415,7 +1415,7 @@
                                                        }];
         }];
 
-        [room sendTextMessage:message success:^(NSString *eventId) {
+        [room sendTextMessage:message threadId:nil success:^(NSString *eventId) {
             messageEventId = eventId;
         } failure:nil];
     }];

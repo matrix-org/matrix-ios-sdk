@@ -64,7 +64,7 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
 {
     [matrixSDKTestsData doMXSessionTestWithBobAndARoom:self andStore:[[MXMemoryStore alloc] init] readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
 
-        [room sendTextMessage:kOriginalMessageText success:^(NSString *eventId) {
+        [room sendTextMessage:kOriginalMessageText threadId:nil success:^(NSString *eventId) {
             [mxSession eventWithEventId:eventId inRoom:room.roomId success:^(MXEvent *event) {
                 [mxSession.aggregations replaceTextMessageEvent:event withTextMessage:kEditedMessageText formattedText:nil localEchoBlock:nil success:^(NSString * _Nonnull editEventId) {
                     
@@ -93,7 +93,7 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
 {
     [matrixSDKTestsData doMXSessionTestWithBobAndARoom:self andStore:[[MXMemoryStore alloc] init] readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
         
-        [room sendTextMessage:kOriginalMarkdownMessageText success:^(NSString *eventId) {
+        [room sendTextMessage:kOriginalMarkdownMessageText threadId:nil success:^(NSString *eventId) {
             [mxSession eventWithEventId:eventId inRoom:room.roomId success:^(MXEvent *event) {
                 [mxSession.aggregations replaceTextMessageEvent:event withTextMessage:kEditedMarkdownMessageText formattedText:kEditedMarkdownMessageFormattedText localEchoBlock:nil success:^(NSString * _Nonnull editEventId) {
                     
@@ -125,7 +125,7 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
     [matrixSDKTestsData doMXSessionTestWithBobAndARoom:self andStore:[[MXMemoryStore alloc] init] readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
 
         // - Send a message
-        [room sendTextMessage:kOriginalMessageText success:^(NSString *eventId) {
+        [room sendTextMessage:kOriginalMessageText threadId:nil success:^(NSString *eventId) {
 
             [mxSession eventWithEventId:eventId inRoom:room.roomId success:^(MXEvent *event) {
 
@@ -146,8 +146,8 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
                     XCTAssertEqualObjects(event.relatesTo.relationType, MXEventRelationTypeReplace);
                     XCTAssertEqualObjects(event.relatesTo.eventId, eventId);
 
-                    XCTAssertEqualObjects(event.content[@"m.new_content"][@"msgtype"], kMXMessageTypeText);
-                    XCTAssertEqualObjects(event.content[@"m.new_content"][@"body"], kEditedMessageText);
+                    XCTAssertEqualObjects(event.content[@"m.new_content"][kMXMessageTypeKey], kMXMessageTypeText);
+                    XCTAssertEqualObjects(event.content[@"m.new_content"][kMXMessageBodyKey], kEditedMessageText);
 
                     [expectation fulfill];
                 }];
@@ -171,7 +171,7 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
     [matrixSDKTestsData doMXSessionTestWithBobAndARoom:self andStore:[[MXMemoryStore alloc] init] readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
         
         // - Send a message
-        [room sendTextMessage:kOriginalMarkdownMessageText success:^(NSString *eventId) {
+        [room sendTextMessage:kOriginalMarkdownMessageText threadId:nil success:^(NSString *eventId) {
             
             [mxSession eventWithEventId:eventId inRoom:room.roomId success:^(MXEvent *event) {
                 
@@ -195,11 +195,11 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
                     NSString *compatibilityBody = [NSString stringWithFormat:@"* %@", kEditedMarkdownMessageText];
                     NSString *compatibilityFormattedBody = [NSString stringWithFormat:@"* %@", kEditedMarkdownMessageFormattedText];
 
-                    XCTAssertEqualObjects(event.content[@"body"], compatibilityBody);
+                    XCTAssertEqualObjects(event.content[kMXMessageBodyKey], compatibilityBody);
                     XCTAssertEqualObjects(event.content[@"formatted_body"], compatibilityFormattedBody);
 
-                    XCTAssertEqualObjects(event.content[@"m.new_content"][@"msgtype"], kMXMessageTypeText);
-                    XCTAssertEqualObjects(event.content[@"m.new_content"][@"body"], kEditedMarkdownMessageText);
+                    XCTAssertEqualObjects(event.content[@"m.new_content"][kMXMessageTypeKey], kMXMessageTypeText);
+                    XCTAssertEqualObjects(event.content[@"m.new_content"][kMXMessageBodyKey], kEditedMarkdownMessageText);
                     XCTAssertEqualObjects(event.content[@"m.new_content"][@"formatted_body"], kEditedMarkdownMessageFormattedText);
                     
                     [expectation fulfill];
@@ -231,7 +231,7 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
             XCTAssertNotNil(event);
             XCTAssertTrue(event.contentHasBeenEdited);
             XCTAssertEqualObjects(event.unsignedData.relations.replace.eventId, editEventId);
-            XCTAssertEqualObjects(event.content[@"body"], kEditedMessageText);
+            XCTAssertEqualObjects(event.content[kMXMessageBodyKey], kEditedMessageText);
             
             XCTAssertEqualObjects(event.content, localEditedEvent.content);
             XCTAssertEqualObjects(event.JSONDictionary[@"unsigned"][@"relations"], localEditedEvent.JSONDictionary[@"unsigned"][@"relations"]);
@@ -260,7 +260,7 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
             XCTAssertNotNil(event);
             XCTAssertTrue(event.contentHasBeenEdited);
             XCTAssertEqualObjects(event.unsignedData.relations.replace.eventId, editEventId);
-            XCTAssertEqualObjects(event.content[@"body"], kEditedMarkdownMessageText);
+            XCTAssertEqualObjects(event.content[kMXMessageBodyKey], kEditedMarkdownMessageText);
             XCTAssertEqualObjects(event.content[@"formatted_body"], kEditedMarkdownMessageFormattedText);
             
             XCTAssertEqualObjects(event.content, localEditedEvent.content);
@@ -304,7 +304,7 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
                 XCTAssertNotNil(editedEvent);
                 XCTAssertTrue(editedEvent.contentHasBeenEdited);
                 XCTAssertEqualObjects(editedEvent.unsignedData.relations.replace.eventId, editEventId);
-                XCTAssertEqualObjects(editedEvent.content[@"body"], kEditedMessageText);
+                XCTAssertEqualObjects(editedEvent.content[kMXMessageBodyKey], kEditedMessageText);
                 
                 XCTAssertEqualObjects(editedEvent.content, editedEventBeforeSync.content);
                 XCTAssertEqualObjects(editedEvent.JSONDictionary[@"unsigned"][@"relations"], editedEventBeforeSync.JSONDictionary[@"unsigned"][@"relations"]);
@@ -352,7 +352,7 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
                 XCTAssertNotNil(editedEvent);
                 XCTAssertTrue(editedEvent.contentHasBeenEdited);
                 XCTAssertEqualObjects(editedEvent.unsignedData.relations.replace.eventId, editEventId);
-                XCTAssertEqualObjects(editedEvent.content[@"body"], kEditedMarkdownMessageText);
+                XCTAssertEqualObjects(editedEvent.content[kMXMessageBodyKey], kEditedMarkdownMessageText);
                 XCTAssertEqualObjects(editedEvent.content[@"formatted_body"], kEditedMarkdownMessageFormattedText);
                 
                 XCTAssertEqualObjects(editedEvent.content, editedEventBeforeSync.content);
@@ -385,7 +385,7 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
         XCTAssertNotNil(editedEvent);
         XCTAssertTrue(editedEvent.contentHasBeenEdited);
         XCTAssertEqualObjects(editedEvent.unsignedData.relations.replace.eventId, editEventId);
-        XCTAssertEqualObjects(editedEvent.content[@"body"], kEditedMessageText);
+        XCTAssertEqualObjects(editedEvent.content[kMXMessageBodyKey], kEditedMessageText);
         
         [expectation fulfill];
     }];
@@ -404,7 +404,7 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
         XCTAssertNotNil(editedEvent);
         XCTAssertTrue(editedEvent.contentHasBeenEdited);
         XCTAssertEqualObjects(editedEvent.unsignedData.relations.replace.eventId, editEventId);
-        XCTAssertEqualObjects(editedEvent.content[@"body"], kEditedMarkdownMessageText);
+        XCTAssertEqualObjects(editedEvent.content[kMXMessageBodyKey], kEditedMarkdownMessageText);
         XCTAssertEqualObjects(editedEvent.content[@"formatted_body"], kEditedMarkdownMessageFormattedText);
         
         [expectation fulfill];
@@ -429,7 +429,7 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
             XCTAssertNotNil(editedEvent);
             XCTAssertTrue(editedEvent.contentHasBeenEdited);
             XCTAssertEqualObjects(editedEvent.unsignedData.relations.replace.eventId, replaceEvent.eventId);
-            XCTAssertEqualObjects(editedEvent.content[@"body"], secondEditionTextMessage);
+            XCTAssertEqualObjects(editedEvent.content[kMXMessageBodyKey], secondEditionTextMessage);
             
             [expectation fulfill];
         }];
@@ -464,7 +464,7 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
             XCTAssertNotNil(lastEvent);
             XCTAssertTrue(lastEvent.contentHasBeenEdited);
             XCTAssertEqualObjects(lastEvent.unsignedData.relations.replace.eventId, editEventId);
-            XCTAssertEqualObjects(lastEvent.content[@"body"], kEditedMessageText);
+            XCTAssertEqualObjects(lastEvent.content[kMXMessageBodyKey], kEditedMessageText);
 
             [expectation fulfill];
             
@@ -488,7 +488,7 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
 
         // - Send a message
         MXEvent *localEcho;
-        [room sendTextMessage:kOriginalMessageText formattedText:nil localEcho:&localEcho success:^(NSString *theEventId) {
+        [room sendTextMessage:kOriginalMessageText formattedText:nil threadId:nil localEcho:&localEcho success:^(NSString *theEventId) {
             eventId = theEventId;
         } failure:^(NSError *error) {
             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
@@ -506,8 +506,8 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
             XCTAssertNotNil(localEcho.relatesTo);
             XCTAssertEqualObjects(localEcho.relatesTo.relationType, MXEventRelationTypeReplace);
 
-            XCTAssertEqualObjects(localEcho.content[@"m.new_content"][@"msgtype"], kMXMessageTypeText);
-            XCTAssertEqualObjects(localEcho.content[@"m.new_content"][@"body"], kEditedMessageText);
+            XCTAssertEqualObjects(localEcho.content[@"m.new_content"][kMXMessageTypeKey], kMXMessageTypeText);
+            XCTAssertEqualObjects(localEcho.content[@"m.new_content"][kMXMessageBodyKey], kEditedMessageText);
 
             switch (localEchoBlockCount) {
                 case 1:
@@ -540,7 +540,7 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
             XCTAssertNotNil(editedEvent);
             XCTAssertTrue(editedEvent.contentHasBeenEdited);
             XCTAssertEqualObjects(editedEvent.unsignedData.relations.replace.eventId, replaceEvent.eventId);
-            XCTAssertEqualObjects(editedEvent.content[@"body"], kEditedMessageText);
+            XCTAssertEqualObjects(editedEvent.content[kMXMessageBodyKey], kEditedMessageText);
 
             XCTAssertEqualObjects(replaceEvent.relatesTo.eventId, eventId);
 
@@ -562,7 +562,7 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
 
         MXRoom *room = [mxSession roomWithRoomId:roomId];
 
-        [room sendTextMessage:kOriginalMessageText success:^(NSString *eventId) {
+        [room sendTextMessage:kOriginalMessageText threadId:nil success:^(NSString *eventId) {
             [mxSession eventWithEventId:eventId inRoom:room.roomId success:^(MXEvent *event) {
                 [mxSession.aggregations replaceTextMessageEvent:event withTextMessage:kEditedMessageText formattedText:nil localEchoBlock:nil success:^(NSString * _Nonnull editEventId) {
 
@@ -598,7 +598,7 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
         MXRoom *room = [aliceSession roomWithRoomId:roomId];
 
         // - Send a message
-        [room sendTextMessage:kOriginalMessageText success:^(NSString *eventId) {
+        [room sendTextMessage:kOriginalMessageText threadId:nil success:^(NSString *eventId) {
 
             [aliceSession eventWithEventId:eventId inRoom:room.roomId success:^(MXEvent *event) {
 
@@ -621,8 +621,8 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
                     XCTAssertEqualObjects(editEvent.relatesTo.relationType, MXEventRelationTypeReplace);
                     XCTAssertEqualObjects(editEvent.relatesTo.eventId, eventId);
 
-                    XCTAssertEqualObjects(editEvent.content[@"m.new_content"][@"msgtype"], kMXMessageTypeText);
-                    XCTAssertEqualObjects(editEvent.content[@"m.new_content"][@"body"], kEditedMessageText);
+                    XCTAssertEqualObjects(editEvent.content[@"m.new_content"][kMXMessageTypeKey], kMXMessageTypeText);
+                    XCTAssertEqualObjects(editEvent.content[@"m.new_content"][kMXMessageBodyKey], kEditedMessageText);
 
                     // -> Check the edited message in the store
                     [aliceSession eventWithEventId:eventId inRoom:room.roomId success:^(MXEvent *localEditedEvent) {
@@ -632,11 +632,11 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
                         XCTAssertTrue(localEditedEvent.isEncrypted);
                         XCTAssertTrue(localEditedEvent.contentHasBeenEdited);
 
-                        XCTAssertEqualObjects(localEditedEvent.content[@"msgtype"], kMXMessageTypeText);
-                        XCTAssertEqualObjects(localEditedEvent.content[@"body"], kEditedMessageText);
+                        XCTAssertEqualObjects(localEditedEvent.content[kMXMessageTypeKey], kMXMessageTypeText);
+                        XCTAssertEqualObjects(localEditedEvent.content[kMXMessageBodyKey], kEditedMessageText);
 
                         // The event content must be encrypted
-                        XCTAssertNil(localEditedEvent.wireContent[@"body"]);
+                        XCTAssertNil(localEditedEvent.wireContent[kMXMessageBodyKey]);
                         XCTAssertNotNil(localEditedEvent.wireContent[@"ciphertext"]);
 
                         [expectation fulfill];
@@ -679,7 +679,7 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
                 // TODO: Synapse does not support aggregation for e2e rooms yet
                 XCTAssertTrue(event.contentHasBeenEdited);
                 XCTAssertEqualObjects(event.unsignedData.relations.replace.eventId, editEventId);
-                XCTAssertEqualObjects(event.content[@"body"], kEditedMessageText);
+                XCTAssertEqualObjects(event.content[kMXMessageBodyKey], kEditedMessageText);
                 
                 XCTAssertEqualObjects(event.content, localEditedEvent.content);
                 XCTAssertEqualObjects(event.JSONDictionary[@"unsigned"][@"relations"], localEditedEvent.JSONDictionary[@"unsigned"][@"relations"]);
@@ -710,7 +710,7 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
 
         // - Send a message
         MXEvent *localEcho;
-        [room sendTextMessage:kOriginalMessageText formattedText:nil localEcho:&localEcho success:^(NSString *theEventId) {
+        [room sendTextMessage:kOriginalMessageText formattedText:nil threadId:nil localEcho:&localEcho success:^(NSString *theEventId) {
             eventId = theEventId;
         } failure:^(NSError *error) {
             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
@@ -727,8 +727,8 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
             XCTAssertNotNil(localEcho.relatesTo);
             XCTAssertEqualObjects(localEcho.relatesTo.relationType, MXEventRelationTypeReplace);
 
-            XCTAssertEqualObjects(localEcho.content[@"m.new_content"][@"msgtype"], kMXMessageTypeText);
-            XCTAssertEqualObjects(localEcho.content[@"m.new_content"][@"body"], kEditedMessageText);
+            XCTAssertEqualObjects(localEcho.content[@"m.new_content"][kMXMessageTypeKey], kMXMessageTypeText);
+            XCTAssertEqualObjects(localEcho.content[@"m.new_content"][kMXMessageBodyKey], kEditedMessageText);
 
             switch (localEchoBlockCount) {
                     case 1:
@@ -763,7 +763,7 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
             XCTAssertNotNil(editedEvent);
             XCTAssertTrue(editedEvent.contentHasBeenEdited);
             XCTAssertEqualObjects(editedEvent.unsignedData.relations.replace.eventId, replaceEvent.eventId);
-            XCTAssertEqualObjects(editedEvent.content[@"body"], kEditedMessageText);
+            XCTAssertEqualObjects(editedEvent.content[kMXMessageBodyKey], kEditedMessageText);
 
             XCTAssertEqualObjects(replaceEvent.relatesTo.eventId, eventId);
 
@@ -839,7 +839,7 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
                 // -> We must get the original event
                 XCTAssertNotNil(paginatedResponse.originalEvent);
                 XCTAssertEqualObjects(paginatedResponse.originalEvent.eventId, eventId);
-                XCTAssertEqualObjects(paginatedResponse.originalEvent.content[@"body"], kOriginalMessageText);
+                XCTAssertEqualObjects(paginatedResponse.originalEvent.content[kMXMessageBodyKey], kOriginalMessageText);
 
                 // - Paginate more
                 [mxSession.aggregations replaceEventsForEvent:eventId isEncrypted:NO inRoom:room.roomId from:paginatedResponse.nextBatch limit:20 success:^(MXAggregationPaginatedResponse *paginatedResponse) {
@@ -857,7 +857,7 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
                     // -> We must get the original event
                     XCTAssertNotNil(paginatedResponse.originalEvent);
                     XCTAssertEqualObjects(paginatedResponse.originalEvent.eventId, eventId);
-                    XCTAssertEqualObjects(paginatedResponse.originalEvent.content[@"body"], kOriginalMessageText);
+                    XCTAssertEqualObjects(paginatedResponse.originalEvent.content[kMXMessageBodyKey], kOriginalMessageText);
 
                     [expectation fulfill];
 

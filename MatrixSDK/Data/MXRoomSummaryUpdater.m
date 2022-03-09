@@ -101,6 +101,11 @@
         // Do not display update events in the summary
         return NO;
     }
+    else if (event.isInThread)
+    {
+        // do not display thread events in the summary
+        return NO;
+    }
 
     // Accept redacted event only if configured
     if (_ignoreRedactedEvent && event.isRedactedEvent)

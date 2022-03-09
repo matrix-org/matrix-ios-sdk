@@ -39,6 +39,7 @@
 #import "MXExportedOlmDevice.h"
 
 @class MXSession;
+@class MXRoom;
 
 /**
  Fires when we receive a room key request.
@@ -599,7 +600,17 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
  */
 - (BOOL)isBlacklistUnverifiedDevicesInRoom:(NSString *)roomId;
 
+
 /**
+ Tells if a room is encrypted according to the crypo module.
+ It is different than the summary or state store. The crypto store
+ is more restrictive and can never be reverted to an unsuported algorithm
+ So prefer this when deciding if an event should be sent encrypted as a protection
+ against state broken/reset issues.
+ */
+- (BOOL)isRoomEncrypted:(NSString *)roomId;
+
+/**he
  Set the blacklist of unverified devices in a room.
  
  @param roomId the room id.

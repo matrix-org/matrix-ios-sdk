@@ -26,7 +26,7 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @interface MXReplyEventParser : NSObject
 
-- (MXReplyEventParts*)parse:(MXEvent*)replyEvent;
+- (nullable MXReplyEventParts*)parse:(MXEvent*)replyEvent;
 
 @end
 

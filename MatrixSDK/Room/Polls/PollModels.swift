@@ -16,12 +16,12 @@
 
 import Foundation
 
-enum PollKind {
+public enum PollKind {
     case disclosed
     case undisclosed
 }
 
-protocol PollAnswerOptionProtocol {
+public protocol PollAnswerOptionProtocol {
     var id: String { get }
     var text: String { get }
     var count: UInt { get }
@@ -29,12 +29,14 @@ protocol PollAnswerOptionProtocol {
     var isCurrentUserSelection: Bool { get }
 }
 
-protocol PollProtocol {
+public protocol PollProtocol {
     var text: String { get }
     var answerOptions: [PollAnswerOptionProtocol] { get }
     var kind: PollKind { get }
     var maxAllowedSelections: UInt { get }
     var isClosed: Bool { get }
+    var totalAnswerCount: UInt { get }
+    var hasBeenEdited: Bool { get }
 }
 
 class PollAnswerOption: PollAnswerOptionProtocol {
@@ -53,6 +55,7 @@ class Poll: PollProtocol {
     var kind: PollKind = .disclosed
     var maxAllowedSelections: UInt = 1
     var isClosed: Bool = false
+    var hasBeenEdited: Bool = false
     
     var totalAnswerCount: UInt {
         return self.answerOptions.reduce(0) { $0 + $1.count}
