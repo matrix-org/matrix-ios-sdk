@@ -735,7 +735,7 @@
                 
                 NSString *secondEventBody = localEchoEvent.content[kMXMessageBodyKey];
                 NSString *secondEventFormattedBody = localEchoEvent.content[@"formatted_body"];
-                NSString *secondEventRelatesToEventId = localEchoEvent.content[kMXEventRelationRelatesToKey][@"m.in_reply_to"][@"event_id"];
+                NSString *secondEventRelatesToEventId = localEchoEvent.content[kMXEventRelationRelatesToKey][kMXEventContentRelatesToKeyInReplyTo][kMXEventContentRelatesToKeyEventId];
 
                 NSString *permalinkToUser = [MXTools permalinkToUserWithUserId:firstEventSender];
                 NSString *permalinkToEvent = [MXTools permalinkToEvent:firstEventId inRoom:roomId];
@@ -767,7 +767,7 @@
                 
                 NSString *thirdEventBody = localEchoEvent.content[kMXMessageBodyKey];
                 NSString *thirdEventFormattedBody = localEchoEvent.content[@"formatted_body"];
-                NSString *thirdEventRelatesToEventId = localEchoEvent.content[kMXEventRelationRelatesToKey][@"m.in_reply_to"][@"event_id"];
+                NSString *thirdEventRelatesToEventId = localEchoEvent.content[kMXEventRelationRelatesToKey][kMXEventContentRelatesToKeyInReplyTo][kMXEventContentRelatesToKeyEventId];
                 
                 NSString *permalinkToUser = [MXTools permalinkToUserWithUserId:secondEventSender];
                 NSString *permalinkToEvent = [MXTools permalinkToEvent:secondEventId inRoom:roomId];

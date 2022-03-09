@@ -676,7 +676,7 @@ NSString *const kMXMessageContentKeyExtensibleAssetTypeUser = @"m.self";
     MXEvent *editedEvent;
     MXEvent *event = self;
     NSDictionary *newContentDict;
-    MXJSONModelSetDictionary(newContentDict, replaceEvent.content[@"m.new_content"])
+    MXJSONModelSetDictionary(newContentDict, replaceEvent.content[kMXMessageContentKeyNewContent])
     NSDictionary *oldRelatesTo = self.relatesTo.JSONDictionary;
     
     MXEventDecryptionResult *replaceEventDecryptionResult;
@@ -720,20 +720,21 @@ NSString *const kMXMessageContentKeyExtensibleAssetTypeUser = @"m.self";
         
         if (event.unsignedData.relations)
         {
-            editedEventDict[@"unsigned"][@"m.relations"][@"m.replace"] = replaceEventDict;
+            editedEventDict[@"unsigned"][@"m.relations"][MXEventRelationTypeReplace] = replaceEventDict;
         }
         else if (event.unsignedData)
         {
             editedEventDict[@"unsigned"][@"m.relations"] = @{
-                                                             @"m.replace": replaceEventDict
-                                                             };
+                MXEventRelationTypeReplace: replaceEventDict
+            };
         }
         else
         {
-            editedEventDict[@"unsigned"] = @{ @"m.relations": @{
-                                                      @"m.replace": replaceEventDict
-                                                      }
-                                              };
+            editedEventDict[@"unsigned"] = @{
+                @"m.relations": @{
+                    MXEventRelationTypeReplace: replaceEventDict
+                }
+            };
         }
         
         editedEvent = [MXEvent modelFromJSON:editedEventDict];
@@ -766,21 +767,21 @@ NSString *const kMXMessageContentKeyExtensibleAssetTypeUser = @"m.self";
     NSMutableDictionary *newEventDict = [self.JSONDictionary mutableCopy];
     if (self.unsignedData.relations)
     {
-        newEventDict[@"unsigned"][@"m.relations"][@"m.reference"] = newReferenceDict;
+        newEventDict[@"unsigned"][@"m.relations"][MXEventRelationTypeReference] = newReferenceDict;
     }
     else if (self.unsignedData)
     {
         newEventDict[@"unsigned"][@"m.relations"] = @{
-                                                         @"m.reference": newReferenceDict
-                                                         };
+            MXEventRelationTypeReference: newReferenceDict
+        };
     }
     else
     {
         newEventDict[@"unsigned"] = @{
-                                      @"m.relations": @{
-                                              @"m.reference": newReferenceDict
-                                              }
-                                      };
+            @"m.relations": @{
+                MXEventRelationTypeReference: newReferenceDict
+            }
+        };
     }
 
     newEvent = [MXEvent modelFromJSON:newEventDict];
@@ -962,13 +963,13 @@ NSString *const kMXMessageContentKeyExtensibleAssetTypeUser = @"m.self";
         MXJSONModelSetDictionary(clearEventJSON, decryptionResult.clearEvent);
         MXJSONModelSetDictionary(clearEventJSONContent, clearEventJSON[@"content"]);
 
-        if (clearEventJSONContent[@"m.new_content"] && !_wireContent[kMXEventRelationRelatesToKey])
+        if (clearEventJSONContent[kMXMessageContentKeyNewContent] && !_wireContent[kMXEventRelationRelatesToKey])
         {
             // If the event has been edited, use the new content
             // This can be done only on client side
             // TODO: Remove this with the coming update of MSC1849.
             NSDictionary *clearEventJSONNewContent;
-            MXJSONModelSetDictionary(clearEventJSONNewContent, clearEventJSONContent[@"m.new_content"]);
+            MXJSONModelSetDictionary(clearEventJSONNewContent, clearEventJSONContent[kMXMessageContentKeyNewContent]);
             
             if (clearEventJSONNewContent)
             {
