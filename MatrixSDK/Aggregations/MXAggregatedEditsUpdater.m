@@ -134,11 +134,11 @@
     
     [content addEntriesFromDictionary:compatibilityContent];
     
-    content[@"m.new_content"] = newContent;
+    content[kMXMessageContentKeyNewContent] = newContent;
     
     content[kMXEventRelationRelatesToKey] = @{
-        @"rel_type" : @"m.replace",
-        @"event_id": event.eventId
+        kMXEventContentRelatesToKeyRelationType : MXEventRelationTypeReplace,
+        kMXEventContentRelatesToKeyEventId: event.eventId
     };
     
     MXHTTPOperation *operation;

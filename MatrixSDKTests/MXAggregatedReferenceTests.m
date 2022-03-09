@@ -67,8 +67,8 @@ static NSString* const kThreadedMessage1Text = @"Morning!";
                 kMXMessageTypeKey: kMXMessageTypeText,
                 kMXMessageBodyKey: kThreadedMessage1Text,
                 kMXEventRelationRelatesToKey:  @{
-                        @"rel_type": MXEventRelationTypeReference,
-                        @"event_id": eventId,
+                    kMXEventContentRelatesToKeyRelationType: MXEventRelationTypeReference,
+                    kMXEventContentRelatesToKeyEventId: eventId,
                 }
             };
 
@@ -241,8 +241,8 @@ static NSString* const kThreadedMessage1Text = @"Morning!";
                 kMXMessageTypeKey: kMXMessageTypeText,
                 kMXMessageBodyKey: kThreadedMessage1Text,
                 kMXEventRelationRelatesToKey:  @{
-                        @"rel_type": MXEventRelationTypeReference,
-                        @"event_id": eventId,
+                    kMXEventContentRelatesToKeyRelationType: MXEventRelationTypeReference,
+                    kMXEventContentRelatesToKeyEventId: eventId,
                 }
             };
 

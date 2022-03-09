@@ -146,8 +146,8 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
                     XCTAssertEqualObjects(event.relatesTo.relationType, MXEventRelationTypeReplace);
                     XCTAssertEqualObjects(event.relatesTo.eventId, eventId);
 
-                    XCTAssertEqualObjects(event.content[@"m.new_content"][kMXMessageTypeKey], kMXMessageTypeText);
-                    XCTAssertEqualObjects(event.content[@"m.new_content"][kMXMessageBodyKey], kEditedMessageText);
+                    XCTAssertEqualObjects(event.content[kMXMessageContentKeyNewContent][kMXMessageTypeKey], kMXMessageTypeText);
+                    XCTAssertEqualObjects(event.content[kMXMessageContentKeyNewContent][kMXMessageBodyKey], kEditedMessageText);
 
                     [expectation fulfill];
                 }];
@@ -198,9 +198,9 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
                     XCTAssertEqualObjects(event.content[kMXMessageBodyKey], compatibilityBody);
                     XCTAssertEqualObjects(event.content[@"formatted_body"], compatibilityFormattedBody);
 
-                    XCTAssertEqualObjects(event.content[@"m.new_content"][kMXMessageTypeKey], kMXMessageTypeText);
-                    XCTAssertEqualObjects(event.content[@"m.new_content"][kMXMessageBodyKey], kEditedMarkdownMessageText);
-                    XCTAssertEqualObjects(event.content[@"m.new_content"][@"formatted_body"], kEditedMarkdownMessageFormattedText);
+                    XCTAssertEqualObjects(event.content[kMXMessageContentKeyNewContent][kMXMessageTypeKey], kMXMessageTypeText);
+                    XCTAssertEqualObjects(event.content[kMXMessageContentKeyNewContent][kMXMessageBodyKey], kEditedMarkdownMessageText);
+                    XCTAssertEqualObjects(event.content[kMXMessageContentKeyNewContent][@"formatted_body"], kEditedMarkdownMessageFormattedText);
                     
                     [expectation fulfill];
                 }];
@@ -506,8 +506,8 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
             XCTAssertNotNil(localEcho.relatesTo);
             XCTAssertEqualObjects(localEcho.relatesTo.relationType, MXEventRelationTypeReplace);
 
-            XCTAssertEqualObjects(localEcho.content[@"m.new_content"][kMXMessageTypeKey], kMXMessageTypeText);
-            XCTAssertEqualObjects(localEcho.content[@"m.new_content"][kMXMessageBodyKey], kEditedMessageText);
+            XCTAssertEqualObjects(localEcho.content[kMXMessageContentKeyNewContent][kMXMessageTypeKey], kMXMessageTypeText);
+            XCTAssertEqualObjects(localEcho.content[kMXMessageContentKeyNewContent][kMXMessageBodyKey], kEditedMessageText);
 
             switch (localEchoBlockCount) {
                 case 1:
@@ -621,8 +621,8 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
                     XCTAssertEqualObjects(editEvent.relatesTo.relationType, MXEventRelationTypeReplace);
                     XCTAssertEqualObjects(editEvent.relatesTo.eventId, eventId);
 
-                    XCTAssertEqualObjects(editEvent.content[@"m.new_content"][kMXMessageTypeKey], kMXMessageTypeText);
-                    XCTAssertEqualObjects(editEvent.content[@"m.new_content"][kMXMessageBodyKey], kEditedMessageText);
+                    XCTAssertEqualObjects(editEvent.content[kMXMessageContentKeyNewContent][kMXMessageTypeKey], kMXMessageTypeText);
+                    XCTAssertEqualObjects(editEvent.content[kMXMessageContentKeyNewContent][kMXMessageBodyKey], kEditedMessageText);
 
                     // -> Check the edited message in the store
                     [aliceSession eventWithEventId:eventId inRoom:room.roomId success:^(MXEvent *localEditedEvent) {
@@ -727,8 +727,8 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
             XCTAssertNotNil(localEcho.relatesTo);
             XCTAssertEqualObjects(localEcho.relatesTo.relationType, MXEventRelationTypeReplace);
 
-            XCTAssertEqualObjects(localEcho.content[@"m.new_content"][kMXMessageTypeKey], kMXMessageTypeText);
-            XCTAssertEqualObjects(localEcho.content[@"m.new_content"][kMXMessageBodyKey], kEditedMessageText);
+            XCTAssertEqualObjects(localEcho.content[kMXMessageContentKeyNewContent][kMXMessageTypeKey], kMXMessageTypeText);
+            XCTAssertEqualObjects(localEcho.content[kMXMessageContentKeyNewContent][kMXMessageBodyKey], kEditedMessageText);
 
             switch (localEchoBlockCount) {
                     case 1:
