@@ -150,9 +150,9 @@ public class MXThreadingService: NSObject {
         if session.homeserverCapabilities?.threads?.isEnabled == true {
             //  homeserver supports threads
             let filter = MXRoomEventFilter()
-            filter.relationTypes = [MXEventRelationTypeThread]
+            filter.relatedByTypes = [MXEventRelationTypeThread]
             if onlyParticipated {
-                filter.relationSenders = [session.myUserId]
+                filter.relatedBySenders = [session.myUserId]
             }
             return session.matrixRestClient.messages(forRoom: roomId,
                                                      from: "",

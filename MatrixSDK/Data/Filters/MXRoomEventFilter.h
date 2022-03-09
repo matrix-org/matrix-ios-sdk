@@ -66,14 +66,16 @@
 @property (nonatomic) NSArray<NSString*> *notSenders;
 
 /**
- A list of relation types which must be bundled with the event to include it. If this list is absent then no filtering is done on relation types.
+ A list of relation types to include. An event `A` is included in the filter only if there exists another event `B`,
+ which relates to `A` with a relation type included in the list.
+ If this list is absent then no filtering is done on relation types.
  */
-@property (nonatomic) NSArray<NSString*> *relationTypes;
+@property (nonatomic) NSArray<NSString*> *relatedByTypes;
 
 /**
- A list of senders of relations
+ A list of senders to include. An event `A` is included in the filter only if there exists another event `B` which relates to `A` and `sender` of `A` is included in the list.
  */
-@property (nonatomic) NSArray<NSString*> *relationSenders;
+@property (nonatomic) NSArray<NSString*> *relatedBySenders;
 
 /**
  The maximum number of events to return.
