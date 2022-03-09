@@ -21,6 +21,7 @@
 #import "MXRoomEventFilter.h"
 #import "MXRoomFilter.h"
 #import "MXFilterJSONModel.h"
+#import "MXEvent.h"
 
 @interface MXFilterUnitTests : XCTestCase
 @end
@@ -32,7 +33,7 @@
     MXFilter *filter = [[MXFilter alloc] initWithDictionary:
                                           @{
                                             @"limit": @(30),
-                                            @"types": @[@"m.room.message"],
+                                            @"types": @[kMXEventTypeStringRoomMessage],
                                             @"not_types": @[@"m.room.not.message"],
                                             @"senders": @[@"@hello:example.com"],
                                             @"not_senders": @[@"@spam:example.com"],
@@ -42,7 +43,7 @@
                                             }];
 
     XCTAssertEqual(filter.limit, 30);
-    XCTAssertEqualObjects(filter.types[0], @"m.room.message");
+    XCTAssertEqualObjects(filter.types[0], kMXEventTypeStringRoomMessage);
     XCTAssertEqualObjects(filter.notTypes[0], @"m.room.not.message");
     XCTAssertEqualObjects(filter.senders[0], @"@hello:example.com");
     XCTAssertEqualObjects(filter.notSenders[0], @"@spam:example.com");
@@ -53,14 +54,14 @@
 {
     MXFilter *filter = [[MXFilter alloc] init];
     filter.limit = 30;
-    filter.types = @[@"m.room.message"];
+    filter.types = @[kMXEventTypeStringRoomMessage];
     filter.notTypes = @[@"m.room.not.message"];
     filter.senders = @[@"@hello:example.com"];
     filter.notSenders = @[@"@spam:example.com"];
 
     NSDictionary *dictionary = @{
                                  @"limit": @(30),
-                                 @"types": @[@"m.room.message"],
+                                 @"types": @[kMXEventTypeStringRoomMessage],
                                  @"not_types": @[@"m.room.not.message"],
                                  @"senders": @[@"@hello:example.com"],
                                  @"not_senders": @[@"@spam:example.com"]
@@ -75,7 +76,7 @@
     MXRoomEventFilter *filter = [[MXRoomEventFilter alloc] initWithDictionary:
                                           @{
                                             @"limit": @(30),
-                                            @"types": @[@"m.room.message"],
+                                            @"types": @[kMXEventTypeStringRoomMessage],
                                             @"not_types": @[@"m.room.not.message"],
                                             @"rooms": @[@"!726s6s6q:example.com"],
                                             @"not_rooms": @[@"!not726s6s6q:example.com"],
@@ -88,7 +89,7 @@
                                             }];
 
     XCTAssertEqual(filter.limit, 30);
-    XCTAssertEqualObjects(filter.types[0], @"m.room.message");
+    XCTAssertEqualObjects(filter.types[0], kMXEventTypeStringRoomMessage);
     XCTAssertEqualObjects(filter.notTypes[0], @"m.room.not.message");
     XCTAssertEqualObjects(filter.rooms[0], @"!726s6s6q:example.com");
     XCTAssertEqualObjects(filter.notRooms[0], @"!not726s6s6q:example.com");
@@ -102,7 +103,7 @@
 {
     MXRoomEventFilter *filter = [[MXRoomEventFilter alloc] init];
     filter.limit = 30;
-    filter.types = @[@"m.room.message"];
+    filter.types = @[kMXEventTypeStringRoomMessage];
     filter.notTypes = @[@"m.room.not.message"];
     filter.rooms = @[@"!726s6s6q:example.com"];
     filter.notRooms = @[@"!not726s6s6q:example.com"];
@@ -112,7 +113,7 @@
 
     NSDictionary *dictionary = @{
                                  @"limit": @(30),
-                                 @"types": @[@"m.room.message"],
+                                 @"types": @[kMXEventTypeStringRoomMessage],
                                  @"not_types": @[@"m.room.not.message"],
                                  @"rooms": @[@"!726s6s6q:example.com"],
                                  @"not_rooms": @[@"!not726s6s6q:example.com"],
@@ -132,7 +133,7 @@
     {
         [roomEventFiltersDict addObject:@{
                                           @"limit": @(i),
-                                          @"types": @[@"m.room.message"],
+                                          @"types": @[kMXEventTypeStringRoomMessage],
                                           @"not_types": @[@"m.room.not.message"],
                                           @"rooms": @[@"!726s6s6q:example.com"],
                                           @"not_rooms": @[@"!not726s6s6q:example.com"],
@@ -173,7 +174,7 @@
     {
         [roomEventFilters addObject:[[MXRoomEventFilter alloc] initWithDictionary:@{
                                                                                     @"limit": @(i),
-                                                                                    @"types": @[@"m.room.message"],
+                                                                                    @"types": @[kMXEventTypeStringRoomMessage],
                                                                                     @"not_types": @[@"m.room.not.message"],
                                                                                     @"rooms": @[@"!726s6s6q:example.com"],
                                                                                     @"not_rooms": @[@"!not726s6s6q:example.com"],

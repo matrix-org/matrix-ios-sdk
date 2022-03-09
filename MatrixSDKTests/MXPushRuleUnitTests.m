@@ -84,13 +84,13 @@
 - (MXEvent*)messageTextEventWithContent:(NSString*)content
 {
     return [MXEvent modelFromJSON:@{
-        @"type": @"m.room.message",
+        @"type": kMXEventTypeStringRoomMessage,
         @"event_id": @"anID",
         @"room_id": @"roomId",
         @"user_id": @"userId",
         @"content": @{
                 kMXMessageBodyKey: content,
-                kMXMessageTypeKey: @"m.text"
+                kMXMessageTypeKey: kMXMessageTypeText
         }
     }];
 }

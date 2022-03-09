@@ -630,8 +630,8 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
             else if (threadId)
             {
                 relatesToJSON = @{
-                    @"rel_type": MXEventRelationTypeThread,
-                    @"event_id": threadId
+                    kMXEventContentRelatesToKeyRelationType: MXEventRelationTypeThread,
+                    kMXEventContentRelatesToKeyEventId: threadId
                 };
                 contentCopyToEncrypt = contentCopy;
             }
@@ -784,8 +784,8 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     NSDictionary *newContent = content;
     BOOL inThread = NO;
     BOOL startsThread = NO;
-    BOOL isReply = content[kMXEventRelationRelatesToKey][@"m.in_reply_to"][@"event_id"] != nil;
-    BOOL isEditing = [content[kMXEventRelationRelatesToKey][@"rel_type"] isEqualToString:MXEventRelationTypeReplace];
+    BOOL isReply = content[kMXEventRelationRelatesToKey][kMXEventContentRelatesToKeyInReplyTo][kMXEventContentRelatesToKeyEventId] != nil;
+    BOOL isEditing = [content[kMXEventRelationRelatesToKey][kMXEventContentRelatesToKeyRelationType] isEqualToString:MXEventRelationTypeReplace];
     if (MXSDKOptions.sharedInstance.enableThreads)
     {
         if (threadId)
@@ -795,7 +795,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
             if (isReply)
             {
                 //  this will be a real in-thread reply
-                mutableContent[kMXEventRelationRelatesToKey][@"m.in_reply_to"][@"m.render_in"] = @[MXEventRelationTypeThread];
+                mutableContent[kMXEventRelationRelatesToKey][kMXEventContentRelatesToKeyDisplayReplyFallback] = @(YES);
             }
             else
             {
@@ -806,15 +806,15 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
 
                 if (mutableContent[kMXEventRelationRelatesToKey])
                 {
-                    mutableContent[kMXEventRelationRelatesToKey][@"m.in_reply_to"] = @{
-                        @"event_id": replyToEventId
+                    mutableContent[kMXEventRelationRelatesToKey][kMXEventContentRelatesToKeyInReplyTo] = @{
+                        kMXEventContentRelatesToKeyEventId: replyToEventId
                     };
                 }
                 else
                 {
                     mutableContent[kMXEventRelationRelatesToKey] = @{
-                        @"m.in_reply_to": @{
-                            @"event_id": replyToEventId
+                        kMXEventContentRelatesToKeyInReplyTo: @{
+                            kMXEventContentRelatesToKeyEventId: replyToEventId
                         }
                     };
                 }
@@ -824,7 +824,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
         else if (isEditing)
         {
             //  detect in-thread edits
-            NSString *editedEventId = content[kMXEventRelationRelatesToKey][@"event_id"];
+            NSString *editedEventId = content[kMXEventRelationRelatesToKey][kMXEventContentRelatesToKeyEventId];
             MXEvent *editedEvent = [self.mxSession.store eventWithEventId:editedEventId inRoom:self.roomId];
             inThread = editedEvent.isInThread;
         }
@@ -2038,9 +2038,9 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
         NSString *eventId = eventToReply.eventId;
         
         NSDictionary *relatesToDict = @{
-            @"m.in_reply_to" :
+            kMXEventContentRelatesToKeyInReplyTo :
                 @{
-                    @"event_id" : eventId
+                    kMXEventContentRelatesToKeyEventId : eventId
                 }
         };
         
@@ -2706,8 +2706,8 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     {
         NSMutableDictionary *newContent = [NSMutableDictionary dictionaryWithDictionary:content];
         newContent[kMXEventRelationRelatesToKey] = @{
-            @"rel_type": MXEventRelationTypeThread,
-            @"event_id": threadId
+            kMXEventContentRelatesToKeyRelationType: MXEventRelationTypeThread,
+            kMXEventContentRelatesToKeyEventId: threadId
         };
         event.wireContent = newContent;
     }

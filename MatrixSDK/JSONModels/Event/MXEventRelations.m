@@ -31,10 +31,10 @@
     MXEventRelations *relations;
 
     MXEventAnnotationChunk *annotation;
-    MXJSONModelSetMXJSONModel(annotation, MXEventAnnotationChunk, JSONDictionary[@"m.annotation"]);
+    MXJSONModelSetMXJSONModel(annotation, MXEventAnnotationChunk, JSONDictionary[MXEventRelationTypeAnnotation]);
 
     MXEventReferenceChunk *reference;
-    MXJSONModelSetMXJSONModel(reference, MXEventReferenceChunk, JSONDictionary[@"m.reference"]);
+    MXJSONModelSetMXJSONModel(reference, MXEventReferenceChunk, JSONDictionary[MXEventRelationTypeReference]);
 
     MXEventReplace *eventReplace;
     MXJSONModelSetMXJSONModel(eventReplace, MXEventReplace, JSONDictionary[MXEventRelationTypeReplace]);
@@ -61,12 +61,12 @@
     {
         if (_annotation)
         {
-            JSONDictionary[@"m.annotation"] = _annotation.JSONDictionary;                        
+            JSONDictionary[MXEventRelationTypeAnnotation] = _annotation.JSONDictionary;
         }
 
         if (_reference)
         {
-            JSONDictionary[@"m.reference"] = _reference.JSONDictionary;
+            JSONDictionary[MXEventRelationTypeReference] = _reference.JSONDictionary;
         }
 
         if (_replace)
