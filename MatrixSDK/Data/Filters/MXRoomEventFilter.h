@@ -73,7 +73,7 @@
 @property (nonatomic) NSArray<NSString*> *relatedByTypes;
 
 /**
- A list of senders to include. An event `A` is included in the filter only if there exists another event `B` which relates to `A` and has a `sender` included in the list.
+ A list of senders to include. An event `A` is included in the filter only if there exists another event `B` which relates to `A` and `sender` of `A` is included in the list.
  */
 @property (nonatomic) NSArray<NSString*> *relatedBySenders;
 
