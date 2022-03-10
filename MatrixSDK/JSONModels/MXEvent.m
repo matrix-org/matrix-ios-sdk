@@ -512,7 +512,7 @@ NSString *const kMXJoinRulesContentKeyRoomId = @"room_id";
 {
     return self.eventType == MXEventTypeRoomMessage && self.relatesTo.inReplyTo.eventId != nil &&
     //  add condition after new thread event fallbacks
-    (self.isInThread ? self.relatesTo.displayReplyFallback : YES);
+    (self.isInThread ? !self.relatesTo.isReplyFallback : YES);
 }
 
 - (BOOL)isVoiceMessage
