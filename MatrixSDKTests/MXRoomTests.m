@@ -795,6 +795,44 @@
     }];
 }
 
+- (void)testUpgrade
+{
+    [matrixSDKTestsData doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
+        NSString *newRoomVersion = @"9";
+        
+        [mxSession.matrixRestClient upgradeRoomWithId:room.roomId to:newRoomVersion success:^(NSString *replacementRoomId) {
+            
+            XCTAssertNotEqual(room.roomId, replacementRoomId, @"Replacement room ID (%@) must be different from initial room ID (%@)", replacementRoomId, room.roomId);
+            
+            MXRoom *replacementRoom = [mxSession roomWithRoomId:replacementRoomId];
+            XCTAssertNotNil(replacementRoom, "Cannot find replacement room");
+            
+            if (replacementRoom)
+            {
+                [replacementRoom state:^(MXRoomState *roomState) {
+                    MXEvent *createEvent = [roomState stateEventsWithType:kMXEventTypeStringRoomCreate].lastObject;
+                    XCTAssertNotNil(createEvent, "Cannot find create event");
+                    
+                    NSDictionary<NSString*, id> *wireContent = createEvent.wireContent;
+                    XCTAssert([wireContent[@"creator"] isEqualToString:mxSession.myUserId]);
+                    XCTAssert([wireContent[@"room_version"] isEqualToString:newRoomVersion]);
+                    XCTAssert([wireContent[@"predecessor"][@"room_id"] isEqualToString:room.roomId]);
+                    
+                    [expectation fulfill];
+                }];
+            }
+            else
+            {
+                [expectation fulfill];
+            }
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
 @end
 
 #pragma clang diagnostic pop

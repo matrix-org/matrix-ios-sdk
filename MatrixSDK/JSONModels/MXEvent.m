@@ -50,6 +50,7 @@ NSString *const kMXEventTypeStringRoomRedaction         = @"m.room.redaction";
 NSString *const kMXEventTypeStringRoomThirdPartyInvite  = @"m.room.third_party_invite";
 NSString *const kMXEventTypeStringRoomRelatedGroups     = @"m.room.related_groups";
 NSString *const kMXEventTypeStringRoomPinnedEvents      = @"m.room.pinned_events";
+NSString *const kMXEventTypeStringRoomMembership        = @"m.room_membership";
 NSString *const kMXEventTypeStringRoomTag               = @"m.tag";
 NSString *const kMXEventTypeStringPresence              = @"m.presence";
 NSString *const kMXEventTypeStringTypingNotification    = @"m.typing";
@@ -185,6 +186,12 @@ NSString *const kMXMessageContentKeyExtensibleAsset = @"m.asset";
 NSString *const kMXMessageContentKeyExtensibleAssetMSC3488 = @"org.matrix.msc3488.asset";
 NSString *const kMXMessageContentKeyExtensibleAssetType = @"type";
 NSString *const kMXMessageContentKeyExtensibleAssetTypeUser = @"m.self";
+
+// Join Rules
+
+NSString *const kMXJoinRulesContentKeyAllow = @"allow";
+NSString *const kMXJoinRulesContentKeyType = @"type";
+NSString *const kMXJoinRulesContentKeyRoomId = @"room_id";
 
 #pragma mark - MXEvent
 @interface MXEvent ()

@@ -130,6 +130,7 @@ FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomRedaction;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomThirdPartyInvite;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomRelatedGroups;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomPinnedEvents;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomMembership;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomTag;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringPresence;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringTypingNotification;
@@ -276,6 +277,12 @@ FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleAsset;
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleAssetMSC3488;
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleAssetType;
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleAssetTypeUser;
+
+// Join Rules
+
+FOUNDATION_EXPORT NSString *const kMXJoinRulesContentKeyAllow;
+FOUNDATION_EXPORT NSString *const kMXJoinRulesContentKeyType;
+FOUNDATION_EXPORT NSString *const kMXJoinRulesContentKeyRoomId;
 
 /**
  The internal event state used to handle the different steps of the event sending.

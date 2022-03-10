@@ -686,6 +686,14 @@
 		3A7509BC26FC61DF00B85773 /* MXSpaceNotificationCounter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A7509BA26FC61DF00B85773 /* MXSpaceNotificationCounter.swift */; };
 		3A7B8D0E267FCF7200D9DD96 /* MXDehydrationTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 3A7B8CFD267FCD9B00D9DD96 /* MXDehydrationTests.m */; };
 		3A7B8D13267FCF7300D9DD96 /* MXDehydrationTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 3A7B8CFD267FCD9B00D9DD96 /* MXDehydrationTests.m */; };
+		3A858DDA2750EE3F006322C1 /* MXHomeserverCapabilitiesService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A858DD92750EE3F006322C1 /* MXHomeserverCapabilitiesService.swift */; };
+		3A858DDD275121DB006322C1 /* MXHomeserverCapabilitiesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A858DDB275120D1006322C1 /* MXHomeserverCapabilitiesTests.swift */; };
+		3A858DDE275121DC006322C1 /* MXHomeserverCapabilitiesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A858DDB275120D1006322C1 /* MXHomeserverCapabilitiesTests.swift */; };
+		3A858DE127517C0E006322C1 /* MXRoomCapabilityType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A858DE027517C0E006322C1 /* MXRoomCapabilityType.swift */; };
+		3A858DE227528EEB006322C1 /* MXHomeserverCapabilitiesService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A858DD92750EE3F006322C1 /* MXHomeserverCapabilitiesService.swift */; };
+		3A858DE327529183006322C1 /* MXRoomCapabilityType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A858DE027517C0E006322C1 /* MXRoomCapabilityType.swift */; };
+		3A858DE8275511A4006322C1 /* MXRoomAliasAvailabilityCheckerResultTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A858DE7275511A4006322C1 /* MXRoomAliasAvailabilityCheckerResultTests.swift */; };
+		3A858DE9275511A4006322C1 /* MXRoomAliasAvailabilityCheckerResultTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A858DE7275511A4006322C1 /* MXRoomAliasAvailabilityCheckerResultTests.swift */; };
 		3AB5EBB4270B332B0058703A /* MXSpaceStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AB5EBB3270B332B0058703A /* MXSpaceStore.swift */; };
 		3AB5EBB5270B332B0058703A /* MXSpaceStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AB5EBB3270B332B0058703A /* MXSpaceStore.swift */; };
 		3AB5EBB7270ED1C00058703A /* MXSpaceFileStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AB5EBB6270ED1C00058703A /* MXSpaceFileStore.swift */; };
@@ -698,6 +706,8 @@
 		3AC13803264482A100EE1E74 /* MXExportedOlmDevice.h in Headers */ = {isa = PBXBuildFile; fileRef = 3AC13800264482A100EE1E74 /* MXExportedOlmDevice.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		3AC13804264482A100EE1E74 /* MXExportedOlmDevice.m in Sources */ = {isa = PBXBuildFile; fileRef = 3AC13801264482A100EE1E74 /* MXExportedOlmDevice.m */; };
 		3AC13805264482A100EE1E74 /* MXExportedOlmDevice.m in Sources */ = {isa = PBXBuildFile; fileRef = 3AC13801264482A100EE1E74 /* MXExportedOlmDevice.m */; };
+		3AD4F231274B922D003F47FE /* MXRoomAliasAvailabilityChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AD4F230274B922C003F47FE /* MXRoomAliasAvailabilityChecker.swift */; };
+		3AD4F232274B922D003F47FE /* MXRoomAliasAvailabilityChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AD4F230274B922C003F47FE /* MXRoomAliasAvailabilityChecker.swift */; };
 		3AF85F9226FC7AE800A9E67B /* MXSpaceNotificationState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AF85F9126FC7AE800A9E67B /* MXSpaceNotificationState.swift */; };
 		3AF85F9326FC7AE800A9E67B /* MXSpaceNotificationState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AF85F9126FC7AE800A9E67B /* MXSpaceNotificationState.swift */; };
 		3B60DCAB92D470B91262BF0C /* libPods-MatrixSDKTests-macOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 15D7F292D95EB58AEE801C4E /* libPods-MatrixSDKTests-macOS.a */; };
@@ -2292,12 +2302,17 @@
 		3A59A52825A7B1B000DDA1FC /* MXOutboundSessionInfo.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXOutboundSessionInfo.m; sourceTree = "<group>"; };
 		3A7509BA26FC61DF00B85773 /* MXSpaceNotificationCounter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MXSpaceNotificationCounter.swift; sourceTree = "<group>"; };
 		3A7B8CFD267FCD9B00D9DD96 /* MXDehydrationTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXDehydrationTests.m; sourceTree = "<group>"; };
+		3A858DD92750EE3F006322C1 /* MXHomeserverCapabilitiesService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXHomeserverCapabilitiesService.swift; sourceTree = "<group>"; };
+		3A858DDB275120D1006322C1 /* MXHomeserverCapabilitiesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXHomeserverCapabilitiesTests.swift; sourceTree = "<group>"; };
+		3A858DE027517C0E006322C1 /* MXRoomCapabilityType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXRoomCapabilityType.swift; sourceTree = "<group>"; };
+		3A858DE7275511A4006322C1 /* MXRoomAliasAvailabilityCheckerResultTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXRoomAliasAvailabilityCheckerResultTests.swift; sourceTree = "<group>"; };
 		3AB5EBB3270B332B0058703A /* MXSpaceStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXSpaceStore.swift; sourceTree = "<group>"; };
 		3AB5EBB6270ED1C00058703A /* MXSpaceFileStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXSpaceFileStore.swift; sourceTree = "<group>"; };
 		3AC135D72640335100EE1E74 /* MXDehydrationService.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXDehydrationService.h; sourceTree = "<group>"; };
 		3AC135D82640335100EE1E74 /* MXDehydrationService.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXDehydrationService.m; sourceTree = "<group>"; };
 		3AC13800264482A100EE1E74 /* MXExportedOlmDevice.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXExportedOlmDevice.h; sourceTree = "<group>"; };
 		3AC13801264482A100EE1E74 /* MXExportedOlmDevice.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXExportedOlmDevice.m; sourceTree = "<group>"; };
+		3AD4F230274B922C003F47FE /* MXRoomAliasAvailabilityChecker.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MXRoomAliasAvailabilityChecker.swift; sourceTree = "<group>"; };
 		3AF85F9126FC7AE800A9E67B /* MXSpaceNotificationState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXSpaceNotificationState.swift; sourceTree = "<group>"; };
 		492C3485159D57C2116EDCBD /* Pods-SDK-MatrixSDK-macOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SDK-MatrixSDK-macOS.debug.xcconfig"; path = "Target Support Files/Pods-SDK-MatrixSDK-macOS/Pods-SDK-MatrixSDK-macOS.debug.xcconfig"; sourceTree = "<group>"; };
 		6257D945D115DA658F44E8D4 /* Pods-SDK-MatrixSDK-macOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SDK-MatrixSDK-macOS.release.xcconfig"; path = "Target Support Files/Pods-SDK-MatrixSDK-macOS/Pods-SDK-MatrixSDK-macOS.release.xcconfig"; sourceTree = "<group>"; };
@@ -3717,6 +3732,7 @@
 		32C6F92F19DD814400EA4E9C /* MatrixSDK */ = {
 			isa = PBXGroup;
 			children = (
+				3A858DD82750EE0A006322C1 /* HomeServer */,
 				ECCA02B9273485A100B6F34F /* Threads */,
 				3259CFD9260266F700C365DB /* Categories */,
 				EC383BA0253DE49B002FBBE6 /* Background */,
@@ -3856,6 +3872,8 @@
 				EC131B182779D8D500712964 /* MXThreadEventTimelineUnitTests.swift */,
 				EC746C58274E61EF002AD24C /* MXThreadingServiceTests.swift */,
 				322985CD26FAFC58001890BC /* MatrixSDKTestsSwiftHeader.h */,
+				3A858DDB275120D1006322C1 /* MXHomeserverCapabilitiesTests.swift */,
+				3A858DE7275511A4006322C1 /* MXRoomAliasAvailabilityCheckerResultTests.swift */,
 			);
 			path = MatrixSDKTests;
 			sourceTree = "<group>";
@@ -4011,6 +4029,15 @@
 				3A108AA125810FE5005EEBE9 /* MXRawDataKey.m */,
 			);
 			path = KeyProvider;
+			sourceTree = "<group>";
+		};
+		3A858DD82750EE0A006322C1 /* HomeServer */ = {
+			isa = PBXGroup;
+			children = (
+				3A858DD92750EE3F006322C1 /* MXHomeserverCapabilitiesService.swift */,
+				3A858DE027517C0E006322C1 /* MXRoomCapabilityType.swift */,
+			);
+			path = HomeServer;
 			sourceTree = "<group>";
 		};
 		3AC1379326432ED500EE1E74 /* Dehydration */ = {
@@ -4230,6 +4257,7 @@
 				3A0AF06A2705A11400679D1A /* MXSpaceGraphData.swift */,
 				3AB5EBB3270B332B0058703A /* MXSpaceStore.swift */,
 				3AB5EBB6270ED1C00058703A /* MXSpaceFileStore.swift */,
+				3AD4F230274B922C003F47FE /* MXRoomAliasAvailabilityChecker.swift */,
 			);
 			path = Space;
 			sourceTree = "<group>";
@@ -5720,6 +5748,7 @@
 				322360531A8E610500A3CA81 /* MXPushRuleDisplayNameCondtionChecker.m in Sources */,
 				32A31BC520D3FFB0005916C7 /* MXFilter.m in Sources */,
 				32B76EA520FDE85100B095F6 /* MXRoomMembersCount.m in Sources */,
+				3AD4F231274B922D003F47FE /* MXRoomAliasAvailabilityChecker.swift in Sources */,
 				B1710B1F2613D01400A9B429 /* MXSpaceChildrenRequestParameters.swift in Sources */,
 				32CEEF4B23B0A8170039BA98 /* MXCrossSigningTools.m in Sources */,
 				EC8A53A525B1BC77004E0802 /* MXCallInviteEventContent.m in Sources */,
@@ -5804,6 +5833,7 @@
 				32A151531DAF8A7200400192 /* MXQueuedEncryption.m in Sources */,
 				324AAC70239913AD00380A66 /* MXKeyVerificationJSONModel.m in Sources */,
 				C6D5D60A1E4FA74000706C0F /* MXEnumConstants.swift in Sources */,
+				3A858DDA2750EE3F006322C1 /* MXHomeserverCapabilitiesService.swift in Sources */,
 				327E9ADD2284804500A98BC1 /* MXEventRelations.m in Sources */,
 				B19EC8A2260E134A00543BEC /* MXRoomInitialStateEventBuilder.swift in Sources */,
 				32C474C222AF7A2D00CFBCD2 /* MXReactionOperation.m in Sources */,
@@ -5901,6 +5931,7 @@
 				3264DB921CEC528D00B99881 /* MXAccountData.m in Sources */,
 				3229535325A5F7220012FCF0 /* MXBackgroundCryptoStore.m in Sources */,
 				3213301A228B010C0070BA9B /* MXRealmReactionCount.m in Sources */,
+				3A858DE127517C0E006322C1 /* MXRoomCapabilityType.swift in Sources */,
 				91CC0FCC26A033AE00C2A387 /* MXURLPreview.m in Sources */,
 				322AB591260CDBC10017E964 /* MXSyncResponseStoreManager.swift in Sources */,
 				3250E7CB220C913900736CB5 /* MXCryptoTools.m in Sources */,
@@ -6150,6 +6181,7 @@
 				32B477852638133C00EA5800 /* MXAggregatedEditsUnitTests.m in Sources */,
 				ECB6FA8E267CFF4300A941E4 /* MXCredentialsUnitTests.swift in Sources */,
 				3A108E6725826F52005EEBE9 /* MXKeyProviderUnitTests.m in Sources */,
+				3A858DE8275511A4006322C1 /* MXRoomAliasAvailabilityCheckerResultTests.swift in Sources */,
 				EC116593270FB6970089FA56 /* MXBackgroundTaskUnitTests.swift in Sources */,
 				B11BD45C22CB8ABC0064D8B0 /* MXReplyEventParserUnitTests.m in Sources */,
 				ECAE7AEC24ED75F1002FA813 /* MXHTTPAdditionalHeadersUnitTests.m in Sources */,
@@ -6194,6 +6226,7 @@
 				3246BDC51A1A0789000A7D62 /* MXRoomStateDynamicTests.m in Sources */,
 				32B477832638133C00EA5800 /* MXJSONModelUnitTests.m in Sources */,
 				321EA11D24893A0400E35B02 /* MXCryptoRecoveryServiceTests.m in Sources */,
+				3A858DDD275121DB006322C1 /* MXHomeserverCapabilitiesTests.swift in Sources */,
 				3264DB941CECA72900B99881 /* MXAccountDataTests.m in Sources */,
 				32792BDF2296C59B00F4FC9D /* MXAggregatedReactionTests.m in Sources */,
 				322D01C422492B0700150C68 /* MXCryptoShareTests.m in Sources */,
@@ -6230,6 +6263,7 @@
 				B14EF1D42397E90400758AF0 /* MXRealmHelper.m in Sources */,
 				B19A30C12404268600FB6F35 /* MXQRCodeDataCoder.m in Sources */,
 				B16C56E3261D0A9D00604765 /* MXSpaceChildInfo.swift in Sources */,
+				3AD4F232274B922D003F47FE /* MXRoomAliasAvailabilityChecker.swift in Sources */,
 				B14EF1D52397E90400758AF0 /* MXEventAnnotation.m in Sources */,
 				B14EF1D62397E90400758AF0 /* MXPusher.m in Sources */,
 				B14EF1D72397E90400758AF0 /* MXMediaLoader.m in Sources */,
@@ -6412,6 +6446,7 @@
 				32AF9287240EA2430008A0FD /* MXSecretShareRequest.m in Sources */,
 				91CC0FCD26A033AE00C2A387 /* MXURLPreview.m in Sources */,
 				B14EF2362397E90400758AF0 /* MXAggregations.m in Sources */,
+				3A858DE327529183006322C1 /* MXRoomCapabilityType.swift in Sources */,
 				B14EF2372397E90400758AF0 /* MXKeyVerificationManager.m in Sources */,
 				8EC5110D256822B400EC4E5B /* MXTaggedEvents.m in Sources */,
 				B14EF2382397E90400758AF0 /* MXEvent.m in Sources */,
@@ -6457,6 +6492,7 @@
 				324DD2B9246C21C700377005 /* MXSecretStorageKeyCreationInfo.m in Sources */,
 				B14EF24B2397E90400758AF0 /* MXServiceTermsRestClient.m in Sources */,
 				EC1165C527107E330089FA56 /* MXRoomListDataFilterOptions.swift in Sources */,
+				3A858DE227528EEB006322C1 /* MXHomeserverCapabilitiesService.swift in Sources */,
 				ECDA764F27BA963D000C48CF /* MXBooleanCapability.m in Sources */,
 				B14EF24C2397E90400758AF0 /* MXCredentials.m in Sources */,
 				EC116590270F3ABF0089FA56 /* RLMRealm+MatrixSDK.m in Sources */,
@@ -6660,6 +6696,7 @@
 				32AF9293241112850008A0FD /* MXCryptoSecretShareTests.m in Sources */,
 				B1E09A462397FD990057C069 /* MXMediaScanStoreUnitTests.m in Sources */,
 				ECB6FA8F267CFF4300A941E4 /* MXCredentialsUnitTests.swift in Sources */,
+				3A858DE9275511A4006322C1 /* MXRoomAliasAvailabilityCheckerResultTests.swift in Sources */,
 				B1E09A292397FD080057C069 /* MXLoggerUnitTests.m in Sources */,
 				B1E09A492398028D0057C069 /* MXSelfSignedHomeserverTests.m in Sources */,
 				32B0E3E523A384D40054FF1A /* MXAggregatedReferenceTests.m in Sources */,
@@ -6704,6 +6741,7 @@
 				B1E09A2A2397FD680057C069 /* MatrixSDKTestsData.m in Sources */,
 				B1E09A302397FD750057C069 /* MXHTTPClientTests.m in Sources */,
 				EC383BC02542F1E4002FBBE6 /* MXBackgroundSyncServiceTests.swift in Sources */,
+				3A858DDE275121DC006322C1 /* MXHomeserverCapabilitiesTests.swift in Sources */,
 				321EA11E24893A0400E35B02 /* MXCryptoRecoveryServiceTests.m in Sources */,
 				B1E09A372397FD7D0057C069 /* MXRoomMemberTests.m in Sources */,
 				B1E09A2C2397FD6F0057C069 /* MXFilterTests.m in Sources */,

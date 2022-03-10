@@ -441,7 +441,21 @@ public extension MXRoom {
         return __setJoinRule(joinRule.identifier, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
-    
+    /**
+     Set the join rule of the room.
+     
+     - parameters:
+         - joinRule: the join rule to set.
+         - parentIds: list of allowed parents (for `restricted` join rule only)
+         - completion: A block object called when the operation completes.
+         - response: Indicates whether the operation was a success or failure.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func setJoinRule(_ joinRule: MXRoomJoinRule, parentIds: [String], completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
+        return __setJoinRule(joinRule.identifier, parentIds: parentIds, success: currySuccess(completion), failure: curryFailure(completion))
+    }
+
     /**
      Set the guest access of the room.
      

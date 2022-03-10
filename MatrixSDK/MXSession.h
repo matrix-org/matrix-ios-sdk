@@ -345,6 +345,7 @@ FOUNDATION_EXPORT NSString *const kMXSessionNotificationUserIdsArrayKey;
 FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
 
 @class MXSpaceService;
+@class MXHomeserverCapabilitiesService;
 @class MXThreadingService;
 @class MXCapabilities;
 
@@ -481,6 +482,11 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
  The module that manages spaces.
  */
 @property (nonatomic, readonly) MXSpaceService *spaceService;
+
+/**
+ Capabilities of the current homeserver
+ */
+@property (nonatomic, readonly) MXHomeserverCapabilitiesService *homeserverCapabilitiesService;
 
 /**
  The module that manages threads.
