@@ -19,7 +19,7 @@
 NSString *const kMXEventContentRelatesToKeyRelationType = @"rel_type";
 NSString *const kMXEventContentRelatesToKeyEventId = @"event_id";
 NSString *const kMXEventContentRelatesToKeyKey = @"key";
-NSString *const kMXEventContentRelatesToKeyIsReplyFallback = @"io.element.show_reply";
+NSString *const kMXEventContentRelatesToKeyIsReplyFallback = @"is_falling_back";
 NSString *const kMXEventContentRelatesToKeyInReplyTo = @"m.in_reply_to";
 
 @interface MXEventContentRelatesTo()

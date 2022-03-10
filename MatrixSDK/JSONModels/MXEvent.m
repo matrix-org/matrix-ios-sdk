@@ -117,7 +117,7 @@ NSString *const MXEventRelationTypeReplace           = @"m.replace";
 NSString *const kMXMessageContentKeyNewContent       = @"m.new_content";
 //  TODO: Replace when the MSC merged
 //  https://github.com/matrix-org/matrix-doc/pull/3440
-NSString *const MXEventRelationTypeThread            = @"io.element.thread";
+NSString *const MXEventRelationTypeThread            = @"m.thread";
 
 NSString *const kMXEventLocalEventIdPrefix           = @"kMXEventLocalId_";
 

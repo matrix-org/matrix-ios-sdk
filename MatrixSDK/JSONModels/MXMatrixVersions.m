@@ -41,7 +41,7 @@ static NSString* const kJSONKeyVersions = @"versions";
 static NSString* const kJSONKeyUnstableFeatures = @"unstable_features";
 
 //  Unstable features
-static NSString* const kJSONKeyMSC3440 = @"org.matrix.msc3440";
+static NSString* const kJSONKeyMSC3440 = @"org.matrix.msc3440.stable";
 
 @interface MXMatrixVersions ()
 
