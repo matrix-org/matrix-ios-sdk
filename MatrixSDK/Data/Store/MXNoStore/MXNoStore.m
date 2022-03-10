@@ -433,6 +433,14 @@
 {
 }
 
+- (MXMatrixVersions *)supportedMatrixVersions
+{
+    return nil;
+}
+- (void)storeSupportedMatrixVersions:(MXMatrixVersions *)supportedMatrixVersions
+{
+}
+
 - (NSInteger)maxUploadSize
 {
     return -1;

@@ -491,6 +491,20 @@ static NSUInteger preloadOptions;
     }
 }
 
+- (MXMatrixVersions *)supportedMatrixVersions
+{
+    return metaData.supportedMatrixVersions;
+}
+
+- (void)storeSupportedMatrixVersions:(MXMatrixVersions *)supportedMatrixVersions
+{
+    if (metaData)
+    {
+        metaData.supportedMatrixVersions = supportedMatrixVersions;
+        metaDataHasChanged = YES;
+    }
+}
+
 - (NSInteger)maxUploadSize
 {
     return metaData.maxUploadSize;
