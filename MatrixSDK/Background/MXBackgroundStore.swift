@@ -244,6 +244,10 @@ class MXBackgroundStore: NSObject, MXStore {
     var homeserverCapabilities: MXCapabilities?
     func storeHomeserverCapabilities(_ homeserverCapabilities: MXCapabilities) {
     }
+
+    var supportedMatrixVersions: MXMatrixVersions?
+    func storeSupportedMatrixVersions(_ supportedMatrixVersions: MXMatrixVersions) {
+    }
     
     func loadRoomMessages(forRoom roomId: String, completion: (() -> Void)? = nil) {
         DispatchQueue.main.async {

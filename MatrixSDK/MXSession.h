@@ -773,7 +773,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)supportedMatrixVersions:(void (^)(MXMatrixVersions *matrixVersions))success failure:(void (^)(NSError *error))failure;
+- (MXHTTPOperation*)supportedMatrixVersions:(void (^)(MXMatrixVersions *matrixVersions))success failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  The antivirus server URL (nil by default).

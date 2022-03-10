@@ -380,4 +380,12 @@ public extension MXSession {
     var homeserverCapabilities: MXCapabilities? {
         return __homeserverCapabilities
     }
+
+    /// Matrix versions supported by the homeserver.
+    /// 
+    /// - Parameter completion: A block object called when the operation completes.
+    /// - Returns: a `MXHTTPOperation` instance.
+    @nonobjc @discardableResult func supportedMatrixVersions(_ completion: @escaping (_ response: MXResponse<MXMatrixVersions>) -> Void) -> MXHTTPOperation {
+        return __supportedMatrixVersions(currySuccess(completion), failure: curryFailure(completion))
+    }
 }
