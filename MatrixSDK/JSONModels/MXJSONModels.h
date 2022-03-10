@@ -25,6 +25,7 @@
 #import "MXLoginTerms.h"
 #import "MXWellKnown.h"
 #import "MXCrossSigningInfo.h"
+#import "MXEnumConstants.h"
 
 @class MXEvent, MXDeviceInfo, MXKey, MXUser;
 
@@ -1376,6 +1377,17 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
 
 @end
 
+/**
+ `MXRoomJoinRuleResponse` represents the enhanced join rule response as per [MSC3083](https://github.com/matrix-org/matrix-doc/pull/3083)
+ */
+@interface MXRoomJoinRuleResponse : MXJSONModel
+
+@property (nonatomic) MXRoomJoinRule joinRule;
+
+@property (nonatomic, nullable) NSArray<NSString *> *allowedParentIds;
+
+@end
+
 #pragma mark - Dehydration
 
 /**
@@ -1405,3 +1417,84 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
 
 @end
 
+#pragma mark - Homeserver Capabilities
+
+@interface MXRoomVersionInfo: NSObject
+
+    /**
+     * version fo the room
+     */
+    @property (nonatomic) NSString *version;
+
+    /**
+     * Status of the room version: "stable" or "unstable"
+     */
+    @property (nonatomic) NSString *statusString;
+
+@end
+
+/**
+ * give the list of capabilities of the server and their related room versions
+ *
+ *  "room_capabilities": {
+ *      "knock" : {
+ *              "preferred": "7",
+ *              "support" : ["7"]
+ *      },
+ *      "restricted" : {
+ *              "preferred": "9",
+ *              "support" : ["8", "9"]
+ *      }
+ * }
+ */
+@interface MXRoomCapabilitySupport: MXJSONModel
+
+    /**
+     * Preferred version for this capability
+     */
+    @property (nonatomic) NSString *preferred;
+
+    /**
+     * List of room versions that support this capability
+     */
+    @property (nonatomic) NSArray<NSString *> *support;
+
+@end
+
+@interface MXRoomVersionCapabilities: MXJSONModel
+
+    /**
+     * Actual default version used for creating rooms in this server
+     */
+    @property (nonatomic) NSString *defaultRoomVersion;
+
+    /**
+     * Keys are capabilities defined per spec, as for now knock or restricted
+     */
+    @property (nonatomic) NSArray<MXRoomVersionInfo *> *supportedVersions;
+
+    /**
+     * Keys are capabilities defined per spec, as for now knock or restricted
+     */
+    @property (nonatomic, nullable) NSDictionary<NSString *, MXRoomCapabilitySupport *> *roomCapabilities;
+
+@end
+
+/**
+ `MXHomeserverCapabilities` the capabilities of the current homeserver
+ */
+@interface MXHomeserverCapabilities : MXJSONModel
+
+    /**
+     * True if it is possible to change the password of the account.
+     */
+    @property (nonatomic) BOOL canChangePassword;
+
+    /**
+     * Room versions supported by the server
+     * This capability describes the default and available room versions a server supports, and at what level of stability.
+     * Clients should make use of this capability to determine if users need to be encouraged to upgrade their rooms.
+     */
+    @property (nonatomic, nullable) MXRoomVersionCapabilities *roomVersions;
+
+@end
