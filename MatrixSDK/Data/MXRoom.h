@@ -70,6 +70,11 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
 FOUNDATION_EXPORT NSInteger const kMXRoomAlreadyJoinedErrorCode;
 
 /**
+ Error code when attempting to use a room invite sender which is invalid.
+ */
+FOUNDATION_EXPORT NSInteger const kMXRoomInvalidInviteSenderErrorCode;
+
+/**
  `MXRoom` is the class
  */
 @interface MXRoom : NSObject
@@ -776,6 +781,18 @@ FOUNDATION_EXPORT NSInteger const kMXRoomAlreadyJoinedErrorCode;
  */
 - (MXHTTPOperation*)leave:(void (^)(void))success
                   failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
+/**
+ Ignore the user who sent the invite to this room. This user is then added to the current
+ user's ignore list.
+ 
+ @param success A block object called when the operation is complete.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)ignoreInviteSender:(void (^)(void))success
+                               failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Invite a user to this room.

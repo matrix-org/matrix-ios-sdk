@@ -44,6 +44,7 @@
 NSString *const kMXRoomDidFlushDataNotification = @"kMXRoomDidFlushDataNotification";
 NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotification";
 NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
+NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
 
 @interface MXRoom ()
 {
@@ -1894,6 +1895,24 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                   failure:(void (^)(NSError *error))failure
 {
     return [mxSession leaveRoom:self.roomId success:success failure:failure];
+}
+
+- (MXHTTPOperation*)ignoreInviteSender:(void (^)(void))success
+                               failure:(void (^)(NSError *))failure {
+    MXHTTPOperation *operation = [[MXHTTPOperation alloc] init];
+    [self state:^(MXRoomState *roomState) {
+        MXRoomMember *myUser = [roomState.members memberWithUserId:self.mxSession.myUserId];
+        NSString *inviteSenderID = myUser.originalEvent.sender;
+        if (!inviteSenderID || [inviteSenderID isEqualToString:myUser.userId]) {
+            NSError *error = [NSError errorWithDomain:kMXNSErrorDomain code:kMXRoomInvalidInviteSenderErrorCode userInfo:nil];
+            failure(error);
+            return;
+        }
+        
+        MXHTTPOperation *operation2 = [self.mxSession ignoreUsers:@[inviteSenderID] success:success failure:failure];
+        [operation mutateTo:operation2];
+    }];
+    return operation;
 }
 
 - (MXHTTPOperation*)inviteUser:(NSString*)userId
