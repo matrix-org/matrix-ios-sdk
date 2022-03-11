@@ -22,8 +22,8 @@
 
 //  TODO: Replace when the MSC merged
 //  https://github.com/matrix-org/matrix-doc/pull/3440
-NSString *const kMXRoomEventFilterKeyRelatedByTypes = @"io.element.relation_types";
-NSString *const kMXRoomEventFilterKeyRelatedBySenders = @"io.element.relation_senders";
+NSString *const kMXRoomEventFilterKeyRelatedByTypes = @"related_by_rel_types";
+NSString *const kMXRoomEventFilterKeyRelatedBySenders = @"related_by_senders";
 
 @implementation MXRoomEventFilter
 
