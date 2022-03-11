@@ -71,6 +71,7 @@ public class MXThread: NSObject, MXThreadProtocol {
             //  the user sent a message to the thread, so mark the thread as read
             markAsRead()
         }
+        liveTimeline?.notifyListeners(event, direction: direction)
         return true
     }
 
