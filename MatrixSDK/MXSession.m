@@ -85,7 +85,7 @@ NSString *const kMXSessionNoRoomTag = @"m.recent";  // Use the same value as mat
  Default timeouts used by the events streams.
  */
 #define SERVER_TIMEOUT_MS 30000
-#define CLIENT_TIMEOUT_MS 120000
+#define CLIENT_TIMEOUT_MS 240000
 
 /**
  Time before retrying in case of `MXSessionStateSyncError`.
