@@ -64,7 +64,7 @@
     {
         NSMutableArray *result = [NSMutableArray arrayWithCapacity:eventsCount];
         MXEvent *event;
-        while ((event = self.nextEvent) && result.count < eventsCount)
+        while (result.count < eventsCount && (event = self.nextEvent))
         {
             if ([event.threadId isEqualToString:threadId] || [event.eventId isEqualToString:threadId])
             {
@@ -78,7 +78,7 @@
         NSMutableArray *result = [NSMutableArray arrayWithCapacity:eventsCount];
         MXEvent *event;
         NSUInteger count = 0;
-        while ((event = self.nextEvent) && count < eventsCount)
+        while (count < eventsCount && (event = self.nextEvent))
         {
             //  do not count in-thread events
             if (!event.isInThread)
