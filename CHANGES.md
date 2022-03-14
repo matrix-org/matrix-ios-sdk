@@ -1,3 +1,10 @@
+## Changes in 0.22.6 (2022-03-14)
+
+🙌 Improvements
+
+- Room: API to ignore the sender of a room invite before the room is joined ([#5807](https://github.com/vector-im/element-ios/issues/5807))
+
+
 ## Changes in 0.22.5 (2022-03-08)
 
 🙌 Improvements
