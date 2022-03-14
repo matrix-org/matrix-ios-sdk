@@ -807,7 +807,7 @@ FOUNDATION_EXPORT NSInteger const kMXRoomInvalidInviteSenderErrorCode;
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)ignoreInviteSender:(void (^)(void))success
-                               failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+                               failure:(void (^)(NSError *error))failure;
 
 /**
  Invite a user to this room.
