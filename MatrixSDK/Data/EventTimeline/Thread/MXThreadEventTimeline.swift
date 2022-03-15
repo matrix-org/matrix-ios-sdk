@@ -435,9 +435,10 @@ public class MXThreadEventTimeline: NSObject, MXEventTimeline {
             notifyListeners(event, direction: direction)
         } else {
             if let threadingService = thread.session?.threadingService {
-                let handled = threadingService.handleEvent(event, direction: direction)
-                if handled {
-                    notifyListeners(event, direction: direction)
+                threadingService.handleEvent(event, direction: direction) { handled in
+                    if handled {
+                        self.notifyListeners(event, direction: direction)
+                    }
                 }
             }
             
