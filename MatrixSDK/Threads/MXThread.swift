@@ -117,6 +117,12 @@ public class MXThread: NSObject, MXThreadProtocol {
     public var numberOfReplies: Int {
         return eventsMap.filter({ $0 != id && $1.isInThread() }).count
     }
+
+    public func handleJoinedRoomSync(_ roomSync: MXRoomSync) {
+        liveTimeline { timeline in
+            timeline.handleJoinedRoomSync(roomSync, onComplete: {})
+        }
+    }
     
     /// The live events timeline
     /// - Parameter completion: Completion block

@@ -62,7 +62,32 @@ public class MXThreadingService: NSObject {
         self.session = session
         super.init()
     }
-    
+
+    /// Handle joined room sync
+    /// - Parameter roomSync: room sync instance
+    public func handleJoinedRoomSync(_ roomSync: MXRoomSync) {
+        guard let session = session else {
+            //  session closed
+            return
+        }
+
+        let events = roomSync.timeline.events
+        session.decryptEvents(events, inTimeline: nil) { _ in
+            let dispatchGroup = DispatchGroup()
+
+            for event in events {
+                dispatchGroup.enter()
+                self.handleEvent(event, direction: .forwards) { _ in
+                    dispatchGroup.leave()
+                }
+            }
+
+            dispatchGroup.notify(queue: .main) {
+                self.threads.values.forEach { $0.handleJoinedRoomSync(roomSync) }
+            }
+        }
+    }
+
     /// Adds event to the related thread instance
     /// - Parameter event: event to be handled
     /// - Returns: true if the event handled, false otherwise

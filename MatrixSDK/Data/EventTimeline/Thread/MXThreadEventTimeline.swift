@@ -300,7 +300,21 @@ public class MXThreadEventTimeline: NSObject, MXEventTimeline {
     }
     
     public func handleJoinedRoomSync(_ roomSync: MXRoomSync, onComplete: @escaping () -> Void) {
-        //  no-op
+        let events = roomSync.timeline.events
+        let dispatchGroup = DispatchGroup()
+
+        if let session = thread.session {
+            dispatchGroup.enter()
+            session.decryptEvents(events, inTimeline: nil) { _ in
+                dispatchGroup.leave()
+            }
+        }
+
+        dispatchGroup.notify(queue: .main) {
+            events.forEach {
+                self.notifyListeners($0, direction: .forwards)
+            }
+        }
     }
     
     public func handle(_ invitedRoomSync: MXInvitedRoomSync, onComplete: @escaping () -> Void) {
