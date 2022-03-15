@@ -52,7 +52,7 @@
     MXEvent *event;
 
     // Feed the array with matching events
-    while ((event = self.nextEvent) && (nextEvents.count != eventsCount))
+    while ((nextEvents.count != eventsCount) && (event = self.nextEvent))
     {
         if (!nextEvents)
         {

@@ -191,6 +191,52 @@
     }];
 }
 
+- (void)testIgnoreInviteSender
+{
+    [matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobClient, NSString *roomId, XCTestExpectation *expectation) {
+
+        [matrixSDKTestsData doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceClient, XCTestExpectation *expectation2) {
+
+            MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceClient];
+            [matrixSDKTestsData retain:mxSession];
+
+            [bobClient inviteUser:aliceClient.credentials.userId toRoom:roomId success:^{
+                [mxSession startWithSyncFilter:[MXFilterJSONModel syncFilterWithMessageLimit:0]
+                              onServerSyncDone:^{
+
+                    MXRoom *room = [mxSession roomWithRoomId:roomId];
+                    XCTAssertEqual(mxSession.ignoredUsers.count, 0);
+                    XCTAssertEqual([mxSession isUserIgnored:bobClient.credentials.userId], NO);
+                    
+                    // Listen to mxSession.ignoredUsers changes where the successful assertion happens
+                    [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionIgnoredUsersDidChangeNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification * _Nonnull notif) {
+                        if (notif.object == mxSession)
+                        {
+                            XCTAssertEqual(mxSession.ignoredUsers.count, 1);
+                            XCTAssertEqual([mxSession isUserIgnored:bobClient.credentials.userId], YES);
+
+                            [expectation fulfill];
+                        }
+                    }];
+                    
+                    [room ignoreInviteSender:nil failure:^(NSError *error) {
+                        XCTFail(@"Failed to ignore invite sender - NSError: %@", error);
+                        [expectation fulfill];
+                    }];
+
+                } failure:^(NSError *error) {;
+                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                    [expectation fulfill];
+                }];
+
+            } failure:^(NSError *error) {
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
+            }];
+        }];
+    }];
+}
+
 - (void)testJoin
 {
     [matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
