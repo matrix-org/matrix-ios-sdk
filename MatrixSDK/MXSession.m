@@ -2957,9 +2957,9 @@ typedef void (^MXOnResumeDone)(void);
                 failure(error.createNSError);
             });
         }
-        return nil;
+        return [MXHTTPOperation new];
     }
-    MXHTTPOperation *operation;
+    MXHTTPOperation *operation = [MXHTTPOperation new];
 
     void (^decryptIfNeeded)(MXEvent *event) = ^(MXEvent *event) {
         [self decryptEvents:@[event] inTimeline:nil onComplete:^(NSArray<MXEvent *> *failedEvents) {

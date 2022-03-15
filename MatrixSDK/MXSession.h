@@ -1039,7 +1039,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 - (MXHTTPOperation*)eventWithEventId:(NSString*)eventId
                               inRoom:(NSString *)roomId
                              success:(void (^)(MXEvent *event))success
-                             failure:(void (^)(NSError *error))failure;
+                             failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 
 #pragma mark - Rooms summaries
