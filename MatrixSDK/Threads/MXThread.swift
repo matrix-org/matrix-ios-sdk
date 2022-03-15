@@ -85,6 +85,7 @@ public class MXThread: NSObject, MXThreadProtocol {
             return false
         }
         eventsMap[oldEventId] = newEvent
+        liveTimeline?.notifyListeners(newEvent, direction: .forwards)
         return true
     }
     
