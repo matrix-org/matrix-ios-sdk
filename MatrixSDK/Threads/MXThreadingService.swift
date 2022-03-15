@@ -181,8 +181,24 @@ public class MXThreadingService: NSObject {
                             return
                         }
 
-                        let threads = rootEvents.map { self.thread(forRootEvent: $0, session: session) }.sorted(by: <)
-                        completion(.success(threads))
+                        session.decryptEvents(rootEvents, inTimeline: nil) { _ in
+                            let threads = rootEvents.map { self.thread(forRootEvent: $0, session: session) }.sorted(by: <)
+                            let decryptionGroup = DispatchGroup()
+                            for thread in threads {
+                                if let rootEvent = rootEvents.first(where: { $0.eventId == thread.id }),
+                                   let latestEvent = rootEvent.unsignedData.relations?.thread?.latestEvent {
+                                    decryptionGroup.enter()
+                                    session.decryptEvents([latestEvent], inTimeline: nil) { _ in
+                                        thread.updateLastMessage(latestEvent)
+                                        decryptionGroup.leave()
+                                    }
+                                }
+                            }
+
+                            decryptionGroup.notify(queue: .main) {
+                                completion(.success(threads))
+                            }
+                        }
                     case .failure(let error):
                         completion(.failure(error))
                     }
