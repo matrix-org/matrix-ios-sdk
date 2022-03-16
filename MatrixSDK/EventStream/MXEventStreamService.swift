@@ -28,28 +28,15 @@ import Foundation
         listeners.removeAll { $0 === eventStreamListener }
     }
     
-    public func dispatchLiveEventReceived(event: MXEvent, roomId: String, initialSync: Bool) {
-        guard !initialSync else { return }
+    public func dispatchSessionStateChanged(state: MXSessionState) {
         listeners.forEach { listener in
-            listener.onLiveEvent(roomId: roomId, event: event)
+            listener.onSessionStateChanged(state: state)
         }
     }
-
-    public func dispatchPaginatedEventReceived(event: MXEvent, roomId: String) {
+    
+    public func dispatchLiveEventDecryptionAttempted(event: MXEvent, result: MXEventDecryptionResult) {
         listeners.forEach { listener in
-            listener.onPaginatedEvent(roomId: roomId, event: event)
-        }
-    }
-
-    public func dispatchLiveEventDecrypted(event: MXEvent, result: MXEventDecryptionResult) {
-        listeners.forEach { listener in
-            listener.onEventDecrypted(eventId: event.eventId, roomId: event.roomId, clearEvent: result.clearEvent)
-        }
-    }
-
-    public func dispatchLiveEventDecryptionFailed(event: MXEvent, error: Error) {
-        listeners.forEach { listener in
-            listener.onEventDecryptionError(eventId: event.eventId, roomId: event.roomId, error: error)
+            listener.onLiveEventDecryptionAttempted(event: event, result: result)
         }
     }
 

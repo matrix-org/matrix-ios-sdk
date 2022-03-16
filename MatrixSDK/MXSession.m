@@ -327,6 +327,7 @@ typedef void (^MXOnResumeDone)(void);
         
         NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
         [notificationCenter postNotificationName:kMXSessionStateDidChangeNotification object:self userInfo:nil];
+        [_eventStreamService dispatchSessionStateChangedWithState:state];
     }
 }
 

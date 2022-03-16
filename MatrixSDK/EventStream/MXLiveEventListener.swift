@@ -15,16 +15,11 @@
 //
 
 public protocol MXLiveEventListener: AnyObject {
-
-    func onLiveEvent(roomId: String, event: MXEvent)
-
-    func onPaginatedEvent(roomId: String, event: MXEvent)
-
-    func onEventDecrypted(eventId: String, roomId: String, clearEvent: [AnyHashable: Any])
-
-    func onEventDecryptionError(eventId: String, roomId: String, error: Error)
+    
+    func onSessionStateChanged(state: MXSessionState)
+    
+    func onLiveEventDecryptionAttempted(event: MXEvent, result:MXEventDecryptionResult)
 
     func onLiveToDeviceEvent(event: MXEvent)
 
-    // Maybe later add more, like onJoin, onLeave..
 }

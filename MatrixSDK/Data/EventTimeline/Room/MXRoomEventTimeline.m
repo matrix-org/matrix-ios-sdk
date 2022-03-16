@@ -299,7 +299,6 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
             // Handle events from the most recent
             for (MXEvent *event in eventsFromStore.reverseObjectEnumerator)
             {
-                [self->room.mxSession.eventStreamService dispatchPaginatedEventReceivedWithEvent:event roomId:self->room.roomId];
                 [self addEvent:event direction:MXTimelineDirectionBackwards fromStore:YES isRoomInitialSync:NO];
             }
             
@@ -521,7 +520,6 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
             
             for (MXEvent *event in roomSync.timeline.events)
             {
-                [self->room.mxSession.eventStreamService dispatchLiveEventReceivedWithEvent:event roomId:self->room.roomId initialSync:isRoomInitialSync];
                 // Add the event to the end of the timeline
                 [self addEvent:event direction:MXTimelineDirectionForwards fromStore:NO isRoomInitialSync:isRoomInitialSync];
             }
