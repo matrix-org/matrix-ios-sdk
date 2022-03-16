@@ -44,7 +44,9 @@
 
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        updaterPerSession = [[NSMapTable alloc] init];
+        updaterPerSession = [[NSMapTable alloc] initWithKeyOptions:NSPointerFunctionsWeakMemory
+                                                      valueOptions:NSPointerFunctionsWeakMemory
+                                                          capacity:1];
     });
 
     MXRoomSummaryUpdater *updater = [updaterPerSession objectForKey:mxSession];
