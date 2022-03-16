@@ -551,7 +551,7 @@ typedef void (^MXOnResumeDone)(void);
                     }
                 }
 
-                [self.threadingService handleJoinedRoomSync:roomSync];
+                [self.threadingService handleJoinedRoomSync:roomSync forRoom:roomId];
             }
         }
         

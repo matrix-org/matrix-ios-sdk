@@ -65,13 +65,15 @@ public class MXThreadingService: NSObject {
 
     /// Handle joined room sync
     /// - Parameter roomSync: room sync instance
-    public func handleJoinedRoomSync(_ roomSync: MXRoomSync) {
+    public func handleJoinedRoomSync(_ roomSync: MXRoomSync, forRoom roomId: String) {
         guard let session = session else {
             //  session closed
             return
         }
 
         let events = roomSync.timeline.events
+        // Make sure that all events have a room id. They are skipped in some server responses
+        events.forEach({ $0.roomId = roomId })
         session.decryptEvents(events, inTimeline: nil) { _ in
             let dispatchGroup = DispatchGroup()
 
@@ -83,7 +85,7 @@ public class MXThreadingService: NSObject {
             }
 
             dispatchGroup.notify(queue: .main) {
-                self.threads.values.forEach { $0.handleJoinedRoomSync(roomSync) }
+                self.threads.values.filter { $0.roomId == roomId }.forEach { $0.handleJoinedRoomSync(roomSync) }
             }
         }
     }

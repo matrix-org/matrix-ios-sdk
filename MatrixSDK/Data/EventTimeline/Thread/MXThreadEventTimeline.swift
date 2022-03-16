@@ -301,6 +301,7 @@ public class MXThreadEventTimeline: NSObject, MXEventTimeline {
     
     public func handleJoinedRoomSync(_ roomSync: MXRoomSync, onComplete: @escaping () -> Void) {
         let events = roomSync.timeline.events
+        fixRoomId(inEvents: events)
         let dispatchGroup = DispatchGroup()
 
         if let session = thread.session {
