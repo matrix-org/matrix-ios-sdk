@@ -34,13 +34,15 @@
 
 @implementation MXEventsByTypesEnumeratorOnArray
 
-- (instancetype)initWithMessages:(NSArray<MXEvent *> *)messages andTypesIn:(NSArray *)theTypes
+- (instancetype)initWithEventIds:(NSArray<NSString *> *)eventIds
+                      andTypesIn:(NSArray*)theTypes
+                      dataSource:(id<MXEventsEnumeratorDataSource>)dataSource
 {
     self = [super init];
     if (self)
     {
         types = theTypes;
-        allMessagesEnumerator = [[MXEventsEnumeratorOnArray alloc] initWithMessages:messages];
+        allMessagesEnumerator = [[MXEventsEnumeratorOnArray alloc] initWithEventIds:eventIds dataSource:dataSource];
     }
 
     return self;
