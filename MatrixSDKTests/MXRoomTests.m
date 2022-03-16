@@ -191,6 +191,52 @@
     }];
 }
 
+- (void)testIgnoreInviteSender
+{
+    [matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobClient, NSString *roomId, XCTestExpectation *expectation) {
+
+        [matrixSDKTestsData doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceClient, XCTestExpectation *expectation2) {
+
+            MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceClient];
+            [matrixSDKTestsData retain:mxSession];
+
+            [bobClient inviteUser:aliceClient.credentials.userId toRoom:roomId success:^{
+                [mxSession startWithSyncFilter:[MXFilterJSONModel syncFilterWithMessageLimit:0]
+                              onServerSyncDone:^{
+
+                    MXRoom *room = [mxSession roomWithRoomId:roomId];
+                    XCTAssertEqual(mxSession.ignoredUsers.count, 0);
+                    XCTAssertEqual([mxSession isUserIgnored:bobClient.credentials.userId], NO);
+                    
+                    // Listen to mxSession.ignoredUsers changes where the successful assertion happens
+                    [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionIgnoredUsersDidChangeNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification * _Nonnull notif) {
+                        if (notif.object == mxSession)
+                        {
+                            XCTAssertEqual(mxSession.ignoredUsers.count, 1);
+                            XCTAssertEqual([mxSession isUserIgnored:bobClient.credentials.userId], YES);
+
+                            [expectation fulfill];
+                        }
+                    }];
+                    
+                    [room ignoreInviteSender:nil failure:^(NSError *error) {
+                        XCTFail(@"Failed to ignore invite sender - NSError: %@", error);
+                        [expectation fulfill];
+                    }];
+
+                } failure:^(NSError *error) {;
+                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                    [expectation fulfill];
+                }];
+
+            } failure:^(NSError *error) {
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
+            }];
+        }];
+    }];
+}
+
 - (void)testJoin
 {
     [matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
@@ -720,7 +766,7 @@
                 __block MXEvent *localEchoEvent = nil;
                 
                 // Reply to first message
-                [room sendReplyToEvent:event withTextMessage:secondMessageReplyToFirst formattedTextMessage:secondMessageFormattedReplyToFirst stringLocalizer:defaultStringLocalizer localEcho:&localEchoEvent success:^(NSString *eventId) {
+                [room sendReplyToEvent:event withTextMessage:secondMessageReplyToFirst formattedTextMessage:secondMessageFormattedReplyToFirst stringLocalizer:defaultStringLocalizer threadId:nil localEcho:&localEchoEvent success:^(NSString *eventId) {
                     MXLogDebug(@"Send reply to first message with success");
                 } failure:^(NSError *error) {
                     XCTFail(@"The request should not fail - NSError: %@", error);
@@ -735,7 +781,7 @@
                 
                 NSString *secondEventBody = localEchoEvent.content[kMXMessageBodyKey];
                 NSString *secondEventFormattedBody = localEchoEvent.content[@"formatted_body"];
-                NSString *secondEventRelatesToEventId = localEchoEvent.content[kMXEventRelationRelatesToKey][@"m.in_reply_to"][@"event_id"];
+                NSString *secondEventRelatesToEventId = localEchoEvent.content[kMXEventRelationRelatesToKey][kMXEventContentRelatesToKeyInReplyTo][kMXEventContentRelatesToKeyEventId];
 
                 NSString *permalinkToUser = [MXTools permalinkToUserWithUserId:firstEventSender];
                 NSString *permalinkToEvent = [MXTools permalinkToEvent:firstEventId inRoom:roomId];
@@ -752,7 +798,7 @@
                 __block MXEvent *localEchoEvent = nil;
                 
                 // Reply to second message, which was also a reply
-                [room sendReplyToEvent:event withTextMessage:thirdMessageReplyToSecond formattedTextMessage:thirdMessageFormattedReplyToSecond stringLocalizer:defaultStringLocalizer localEcho:&localEchoEvent success:^(NSString *eventId) {
+                [room sendReplyToEvent:event withTextMessage:thirdMessageReplyToSecond formattedTextMessage:thirdMessageFormattedReplyToSecond stringLocalizer:defaultStringLocalizer threadId:nil localEcho:&localEchoEvent success:^(NSString *eventId) {
                     MXLogDebug(@"Send reply to second message with success");
                 } failure:^(NSError *error) {
                     XCTFail(@"The request should not fail - NSError: %@", error);
@@ -767,7 +813,7 @@
                 
                 NSString *thirdEventBody = localEchoEvent.content[kMXMessageBodyKey];
                 NSString *thirdEventFormattedBody = localEchoEvent.content[@"formatted_body"];
-                NSString *thirdEventRelatesToEventId = localEchoEvent.content[kMXEventRelationRelatesToKey][@"m.in_reply_to"][@"event_id"];
+                NSString *thirdEventRelatesToEventId = localEchoEvent.content[kMXEventRelationRelatesToKey][kMXEventContentRelatesToKeyInReplyTo][kMXEventContentRelatesToKeyEventId];
                 
                 NSString *permalinkToUser = [MXTools permalinkToUserWithUserId:secondEventSender];
                 NSString *permalinkToEvent = [MXTools permalinkToEvent:secondEventId inRoom:roomId];
@@ -788,6 +834,44 @@
         // Send first message
         [room sendTextMessage:firstMessage formattedText:firstFormattedMessage threadId:nil localEcho:nil success:^(NSString *eventId) {
             MXLogDebug(@"Send first message with success");
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+- (void)testUpgrade
+{
+    [matrixSDKTestsData doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
+        NSString *newRoomVersion = @"9";
+        
+        [mxSession.matrixRestClient upgradeRoomWithId:room.roomId to:newRoomVersion success:^(NSString *replacementRoomId) {
+            
+            XCTAssertNotEqual(room.roomId, replacementRoomId, @"Replacement room ID (%@) must be different from initial room ID (%@)", replacementRoomId, room.roomId);
+            
+            MXRoom *replacementRoom = [mxSession roomWithRoomId:replacementRoomId];
+            XCTAssertNotNil(replacementRoom, "Cannot find replacement room");
+            
+            if (replacementRoom)
+            {
+                [replacementRoom state:^(MXRoomState *roomState) {
+                    MXEvent *createEvent = [roomState stateEventsWithType:kMXEventTypeStringRoomCreate].lastObject;
+                    XCTAssertNotNil(createEvent, "Cannot find create event");
+                    
+                    NSDictionary<NSString*, id> *wireContent = createEvent.wireContent;
+                    XCTAssert([wireContent[@"creator"] isEqualToString:mxSession.myUserId]);
+                    XCTAssert([wireContent[@"room_version"] isEqualToString:newRoomVersion]);
+                    XCTAssert([wireContent[@"predecessor"][@"room_id"] isEqualToString:room.roomId]);
+                    
+                    [expectation fulfill];
+                }];
+            }
+            else
+            {
+                [expectation fulfill];
+            }
+            
         } failure:^(NSError *error) {
             XCTFail(@"The request should not fail - NSError: %@", error);
             [expectation fulfill];

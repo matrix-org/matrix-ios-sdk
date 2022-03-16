@@ -21,11 +21,11 @@ class MXEventAnnotationUnitTests: XCTestCase {
 
     let eventJSON: [String : Any] = [
         "event_id": "$eventId",
-        "type": "m.room.message",
+        "type": kMXEventTypeStringRoomMessage,
         "origin_server_ts": 0,
         "unsigned": [
             "m.relations": [
-                "m.annotation": [
+                MXEventRelationTypeAnnotation: [
                     "chunk": [
                         [
                             "type": "m.reaction",

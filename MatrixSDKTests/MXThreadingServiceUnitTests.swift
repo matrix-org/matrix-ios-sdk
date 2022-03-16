@@ -15,6 +15,7 @@
 //
 
 import XCTest
+import MatrixSDK
 
 class MXThreadingServiceUnitTests: XCTestCase {
 
@@ -69,8 +70,8 @@ class MXThreadingServiceUnitTests: XCTestCase {
                 "type": kMXMessageTypeText,
                 "body": "Message",
                 kMXEventRelationRelatesToKey: [
-                    "rel_type": MXEventRelationTypeThread,
-                    "event_id": threadId
+                    kMXEventContentRelatesToKeyRelationType: MXEventRelationTypeThread,
+                    kMXEventContentRelatesToKeyEventId: threadId
                 ],
             ]
         ]) else {
@@ -117,8 +118,8 @@ class MXThreadingServiceUnitTests: XCTestCase {
                 "type": kMXMessageTypeText,
                 "body": "Message Old",
                 kMXEventRelationRelatesToKey: [
-                    "rel_type": MXEventRelationTypeThread,
-                    "event_id": threadId
+                    kMXEventContentRelatesToKeyRelationType: MXEventRelationTypeThread,
+                    kMXEventContentRelatesToKeyEventId: threadId
                 ],
             ]
         ]) else {
@@ -136,8 +137,8 @@ class MXThreadingServiceUnitTests: XCTestCase {
                 "type": kMXMessageTypeText,
                 "body": "Message New",
                 kMXEventRelationRelatesToKey: [
-                    "rel_type": MXEventRelationTypeThread,
-                    "event_id": threadId
+                    kMXEventContentRelatesToKeyRelationType: MXEventRelationTypeThread,
+                    kMXEventContentRelatesToKeyEventId: threadId
                 ],
             ],
             "sender": Constants.credentials.userId!
@@ -192,8 +193,8 @@ class MXThreadingServiceUnitTests: XCTestCase {
                 "type": kMXMessageTypeText,
                 "body": "Message",
                 kMXEventRelationRelatesToKey: [
-                    "rel_type": MXEventRelationTypeThread,
-                    "event_id": threadId
+                    kMXEventContentRelatesToKeyRelationType: MXEventRelationTypeThread,
+                    kMXEventContentRelatesToKeyEventId: threadId
                 ],
             ]
         ]) else {
@@ -268,8 +269,8 @@ class MXThreadingServiceUnitTests: XCTestCase {
                 "type": kMXMessageTypeText,
                 "body": "Message",
                 kMXEventRelationRelatesToKey: [
-                    "rel_type": MXEventRelationTypeThread,
-                    "event_id": threadId
+                    kMXEventContentRelatesToKeyRelationType: MXEventRelationTypeThread,
+                    kMXEventContentRelatesToKeyEventId: threadId
                 ],
             ]
         ]) else {

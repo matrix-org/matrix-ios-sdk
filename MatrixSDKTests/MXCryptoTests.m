@@ -1441,7 +1441,7 @@
                 __block MXEvent *localEchoEvent = nil;
                 
                 // Reply to first message
-                [roomFromBobPOV sendReplyToEvent:event withTextMessage:secondMessageReplyToFirst formattedTextMessage:secondMessageFormattedReplyToFirst stringLocalizer:defaultStringLocalizer localEcho:&localEchoEvent success:^(NSString *eventId) {
+                [roomFromBobPOV sendReplyToEvent:event withTextMessage:secondMessageReplyToFirst formattedTextMessage:secondMessageFormattedReplyToFirst stringLocalizer:defaultStringLocalizer threadId:nil localEcho:&localEchoEvent success:^(NSString *eventId) {
                     MXLogDebug(@"Send reply to first message with success");
                 } failure:^(NSError *error) {
                     XCTFail(@"The request should not fail - NSError: %@", error);
@@ -1455,8 +1455,8 @@
                 
                 NSString *secondEventBody = localEchoEvent.content[kMXMessageBodyKey];
                 NSString *secondEventFormattedBody = localEchoEvent.content[@"formatted_body"];
-                NSString *secondEventRelatesToEventId = localEchoEvent.content[kMXEventRelationRelatesToKey][@"m.in_reply_to"][@"event_id"];
-                NSString *secondWiredEventRelatesToEventId = localEchoEvent.wireContent[kMXEventRelationRelatesToKey][@"m.in_reply_to"][@"event_id"];
+                NSString *secondEventRelatesToEventId = localEchoEvent.content[kMXEventRelationRelatesToKey][kMXEventContentRelatesToKeyInReplyTo][kMXEventContentRelatesToKeyEventId];
+                NSString *secondWiredEventRelatesToEventId = localEchoEvent.relatesTo.inReplyTo.eventId;
                 
                 NSString *permalinkToUser = [MXTools permalinkToUserWithUserId:firstEventSender];
                 NSString *permalinkToEvent = [MXTools permalinkToEvent:firstEventId inRoom:roomId];
@@ -1474,7 +1474,7 @@
                 __block MXEvent *localEchoEvent = nil;
                 
                 // Reply to second message, which was also a reply
-                [roomFromBobPOV sendReplyToEvent:event withTextMessage:thirdMessageReplyToSecond formattedTextMessage:thirdMessageFormattedReplyToSecond stringLocalizer:defaultStringLocalizer localEcho:&localEchoEvent success:^(NSString *eventId) {
+                [roomFromBobPOV sendReplyToEvent:event withTextMessage:thirdMessageReplyToSecond formattedTextMessage:thirdMessageFormattedReplyToSecond stringLocalizer:defaultStringLocalizer threadId:nil localEcho:&localEchoEvent success:^(NSString *eventId) {
                     MXLogDebug(@"Send reply to second message with success");
                 } failure:^(NSError *error) {
                     XCTFail(@"The request should not fail - NSError: %@", error);
@@ -1488,8 +1488,8 @@
                 
                 NSString *thirdEventBody = localEchoEvent.content[kMXMessageBodyKey];
                 NSString *thirdEventFormattedBody = localEchoEvent.content[@"formatted_body"];
-                NSString *thirdEventRelatesToEventId = localEchoEvent.content[kMXEventRelationRelatesToKey][@"m.in_reply_to"][@"event_id"];
-                NSString *thirdWiredEventRelatesToEventId = localEchoEvent.wireContent[kMXEventRelationRelatesToKey][@"m.in_reply_to"][@"event_id"];
+                NSString *thirdEventRelatesToEventId = localEchoEvent.content[kMXEventRelationRelatesToKey][kMXEventContentRelatesToKeyInReplyTo][kMXEventContentRelatesToKeyEventId];
+                NSString *thirdWiredEventRelatesToEventId = localEchoEvent.relatesTo.inReplyTo.eventId;
                 
                 NSString *permalinkToUser = [MXTools permalinkToUserWithUserId:secondEventSender];
                 NSString *permalinkToEvent = [MXTools permalinkToEvent:secondEventId inRoom:roomId];
@@ -1523,13 +1523,13 @@
             else if (messageCountFromAlice == 2)
             {
                 secondEventId = event.eventId;
-                NSString *secondWiredEventRelatesToEventId = event.wireContent[kMXEventRelationRelatesToKey][@"m.in_reply_to"][@"event_id"];
+                NSString *secondWiredEventRelatesToEventId = event.relatesTo.inReplyTo.eventId;
 
                 XCTAssertEqualObjects(secondWiredEventRelatesToEventId, firstEventId);
             }
             else
             {
-                NSString *thirdWiredEventRelatesToEventId = event.wireContent[kMXEventRelationRelatesToKey][@"m.in_reply_to"][@"event_id"];
+                NSString *thirdWiredEventRelatesToEventId = event.relatesTo.inReplyTo.eventId;
 
                 XCTAssertEqualObjects(thirdWiredEventRelatesToEventId, secondEventId);
                 

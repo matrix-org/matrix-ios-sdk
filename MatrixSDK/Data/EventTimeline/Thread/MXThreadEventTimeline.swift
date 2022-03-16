@@ -59,7 +59,7 @@ public class MXThreadEventTimeline: NSObject, MXEventTimeline {
     
     private lazy var threadEventFilter: MXRoomEventFilter = {
         let filter = MXRoomEventFilter()
-        filter.relationTypes = [MXEventRelationTypeThread]
+        filter.relatedByTypes = [MXEventRelationTypeThread]
         return filter
     }()
     
@@ -361,22 +361,34 @@ public class MXThreadEventTimeline: NSObject, MXEventTimeline {
     //  MARK: - Private
     
     private func processPaginationResponse(_ response: MXAggregationPaginatedResponse, direction: MXTimelineDirection) {
-        for event in response.chunk {
-            addEvent(event, direction: direction, fromStore: false)
+        let dispatchGroup = DispatchGroup()
+
+        dispatchGroup.enter()
+        decryptEvents(response.chunk) {
+            for event in response.chunk {
+                self.addEvent(event, direction: direction, fromStore: false)
+            }
+            dispatchGroup.leave()
         }
         if let rootEvent = response.originalEvent, response.nextBatch == nil {
-            addEvent(rootEvent, direction: direction, fromStore: false)
+            dispatchGroup.enter()
+            decryptEvents([rootEvent]) {
+                self.addEvent(rootEvent, direction: direction, fromStore: false)
+                dispatchGroup.leave()
+            }
         }
-        
-        switch direction {
-        case .backwards:
-            backwardsPaginationToken = response.nextBatch
-            hasReachedHomeServerBackwardsPaginationEnd = response.nextBatch == nil
-        case .forwards:
-            forwardsPaginationToken = response.nextBatch
-            hasReachedHomeServerForwardsPaginationEnd = response.nextBatch == nil
-        @unknown default:
-            fatalError("[MXThreadEventTimeline][\(timelineId)] processPaginationResponse: Unknown direction")
+
+        dispatchGroup.notify(queue: .main) {
+            switch direction {
+            case .backwards:
+                self.backwardsPaginationToken = response.nextBatch
+                self.hasReachedHomeServerBackwardsPaginationEnd = response.nextBatch == nil
+            case .forwards:
+                self.forwardsPaginationToken = response.nextBatch
+                self.hasReachedHomeServerForwardsPaginationEnd = response.nextBatch == nil
+            @unknown default:
+                fatalError("[MXThreadEventTimeline][\(self.timelineId)] processPaginationResponse: Unknown direction")
+            }
         }
     }
     

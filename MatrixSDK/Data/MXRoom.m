@@ -44,6 +44,7 @@
 NSString *const kMXRoomDidFlushDataNotification = @"kMXRoomDidFlushDataNotification";
 NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotification";
 NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
+NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
 
 @interface MXRoom ()
 {
@@ -630,8 +631,8 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
             else if (threadId)
             {
                 relatesToJSON = @{
-                    @"rel_type": MXEventRelationTypeThread,
-                    @"event_id": threadId
+                    kMXEventContentRelatesToKeyRelationType: MXEventRelationTypeThread,
+                    kMXEventContentRelatesToKeyEventId: threadId
                 };
                 contentCopyToEncrypt = contentCopy;
             }
@@ -784,8 +785,8 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     NSDictionary *newContent = content;
     BOOL inThread = NO;
     BOOL startsThread = NO;
-    BOOL isReply = content[kMXEventRelationRelatesToKey][@"m.in_reply_to"][@"event_id"] != nil;
-    BOOL isEditing = [content[kMXEventRelationRelatesToKey][@"rel_type"] isEqualToString:MXEventRelationTypeReplace];
+    BOOL isReply = content[kMXEventRelationRelatesToKey][kMXEventContentRelatesToKeyInReplyTo][kMXEventContentRelatesToKeyEventId] != nil;
+    BOOL isEditing = [content[kMXEventRelationRelatesToKey][kMXEventContentRelatesToKeyRelationType] isEqualToString:MXEventRelationTypeReplace];
     if (MXSDKOptions.sharedInstance.enableThreads)
     {
         if (threadId)
@@ -795,7 +796,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
             if (isReply)
             {
                 //  this will be a real in-thread reply
-                mutableContent[kMXEventRelationRelatesToKey][@"m.in_reply_to"][@"m.render_in"] = @[MXEventRelationTypeThread];
+                mutableContent[kMXEventRelationRelatesToKey][kMXEventContentRelatesToKeyIsReplyFallback] = @(NO);
             }
             else
             {
@@ -806,15 +807,17 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
 
                 if (mutableContent[kMXEventRelationRelatesToKey])
                 {
-                    mutableContent[kMXEventRelationRelatesToKey][@"m.in_reply_to"] = @{
-                        @"event_id": replyToEventId
+                    mutableContent[kMXEventRelationRelatesToKey][kMXEventContentRelatesToKeyInReplyTo] = @{
+                        kMXEventContentRelatesToKeyEventId: replyToEventId
                     };
+                    mutableContent[kMXEventRelationRelatesToKey][kMXEventContentRelatesToKeyIsReplyFallback] = @(YES);
                 }
                 else
                 {
                     mutableContent[kMXEventRelationRelatesToKey] = @{
-                        @"m.in_reply_to": @{
-                            @"event_id": replyToEventId
+                        kMXEventContentRelatesToKeyIsReplyFallback: @(YES),
+                        kMXEventContentRelatesToKeyInReplyTo: @{
+                            kMXEventContentRelatesToKeyEventId: replyToEventId
                         }
                     };
                 }
@@ -824,7 +827,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
         else if (isEditing)
         {
             //  detect in-thread edits
-            NSString *editedEventId = content[kMXEventRelationRelatesToKey][@"event_id"];
+            NSString *editedEventId = content[kMXEventRelationRelatesToKey][kMXEventContentRelatesToKeyEventId];
             MXEvent *editedEvent = [self.mxSession.store eventWithEventId:editedEventId inRoom:self.roomId];
             inThread = editedEvent.isInThread;
         }
@@ -1838,6 +1841,13 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
 {
     return [mxSession.matrixRestClient setRoomJoinRule:self.roomId joinRule:joinRule success:success failure:failure];
 }
+- (MXHTTPOperation*)setJoinRule:(MXRoomJoinRule)joinRule
+                      parentIds:(NSArray<NSString *>*)parentIds
+                        success:(void (^)(void))success
+                        failure:(void (^)(NSError *error))failure
+{
+    return [mxSession.matrixRestClient setRoomJoinRule:joinRule forRoomWithId:self.roomId allowedParentIds:parentIds success:success failure:failure];
+}
 
 - (MXHTTPOperation*)setGuestAccess:(MXRoomGuestAccess)guestAccess
                            success:(void (^)(void))success
@@ -1894,6 +1904,24 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                   failure:(void (^)(NSError *error))failure
 {
     return [mxSession leaveRoom:self.roomId success:success failure:failure];
+}
+
+- (MXHTTPOperation*)ignoreInviteSender:(void (^)(void))success
+                               failure:(void (^)(NSError *))failure {
+    MXHTTPOperation *operation = [[MXHTTPOperation alloc] init];
+    [self state:^(MXRoomState *roomState) {
+        MXRoomMember *myUser = [roomState.members memberWithUserId:self.mxSession.myUserId];
+        NSString *inviteSenderID = myUser.originalEvent.sender;
+        if (!inviteSenderID || [inviteSenderID isEqualToString:myUser.userId]) {
+            NSError *error = [NSError errorWithDomain:kMXNSErrorDomain code:kMXRoomInvalidInviteSenderErrorCode userInfo:nil];
+            failure(error);
+            return;
+        }
+        
+        MXHTTPOperation *operation2 = [self.mxSession ignoreUsers:@[inviteSenderID] success:success failure:failure];
+        [operation mutateTo:operation2];
+    }];
+    return operation;
 }
 
 - (MXHTTPOperation*)inviteUser:(NSString*)userId
@@ -2000,6 +2028,7 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
                      withTextMessage:(NSString*)textMessage
                 formattedTextMessage:(NSString*)formattedTextMessage
                      stringLocalizer:(id<MXSendReplyEventStringLocalizerProtocol>)stringLocalizer
+                            threadId:(NSString*)threadId
                            localEcho:(MXEvent**)localEcho
                              success:(void (^)(NSString *eventId))success
                              failure:(void (^)(NSError *error))failure
@@ -2038,9 +2067,9 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
         NSString *eventId = eventToReply.eventId;
         
         NSDictionary *relatesToDict = @{
-            @"m.in_reply_to" :
+            kMXEventContentRelatesToKeyInReplyTo :
                 @{
-                    @"event_id" : eventId
+                    kMXEventContentRelatesToKeyEventId : eventId
                 }
         };
         
@@ -2051,9 +2080,9 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
         msgContent[kMXMessageBodyKey] = replyToBody;
         msgContent[@"formatted_body"] = replyToFormattedBody;
         msgContent[kMXEventRelationRelatesToKey] = relatesToDict;
-        
+
         operation = [self sendMessageWithContent:msgContent
-                                        threadId:eventToReply.threadId  //  reply in the same thread
+                                        threadId:threadId
                                        localEcho:localEcho
                                          success:success
                                          failure:failure];
@@ -2706,8 +2735,8 @@ NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
     {
         NSMutableDictionary *newContent = [NSMutableDictionary dictionaryWithDictionary:content];
         newContent[kMXEventRelationRelatesToKey] = @{
-            @"rel_type": MXEventRelationTypeThread,
-            @"event_id": threadId
+            kMXEventContentRelatesToKeyRelationType: MXEventRelationTypeThread,
+            kMXEventContentRelatesToKeyEventId: threadId
         };
         event.wireContent = newContent;
     }

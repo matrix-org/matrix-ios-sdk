@@ -625,9 +625,9 @@
 
     NSDictionary *reactionContent = @{
         kMXEventRelationRelatesToKey: @{
-                @"rel_type": @"m.annotation",
-                @"event_id": eventId,
-                @"key": reaction
+            kMXEventContentRelatesToKeyRelationType: MXEventRelationTypeAnnotation,
+            kMXEventContentRelatesToKeyEventId: eventId,
+            kMXEventContentRelatesToKeyKey: reaction
         }
     };
 

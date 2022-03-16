@@ -61,8 +61,9 @@ class MXSpaceServiceTest: XCTestCase {
         for spaceName in spaceNames {
             
             dispatchGroup.enter()
+            let alias = "\(MXTools.validAliasLocalPart(from: spaceName))-\(NSUUID().uuidString)"
             
-            spaceService.createSpace(withName: spaceName, topic: nil, isPublic: true) { (response) in
+            spaceService.createSpace(withName: spaceName, topic: nil, isPublic: true, aliasLocalPart: alias, inviteArray: nil) { (response) in
                                 
                 switch response {
                 case .success(let space):
@@ -173,11 +174,12 @@ class MXSpaceServiceTest: XCTestCase {
         // Create Bob and setup Bob session
         self.doSpaceServiceTestWithBob(testCase: self) { (spaceService, _, expectation) in
             
-            let expectedSpaceName = "Space name"
+            let expectedSpaceName = "mxSpace \(NSUUID().uuidString)"
             let expectedSpaceTopic = "Space topic"
+            let alias = MXTools.validAliasLocalPart(from: expectedSpaceName)
             
             // Create a public space
-            spaceService.createSpace(withName: expectedSpaceName, topic: expectedSpaceTopic, isPublic: true) { (response) in
+            spaceService.createSpace(withName: expectedSpaceName, topic: expectedSpaceTopic, isPublic: true, aliasLocalPart: alias, inviteArray: nil) { (response) in
                 switch response {
                 case .success(let space):
                     
@@ -246,40 +248,36 @@ class MXSpaceServiceTest: XCTestCase {
                     let rootSpace = spaces[0]
                     let childSpace = spaces[1]
                     
+                    let _ = session.listenToEvents([.spaceChild]) { event, direction, customObject in
+                        guard let foundRootSpace = spaceService.getSpace(withId: rootSpace.spaceId) else {
+                            XCTFail("Fail to found the root space")
+                            expectation.fulfill()
+                            return
+                        }
+                        
+                        guard let room = foundRootSpace.room else {
+                            XCTFail("Space should have a room")
+                            expectation.fulfill()
+                            return
+                        }
+                        
+                        // Check if space A contains the space child state event for space B
+                        room.state({ (roomState) in
+
+                            let stateEvent = roomState?.stateEvents(with: .spaceChild)?.first
+
+                            XCTAssert(stateEvent?.stateKey == childSpace.spaceId)
+
+                            expectation.fulfill()
+                        })
+                    }
+                    
                     // Add space A as child of space B
                     rootSpace.addChild(roomId: childSpace.spaceId) { (response) in
                         switch response {
                         case .success:
-                            
-                            // Make an initial sync and and get the root space A
-                            session.start { (response) in
-                                switch response {
-                                case .success:
-                                    
-                                    guard let foundRootSpace = spaceService.getSpace(withId: rootSpace.spaceId) else {
-                                        XCTFail("Fail to found the root space")
-                                        return
-                                    }
-                                    
-                                    guard let room = foundRootSpace.room else {
-                                        XCTFail("Space should have a room")
-                                        return
-                                    }
-                                    
-                                    // Check if space A contains the space child state event for space B
-                                    room.state({ (roomState) in
-                                        
-                                        let stateEvent = roomState?.stateEvents(with: .spaceChild)?.first
-                                        
-                                        XCTAssert(stateEvent?.stateKey == childSpace.spaceId)
-                                        
-                                        expectation.fulfill()
-                                    })
-                                case .failure(let error):
-                                    XCTFail("Sync failed with error\(error)")
-                                    expectation.fulfill()
-                                }
-                            }
+                            // rest of the test is handled by the event listener
+                            break
                             
                         case .failure(let error):
                             XCTFail("Add child space failed with error \(error)")

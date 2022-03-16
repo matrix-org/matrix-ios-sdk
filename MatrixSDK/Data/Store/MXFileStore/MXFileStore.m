@@ -491,6 +491,20 @@ static NSUInteger preloadOptions;
     }
 }
 
+- (MXMatrixVersions *)supportedMatrixVersions
+{
+    return metaData.supportedMatrixVersions;
+}
+
+- (void)storeSupportedMatrixVersions:(MXMatrixVersions *)supportedMatrixVersions
+{
+    if (metaData)
+    {
+        metaData.supportedMatrixVersions = supportedMatrixVersions;
+        metaDataHasChanged = YES;
+    }
+}
+
 - (NSInteger)maxUploadSize
 {
     return metaData.maxUploadSize;
@@ -850,7 +864,8 @@ static NSUInteger preloadOptions;
         //  A per-room lock might be better.
         @synchronized (roomStores) {
             NSString *roomFile = [self messagesFileForRoom:roomId forBackup:NO];
-            if ([[NSFileManager defaultManager] fileExistsAtPath:roomFile])
+            BOOL isMarkedForDeletion = [roomsToCommitForDeletion containsObject:roomId];
+            if (!isMarkedForDeletion && [[NSFileManager defaultManager] fileExistsAtPath:roomFile])
             {
                 @try
                 {

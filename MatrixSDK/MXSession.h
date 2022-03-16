@@ -345,6 +345,7 @@ FOUNDATION_EXPORT NSString *const kMXSessionNotificationUserIdsArrayKey;
 FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
 
 @class MXSpaceService;
+@class MXHomeserverCapabilitiesService;
 @class MXThreadingService;
 @class MXCapabilities;
 @class MXEventStreamService;
@@ -482,6 +483,11 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
  The module that manages spaces.
  */
 @property (nonatomic, readonly) MXSpaceService *spaceService;
+
+/**
+ Capabilities of the current homeserver
+ */
+@property (nonatomic, readonly) MXHomeserverCapabilitiesService *homeserverCapabilitiesService;
 
 /**
  The module that manages threads.
@@ -773,7 +779,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)supportedMatrixVersions:(void (^)(MXMatrixVersions *matrixVersions))success failure:(void (^)(NSError *error))failure;
+- (MXHTTPOperation*)supportedMatrixVersions:(void (^)(MXMatrixVersions *matrixVersions))success failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  The antivirus server URL (nil by default).

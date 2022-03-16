@@ -1,3 +1,25 @@
+## Changes in 0.22.6 (2022-03-14)
+
+🙌 Improvements
+
+- Room: API to ignore the sender of a room invite before the room is joined ([#5807](https://github.com/vector-im/element-ios/issues/5807))
+
+
+## Changes in 0.22.5 (2022-03-08)
+
+🙌 Improvements
+
+- Room data filters: strict matches support ([#1379](https://github.com/matrix-org/matrix-ios-sdk/pull/1379))
+- Analytics: Add event composition tracking and isSpace for joined room events. ([#5365](https://github.com/vector-im/element-ios/issues/5365))
+- MXEvent+Extensions: Do not highlight any event that the current user sent. ([#5552](https://github.com/vector-im/element-ios/issues/5552))
+
+🐛 Bugfixes
+
+- Room: fix crash on members count not being always properly set ([#4949](https://github.com/vector-im/element-ios/issues/4949))
+- MXSuggestedRoomListDataFetcher: hide suggested rooms that a user is already part of ([#5276](https://github.com/vector-im/element-ios/issues/5276))
+- MXFileStore: Do not reuse room files if the room is marked for deletion ([#5717](https://github.com/vector-im/element-ios/issues/5717))
+
+
 ## Changes in 0.22.4 (2022-02-25)
 
 🙌 Improvements

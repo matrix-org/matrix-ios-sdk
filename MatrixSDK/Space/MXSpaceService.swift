@@ -176,6 +176,28 @@ public class MXSpaceService: NSObject {
         }
     }
     
+    /// Returns the set of direct parent IDs of the given room
+    /// - Parameters:
+    ///   - roomId: ID of the room
+    /// - Returns: set of direct parent IDs of the given room. Empty set if the room has no parent.
+    public func directParentIds(ofRoomWithId roomId: String) -> Set<String> {
+        return graph.parentIdsPerRoomId[roomId] ?? Set()
+    }
+    
+    /// Returns the set of direct parent IDs of the given room for which the room is suggested or not according to the request.
+    /// - Parameters:
+    ///   - roomId: ID of the room
+    ///   - suggested: If `true` the method will return the parent IDs where the room is suggested. If `false`  the method will return the parent IDs where the room is NOT suggested
+    /// - Returns: set of direct parent IDs of the given room. Empty set if the room has no parent.
+    public func directParentIds(ofRoomWithId roomId: String, whereRoomIsSuggested suggested: Bool) -> Set<String> {
+        return directParentIds(ofRoomWithId: roomId).filter { spaceId in
+            guard let space = spacesPerId[spaceId] else {
+                return false
+            }
+            return (suggested && space.suggestedRoomIds.contains(roomId)) || (!suggested && !space.suggestedRoomIds.contains(roomId))
+        }
+    }
+    
     /// Allows to know if a given room is a descendant of a given space
     /// - Parameters:
     ///   - roomId: ID of the room
@@ -197,9 +219,8 @@ public class MXSpaceService: NSObject {
     /// - Parameters:
     ///   - syncResponse: The sync response object
     public func handleSyncResponse(_ syncResponse: MXSyncResponse) {
-        guard self.needsUpdate || !(syncResponse.rooms?.join?.isEmpty ?? true) || !(syncResponse.rooms?.invite?.isEmpty ?? true) || !(syncResponse.rooms?.leave?.isEmpty ?? true) || !(syncResponse.toDevice?.events.isEmpty ?? true) else
-        {
-            return
+         guard self.needsUpdate || !(syncResponse.rooms?.join?.isEmpty ?? true) || !(syncResponse.rooms?.invite?.isEmpty ?? true) || !(syncResponse.rooms?.leave?.isEmpty ?? true) || !(syncResponse.toDevice?.events.isEmpty ?? true) else {
+             return
         }
         
         self.buildGraph()
@@ -232,24 +253,31 @@ public class MXSpaceService: NSObject {
     ///   - name: The space name.
     ///   - topic: The space topic.
     ///   - isPublic: true to indicate to use public chat presets and join the space without invite or false to use private chat presets and join the space on invite.
+    ///   - aliasLocalPart: local part of the alias
+    ///   (e.g. for the alias "#my_alias:example.org", the local part is "my_alias")
+    ///   - inviteArray: list of invited user IDs
     ///   - completion: A closure called when the operation completes.
     /// - Returns: a `MXHTTPOperation` instance.
     @discardableResult
-    public func createSpace(withName name: String, topic: String?, isPublic: Bool, completion: @escaping (MXResponse<MXSpace>) -> Void) -> MXHTTPOperation {
+    public func createSpace(withName name: String?, topic: String?, isPublic: Bool, aliasLocalPart: String? = nil, inviteArray: [String]? = nil, completion: @escaping (MXResponse<MXSpace>) -> Void) -> MXHTTPOperation {
+        
         let parameters = MXSpaceCreationParameters()
         parameters.name = name
         parameters.topic = topic
         parameters.preset = isPublic ? kMXRoomPresetPublicChat : kMXRoomPresetPrivateChat
-        
+        parameters.visibility = isPublic ? kMXRoomDirectoryVisibilityPublic : kMXRoomDirectoryVisibilityPrivate
+        parameters.inviteArray = inviteArray
         if isPublic {
+            parameters.roomAlias = aliasLocalPart
             let guestAccessStateEvent = self.stateEventBuilder.buildGuestAccessEvent(withAccess: .canJoin)
-                                    
-            let historyVisibilityStateEvent = self.stateEventBuilder.buildHistoryVisibilityEvent(withVisibility: .worldReadable)
-            
             parameters.addOrUpdateInitialStateEvent(guestAccessStateEvent)
+            let historyVisibilityStateEvent = self.stateEventBuilder.buildHistoryVisibilityEvent(withVisibility: .worldReadable)
             parameters.addOrUpdateInitialStateEvent(historyVisibilityStateEvent)
+            parameters.powerLevelContentOverride?.invite = 0 // default
+        } else {
+            parameters.powerLevelContentOverride?.invite = 50 // moderator
         }
-        
+
         return self.createSpace(with: parameters, completion: completion)
     }
     
@@ -594,7 +622,6 @@ public class MXSpaceService: NSObject {
     private func computSpaceGraph(with result: PrepareDataResult, roomIds: [String], directRoomIds: Set<String>, completion: @escaping (_ graph: MXSpaceGraphData) -> Void) {
         let startDate = Date()
         MXLog.debug("[MXSpaceService] computSpaceGraph: started for \(roomIds.count) rooms, \(directRoomIds.count) direct rooms, \(result.spaces.count) spaces, \(result.spaces.reduce(0, { $0 + $1.childSpaces.count })) child spaces, \(result.spaces.reduce(0, { $0 + $1.childRoomIds.count })) child rooms,  \(result.spaces.reduce(0, { $0 + $1.otherMembersId.count })) other members, \(result.directRoomIdsPerMemberId.count) members")
-
         self.processingQueue.async {
             var parentIdsPerRoomId: [String : Set<String>] = [:]
             result.spaces.forEach { space in
@@ -777,12 +804,15 @@ extension MXSpaceService {
     ///   - name: The space name.
     ///   - topic: The space topic.
     ///   - isPublic: true to indicate to use public chat presets and join the space without invite or false to use private chat presets and join the space on invite.
+    ///   - aliasLocalPart: local part of the alias
+    ///   (e.g. for the alias "#my_alias:example.org", the local part is "my_alias")
+    ///   - inviteArray: list of invited user IDs
     ///   - success: A closure called when the operation is complete.
     ///   - failure: A closure called  when the operation fails.
     /// - Returns: a `MXHTTPOperation` instance.
     @discardableResult
-    @objc public func createSpace(withName name: String, topic: String?, isPublic: Bool, success: @escaping (MXSpace) -> Void, failure: @escaping (Error) -> Void) -> MXHTTPOperation {
-        return self.createSpace(withName: name, topic: topic, isPublic: isPublic) { (response) in
+    @objc public func createSpace(withName name: String, topic: String?, isPublic: Bool, aliasLocalPart: String?, inviteArray: [String]?, success: @escaping (MXSpace) -> Void, failure: @escaping (Error) -> Void) -> MXHTTPOperation {
+        return self.createSpace(withName: name, topic: topic, isPublic: isPublic, aliasLocalPart: aliasLocalPart, inviteArray: inviteArray) { (response) in
             uncurryResponse(response, success: success, failure: failure)
         }
     }
