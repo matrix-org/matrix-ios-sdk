@@ -236,7 +236,7 @@ class MXThreadingServiceTests: XCTestCase {
                                     return
                                 }
                                 
-                                initialRoom.sendReply(to: lastMessage, textMessage: "Reply message", formattedTextMessage: nil, stringLocalizer: nil, localEcho: &localEcho) { response3 in
+                                initialRoom.sendReply(to: lastMessage, textMessage: "Reply message", formattedTextMessage: nil, stringLocalizer: nil, threadId: threadId, localEcho: &localEcho) { response3 in
                                     switch response3 {
                                     case .success(let replyEventId):
                                         var syncObserver: NSObjectProtocol?

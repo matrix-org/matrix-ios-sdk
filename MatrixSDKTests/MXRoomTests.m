@@ -766,7 +766,7 @@
                 __block MXEvent *localEchoEvent = nil;
                 
                 // Reply to first message
-                [room sendReplyToEvent:event withTextMessage:secondMessageReplyToFirst formattedTextMessage:secondMessageFormattedReplyToFirst stringLocalizer:defaultStringLocalizer localEcho:&localEchoEvent success:^(NSString *eventId) {
+                [room sendReplyToEvent:event withTextMessage:secondMessageReplyToFirst formattedTextMessage:secondMessageFormattedReplyToFirst stringLocalizer:defaultStringLocalizer threadId:nil localEcho:&localEchoEvent success:^(NSString *eventId) {
                     MXLogDebug(@"Send reply to first message with success");
                 } failure:^(NSError *error) {
                     XCTFail(@"The request should not fail - NSError: %@", error);
@@ -798,7 +798,7 @@
                 __block MXEvent *localEchoEvent = nil;
                 
                 // Reply to second message, which was also a reply
-                [room sendReplyToEvent:event withTextMessage:thirdMessageReplyToSecond formattedTextMessage:thirdMessageFormattedReplyToSecond stringLocalizer:defaultStringLocalizer localEcho:&localEchoEvent success:^(NSString *eventId) {
+                [room sendReplyToEvent:event withTextMessage:thirdMessageReplyToSecond formattedTextMessage:thirdMessageFormattedReplyToSecond stringLocalizer:defaultStringLocalizer threadId:nil localEcho:&localEchoEvent success:^(NSString *eventId) {
                     MXLogDebug(@"Send reply to second message with success");
                 } failure:^(NSError *error) {
                     XCTFail(@"The request should not fail - NSError: %@", error);
