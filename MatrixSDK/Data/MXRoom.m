@@ -2028,6 +2028,7 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
                      withTextMessage:(NSString*)textMessage
                 formattedTextMessage:(NSString*)formattedTextMessage
                      stringLocalizer:(id<MXSendReplyEventStringLocalizerProtocol>)stringLocalizer
+                            threadId:(NSString*)threadId
                            localEcho:(MXEvent**)localEcho
                              success:(void (^)(NSString *eventId))success
                              failure:(void (^)(NSError *error))failure
@@ -2079,9 +2080,9 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
         msgContent[kMXMessageBodyKey] = replyToBody;
         msgContent[@"formatted_body"] = replyToFormattedBody;
         msgContent[kMXEventRelationRelatesToKey] = relatesToDict;
-        
+
         operation = [self sendMessageWithContent:msgContent
-                                        threadId:eventToReply.threadId  //  reply in the same thread
+                                        threadId:threadId
                                        localEcho:localEcho
                                          success:success
                                          failure:failure];

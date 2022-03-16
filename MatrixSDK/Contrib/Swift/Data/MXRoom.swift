@@ -743,6 +743,7 @@ public extension MXRoom {
         - textMessage: The text to send.
         - formattedTextMessage: The optional HTML formatted string of the text to send.
         - stringLocalizer: String localizations used when building reply message.
+        - threadId: identifier of the thread in which the reply event will reside. Pass nil to use room timeline instead.
         - localEcho: a pointer to an MXEvent object.
 
              When the event type is `MXEventType.roomMessage`, this pointer is set to an actual
@@ -762,8 +763,8 @@ public extension MXRoom {
 
          - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func sendReply(to eventToReply: MXEvent, textMessage: String, formattedTextMessage: String?, stringLocalizer: MXSendReplyEventStringLocalizerProtocol?, localEcho: inout MXEvent?, completion: @escaping (_ response: MXResponse<String?>) -> Void) -> MXHTTPOperation {
-        return __sendReply(to: eventToReply, withTextMessage: textMessage, formattedTextMessage: formattedTextMessage, stringLocalizer: stringLocalizer, localEcho: &localEcho, success: currySuccess(completion), failure: curryFailure(completion))
+    @nonobjc @discardableResult func sendReply(to eventToReply: MXEvent, textMessage: String, formattedTextMessage: String?, stringLocalizer: MXSendReplyEventStringLocalizerProtocol?, threadId: String?, localEcho: inout MXEvent?, completion: @escaping (_ response: MXResponse<String?>) -> Void) -> MXHTTPOperation {
+        return __sendReply(to: eventToReply, withTextMessage: textMessage, formattedTextMessage: formattedTextMessage, stringLocalizer: stringLocalizer, threadId: threadId, localEcho: &localEcho, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
     
