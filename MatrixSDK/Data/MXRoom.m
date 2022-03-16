@@ -546,6 +546,7 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
 
     MXWeakify(self);
     void(^onSuccess)(NSString *) = ^(NSString *eventId) {
+        MXStrongifyAndReturnIfNil(self);
         
         if (event)
         {
@@ -559,7 +560,6 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
             // Update stored echo.
             // We keep this event here as local echo to handle correctly outgoing messages from multiple devices.
             // The echo will be removed when the corresponding event will come through the server sync.
-            MXStrongifyAndReturnIfNil(self);
             [self updateOutgoingMessage:localEventId withOutgoingMessage:event];
         }
 
@@ -568,11 +568,11 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
             success(eventId);
         }
 
-        MXStrongifyAndReturnIfNil(self);
         [self handleNextOperationAfter:roomOperation];
     };
 
     void(^onFailure)(NSError *) = ^(NSError *error) {
+        MXStrongifyAndReturnIfNil(self);
         
         if (event)
         {
@@ -581,7 +581,6 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
             event.sentState = MXEventSentStateFailed;
 
             // Update the stored echo.
-            MXStrongifyAndReturnIfNil(self);
             [self updateOutgoingMessage:event.eventId withOutgoingMessage:event];
         }
 
@@ -590,7 +589,6 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
             failure(error);
         }
 
-        MXStrongifyAndReturnIfNil(self);
         [self handleNextOperationAfter:roomOperation];
     };
     
@@ -1039,13 +1037,13 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
 
     MXWeakify(self);
     void(^onSuccess)(NSString *) = ^(NSString *eventId) {
+        MXStrongifyAndReturnIfNil(self);
 
         if (success)
         {
             success(eventId);
         }
 
-        MXStrongifyAndReturnIfNil(self);
         [self handleNextOperationAfter:roomOperation];
     };
 
