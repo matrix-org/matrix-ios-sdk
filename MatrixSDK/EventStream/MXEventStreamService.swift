@@ -16,6 +16,7 @@
 
 import Foundation
 
+/// Manages the adding, removing MXLiveEventListeners and dispatching of events to those listeners.
 @objcMembers public class MXEventStreamService: NSObject {
     
     var listeners = [MXLiveEventListener]()

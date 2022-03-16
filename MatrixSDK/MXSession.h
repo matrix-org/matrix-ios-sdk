@@ -495,7 +495,7 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
 @property (nonatomic, readonly) MXThreadingService *threadingService NS_REFINED_FOR_SWIFT;
 
 /**
- Service to observe  events.
+ Service  used to monitor live events of the session.
  */
 @property (nonatomic, readonly) MXEventStreamService *eventStreamService;
 

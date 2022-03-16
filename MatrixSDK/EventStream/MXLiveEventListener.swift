@@ -14,12 +14,16 @@
 // limitations under the License.
 //
 
+/// Protocol used to monitor events of a specific session
 public protocol MXLiveEventListener: AnyObject {
     
+    /// Monitor changes to session state
     func onSessionStateChanged(state: MXSessionState)
     
+    /// Monitor decryption attempts
     func onLiveEventDecryptionAttempted(event: MXEvent, result:MXEventDecryptionResult)
-
+    
+    /// Monitor to device events
     func onLiveToDeviceEvent(event: MXEvent)
 
 }
