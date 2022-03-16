@@ -717,8 +717,6 @@
 		66836AB827CFA17200515780 /* MXEventStreamService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66836AB527CFA17200515780 /* MXEventStreamService.swift */; };
 		66836AB927CFA17200515780 /* MXLiveEventListener.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66836AB627CFA17200515780 /* MXLiveEventListener.swift */; };
 		66836ABA27CFA17200515780 /* MXLiveEventListener.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66836AB627CFA17200515780 /* MXLiveEventListener.swift */; };
-		66836ABC27CFA51900515780 /* MXToDeviceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66836ABB27CFA51900515780 /* MXToDeviceService.swift */; };
-		66836ABD27CFA51900515780 /* MXToDeviceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66836ABB27CFA51900515780 /* MXToDeviceService.swift */; };
 		66AC9D23278CE627002E9B8F /* MXRefreshTokenData.h in Headers */ = {isa = PBXBuildFile; fileRef = 66AC9D21278CE626002E9B8F /* MXRefreshTokenData.h */; };
 		66AC9D24278CE627002E9B8F /* MXRefreshTokenData.h in Headers */ = {isa = PBXBuildFile; fileRef = 66AC9D21278CE626002E9B8F /* MXRefreshTokenData.h */; };
 		66AC9D25278CE627002E9B8F /* MXRefreshTokenData.m in Sources */ = {isa = PBXBuildFile; fileRef = 66AC9D22278CE626002E9B8F /* MXRefreshTokenData.m */; };
@@ -2332,7 +2330,6 @@
 		66398BA727A408C000466E89 /* MXRefreshResponse.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXRefreshResponse.h; sourceTree = "<group>"; };
 		66836AB527CFA17200515780 /* MXEventStreamService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MXEventStreamService.swift; sourceTree = "<group>"; };
 		66836AB627CFA17200515780 /* MXLiveEventListener.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MXLiveEventListener.swift; sourceTree = "<group>"; };
-		66836ABB27CFA51900515780 /* MXToDeviceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXToDeviceService.swift; sourceTree = "<group>"; };
 		66AC9D21278CE626002E9B8F /* MXRefreshTokenData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXRefreshTokenData.h; sourceTree = "<group>"; };
 		66AC9D22278CE626002E9B8F /* MXRefreshTokenData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXRefreshTokenData.m; sourceTree = "<group>"; };
 		6869D206EA7C7FB05EAB75B0 /* Pods-MatrixSDKTests-iOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MatrixSDKTests-iOS.release.xcconfig"; path = "Target Support Files/Pods-MatrixSDKTests-iOS/Pods-MatrixSDKTests-iOS.release.xcconfig"; sourceTree = "<group>"; };
@@ -4074,7 +4071,6 @@
 			children = (
 				66836AB527CFA17200515780 /* MXEventStreamService.swift */,
 				66836AB627CFA17200515780 /* MXLiveEventListener.swift */,
-				66836ABB27CFA51900515780 /* MXToDeviceService.swift */,
 			);
 			name = EventStream;
 			path = MatrixSDK/EventStream;
@@ -6109,7 +6105,6 @@
 				ECB5D98C2552C9B4000AD89C /* MXStopwatch.swift in Sources */,
 				B1136964230AC9D900E2B2FA /* MXIdentityServerRestClient.m in Sources */,
 				F0C34CBB1C18C93700C36F09 /* MXSDKOptions.m in Sources */,
-				66836ABC27CFA51900515780 /* MXToDeviceService.swift in Sources */,
 				B16F35A225F916A00029AE98 /* MXRoomTypeMapper.swift in Sources */,
 				ECD289BF26FDE5F700F268CF /* MXStoreRoomListDataCounts.swift in Sources */,
 				320BBF441D6C81550079890E /* MXEventsEnumeratorOnArray.m in Sources */,
@@ -6630,7 +6625,6 @@
 				EC60ED6A265CFC7200B39A4E /* MXPresenceSyncResponse.m in Sources */,
 				3A108AA525810FE5005EEBE9 /* MXRawDataKey.m in Sources */,
 				324DD29C246AD2B500377005 /* MXSecretStorage.m in Sources */,
-				66836ABD27CFA51900515780 /* MXToDeviceService.swift in Sources */,
 				EC60EDC9265CFEA800B39A4E /* MXRoomSyncUnreadNotifications.m in Sources */,
 				B14EF26F2397E90400758AF0 /* MXUser.m in Sources */,
 				324AAC772399140D00380A66 /* MXKeyVerificationDone.m in Sources */,
