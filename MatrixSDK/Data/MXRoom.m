@@ -545,7 +545,6 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
     NSDictionary *contentCopy = [[NSDictionary alloc] initWithDictionary:content copyItems:YES];
 
     MXWeakify(self);
-    MXWeakify(roomOperation);
     void(^onSuccess)(NSString *) = ^(NSString *eventId) {
         
         if (event)
@@ -570,7 +569,6 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
         }
 
         MXStrongifyAndReturnIfNil(self);
-        MXStrongifyAndReturnIfNil(roomOperation);
         [self handleNextOperationAfter:roomOperation];
     };
 
@@ -593,7 +591,6 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
         }
 
         MXStrongifyAndReturnIfNil(self);
-        MXStrongifyAndReturnIfNil(roomOperation);
         [self handleNextOperationAfter:roomOperation];
     };
     
@@ -675,7 +672,6 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
             }
 
             MXWeakify(self);
-            MXWeakify(roomOperation);
             roomOperation = [self preserveOperationOrder:event block:^{
                 MXStrongifyAndReturnIfNil(self);
 
@@ -734,7 +730,6 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
                     if (operation2)
                     {
                         // Mutate MXHTTPOperation so that the user can cancel this new operation
-                        MXStrongifyAndReturnIfNil(roomOperation);
                         [roomOperation.operation mutateTo:operation2];
                     }
 
@@ -745,7 +740,6 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
                     onFailure(error);
                 }];
 
-                MXStrongifyAndReturnIfNil(roomOperation);
                 [roomOperation.operation mutateTo:operation];
             }];
         }
@@ -776,8 +770,9 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
                 [self updateOutgoingMessage:event.eventId withOutgoingMessage:event];
             }
         }
-
+        
         roomOperation = [self preserveOperationOrder:event block:^{
+            MXStrongifyAndReturnIfNil(self);
             MXHTTPOperation *operation = [self _sendEventOfType:eventTypeString content:contentCopy txnId:event.eventId threadId:threadId success:onSuccess failure:onFailure];
             [roomOperation.operation mutateTo:operation];
         }];
@@ -1043,7 +1038,6 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
     __block id uploaderObserver;
 
     MXWeakify(self);
-    MXWeakify(roomOperation);
     void(^onSuccess)(NSString *) = ^(NSString *eventId) {
 
         if (success)
@@ -1052,7 +1046,6 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
         }
 
         MXStrongifyAndReturnIfNil(self);
-        MXStrongifyAndReturnIfNil(roomOperation);
         [self handleNextOperationAfter:roomOperation];
     };
 
@@ -1085,7 +1078,6 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
             failure(error);
         }
 
-        MXStrongifyAndReturnIfNil(roomOperation);
         [self handleNextOperationAfter:roomOperation];
     };
     
@@ -1141,14 +1133,12 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
                 msgContent[@"file"] = result.JSONDictionary;
 
                 MXWeakify(self);
-                MXWeakify(roomOperation);
                 void(^onDidUpload)(void) = ^{
                     MXStrongifyAndReturnIfNil(self);
 
                     // Do not go further if the orignal request has been cancelled
                     if (roomOperation.isCancelled)
                     {
-                        MXStrongifyAndReturnIfNil(roomOperation);
                         [self handleNextOperationAfter:roomOperation];
                         return;
                     }
@@ -2634,6 +2624,9 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
             [self handleNextOperationAfter:nextRoomOperation];
         }
     }
+    
+    // Release the old block to remove any strong references.
+    roomOperation.block = ^{};
 }
 
 /**
@@ -2703,6 +2696,9 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
         {
             roomOperation.block();
         }
+        
+        // Release the old block to remove any strong references.
+        newRomOperation.block = ^{};
     }
 }
 
