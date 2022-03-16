@@ -1808,6 +1808,56 @@
     }];
 }
 
+- (void)testReplayAttackForEventEdits
+{
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:NO readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+
+        NSString *messageFromAlice = @"Hello I'm Alice!";
+
+        MXRoom *roomFromBobPOV = [bobSession roomWithRoomId:roomId];
+        MXRoom *roomFromAlicePOV = [aliceSession roomWithRoomId:roomId];
+
+        XCTAssert(roomFromBobPOV.summary.isEncrypted);
+        XCTAssert(roomFromAlicePOV.summary.isEncrypted);
+
+        [roomFromBobPOV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
+            [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+
+                // Turn the event into an edit event (not directly rendered) and try to decrypt again
+                NSMutableDictionary *content = event.wireContent.mutableCopy;
+                content[kMXEventRelationRelatesToKey] = @{
+                    kMXEventContentRelatesToKeyRelationType: MXEventRelationTypeReplace
+                };
+                event.wireContent = content;
+                [event setClearData:nil];
+                
+                [bobSession decryptEvents:@[event] inTimeline:liveTimeline.timelineId onComplete:^(NSArray<MXEvent *> *failedEvents) {
+                    
+                    // The first edited event with the same content is decrypted successfuly and not treated as a replay attack
+                    XCTAssertEqual(failedEvents.count, 0);
+                    XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messageFromAlice senderSession:aliceSession]);
+                    [event setClearData:nil];
+                    
+                    // Decrypt the same edit event again, this time failing as a replay attack
+                    [bobSession decryptEvents:@[event] inTimeline:liveTimeline.timelineId onComplete:^(NSArray<MXEvent *> *failedEvents) {
+                        XCTAssertEqual(failedEvents.count, 1);
+                        XCTAssert(event.decryptionError);
+                        XCTAssertEqual(event.decryptionError.code, MXDecryptingErrorDuplicateMessageIndexCode);
+                        XCTAssertNil(event.clearEvent);
+                        
+                        [expectation fulfill];
+                    }];
+                }];
+            }];
+        }];
+
+        [roomFromAlicePOV sendTextMessage:messageFromAlice threadId:nil success:nil failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
 - (void)testRoomKeyReshare
 {
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:NO readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
