@@ -104,7 +104,7 @@ public class MXSpaceService: NSObject {
         }
     }
 
-    /// `true` if the `MXspaceService` instance needs to be update (e.g. the instance was busy while `handleSync` was called). `false` otherwise
+    /// `true` if the `MXSpaceService` instance needs to be updated (e.g. the instance was busy while `handleSync` was called). `false` otherwise
     public private(set) var needsUpdate: Bool = true
     
     /// Set it to `false` if you want to temporarily disable graph update. This will be set automatically to `true` after next sync of the `MXSession`.
