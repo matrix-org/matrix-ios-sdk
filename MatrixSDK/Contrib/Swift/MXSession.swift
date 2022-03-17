@@ -374,6 +374,16 @@ public extension MXSession {
         }
     }
 
+    /// Fetch an event from the session store, or from the homeserver if required.
+    /// - Parameters:
+    ///   - eventId: Event identifier to be fetched.
+    ///   - roomId: Room identifier for the event.
+    ///   - completion: Completion block to be called at the end of the process.
+    /// - Returns: a `MXHTTPOperation` instance.
+    @nonobjc @discardableResult func event(withEventId eventId: String, inRoom roomId: String?, _ completion: @escaping (_ response: MXResponse<MXEvent>) -> Void) -> MXHTTPOperation {
+        return __event(withEventId: eventId, inRoom: roomId, success: currySuccess(completion), failure: curryFailure(completion))
+    }
+
     //  MARK: - Homeserver Information
 
     /// The homeserver capabilities
