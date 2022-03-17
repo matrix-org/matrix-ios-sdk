@@ -97,7 +97,7 @@ public class MXSpaceService: NSObject {
         }
     }
     
-    /// List of `MXroomSummary` of all spaces known by the user.
+    /// List of `MXRoomSummary` of all spaces known by the user.
     public var spaceSummaries: [MXRoomSummary] {
         return self.graph.spaceRoomIds.compactMap { spaceId in
             self.session.roomSummary(withRoomId: spaceId)
