@@ -25,7 +25,7 @@ class MXEventsByTypesEnumeratorOnArrayTests: XCTestCase {
     
     func test_nextBatchHasAllMessages() {
         let events = (1...100).map(MXEvent.fixture)
-        let enumerator = MXEventsByTypesEnumeratorOnArray(messages: events, andTypesIn: nil)!
+        let enumerator = makeEnumerator(events: events)
         
         let batch = enumerator.nextBatch(100)
         
@@ -34,7 +34,7 @@ class MXEventsByTypesEnumeratorOnArrayTests: XCTestCase {
     
     func test_nextBatchReturnsPortionOfMessages() {
         let events = (1...30).map(MXEvent.fixture)
-        let enumerator = MXEventsByTypesEnumeratorOnArray(messages: events, andTypesIn: nil)!
+        let enumerator = makeEnumerator(events: events)
         
         let batch = enumerator.nextBatch(10)
         
@@ -44,13 +44,20 @@ class MXEventsByTypesEnumeratorOnArrayTests: XCTestCase {
     
     func test_secondBatchReturnsCorrectSlice() {
         let events = (1...40).map(MXEvent.fixture)
-        let enumerator = MXEventsByTypesEnumeratorOnArray(messages: events, andTypesIn: nil)!
+        let enumerator = makeEnumerator(events: events)
         
         let _ = enumerator.nextBatch(8)
         let batch = enumerator.nextBatch(8)
         
         XCTAssertEqual(batch.count, 8)
         XCTAssertEqual(batch, Array(events[24..<32]).reversed())
+    }
+    
+    // Helpers
+    
+    private func makeEnumerator(events: [MXEvent]) -> MXEventsByTypesEnumeratorOnArray {
+        let dataSource = EventsEnumeratorDataSourceStub(events: events)
+        return MXEventsByTypesEnumeratorOnArray(eventIds: events.map(\.eventId), andTypesIn: nil, dataSource: dataSource)!
     }
 }
 
