@@ -264,8 +264,8 @@ public class MXThreadingService: NSObject {
     }
 
     private func thread(forRootEvent rootEvent: MXEvent, session: MXSession) -> MXThreadModel {
-        let notificationCount: UInt
-        let highlightCount: UInt
+        var notificationCount: UInt = 0
+        var highlightCount: UInt = 0
         if let store = session.store {
             notificationCount = store.localUnreadEventCount(rootEvent.roomId,
                                                             threadId: rootEvent.eventId,
@@ -274,9 +274,10 @@ public class MXThreadingService: NSObject {
                                                     threadId: rootEvent.eventId,
                                                     withTypeIn: session.unreadEventTypes)
             highlightCount = UInt(newEvents.filter { $0.shouldBeHighlighted(inSession: session) }.count)
-        } else {
-            notificationCount = 0
-            highlightCount = 0
+        }
+        if let localThread = thread(withId: rootEvent.eventId) {
+            notificationCount = max(notificationCount, localThread.notificationCount)
+            highlightCount = max(highlightCount, localThread.highlightCount)
         }
         let thread = MXThreadModel(withRootEvent: rootEvent,
                                    notificationCount: notificationCount,
@@ -303,14 +304,17 @@ public class MXThreadingService: NSObject {
             completion?(handled)
         } else {
             //  create the thread for the first time
-            var thread: MXThread = MXThread(withSession: session, identifier: threadId, roomId: event.roomId)
+            let thread = MXThread(withSession: session, identifier: threadId, roomId: event.roomId)
+            self.saveThread(thread)
+            self.notifyDidCreateThread(thread, direction: direction)
+            self.notifyDidUpdateThreads()
             let dispatchGroup = DispatchGroup()
             //  try to find the root event in the session store
             dispatchGroup.enter()
             session.event(withEventId: threadId, inRoom: event.roomId) { response in
                 switch response {
                 case .success(let rootEvent):
-                    thread = MXThread(withSession: session, rootEvent: rootEvent)
+                    thread.addEvent(rootEvent, direction: direction)
                 case .failure(let error):
                     MXLog.error("[MXThreadingService] handleInThreadEvent: root event not found: \(error)")
                 }
@@ -319,8 +323,6 @@ public class MXThreadingService: NSObject {
 
             dispatchGroup.notify(queue: .main) {
                 let handled = thread.addEvent(event, direction: direction)
-                self.saveThread(thread)
-                self.notifyDidCreateThread(thread, direction: direction)
                 self.notifyDidUpdateThreads()
                 completion?(handled)
             }
