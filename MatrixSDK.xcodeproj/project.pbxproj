@@ -5509,9 +5509,9 @@
 			buildConfigurationList = 32C6F94019DD814400EA4E9C /* Build configuration list for PBXNativeTarget "MatrixSDK-iOS" */;
 			buildPhases = (
 				385E87177134AE6EBD88F314 /* [CP] Check Pods Manifest.lock */,
+				32C6F92A19DD814400EA4E9C /* Headers */,
 				32C6F92819DD814400EA4E9C /* Sources */,
 				32C6F92919DD814400EA4E9C /* Frameworks */,
-				32C6F92A19DD814400EA4E9C /* Headers */,
 				32C6F92B19DD814400EA4E9C /* Resources */,
 				323B2ADA1BCD47F000B11F34 /* CopyFiles */,
 			);
@@ -5548,9 +5548,9 @@
 			buildConfigurationList = B14EF3682397E90400758AF0 /* Build configuration list for PBXNativeTarget "MatrixSDK-macOS" */;
 			buildPhases = (
 				C9A686A24B8547C17FE45FC5 /* [CP] Check Pods Manifest.lock */,
+				B14EF2962397E90400758AF0 /* Headers */,
 				B14EF1C92397E90400758AF0 /* Sources */,
 				B14EF2942397E90400758AF0 /* Frameworks */,
-				B14EF2962397E90400758AF0 /* Headers */,
 				B14EF3662397E90400758AF0 /* Resources */,
 				B14EF3672397E90400758AF0 /* CopyFiles */,
 			);
