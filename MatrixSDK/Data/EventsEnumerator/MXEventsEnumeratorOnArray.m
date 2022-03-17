@@ -17,47 +17,40 @@
 #import "MXEventsEnumeratorOnArray.h"
 
 @interface MXEventsEnumeratorOnArray ()
-{
-    // The list of events to enumerate on.
-    // The order is chronological: the first item is the oldest message.
-    NSArray<MXEvent*> *messages;
-
-    // This is the position from the end
-    NSInteger paginationPosition;
-}
-
+@property (nonatomic, strong) id<MXEventsEnumeratorDataSource> dataSource;
+@property (nonatomic, strong) NSArray<NSString *> *eventIds;
+@property (nonatomic) NSInteger paginationPosition;
 @end
 
 @implementation MXEventsEnumeratorOnArray
 
-- (instancetype)initWithMessages:(NSArray<MXEvent*> *)theMessages
+- (instancetype)initWithEventIds:(NSArray<NSString *> *)eventIds
+                      dataSource:(id<MXEventsEnumeratorDataSource>)dataSource;
 {
     self = [super init];
     if (self)
     {
-        // Copy the array of events references to be protected against mutation of
-        // theMessages.
-        // No need of a deep copy as the events it contains are immutable.
-        messages = [theMessages copy];
-        paginationPosition = messages.count;
+        _eventIds = eventIds;
+        _dataSource = dataSource;
+        _paginationPosition = _eventIds.count;
     }
     return self;
 }
 
 - (NSArray *)nextEventsBatch:(NSUInteger)eventsCount threadId:(NSString *)threadId
 {
-    if (paginationPosition <= 0)
+    if (self.paginationPosition <= 0)
     {
         //  there is not any events left
         return nil;
     }
 
-    if (paginationPosition <= eventsCount)
+    if (self.paginationPosition <= eventsCount)
     {
         //  there is not enough events, return them all
-        NSArray *result = [messages subarrayWithRange:NSMakeRange(0, paginationPosition)];
-        paginationPosition = 0;
-        return result;
+        NSArray *result = [self.eventIds subarrayWithRange:NSMakeRange(0, self.paginationPosition)];
+        self.paginationPosition = 0;
+        return [self eventsForEventIds:result];
     }
 
     if (threadId)
@@ -95,10 +88,11 @@
 {
     MXEvent *nextEvent = nil;
 
-    if (0 < paginationPosition)
+    if (0 < self.paginationPosition)
     {
-        nextEvent = messages[paginationPosition - 1];
-        paginationPosition--;
+        NSString *eventId = self.eventIds[self.paginationPosition - 1];
+        nextEvent = [self.dataSource eventWithEventId:eventId];
+        self.paginationPosition--;
     }
 
     return nextEvent;
@@ -106,7 +100,19 @@
 
 - (NSUInteger)remaining
 {
-    return paginationPosition;
+    return self.paginationPosition;
+}
+
+- (NSArray <MXEvent *>*)eventsForEventIds:(NSArray <NSString *>*)eventIds
+{
+    NSMutableArray *events = [[NSMutableArray alloc] initWithCapacity:eventIds.count];
+    for (NSString *eventId in eventIds) {
+        MXEvent *event = [self.dataSource eventWithEventId:eventId];
+        if (event) {
+            [events addObject:event];
+        }
+    }
+    return events.copy;
 }
 
 @end
