@@ -136,6 +136,11 @@ public class MXThreadEventTimeline: NSObject, MXEventTimeline {
         
         // Reset store pagination
         storeMessagesEnumerator = store.messagesEnumerator(forRoom: thread.roomId)
+
+        if isLiveTimeline {
+            hasReachedHomeServerBackwardsPaginationEnd = false
+            hasReachedHomeServerForwardsPaginationEnd = false
+        }
     }
     
     public func __resetPaginationAroundInitialEvent(withLimit limit: UInt,
