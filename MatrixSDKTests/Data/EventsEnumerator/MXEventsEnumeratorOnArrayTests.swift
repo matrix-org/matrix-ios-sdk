@@ -17,54 +17,94 @@
 import Foundation
 
 class MXEventsEnumeratorOnArrayTests: XCTestCase {
+    func test_remainingMatchesInitialEventCount() {
+        let events = (1...123).map(MXEvent.fixture)
+        let enumerator = makeEnumerator(events: events)
+        XCTAssertEqual(enumerator.remaining, 123)
+    }
+    
     func test_nextBatchIsEmpty_ifNoMessages() {
-        let enumerator = MXEventsEnumeratorOnArray()
+        let enumerator = makeEnumerator(events: [])
         let batch = enumerator.nextBatch(UInt.max)
         XCTAssertTrue(batch.isEmpty)
     }
     
     func test_nextBatchHasAllMessages() {
         let events = (1...100).map(MXEvent.fixture)
-        let enumerator = MXEventsEnumeratorOnArray(messages: events)!
+        let enumerator = makeEnumerator(events: events)
         
         let batch = enumerator.nextBatch(UInt.max)
         
         XCTAssertEqual(batch, events)
     }
     
+    func test_nextBatchExcludesNilEvents() {
+        let events = (1...100).map(MXEvent.fixture)
+        let dataSource = EventsEnumeratorDataSourceStub(events: Array(events[10 ..< 50]))
+        let enumerator = MXEventsEnumeratorOnArray(eventIds: events.map(\.eventId), dataSource: dataSource)!
+        
+        let batch = enumerator.nextBatch(UInt.max)
+        
+        XCTAssertEqual(batch, Array(events[10 ..< 50]))
+    }
+
     func test_nextBatchReturnsPortionOfMessages() {
         let events = (1...30).map(MXEvent.fixture)
-        let enumerator = MXEventsEnumeratorOnArray(messages: events)!
-        
+        let enumerator = makeEnumerator(events: events)
+
         let batch = enumerator.nextBatch(10)
-        
+
         XCTAssertEqual(batch.count, 10)
         XCTAssertEqual(batch, Array(events[20..<30]))
         XCTAssertEqual(enumerator.remaining, 20)
     }
-    
+
     func test_secondBatchReturnsCorrectSlice() {
         let events = (1...40).map(MXEvent.fixture)
-        let enumerator = MXEventsEnumeratorOnArray(messages: events)!
-        
+        let enumerator = makeEnumerator(events: events)
+
         let _ = enumerator.nextBatch(8)
         let batch = enumerator.nextBatch(8)
-        
+
+        XCTAssertEqual(batch.count, 8)
+        XCTAssertEqual(batch, Array(events[24..<32]))
+        XCTAssertEqual(enumerator.remaining, 24)
+    }
+
+    func test_secondThreadedBatchReturnsCorrectSlice() {
+        let events = (1...40).map { MXEvent.fixture(id: $0, threadId: "abc") }
+        let enumerator = makeEnumerator(events: events)
+
+        let _ = enumerator.nextBatch(8, threadId: "abc")
+        let batch = enumerator.nextBatch(8, threadId: "abc")
+
         XCTAssertEqual(batch.count, 8)
         XCTAssertEqual(batch, Array(events[24..<32]))
         XCTAssertEqual(enumerator.remaining, 24)
     }
     
-    func test_secondThreadedBatchReturnsCorrectSlice() {
-        let events = (1...40).map { MXEvent.fixture(id: $0, threadId: "abc") }
-        let enumerator = MXEventsEnumeratorOnArray(messages: events)!
+    func test_nextBatchReturnsMessagesWithLatestContent() {
+        let events = (1...100).map(MXEvent.fixture)
+        let dataSource = EventsEnumeratorDataSourceStub(events: events)
+        let enumerator = MXEventsEnumeratorOnArray(eventIds: events.map(\.eventId), dataSource: dataSource)!
+        let editedEvents = (1...100).map {
+            MXEvent.fixture(id: $0, threadId: "abc")
+        }
+        dataSource.update(events: editedEvents)
         
-        let _ = enumerator.nextBatch(8, threadId: "abc")
-        let batch = enumerator.nextBatch(8, threadId: "abc")
+        let batch = enumerator.nextBatch(UInt.max)
         
-        XCTAssertEqual(batch.count, 8)
-        XCTAssertEqual(batch, Array(events[24..<32]))
-        XCTAssertEqual(enumerator.remaining, 24)
+        XCTAssertEqual(batch, editedEvents)
+    }
+    
+    // Helpers
+    
+    private func makeEnumerator(events: [MXEvent]) -> MXEventsEnumeratorOnArray {
+        let dataSource = EventsEnumeratorDataSourceStub(events: events)
+        return MXEventsEnumeratorOnArray(
+            eventIds: events.map(\.eventId),
+            dataSource: dataSource
+        )!
     }
 }
 
