@@ -64,7 +64,7 @@ public class MXSpaceService: NSObject {
     private let sdkProcessingQueue: DispatchQueue
     private let completionQueue: DispatchQueue
     
-    private var spacesPerId: [String:MXSpace] = [:]
+    private var spacesPerId: [String: MXSpace] = [:]
     
     private var isGraphBuilding = false;
     private var isClosed = false;
