@@ -264,8 +264,8 @@ public class MXThreadingService: NSObject {
     }
 
     private func thread(forRootEvent rootEvent: MXEvent, session: MXSession) -> MXThreadModel {
-        let notificationCount: UInt
-        let highlightCount: UInt
+        var notificationCount: UInt = 0
+        var highlightCount: UInt = 0
         if let store = session.store {
             notificationCount = store.localUnreadEventCount(rootEvent.roomId,
                                                             threadId: rootEvent.eventId,
@@ -274,9 +274,10 @@ public class MXThreadingService: NSObject {
                                                     threadId: rootEvent.eventId,
                                                     withTypeIn: session.unreadEventTypes)
             highlightCount = UInt(newEvents.filter { $0.shouldBeHighlighted(inSession: session) }.count)
-        } else {
-            notificationCount = 0
-            highlightCount = 0
+        }
+        if let localThread = thread(withId: rootEvent.eventId) {
+            notificationCount = max(notificationCount, localThread.notificationCount)
+            highlightCount = max(highlightCount, localThread.highlightCount)
         }
         let thread = MXThreadModel(withRootEvent: rootEvent,
                                    notificationCount: notificationCount,
