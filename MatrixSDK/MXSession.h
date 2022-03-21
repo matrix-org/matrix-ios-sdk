@@ -1045,7 +1045,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 - (MXHTTPOperation*)eventWithEventId:(NSString*)eventId
                               inRoom:(NSString *)roomId
                              success:(void (^)(MXEvent *event))success
-                             failure:(void (^)(NSError *error))failure;
+                             failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 
 #pragma mark - Rooms summaries
@@ -1090,12 +1090,16 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 /**
  Delegate for updating room summaries.
  By default, it is the one returned by [MXRoomSummaryUpdater roomSummaryUpdaterForSession:].
+ 
+ This property is strong as the only other reference to the delegate is a weak ref in the updaterPerSession table.
  */
 @property id<MXRoomSummaryUpdating> roomSummaryUpdateDelegate;
 
 /**
  Delegate for updating room account data.
  By default, it is the one returned by [MXRoomAccountDataUpdater roomAccountDataUpdaterForSession:].
+ 
+ This property is strong as the only other reference to the delegate is a weak ref in the updaterPerSession table.
  */
 @property id<MXRoomAccountDataUpdating> roomAccountDataUpdateDelegate;
 

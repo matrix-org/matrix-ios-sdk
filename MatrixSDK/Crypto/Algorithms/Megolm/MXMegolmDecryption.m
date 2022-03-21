@@ -100,7 +100,13 @@
     }
 
     NSError *olmError;
-    MXDecryptionResult *olmResult = [olmDevice decryptGroupMessage:ciphertext roomId:event.roomId inTimeline:timeline sessionId:sessionId senderKey:senderKey error:&olmError];
+    MXDecryptionResult *olmResult = [olmDevice decryptGroupMessage:ciphertext
+                                                       isEditEvent:event.isEditEvent
+                                                            roomId:event.roomId
+                                                        inTimeline:timeline
+                                                         sessionId:sessionId
+                                                         senderKey:senderKey
+                                                             error:&olmError];
 
     result = [MXEventDecryptionResult new];
     if (olmResult)

@@ -432,9 +432,12 @@
     return sessions;
 }
 
-- (MXDecryptionResult *)decryptGroupMessage:(NSString *)body roomId:(NSString *)roomId
+- (MXDecryptionResult *)decryptGroupMessage:(NSString *)body
+                                isEditEvent:(BOOL)isEditEvent
+                                     roomId:(NSString *)roomId
                                  inTimeline:(NSString *)timeline
-                                  sessionId:(NSString *)sessionId senderKey:(NSString *)senderKey
+                                  sessionId:(NSString *)sessionId
+                                  senderKey:(NSString *)senderKey
                                       error:(NSError *__autoreleasing *)error
 {
     __block NSUInteger messageIndex;
@@ -471,7 +474,7 @@
                 inboundGroupSessionMessageIndexes[timeline] = [NSMutableDictionary dictionary];
             }
             
-            NSString *messageIndexKey = [NSString stringWithFormat:@"%@|%@|%tu", senderKey, sessionId, messageIndex];
+            NSString *messageIndexKey = [NSString stringWithFormat:@"%@|%@|%tu|%d", senderKey, sessionId, messageIndex, isEditEvent];
             if (inboundGroupSessionMessageIndexes[timeline][messageIndexKey])
             {
                 MXLogDebug(@"[MXOlmDevice] decryptGroupMessage: Warning: Possible replay attack %@", messageIndexKey);

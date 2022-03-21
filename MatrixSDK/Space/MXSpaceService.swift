@@ -64,6 +64,13 @@ public class MXSpaceService: NSObject {
     private let sdkProcessingQueue: DispatchQueue
     private let completionQueue: DispatchQueue
     
+    private var spacesPerId: [String: MXSpace] = [:]
+    
+    private var isGraphBuilding = false;
+    private var isClosed = false;
+    
+    private var sessionStateDidChangeObserver: Any?
+
     private var graph: MXSpaceGraphData = MXSpaceGraphData() {
         didSet {
             var spacesPerId: [String:MXSpace] = [:]
@@ -77,29 +84,38 @@ public class MXSpaceService: NSObject {
             }
         }
     }
-    private var spacesPerId: [String:MXSpace] = [:]
     
-    private var isGraphBuilding = false;
-    private var isClosed = false;
-    
+    // MARK: Public
+
+    /// The instance of `MXSpaceNotificationCounter` that computes the number of unread messages for each space
     public let notificationCounter: MXSpaceNotificationCounter
     
+    /// List of `MXRoomSummary` of the high level spaces.
     public var rootSpaceSummaries: [MXRoomSummary] {
         return self.graph.rootSpaceIds.compactMap { spaceId in
             self.session.roomSummary(withRoomId: spaceId)
         }
     }
     
+    /// List of `MXRoomSummary` of all spaces known by the user.
+    public var spaceSummaries: [MXRoomSummary] {
+        return self.graph.spaceRoomIds.compactMap { spaceId in
+            self.session.roomSummary(withRoomId: spaceId)
+        }
+    }
+
+    /// `true` if the `MXSpaceService` instance needs to be updated (e.g. the instance was busy while `handleSync` was called). `false` otherwise
     public private(set) var needsUpdate: Bool = true
     
+    /// Set it to `false` if you want to temporarily disable graph update. This will be set automatically to `true` after next sync of the `MXSession`.
     public var graphUpdateEnabled = true
     
-    private var sessionStateDidChangeObserver: Any?
-    
+    /// List of ID of all the ancestors (direct parent spaces and parent spaces of the direct parent spaces) by room ID.
     public var ancestorsPerRoomId: [String:Set<String>] {
         return graph.ancestorsPerRoomId
     }
     
+    /// The `MXSpaceService` instance is initialised if a previously saved graph has been restored or after the first sync.
     public private(set) var isInitialised = false {
         didSet {
             if !oldValue && isInitialised {

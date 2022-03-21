@@ -544,8 +544,10 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
     //    - message order mechanism where events may be queued
     NSDictionary *contentCopy = [[NSDictionary alloc] initWithDictionary:content copyItems:YES];
 
+    MXWeakify(self);
     void(^onSuccess)(NSString *) = ^(NSString *eventId) {
-
+        MXStrongifyAndReturnIfNil(self);
+        
         if (event)
         {
             // Update the local echo with its actual identifier (by keeping the initial id).
@@ -570,7 +572,8 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
     };
 
     void(^onFailure)(NSError *) = ^(NSError *error) {
-
+        MXStrongifyAndReturnIfNil(self);
+        
         if (event)
         {
             // Update the local echo with the error state (This will trigger kMXEventDidChangeSentStateNotification notification).
@@ -765,8 +768,9 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
                 [self updateOutgoingMessage:event.eventId withOutgoingMessage:event];
             }
         }
-
+        
         roomOperation = [self preserveOperationOrder:event block:^{
+            MXStrongifyAndReturnIfNil(self);
             MXHTTPOperation *operation = [self _sendEventOfType:eventTypeString content:contentCopy txnId:event.eventId threadId:threadId success:onSuccess failure:onFailure];
             [roomOperation.operation mutateTo:operation];
         }];
@@ -1031,7 +1035,9 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
     __block MXEvent *event;
     __block id uploaderObserver;
 
+    MXWeakify(self);
     void(^onSuccess)(NSString *) = ^(NSString *eventId) {
+        MXStrongifyAndReturnIfNil(self);
 
         if (success)
         {
@@ -1042,6 +1048,7 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
     };
 
     void(^onFailure)(NSError *) = ^(NSError *error) {
+        MXStrongifyAndReturnIfNil(self);
         
         // Remove outgoing message when its sent has been cancelled
         if ([error.domain isEqualToString:NSURLErrorDomain] && error.code == NSURLErrorCancelled)
@@ -1082,7 +1089,6 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
         *localEcho = event;
     }
 
-    MXWeakify(self);
     roomOperation = [self preserveOperationOrder:event block:^{
         MXStrongifyAndReturnIfNil(self);
 
@@ -1124,7 +1130,9 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
                 [msgContent removeObjectForKey:@"url"];
                 msgContent[@"file"] = result.JSONDictionary;
 
+                MXWeakify(self);
                 void(^onDidUpload)(void) = ^{
+                    MXStrongifyAndReturnIfNil(self);
 
                     // Do not go further if the orignal request has been cancelled
                     if (roomOperation.isCancelled)
@@ -2614,6 +2622,9 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
             [self handleNextOperationAfter:nextRoomOperation];
         }
     }
+    
+    // Release the old block to remove any strong references.
+    roomOperation.block = ^{};
 }
 
 /**
@@ -2683,6 +2694,9 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
         {
             roomOperation.block();
         }
+        
+        // Release the old block to remove any strong references.
+        newRomOperation.block = ^{};
     }
 }
 
