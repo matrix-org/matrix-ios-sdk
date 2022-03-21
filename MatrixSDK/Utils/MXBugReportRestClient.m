@@ -59,7 +59,7 @@
 
 @implementation MXBugReportRestClient
 
-- (instancetype)initWithBugReportEndpoint:(NSString *)theBugReportEndpoint
+- (nonnull instancetype)initWithBugReportEndpoint:(NSString *)theBugReportEndpoint
 {
     self = [super init];
     if (self)

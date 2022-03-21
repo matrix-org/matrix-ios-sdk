@@ -51,7 +51,7 @@ typedef enum : NSUInteger
  @param bugReportEndpoint the endpoint URL.
  @return a MXBugReportRestClient instance.
  */
-- (instancetype)initWithBugReportEndpoint:(NSString *)bugReportEndpoint;
+- (nonnull instancetype)initWithBugReportEndpoint:(NSString *)bugReportEndpoint;
 
 /**
  Send a bug report.
