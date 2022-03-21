@@ -15,6 +15,7 @@
 //
 
 /// Protocol used to monitor events of a specific session
+@objc
 public protocol MXLiveEventListener: AnyObject {
     
     /// Monitor changes to session state

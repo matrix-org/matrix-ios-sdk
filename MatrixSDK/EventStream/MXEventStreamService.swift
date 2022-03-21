@@ -19,32 +19,26 @@ import Foundation
 /// Manages the adding, removing MXLiveEventListeners and dispatching of events to those listeners.
 @objcMembers public class MXEventStreamService: NSObject {
     
-    var listeners = [MXLiveEventListener]()
-
+    private let multicastDelegate: MXMulticastDelegate<MXLiveEventListener> = MXMulticastDelegate()
+    
     public func add(eventStreamListener: MXLiveEventListener) {
-        listeners.append(eventStreamListener)
+        multicastDelegate.addDelegate(eventStreamListener)
     }
 
     public func remove(eventStreamListener: MXLiveEventListener) {
-        listeners.removeAll { $0 === eventStreamListener }
+        multicastDelegate.removeDelegate(eventStreamListener)
     }
     
     public func dispatchSessionStateChanged(state: MXSessionState) {
-        listeners.forEach { listener in
-            listener.onSessionStateChanged(state: state)
-        }
+        multicastDelegate.invoke({ listener in listener.onSessionStateChanged(state: state) })
     }
     
     public func dispatchLiveEventDecryptionAttempted(event: MXEvent, result: MXEventDecryptionResult) {
-        listeners.forEach { listener in
-            listener.onLiveEventDecryptionAttempted(event: event, result: result)
-        }
+        multicastDelegate.invoke({ listener in listener.onLiveEventDecryptionAttempted(event: event, result: result) })
     }
 
     public func dispatchOnLiveToDevice(event: MXEvent) {
-        listeners.forEach { listener in
-            listener.onLiveToDeviceEvent(event: event)
-        }
+            multicastDelegate.invoke({ listener in listener.onLiveToDeviceEvent(event: event)})
     }
 }
 
