@@ -22,8 +22,8 @@
 
 //  TODO: Replace when the MSC merged
 //  https://github.com/matrix-org/matrix-doc/pull/3440
-NSString *const kMXRoomEventFilterKeyRelationTypes = @"io.element.relation_types";
-NSString *const kMXRoomEventFilterKeyRelationSenders = @"io.element.relation_senders";
+NSString *const kMXRoomEventFilterKeyRelatedByTypes = @"related_by_rel_types";
+NSString *const kMXRoomEventFilterKeyRelatedBySenders = @"related_by_senders";
 
 @implementation MXRoomEventFilter
 
@@ -143,27 +143,27 @@ NSString *const kMXRoomEventFilterKeyRelationSenders = @"io.element.relation_sen
     return lazyLoadMembers;
 }
 
-- (void)setRelationTypes:(NSArray<NSString *> *)relationTypes
+- (void)setRelatedByTypes:(NSArray<NSString *> *)relatedByTypes
 {
-    dictionary[kMXRoomEventFilterKeyRelationTypes] = relationTypes;
+    dictionary[kMXRoomEventFilterKeyRelatedByTypes] = relatedByTypes;
 }
 
-- (NSArray<NSString *> *)relationTypes
+- (NSArray<NSString *> *)relatedByTypes
 {
     NSArray<NSString *> *result;
-    MXJSONModelSetArray(result, dictionary[kMXRoomEventFilterKeyRelationTypes]);
+    MXJSONModelSetArray(result, dictionary[kMXRoomEventFilterKeyRelatedByTypes]);
     return result;
 }
 
-- (void)setRelationSenders:(NSArray<NSString *> *)relationSenders
+- (void)setRelatedBySenders:(NSArray<NSString *> *)relatedBySenders
 {
-    dictionary[kMXRoomEventFilterKeyRelationSenders] = relationSenders;
+    dictionary[kMXRoomEventFilterKeyRelatedBySenders] = relatedBySenders;
 }
 
-- (NSArray<NSString *> *)relationSenders
+- (NSArray<NSString *> *)relatedBySenders
 {
     NSArray<NSString *> *result;
-    MXJSONModelSetArray(result, dictionary[kMXRoomEventFilterKeyRelationSenders]);
+    MXJSONModelSetArray(result, dictionary[kMXRoomEventFilterKeyRelatedBySenders]);
     return result;
 }
 

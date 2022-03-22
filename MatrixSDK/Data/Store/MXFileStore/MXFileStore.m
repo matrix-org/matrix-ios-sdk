@@ -491,6 +491,20 @@ static NSUInteger preloadOptions;
     }
 }
 
+- (MXMatrixVersions *)supportedMatrixVersions
+{
+    return metaData.supportedMatrixVersions;
+}
+
+- (void)storeSupportedMatrixVersions:(MXMatrixVersions *)supportedMatrixVersions
+{
+    if (metaData)
+    {
+        metaData.supportedMatrixVersions = supportedMatrixVersions;
+        metaDataHasChanged = YES;
+    }
+}
+
 - (NSInteger)maxUploadSize
 {
     return metaData.maxUploadSize;
@@ -1638,13 +1652,15 @@ static NSUInteger preloadOptions;
 #pragma mark - Matrix filters
 - (void)loadFilters
 {
+    MXLogDebug(@"[MXFileStore] Loading filters");
     NSString *file = [storePath stringByAppendingPathComponent:kMXFileStoreFiltersFile];
-    filters = [NSKeyedUnarchiver unarchiveObjectWithFile:file];
+    filters = [self loadObjectOfClasses:[NSSet setWithArray:@[NSDictionary.class, NSString.class]] fromFile:file];
 
     if (!filters)
     {
         // This is used as flag to indicate it has been mounted from the file
         filters = [NSMutableDictionary dictionary];
+        MXLogDebug(@"[MXFileStore] No filters loaded, creating empty dictionary");
     }
 }
 
@@ -1676,7 +1692,8 @@ static NSUInteger preloadOptions;
             }
 
             // Store new data
-            [NSKeyedArchiver archiveRootObject:self->filters toFile:file];
+            MXLogDebug(@"[MXFileStore] Saving filters");
+            [self saveObject:self->filters toFile:file];
         });
     }
 }
@@ -2157,6 +2174,65 @@ static NSUInteger preloadOptions;
 
 
 #pragma mark - Tools
+
+- (void)saveObject:(id)object toFile:(NSString *)file
+{
+    if (@available(iOS 11.0, *))
+    {
+        NSError *error;
+        NSData *data = [NSKeyedArchiver archivedDataWithRootObject:object requiringSecureCoding:NO error:&error];
+        if (error)
+        {
+            MXLogDebug(@"[MXFileStore] Failed archiving root object with error: '%@'", error.localizedDescription);
+            return;
+        }
+        
+        BOOL success = [data writeToFile:file options:0 error:&error];
+        if (success)
+        {
+            MXLogDebug(@"[MXFileStore] Saved data successfully");
+        }
+        else
+        {
+            MXLogDebug(@"[MXFileStore] Failed saving data with error: '%@'", error.localizedDescription);
+        }
+    }
+    else
+    {
+        [NSKeyedArchiver archiveRootObject:object toFile:file];
+    }
+}
+
+- (id)loadObjectOfClasses:(NSSet<Class> *)classes fromFile:(NSString *)file
+{
+    if (@available(iOS 11.0, *))
+    {
+        NSData *data = [NSData dataWithContentsOfFile:file];
+        if (!data)
+        {
+            MXLogDebug(@"[MXFileStore] No data to load at file %@", file);
+            return nil;
+        }
+        
+        NSError *error;
+        id object = [NSKeyedUnarchiver unarchivedObjectOfClasses:classes fromData:data error:&error];
+        if (object)
+        {
+            MXLogDebug(@"[MXFileStore] Loaded object from class");
+            return object;
+        }
+        else
+        {
+            MXLogDebug(@"[MXFileStore] Failed loading object from class with error: '%@'", error.localizedDescription);
+            return nil;
+        }
+    }
+    else
+    {
+        return [NSKeyedUnarchiver unarchiveObjectWithFile:file];
+    }
+}
+
 /**
  List recursevely files in a folder
  

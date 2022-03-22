@@ -33,7 +33,6 @@ static NSString* const kJSONKeyThreePidChanges = @"m.3pid_changes";
 @property (nonatomic, readwrite, nullable) MXBooleanCapability *setDisplayName;
 @property (nonatomic, readwrite, nullable) MXBooleanCapability *setAvatarUrl;
 @property (nonatomic, readwrite, nullable) MXBooleanCapability *threePidChanges;
-@property (nonatomic, readwrite, nullable) MXBooleanCapability *threads;
 
 @end
 
@@ -53,7 +52,6 @@ static NSString* const kJSONKeyThreePidChanges = @"m.3pid_changes";
         MXJSONModelSetMXJSONModel(result.setDisplayName, MXBooleanCapability, capabilities[kJSONKeySetDisplayName]);
         MXJSONModelSetMXJSONModel(result.setAvatarUrl, MXBooleanCapability, capabilities[kJSONKeySetAvatarUrl]);
         MXJSONModelSetMXJSONModel(result.threePidChanges, MXBooleanCapability, capabilities[kJSONKeyThreePidChanges]);
-        MXJSONModelSetMXJSONModel(result.threads, MXBooleanCapability, capabilities[MXEventRelationTypeThread]);
 
         return result;
     }
@@ -81,7 +79,6 @@ static NSString* const kJSONKeyThreePidChanges = @"m.3pid_changes";
         MXJSONModelSetMXJSONModel(self.setDisplayName, MXBooleanCapability, self.allCapabilities[kJSONKeySetDisplayName]);
         MXJSONModelSetMXJSONModel(self.setAvatarUrl, MXBooleanCapability, self.allCapabilities[kJSONKeySetAvatarUrl]);
         MXJSONModelSetMXJSONModel(self.threePidChanges, MXBooleanCapability, self.allCapabilities[kJSONKeyThreePidChanges]);
-        MXJSONModelSetMXJSONModel(self.threads, MXBooleanCapability, self.allCapabilities[MXEventRelationTypeThread]);
     }
     return self;
 }

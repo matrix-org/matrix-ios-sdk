@@ -62,35 +62,68 @@ public class MXThreadingService: NSObject {
         self.session = session
         super.init()
     }
-    
+
+    /// Handle joined room sync
+    /// - Parameter roomSync: room sync instance
+    public func handleJoinedRoomSync(_ roomSync: MXRoomSync, forRoom roomId: String) {
+        guard let session = session else {
+            //  session closed
+            return
+        }
+
+        let events = roomSync.timeline.events
+        // Make sure that all events have a room id. They are skipped in some server responses
+        events.forEach({ $0.roomId = roomId })
+        session.decryptEvents(events, inTimeline: nil) { _ in
+            let dispatchGroup = DispatchGroup()
+
+            for event in events {
+                dispatchGroup.enter()
+                self.handleEvent(event, direction: .forwards) { _ in
+                    dispatchGroup.leave()
+                }
+            }
+
+            dispatchGroup.notify(queue: .main) {
+                self.threads.values.filter { $0.roomId == roomId }.forEach { $0.handleJoinedRoomSync(roomSync) }
+            }
+        }
+    }
+
     /// Adds event to the related thread instance
-    /// - Parameter event: event to be handled
-    /// - Returns: true if the event handled, false otherwise
-    @discardableResult
-    public func handleEvent(_ event: MXEvent, direction: MXTimelineDirection) -> Bool {
+    /// - Parameters:
+    ///   - event: event to be handled
+    ///   - direction: direction of the event
+    ///   - completion: Completion block containing the flag indicating that the event is handled
+    public func handleEvent(_ event: MXEvent, direction: MXTimelineDirection, completion: ((Bool) -> Void)?) {
         guard MXSDKOptions.sharedInstance().enableThreads else {
             //  threads disabled in the SDK
-            return false
+            completion?(false)
+            return
         }
         guard let session = session else {
             //  session closed
-            return false
+            completion?(false)
+            return
         }
         if event.isInThread() {
             //  event is in a thread
-            return handleInThreadEvent(event, direction: direction, session: session)
+            handleInThreadEvent(event, direction: direction, session: session, completion: completion)
         } else if let thread = thread(withId: event.eventId) {
             //  event is a thread root
             if thread.addEvent(event, direction: direction) {
                 notifyDidUpdateThreads()
-                return true
+                completion?(true)
+            } else {
+                completion?(false)
             }
         } else if event.isEdit() {
-            return handleEditEvent(event, direction: direction, session: session)
+            handleEditEvent(event, direction: direction, session: session, completion: completion)
         } else if event.eventType == .roomRedaction {
-            return handleRedactionEvent(event, direction: direction, session: session)
+            handleRedactionEvent(event, direction: direction, session: session, completion: completion)
+        } else {
+            completion?(false)
         }
-        return false
     }
     
     /// Get notifications count of threads in a room
@@ -147,44 +180,75 @@ public class MXThreadingService: NSObject {
             return nil
         }
 
-        if session.homeserverCapabilities?.threads?.isEnabled == true {
-            //  homeserver supports threads
-            let filter = MXRoomEventFilter()
-            filter.relationTypes = [MXEventRelationTypeThread]
-            if onlyParticipated {
-                filter.relationSenders = [session.myUserId]
-            }
-            return session.matrixRestClient.messages(forRoom: roomId,
-                                                     from: "",
-                                                     direction: .backwards,
-                                                     limit: nil,
-                                                     filter: filter) { response in
-                switch response {
-                case .success(let paginationResponse):
-                    guard let rootEvents = paginationResponse.chunk else {
-                        completion(.success([]))
-                        return
-                    }
+        var serverSupportThreads = false
+        let dispatchGroup = DispatchGroup()
 
-                    let threads = rootEvents.map { self.thread(forRootEvent: $0, session: session) }.sorted(by: <)
-                    completion(.success(threads))
-                case .failure(let error):
-                    completion(.failure(error))
-                }
+        dispatchGroup.enter()
+        let operation = session.supportedMatrixVersions { response in
+            switch response {
+            case .success(let versions):
+                serverSupportThreads = versions.supportsThreads
+            default:
+                break
             }
-        } else {
-            //  use local implementation
-            if onlyParticipated {
-                DispatchQueue.main.async {
-                    completion(.success(self.localParticipatedThreads(inRoom: roomId)))
+            dispatchGroup.leave()
+        }
+
+        dispatchGroup.notify(queue: .main) {
+            if serverSupportThreads {
+                //  homeserver supports threads
+                let filter = MXRoomEventFilter()
+                filter.relatedByTypes = [MXEventRelationTypeThread]
+                if onlyParticipated {
+                    filter.relatedBySenders = [session.myUserId]
                 }
+                let newOperation = session.matrixRestClient.messages(forRoom: roomId,
+                                                                     from: "",
+                                                                     direction: .backwards,
+                                                                     limit: nil,
+                                                                     filter: filter) { response in
+                    switch response {
+                    case .success(let paginationResponse):
+                        guard let rootEvents = paginationResponse.chunk else {
+                            completion(.success([]))
+                            return
+                        }
+
+                        session.decryptEvents(rootEvents, inTimeline: nil) { _ in
+                            let threads = rootEvents.map { self.thread(forRootEvent: $0, session: session) }.sorted(by: <)
+                            let decryptionGroup = DispatchGroup()
+                            for thread in threads {
+                                if let rootEvent = rootEvents.first(where: { $0.eventId == thread.id }),
+                                   let latestEvent = rootEvent.unsignedData.relations?.thread?.latestEvent {
+                                    decryptionGroup.enter()
+                                    session.decryptEvents([latestEvent], inTimeline: nil) { _ in
+                                        thread.updateLastMessage(latestEvent)
+                                        decryptionGroup.leave()
+                                    }
+                                }
+                            }
+
+                            decryptionGroup.notify(queue: .main) {
+                                completion(.success(threads))
+                            }
+                        }
+                    case .failure(let error):
+                        completion(.failure(error))
+                    }
+                }
+
+                operation.mutate(to: newOperation)
             } else {
-                DispatchQueue.main.async {
+                //  use local implementation
+                if onlyParticipated {
+                    completion(.success(self.localParticipatedThreads(inRoom: roomId)))
+                } else {
                     completion(.success(self.localThreads(inRoom: roomId)))
                 }
             }
-            return nil
         }
+
+        return operation
     }
 
     //  MARK: - Private
@@ -200,8 +264,8 @@ public class MXThreadingService: NSObject {
     }
 
     private func thread(forRootEvent rootEvent: MXEvent, session: MXSession) -> MXThreadModel {
-        let notificationCount: UInt
-        let highlightCount: UInt
+        var notificationCount: UInt = 0
+        var highlightCount: UInt = 0
         if let store = session.store {
             notificationCount = store.localUnreadEventCount(rootEvent.roomId,
                                                             threadId: rootEvent.eventId,
@@ -210,9 +274,10 @@ public class MXThreadingService: NSObject {
                                                     threadId: rootEvent.eventId,
                                                     withTypeIn: session.unreadEventTypes)
             highlightCount = UInt(newEvents.filter { $0.shouldBeHighlighted(inSession: session) }.count)
-        } else {
-            notificationCount = 0
-            highlightCount = 0
+        }
+        if let localThread = thread(withId: rootEvent.eventId) {
+            notificationCount = max(notificationCount, localThread.notificationCount)
+            highlightCount = max(highlightCount, localThread.highlightCount)
         }
         let thread = MXThreadModel(withRootEvent: rootEvent,
                                    notificationCount: notificationCount,
@@ -227,77 +292,95 @@ public class MXThreadingService: NSObject {
         return thread
     }
 
-    @discardableResult
-    private func handleInThreadEvent(_ event: MXEvent, direction: MXTimelineDirection, session: MXSession) -> Bool {
+    private func handleInThreadEvent(_ event: MXEvent, direction: MXTimelineDirection, session: MXSession, completion: ((Bool) -> Void)?) {
         guard let threadId = event.threadId else {
-            return false
+            completion?(false)
+            return
         }
-        let handled: Bool
         if let thread = thread(withId: threadId) {
             //  add event to the thread if found
-            handled = thread.addEvent(event, direction: direction)
+            let handled = thread.addEvent(event, direction: direction)
+            notifyDidUpdateThreads()
+            completion?(handled)
         } else {
             //  create the thread for the first time
-            let thread: MXThread
+            let thread = MXThread(withSession: session, identifier: threadId, roomId: event.roomId)
+            self.saveThread(thread)
+            self.notifyDidCreateThread(thread, direction: direction)
+            self.notifyDidUpdateThreads()
+            let dispatchGroup = DispatchGroup()
             //  try to find the root event in the session store
-            if let rootEvent = session.store?.event(withEventId: threadId, inRoom: event.roomId) {
-                thread = MXThread(withSession: session, rootEvent: rootEvent)
-            } else {
-                thread = MXThread(withSession: session, identifier: threadId, roomId: event.roomId)
+            dispatchGroup.enter()
+            session.event(withEventId: threadId, inRoom: event.roomId) { response in
+                switch response {
+                case .success(let rootEvent):
+                    thread.addEvent(rootEvent, direction: direction)
+                case .failure(let error):
+                    MXLog.error("[MXThreadingService] handleInThreadEvent: root event not found: \(error)")
+                }
+                dispatchGroup.leave()
             }
-            handled = thread.addEvent(event, direction: direction)
-            saveThread(thread)
-            notifyDidCreateThread(thread, direction: direction)
+
+            dispatchGroup.notify(queue: .main) {
+                let handled = thread.addEvent(event, direction: direction)
+                self.notifyDidUpdateThreads()
+                completion?(handled)
+            }
         }
-        notifyDidUpdateThreads()
-        return handled
     }
 
-    @discardableResult
-    private func handleEditEvent(_ event: MXEvent, direction: MXTimelineDirection, session: MXSession) -> Bool {
+    private func handleEditEvent(_ event: MXEvent, direction: MXTimelineDirection, session: MXSession, completion: ((Bool) -> Void)?) {
         guard let editedEventId = event.relatesTo?.eventId else {
-            return false
+            completion?(false)
+            return
         }
         guard let editedEvent = session.store?.event(withEventId: editedEventId,
                                                   inRoom: event.roomId) else {
-            return false
+            completion?(false)
+            return
         }
 
-        handleEvent(editedEvent, direction: direction)
-
-        guard let newEvent = editedEvent.editedEvent(fromReplacementEvent: event) else {
-            return false
+        handleEvent(editedEvent, direction: direction) { _ in
+            guard let newEvent = editedEvent.editedEvent(fromReplacementEvent: event) else {
+                completion?(false)
+                return
+            }
+            if let threadId = editedEvent.threadId,
+               let thread = self.thread(withId: threadId) {
+                //  edited event is in a known thread
+                let handled = thread.replaceEvent(withId: editedEventId, with: newEvent)
+                self.notifyDidUpdateThreads()
+                completion?(handled)
+                return
+            } else if let thread = self.thread(withId: editedEventId) {
+                //  edited event is a thread root
+                let handled = thread.replaceEvent(withId: editedEventId, with: newEvent)
+                self.notifyDidUpdateThreads()
+                completion?(handled)
+                return
+            }
+            completion?(false)
         }
-        if let threadId = editedEvent.threadId,
-           let thread = thread(withId: threadId) {
-            //  edited event is in a known thread
-            let handled = thread.replaceEvent(withId: editedEventId, with: newEvent)
-            notifyDidUpdateThreads()
-            return handled
-        } else if let thread = thread(withId: editedEventId) {
-            //  edited event is a thread root
-            let handled = thread.replaceEvent(withId: editedEventId, with: newEvent)
-            notifyDidUpdateThreads()
-            return handled
-        }
-        return false
     }
 
-    @discardableResult
-    private func handleRedactionEvent(_ event: MXEvent, direction: MXTimelineDirection, session: MXSession) -> Bool {
+    private func handleRedactionEvent(_ event: MXEvent, direction: MXTimelineDirection, session: MXSession, completion: ((Bool) -> Void)?) {
         guard direction == .forwards else {
-            return false
+            completion?(false)
+            return
         }
         if let redactedEventId = event.redacts,
            let thread = thread(withId: redactedEventId),
            let newEvent = session.store?.event(withEventId: redactedEventId,
                                                inRoom: event.roomId) {
-            //  event is a thread root
-            let handled = thread.replaceEvent(withId: redactedEventId, with: newEvent)
-            notifyDidUpdateThreads()
-            return handled
+            session.decryptEvents([newEvent], inTimeline: nil) { _ in
+                //  event is a thread root
+                let handled = thread.replaceEvent(withId: redactedEventId, with: newEvent)
+                self.notifyDidUpdateThreads()
+                completion?(handled)
+            }
+            return
         }
-        return false
+        completion?(false)
     }
     
     private func unsortedThreads(inRoom roomId: String) -> [MXThread] {

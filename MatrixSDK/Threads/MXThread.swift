@@ -71,6 +71,7 @@ public class MXThread: NSObject, MXThreadProtocol {
             //  the user sent a message to the thread, so mark the thread as read
             markAsRead()
         }
+        liveTimeline?.notifyListeners(event, direction: direction)
         return true
     }
 
@@ -84,6 +85,7 @@ public class MXThread: NSObject, MXThreadProtocol {
             return false
         }
         eventsMap[oldEventId] = newEvent
+        liveTimeline?.notifyListeners(newEvent, direction: .forwards)
         return true
     }
     
@@ -115,6 +117,12 @@ public class MXThread: NSObject, MXThreadProtocol {
     /// Number of replies in the thread. Does not count the root event
     public var numberOfReplies: Int {
         return eventsMap.filter({ $0 != id && $1.isInThread() }).count
+    }
+
+    public func handleJoinedRoomSync(_ roomSync: MXRoomSync) {
+        liveTimeline { timeline in
+            timeline.handleJoinedRoomSync(roomSync, onComplete: {})
+        }
     }
     
     /// The live events timeline

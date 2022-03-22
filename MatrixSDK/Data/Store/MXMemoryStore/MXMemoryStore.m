@@ -40,6 +40,7 @@
 
 @synthesize storeService, eventStreamToken, userAccountData, syncFilterId, homeserverWellknown, areAllIdentityServerTermsAgreed;
 @synthesize homeserverCapabilities;
+@synthesize supportedMatrixVersions;
 
 - (instancetype)init
 {
@@ -318,6 +319,11 @@
     homeserverCapabilities = capabilities;
 }
 
+- (void)storeSupportedMatrixVersions:(MXMatrixVersions *)supportedMatrixVersions
+{
+    supportedMatrixVersions = supportedMatrixVersions;
+}
+
 - (NSInteger)maxUploadSize
 {
     return self->maxUploadSize;
@@ -421,6 +427,11 @@
     }
 
     filters[filterId] = filter.jsonString;
+}
+
+- (NSArray<NSString *> *)allFilterIds
+{
+    return filters.allKeys;
 }
 
 - (void)filterWithFilterId:(nonnull NSString*)filterId

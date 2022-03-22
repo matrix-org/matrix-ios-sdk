@@ -2038,6 +2038,48 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
 
 @end
 
+@implementation MXRoomJoinRuleResponse
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXRoomJoinRuleResponse *response = [MXRoomJoinRuleResponse new];
+    
+    if (response)
+    {
+        MXJSONModelSetString(response.joinRule, JSONDictionary[@"join_rule"]);
+        
+        NSArray <NSDictionary *> *allowedArray;
+        MXJSONModelSetArray(allowedArray, JSONDictionary[@"allow"])
+        response.allowedParentIds = [self buildAllowedParentIdsWith: allowedArray];
+    }
+
+    return response;
+}
+
++ (NSArray<NSString *> *)buildAllowedParentIdsWith:(NSArray<NSDictionary *> *)allowedArray
+{
+    NSMutableArray <NSString *> *allowedParentIds = [NSMutableArray new];
+    
+    for (NSDictionary *allowed in allowedArray)
+    {
+        NSString *type;
+        MXJSONModelSetString(type, allowed[@"type"]);
+        if ([type isEqualToString: kMXEventTypeStringRoomMembership])
+        {
+            NSString *roomId;
+            MXJSONModelSetString(roomId, allowed[@"room_id"]);
+            if (roomId)
+            {
+                [allowedParentIds addObject: roomId];
+            }
+        }
+    }
+    
+    return allowedParentIds;
+}
+
+@end
+
 #pragma mark - Dehydration
 
 @implementation MXDehydratedDevice
@@ -2098,3 +2140,93 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
 
 @end
 
+#pragma mark - Homeserver Capabilities
+
+@implementation MXRoomVersionInfo
+
+@end
+
+@implementation MXRoomCapabilitySupport
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXRoomCapabilitySupport *roomCapability = [MXRoomCapabilitySupport new];
+    if (roomCapability)
+    {
+        MXJSONModelSetString(roomCapability.preferred, JSONDictionary[@"preferred"]);
+        MXJSONModelSetArray(roomCapability.support, JSONDictionary[@"support"])
+    }
+    
+    return roomCapability;
+}
+
+@end
+
+@implementation MXRoomVersionCapabilities
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXRoomVersionCapabilities *versionCapabilities = [MXRoomVersionCapabilities new];
+    if (versionCapabilities)
+    {
+        MXJSONModelSetString(versionCapabilities.defaultRoomVersion, JSONDictionary[@"default"])
+        
+        NSMutableArray<MXRoomVersionInfo *> *versionInfoList = [NSMutableArray<MXRoomVersionInfo *> new];
+        NSDictionary *availableVersions = nil;
+        MXJSONModelSetDictionary(availableVersions, JSONDictionary[@"available"]);
+        [availableVersions enumerateKeysAndObjectsUsingBlock:^(id version, id status, BOOL* stop) {
+            MXRoomVersionInfo *versionInfo = [MXRoomVersionInfo new];
+            MXJSONModelSetString(versionInfo.version, version)
+            MXJSONModelSetString(versionInfo.statusString, status)
+            [versionInfoList addObject:versionInfo];
+        }];
+        versionCapabilities.supportedVersions = versionInfoList;
+        
+        NSMutableDictionary<NSString *, MXRoomCapabilitySupport *> *roomCapabilities = [NSMutableDictionary<NSString *, MXRoomCapabilitySupport *> new];
+        NSDictionary *roomCapabilitiesData = nil;
+        MXJSONModelSetDictionary(roomCapabilitiesData, JSONDictionary[@"org.matrix.msc3244.room_capabilities"]);
+        [roomCapabilitiesData enumerateKeysAndObjectsUsingBlock:^(id name, id capabilityData, BOOL* stop) {
+            MXRoomCapabilitySupport *capability = nil;
+            MXJSONModelSetMXJSONModel(capability, MXRoomCapabilitySupport, capabilityData);
+            if (capability)
+            {
+                roomCapabilities[name] = capability;
+            }
+        }];
+        versionCapabilities.roomCapabilities = roomCapabilities;
+    }
+    
+    return versionCapabilities;
+}
+
+@end
+
+@implementation MXHomeserverCapabilities
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXHomeserverCapabilities *capabilities = [MXHomeserverCapabilities new];
+    NSDictionary *capabilitiesData = JSONDictionary[@"capabilities"];
+    if (capabilities)
+    {
+        // The spec says: If not present, the client should assume that password changes are possible via the API
+        capabilities.canChangePassword = YES;
+        NSDictionary *changePassword = nil;
+        MXJSONModelSetDictionary(changePassword, capabilitiesData[@"m.change_password"]);
+        if (changePassword)
+        {
+            MXJSONModelSetBoolean(capabilities.canChangePassword, changePassword[@"enabled"])
+        }
+
+        NSDictionary *roomVersionsData = nil;
+        MXJSONModelSetDictionary(roomVersionsData, capabilitiesData[@"m.room_versions"]);
+        if (roomVersionsData)
+        {
+            MXJSONModelSetMXJSONModel(capabilities.roomVersions, MXRoomVersionCapabilities, roomVersionsData)
+        }
+    }
+
+    return capabilities;
+}
+
+@end

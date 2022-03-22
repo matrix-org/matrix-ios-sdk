@@ -63,12 +63,6 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @property (nonatomic, readonly, nullable) MXBooleanCapability *threePidChanges;
 
-/**
- Capability describing whether the server supports threads.
- If not present, clients should assume the server does not support threads.
- */
-@property (nonatomic, readonly, nullable) MXBooleanCapability *threads;
-
 @end
 
 NS_ASSUME_NONNULL_END

@@ -16,16 +16,18 @@
 
 #import "MXEventContentRelatesTo.h"
 
-static NSString* const kJSONRelationType = @"rel_type";
-static NSString* const kJSONEventId = @"event_id";
-static NSString* const kJSONKey = @"key";
-static NSString* const kJSONInReplyTo = @"m.in_reply_to";
+NSString *const kMXEventContentRelatesToKeyRelationType = @"rel_type";
+NSString *const kMXEventContentRelatesToKeyEventId = @"event_id";
+NSString *const kMXEventContentRelatesToKeyKey = @"key";
+NSString *const kMXEventContentRelatesToKeyIsReplyFallback = @"is_falling_back";
+NSString *const kMXEventContentRelatesToKeyInReplyTo = @"m.in_reply_to";
 
 @interface MXEventContentRelatesTo()
 
 @property (nonatomic, readwrite, nullable) NSString *relationType;
 @property (nonatomic, readwrite, nullable) NSString *eventId;
 @property (nonatomic, readwrite, nullable) NSString *key;
+@property (nonatomic, readwrite) BOOL isReplyFallback;
 @property (nonatomic, readwrite, nullable) MXInReplyTo *inReplyTo;
 
 @end
@@ -44,6 +46,7 @@ static NSString* const kJSONInReplyTo = @"m.in_reply_to";
         _relationType = relationType;
         _eventId = eventId;
         _key = key;
+        _isReplyFallback = NO;
     }
     
     return self;
@@ -55,10 +58,11 @@ static NSString* const kJSONInReplyTo = @"m.in_reply_to";
 {
     MXEventContentRelatesTo *relatesTo = [MXEventContentRelatesTo new];
 
-    MXJSONModelSetString(relatesTo.relationType, JSONDictionary[kJSONRelationType]);
-    MXJSONModelSetString(relatesTo.eventId, JSONDictionary[kJSONEventId]);
-    MXJSONModelSetString(relatesTo.key, JSONDictionary[kJSONKey]);
-    MXJSONModelSetMXJSONModel(relatesTo.inReplyTo, MXInReplyTo, JSONDictionary[kJSONInReplyTo]);
+    MXJSONModelSetString(relatesTo.relationType, JSONDictionary[kMXEventContentRelatesToKeyRelationType]);
+    MXJSONModelSetString(relatesTo.eventId, JSONDictionary[kMXEventContentRelatesToKeyEventId]);
+    MXJSONModelSetString(relatesTo.key, JSONDictionary[kMXEventContentRelatesToKeyKey]);
+    MXJSONModelSetBoolean(relatesTo.isReplyFallback, JSONDictionary[kMXEventContentRelatesToKeyIsReplyFallback]);
+    MXJSONModelSetMXJSONModel(relatesTo.inReplyTo, MXInReplyTo, JSONDictionary[kMXEventContentRelatesToKeyInReplyTo]);
 
     if (relatesTo.relationType || relatesTo.eventId || relatesTo.key || relatesTo.inReplyTo)
     {
@@ -74,19 +78,20 @@ static NSString* const kJSONInReplyTo = @"m.in_reply_to";
 
     if (self.relationType)
     {
-        JSONDictionary[kJSONRelationType] = self.relationType;
+        JSONDictionary[kMXEventContentRelatesToKeyRelationType] = self.relationType;
     }
     if (self.eventId)
     {
-        JSONDictionary[kJSONEventId] = self.eventId;
+        JSONDictionary[kMXEventContentRelatesToKeyEventId] = self.eventId;
     }
     if (self.key)
     {
-        JSONDictionary[kJSONKey] = self.key;
+        JSONDictionary[kMXEventContentRelatesToKeyKey] = self.key;
     }
+    JSONDictionary[kMXEventContentRelatesToKeyIsReplyFallback] = @(self.isReplyFallback);
     if (self.inReplyTo)
     {
-        JSONDictionary[kJSONInReplyTo] = self.inReplyTo.JSONDictionary;
+        JSONDictionary[kMXEventContentRelatesToKeyInReplyTo] = self.inReplyTo.JSONDictionary;
     }
     
     return JSONDictionary;

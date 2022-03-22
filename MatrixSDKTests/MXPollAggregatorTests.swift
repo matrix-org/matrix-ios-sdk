@@ -167,20 +167,27 @@ class MXPollAggregatorTest: XCTestCase {
             let pollStartContent = MXEventContentPollStart(question: "Question", kind: kMXMessageContentKeyExtensiblePollKindDisclosed, maxSelections: 100, answerOptions: answerOptions)
             
             bobRoom?.sendPollStart(withContent: pollStartContent, threadId:nil, localEcho: nil, success: { pollStartEventId in
-                bobSession?.event(withEventId: pollStartEventId, inRoom: roomId, success: { pollStartEvent in
-                    let aliceRoom = aliceSession?.room(withRoomId: roomId)
-                    aliceRoom?.sendPollResponse(for: pollStartEvent, withAnswerIdentifiers: [pollStartContent.answerOptions.first!.uuid], threadId:nil, localEcho: nil, success: { _ in
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                            readyToTest(bobSession!, aliceSession!, bobRoom!, aliceRoom!, pollStartEvent!, expectation!)
-                        }
-                    }, failure: { error in
+                guard let pollStartEventId = pollStartEventId else {
+                    XCTFail("The operation should not fail - Poll start event cannot be sent")
+                    expectation?.fulfill()
+                    return
+                }
+                bobSession?.event(withEventId: pollStartEventId, inRoom: roomId, { response in
+                    switch response {
+                    case .success(let pollStartEvent):
+                        let aliceRoom = aliceSession?.room(withRoomId: roomId)
+                        aliceRoom?.sendPollResponse(for: pollStartEvent, withAnswerIdentifiers: [pollStartContent.answerOptions.first!.uuid], threadId:nil, localEcho: nil, success: { _ in
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                                readyToTest(bobSession!, aliceSession!, bobRoom!, aliceRoom!, pollStartEvent, expectation!)
+                            }
+                        }, failure: { error in
+                            XCTFail("The operation should not fail - NSError: \(String(describing: error))")
+                            expectation?.fulfill()
+                        })
+                    case .failure(let error):
                         XCTFail("The operation should not fail - NSError: \(String(describing: error))")
                         expectation?.fulfill()
-                    })
-                    
-                }, failure: {  error in
-                    XCTFail("The operation should not fail - NSError: \(String(describing: error))")
-                    expectation?.fulfill()
+                    }
                 })
             }, failure: { error in
                 XCTFail("The operation should not fail - NSError: \(String(describing: error))")

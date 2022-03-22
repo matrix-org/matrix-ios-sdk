@@ -171,6 +171,12 @@ class MXSpaceGraphData: NSObject, NSCoding {
         orphanedRoomIds = Set<String>(orphanedRoomIdsJson)
         orphanedDirectRoomIds = Set<String>(orphanedDirectRoomIdsJson)
 
-        return MXSpaceGraphData(spaceRoomIds: spaceIdsJson, parentIdsPerRoomId: parentIdsPerRoomId, ancestorsPerRoomId: ancestorsPerRoomId, descendantsPerRoomId: descendantsPerRoomId, rootSpaceIds: rootSpaceIdsJson, orphanedRoomIds: orphanedRoomIds, orphanedDirectRoomIds: orphanedDirectRoomIds)
+        return MXSpaceGraphData(spaceRoomIds: spaceIdsJson,
+                                parentIdsPerRoomId: parentIdsPerRoomId,
+                                ancestorsPerRoomId: ancestorsPerRoomId,
+                                descendantsPerRoomId: descendantsPerRoomId,
+                                rootSpaceIds: rootSpaceIdsJson,
+                                orphanedRoomIds: orphanedRoomIds,
+                                orphanedDirectRoomIds: orphanedDirectRoomIds)
     }
 }
