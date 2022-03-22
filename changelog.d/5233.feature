@@ -1,1 +1,0 @@
-MXRoomAliasAvailabilityChecker: added extractLocalAliasPart()
