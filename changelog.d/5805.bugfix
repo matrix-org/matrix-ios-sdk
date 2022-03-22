@@ -1,1 +1,0 @@
-MXRoom: Fix retain cycles, in particular between MXRoomOperation and its block.
