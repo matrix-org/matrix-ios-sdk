@@ -441,7 +441,21 @@ public extension MXRoom {
         return __setJoinRule(joinRule.identifier, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
-    
+    /**
+     Set the join rule of the room.
+     
+     - parameters:
+         - joinRule: the join rule to set.
+         - parentIds: list of allowed parents (for `restricted` join rule only)
+         - completion: A block object called when the operation completes.
+         - response: Indicates whether the operation was a success or failure.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func setJoinRule(_ joinRule: MXRoomJoinRule, parentIds: [String], completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
+        return __setJoinRule(joinRule.identifier, parentIds: parentIds, success: currySuccess(completion), failure: curryFailure(completion))
+    }
+
     /**
      Set the guest access of the room.
      
@@ -729,6 +743,7 @@ public extension MXRoom {
         - textMessage: The text to send.
         - formattedTextMessage: The optional HTML formatted string of the text to send.
         - stringLocalizer: String localizations used when building reply message.
+        - threadId: identifier of the thread in which the reply event will reside. Pass nil to use room timeline instead.
         - localEcho: a pointer to an MXEvent object.
 
              When the event type is `MXEventType.roomMessage`, this pointer is set to an actual
@@ -748,8 +763,8 @@ public extension MXRoom {
 
          - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func sendReply(to eventToReply: MXEvent, textMessage: String, formattedTextMessage: String?, stringLocalizer: MXSendReplyEventStringLocalizerProtocol?, localEcho: inout MXEvent?, completion: @escaping (_ response: MXResponse<String?>) -> Void) -> MXHTTPOperation {
-        return __sendReply(to: eventToReply, withTextMessage: textMessage, formattedTextMessage: formattedTextMessage, stringLocalizer: stringLocalizer, localEcho: &localEcho, success: currySuccess(completion), failure: curryFailure(completion))
+    @nonobjc @discardableResult func sendReply(to eventToReply: MXEvent, textMessage: String, formattedTextMessage: String?, stringLocalizer: MXSendReplyEventStringLocalizerProtocol?, threadId: String?, localEcho: inout MXEvent?, completion: @escaping (_ response: MXResponse<String?>) -> Void) -> MXHTTPOperation {
+        return __sendReply(to: eventToReply, withTextMessage: textMessage, formattedTextMessage: formattedTextMessage, stringLocalizer: stringLocalizer, threadId: threadId, localEcho: &localEcho, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
     

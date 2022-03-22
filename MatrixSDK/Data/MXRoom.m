@@ -544,8 +544,10 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
     //    - message order mechanism where events may be queued
     NSDictionary *contentCopy = [[NSDictionary alloc] initWithDictionary:content copyItems:YES];
 
+    MXWeakify(self);
     void(^onSuccess)(NSString *) = ^(NSString *eventId) {
-
+        MXStrongifyAndReturnIfNil(self);
+        
         if (event)
         {
             // Update the local echo with its actual identifier (by keeping the initial id).
@@ -570,7 +572,8 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
     };
 
     void(^onFailure)(NSError *) = ^(NSError *error) {
-
+        MXStrongifyAndReturnIfNil(self);
+        
         if (event)
         {
             // Update the local echo with the error state (This will trigger kMXEventDidChangeSentStateNotification notification).
@@ -631,8 +634,8 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
             else if (threadId)
             {
                 relatesToJSON = @{
-                    @"rel_type": MXEventRelationTypeThread,
-                    @"event_id": threadId
+                    kMXEventContentRelatesToKeyRelationType: MXEventRelationTypeThread,
+                    kMXEventContentRelatesToKeyEventId: threadId
                 };
                 contentCopyToEncrypt = contentCopy;
             }
@@ -765,8 +768,9 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
                 [self updateOutgoingMessage:event.eventId withOutgoingMessage:event];
             }
         }
-
+        
         roomOperation = [self preserveOperationOrder:event block:^{
+            MXStrongifyAndReturnIfNil(self);
             MXHTTPOperation *operation = [self _sendEventOfType:eventTypeString content:contentCopy txnId:event.eventId threadId:threadId success:onSuccess failure:onFailure];
             [roomOperation.operation mutateTo:operation];
         }];
@@ -785,8 +789,8 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
     NSDictionary *newContent = content;
     BOOL inThread = NO;
     BOOL startsThread = NO;
-    BOOL isReply = content[kMXEventRelationRelatesToKey][@"m.in_reply_to"][@"event_id"] != nil;
-    BOOL isEditing = [content[kMXEventRelationRelatesToKey][@"rel_type"] isEqualToString:MXEventRelationTypeReplace];
+    BOOL isReply = content[kMXEventRelationRelatesToKey][kMXEventContentRelatesToKeyInReplyTo][kMXEventContentRelatesToKeyEventId] != nil;
+    BOOL isEditing = [content[kMXEventRelationRelatesToKey][kMXEventContentRelatesToKeyRelationType] isEqualToString:MXEventRelationTypeReplace];
     if (MXSDKOptions.sharedInstance.enableThreads)
     {
         if (threadId)
@@ -796,7 +800,7 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
             if (isReply)
             {
                 //  this will be a real in-thread reply
-                mutableContent[kMXEventRelationRelatesToKey][@"m.in_reply_to"][@"m.render_in"] = @[MXEventRelationTypeThread];
+                mutableContent[kMXEventRelationRelatesToKey][kMXEventContentRelatesToKeyIsReplyFallback] = @(NO);
             }
             else
             {
@@ -807,15 +811,17 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
 
                 if (mutableContent[kMXEventRelationRelatesToKey])
                 {
-                    mutableContent[kMXEventRelationRelatesToKey][@"m.in_reply_to"] = @{
-                        @"event_id": replyToEventId
+                    mutableContent[kMXEventRelationRelatesToKey][kMXEventContentRelatesToKeyInReplyTo] = @{
+                        kMXEventContentRelatesToKeyEventId: replyToEventId
                     };
+                    mutableContent[kMXEventRelationRelatesToKey][kMXEventContentRelatesToKeyIsReplyFallback] = @(YES);
                 }
                 else
                 {
                     mutableContent[kMXEventRelationRelatesToKey] = @{
-                        @"m.in_reply_to": @{
-                            @"event_id": replyToEventId
+                        kMXEventContentRelatesToKeyIsReplyFallback: @(YES),
+                        kMXEventContentRelatesToKeyInReplyTo: @{
+                            kMXEventContentRelatesToKeyEventId: replyToEventId
                         }
                     };
                 }
@@ -825,7 +831,7 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
         else if (isEditing)
         {
             //  detect in-thread edits
-            NSString *editedEventId = content[kMXEventRelationRelatesToKey][@"event_id"];
+            NSString *editedEventId = content[kMXEventRelationRelatesToKey][kMXEventContentRelatesToKeyEventId];
             MXEvent *editedEvent = [self.mxSession.store eventWithEventId:editedEventId inRoom:self.roomId];
             inThread = editedEvent.isInThread;
         }
@@ -1029,7 +1035,9 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
     __block MXEvent *event;
     __block id uploaderObserver;
 
+    MXWeakify(self);
     void(^onSuccess)(NSString *) = ^(NSString *eventId) {
+        MXStrongifyAndReturnIfNil(self);
 
         if (success)
         {
@@ -1040,6 +1048,7 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
     };
 
     void(^onFailure)(NSError *) = ^(NSError *error) {
+        MXStrongifyAndReturnIfNil(self);
         
         // Remove outgoing message when its sent has been cancelled
         if ([error.domain isEqualToString:NSURLErrorDomain] && error.code == NSURLErrorCancelled)
@@ -1080,7 +1089,6 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
         *localEcho = event;
     }
 
-    MXWeakify(self);
     roomOperation = [self preserveOperationOrder:event block:^{
         MXStrongifyAndReturnIfNil(self);
 
@@ -1122,7 +1130,9 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
                 [msgContent removeObjectForKey:@"url"];
                 msgContent[@"file"] = result.JSONDictionary;
 
+                MXWeakify(self);
                 void(^onDidUpload)(void) = ^{
+                    MXStrongifyAndReturnIfNil(self);
 
                     // Do not go further if the orignal request has been cancelled
                     if (roomOperation.isCancelled)
@@ -1839,6 +1849,13 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
 {
     return [mxSession.matrixRestClient setRoomJoinRule:self.roomId joinRule:joinRule success:success failure:failure];
 }
+- (MXHTTPOperation*)setJoinRule:(MXRoomJoinRule)joinRule
+                      parentIds:(NSArray<NSString *>*)parentIds
+                        success:(void (^)(void))success
+                        failure:(void (^)(NSError *error))failure
+{
+    return [mxSession.matrixRestClient setRoomJoinRule:joinRule forRoomWithId:self.roomId allowedParentIds:parentIds success:success failure:failure];
+}
 
 - (MXHTTPOperation*)setGuestAccess:(MXRoomGuestAccess)guestAccess
                            success:(void (^)(void))success
@@ -2019,6 +2036,7 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
                      withTextMessage:(NSString*)textMessage
                 formattedTextMessage:(NSString*)formattedTextMessage
                      stringLocalizer:(id<MXSendReplyEventStringLocalizerProtocol>)stringLocalizer
+                            threadId:(NSString*)threadId
                            localEcho:(MXEvent**)localEcho
                              success:(void (^)(NSString *eventId))success
                              failure:(void (^)(NSError *error))failure
@@ -2057,9 +2075,9 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
         NSString *eventId = eventToReply.eventId;
         
         NSDictionary *relatesToDict = @{
-            @"m.in_reply_to" :
+            kMXEventContentRelatesToKeyInReplyTo :
                 @{
-                    @"event_id" : eventId
+                    kMXEventContentRelatesToKeyEventId : eventId
                 }
         };
         
@@ -2070,9 +2088,9 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
         msgContent[kMXMessageBodyKey] = replyToBody;
         msgContent[@"formatted_body"] = replyToFormattedBody;
         msgContent[kMXEventRelationRelatesToKey] = relatesToDict;
-        
+
         operation = [self sendMessageWithContent:msgContent
-                                        threadId:eventToReply.threadId  //  reply in the same thread
+                                        threadId:threadId
                                        localEcho:localEcho
                                          success:success
                                          failure:failure];
@@ -2604,6 +2622,9 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
             [self handleNextOperationAfter:nextRoomOperation];
         }
     }
+    
+    // Release the old block to remove any strong references.
+    roomOperation.block = ^{};
 }
 
 /**
@@ -2673,6 +2694,9 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
         {
             roomOperation.block();
         }
+        
+        // Release the old block to remove any strong references.
+        newRomOperation.block = ^{};
     }
 }
 
@@ -2725,8 +2749,8 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
     {
         NSMutableDictionary *newContent = [NSMutableDictionary dictionaryWithDictionary:content];
         newContent[kMXEventRelationRelatesToKey] = @{
-            @"rel_type": MXEventRelationTypeThread,
-            @"event_id": threadId
+            kMXEventContentRelatesToKeyRelationType: MXEventRelationTypeThread,
+            kMXEventContentRelatesToKeyEventId: threadId
         };
         event.wireContent = newContent;
     }

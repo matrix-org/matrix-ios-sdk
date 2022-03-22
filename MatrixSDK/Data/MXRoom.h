@@ -680,6 +680,21 @@ FOUNDATION_EXPORT NSInteger const kMXRoomInvalidInviteSenderErrorCode;
                         failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
+ Set the join rule of the room.
+
+ @param joinRule the join rule to set.
+ @param parentIds list of parent room ID (requested for `restricted` join rule)
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)setJoinRule:(MXRoomJoinRule)joinRule
+                      parentIds:(NSArray<NSString *>*)parentIds
+                        success:(void (^)(void))success
+                        failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
+/**
  Set the guest access of the room.
 
  @param guestAccess the guest access to set.
@@ -959,6 +974,7 @@ FOUNDATION_EXPORT NSInteger const kMXRoomInvalidInviteSenderErrorCode;
  @param textMessage the text to send.
  @param formattedTextMessage the optional HTML formatted string of the text to send.
  @param stringLocalizer string localizations used when building reply message.
+ @param threadId identifier of the thread in which the reply event will reside. Pass nil to use room timeline instead.
  @param localEcho a pointer to a MXEvent object (@see sendMessageWithContent: for details).
  @param success A block object called when the operation succeeds. It returns
  the event id of the event generated on the home server
@@ -970,6 +986,7 @@ FOUNDATION_EXPORT NSInteger const kMXRoomInvalidInviteSenderErrorCode;
                      withTextMessage:(NSString*)textMessage
                 formattedTextMessage:(NSString*)formattedTextMessage
                      stringLocalizer:(id<MXSendReplyEventStringLocalizerProtocol>)stringLocalizer
+                            threadId:(NSString*)threadId
                            localEcho:(MXEvent**)localEcho
                              success:(void (^)(NSString *eventId))success
                              failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;

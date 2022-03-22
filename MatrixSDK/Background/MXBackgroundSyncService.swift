@@ -407,7 +407,7 @@ public enum MXBackgroundSyncServiceError: Error {
                     throw MXBackgroundSyncServiceError.unknown
             }
             
-            let olmResult = try olmDevice.decryptGroupMessage(ciphertext, roomId: event.roomId, inTimeline: nil, sessionId: sessionId, senderKey: senderKey)
+            let olmResult = try olmDevice.decryptGroupMessage(ciphertext, isEditEvent: event.isEdit(), roomId: event.roomId, inTimeline: nil, sessionId: sessionId, senderKey: senderKey)
             
             let decryptionResult = MXEventDecryptionResult()
             decryptionResult.clearEvent = olmResult.payload

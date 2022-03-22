@@ -24,6 +24,10 @@ const struct MXMatrixClientServerAPIVersionStruct MXMatrixClientServerAPIVersion
     .r0_4_0 = @"r0.4.0",
     .r0_5_0 = @"r0.5.0",
     .r0_6_0 = @"r0.6.0",
+    .r0_6_1 = @"r0.6.1",
+    .v1_1   = @"v1.1",
+    .v1_2   = @"v1.2",
+    .v1_3   = @"v1.3"
 };
 
 const struct MXMatrixVersionsFeatureStruct MXMatrixVersionsFeature = {
@@ -33,52 +37,122 @@ const struct MXMatrixVersionsFeatureStruct MXMatrixVersionsFeature = {
     .separateAddAndBind = @"m.separate_add_and_bind"
 };
 
+static NSString* const kJSONKeyVersions = @"versions";
+static NSString* const kJSONKeyUnstableFeatures = @"unstable_features";
+
+//  Unstable features
+static NSString* const kJSONKeyMSC3440 = @"org.matrix.msc3440.stable";
+
+@interface MXMatrixVersions ()
+
+@property (nonatomic, readwrite) NSArray<NSString *> *versions;
+@property (nonatomic, nullable, readwrite) NSDictionary<NSString*, NSNumber*> *unstableFeatures;
+
+@end
+
 @implementation MXMatrixVersions
 
 + (id)modelFromJSON:(NSDictionary *)JSONDictionary
 {
-    MXMatrixVersions *matrixVersions = [[MXMatrixVersions alloc] init];
-    if (matrixVersions)
+    if (JSONDictionary[kJSONKeyVersions])
     {
-        MXJSONModelSetArray(matrixVersions.versions, JSONDictionary[@"versions"]);
-        MXJSONModelSetDictionary(matrixVersions.unstableFeatures, JSONDictionary[@"unstable_features"]);
+        MXMatrixVersions *result = [MXMatrixVersions new];
+
+        MXJSONModelSetArray(result.versions, JSONDictionary[kJSONKeyVersions]);
+        MXJSONModelSetDictionary(result.unstableFeatures, JSONDictionary[kJSONKeyUnstableFeatures]);
+
+        return result;
     }
-    return matrixVersions;
+    return nil;
+}
+
+- (NSDictionary *)JSONDictionary
+{
+    NSMutableDictionary *JSONDictionary = [NSMutableDictionary dictionary];
+
+    JSONDictionary[kJSONKeyVersions] = self.versions;
+
+    if (self.unstableFeatures)
+    {
+        JSONDictionary[kJSONKeyUnstableFeatures] = self.unstableFeatures;
+    }
+
+    return JSONDictionary;
 }
 
 - (BOOL)supportLazyLoadMembers
 {
-    return [self.versions containsObject:MXMatrixClientServerAPIVersion.r0_5_0]
-        || [self.unstableFeatures[MXMatrixVersionsFeature.lazyLoadMembers] boolValue];
+    return [self serverSupportsVersion:MXMatrixClientServerAPIVersion.r0_5_0]
+    || [self serverSupportsFeature:MXMatrixVersionsFeature.lazyLoadMembers];
 }
 
 - (BOOL)doesServerRequireIdentityServerParam
 {
-    // YES by default
-    BOOL doesServerRequireIdentityServerParam = YES;
-
-    if ([self.versions containsObject:MXMatrixClientServerAPIVersion.r0_6_0])
+    if ([self serverSupportsVersion:MXMatrixClientServerAPIVersion.r0_6_0])
     {
-        doesServerRequireIdentityServerParam = NO;
-    }
-    else if (self.unstableFeatures[MXMatrixVersionsFeature.requireIdentityServer])
-    {
-        doesServerRequireIdentityServerParam = [self.unstableFeatures[MXMatrixVersionsFeature.requireIdentityServer] boolValue];
+        return NO;
     }
 
-    return doesServerRequireIdentityServerParam;
+    return [self serverSupportsFeature:MXMatrixVersionsFeature.requireIdentityServer
+                          defaultValue:YES];
 }
 
 - (BOOL)doesServerAcceptIdentityAccessToken
 {
-    return  [self.versions containsObject:MXMatrixClientServerAPIVersion.r0_6_0]
-        || [self.unstableFeatures[MXMatrixVersionsFeature.idAccessToken] boolValue];
+    return [self serverSupportsVersion:MXMatrixClientServerAPIVersion.r0_6_0]
+    || [self serverSupportsFeature:MXMatrixVersionsFeature.idAccessToken];
 }
 
 - (BOOL)doesServerSupportSeparateAddAndBind
 {
-    return  [self.versions containsObject:MXMatrixClientServerAPIVersion.r0_6_0]
-        || [self.unstableFeatures[MXMatrixVersionsFeature.separateAddAndBind] boolValue];
+    return [self serverSupportsVersion:MXMatrixClientServerAPIVersion.r0_6_0]
+    || [self serverSupportsFeature:MXMatrixVersionsFeature.separateAddAndBind];
+}
+
+- (BOOL)supportsThreads
+{
+    return [self serverSupportsVersion:MXMatrixClientServerAPIVersion.v1_3]
+        || [self serverSupportsFeature:kJSONKeyMSC3440];
+}
+
+#pragma mark - Private
+
+- (BOOL)serverSupportsVersion:(NSString *)version
+{
+    //  we might improve this logic in future, so moved into a dedicated method.
+    return [self.versions containsObject:version];
+}
+
+- (BOOL)serverSupportsFeature:(NSString *)feature
+{
+    return [self serverSupportsFeature:feature defaultValue:NO];
+}
+
+- (BOOL)serverSupportsFeature:(NSString *)feature defaultValue:(BOOL)defaultValue
+{
+    if (self.unstableFeatures[feature])
+    {
+        return self.unstableFeatures[feature].boolValue;
+    }
+    return defaultValue;
+}
+
+#pragma mark - NSCoding
+
+- (id)initWithCoder:(NSCoder *)aDecoder
+{
+    if (self = [super init])
+    {
+        self.versions = [aDecoder decodeObjectForKey:kJSONKeyVersions];
+        self.unstableFeatures = [aDecoder decodeObjectForKey:kJSONKeyUnstableFeatures];
+    }
+    return self;
+}
+
+- (void)encodeWithCoder:(NSCoder *)aCoder
+{
+    [aCoder encodeObject:self.versions forKey:kJSONKeyVersions];
+    [aCoder encodeObject:self.unstableFeatures forKey:kJSONKeyUnstableFeatures];
 }
 
 @end

@@ -59,7 +59,7 @@ public class MXThreadEventTimeline: NSObject, MXEventTimeline {
     
     private lazy var threadEventFilter: MXRoomEventFilter = {
         let filter = MXRoomEventFilter()
-        filter.relationTypes = [MXEventRelationTypeThread]
+        filter.relatedByTypes = [MXEventRelationTypeThread]
         return filter
     }()
     
@@ -136,6 +136,11 @@ public class MXThreadEventTimeline: NSObject, MXEventTimeline {
         
         // Reset store pagination
         storeMessagesEnumerator = store.messagesEnumerator(forRoom: thread.roomId)
+
+        if isLiveTimeline {
+            hasReachedHomeServerBackwardsPaginationEnd = false
+            hasReachedHomeServerForwardsPaginationEnd = false
+        }
     }
     
     public func __resetPaginationAroundInitialEvent(withLimit limit: UInt,
@@ -300,7 +305,22 @@ public class MXThreadEventTimeline: NSObject, MXEventTimeline {
     }
     
     public func handleJoinedRoomSync(_ roomSync: MXRoomSync, onComplete: @escaping () -> Void) {
-        //  no-op
+        let events = roomSync.timeline.events
+        fixRoomId(inEvents: events)
+        let dispatchGroup = DispatchGroup()
+
+        if let session = thread.session {
+            dispatchGroup.enter()
+            session.decryptEvents(events, inTimeline: nil) { _ in
+                dispatchGroup.leave()
+            }
+        }
+
+        dispatchGroup.notify(queue: .main) {
+            events.forEach {
+                self.notifyListeners($0, direction: .forwards)
+            }
+        }
     }
     
     public func handle(_ invitedRoomSync: MXInvitedRoomSync, onComplete: @escaping () -> Void) {
@@ -361,22 +381,39 @@ public class MXThreadEventTimeline: NSObject, MXEventTimeline {
     //  MARK: - Private
     
     private func processPaginationResponse(_ response: MXAggregationPaginatedResponse, direction: MXTimelineDirection) {
-        for event in response.chunk {
-            addEvent(event, direction: direction, fromStore: false)
-        }
-        if let rootEvent = response.originalEvent, response.nextBatch == nil {
-            addEvent(rootEvent, direction: direction, fromStore: false)
-        }
-        
-        switch direction {
-        case .backwards:
-            backwardsPaginationToken = response.nextBatch
-            hasReachedHomeServerBackwardsPaginationEnd = response.nextBatch == nil
-        case .forwards:
-            forwardsPaginationToken = response.nextBatch
-            hasReachedHomeServerForwardsPaginationEnd = response.nextBatch == nil
-        @unknown default:
-            fatalError("[MXThreadEventTimeline][\(timelineId)] processPaginationResponse: Unknown direction")
+        MXLog.debug("[MXThreadEventTimeline][\(self.timelineId)] processPaginationResponse: \(response.chunk.count) messages from the server, direction: \(direction)")
+
+        decryptEvents(response.chunk) {
+            //  process chunk first
+            for event in response.chunk {
+                self.addEvent(event, direction: direction, fromStore: false)
+            }
+
+            let updatePaginationInfo = {
+                switch direction {
+                case .backwards:
+                    self.backwardsPaginationToken = response.nextBatch
+                    self.hasReachedHomeServerBackwardsPaginationEnd = response.nextBatch == nil
+                    MXLog.debug("[MXThreadEventTimeline][\(self.timelineId)] processPaginationResponse: hasReachedHomeServerBackwardsPaginationEnd: \(self.hasReachedHomeServerBackwardsPaginationEnd)")
+                case .forwards:
+                    self.forwardsPaginationToken = response.nextBatch
+                    self.hasReachedHomeServerForwardsPaginationEnd = response.nextBatch == nil
+                    MXLog.debug("[MXThreadEventTimeline][\(self.timelineId)] processPaginationResponse: hasReachedHomeServerForwardsPaginationEnd: \(self.hasReachedHomeServerForwardsPaginationEnd)")
+                @unknown default:
+                    fatalError("[MXThreadEventTimeline][\(self.timelineId)] processPaginationResponse: Unknown direction")
+                }
+            }
+
+            //  then process the root if there is no more messages in server
+
+            if let rootEvent = response.originalEvent, response.nextBatch == nil {
+                self.decryptEvents([rootEvent]) {
+                    self.addEvent(rootEvent, direction: direction, fromStore: false)
+                    updatePaginationInfo()
+                }
+            } else {
+                updatePaginationInfo()
+            }
         }
     }
     
@@ -408,12 +445,8 @@ public class MXThreadEventTimeline: NSObject, MXEventTimeline {
         if fromStore {
             notifyListeners(event, direction: direction)
         } else {
-            if let threadingService = thread.session?.threadingService {
-                let handled = threadingService.handleEvent(event, direction: direction)
-                if handled {
-                    notifyListeners(event, direction: direction)
-                }
-            }
+            self.notifyListeners(event, direction: direction)
+            thread.session?.threadingService.handleEvent(event, direction: direction, completion: nil)
             
             if !isLiveTimeline {
                 store.storeEvent(forRoom: thread.roomId, event: event, direction: direction)

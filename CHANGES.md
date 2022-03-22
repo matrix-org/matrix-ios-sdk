@@ -1,3 +1,36 @@
+## Changes in 0.23.0 (2022-03-22)
+
+✨ Features
+
+- MXSpace: added canAddRoom() method ([#5230](https://github.com/vector-im/element-ios/issues/5230))
+- MXRoomAliasAvailabilityChecker: added extractLocalAliasPart() ([#5233](https://github.com/vector-im/element-ios/issues/5233))
+
+🙌 Improvements
+
+- Space creation: Added home server capabilities, room alias validator, restricted join rule, refined space related API, and added tests ([#5224](https://github.com/vector-im/element-ios/issues/5224))
+- Added room upgrade API call and the ability to (un)suggest a room for a space ([#5231](https://github.com/vector-im/element-ios/issues/5231))
+- MXSpaceService: added `spaceSummaries` property ([#5401](https://github.com/vector-im/element-ios/issues/5401))
+- Threads: Fix deleted thread root & decrypt thread list. ([#5441](https://github.com/vector-im/element-ios/issues/5441))
+- Threads: Replace property for in-thread replies. ([#5704](https://github.com/vector-im/element-ios/issues/5704))
+- MXRoomEventFilter: Update property names for relation types and senders. ([#5705](https://github.com/vector-im/element-ios/issues/5705))
+- MXThreadingService: Use versions instead of capabilities to check threads server support. ([#5744](https://github.com/vector-im/element-ios/issues/5744))
+- MXEventContentRelatesTo: Update reply fallback property name and reverse the logic. ([#5790](https://github.com/vector-im/element-ios/issues/5790))
+- Threads: Update all properties to stable values. ([#5791](https://github.com/vector-im/element-ios/issues/5791))
+- Room: API to ignore the sender of a room invite before the room is joined ([#5807](https://github.com/vector-im/element-ios/issues/5807))
+- MXRoom: Do not try to guess threadId for replies, get that as a parameter. ([#5829](https://github.com/vector-im/element-ios/issues/5829))
+- MXThreadingService: Fix number of replies & notification/highlight counts for threads. ([#5843](https://github.com/vector-im/element-ios/issues/5843))
+
+🐛 Bugfixes
+
+- MXThreadEventTimeline: Decrypt events fetched from server. ([#5749](https://github.com/vector-im/element-ios/issues/5749))
+- MXRoom: Fix retain cycles, in particular between MXRoomOperation and its block. ([#5805](https://github.com/vector-im/element-ios/issues/5805))
+- Timeline: Prevent skipping an item between each pagination batch ([#5819](https://github.com/vector-im/element-ios/issues/5819))
+- Crypto: Distinguish between original and edit message when preventing replay attacks ([#5835](https://github.com/vector-im/element-ios/issues/5835))
+- MXThreadEventTimeline: Fix processing order of thread events & fix empty thread screen issue. ([#5840](https://github.com/vector-im/element-ios/issues/5840))
+- Timeline: Paginated events always show the most recent edit ([#5848](https://github.com/vector-im/element-ios/issues/5848))
+- MXFileStore: Log when filters cannot be saved or loaded ([#5873](https://github.com/vector-im/element-ios/issues/5873))
+
+
 ## Changes in 0.22.6 (2022-03-14)
 
 🙌 Improvements

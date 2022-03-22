@@ -345,6 +345,7 @@ FOUNDATION_EXPORT NSString *const kMXSessionNotificationUserIdsArrayKey;
 FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
 
 @class MXSpaceService;
+@class MXHomeserverCapabilitiesService;
 @class MXThreadingService;
 @class MXCapabilities;
 
@@ -481,6 +482,11 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
  The module that manages spaces.
  */
 @property (nonatomic, readonly) MXSpaceService *spaceService;
+
+/**
+ Capabilities of the current homeserver
+ */
+@property (nonatomic, readonly) MXHomeserverCapabilitiesService *homeserverCapabilitiesService;
 
 /**
  The module that manages threads.
@@ -767,7 +773,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)supportedMatrixVersions:(void (^)(MXMatrixVersions *matrixVersions))success failure:(void (^)(NSError *error))failure;
+- (MXHTTPOperation*)supportedMatrixVersions:(void (^)(MXMatrixVersions *matrixVersions))success failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  The antivirus server URL (nil by default).
@@ -1033,7 +1039,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 - (MXHTTPOperation*)eventWithEventId:(NSString*)eventId
                               inRoom:(NSString *)roomId
                              success:(void (^)(MXEvent *event))success
-                             failure:(void (^)(NSError *error))failure;
+                             failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 
 #pragma mark - Rooms summaries
@@ -1078,12 +1084,16 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 /**
  Delegate for updating room summaries.
  By default, it is the one returned by [MXRoomSummaryUpdater roomSummaryUpdaterForSession:].
+ 
+ This property is strong as the only other reference to the delegate is a weak ref in the updaterPerSession table.
  */
 @property id<MXRoomSummaryUpdating> roomSummaryUpdateDelegate;
 
 /**
  Delegate for updating room account data.
  By default, it is the one returned by [MXRoomAccountDataUpdater roomAccountDataUpdaterForSession:].
+ 
+ This property is strong as the only other reference to the delegate is a weak ref in the updaterPerSession table.
  */
 @property id<MXRoomAccountDataUpdating> roomAccountDataUpdateDelegate;
 

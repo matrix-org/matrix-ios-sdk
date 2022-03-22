@@ -1441,7 +1441,7 @@
                 __block MXEvent *localEchoEvent = nil;
                 
                 // Reply to first message
-                [roomFromBobPOV sendReplyToEvent:event withTextMessage:secondMessageReplyToFirst formattedTextMessage:secondMessageFormattedReplyToFirst stringLocalizer:defaultStringLocalizer localEcho:&localEchoEvent success:^(NSString *eventId) {
+                [roomFromBobPOV sendReplyToEvent:event withTextMessage:secondMessageReplyToFirst formattedTextMessage:secondMessageFormattedReplyToFirst stringLocalizer:defaultStringLocalizer threadId:nil localEcho:&localEchoEvent success:^(NSString *eventId) {
                     MXLogDebug(@"Send reply to first message with success");
                 } failure:^(NSError *error) {
                     XCTFail(@"The request should not fail - NSError: %@", error);
@@ -1455,8 +1455,8 @@
                 
                 NSString *secondEventBody = localEchoEvent.content[kMXMessageBodyKey];
                 NSString *secondEventFormattedBody = localEchoEvent.content[@"formatted_body"];
-                NSString *secondEventRelatesToEventId = localEchoEvent.content[kMXEventRelationRelatesToKey][@"m.in_reply_to"][@"event_id"];
-                NSString *secondWiredEventRelatesToEventId = localEchoEvent.wireContent[kMXEventRelationRelatesToKey][@"m.in_reply_to"][@"event_id"];
+                NSString *secondEventRelatesToEventId = localEchoEvent.content[kMXEventRelationRelatesToKey][kMXEventContentRelatesToKeyInReplyTo][kMXEventContentRelatesToKeyEventId];
+                NSString *secondWiredEventRelatesToEventId = localEchoEvent.relatesTo.inReplyTo.eventId;
                 
                 NSString *permalinkToUser = [MXTools permalinkToUserWithUserId:firstEventSender];
                 NSString *permalinkToEvent = [MXTools permalinkToEvent:firstEventId inRoom:roomId];
@@ -1474,7 +1474,7 @@
                 __block MXEvent *localEchoEvent = nil;
                 
                 // Reply to second message, which was also a reply
-                [roomFromBobPOV sendReplyToEvent:event withTextMessage:thirdMessageReplyToSecond formattedTextMessage:thirdMessageFormattedReplyToSecond stringLocalizer:defaultStringLocalizer localEcho:&localEchoEvent success:^(NSString *eventId) {
+                [roomFromBobPOV sendReplyToEvent:event withTextMessage:thirdMessageReplyToSecond formattedTextMessage:thirdMessageFormattedReplyToSecond stringLocalizer:defaultStringLocalizer threadId:nil localEcho:&localEchoEvent success:^(NSString *eventId) {
                     MXLogDebug(@"Send reply to second message with success");
                 } failure:^(NSError *error) {
                     XCTFail(@"The request should not fail - NSError: %@", error);
@@ -1488,8 +1488,8 @@
                 
                 NSString *thirdEventBody = localEchoEvent.content[kMXMessageBodyKey];
                 NSString *thirdEventFormattedBody = localEchoEvent.content[@"formatted_body"];
-                NSString *thirdEventRelatesToEventId = localEchoEvent.content[kMXEventRelationRelatesToKey][@"m.in_reply_to"][@"event_id"];
-                NSString *thirdWiredEventRelatesToEventId = localEchoEvent.wireContent[kMXEventRelationRelatesToKey][@"m.in_reply_to"][@"event_id"];
+                NSString *thirdEventRelatesToEventId = localEchoEvent.content[kMXEventRelationRelatesToKey][kMXEventContentRelatesToKeyInReplyTo][kMXEventContentRelatesToKeyEventId];
+                NSString *thirdWiredEventRelatesToEventId = localEchoEvent.relatesTo.inReplyTo.eventId;
                 
                 NSString *permalinkToUser = [MXTools permalinkToUserWithUserId:secondEventSender];
                 NSString *permalinkToEvent = [MXTools permalinkToEvent:secondEventId inRoom:roomId];
@@ -1523,13 +1523,13 @@
             else if (messageCountFromAlice == 2)
             {
                 secondEventId = event.eventId;
-                NSString *secondWiredEventRelatesToEventId = event.wireContent[kMXEventRelationRelatesToKey][@"m.in_reply_to"][@"event_id"];
+                NSString *secondWiredEventRelatesToEventId = event.relatesTo.inReplyTo.eventId;
 
                 XCTAssertEqualObjects(secondWiredEventRelatesToEventId, firstEventId);
             }
             else
             {
-                NSString *thirdWiredEventRelatesToEventId = event.wireContent[kMXEventRelationRelatesToKey][@"m.in_reply_to"][@"event_id"];
+                NSString *thirdWiredEventRelatesToEventId = event.relatesTo.inReplyTo.eventId;
 
                 XCTAssertEqualObjects(thirdWiredEventRelatesToEventId, secondEventId);
                 
@@ -1794,6 +1794,56 @@
                     [bobSession decryptEvents:@[event] inTimeline:nil onComplete:^(NSArray<MXEvent *> *failedEvents) {
                         XCTAssertEqual(failedEvents.count, 0);
                         XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messageFromAlice senderSession:aliceSession]);
+                        
+                        [expectation fulfill];
+                    }];
+                }];
+            }];
+        }];
+
+        [roomFromAlicePOV sendTextMessage:messageFromAlice threadId:nil success:nil failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+- (void)testReplayAttackForEventEdits
+{
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:NO readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+
+        NSString *messageFromAlice = @"Hello I'm Alice!";
+
+        MXRoom *roomFromBobPOV = [bobSession roomWithRoomId:roomId];
+        MXRoom *roomFromAlicePOV = [aliceSession roomWithRoomId:roomId];
+
+        XCTAssert(roomFromBobPOV.summary.isEncrypted);
+        XCTAssert(roomFromAlicePOV.summary.isEncrypted);
+
+        [roomFromBobPOV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
+            [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+
+                // Turn the event into an edit event (not directly rendered) and try to decrypt again
+                NSMutableDictionary *content = event.wireContent.mutableCopy;
+                content[kMXEventRelationRelatesToKey] = @{
+                    kMXEventContentRelatesToKeyRelationType: MXEventRelationTypeReplace
+                };
+                event.wireContent = content;
+                [event setClearData:nil];
+                
+                [bobSession decryptEvents:@[event] inTimeline:liveTimeline.timelineId onComplete:^(NSArray<MXEvent *> *failedEvents) {
+                    
+                    // The first edited event with the same content is decrypted successfuly and not treated as a replay attack
+                    XCTAssertEqual(failedEvents.count, 0);
+                    XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messageFromAlice senderSession:aliceSession]);
+                    [event setClearData:nil];
+                    
+                    // Decrypt the same edit event again, this time failing as a replay attack
+                    [bobSession decryptEvents:@[event] inTimeline:liveTimeline.timelineId onComplete:^(NSArray<MXEvent *> *failedEvents) {
+                        XCTAssertEqual(failedEvents.count, 1);
+                        XCTAssert(event.decryptionError);
+                        XCTAssertEqual(event.decryptionError.code, MXDecryptingErrorDuplicateMessageIndexCode);
+                        XCTAssertNil(event.clearEvent);
                         
                         [expectation fulfill];
                     }];

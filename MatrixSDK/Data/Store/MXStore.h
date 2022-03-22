@@ -33,6 +33,7 @@
 @class MXSpaceGraphData;
 @class MXStoreService;
 @class MXCapabilities;
+@class MXMatrixVersions;
 
 /**
  The `MXStore` protocol defines an interface that must be implemented in order to store
@@ -349,6 +350,18 @@
  */
 - (void)storeHomeserverCapabilities:(nonnull MXCapabilities*)homeserverCapabilities;
 
+/**
+ Supported Matrix versions by the homeserver.
+ */
+@property (nonatomic, readonly) MXMatrixVersions * _Nullable supportedMatrixVersions;
+
+/**
+ Store the supported Matrix versions.
+
+ @param supportedMatrixVersions the supported Matrix versions to store.
+ */
+- (void)storeSupportedMatrixVersions:(nonnull MXMatrixVersions*)supportedMatrixVersions;
+
 #pragma mark - Room Messages
 
 /**
@@ -507,6 +520,11 @@
  @param filterId the id of this filter on the homeserver.
  */
 - (void)storeFilter:(nonnull MXFilterJSONModel*)filter withFilterId:(nonnull NSString*)filterId;
+
+/**
+ Retrieve a list of all stored filter ids.
+ */
+- (nonnull NSArray <NSString *> *)allFilterIds;
 
 /**
  Retrieve a filter with a given id.

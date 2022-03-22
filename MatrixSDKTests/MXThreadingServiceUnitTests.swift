@@ -15,6 +15,7 @@
 //
 
 import XCTest
+import MatrixSDK
 
 class MXThreadingServiceUnitTests: XCTestCase {
 
@@ -69,27 +70,31 @@ class MXThreadingServiceUnitTests: XCTestCase {
                 "type": kMXMessageTypeText,
                 "body": "Message",
                 kMXEventRelationRelatesToKey: [
-                    "rel_type": MXEventRelationTypeThread,
-                    "event_id": threadId
+                    kMXEventContentRelatesToKeyRelationType: MXEventRelationTypeThread,
+                    kMXEventContentRelatesToKeyEventId: threadId
                 ],
             ]
         ]) else {
             XCTFail("Failed to setup initial conditions")
             return
         }
-        
-        threadingService.handleEvent(event, direction: .forwards)
-        
-        guard let thread = threadingService.thread(withId: threadId) else {
-            XCTFail("Thread not created after handling event")
-            return
+
+        wait { expectation in
+            threadingService.handleEvent(event, direction: .forwards) { handled in
+                guard let thread = threadingService.thread(withId: threadId) else {
+                    XCTFail("Thread not created after handling event")
+                    return
+                }
+
+                XCTAssertEqual(thread.id, threadId, "Thread id must be kept")
+                XCTAssertEqual(thread.roomId, roomId, "Thread room ids must be equal")
+                XCTAssertEqual(thread.lastMessage, event, "Thread last message must be kept")
+                XCTAssertNil(thread.rootMessage, "Thread must not have the root event")
+                XCTAssertEqual(thread.numberOfReplies, 1, "Thread must have only 1 reply")
+
+                expectation.fulfill()
+            }
         }
-        
-        XCTAssertEqual(thread.id, threadId, "Thread id must be kept")
-        XCTAssertEqual(thread.roomId, roomId, "Thread room ids must be equal")
-        XCTAssertEqual(thread.lastMessage, event, "Thread last message must be kept")
-        XCTAssertNil(thread.rootMessage, "Thread must not have the root event")
-        XCTAssertEqual(thread.numberOfReplies, 1, "Thread must have only 1 reply")
     }
     
     func testHandleEventUpdatingThread() {
@@ -117,8 +122,8 @@ class MXThreadingServiceUnitTests: XCTestCase {
                 "type": kMXMessageTypeText,
                 "body": "Message Old",
                 kMXEventRelationRelatesToKey: [
-                    "rel_type": MXEventRelationTypeThread,
-                    "event_id": threadId
+                    kMXEventContentRelatesToKeyRelationType: MXEventRelationTypeThread,
+                    kMXEventContentRelatesToKeyEventId: threadId
                 ],
             ]
         ]) else {
@@ -136,8 +141,8 @@ class MXThreadingServiceUnitTests: XCTestCase {
                 "type": kMXMessageTypeText,
                 "body": "Message New",
                 kMXEventRelationRelatesToKey: [
-                    "rel_type": MXEventRelationTypeThread,
-                    "event_id": threadId
+                    kMXEventContentRelatesToKeyRelationType: MXEventRelationTypeThread,
+                    kMXEventContentRelatesToKeyEventId: threadId
                 ],
             ],
             "sender": Constants.credentials.userId!
@@ -145,22 +150,36 @@ class MXThreadingServiceUnitTests: XCTestCase {
             XCTFail("Failed to setup initial conditions")
             return
         }
-        
-        //  handle events backwards
-        threadingService.handleEvent(eventNew, direction: .forwards)
-        threadingService.handleEvent(eventOld, direction: .forwards)
-        
-        guard let thread = threadingService.thread(withId: threadId) else {
-            XCTFail("Thread not created after handling events")
-            return
+
+        let dispatchGroup = DispatchGroup()
+
+        wait { expectation in
+            //  handle events backwards
+            dispatchGroup.enter()
+            threadingService.handleEvent(eventNew, direction: .forwards) { _ in
+                dispatchGroup.leave()
+            }
+            dispatchGroup.enter()
+            threadingService.handleEvent(eventOld, direction: .forwards) { _ in
+                dispatchGroup.leave()
+            }
+
+            dispatchGroup.notify(queue: .main) {
+                guard let thread = threadingService.thread(withId: threadId) else {
+                    XCTFail("Thread not created after handling events")
+                    return
+                }
+
+                XCTAssertEqual(thread.id, threadId, "Thread id must be kept")
+                XCTAssertEqual(thread.roomId, roomId, "Thread room ids must be equal")
+                XCTAssertEqual(thread.lastMessage, eventNew, "Thread last message must be the new event")
+                XCTAssertNil(thread.rootMessage, "Thread must not have the root event")
+                XCTAssertEqual(thread.numberOfReplies, 2, "Thread must have 2 replies")
+                XCTAssertTrue(thread.isParticipated, "Thread must be participated")
+
+                expectation.fulfill()
+            }
         }
-        
-        XCTAssertEqual(thread.id, threadId, "Thread id must be kept")
-        XCTAssertEqual(thread.roomId, roomId, "Thread room ids must be equal")
-        XCTAssertEqual(thread.lastMessage, eventNew, "Thread last message must be the new event")
-        XCTAssertNil(thread.rootMessage, "Thread must not have the root event")
-        XCTAssertEqual(thread.numberOfReplies, 2, "Thread must have 2 replies")
-        XCTAssertTrue(thread.isParticipated, "Thread must be participated")
     }
     
     func testHandleEventCreatingThreadWithRootEvent() {
@@ -192,8 +211,8 @@ class MXThreadingServiceUnitTests: XCTestCase {
                 "type": kMXMessageTypeText,
                 "body": "Message",
                 kMXEventRelationRelatesToKey: [
-                    "rel_type": MXEventRelationTypeThread,
-                    "event_id": threadId
+                    kMXEventContentRelatesToKeyRelationType: MXEventRelationTypeThread,
+                    kMXEventContentRelatesToKeyEventId: threadId
                 ],
             ]
         ]) else {
@@ -219,18 +238,20 @@ class MXThreadingServiceUnitTests: XCTestCase {
                         session.close()
                     }
                     
-                    threadingService.handleEvent(event, direction: .forwards)
-                    
-                    guard let thread = threadingService.thread(withId: threadId) else {
-                        XCTFail("Thread not created after handling event")
-                        return
+                    threadingService.handleEvent(event, direction: .forwards) { _ in
+                        guard let thread = threadingService.thread(withId: threadId) else {
+                            XCTFail("Thread not created after handling event")
+                            return
+                        }
+
+                        XCTAssertEqual(thread.id, threadId, "Thread id must be kept")
+                        XCTAssertEqual(thread.roomId, roomId, "Thread room ids must be equal")
+                        XCTAssertEqual(thread.lastMessage, event, "Thread last message must be kept")
+                        XCTAssertEqual(thread.rootMessage, rootEvent, "Thread must have the root event")
+                        XCTAssertEqual(thread.numberOfReplies, 1, "Thread must have only 1 reply")
+
+                        expectation.fulfill()
                     }
-                    
-                    XCTAssertEqual(thread.id, threadId, "Thread id must be kept")
-                    XCTAssertEqual(thread.roomId, roomId, "Thread room ids must be equal")
-                    XCTAssertEqual(thread.lastMessage, event, "Thread last message must be kept")
-                    XCTAssertEqual(thread.rootMessage, rootEvent, "Thread must have the root event")
-                    XCTAssertEqual(thread.numberOfReplies, 1, "Thread must have only 1 reply")
                 case .failure(let error):
                     XCTFail("Failed to setup initial conditions: \(error)")
                     return
@@ -268,8 +289,8 @@ class MXThreadingServiceUnitTests: XCTestCase {
                 "type": kMXMessageTypeText,
                 "body": "Message",
                 kMXEventRelationRelatesToKey: [
-                    "rel_type": MXEventRelationTypeThread,
-                    "event_id": threadId
+                    kMXEventContentRelatesToKeyRelationType: MXEventRelationTypeThread,
+                    kMXEventContentRelatesToKeyEventId: threadId
                 ],
             ]
         ]) else {
@@ -287,20 +308,34 @@ class MXThreadingServiceUnitTests: XCTestCase {
         defer {
             session.close()
         }
-        
-        threadingService.handleEvent(event, direction: .forwards)
-        threadingService.handleEvent(rootEvent, direction: .forwards)
-        
-        guard let thread = threadingService.thread(withId: threadId) else {
-            XCTFail("Thread not created after handling event")
-            return
+
+        let dispatchGroup = DispatchGroup()
+
+        wait { expectation in
+            dispatchGroup.enter()
+            threadingService.handleEvent(event, direction: .forwards) { _ in
+                dispatchGroup.leave()
+            }
+            dispatchGroup.enter()
+            threadingService.handleEvent(rootEvent, direction: .forwards) { _ in
+                dispatchGroup.leave()
+            }
+
+            dispatchGroup.notify(queue: .main) {
+                guard let thread = threadingService.thread(withId: threadId) else {
+                    XCTFail("Thread not created after handling event")
+                    return
+                }
+
+                XCTAssertEqual(thread.id, threadId, "Thread id must be kept")
+                XCTAssertEqual(thread.roomId, roomId, "Thread room ids must be equal")
+                XCTAssertEqual(thread.lastMessage, event, "Thread last message must be kept")
+                XCTAssertEqual(thread.rootMessage, rootEvent, "Thread must have the root event")
+                XCTAssertEqual(thread.numberOfReplies, 1, "Thread must have only 1 reply")
+
+                expectation.fulfill()
+            }
         }
-        
-        XCTAssertEqual(thread.id, threadId, "Thread id must be kept")
-        XCTAssertEqual(thread.roomId, roomId, "Thread room ids must be equal")
-        XCTAssertEqual(thread.lastMessage, event, "Thread last message must be kept")
-        XCTAssertEqual(thread.rootMessage, rootEvent, "Thread must have the root event")
-        XCTAssertEqual(thread.numberOfReplies, 1, "Thread must have only 1 reply")
     }
     
     func testTemporaryThreads() {

@@ -287,6 +287,9 @@ typedef void (^MXOnResumeDone)(void);
         _catchingUp = NO;
         MXCredentials *initialSyncCredentials = [MXCredentials initialSyncCacheCredentialsFrom:mxRestClient.credentials];
         _initialSyncResponseCache = [[MXSyncResponseFileStore alloc] initWithCredentials:initialSyncCredentials];
+        
+        _homeserverCapabilitiesService = [[MXHomeserverCapabilitiesService alloc] initWithSession: self];
+        [_homeserverCapabilitiesService updateWithCompletion:nil];
 
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onDidDecryptEvent:) name:kMXEventDidDecryptNotification object:nil];
 
@@ -547,6 +550,8 @@ typedef void (^MXOnResumeDone)(void);
                         }
                     }
                 }
+
+                [self.threadingService handleJoinedRoomSync:roomSync forRoom:roomId];
             }
         }
         
@@ -691,6 +696,11 @@ typedef void (^MXOnResumeDone)(void);
             
             // Propagate sync response to the associated space service
             [self.spaceService handleSyncResponse:syncResponse];
+            
+            if (!self.homeserverCapabilitiesService.isInitialised)
+            {
+                [self.homeserverCapabilitiesService updateWithCompletion:nil];
+            }
             
             if (completion)
             {
@@ -914,6 +924,9 @@ typedef void (^MXOnResumeDone)(void);
 
     // Refresh homeserver capabilities
     [self refreshHomeserverCapabilities:nil failure:nil];
+
+    // Refresh supported Matrix versions
+    [self refreshSupportedMatrixVersions:nil failure:nil];
     
     // Get the maximum file size allowed for uploading media
     [self.matrixRestClient maxUploadSize:^(NSInteger maxUploadSize) {
@@ -2074,11 +2087,6 @@ typedef void (^MXOnResumeDone)(void);
     }
 }
 
-- (MXHTTPOperation*)supportedMatrixVersions:(void (^)(MXMatrixVersions *))success failure:(void (^)(NSError *))failure
-{
-    return [matrixRestClient supportedMatrixVersions:success failure:failure];
-}
-
 - (void)setAntivirusServerURL:(NSString *)antivirusServerURL
 {
     _antivirusServerURL = antivirusServerURL;
@@ -2951,9 +2959,9 @@ typedef void (^MXOnResumeDone)(void);
                 failure(error.createNSError);
             });
         }
-        return nil;
+        return [MXHTTPOperation new];
     }
-    MXHTTPOperation *operation;
+    MXHTTPOperation *operation = [MXHTTPOperation new];
 
     void (^decryptIfNeeded)(MXEvent *event) = ^(MXEvent *event) {
         [self decryptEvents:@[event] inTimeline:nil onComplete:^(NSArray<MXEvent *> *failedEvents) {
@@ -4438,6 +4446,45 @@ typedef void (^MXOnResumeDone)(void);
         if (success)
         {
             success(capabilities);
+        }
+    } failure:failure];
+}
+
+#pragma mark - Supported Matrix versions
+
+- (MXHTTPOperation*)supportedMatrixVersions:(void (^)(MXMatrixVersions *))success failure:(void (^)(NSError *))failure
+{
+    MXMatrixVersions *supportedVersionsInStore = self.store.supportedMatrixVersions;
+    if (supportedVersionsInStore)
+    {
+        if (success)
+        {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                success(supportedVersionsInStore);
+            });
+        }
+        return [MXHTTPOperation new];
+    }
+    return [matrixRestClient supportedMatrixVersions:success failure:failure];
+}
+
+- (MXHTTPOperation *)refreshSupportedMatrixVersions:(void (^)(MXMatrixVersions *))success
+                                            failure:(void (^)(NSError *))failure
+{
+    MXLogDebug(@"[MXSession] refreshMatrixSupportedVersions");
+
+    MXWeakify(self);
+    return [self.matrixRestClient supportedMatrixVersions:^(MXMatrixVersions *matrixVersions) {
+        MXStrongifyAndReturnIfNil(self);
+
+        if (matrixVersions)
+        {
+            [self.store storeSupportedMatrixVersions:matrixVersions];
+        }
+
+        if (success)
+        {
+            success(matrixVersions);
         }
     } failure:failure];
 }

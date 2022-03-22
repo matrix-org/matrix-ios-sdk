@@ -165,11 +165,11 @@ class MXBackgroundStore: NSObject, MXStore {
     }
     
     func messagesEnumerator(forRoom roomId: String) -> MXEventsEnumerator {
-        return MXEventsEnumeratorOnArray(messages: [])
+        return MXEventsEnumeratorOnArray(eventIds: [], dataSource: nil)
     }
     
     func messagesEnumerator(forRoom roomId: String, withTypeIn types: [Any]?) -> MXEventsEnumerator {
-        return MXEventsEnumeratorOnArray(messages: [])
+        return MXEventsEnumeratorOnArray(eventIds: [], dataSource: nil)
     }
     
     func relations(forEvent eventId: String, inRoom roomId: String, relationType: String) -> [MXEvent] {
@@ -243,6 +243,10 @@ class MXBackgroundStore: NSObject, MXStore {
 
     var homeserverCapabilities: MXCapabilities?
     func storeHomeserverCapabilities(_ homeserverCapabilities: MXCapabilities) {
+    }
+
+    var supportedMatrixVersions: MXMatrixVersions?
+    func storeSupportedMatrixVersions(_ supportedMatrixVersions: MXMatrixVersions) {
     }
     
     func loadRoomMessages(forRoom roomId: String, completion: (() -> Void)? = nil) {

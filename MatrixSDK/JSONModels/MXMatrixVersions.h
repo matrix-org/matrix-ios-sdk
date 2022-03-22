@@ -17,6 +17,8 @@
 #import <Foundation/Foundation.h>
 #import "MXJSONModel.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 /**
  Matrix Client-Server API versions.
  */
@@ -29,6 +31,10 @@ struct MXMatrixClientServerAPIVersionStruct
     __unsafe_unretained NSString * const r0_4_0;
     __unsafe_unretained NSString * const r0_5_0;
     __unsafe_unretained NSString * const r0_6_0;
+    __unsafe_unretained NSString * const r0_6_1;
+    __unsafe_unretained NSString * const v1_1;
+    __unsafe_unretained NSString * const v1_2;
+    __unsafe_unretained NSString * const v1_3;
 };
 extern const struct MXMatrixClientServerAPIVersionStruct MXMatrixClientServerAPIVersion;
 
@@ -50,18 +56,18 @@ extern const struct MXMatrixVersionsFeatureStruct MXMatrixVersionsFeature;
  by the home server.
  It is returned by the /versions API.
  */
-@interface MXMatrixVersions : MXJSONModel
+@interface MXMatrixVersions : MXJSONModel<NSCoding>
 
 /**
  The versions supported by the server.
  */
-@property (nonatomic) NSArray<NSString *> *versions;
+@property (nonatomic, readonly) NSArray<NSString *> *versions;
 
 /**
  The unstable features supported by the server.
 
  */
-@property (nonatomic) NSDictionary<NSString*, NSNumber*> *unstableFeatures;
+@property (nonatomic, nullable, readonly) NSDictionary<NSString*, NSNumber*> *unstableFeatures;
 
 /**
  Check whether the server supports the room members lazy loading.
@@ -87,4 +93,11 @@ extern const struct MXMatrixVersionsFeatureStruct MXMatrixVersionsFeature;
  */
 @property (nonatomic, readonly) BOOL doesServerSupportSeparateAddAndBind;
 
+/**
+ Indicate if the server supports threads via MSC3440.
+ */
+@property (nonatomic, readonly) BOOL supportsThreads;
+
 @end
+
+NS_ASSUME_NONNULL_END

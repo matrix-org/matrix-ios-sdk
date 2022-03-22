@@ -175,6 +175,7 @@
 
                         XCTAssertNotNil(filter2);
                         XCTAssertEqualObjects(filter, filter2);
+                        XCTAssertEqualObjects(fileStore.allFilterIds, @[syncFilterId]);
 
                         [expectation fulfill];
 
