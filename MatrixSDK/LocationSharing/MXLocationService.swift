@@ -19,7 +19,7 @@ import Foundation
 /// MXLocationService handles live location sharing
 /// Note: Cannot use a protocol because of Objective-C compatibility
 @objcMembers
-class MXLocationService: NSObject {
+public class MXLocationService: NSObject {
     
     // MARK: - Properties
     
