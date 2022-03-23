@@ -23,6 +23,7 @@
 #import "MXEventRelations.h"
 #import "MXEventReferenceChunk.h"
 #import "MXEventContentLocation.h"
+#import "MatrixSDKSwiftHeader.h"
 
 #pragma mark - Constants definitions
 
@@ -94,6 +95,9 @@ NSString *const kMXEventTypeStringPollResponse        = @"m.poll.response";
 NSString *const kMXEventTypeStringPollResponseMSC3381 = @"org.matrix.msc3381.poll.response";
 NSString *const kMXEventTypeStringPollEnd             = @"m.poll.end";
 NSString *const kMXEventTypeStringPollEndMSC3381      = @"org.matrix.msc3381.poll.end";
+
+NSString *const kMXEventTypeStringBeaconInfo = @"m.beacon_info";
+NSString *const kMXEventTypeStringBeaconInfoMSC3489 = @"org.matrix.msc3489.beacon_info";
 
 NSString *const kMXMessageTypeKey                    = @"msgtype";
 NSString *const kMXMessageTypeText                   = @"m.text";
@@ -186,6 +190,7 @@ NSString *const kMXMessageContentKeyExtensibleAsset = @"m.asset";
 NSString *const kMXMessageContentKeyExtensibleAssetMSC3488 = @"org.matrix.msc3488.asset";
 NSString *const kMXMessageContentKeyExtensibleAssetType = @"type";
 NSString *const kMXMessageContentKeyExtensibleAssetTypeUser = @"m.self";
+NSString *const kMXMessageContentKeyExtensibleAssetTypeLiveLocation = @"m.self.live";
 
 // Join Rules
 
@@ -521,6 +526,11 @@ NSString *const kMXJoinRulesContentKeyRoomId = @"room_id";
     return [msgtype isEqualToString:kMXMessageTypeAudio] && (self.content[kMXMessageContentKeyVoiceMessage] ||
                                                              self.content[kMXMessageContentKeyVoiceMessageMSC2516] ||
                                                              self.content[kMXMessageContentKeyVoiceMessageMSC3245]);
+}
+
+- (BOOL)isBeaconInfo
+{
+    return [MXBeaconInfoEventTypeComponents isEventTypeStringBeaconInfo:self.type];
 }
 
 - (MXEventContentLocation *)location
