@@ -93,6 +93,8 @@ internal class MockRoomSummary: NSObject, MXRoomSummaryProtocol {
     
     var parentSpaceIds: Set<String> = []
     
+    var beaconInfoEvents: [MXBeaconInfo] = []
+    
     init(withRoomId roomId: String) {
         self.roomId = roomId
         super.init()
