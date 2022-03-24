@@ -106,9 +106,9 @@ class MXBeaconInfoUnitTests: XCTestCase {
         
         let expectedUserId = "@alice:matrix.org"
         let expectedUniqueId = "98088ZE98"
-        let expectedUniqueSuffix = ".\(expectedUserId).\(expectedUniqueId)"
+        let expectedUniqueSuffix = "\(expectedUserId).\(expectedUniqueId)"
         
-        let expectedFullEventTypeString = "\(kMXEventTypeStringBeaconInfoMSC3489)\(expectedUniqueSuffix)"
+        let expectedFullEventTypeString = "\(kMXEventTypeStringBeaconInfoMSC3489).\(expectedUniqueSuffix)"
         
         let beaconInfoEventTypeComponents = MXBeaconInfoEventTypeComponents(eventTypeString: expectedFullEventTypeString)
         
@@ -118,8 +118,21 @@ class MXBeaconInfoUnitTests: XCTestCase {
             return
         }
         
-//        XCTAssertEqual(beaconInfoEventTypeComponents.userId, expectedUserId)
-//        XCTAssertEqual(beaconInfoEventTypeComponents.uniqueId, expectedUniqueId)
+        XCTAssertEqual(beaconInfoEventTypeComponents.uniqueSuffix, expectedUniqueSuffix)
+        XCTAssertEqual(beaconInfoEventTypeComponents.fullEventTypeString, expectedFullEventTypeString)
+    }
+    
+    func testBuildWithUniqueSuffixSucceed() throws {
+        
+        let expectedUserId = "@alice:matrix.org"
+        let expectedUniqueId = "98088ZE98"
+        let expectedUniqueSuffix = "\(expectedUserId).\(expectedUniqueId)"
+        
+        let expectedFullEventTypeString = "\(kMXEventTypeStringBeaconInfoMSC3489).\(expectedUniqueSuffix)"
+        
+        let beaconInfoEventTypeComponents = MXBeaconInfoEventTypeComponents(uniqueSuffix: expectedUniqueSuffix)
+        
+        XCTAssertNotNil(beaconInfoEventTypeComponents)
         XCTAssertEqual(beaconInfoEventTypeComponents.uniqueSuffix, expectedUniqueSuffix)
         XCTAssertEqual(beaconInfoEventTypeComponents.fullEventTypeString, expectedFullEventTypeString)
     }

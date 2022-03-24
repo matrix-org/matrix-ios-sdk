@@ -37,7 +37,7 @@ public class MXBeaconInfoEventTypeComponents: NSObject {
     /// The event type string (i.e. "m.beacon_info)
     public let eventTypeString: String
     
-    /// The event type unique suffix string (i.e. ".@alice:matrix.org.0808090")
+    /// The event type unique suffix string (i.e. "@alice:matrix.org.0808090")
     public let uniqueSuffix: String
     
     /// User id from unique suffix if found (i.e. "@alice:matrix.org")
@@ -48,7 +48,7 @@ public class MXBeaconInfoEventTypeComponents: NSObject {
     
     /// Generate "m.beacon_info" event type string with format "m.beacon_info.{userId}.{uniqueId}"
     public var fullEventTypeString: String {
-        return "\(eventTypeString)\(uniqueSuffix)"
+        return "\(eventTypeString)\(Constants.separator)\(uniqueSuffix)"
     }
     
     // MARK: - Setup
@@ -104,10 +104,19 @@ public class MXBeaconInfoEventTypeComponents: NSObject {
         guard self.isEventTypeStringBeaconInfo(eventTypeString) else {
             return nil
         }
-                        
-        let eventTypeStringWithoutPrefix = eventTypeString.dropFirst(self.eventTypeStringPrefix.count)
         
-        let uniqueSuffix = String(eventTypeStringWithoutPrefix)
+        let separatorString = "\(Constants.separator)"
+                        
+        let eventTypeStringWithoutPrefix = String(eventTypeString.dropFirst(self.eventTypeStringPrefix.count))
+        
+        let uniqueSuffix: String
+        
+        // Remove the dot prefix of the suffix: ".@alice:matrix.org.0808090"
+        if eventTypeStringWithoutPrefix.hasPrefix(separatorString) {
+            uniqueSuffix = String(eventTypeStringWithoutPrefix.dropFirst(separatorString.count))
+        } else {
+            uniqueSuffix = eventTypeStringWithoutPrefix
+        }
         
         let (userId, uniqueId) = self.getComponents(fromUniqueSuffix: uniqueSuffix)
         
@@ -115,7 +124,7 @@ public class MXBeaconInfoEventTypeComponents: NSObject {
     }
     
     private class func uniqueSuffix(from userId: String, uniqueId: String) -> String {
-        return "\(Constants.separator)\(userId)\(Constants.separator)\(uniqueId)"
+        return "\(userId)\(Constants.separator)\(uniqueId)"
     }
     
     // TODO: Try to retrieve user Id with MXTools.isMatrixUserIdentifierRegex and unique Id
