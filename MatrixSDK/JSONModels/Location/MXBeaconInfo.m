@@ -16,6 +16,7 @@
 
 #import "MXBeaconInfo.h"
 #import "MXEvent.h"
+#import "MatrixSDKSwiftHeader.h"
 
 static NSString * const kDescriptionJSONKey = @"description";
 static NSString * const kTimeoutJSONKey = @"timeout";
@@ -25,20 +26,63 @@ static NSString * const kLiveJSONKey = @"live";
 
 #pragma mark - Setup
 
-- (instancetype)initWithDescription:(NSString*)desc
-                            timeout:(NSTimeInterval)timeout
-                             isLive:(BOOL)isLive
+- (instancetype)initWithUserId:(NSString *)userId
+                      uniqueId:(NSString *)uniqueId
+                   description:(NSString *)desc
+                       timeout:(uint64_t)timeout
+                        isLive:(BOOL)isLive
+                     timestamp:(uint64_t)timestamp
 {
     self = [super init];
     if (self)
     {
+        _userId = userId;
+        _uniqueId = uniqueId;
         _desc = desc;
         _timeout = timeout;
         _isLive = isLive;
         _assetType = MXEventAssetTypeLiveLocation;
-        _timestamp = [[NSDate date] timeIntervalSince1970] * 1000;
+        _timestamp = timestamp;
     }
     return self;
+}
+
+- (instancetype)initWithDescription:(NSString*)desc
+                            timeout:(uint64_t)timeout
+                             isLive:(BOOL)isLive
+{
+    uint64_t timestamp = (uint64_t)[[NSDate date] timeIntervalSince1970] * 1000;
+    
+    return [self initWithUserId:nil
+                       uniqueId:nil
+                    description:desc
+                        timeout:timeout
+                         isLive:isLive
+                      timestamp:timestamp];
+}
+
+- (instancetype)initWithMXEvent:(MXEvent*)event
+{
+    if (!event.isBeaconInfo)
+    {
+        return nil;
+    }
+    
+    MXBeaconInfo *beaconInfo = [MXBeaconInfo modelFromJSON:event.content];
+    
+    if (!beaconInfo)
+    {
+        return nil;
+    }
+    
+    MXBeaconInfoEventTypeComponents *eventTypeComponents = [[MXBeaconInfoEventTypeComponents alloc] initWithEventTypeString:event.type];
+    
+    return [self initWithUserId:event.stateKey
+                       uniqueId:eventTypeComponents.uniqueSuffix
+                    description:beaconInfo.desc
+                        timeout:beaconInfo.timeout
+                         isLive:beaconInfo.isLive
+                      timestamp:beaconInfo.timestamp];
 }
 
 #pragma mark - Overrides
@@ -84,11 +128,11 @@ static NSString * const kLiveJSONKey = @"live";
     {
         MXJSONModelSetString(beaconInfo->_desc, beaconInfoContent[kDescriptionJSONKey]);
         
-        beaconInfo->_timeout = [timeoutNumber doubleValue];
+        beaconInfo->_timeout = [timeoutNumber unsignedLongLongValue];
         
         MXJSONModelSetBoolean(beaconInfo->_isLive, beaconInfoContent[kLiveJSONKey]);
-        
-        beaconInfo->_timestamp = [timestampNumber doubleValue];
+                
+        beaconInfo->_timestamp = [timestampNumber unsignedLongLongValue];
         
         beaconInfo->_assetType = MXEventAssetTypeLiveLocation;
     }
@@ -103,7 +147,11 @@ static NSString * const kLiveJSONKey = @"live";
     // Beacon info content
     NSMutableDictionary *beaconInfoContent = [NSMutableDictionary dictionary];
     
-    beaconInfoContent[kDescriptionJSONKey] = self.desc;
+    if (self.desc)
+    {
+        beaconInfoContent[kDescriptionJSONKey] = self.desc;
+    }
+    
     beaconInfoContent[kTimeoutJSONKey] = @(self.timeout);
     beaconInfoContent[kLiveJSONKey] = @(self.isLive);
     
@@ -120,6 +168,26 @@ static NSString * const kLiveJSONKey = @"live";
     };
 
     return content;
+}
+
+#pragma mark - Public
+
+- (BOOL)areIdentifiersEquals:(MXBeaconInfo *)beaconInfo
+{
+    BOOL areUserIdEquals = NO;
+    BOOL areUniqueIdEquals = NO;
+    
+    if (self.userId && beaconInfo.userId)
+    {
+        areUserIdEquals = [self.userId isEqualToString:beaconInfo.userId];
+    }
+    
+    if (self.uniqueId && beaconInfo.uniqueId)
+    {
+        areUniqueIdEquals = [self.uniqueId isEqualToString:beaconInfo.uniqueId];
+    }
+    
+    return areUserIdEquals && areUniqueIdEquals;
 }
 
 #pragma mark - Private

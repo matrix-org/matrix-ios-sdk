@@ -19,17 +19,27 @@
 #import "MXJSONModel.h"
 #import "MXEventAssetType.h"
 
+@class MXEvent;
+
 NS_ASSUME_NONNULL_BEGIN
 
 /// `MXBeaconInfo` is a state event that contains the metadata about the beacons advertised by a given user.
 /// See MSC3489 for more details https://github.com/matrix-org/matrix-spec-proposals/blob/matthew/location-streaming/proposals/3489-location-streaming.md
 @interface MXBeaconInfo : MXJSONModel
 
+#pragma mark - Properties
+
+/// Beacon user id
+@property (nonatomic, strong, readonly, nullable) NSString* userId;
+
+/// Beacon unique Id
+@property (nonatomic, strong, readonly, nullable) NSString* uniqueId;
+
 /// Beacon description
 @property (nonatomic, strong, readonly, nullable) NSString* desc;
 
 /// How long from the last event until we consider the beacon inactive in milliseconds
-@property (nonatomic, readonly) NSTimeInterval timeout;
+@property (nonatomic, readonly) uint64_t timeout;
 
 /// Mark the start of an user's intent to share ephemeral location information.
 /// When the user decides they would like to stop sharing their live location the original m.beacon_info's live property should be set to false.
@@ -40,11 +50,31 @@ NS_ASSUME_NONNULL_BEGIN
 
 /// Creation timestamp of the beacon on the client
 /// Milliseconds since UNIX epoch
-@property (nonatomic, readonly) NSTimeInterval timestamp;
+@property (nonatomic, readonly) uint64_t timestamp;
 
-- (instancetype)initWithDescription:(NSString*)desc
-                            timeout:(NSTimeInterval)timeout
+#pragma mark - Setup
+
+- (instancetype)initWithUserId:(nullable NSString *)userId
+                      uniqueId:(nullable NSString *)uniqueId
+                   description:(nullable NSString *)desc
+                       timeout:(uint64_t)timeout
+                        isLive:(BOOL)isLive
+                     timestamp:(uint64_t)timestamp;
+
+- (instancetype)initWithDescription:(nullable NSString*)desc
+                            timeout:(uint64_t)timeout
                              isLive:(BOOL)isLive;
+
+
+/// Create the `MXBeaconInfo` object from a Matrix m.beacon_info event.
+/// @param event The m.beacon_info event.
+- (instancetype)initWithMXEvent:(MXEvent*)event;
+
+#pragma mark - Public methods
+
+/// Return YES if user id and unique id are equals.
+/// @param beaconInfo the other beacon info to compare.
+- (BOOL)areIdentifiersEquals:(MXBeaconInfo*)beaconInfo;
 
 @end
 
