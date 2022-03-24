@@ -407,8 +407,7 @@
     {
         if (event.isBeaconInfo)
         {
-            NSDictionary *eventContent = [self contentOfEvent:event];
-            MXBeaconInfo *beaconInfo = [MXBeaconInfo modelFromJSON:eventContent];
+            MXBeaconInfo *beaconInfo = [[MXBeaconInfo alloc] initWithMXEvent:event];
             
             if (beaconInfo)
             {
