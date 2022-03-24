@@ -442,6 +442,7 @@ private class RoomSummaryForTotalCounts: NSObject, MXRoomSummaryProtocol {
     var others: [String: NSCoding]?
     var favoriteTagOrder: String?
     var dataTypes: MXRoomSummaryDataTypes
+    var beaconInfoEvents: [MXBeaconInfo] = []
 
     func isTyped(_ types: MXRoomSummaryDataTypes) -> Bool {
         return (dataTypes.rawValue & types.rawValue) != 0
