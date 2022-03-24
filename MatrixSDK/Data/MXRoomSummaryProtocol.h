@@ -27,6 +27,7 @@
 
 @class MXSession;
 @class MXSpaceChildInfo;
+@class MXBeaconInfo;
 
 #ifndef MXRoomSummaryProtocol_h
 #define MXRoomSummaryProtocol_h
@@ -142,6 +143,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 /// Parent space identifiers of whom the room is a descendant
 @property (nonatomic, readonly) NSSet<NSString*> *parentSpaceIds;
+
+/// Get all beacon info shared in the room
+@property (nonatomic, readonly) NSArray<MXBeaconInfo*> *beaconInfoEvents;
 
 #pragma mark - Optional
 
