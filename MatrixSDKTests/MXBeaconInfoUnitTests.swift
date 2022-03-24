@@ -25,9 +25,9 @@ class MXBeaconInfoUnitTests: XCTestCase {
     func testParsingSucceed() throws {
         
         let expectedDescription = "Live location description"
-        let expectedTimeout: TimeInterval = 600000
+        let expectedTimeout: UInt64 = 600000
         let expectedIsLive = true
-        let expectedTimestamp: TimeInterval = 1436829458432
+        let expectedTimestamp: UInt64 = 1436829458432
         
         let eventContentJSON: [String : Any] = [
             kMXEventTypeStringBeaconInfoMSC3489: [
@@ -80,7 +80,7 @@ class MXBeaconInfoUnitTests: XCTestCase {
     func testJSONDictionarySucceed() throws {
                 
         let expectedDescription = "Live location description"
-        let expectedTimeout: TimeInterval = 600000
+        let expectedTimeout: UInt64 = 600000
         let expectedIsLive = true
         
         let beaconInfo = MXBeaconInfo(description: expectedDescription, timeout: expectedTimeout, isLive: expectedIsLive)
