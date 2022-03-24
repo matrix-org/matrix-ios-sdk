@@ -23,6 +23,7 @@
 #import "MXRoom.h"
 #import "MXSession.h"
 #import "MXRoomNameDefaultStringLocalizer.h"
+#import "MXBeaconInfo.h"
 
 #import "NSArray+MatrixSDK.h"
 
@@ -144,7 +145,10 @@
 {
     BOOL hasRoomMembersChange = NO;
     BOOL updated = NO;
-
+    
+    NSArray *existingBeaconEvents = [self beaconInfoEventsFromRoomSummary:summary];
+    NSMutableArray *beaconInfoEvents = [NSMutableArray arrayWithArray:existingBeaconEvents];
+    
     for (MXEvent *event in stateEvents)
     {
         switch (event.eventType)
@@ -242,7 +246,11 @@
             default:
                 break;
         }
+        
+        updated = [self addEvent:event toBeaconInfoEventsIfPossible:beaconInfoEvents];
     }
+    
+    summary.beaconInfoEvents = beaconInfoEvents;
 
     if (hasRoomMembersChange)
     {
@@ -791,6 +799,69 @@
     
     // Only accept membership join or invite for given user id
     return [self isMembershipEventJoinOrInvite:event forUserId:userId]; 
+}
+
+#pragma mark Beacon info
+
+- (NSArray<MXBeaconInfo*>*)beaconInfoEventsFromRoomSummary:(MXRoomSummary*)roomSummary
+{
+    return roomSummary.beaconInfoEvents ?: @[];
+}
+
+- (BOOL)addEvent:(MXEvent*)event toBeaconInfoEventsIfPossible:(NSMutableArray<MXBeaconInfo*>*)beaconInfoEvents
+
+{
+    if (!event.isBeaconInfo)
+    {
+        return NO;
+    }
+    
+    BOOL updated = NO;
+    
+    MXBeaconInfo *beaconInfo = [[MXBeaconInfo alloc] initWithMXEvent:event];
+    
+    if (beaconInfo && beaconInfo.userId && beaconInfo.uniqueId)
+    {
+        MXBeaconInfo *existingBeaconInfo = [self beaconInfoWithUserId:beaconInfo.userId andUniqueId:beaconInfo.uniqueId inBeaconInfoEvents:beaconInfoEvents];
+        
+        if (existingBeaconInfo)
+        {
+            if (existingBeaconInfo.timestamp < beaconInfo.timestamp)
+            {
+                [beaconInfoEvents removeObject:existingBeaconInfo];
+                [beaconInfoEvents addObject:beaconInfo];
+                updated = YES;
+            }
+        }
+        else
+        {
+            [beaconInfoEvents addObject:beaconInfo];
+            updated = YES;
+        }
+    }
+    
+    return updated;
+}
+
+- (nullable MXBeaconInfo*)beaconInfoWithUserId:(nonnull NSString*)userId andUniqueId:(NSString*)uniqueId inBeaconInfoEvents:(nonnull NSArray<MXBeaconInfo*>*)beaconInfoEvents
+{
+    MXBeaconInfo *beaconInfo;
+    
+    NSUInteger beaconInfoIndex = [beaconInfoEvents indexOfObjectPassingTest:^BOOL(MXBeaconInfo * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        if ([obj.userId isEqualToString:userId] && [obj.uniqueId isEqualToString:uniqueId])
+        {
+            *stop = YES;
+            return YES;
+        }
+        return NO;
+    }];
+    
+    if (beaconInfoIndex != NSNotFound)
+    {
+        beaconInfo = beaconInfoEvents[beaconInfoIndex];
+    }
+    
+    return beaconInfo;
 }
 
 @end
