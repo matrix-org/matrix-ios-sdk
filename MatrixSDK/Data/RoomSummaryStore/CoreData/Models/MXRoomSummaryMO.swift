@@ -311,4 +311,8 @@ extension MXRoomSummaryMO: MXRoomSummaryProtocol {
         return nil
     }
     
+    // TODO: Add beaconInfoEvents property support
+    public var beaconInfoEvents: [MXBeaconInfo] {
+        return []
+    }
 }
