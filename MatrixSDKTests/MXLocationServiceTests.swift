@@ -21,7 +21,11 @@ import XCTest
 
 class MXLocationServiceTests: XCTestCase {
 
+    // MARK: - Properties
+    
     private var testData: MatrixSDKTestsData!
+    
+    // MARK: - Setup
     
     override func setUp() {
         testData = MatrixSDKTestsData()
@@ -31,6 +35,8 @@ class MXLocationServiceTests: XCTestCase {
     override func tearDown() {
         testData = nil
     }
+    
+    // MARK: - Tests
     
     /// Test: Expect the location service is initialized after creating a session
     /// - Create a Bob session
@@ -54,7 +60,7 @@ class MXLocationServiceTests: XCTestCase {
     /// - Create an initial room
     /// - Start location sharing
     /// - Expect a beacon info state event created in the room
-    func testStartingThread() {
+    func testStartingLiveLocationSharingAndCheckStateEvents() {
         let store = MXMemoryStore()
         testData.doMXSessionTest(withBobAndARoom: self, andStore: store) { bobSession, initialRoom, expectation in
             guard let bobSession = bobSession,
@@ -75,32 +81,123 @@ class MXLocationServiceTests: XCTestCase {
                 switch response {
                 case .success(let eventId):
                     
-                    initialRoom.state { roomState in
+                    _ = bobSession.listenToEvents { event, direction, customObject in
                         
-                        let beaconInfo = roomState?.beaconInfoEvents.last
-                        
-                        let beaconInfoStateEvent = roomState?.stateEvents.first(where: { event in
-                            event.eventId == eventId
-                        })
-                        
-                        XCTAssertNotNil(beaconInfoStateEvent)
-                        
-                        XCTAssertNotNil(beaconInfo)
-                        
-                        if let beaconInfo = beaconInfo {
+                        if event.isBeaconInfo() {
                             
-                            XCTAssertEqual(beaconInfo.desc, expectedBeaconInfoDescription)
-                            XCTAssertEqual(beaconInfo.timeout, expectedBeaconInfoTimeout)
-                            XCTAssertEqual(beaconInfo.isLive, expectedBeaconInfoIsLive)
+                            // Get the beacon info from the room state of the room
+                            initialRoom.state { roomState in
+                                
+                                let beaconInfo = roomState?.beaconInfoEvents.last
+                                
+                                let beaconInfoStateEvent = roomState?.stateEvents.first(where: { event in
+                                    event.eventId == eventId
+                                })
+                                
+                                XCTAssertNotNil(beaconInfoStateEvent)
+                                
+                                XCTAssertNotNil(beaconInfo)
+                                
+                                if let beaconInfo = beaconInfo {
+                                    
+                                    XCTAssertEqual(beaconInfo.desc, expectedBeaconInfoDescription)
+                                    XCTAssertEqual(beaconInfo.timeout, UInt64(expectedBeaconInfoTimeout))
+                                    XCTAssertEqual(beaconInfo.isLive, expectedBeaconInfoIsLive)
+                                }
+                                
+                                expectation.fulfill()
+                            }
                         }
-                        
-                        expectation.fulfill()
                     }
                 case .failure(let error):
                     XCTFail("Start location sharing fails with error: \(error)")
                     expectation.fulfill()
                 }
             }
+        }
+    }
+    
+    /// Test: Expect room summary updated with beacon info event after user has started to share is location
+    /// - Create a Bob session
+    /// - Create an initial room
+    /// - Start location sharing
+    /// - Expect a beacon info added to the room summary
+    func testStartingLiveLocationSharingAndCheckRoomSummary() {
+        let store = MXMemoryStore()
+                
+        testData.doMXSessionTest(withBobAndARoom: self, andStore: store) { bobSession, initialRoom, expectation in
+            guard let bobSession = bobSession,
+                  let initialRoom = initialRoom,
+                  let expectation = expectation else {
+                XCTFail("Failed to setup test conditions")
+                return
+            }
+            
+            let locationService: MXLocationService = bobSession.locationService
+            
+            let expectedBeaconInfoDescription = "Live location description"
+            let expectedBeaconInfoTimeout: TimeInterval = 600000
+            let expectedBeaconInfoIsLive = true
+            
+            let roomId: String = initialRoom.roomId
+            let userId: String = bobSession.myUserId
+            
+            locationService.startUserLocationSharing(withRoomId: initialRoom.roomId, description: expectedBeaconInfoDescription, timeout: expectedBeaconInfoTimeout) { response in
+                
+                switch response {
+                case .success:
+                
+                    // Wait for room summary update and check if beacon info are populated in the room summary
+                    self.waitForRoomSummaryUpdate(for: initialRoom.summary) {
+                        
+                        let beaconInfoEvents = initialRoom.summary.beaconInfoEvents
+                        
+                        XCTAssertNotNil(beaconInfoEvents)
+                        
+                        if let beaconInfoEvents = beaconInfoEvents {
+                            XCTAssertFalse(beaconInfoEvents.isEmpty)
+                        }
+                        
+                        let allBeaconInfo = locationService.getAllBeaconInfo(inRoomWithId: roomId)
+                        
+                        XCTAssertFalse(allBeaconInfo.isEmpty)
+                        
+                        let allUserBeaconInfo = locationService.getAllBeaconInfo(forUserId: userId , inRoomWithId: roomId)
+                        
+                        XCTAssertFalse(allUserBeaconInfo.isEmpty)
+                        
+                        if let userBeaconInfo = allUserBeaconInfo.first {
+                            
+                            XCTAssertEqual(userBeaconInfo.desc, expectedBeaconInfoDescription)
+                            XCTAssertEqual(userBeaconInfo.timeout, UInt64(expectedBeaconInfoTimeout))
+                            XCTAssertEqual(userBeaconInfo.isLive, expectedBeaconInfoIsLive)
+                        }
+                        
+                        let isCurrentUserSharingLocation = locationService.isCurrentUserSharingIsLocation(inRoomWithId: roomId)
+                        
+                        XCTAssertTrue(isCurrentUserSharingLocation)
+
+                        expectation.fulfill()
+                    }
+                
+                case .failure(let error):
+                    XCTFail("Start location sharing fails with error: \(error)")
+                    expectation.fulfill()
+                }
+            }
+        }
+    }
+    
+    // MARK: - Private
+    
+    private func waitForRoomSummaryUpdate(for roomSummary: MXRoomSummary, completion: @escaping () -> Void) {
+        var observer: NSObjectProtocol?
+        observer = NotificationCenter.default.addObserver(forName: .mxRoomSummaryDidChange, object: roomSummary, queue: .main) { [weak self] _ in
+            guard self != nil else { return }
+            if let observer = observer {
+                NotificationCenter.default.removeObserver(observer)
+            }
+            completion()
         }
     }
 }
