@@ -62,6 +62,13 @@ public class MXSpace: NSObject {
     public private(set) var childRoomIds: [String] = []
     public private(set) var otherMembersId: [String] = []
     public private(set) var suggestedRoomIds: Set<String> = Set()
+    public var order: String? {
+        guard let accountData = self.session.store.accountData?(ofRoom: self.spaceId), let spaceOrderContent = accountData.others?[kMXEventTypeStringSpaceOrderMSC3230] as? [String: String] else {
+            return nil
+        }
+        
+            return spaceOrderContent[kMXEventTypeStringSpaceOrderKey]
+    }
 
     private let processingQueue: DispatchQueue
     private let sdkProcessingQueue: DispatchQueue
