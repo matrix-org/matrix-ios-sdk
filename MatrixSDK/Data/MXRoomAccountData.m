@@ -52,14 +52,14 @@
             }
             else
             {
-                if (!_others)
+                if (!_customEvents)
                 {
-                    _others = [NSDictionary new];
+                    _customEvents = [NSDictionary new];
                 }
                 
-                NSMutableDictionary *dict = [NSMutableDictionary dictionaryWithDictionary:_others];
+                NSMutableDictionary *dict = [NSMutableDictionary dictionaryWithDictionary:_customEvents];
                 dict[event.type] = event.content;
-                _others = dict;
+                _customEvents = dict;
             }
             break;
         }
@@ -92,7 +92,7 @@
         _readMarkerEventId = [aDecoder decodeObjectForKey:@"readMarkerEventId"];
         _taggedEvents = [aDecoder decodeObjectForKey:@"taggedEvents"];
         _virtualRoomInfo = [MXVirtualRoomInfo modelFromJSON:[aDecoder decodeObjectForKey:@"virtualRoomInfo"]];
-        _others = [aDecoder decodeObjectForKey:@"other"];
+        _customEvents = [aDecoder decodeObjectForKey:@"customEvents"];
     }
     return self;
 }
@@ -103,9 +103,9 @@
     [aCoder encodeObject:_readMarkerEventId forKey:@"readMarkerEventId"];
     [aCoder encodeObject:_taggedEvents forKey:@"taggedEvents"];
     [aCoder encodeObject:_virtualRoomInfo.JSONDictionary forKey:@"virtualRoomInfo"];
-    if (_others)
+    if (_customEvents)
     {
-        [aCoder encodeObject:_others forKey:@"other"];
+        [aCoder encodeObject:_customEvents forKey:@"customEvents"];
     }
 }
 

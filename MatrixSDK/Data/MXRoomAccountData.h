@@ -48,8 +48,8 @@
  */
 @property (nonatomic, readonly) MXVirtualRoomInfo *virtualRoomInfo;
 
-/// Any extra event received from the server.
-@property (nonatomic, readonly) NSDictionary <NSString*, NSDictionary<NSString*, id> * > *others;
+/// Any extra custom event received from the server.
+@property (nonatomic, readonly) NSDictionary <NSString*, NSDictionary<NSString*, id> * > *customEvents;
 
 /**
  Process an event that modifies room account data (like m.tag event).

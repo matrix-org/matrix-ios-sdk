@@ -63,7 +63,7 @@ public class MXSpace: NSObject {
     public private(set) var otherMembersId: [String] = []
     public private(set) var suggestedRoomIds: Set<String> = Set()
     public var order: String? {
-        guard let accountData = self.session.store.accountData?(ofRoom: self.spaceId), let spaceOrderContent = accountData.others?[kMXEventTypeStringSpaceOrderMSC3230] as? [String: String] else {
+        guard let accountData = self.session.store.accountData?(ofRoom: self.spaceId), let spaceOrderContent = accountData.customEvents?[kMXEventTypeStringSpaceOrderMSC3230] as? [String: String] else {
             return nil
         }
         
