@@ -42,7 +42,7 @@ public class MXLocationService: NSObject {
     /// - Returns: a `MXHTTPOperation` instance.
     @discardableResult
     public func startUserLocationSharing(withRoomId roomId: String,
-                                         description: String,
+                                         description: String?,
                                          timeout: TimeInterval,
                                          completion: @escaping (MXResponse<String>) -> Void) -> MXHTTPOperation? {
         return self.sendBeaconInfoEvent(withRoomId: roomId, description: description, timeout: timeout, completion: completion)
@@ -89,7 +89,7 @@ public class MXLocationService: NSObject {
     // MARK: - Private
         
     private func sendBeaconInfoEvent(withRoomId roomId: String,
-                                     description: String,
+                                     description: String?,
                                      timeout: TimeInterval,
                                      completion: @escaping (MXResponse<String>) -> Void) -> MXHTTPOperation? {
         
