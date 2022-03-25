@@ -209,7 +209,8 @@ public class MXCoreDataRoomSummaryStore: NSObject {
             MXRoomSummaryMO.entityName,
             MXRoomLastMessageMO.entityName,
             MXUsersTrustLevelSummaryMO.entityName,
-            MXRoomMembersCountMO.entityName
+            MXRoomMembersCountMO.entityName,
+            MXBeaconInfoMO.entityName
         ]
         
         let moc = backgroundMoc
