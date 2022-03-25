@@ -348,6 +348,7 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
 @class MXHomeserverCapabilitiesService;
 @class MXThreadingService;
 @class MXCapabilities;
+@class MXEventStreamService;
 @class MXLocationService;
 
 #pragma mark - MXSession
@@ -493,6 +494,11 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
  The module that manages threads.
  */
 @property (nonatomic, readonly) MXThreadingService *threadingService NS_REFINED_FOR_SWIFT;
+
+/**
+ Service  used to monitor live events of the session.
+ */
+@property (nonatomic, readonly) MXEventStreamService *eventStreamService;
 
 /**
  The module that manages location sharing.

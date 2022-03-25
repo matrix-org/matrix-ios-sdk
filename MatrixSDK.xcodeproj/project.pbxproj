@@ -713,6 +713,10 @@
 		3B60DCAB92D470B91262BF0C /* libPods-MatrixSDKTests-macOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 15D7F292D95EB58AEE801C4E /* libPods-MatrixSDKTests-macOS.a */; };
 		66398BA527A4085B00466E89 /* MXRefreshResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = 66398BA427A4085B00466E89 /* MXRefreshResponse.m */; };
 		66398BA627A4085B00466E89 /* MXRefreshResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = 66398BA427A4085B00466E89 /* MXRefreshResponse.m */; };
+		66836AB727CFA17200515780 /* MXEventStreamService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66836AB527CFA17200515780 /* MXEventStreamService.swift */; };
+		66836AB827CFA17200515780 /* MXEventStreamService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66836AB527CFA17200515780 /* MXEventStreamService.swift */; };
+		66836AB927CFA17200515780 /* MXLiveEventListener.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66836AB627CFA17200515780 /* MXLiveEventListener.swift */; };
+		66836ABA27CFA17200515780 /* MXLiveEventListener.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66836AB627CFA17200515780 /* MXLiveEventListener.swift */; };
 		66AC9D23278CE627002E9B8F /* MXRefreshTokenData.h in Headers */ = {isa = PBXBuildFile; fileRef = 66AC9D21278CE626002E9B8F /* MXRefreshTokenData.h */; };
 		66AC9D24278CE627002E9B8F /* MXRefreshTokenData.h in Headers */ = {isa = PBXBuildFile; fileRef = 66AC9D21278CE626002E9B8F /* MXRefreshTokenData.h */; };
 		66AC9D25278CE627002E9B8F /* MXRefreshTokenData.m in Sources */ = {isa = PBXBuildFile; fileRef = 66AC9D22278CE626002E9B8F /* MXRefreshTokenData.m */; };
@@ -2346,6 +2350,8 @@
 		6257D945D115DA658F44E8D4 /* Pods-SDK-MatrixSDK-macOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SDK-MatrixSDK-macOS.release.xcconfig"; path = "Target Support Files/Pods-SDK-MatrixSDK-macOS/Pods-SDK-MatrixSDK-macOS.release.xcconfig"; sourceTree = "<group>"; };
 		66398BA427A4085B00466E89 /* MXRefreshResponse.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXRefreshResponse.m; sourceTree = "<group>"; };
 		66398BA727A408C000466E89 /* MXRefreshResponse.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXRefreshResponse.h; sourceTree = "<group>"; };
+		66836AB527CFA17200515780 /* MXEventStreamService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MXEventStreamService.swift; sourceTree = "<group>"; };
+		66836AB627CFA17200515780 /* MXLiveEventListener.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MXLiveEventListener.swift; sourceTree = "<group>"; };
 		66AC9D21278CE626002E9B8F /* MXRefreshTokenData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXRefreshTokenData.h; sourceTree = "<group>"; };
 		66AC9D22278CE626002E9B8F /* MXRefreshTokenData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXRefreshTokenData.m; sourceTree = "<group>"; };
 		6869D206EA7C7FB05EAB75B0 /* Pods-MatrixSDKTests-iOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MatrixSDKTests-iOS.release.xcconfig"; path = "Target Support Files/Pods-MatrixSDKTests-iOS/Pods-MatrixSDKTests-iOS.release.xcconfig"; sourceTree = "<group>"; };
@@ -3776,6 +3782,7 @@
 		32C6F92F19DD814400EA4E9C /* MatrixSDK */ = {
 			isa = PBXGroup;
 			children = (
+				66836AB427CFA17200515780 /* EventStream */,
 				3A858DD82750EE0A006322C1 /* HomeServer */,
 				ECCA02B9273485A100B6F34F /* Threads */,
 				3259CFD9260266F700C365DB /* Categories */,
@@ -4096,6 +4103,16 @@
 			);
 			path = Dehydration;
 			sourceTree = "<group>";
+		};
+		66836AB427CFA17200515780 /* EventStream */ = {
+			isa = PBXGroup;
+			children = (
+				66836AB527CFA17200515780 /* MXEventStreamService.swift */,
+				66836AB627CFA17200515780 /* MXLiveEventListener.swift */,
+			);
+			name = EventStream;
+			path = MatrixSDK/EventStream;
+			sourceTree = SOURCE_ROOT;
 		};
 		916911E77039455CC9D0900C /* Pods */ = {
 			isa = PBXGroup;
@@ -5889,6 +5906,7 @@
 				32DC15D51A8CF874006F9AD3 /* MXPushRuleEventMatchConditionChecker.m in Sources */,
 				EC1165B427107E330089FA56 /* MXStoreRoomListDataManager.swift in Sources */,
 				32B94E06228EE90300716A26 /* MXRealmReactionRelation.m in Sources */,
+				66836AB927CFA17200515780 /* MXLiveEventListener.swift in Sources */,
 				320BBF411D6C81550079890E /* MXEventsByTypesEnumeratorOnArray.m in Sources */,
 				181FD5D62660C791008EC084 /* MXLogObjcWrapper.m in Sources */,
 				EC60ED87265CFD0700B39A4E /* MXRoomsSyncResponse.m in Sources */,
@@ -5923,6 +5941,7 @@
 				329FB1761A0A3A1600A5E88E /* MXRoomMember.m in Sources */,
 				3251D41F25AF01D7001E6E77 /* MXUIKitApplicationStateService.swift in Sources */,
 				B1136965230AC9D900E2B2FA /* MXIdentityService.m in Sources */,
+				66836AB727CFA17200515780 /* MXEventStreamService.swift in Sources */,
 				B11BD44922CB56790064D8B0 /* MXReplyEventParser.m in Sources */,
 				EC0B941127184E8A00B4D440 /* MXRoomSummaryMO.swift in Sources */,
 				EC0B941327184E8A00B4D440 /* MXRoomMembersCountMO.swift in Sources */,
@@ -6416,6 +6435,7 @@
 				B14EF1E42397E90400758AF0 /* MXWellknownIntegrations.m in Sources */,
 				EC60EDF5265CFFAC00B39A4E /* MXGroupsSyncResponse.m in Sources */,
 				EC1165B527107E330089FA56 /* MXStoreRoomListDataManager.swift in Sources */,
+				66836ABA27CFA17200515780 /* MXLiveEventListener.swift in Sources */,
 				B14EF1E52397E90400758AF0 /* MXLoginPolicy.m in Sources */,
 				B14EF1E62397E90400758AF0 /* (null) in Sources */,
 				B18D23F727ECF199004C4277 /* MXLocationService.swift in Sources */,
@@ -6451,6 +6471,7 @@
 				B14EF1F82397E90400758AF0 /* MXReplyEventParts.m in Sources */,
 				3259D02426037A7200C365DB /* NSArray.swift in Sources */,
 				3A108A8125810C96005EEBE9 /* MXKeyData.m in Sources */,
+				66836AB827CFA17200515780 /* MXEventStreamService.swift in Sources */,
 				3A59A4A025A7A16F00DDA1FC /* MXOlmOutboundGroupSession.m in Sources */,
 				EC0B941227184E8A00B4D440 /* MXRoomSummaryMO.swift in Sources */,
 				EC0B941427184E8A00B4D440 /* MXRoomMembersCountMO.swift in Sources */,
