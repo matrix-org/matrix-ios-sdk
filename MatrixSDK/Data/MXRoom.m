@@ -370,10 +370,6 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
 - (void)setPartialTextMessage:(NSString *)partialTextMessage
 {
     [mxSession.store storePartialTextMessageForRoom:self.roomId partialTextMessage:partialTextMessage];
-    if ([mxSession.store respondsToSelector:@selector(commit)])
-    {
-        [mxSession.store commit];
-    }
 }
 
 - (NSString *)partialTextMessage
