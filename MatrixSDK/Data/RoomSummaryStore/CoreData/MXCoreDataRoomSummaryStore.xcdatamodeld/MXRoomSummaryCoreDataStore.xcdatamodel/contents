@@ -1,5 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="18154" systemVersion="20F71" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="20086" systemVersion="21E230" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+    <entity name="MXBeaconInfo" representedClassName="MXBeaconInfoMO" syncable="YES">
+        <attribute name="s_description" optional="YES" attributeType="String"/>
+        <attribute name="s_isLive" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="s_timeout" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="s_timestamp" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="s_uniqueId" optional="YES" attributeType="String"/>
+        <attribute name="s_userId" optional="YES" attributeType="String"/>
+        <relationship name="s_roomSummary" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="MXRoomSummary" inverseName="s_beaconInfoEvents" inverseEntity="MXRoomSummary"/>
+    </entity>
     <entity name="MXRoomLastMessage" representedClassName="MXRoomLastMessageMO" syncable="YES">
         <attribute name="s_attributedText" optional="YES" attributeType="Binary" valueTransformerName=""/>
         <attribute name="s_eventId" attributeType="String"/>
@@ -44,6 +53,7 @@
         <attribute name="s_topic" optional="YES" attributeType="String"/>
         <attribute name="s_typeInt" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="s_typeString" optional="YES" attributeType="String"/>
+        <relationship name="s_beaconInfoEvents" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="MXBeaconInfo" inverseName="s_roomSummary" inverseEntity="MXBeaconInfo"/>
         <relationship name="s_lastMessage" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="MXRoomLastMessage" inverseName="s_ofRoom" inverseEntity="MXRoomLastMessage"/>
         <relationship name="s_membersCount" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="MXRoomMembersCount" inverseName="s_ofRoom" inverseEntity="MXRoomMembersCount"/>
         <relationship name="s_trust" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="MXUsersTrustLevelSummary" inverseName="s_ofRoom" inverseEntity="MXUsersTrustLevelSummary"/>
@@ -63,7 +73,8 @@
     <elements>
         <element name="MXRoomLastMessage" positionX="117" positionY="90" width="128" height="149"/>
         <element name="MXRoomMembersCount" positionX="297.1484375" positionY="-66.14453125" width="128" height="89"/>
-        <element name="MXRoomSummary" positionX="-63" positionY="-18" width="128" height="434"/>
+        <element name="MXRoomSummary" positionX="-63" positionY="-18" width="128" height="494"/>
         <element name="MXUsersTrustLevelSummary" positionX="236.4921875" positionY="519.4296875" width="128" height="104"/>
+        <element name="MXBeaconInfo" positionX="117" positionY="90" width="128" height="134"/>
     </elements>
 </model>
