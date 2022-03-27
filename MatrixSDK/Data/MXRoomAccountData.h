@@ -48,8 +48,11 @@
  */
 @property (nonatomic, readonly) MXVirtualRoomInfo *virtualRoomInfo;
 
-/// Any extra custom event received from the server.
-@property (nonatomic, readonly) NSDictionary <NSString*, NSDictionary<NSString*, id> * > *customEvents;
+/**
+ Space as order as per [MSC3230](https://github.com/matrix-org/matrix-spec-proposals/pull/3230)
+ */
+@property (nonatomic, readonly, nullable) NSString *spaceOrder;
+
 
 /**
  Process an event that modifies room account data (like m.tag event).

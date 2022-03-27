@@ -23,6 +23,8 @@
 
 @property (nonatomic, readwrite) MXVirtualRoomInfo *virtualRoomInfo;
 
+@property (nonatomic, readonly) NSDictionary <NSString*, NSDictionary<NSString*, id> * > *customEvents;
+
 @end
 
 @implementation MXRoomAccountData
@@ -80,6 +82,18 @@
 - (NSArray<NSString *> *)getTaggedEventsIds:(NSString*)tag
 {
     return _taggedEvents.tags[tag].allKeys;
+}
+
+#pragma mark - Properties
+
+- (NSString *)spaceOrder
+{
+    NSString *spaceOrder = nil;
+    MXJSONModelSetString(spaceOrder, _customEvents[kMXEventTypeStringSpaceOrder][kMXEventTypeStringSpaceOrderKey])
+    if (!spaceOrder) {
+        MXJSONModelSetString(spaceOrder, _customEvents[kMXEventTypeStringSpaceOrderMSC3230][kMXEventTypeStringSpaceOrderKey])
+    }
+    return spaceOrder;
 }
 
 #pragma mark - NSCoding
