@@ -1,3 +1,14 @@
+## Changes in 0.23.1 (2022-03-28)
+
+🙌 Improvements
+
+- MXRestClient: Use the stable hierarchy endpoint from MSC2946 ([#5144](https://github.com/vector-im/element-ios/issues/5144))
+
+🐛 Bugfixes
+
+- Sync Spaces order with web ([#5134](https://github.com/vector-im/element-ios/issues/5134))
+
+
 ## Changes in 0.23.0 (2022-03-22)
 
 ✨ Features
