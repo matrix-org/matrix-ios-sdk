@@ -49,6 +49,12 @@
 @property (nonatomic, readonly) MXVirtualRoomInfo *virtualRoomInfo;
 
 /**
+ Space as order as per [MSC3230](https://github.com/matrix-org/matrix-spec-proposals/pull/3230)
+ */
+@property (nonatomic, readonly, nullable) NSString *spaceOrder;
+
+
+/**
  Process an event that modifies room account data (like m.tag event).
 
  @param event an event

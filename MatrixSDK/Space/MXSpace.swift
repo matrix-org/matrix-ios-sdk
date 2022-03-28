@@ -62,6 +62,9 @@ public class MXSpace: NSObject {
     public private(set) var childRoomIds: [String] = []
     public private(set) var otherMembersId: [String] = []
     public private(set) var suggestedRoomIds: Set<String> = Set()
+    public var order: String? {
+        return self.session.store.accountData?(ofRoom: self.spaceId)?.spaceOrder
+    }
 
     private let processingQueue: DispatchQueue
     private let sdkProcessingQueue: DispatchQueue
