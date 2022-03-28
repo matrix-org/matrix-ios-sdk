@@ -657,6 +657,21 @@ public class MXSpaceService: NSObject {
             
             let rootSpaces = result.spaces.filter { space in
                 return parentIdsPerRoomId[space.spaceId] == nil
+            }.sorted { space1, space2 in
+                let _space1Order = space1.order
+                let _space2Order = space2.order
+                
+                if let space1Order = _space1Order, let space2Order = _space2Order {
+                    return space1Order <= space2Order
+                }
+                
+                if _space1Order == nil && _space2Order == nil {
+                    return space1.spaceId <= space2.spaceId
+                } else if _space1Order != nil && _space2Order == nil {
+                    return true
+                } else {
+                    return false
+                }
             }
             
             var ancestorsPerRoomId: [String: Set<String>] = [:]
