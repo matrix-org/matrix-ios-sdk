@@ -23,6 +23,8 @@
 
 @property (nonatomic, readwrite) MXVirtualRoomInfo *virtualRoomInfo;
 
+@property (nonatomic, readonly) NSDictionary <NSString*, NSDictionary<NSString*, id> * > *customEvents;
+
 @end
 
 @implementation MXRoomAccountData
@@ -50,6 +52,17 @@
             {
                 self.virtualRoomInfo = [MXVirtualRoomInfo modelFromJSON:event.content];
             }
+            else
+            {
+                if (!_customEvents)
+                {
+                    _customEvents = [NSDictionary new];
+                }
+                
+                NSMutableDictionary *dict = [NSMutableDictionary dictionaryWithDictionary:_customEvents];
+                dict[event.type] = event.content;
+                _customEvents = dict;
+            }
             break;
         }
 
@@ -71,6 +84,18 @@
     return _taggedEvents.tags[tag].allKeys;
 }
 
+#pragma mark - Properties
+
+- (NSString *)spaceOrder
+{
+    NSString *spaceOrder = nil;
+    MXJSONModelSetString(spaceOrder, _customEvents[kMXEventTypeStringSpaceOrder][kMXEventTypeStringSpaceOrderKey])
+    if (!spaceOrder) {
+        MXJSONModelSetString(spaceOrder, _customEvents[kMXEventTypeStringSpaceOrderMSC3230][kMXEventTypeStringSpaceOrderKey])
+    }
+    return spaceOrder;
+}
+
 #pragma mark - NSCoding
 - (instancetype)initWithCoder:(NSCoder *)aDecoder
 {
@@ -81,6 +106,7 @@
         _readMarkerEventId = [aDecoder decodeObjectForKey:@"readMarkerEventId"];
         _taggedEvents = [aDecoder decodeObjectForKey:@"taggedEvents"];
         _virtualRoomInfo = [MXVirtualRoomInfo modelFromJSON:[aDecoder decodeObjectForKey:@"virtualRoomInfo"]];
+        _customEvents = [aDecoder decodeObjectForKey:@"customEvents"];
     }
     return self;
 }
@@ -91,6 +117,10 @@
     [aCoder encodeObject:_readMarkerEventId forKey:@"readMarkerEventId"];
     [aCoder encodeObject:_taggedEvents forKey:@"taggedEvents"];
     [aCoder encodeObject:_virtualRoomInfo.JSONDictionary forKey:@"virtualRoomInfo"];
+    if (_customEvents)
+    {
+        [aCoder encodeObject:_customEvents forKey:@"customEvents"];
+    }
 }
 
 @end
