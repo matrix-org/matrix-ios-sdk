@@ -1721,6 +1721,10 @@
 		ECF29BDF264195320053E6D6 /* MXAssertedIdentityModel.h in Headers */ = {isa = PBXBuildFile; fileRef = ECF29BDD264195320053E6D6 /* MXAssertedIdentityModel.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		ECF29BE52641953C0053E6D6 /* MXAssertedIdentityModel.m in Sources */ = {isa = PBXBuildFile; fileRef = ECF29BE42641953C0053E6D6 /* MXAssertedIdentityModel.m */; };
 		ECF29BE62641953C0053E6D6 /* MXAssertedIdentityModel.m in Sources */ = {isa = PBXBuildFile; fileRef = ECF29BE42641953C0053E6D6 /* MXAssertedIdentityModel.m */; };
+		ED88999127F2065D00718486 /* MXRoomAliasResolution.h in Headers */ = {isa = PBXBuildFile; fileRef = ED88998F27F2065C00718486 /* MXRoomAliasResolution.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		ED88999227F2065D00718486 /* MXRoomAliasResolution.h in Headers */ = {isa = PBXBuildFile; fileRef = ED88998F27F2065C00718486 /* MXRoomAliasResolution.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		ED88999327F2065D00718486 /* MXRoomAliasResolution.m in Sources */ = {isa = PBXBuildFile; fileRef = ED88999027F2065D00718486 /* MXRoomAliasResolution.m */; };
+		ED88999427F2065D00718486 /* MXRoomAliasResolution.m in Sources */ = {isa = PBXBuildFile; fileRef = ED88999027F2065D00718486 /* MXRoomAliasResolution.m */; };
 		ED8943D427E34762000FC39C /* MXMemoryRoomStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED8943D327E34762000FC39C /* MXMemoryRoomStoreTests.swift */; };
 		ED8943D527E34762000FC39C /* MXMemoryRoomStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED8943D327E34762000FC39C /* MXMemoryRoomStoreTests.swift */; };
 		EDB4209227DF77390036AF39 /* MXEventsEnumeratorOnArrayTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDB4209027DF77310036AF39 /* MXEventsEnumeratorOnArrayTests.swift */; };
@@ -2693,6 +2697,8 @@
 		ECF29BDD264195320053E6D6 /* MXAssertedIdentityModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXAssertedIdentityModel.h; sourceTree = "<group>"; };
 		ECF29BE42641953C0053E6D6 /* MXAssertedIdentityModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXAssertedIdentityModel.m; sourceTree = "<group>"; };
 		ED2F344856EFFCA383E37B22 /* Pods-SDK-MatrixSDK.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SDK-MatrixSDK.release.xcconfig"; path = "Target Support Files/Pods-SDK-MatrixSDK/Pods-SDK-MatrixSDK.release.xcconfig"; sourceTree = "<group>"; };
+		ED88998F27F2065C00718486 /* MXRoomAliasResolution.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXRoomAliasResolution.h; sourceTree = "<group>"; };
+		ED88999027F2065D00718486 /* MXRoomAliasResolution.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXRoomAliasResolution.m; sourceTree = "<group>"; };
 		ED8943D327E34762000FC39C /* MXMemoryRoomStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXMemoryRoomStoreTests.swift; sourceTree = "<group>"; };
 		EDB4209027DF77310036AF39 /* MXEventsEnumeratorOnArrayTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXEventsEnumeratorOnArrayTests.swift; sourceTree = "<group>"; };
 		EDB4209427DF822B0036AF39 /* MXEventsByTypesEnumeratorOnArrayTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXEventsByTypesEnumeratorOnArrayTests.swift; sourceTree = "<group>"; };
@@ -3504,6 +3510,8 @@
 				3281E8B619E42DFE00976E1A /* MXJSONModels.m */,
 				323E0C591A306D7A00A31D73 /* MXEvent.h */,
 				323E0C5A1A306D7A00A31D73 /* MXEvent.m */,
+				ED88998F27F2065C00718486 /* MXRoomAliasResolution.h */,
+				ED88999027F2065D00718486 /* MXRoomAliasResolution.m */,
 				B17982F02119E4A0001FD722 /* MXRoomPowerLevels.h */,
 				B17982F42119E4A2001FD722 /* MXRoomPowerLevels.m */,
 				B17982F12119E4A0001FD722 /* MXRoomTombStoneContent.h */,
@@ -4957,6 +4965,7 @@
 				EC8A538B25B1BC77004E0802 /* MXCallCandidate.h in Headers */,
 				F03EF5041DF01596009DF592 /* MXLRUCache.h in Headers */,
 				EC8A539D25B1BC77004E0802 /* MXCallCandidatesEventContent.h in Headers */,
+				ED88999127F2065D00718486 /* MXRoomAliasResolution.h in Headers */,
 				18B22A7027707CDD00482170 /* MXEventContentLocation.h in Headers */,
 				EC60EDC6265CFEA800B39A4E /* MXRoomSyncUnreadNotifications.h in Headers */,
 				329FB1791A0A74B100A5E88E /* MXTools.h in Headers */,
@@ -5509,6 +5518,7 @@
 				B14EF3542397E90400758AF0 /* MXLoginPolicy.h in Headers */,
 				B19A30CF24042F0800FB6F35 /* MXSelfVerifyingMasterKeyTrustedQRCodeData.h in Headers */,
 				B14EF3552397E90400758AF0 /* MXCryptoTools.h in Headers */,
+				ED88999227F2065D00718486 /* MXRoomAliasResolution.h in Headers */,
 				B14EF3562397E90400758AF0 /* MXGroup.h in Headers */,
 				B14EF3572397E90400758AF0 /* MX3PidAddSession.h in Headers */,
 				B14EF3582397E90400758AF0 /* MXUser.h in Headers */,
@@ -6071,6 +6081,7 @@
 				325AF3E324897D9400EF937D /* MXSecretRecoveryResult.m in Sources */,
 				F03EF5091DF071D5009DF592 /* MXEncryptedAttachments.m in Sources */,
 				ECE3DF842707370000FB4C96 /* MXRoomListDataPaginationOptions.swift in Sources */,
+				ED88999327F2065D00718486 /* MXRoomAliasResolution.m in Sources */,
 				324DD2C1246D658500377005 /* MXHkdfSha256.m in Sources */,
 				EC60ED73265CFCA500B39A4E /* MXToDeviceSyncResponse.m in Sources */,
 				3274538623FD69D600438328 /* MXKeyVerificationRequestByToDeviceJSONModel.m in Sources */,
@@ -6593,6 +6604,7 @@
 				B14EF2532397E90400758AF0 /* MXPushRuleSenderNotificationPermissionConditionChecker.m in Sources */,
 				324AAC752399140D00380A66 /* MXKeyVerificationAccept.m in Sources */,
 				B14EF2542397E90400758AF0 /* MXReceiptData.m in Sources */,
+				ED88999427F2065D00718486 /* MXRoomAliasResolution.m in Sources */,
 				32B0E34223A378320054FF1A /* MXEventReference.m in Sources */,
 				B105CD9E261E0B70006EB204 /* MXSpaceChildrenSummary.swift in Sources */,
 				B14EF2552397E90400758AF0 /* MXWellKnownBaseConfig.m in Sources */,

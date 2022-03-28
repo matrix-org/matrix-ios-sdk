@@ -44,6 +44,7 @@
 #import "MXURLPreview.h"
 #import "MXTaggedEvents.h"
 #import "MXCredentials.h"
+#import "MXRoomAliasResolution.h"
 
 @class MXThirdpartyProtocolsResponse;
 @class MXThirdPartyUsersResponse;
@@ -2010,18 +2011,19 @@ NS_REFINED_FOR_SWIFT;
                                 failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
- Get the room ID corresponding to this room alias
+ Resolve given room alias to a room identifier and a list of servers aware of this identifier
 
  @param roomAlias the alias of the room to look for.
 
- @param success A block object called when the operation succeeds. It provides the ID of the room.
+ @param success A block object called when the operation succeeds.
+                It provides a resolution object containing room ID and a list of servers
  @param failure A block object called when the operation fails.
 
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)roomIDForRoomAlias:(NSString*)roomAlias
-                               success:(void (^)(NSString *roomId))success
-                               failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+- (MXHTTPOperation*)resolveRoomAlias:(NSString *)roomAlias
+                             success:(void (^)(MXRoomAliasResolution *resolution))success
+                             failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 
 #pragma mark - Third party Lookup API
