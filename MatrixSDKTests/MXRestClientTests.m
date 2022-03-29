@@ -383,6 +383,8 @@
                     XCTAssertNotNil(resolution);
                     XCTAssertNotEqual(resolution.roomId.length, 0);
                     XCTAssertEqualObjects(resolution.roomId, roomId, @"Mapping from room alias to room ID is wrong");
+                    XCTAssertNotEqual(resolution.servers.count, 0);
+                    XCTAssertNotEqual(resolution.servers[0].length, 0);
                     
                     // Test with a valid alias which already exists
                     [bobRestClient2 addRoomAlias:roomId alias:correctAlias success:^{
