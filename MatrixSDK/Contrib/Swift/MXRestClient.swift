@@ -1665,17 +1665,17 @@ public extension MXRestClient {
     }
     
     /**
-     Get the room ID corresponding to this room alias
-     
+     Resolve given room alias to a room identifier and a list of servers aware of this identifier
+
      - parameters:
         - roomAlias: the alias of the room to look for.
         - completion: A block object called when the operation completes.
-        - response: Provides the the ID of the room on success.
-     
+        - response: Provides a resolution object containing the room ID and a list of servers
+
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func roomId(forRoomAlias roomAlias: String, completion: @escaping (_ response: MXResponse<String>) -> Void) -> MXHTTPOperation {
-        return __roomID(forRoomAlias: roomAlias, success: currySuccess(completion), failure: curryFailure(completion))
+    @nonobjc @discardableResult func resolveRoomAlias(_ roomAlias: String, completion: @escaping (_ response: MXResponse<MXRoomAliasResolution>) -> Void) -> MXHTTPOperation {
+        return __resolveRoomAlias(roomAlias, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
     // Mark: - Media Repository API
