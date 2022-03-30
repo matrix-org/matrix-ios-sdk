@@ -348,6 +348,11 @@
 {
 }
 
+- (NSArray<NSString *> *)allFilterIds
+{
+    return @[];
+}
+
 - (void)filterWithFilterId:(nonnull NSString*)filterId
                    success:(nonnull void (^)(MXFilterJSONModel * _Nullable filter))success
                    failure:(nullable void (^)(NSError * _Nullable error))failure

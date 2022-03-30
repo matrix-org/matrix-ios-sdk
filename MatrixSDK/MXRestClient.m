@@ -4029,9 +4029,9 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
                                  }];
 }
 
-- (MXHTTPOperation*)roomIDForRoomAlias:(NSString*)roomAlias
-                               success:(void (^)(NSString *roomId))success
-                               failure:(void (^)(NSError *error))failure
+- (MXHTTPOperation *)resolveRoomAlias:(NSString *)roomAlias
+                              success:(void (^)(MXRoomAliasResolution *))success
+                              failure:(void (^)(NSError *))failure
 {
     // Note: characters in a room alias need to be escaped in the URL
     NSString *path = [NSString stringWithFormat:@"%@/directory/room/%@",
@@ -4047,11 +4047,11 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
 
                                      if (success)
                                      {
-                                         __block NSString *roomId;
+                                         __block MXRoomAliasResolution *resolution;
                                          [self dispatchProcessing:^{
-                                             MXJSONModelSetString(roomId, JSONResponse[@"room_id"]);
+                                             resolution = [MXRoomAliasResolution modelFromJSON:JSONResponse];
                                          } andCompletion:^{
-                                             success(roomId);
+                                             success(resolution);
                                          }];
                                      }
                                  }
@@ -5926,8 +5926,8 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
     NSString *limitParam = limit >= 0 ? [NSString stringWithFormat:@"&limit=%ld", (long)limit] : @"";
     NSString *maxDepthParam = maxDepth >= 0 ? [NSString stringWithFormat:@"&max_depth=%ld", (long)maxDepth] : @"";
     NSString *fromParam = paginationToken != nil ? [NSString stringWithFormat:@"&from=%@", paginationToken] : @"";
-    NSString *path = [NSString stringWithFormat:@"%@/org.matrix.msc2946/rooms/%@/hierarchy?suggested_only=%@%@%@%@",
-                      kMXAPIPrefixPathUnstable, spaceId, suggestedOnly ? @"true": @"false", limitParam, maxDepthParam, fromParam];
+    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/hierarchy?suggested_only=%@%@%@%@",
+                      kMXAPIPrefixPathV1, spaceId, suggestedOnly ? @"true": @"false", limitParam, maxDepthParam, fromParam];
     
     MXWeakify(self);
     return [httpClient requestWithMethod:@"GET"

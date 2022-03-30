@@ -522,6 +522,11 @@
 - (void)storeFilter:(nonnull MXFilterJSONModel*)filter withFilterId:(nonnull NSString*)filterId;
 
 /**
+ Retrieve a list of all stored filter ids.
+ */
+- (nonnull NSArray <NSString *> *)allFilterIds;
+
+/**
  Retrieve a filter with a given id.
 
  @param filterId the id of the filter.

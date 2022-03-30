@@ -348,6 +348,7 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
 @class MXHomeserverCapabilitiesService;
 @class MXThreadingService;
 @class MXCapabilities;
+@class MXEventStreamService;
 
 #pragma mark - MXSession
 /**
@@ -492,6 +493,11 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
  The module that manages threads.
  */
 @property (nonatomic, readonly) MXThreadingService *threadingService NS_REFINED_FOR_SWIFT;
+
+/**
+ Service  used to monitor live events of the session.
+ */
+@property (nonatomic, readonly) MXEventStreamService *eventStreamService;
 
 /**
  Flag indicating the session can be paused.
@@ -1084,12 +1090,16 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 /**
  Delegate for updating room summaries.
  By default, it is the one returned by [MXRoomSummaryUpdater roomSummaryUpdaterForSession:].
+ 
+ This property is strong as the only other reference to the delegate is a weak ref in the updaterPerSession table.
  */
 @property id<MXRoomSummaryUpdating> roomSummaryUpdateDelegate;
 
 /**
  Delegate for updating room account data.
  By default, it is the one returned by [MXRoomAccountDataUpdater roomAccountDataUpdaterForSession:].
+ 
+ This property is strong as the only other reference to the delegate is a weak ref in the updaterPerSession table.
  */
 @property id<MXRoomAccountDataUpdating> roomAccountDataUpdateDelegate;
 

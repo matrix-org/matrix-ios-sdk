@@ -429,6 +429,11 @@
     filters[filterId] = filter.jsonString;
 }
 
+- (NSArray<NSString *> *)allFilterIds
+{
+    return filters.allKeys;
+}
+
 - (void)filterWithFilterId:(nonnull NSString*)filterId
                    success:(nonnull void (^)(MXFilterJSONModel * _Nullable filter))success
                    failure:(nullable void (^)(NSError * _Nullable error))failure
