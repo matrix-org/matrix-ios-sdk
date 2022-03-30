@@ -38,7 +38,7 @@ import Foundation
     }
 
     public func dispatchOnLiveToDevice(event: MXEvent) {
-            multicastDelegate.invoke({ listener in listener.onLiveToDeviceEvent(event: event)})
+        multicastDelegate.invoke({ listener in listener.onLiveToDeviceEvent(event: event)})
     }
 }
 

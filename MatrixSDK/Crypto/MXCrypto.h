@@ -264,12 +264,12 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
 - (void)handleDeviceUnusedFallbackKeys:(NSArray<NSString *> *)deviceUnusedFallbackKeys;
 
 /**
- Handle toDevice event
+ Handle a room key event.
  
- @param event the `toDevice` event.
+ @param event the room key event.
  @param onComplete the block called when the operation completes.
  */
-- (void)handleToDeviceEvent:(MXEvent*)event onComplete:(void (^)(void))onComplete;
+- (void)handleRoomKeyEvent:(MXEvent*)event onComplete:(void (^)(void))onComplete;
 
 /**
  Handle the completion of a /sync.
