@@ -189,13 +189,6 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @property (nonatomic, assign) BOOL authEnableRefreshTokens;
 
-/**
- Enable threading module and thread-specific replies to events.
-
- @remark NO by default.
- */
-@property (nonatomic) BOOL enableThreads;
-
 @end
 
 NS_ASSUME_NONNULL_END

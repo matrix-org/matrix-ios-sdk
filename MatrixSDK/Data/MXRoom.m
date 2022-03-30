@@ -787,50 +787,47 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
     BOOL startsThread = NO;
     BOOL isReply = content[kMXEventRelationRelatesToKey][kMXEventContentRelatesToKeyInReplyTo][kMXEventContentRelatesToKeyEventId] != nil;
     BOOL isEditing = [content[kMXEventRelationRelatesToKey][kMXEventContentRelatesToKeyRelationType] isEqualToString:MXEventRelationTypeReplace];
-    if (MXSDKOptions.sharedInstance.enableThreads)
+    if (threadId)
     {
-        if (threadId)
+        inThread = YES;
+        NSMutableDictionary *mutableContent = [newContent mutableDeepCopy];
+        if (isReply)
         {
-            inThread = YES;
-            NSMutableDictionary *mutableContent = [newContent mutableDeepCopy];
-            if (isReply)
+            //  this will be a real in-thread reply
+            mutableContent[kMXEventRelationRelatesToKey][kMXEventContentRelatesToKeyIsReplyFallback] = @(NO);
+        }
+        else
+        {
+            //  this will look like a reply, but only an in-thread event
+            NSString *lastEventId = [mxSession.threadingService threadWithId:threadId].lastMessage.eventId;
+            startsThread = lastEventId == nil;
+            NSString *replyToEventId = lastEventId ?: threadId;
+
+            if (mutableContent[kMXEventRelationRelatesToKey])
             {
-                //  this will be a real in-thread reply
-                mutableContent[kMXEventRelationRelatesToKey][kMXEventContentRelatesToKeyIsReplyFallback] = @(NO);
+                mutableContent[kMXEventRelationRelatesToKey][kMXEventContentRelatesToKeyInReplyTo] = @{
+                    kMXEventContentRelatesToKeyEventId: replyToEventId
+                };
+                mutableContent[kMXEventRelationRelatesToKey][kMXEventContentRelatesToKeyIsReplyFallback] = @(YES);
             }
             else
             {
-                //  this will look like a reply, but only an in-thread event
-                NSString *lastEventId = [mxSession.threadingService threadWithId:threadId].lastMessage.eventId;
-                startsThread = lastEventId == nil;
-                NSString *replyToEventId = lastEventId ?: threadId;
-
-                if (mutableContent[kMXEventRelationRelatesToKey])
-                {
-                    mutableContent[kMXEventRelationRelatesToKey][kMXEventContentRelatesToKeyInReplyTo] = @{
+                mutableContent[kMXEventRelationRelatesToKey] = @{
+                    kMXEventContentRelatesToKeyIsReplyFallback: @(YES),
+                    kMXEventContentRelatesToKeyInReplyTo: @{
                         kMXEventContentRelatesToKeyEventId: replyToEventId
-                    };
-                    mutableContent[kMXEventRelationRelatesToKey][kMXEventContentRelatesToKeyIsReplyFallback] = @(YES);
-                }
-                else
-                {
-                    mutableContent[kMXEventRelationRelatesToKey] = @{
-                        kMXEventContentRelatesToKeyIsReplyFallback: @(YES),
-                        kMXEventContentRelatesToKeyInReplyTo: @{
-                            kMXEventContentRelatesToKeyEventId: replyToEventId
-                        }
-                    };
-                }
+                    }
+                };
             }
-            newContent = mutableContent;
         }
-        else if (isEditing)
-        {
-            //  detect in-thread edits
-            NSString *editedEventId = content[kMXEventRelationRelatesToKey][kMXEventContentRelatesToKeyEventId];
-            MXEvent *editedEvent = [self.mxSession.store eventWithEventId:editedEventId inRoom:self.roomId];
-            inThread = editedEvent.isInThread;
-        }
+        newContent = mutableContent;
+    }
+    else if (isEditing)
+    {
+        //  detect in-thread edits
+        NSString *editedEventId = content[kMXEventRelationRelatesToKey][kMXEventContentRelatesToKeyEventId];
+        MXEvent *editedEvent = [self.mxSession.store eventWithEventId:editedEventId inRoom:self.roomId];
+        inThread = editedEvent.isInThread;
     }
     return [mxSession.matrixRestClient sendEventToRoom:self.roomId threadId:threadId eventType:eventTypeString content:newContent txnId:txnId success:^(NSString *eventId) {
 

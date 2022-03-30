@@ -52,7 +52,6 @@ static MXSDKOptions *sharedOnceInstance = nil;
         self.roomListDataManagerClass = [MXCoreDataRoomListDataManager class];
         _clientPermalinkBaseUrl = nil;
         _authEnableRefreshTokens = NO;
-        _enableThreads = NO;
     }
     
     return self;

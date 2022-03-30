@@ -96,11 +96,6 @@ public class MXThreadingService: NSObject {
     ///   - direction: direction of the event
     ///   - completion: Completion block containing the flag indicating that the event is handled
     public func handleEvent(_ event: MXEvent, direction: MXTimelineDirection, completion: ((Bool) -> Void)?) {
-        guard MXSDKOptions.sharedInstance().enableThreads else {
-            //  threads disabled in the SDK
-            completion?(false)
-            return
-        }
         guard let session = session else {
             //  session closed
             completion?(false)

@@ -1,0 +1,1 @@
+MXSDKOptions: Remove `enableThreads` options, which is true by default now.
