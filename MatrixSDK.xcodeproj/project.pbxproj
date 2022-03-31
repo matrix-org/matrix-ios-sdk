@@ -1360,8 +1360,6 @@
 		B1F939F626289F2600D0E525 /* MXSpaceChildContentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1F939F426289F2600D0E525 /* MXSpaceChildContentTests.swift */; };
 		B2EC7E2327F483DB00F40C26 /* MXEventAssetTypeMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2EC7E2227F483DB00F40C26 /* MXEventAssetTypeMapper.swift */; };
 		B2EC7E2427F483DB00F40C26 /* MXEventAssetTypeMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2EC7E2227F483DB00F40C26 /* MXEventAssetTypeMapper.swift */; };
-		B2EC7E2527F483DB00F40C26 /* MXEventAssetTypeMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2EC7E2227F483DB00F40C26 /* MXEventAssetTypeMapper.swift */; };
-		B2EC7E2627F483DB00F40C26 /* MXEventAssetTypeMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2EC7E2227F483DB00F40C26 /* MXEventAssetTypeMapper.swift */; };
 		C60165381E3AA57900B92CFA /* MXSDKOptions.h in Headers */ = {isa = PBXBuildFile; fileRef = F0C34CB91C18C80000C36F09 /* MXSDKOptions.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		C602B58C1F2268F700B67D87 /* MXRoom.swift in Sources */ = {isa = PBXBuildFile; fileRef = C602B58B1F2268F700B67D87 /* MXRoom.swift */; };
 		C602B58E1F22A8D700B67D87 /* MXImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = C602B58D1F22A8D700B67D87 /* MXImage.swift */; };
@@ -6327,7 +6325,6 @@
 				EC1165CC27107F3E0089FA56 /* MXStoreRoomListDataManagerUnitTests.swift in Sources */,
 				3246BDC51A1A0789000A7D62 /* MXRoomStateDynamicTests.m in Sources */,
 				32B477832638133C00EA5800 /* MXJSONModelUnitTests.m in Sources */,
-				B2EC7E2527F483DB00F40C26 /* MXEventAssetTypeMapper.swift in Sources */,
 				321EA11D24893A0400E35B02 /* MXCryptoRecoveryServiceTests.m in Sources */,
 				3A858DDD275121DB006322C1 /* MXHomeserverCapabilitiesTests.swift in Sources */,
 				3264DB941CECA72900B99881 /* MXAccountDataTests.m in Sources */,
@@ -6852,7 +6849,6 @@
 				EC1165CD27107F3E0089FA56 /* MXStoreRoomListDataManagerUnitTests.swift in Sources */,
 				B1E09A2A2397FD680057C069 /* MatrixSDKTestsData.m in Sources */,
 				B1E09A302397FD750057C069 /* MXHTTPClientTests.m in Sources */,
-				B2EC7E2627F483DB00F40C26 /* MXEventAssetTypeMapper.swift in Sources */,
 				EC383BC02542F1E4002FBBE6 /* MXBackgroundSyncServiceTests.swift in Sources */,
 				3A858DDE275121DC006322C1 /* MXHomeserverCapabilitiesTests.swift in Sources */,
 				321EA11E24893A0400E35B02 /* MXCryptoRecoveryServiceTests.m in Sources */,
