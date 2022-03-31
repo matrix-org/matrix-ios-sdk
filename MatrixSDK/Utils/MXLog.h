@@ -35,3 +35,7 @@
 #define MXLogError(message, ...) { \
     [MXLogObjcWrapper logError:[NSString stringWithFormat: message, ##__VA_ARGS__] file:@__FILE__ function:[NSString stringWithFormat:@"%s", __FUNCTION__] line:__LINE__]; \
 }
+
+#define MXLogFailure(message, ...) { \
+    [MXLogObjcWrapper logFailure:[NSString stringWithFormat: message, ##__VA_ARGS__] file:@__FILE__ function:[NSString stringWithFormat:@"%s", __FUNCTION__] line:__LINE__]; \
+}
