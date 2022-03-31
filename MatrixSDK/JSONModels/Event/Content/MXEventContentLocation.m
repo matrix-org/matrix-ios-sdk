@@ -17,6 +17,14 @@
 #import "MXEventContentLocation.h"
 #import "MXEvent.h"
 
+#import "MatrixSDKSwiftHeader.h"
+
+@interface MXEventContentLocation()
+
+@property (nonatomic) MXEventAssetTypeMapper *eventAssetTypeMapper;
+
+@end
+
 @implementation MXEventContentLocation
 
 - (instancetype)initWithAssetType:(MXEventAssetType)assetType
@@ -31,6 +39,7 @@
         _longitude = longitude;
         _locationDescription = description;
         _geoURI = [NSString stringWithFormat:@"geo:%@,%@", @(self.latitude), @(self.longitude)];
+        _eventAssetTypeMapper = [[MXEventAssetTypeMapper alloc] init];
     }
     
     return self;
@@ -40,7 +49,7 @@
 {
     NSString *description;
     NSString *geoURIString;
-    MXEventAssetType assetType = MXEventAssetTypeUser;
+    MXEventAssetType assetType;
     
     NSDictionary *locationDictionary = JSONDictionary[kMXMessageContentKeyExtensibleLocationMSC3488];
     if (locationDictionary == nil)
@@ -63,16 +72,12 @@
     }
     
     NSDictionary *assetDictionary = JSONDictionary[kMXMessageContentKeyExtensibleAssetMSC3488];
-    if (assetDictionary == nil)
-    {
-        assetDictionary = JSONDictionary[kMXMessageContentKeyExtensibleAsset];
-    }
-    
     if (assetDictionary)
     {
-        if (![assetDictionary[kMXMessageContentKeyExtensibleAssetType] isEqualToString:kMXMessageContentKeyExtensibleAssetTypeUser]) {
-            assetType = MXEventAssetTypeGeneric;
-        }
+        assetType = [[[MXEventAssetTypeMapper alloc] init] getMXEventAssetTypeFrom: assetDictionary[kMXMessageContentKeyExtensibleAssetType]];
+    } else {
+        // Should behave like m.self if assetType is null
+        assetType = MXEventAssetTypeUser;
     }
     
     NSString *locationString = [[geoURIString componentsSeparatedByString:@":"].lastObject componentsSeparatedByString:@";"].firstObject;
@@ -101,7 +106,7 @@
     locationContent[kMXMessageContentKeyExtensibleLocationDescription] = self.locationDescription;
     content[kMXMessageContentKeyExtensibleLocationMSC3488] = locationContent;
     
-    content[kMXMessageContentKeyExtensibleAssetMSC3488] = @{ kMXMessageContentKeyExtensibleAssetType: kMXMessageContentKeyExtensibleAssetTypeUser };
+    content[kMXMessageContentKeyExtensibleAssetMSC3488] = @{ kMXMessageContentKeyExtensibleAssetType: [_eventAssetTypeMapper getEventKeyFrom:self.assetType] };
     
     content[kMXMessageTypeKey] = kMXMessageTypeLocation;
     content[kMXMessageGeoURIKey] = self.geoURI;
