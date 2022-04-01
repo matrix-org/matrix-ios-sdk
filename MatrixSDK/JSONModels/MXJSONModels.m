@@ -150,6 +150,21 @@ NSString *const kMXLoginIdentifierTypePhone = @"m.id.phone";
 
 @end
 
+@implementation MXUsernameAvailability
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXUsernameAvailability *availability = [[MXUsernameAvailability alloc] init];
+    if (availability)
+    {
+        MXJSONModelSetBoolean(availability.available, JSONDictionary[@"available"]);
+    }
+    
+    return availability;
+}
+
+@end
+
 @implementation MXAuthenticationSession
 
 + (id)modelFromJSON:(NSDictionary *)JSONDictionary

@@ -55,7 +55,7 @@ NS_ASSUME_NONNULL_BEGIN
                              failure:(void (^)(NSError *error))failure;;
 
 /**
- Get the wellknwon data of the homeserver.
+ Get the wellknown data of the homeserver.
 
  @param success A block object called when the operation succeeds. It provides
                 the wellknown data.
