@@ -368,19 +368,35 @@ public class MXThreadingService: NSObject {
             completion?(false)
             return
         }
-        if let redactedEventId = event.redacts,
-           let thread = thread(withId: redactedEventId),
-           let newEvent = session.store?.event(withEventId: redactedEventId,
-                                               inRoom: event.roomId) {
-            session.decryptEvents([newEvent], inTimeline: nil) { _ in
+        guard let redactedEventId = event.redacts,
+              let redactedEvent = session.store?.event(withEventId: redactedEventId,
+                                                       inRoom: event.roomId) else {
+                  completion?(false)
+                  return
+              }
+
+        session.decryptEvents([redactedEvent], inTimeline: nil) { _ in
+            if let thread = self.thread(withId: redactedEventId) {
                 //  event is a thread root
-                let handled = thread.replaceEvent(withId: redactedEventId, with: newEvent)
+                let handled = thread.replaceEvent(withId: redactedEventId, with: redactedEvent)
                 self.notifyDidUpdateThreads()
                 completion?(handled)
+            } else if let roomId = redactedEvent.roomId {
+                var handled = false
+                self.threads.filter { $1.roomId == roomId }.values.forEach {
+                    let handledForThread = $0.redactEvent(withId: redactedEventId)
+                    if handled == false {
+                        handled = handledForThread
+                    }
+                }
+                if handled {
+                    self.notifyDidUpdateThreads()
+                }
+                completion?(handled)
+            } else {
+                completion?(false)
             }
-            return
         }
-        completion?(false)
     }
     
     private func unsortedThreads(inRoom roomId: String) -> [MXThread] {
