@@ -74,7 +74,7 @@
     NSDictionary *assetDictionary = JSONDictionary[kMXMessageContentKeyExtensibleAssetMSC3488];
     if (assetDictionary)
     {
-        assetType = [[[MXEventAssetTypeMapper alloc] init] getMXEventAssetTypeFrom: assetDictionary[kMXMessageContentKeyExtensibleAssetType]];
+        assetType = [[[MXEventAssetTypeMapper alloc] init] getMXEventAssetTypeFrom:assetDictionary[kMXMessageContentKeyExtensibleAssetType]];
     } else {
         // Should behave like m.self if assetType is null
         assetType = MXEventAssetTypeUser;

@@ -23,7 +23,7 @@ public class MXEventAssetTypeMapper: NSObject {
     // MARK: - Public
     
     /// Return event key String associate to the MXEventAssetType given
-    public func getEventKey(from eventAssetType: MXEventAssetType) -> String {
+    public func eventKey(from eventAssetType: MXEventAssetType) -> String {
         let eventKey: String
         switch eventAssetType {
         case .user:
@@ -39,7 +39,7 @@ public class MXEventAssetTypeMapper: NSObject {
     }
     
     /// Return MXEventAssetType associate to the event key String given
-    public func getMXEventAssetType(from eventKey: String) -> MXEventAssetType {
+    public func eventAssetType(from eventKey: String) -> MXEventAssetType {
         let eventAssetType: MXEventAssetType
         switch eventKey {
         case kMXMessageContentKeyExtensibleAssetTypeUser:
