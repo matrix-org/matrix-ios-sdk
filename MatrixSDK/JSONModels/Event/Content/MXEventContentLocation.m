@@ -74,7 +74,7 @@
     NSDictionary *assetDictionary = JSONDictionary[kMXMessageContentKeyExtensibleAssetMSC3488];
     if (assetDictionary)
     {
-        assetType = [[[MXEventAssetTypeMapper alloc] init] getMXEventAssetTypeFrom:assetDictionary[kMXMessageContentKeyExtensibleAssetType]];
+        assetType = [[[MXEventAssetTypeMapper alloc] init] eventAssetTypeFrom:assetDictionary[kMXMessageContentKeyExtensibleAssetType]];
     } else {
         // Should behave like m.self if assetType is null
         assetType = MXEventAssetTypeUser;
@@ -106,7 +106,7 @@
     locationContent[kMXMessageContentKeyExtensibleLocationDescription] = self.locationDescription;
     content[kMXMessageContentKeyExtensibleLocationMSC3488] = locationContent;
     
-    content[kMXMessageContentKeyExtensibleAssetMSC3488] = @{ kMXMessageContentKeyExtensibleAssetType: [_eventAssetTypeMapper getEventKeyFrom:self.assetType] };
+    content[kMXMessageContentKeyExtensibleAssetMSC3488] = @{ kMXMessageContentKeyExtensibleAssetType: [_eventAssetTypeMapper eventKeyFrom:self.assetType] };
     
     content[kMXMessageTypeKey] = kMXMessageTypeLocation;
     content[kMXMessageGeoURIKey] = self.geoURI;
