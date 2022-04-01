@@ -29,7 +29,7 @@ public class MXThreadModel: NSObject, MXThreadProtocol {
 
     public let isParticipated: Bool
 
-    public let rootMessage: MXEvent?
+    public private(set) var rootMessage: MXEvent?
 
     public private(set) var lastMessage: MXEvent?
 
@@ -53,6 +53,10 @@ public class MXThreadModel: NSObject, MXThreadProtocol {
             numberOfReplies = 0
         }
         super.init()
+    }
+
+    internal func updateRootMessage(_ rootMessage: MXEvent) {
+        self.rootMessage = rootMessage
     }
 
     internal func updateLastMessage(_ lastMessage: MXEvent) {
