@@ -80,6 +80,25 @@ static NSString* const kMXLoginFlowTypeKey = @"type";
     
     return displayname;
 }
+
+- (NSDictionary *)JSONDictionary
+{
+    NSMutableDictionary *jsonDictionary = [NSMutableDictionary dictionary];
+    
+    if (_roomId) { jsonDictionary[@"room_id"] = _roomId; }
+    if (_name) { jsonDictionary[@"name"] = _name; }
+    if (_aliases) { jsonDictionary[@"aliases"] = _aliases; }
+    if (_canonicalAlias) { jsonDictionary[@"canonical_alias"] = _canonicalAlias; }
+    if (_topic) { jsonDictionary[@"topic"] = _topic; }
+    jsonDictionary[@"num_joined_members"] = @(_numJoinedMembers);
+    jsonDictionary[@"world_readable"] = @(_worldReadable);
+    jsonDictionary[@"guest_can_join"] = @(_guestCanJoin);
+    if (_avatarUrl) { jsonDictionary[@"avatar_url"] = _avatarUrl; }
+    if (_roomTypeString) { jsonDictionary[@"room_type"] = _roomTypeString; }
+
+    return jsonDictionary;
+}
+
 @end
 
 
