@@ -1,1 +1,0 @@
-Move `handleRoomKeyEvent` logic back to `MXSession`.
