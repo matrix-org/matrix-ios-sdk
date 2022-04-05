@@ -218,12 +218,34 @@ public class MXThreadingService: NSObject {
                             let threads = rootEvents.map { self.thread(forRootEvent: $0, session: session) }.sorted(by: <)
                             let decryptionGroup = DispatchGroup()
                             for thread in threads {
-                                if let rootEvent = rootEvents.first(where: { $0.eventId == thread.id }),
-                                   let latestEvent = rootEvent.unsignedData.relations?.thread?.latestEvent {
+                                guard let rootEvent = rootEvents.first(where: { $0.eventId == thread.id }) else {
+                                    continue
+                                }
+                                if let rootEventEdition = session.store?.relations(forEvent: rootEvent.eventId,
+                                                                                   inRoom: rootEvent.roomId,
+                                                                                   relationType: MXEventRelationTypeReplace).sorted(by: >).last,
+                                   let editedRootEvent = rootEvent.editedEvent(fromReplacementEvent: rootEventEdition) {
+                                    decryptionGroup.enter()
+                                    session.decryptEvents([editedRootEvent], inTimeline: nil) { _ in
+                                        thread.updateRootMessage(editedRootEvent)
+                                        decryptionGroup.leave()
+                                    }
+                                }
+                                if let latestEvent = rootEvent.unsignedData.relations?.thread?.latestEvent {
                                     decryptionGroup.enter()
                                     session.decryptEvents([latestEvent], inTimeline: nil) { _ in
                                         thread.updateLastMessage(latestEvent)
                                         decryptionGroup.leave()
+                                        if let edition = session.store?.relations(forEvent: latestEvent.eventId,
+                                                                                  inRoom: latestEvent.roomId,
+                                                                                  relationType: MXEventRelationTypeReplace).sorted(by: >).last,
+                                           let editedLatestEvent = latestEvent.editedEvent(fromReplacementEvent: edition) {
+                                            decryptionGroup.enter()
+                                            session.decryptEvents([editedLatestEvent], inTimeline: nil) { _ in
+                                                thread.updateLastMessage(editedLatestEvent)
+                                                decryptionGroup.leave()
+                                            }
+                                        }
                                     }
                                 }
                             }
