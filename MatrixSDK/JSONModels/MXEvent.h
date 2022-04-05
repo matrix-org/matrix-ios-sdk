@@ -281,6 +281,7 @@ FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleAsset;
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleAssetMSC3488;
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleAssetType;
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleAssetTypeUser;
+FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleAssetTypePin;
 
 // Join Rules
 

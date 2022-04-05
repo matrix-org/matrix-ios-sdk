@@ -51,7 +51,7 @@ typedef enum : NSUInteger
  @param bugReportEndpoint the endpoint URL.
  @return a MXBugReportRestClient instance.
  */
-- (instancetype)initWithBugReportEndpoint:(NSString *)bugReportEndpoint;
+- (nonnull instancetype)initWithBugReportEndpoint:(NSString *)bugReportEndpoint;
 
 /**
  Send a bug report.
@@ -74,7 +74,7 @@ typedef enum : NSUInteger
             sendFiles:(NSArray<NSURL*>*)files
    attachGitHubLabels:(NSArray<NSString*>*)gitHubLabels
              progress:(void (^)(MXBugReportState state, NSProgress *progress))progress
-              success:(void (^)(void))success
+              success:(void (^)(NSString *reportUrl))success
               failure:(void (^)(NSError *error))failure;
 
 /**

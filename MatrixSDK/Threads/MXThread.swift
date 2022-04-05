@@ -62,6 +62,10 @@ public class MXThread: NSObject, MXThreadProtocol {
     /// - Returns: true if handled, false otherwise
     @discardableResult
     internal func addEvent(_ event: MXEvent, direction: MXTimelineDirection) -> Bool {
+        guard eventsMap[event.eventId] == nil else {
+            //  do not add the event if already exists
+            return false
+        }
         eventsMap[event.eventId] = event
         updateNotificationsCount()
         if let sender = event.sender,
@@ -86,6 +90,15 @@ public class MXThread: NSObject, MXThreadProtocol {
         }
         eventsMap[oldEventId] = newEvent
         liveTimeline?.notifyListeners(newEvent, direction: .forwards)
+        return true
+    }
+
+    @discardableResult
+    internal func redactEvent(withId eventId: String) -> Bool {
+        guard eventsMap[eventId] != nil else {
+            return false
+        }
+        eventsMap.removeValue(forKey: eventId)
         return true
     }
     

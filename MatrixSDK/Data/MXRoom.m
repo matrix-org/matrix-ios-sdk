@@ -370,10 +370,6 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
 - (void)setPartialTextMessage:(NSString *)partialTextMessage
 {
     [mxSession.store storePartialTextMessageForRoom:self.roomId partialTextMessage:partialTextMessage];
-    if ([mxSession.store respondsToSelector:@selector(commit)])
-    {
-        [mxSession.store commit];
-    }
 }
 
 - (NSString *)partialTextMessage
@@ -2539,10 +2535,11 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
                                   description:(NSString *)description
                                      threadId:(NSString*)threadId
                                     localEcho:(MXEvent **)localEcho
+                                    assetType:(MXEventAssetType)assetType
                                       success:(void (^)(NSString *))success
                                       failure:(void (^)(NSError *))failure
 {
-    MXEventContentLocation *locationContent = [[MXEventContentLocation alloc] initWithAssetType:MXEventAssetTypeUser
+    MXEventContentLocation *locationContent = [[MXEventContentLocation alloc] initWithAssetType:assetType
                                                                                        latitude:latitude
                                                                                       longitude:longitude
                                                                                     description:description];
@@ -2551,7 +2548,7 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
 
     [content addEntriesFromDictionary:locationContent.JSONDictionary];
     
-    NSString *fallbackText = [NSString stringWithFormat:@"%@ was at %@ as of %@", self.mxSession.myUser.displayname, locationContent.geoURI, NSDate.date];
+    NSString *fallbackText = [NSString stringWithFormat:@"Location was shared at %@ as of %@", locationContent.geoURI, NSDate.date];
     content[kMXMessageBodyKey] = fallbackText;
     content[kMXMessageContentKeyExtensibleTextMSC1767] = fallbackText;
     

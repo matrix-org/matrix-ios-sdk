@@ -39,6 +39,7 @@
 #import "MXCall.h"
 #import "MXEventTimeline.h"
 #import "MXEventsEnumerator.h"
+#import "MXEventContentLocation.h"
 #import "MXCryptoConstants.h"
 #import "MXSendReplyEventStringLocalizerProtocol.h"
 
@@ -1026,6 +1027,7 @@ FOUNDATION_EXPORT NSInteger const kMXRoomInvalidInviteSenderErrorCode;
                                   description:(NSString *)description
                                      threadId:(NSString*)threadId
                                     localEcho:(MXEvent **)localEcho
+                                    assetType:(MXEventAssetType)assetType
                                       success:(void (^)(NSString *))success
                                       failure:(void (^)(NSError *))failure;
 

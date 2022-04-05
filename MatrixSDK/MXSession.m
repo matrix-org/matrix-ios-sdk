@@ -243,6 +243,7 @@ typedef void (^MXOnResumeDone)(void);
                                                      name:MXSpaceService.didBuildSpaceGraph
                                                    object:_spaceService];
         _threadingService = [[MXThreadingService alloc] initWithSession:self];
+        _eventStreamService = [[MXEventStreamService alloc] init];
         
         [self setIdentityServer:mxRestClient.identityServer andAccessToken:mxRestClient.credentials.identityServerAccessToken];
         
@@ -329,6 +330,7 @@ typedef void (^MXOnResumeDone)(void);
         
         NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
         [notificationCenter postNotificationName:kMXSessionStateDidChangeNotification object:self userInfo:nil];
+        [_eventStreamService dispatchSessionStateChangedWithState:state];
     }
 }
 
@@ -1890,11 +1892,12 @@ typedef void (^MXOnResumeDone)(void);
             [_crypto handleRoomKeyEvent:event onComplete:onHandleToDeviceEventDone];
             break;
         }
-            
+
         default:
             onHandleToDeviceEventDone();
             break;
     }
+    [_eventStreamService dispatchOnLiveToDeviceWithEvent:event];
 }
 
 /**
