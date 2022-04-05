@@ -1,3 +1,27 @@
+## Changes in 0.23.2 (2022-04-05)
+
+🙌 Improvements
+
+- Room: Return room identifier and known servers when resolving alias ([#4858](https://github.com/vector-im/element-ios/issues/4858))
+- MXRestClient: Use the stable hierarchy endpoint from MSC2946 ([#5144](https://github.com/vector-im/element-ios/issues/5144))
+- MXPublicRoom: added implementation for JSONDictionary ([#5953](https://github.com/vector-im/element-ios/issues/5953))
+
+🐛 Bugfixes
+
+- MXEventListener/MXRoomSummary: Fix retain cycles ([#5058](https://github.com/vector-im/element-ios/issues/5058))
+- Sync Spaces order with web ([#5134](https://github.com/vector-im/element-ios/issues/5134))
+- VoIP: Recreate CXProvider if a call cannot be hung up ([#5189](https://github.com/vector-im/element-ios/issues/5189))
+- MXThreadingService: Apply edits on thread root and latest events of a thread list. ([#5845](https://github.com/vector-im/element-ios/issues/5845))
+- MXThread: Fix redacted events & fix undecrypted events. ([#5877](https://github.com/vector-im/element-ios/issues/5877))
+- Room: Do not commit to file store after typing a single character ([#5906](https://github.com/vector-im/element-ios/issues/5906))
+- Move `handleRoomKeyEvent` logic back to `MXSession`. ([#5938](https://github.com/vector-im/element-ios/issues/5938))
+- MXSuggestedRoomListDataFetcher: Spaces shouldn't be displayed as suggested rooms ([#5978](https://github.com/vector-im/element-ios/issues/5978))
+
+⚠️ API Changes
+
+- Location sharing: Add new event asset type for pin drop location sharing ([#5858](https://github.com/vector-im/element-ios/issues/5858))
+
+
 ## Changes in 0.23.1 (2022-03-28)
 
 🙌 Improvements
