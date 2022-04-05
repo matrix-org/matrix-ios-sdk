@@ -222,9 +222,13 @@ internal class MXSuggestedRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
     
     private func updateData() {
         let summaries = allRoomSummaries.filter { summary in
+            guard summary.spaceChildInfo?.roomType == .room else {
+                return false
+            }
             guard let room = self.session?.room(withRoomId: summary.roomId), let localsummary = room.summary else {
                 return true
             }
+            
             return localsummary.membership != .join && localsummary.membership != .invite && localsummary.membership != .ban
         }
         

@@ -24,6 +24,7 @@
 #import "MXCryptoAlgorithms.h"
 #import "MXCrypto_Private.h"
 #import "MXTools.h"
+#import "MatrixSDKSwiftHeader.h"
 
 @interface MXMegolmDecryption ()
 {
@@ -146,7 +147,8 @@
 
         result.error = olmError;
     }
-
+    
+    [crypto.mxSession.eventStreamService dispatchLiveEventDecryptionAttemptedWithEvent:event result:result];
     return result;
 }
 

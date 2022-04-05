@@ -22,6 +22,7 @@
 #import "MatrixSDKTestsData.h"
 #import "MXRoomMember.h"
 #import "MXKey.h"
+#import "MXRoomAliasResolution.h"
 #import "MXThirdpartyProtocolsResponse.h"
 
 // Do not bother with retain cycles warnings in tests
@@ -377,11 +378,13 @@
             // Test with a valid alias
             [bobRestClient2 addRoomAlias:roomId alias:correctAlias success:^{
                 
-                [bobRestClient2 roomIDForRoomAlias:correctAlias success:^(NSString *roomId2) {
+                [bobRestClient2 resolveRoomAlias:correctAlias success:^(MXRoomAliasResolution *resolution) {
                     
-                    XCTAssertNotNil(roomId2);
-                    XCTAssertNotEqual(roomId2.length, 0);
-                    XCTAssertEqualObjects(roomId2, roomId, @"Mapping from room alias to room ID is wrong");
+                    XCTAssertNotNil(resolution);
+                    XCTAssertNotEqual(resolution.roomId.length, 0);
+                    XCTAssertEqualObjects(resolution.roomId, roomId, @"Mapping from room alias to room ID is wrong");
+                    XCTAssertNotEqual(resolution.servers.count, 0);
+                    XCTAssertNotEqual(resolution.servers[0].length, 0);
                     
                     // Test with a valid alias which already exists
                     [bobRestClient2 addRoomAlias:roomId alias:correctAlias success:^{
@@ -427,7 +430,7 @@
             [bobRestClient2 removeRoomAlias:roomAlias success:^{
                 
                 // Check whether it has been removed correctly
-                [bobRestClient2 roomIDForRoomAlias:roomAlias success:^(NSString *roomId2) {
+                [bobRestClient2 resolveRoomAlias:roomAlias success:^(MXRoomAliasResolution *resolution) {
                     
                     XCTFail(@"The request should not succeed");
                     [expectation fulfill];
@@ -1226,25 +1229,6 @@
         }];
     }];
 }
-
-// Disabled as it seems that the registration method we use in tests now uses the
-// local part of the user id as the default displayname
-//- (void)testUserNilDisplayName
-//{
-//    [self.matrixSDKTestsData doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
-//
-//        [bobRestClient displayNameForUser:nil success:^(NSString *displayname) {
-//
-//            XCTAssertNil(displayname, @"mxBob has no displayname defined");
-//            [expectation fulfill];
-//
-//        } failure:^(NSError *error) {
-//            XCTFail(@"The request should not fail - NSError: %@", error);
-//            [expectation fulfill];
-//        }];
-//
-//    }];
-//}
 
 - (void)testUserAvatarUrl
 {

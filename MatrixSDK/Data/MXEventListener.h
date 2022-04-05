@@ -51,7 +51,7 @@ typedef void (^MXOnEvent)(MXEvent *event, MXTimelineDirection direction, id _Nul
  */
 - (void)notify:(MXEvent*)event direction:(MXTimelineDirection)direction andCustomObject:(nullable id)customObject;
 
-@property (nonatomic, readonly) id sender;
+@property (nonatomic, weak, readonly) id sender;
 @property (nonatomic, nullable, readonly) NSArray<MXEventTypeString>* eventTypes;
 @property (nonatomic, readonly) MXOnEvent listenerBlock;
 

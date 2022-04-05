@@ -51,6 +51,7 @@
 
 #import "MXDeviceListResponse.h"
 
+#import "MatrixSDKSwiftHeader.h"
 /**
  The store to use for crypto.
  */

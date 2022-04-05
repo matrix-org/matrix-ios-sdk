@@ -4029,9 +4029,9 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
                                  }];
 }
 
-- (MXHTTPOperation*)roomIDForRoomAlias:(NSString*)roomAlias
-                               success:(void (^)(NSString *roomId))success
-                               failure:(void (^)(NSError *error))failure
+- (MXHTTPOperation *)resolveRoomAlias:(NSString *)roomAlias
+                              success:(void (^)(MXRoomAliasResolution *))success
+                              failure:(void (^)(NSError *))failure
 {
     // Note: characters in a room alias need to be escaped in the URL
     NSString *path = [NSString stringWithFormat:@"%@/directory/room/%@",
@@ -4047,11 +4047,11 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
 
                                      if (success)
                                      {
-                                         __block NSString *roomId;
+                                         __block MXRoomAliasResolution *resolution;
                                          [self dispatchProcessing:^{
-                                             MXJSONModelSetString(roomId, JSONResponse[@"room_id"]);
+                                             resolution = [MXRoomAliasResolution modelFromJSON:JSONResponse];
                                          } andCompletion:^{
-                                             success(roomId);
+                                             success(resolution);
                                          }];
                                      }
                                  }

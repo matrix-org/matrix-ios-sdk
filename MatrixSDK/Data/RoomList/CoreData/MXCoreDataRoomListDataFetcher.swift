@@ -29,7 +29,6 @@ internal class MXCoreDataRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
     
     private let multicastDelegate: MXMulticastDelegate<MXRoomListDataFetcherDelegate> = MXMulticastDelegate()
     
-    private weak var session: MXSession?
     internal let fetchOptions: MXRoomListDataFetchOptions
     private lazy var dataUpdateThrottler: MXThrottler = {
         return MXThrottler(minimumDelay: 0.1, queue: .main)
@@ -114,10 +113,8 @@ internal class MXCoreDataRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
         return result
     }
     
-    internal init(session: MXSession?,
-                  fetchOptions: MXRoomListDataFetchOptions,
+    internal init(fetchOptions: MXRoomListDataFetchOptions,
                   store: MXRoomSummaryCoreDataContextableStore) {
-        self.session = session
         self.fetchOptions = fetchOptions
         self.store = store
         super.init()
