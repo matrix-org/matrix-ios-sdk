@@ -73,6 +73,7 @@ public enum MXEventType: Equatable, Hashable {
     case keyVerificationDone
     case taggedEvents
     case spaceChild
+    case spaceOrder
     
     case pollStart
     case pollResponse
@@ -128,6 +129,7 @@ public enum MXEventType: Equatable, Hashable {
         case .keyVerificationDone: return kMXEventTypeStringKeyVerificationDone
         case .taggedEvents: return kMXEventTypeStringTaggedEvents
         case .spaceChild: return kMXEventTypeStringSpaceChild
+        case .spaceOrder: return kMXEventTypeStringSpaceOrderMSC3230
             
         case .pollStart: return kMXEventTypeStringPollStartMSC3381
         case .pollResponse: return kMXEventTypeStringPollResponseMSC3381
@@ -146,7 +148,7 @@ public enum MXEventType: Equatable, Hashable {
     }
     
     public init(identifier: String) {
-        let events: [MXEventType] = [.roomName, .roomTopic, .roomAvatar, .roomMember, .roomCreate, .roomJoinRules, .roomPowerLevels, .roomAliases, .roomCanonicalAlias, .roomEncrypted, .roomEncryption, .roomGuestAccess, .roomHistoryVisibility, .roomKey, .roomForwardedKey, .roomKeyRequest, .roomMessage, .roomMessageFeedback, .roomRedaction, .roomThirdPartyInvite, .roomTag, .presence, .typing, .callInvite, .callCandidates, .callAnswer, .callSelectAnswer, .callHangup, .callReject, .callNegotiate, .callReplaces, .callRejectReplacement, .callAssertedIdentity, .callAssertedIdentityUnstable, .reaction, .receipt, .roomTombStone, .keyVerificationStart, .keyVerificationAccept, .keyVerificationKey, .keyVerificationMac, .keyVerificationCancel, .keyVerificationDone, .taggedEvents, .spaceChild, .pollStart, .pollResponse, .pollEnd]
+        let events: [MXEventType] = [.roomName, .roomTopic, .roomAvatar, .roomMember, .roomCreate, .roomJoinRules, .roomPowerLevels, .roomAliases, .roomCanonicalAlias, .roomEncrypted, .roomEncryption, .roomGuestAccess, .roomHistoryVisibility, .roomKey, .roomForwardedKey, .roomKeyRequest, .roomMessage, .roomMessageFeedback, .roomRedaction, .roomThirdPartyInvite, .roomTag, .presence, .typing, .callInvite, .callCandidates, .callAnswer, .callSelectAnswer, .callHangup, .callReject, .callNegotiate, .callReplaces, .callRejectReplacement, .callAssertedIdentity, .callAssertedIdentityUnstable, .reaction, .receipt, .roomTombStone, .keyVerificationStart, .keyVerificationAccept, .keyVerificationKey, .keyVerificationMac, .keyVerificationCancel, .keyVerificationDone, .taggedEvents, .spaceChild, .spaceOrder, .pollStart, .pollResponse, .pollEnd]
         
         if let type = events.first(where: { $0.identifier == identifier }) {
             self = type
@@ -159,6 +161,8 @@ public enum MXEventType: Equatable, Hashable {
                 self = .pollResponse
             } else if identifier == kMXEventTypeStringPollEnd {
                 self = .pollEnd
+            } else if identifier == kMXEventTypeStringSpaceOrder {
+                self = .spaceOrder
             } else {
                 self = .custom(identifier)
             }

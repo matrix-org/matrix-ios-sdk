@@ -54,7 +54,7 @@ public class MXRoomAliasAvailabilityChecker {
             return nil
         }
         
-        return session.matrixRestClient.roomId(forRoomAlias: fullAlias) { response in
+        return session.matrixRestClient.resolveRoomAlias(fullAlias) { response in
             if response.isSuccess {
                 completion(.notAvailable)
             } else if let error = response.error, let response = MXHTTPOperation.urlResponse(fromError: error), response.statusCode == 404 {

@@ -218,12 +218,34 @@ public class MXThreadingService: NSObject {
                             let threads = rootEvents.map { self.thread(forRootEvent: $0, session: session) }.sorted(by: <)
                             let decryptionGroup = DispatchGroup()
                             for thread in threads {
-                                if let rootEvent = rootEvents.first(where: { $0.eventId == thread.id }),
-                                   let latestEvent = rootEvent.unsignedData.relations?.thread?.latestEvent {
+                                guard let rootEvent = rootEvents.first(where: { $0.eventId == thread.id }) else {
+                                    continue
+                                }
+                                if let rootEventEdition = session.store?.relations(forEvent: rootEvent.eventId,
+                                                                                   inRoom: rootEvent.roomId,
+                                                                                   relationType: MXEventRelationTypeReplace).sorted(by: >).last,
+                                   let editedRootEvent = rootEvent.editedEvent(fromReplacementEvent: rootEventEdition) {
+                                    decryptionGroup.enter()
+                                    session.decryptEvents([editedRootEvent], inTimeline: nil) { _ in
+                                        thread.updateRootMessage(editedRootEvent)
+                                        decryptionGroup.leave()
+                                    }
+                                }
+                                if let latestEvent = rootEvent.unsignedData.relations?.thread?.latestEvent {
                                     decryptionGroup.enter()
                                     session.decryptEvents([latestEvent], inTimeline: nil) { _ in
                                         thread.updateLastMessage(latestEvent)
                                         decryptionGroup.leave()
+                                        if let edition = session.store?.relations(forEvent: latestEvent.eventId,
+                                                                                  inRoom: latestEvent.roomId,
+                                                                                  relationType: MXEventRelationTypeReplace).sorted(by: >).last,
+                                           let editedLatestEvent = latestEvent.editedEvent(fromReplacementEvent: edition) {
+                                            decryptionGroup.enter()
+                                            session.decryptEvents([editedLatestEvent], inTimeline: nil) { _ in
+                                                thread.updateLastMessage(editedLatestEvent)
+                                                decryptionGroup.leave()
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -368,19 +390,35 @@ public class MXThreadingService: NSObject {
             completion?(false)
             return
         }
-        if let redactedEventId = event.redacts,
-           let thread = thread(withId: redactedEventId),
-           let newEvent = session.store?.event(withEventId: redactedEventId,
-                                               inRoom: event.roomId) {
-            session.decryptEvents([newEvent], inTimeline: nil) { _ in
+        guard let redactedEventId = event.redacts,
+              let redactedEvent = session.store?.event(withEventId: redactedEventId,
+                                                       inRoom: event.roomId) else {
+                  completion?(false)
+                  return
+              }
+
+        session.decryptEvents([redactedEvent], inTimeline: nil) { _ in
+            if let thread = self.thread(withId: redactedEventId) {
                 //  event is a thread root
-                let handled = thread.replaceEvent(withId: redactedEventId, with: newEvent)
+                let handled = thread.replaceEvent(withId: redactedEventId, with: redactedEvent)
                 self.notifyDidUpdateThreads()
                 completion?(handled)
+            } else if let roomId = redactedEvent.roomId {
+                var handled = false
+                self.threads.filter { $1.roomId == roomId }.values.forEach {
+                    let handledForThread = $0.redactEvent(withId: redactedEventId)
+                    if handled == false {
+                        handled = handledForThread
+                    }
+                }
+                if handled {
+                    self.notifyDidUpdateThreads()
+                }
+                completion?(handled)
+            } else {
+                completion?(false)
             }
-            return
         }
-        completion?(false)
     }
     
     private func unsortedThreads(inRoom roomId: String) -> [MXThread] {

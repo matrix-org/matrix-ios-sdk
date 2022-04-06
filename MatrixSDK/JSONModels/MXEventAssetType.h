@@ -20,5 +20,6 @@ typedef NS_ENUM(NSUInteger, MXEventAssetType)
 {
     MXEventAssetTypeUser,
     MXEventAssetTypeGeneric,
+    MXEventAssetTypePin,
     MXEventAssetTypeLiveLocation
 };

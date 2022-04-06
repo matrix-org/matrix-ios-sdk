@@ -85,6 +85,9 @@ NSString *const kMXEventTypeStringSecretSend            = @"m.secret.send";
 NSString *const kMXEventTypeStringSecretStorageDefaultKey   = @"m.secret_storage.default_key";
 NSString *const kMXEventTypeStringTaggedEvents          = @"m.tagged_events";
 NSString *const kMXEventTypeStringSpaceChild            = @"m.space.child";
+NSString *const kMXEventTypeStringSpaceOrder            = @"m.space_order";
+NSString *const kMXEventTypeStringSpaceOrderMSC3230     = @"org.matrix.msc3230.space_order";
+NSString *const kMXEventTypeStringSpaceOrderKey         = @"order";
 
 NSString *const kMXEventTypeStringAutoJoinKey           = @"auto_join";
 NSString *const kMXEventTypeStringSuggestedKey          = @"suggested";
@@ -190,6 +193,7 @@ NSString *const kMXMessageContentKeyExtensibleAsset = @"m.asset";
 NSString *const kMXMessageContentKeyExtensibleAssetMSC3488 = @"org.matrix.msc3488.asset";
 NSString *const kMXMessageContentKeyExtensibleAssetType = @"type";
 NSString *const kMXMessageContentKeyExtensibleAssetTypeUser = @"m.self";
+NSString *const kMXMessageContentKeyExtensibleAssetTypePin = @"m.pin";
 NSString *const kMXMessageContentKeyExtensibleAssetTypeLiveLocation = @"m.self.live";
 
 // Join Rules

@@ -374,7 +374,9 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     
     // Process every message received by back pagination
     __block BOOL lastMessageUpdated = NO;
+    MXWeakify(timeline);
     [timeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *eventState) {
+        MXStrongifyAndReturnIfNil(timeline);
         if (direction == MXTimelineDirectionBackwards
             && !lastMessageUpdated)
         {

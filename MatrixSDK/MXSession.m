@@ -1886,8 +1886,19 @@ typedef void (^MXOnResumeDone)(void);
         onComplete();
     };
     
-    
-    [_crypto handleToDeviceEvent:event onComplete:onHandleToDeviceEventDone];
+    switch (event.eventType)
+    {
+        case MXEventTypeRoomKey:
+        {
+            [_crypto handleRoomKeyEvent:event onComplete:onHandleToDeviceEventDone];
+            break;
+        }
+
+        default:
+            onHandleToDeviceEventDone();
+            break;
+    }
+    [_eventStreamService dispatchOnLiveToDeviceWithEvent:event];
 }
 
 /**

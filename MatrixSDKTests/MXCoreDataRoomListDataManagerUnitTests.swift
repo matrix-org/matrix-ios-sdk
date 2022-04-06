@@ -221,8 +221,7 @@ class MXCoreDataRoomListDataManagerUnitTests: XCTestCase {
             store.storeSummary(summary)
         }
         
-        let fetcher = MXCoreDataRoomListDataFetcher(session: nil,
-                                                    fetchOptions: basicFetchOptions,
+        let fetcher = MXCoreDataRoomListDataFetcher(fetchOptions: basicFetchOptions,
                                                     store: store)
         return fetcher
     }

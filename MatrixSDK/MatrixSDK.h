@@ -105,6 +105,7 @@ FOUNDATION_EXPORT NSString *MatrixSDKVersion;
 #import "MXEventReplace.h"
 #import "MXInReplyTo.h"
 #import "MXEventRelationThread.h"
+#import "MXEventContentLocation.h"
 
 #import "MXReplyEventParser.h"
 

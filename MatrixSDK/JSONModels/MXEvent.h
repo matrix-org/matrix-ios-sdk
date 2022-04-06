@@ -96,6 +96,7 @@ typedef NS_ENUM(NSInteger, MXEventType)
     MXEventTypePollStart,
     MXEventTypePollResponse,
     MXEventTypePollEnd,
+    MXEventTypeSpaceOrder,
     MXEventTypeBeaconInfo,
 
     // The event is a custom event. Refer to its `MXEventTypeString` version
@@ -154,6 +155,9 @@ FOUNDATION_EXPORT NSString *const kMXEventTypeStringSticker;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomTombStone;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringTaggedEvents;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringSpaceChild;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringSpaceOrder;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringSpaceOrderMSC3230;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringSpaceOrderKey;
 
 // Interactive key verification
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringKeyVerificationRequest;
@@ -286,6 +290,7 @@ FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleAsset;
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleAssetMSC3488;
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleAssetType;
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleAssetTypeUser;
+FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleAssetTypePin;
 // live user location tracking
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleAssetTypeLiveLocation;
 
