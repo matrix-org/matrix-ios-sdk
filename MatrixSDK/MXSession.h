@@ -1638,4 +1638,12 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  */
 - (NSString *)virtualRoomOf:(NSString *)nativeRoomId;
 
+#pragma mark - Presence
+
+/**
+ Preferred presence status for this session. Session will provide this value on syncs
+ while the application is in foreground. Defaults to MXPresenceOnline.
+ */
+@property (nonatomic) MXPresence preferredSyncPresence;
+
 @end
