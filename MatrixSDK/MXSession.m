@@ -244,6 +244,7 @@ typedef void (^MXOnResumeDone)(void);
                                                    object:_spaceService];
         _threadingService = [[MXThreadingService alloc] initWithSession:self];
         _eventStreamService = [[MXEventStreamService alloc] init];
+        _preferredSyncPresence = MXPresenceOnline;
         
         [self setIdentityServer:mxRestClient.identityServer andAccessToken:mxRestClient.credentials.identityServerAccessToken];
         
@@ -900,7 +901,7 @@ typedef void (^MXOnResumeDone)(void);
                     [self setState:MXSessionStateInitialSyncFailed];
                     failure(error);
 
-                } clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
+                } clientTimeout:CLIENT_TIMEOUT_MS setPresence:self.preferredSyncPresenceString];
 
             } failure:^(NSError *error) {
 
@@ -1062,7 +1063,7 @@ typedef void (^MXOnResumeDone)(void);
         if (!eventStreamRequest)
         {
             // Relaunch live events stream (long polling)
-            [self serverSyncWithServerTimeout:0 success:nil failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
+            [self serverSyncWithServerTimeout:0 success:nil failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:self.preferredSyncPresenceString];
         }
     }
 
@@ -1127,7 +1128,7 @@ typedef void (^MXOnResumeDone)(void);
         
         // retrieve the available data asap
         // disable the long poll to get the available data asap
-        [self serverSyncWithServerTimeout:0 success:nil failure:nil clientTimeout:10 setPresence:nil];
+        [self serverSyncWithServerTimeout:0 success:nil failure:nil clientTimeout:10 setPresence:self.preferredSyncPresenceString];
         
         return YES;
     }
@@ -1437,7 +1438,7 @@ typedef void (^MXOnResumeDone)(void);
                     && (self.state != MXSessionStatePauseRequested && self.state != MXSessionStatePaused))
                 {
                     // Pursue live events listening
-                    [self serverSyncWithServerTimeout:nextServerTimeout success:success failure:failure clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
+                    [self serverSyncWithServerTimeout:nextServerTimeout success:success failure:failure clientTimeout:CLIENT_TIMEOUT_MS setPresence:self.preferredSyncPresenceString];
                     return;
                 }
                 
@@ -1506,7 +1507,7 @@ typedef void (^MXOnResumeDone)(void);
                 }
                 
                 // Pursue live events listening
-                [self serverSyncWithServerTimeout:nextServerTimeout success:nil failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
+                [self serverSyncWithServerTimeout:nextServerTimeout success:nil failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:self.preferredSyncPresenceString];
                 
                 //  attempt to join invited rooms if sync succeeds
                 if (MXSDKOptions.sharedInstance.autoAcceptRoomInvites)
@@ -1603,7 +1604,7 @@ typedef void (^MXOnResumeDone)(void);
                                                                          }];
 
             // Switch back to the long poll management
-            [self serverSyncWithServerTimeout:SERVER_TIMEOUT_MS success:nil failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
+            [self serverSyncWithServerTimeout:SERVER_TIMEOUT_MS success:nil failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:self.preferredSyncPresenceString];
         }
         else
         {
@@ -1622,7 +1623,7 @@ typedef void (^MXOnResumeDone)(void);
                     if (self->eventStreamRequest)
                     {
                         MXLogDebug(@"[MXSession] Retry resuming events stream after error %@", mxError.errcode);
-                        [self serverSyncWithServerTimeout:0 success:success failure:failure clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
+                        [self serverSyncWithServerTimeout:0 success:success failure:failure clientTimeout:CLIENT_TIMEOUT_MS setPresence:self.preferredSyncPresenceString];
                     }
                 });
             }
@@ -1648,7 +1649,7 @@ typedef void (^MXOnResumeDone)(void);
                         {
                             MXLogDebug(@"[MXSession] Retry resuming events stream");
                             [self setState:MXSessionStateSyncInProgress];
-                            [self serverSyncWithServerTimeout:0 success:success failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
+                            [self serverSyncWithServerTimeout:0 success:success failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:self.preferredSyncPresenceString];
                         }
                     });
                 }
@@ -1664,7 +1665,7 @@ typedef void (^MXOnResumeDone)(void);
 
                             MXLogDebug(@"[MXSession] Retry resuming events stream");
                             [self setState:MXSessionStateSyncInProgress];
-                            [self serverSyncWithServerTimeout:0 success:success failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
+                            [self serverSyncWithServerTimeout:0 success:success failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:self.preferredSyncPresenceString];
                         }
                     }];
                 }
@@ -4918,6 +4919,13 @@ typedef void (^MXOnResumeDone)(void);
     {
         self->roomSummaries[roomId].parentSpaceIds = parentIds;
     }];
+}
+
+#pragma mark - Presence
+
+- (NSString *)preferredSyncPresenceString
+{
+    return [MXTools presenceString:self.preferredSyncPresence];
 }
 
 @end
