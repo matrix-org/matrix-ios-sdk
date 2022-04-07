@@ -45,7 +45,6 @@ public class MXBeaconInfoMO: NSManagedObject {
     internal func update(withBeaconInfo beaconInfo: MXBeaconInfo) {
         
         s_userId = beaconInfo.userId
-        s_uniqueId = beaconInfo.uniqueId
         s_description = beaconInfo.desc
         s_timeout = Int64(beaconInfo.timeout)
         s_isLive = beaconInfo.isLive

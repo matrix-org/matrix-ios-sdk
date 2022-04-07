@@ -811,7 +811,7 @@
 - (BOOL)addEvent:(MXEvent*)event toBeaconInfoEventsIfPossible:(NSMutableArray<MXBeaconInfo*>*)beaconInfoEvents
 
 {
-    if (!event.isBeaconInfo)
+    if (event.eventType != MXEventTypeBeaconInfo)
     {
         return NO;
     }
@@ -820,9 +820,9 @@
     
     MXBeaconInfo *beaconInfo = [[MXBeaconInfo alloc] initWithMXEvent:event];
     
-    if (beaconInfo && beaconInfo.userId && beaconInfo.uniqueId)
+    if (beaconInfo && beaconInfo.userId)
     {
-        MXBeaconInfo *existingBeaconInfo = [self beaconInfoWithUserId:beaconInfo.userId andUniqueId:beaconInfo.uniqueId inBeaconInfoEvents:beaconInfoEvents];
+        MXBeaconInfo *existingBeaconInfo = [self beaconInfoWithUserId:beaconInfo.userId inBeaconInfoEvents:beaconInfoEvents];
         
         if (existingBeaconInfo)
         {
@@ -843,12 +843,12 @@
     return updated;
 }
 
-- (nullable MXBeaconInfo*)beaconInfoWithUserId:(nonnull NSString*)userId andUniqueId:(NSString*)uniqueId inBeaconInfoEvents:(nonnull NSArray<MXBeaconInfo*>*)beaconInfoEvents
+- (nullable MXBeaconInfo*)beaconInfoWithUserId:(nonnull NSString*)userId inBeaconInfoEvents:(nonnull NSArray<MXBeaconInfo*>*)beaconInfoEvents
 {
     MXBeaconInfo *beaconInfo;
     
     NSUInteger beaconInfoIndex = [beaconInfoEvents indexOfObjectPassingTest:^BOOL(MXBeaconInfo * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-        if ([obj.userId isEqualToString:userId] && [obj.uniqueId isEqualToString:uniqueId])
+        if ([obj.userId isEqualToString:userId])
         {
             *stop = YES;
             return YES;

@@ -364,7 +364,6 @@ extension MXRoomSummaryMO: MXRoomSummaryProtocol {
         
         let allBeaconInfo: [MXBeaconInfo] = allBeaconInfoMO.map { beaconInfoMO in
             return MXBeaconInfo(userId: beaconInfoMO.s_userId,
-                                uniqueId: beaconInfoMO.s_uniqueId,
                                 description: beaconInfoMO.s_description,
                                 timeout: UInt64(beaconInfoMO.s_timeout),
                                 isLive: beaconInfoMO.s_isLive,
