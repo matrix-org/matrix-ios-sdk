@@ -101,49 +101,4 @@ class MXBeaconInfoUnitTests: XCTestCase {
         XCTAssertEqual(beaconInfo.timestamp, beaconInfoCopy.timestamp)
         XCTAssertEqual(beaconInfo.assetType, beaconInfoCopy.assetType)
     }
-    
-    func testBuildEventTypeSucceed() throws {
-        
-        let expectedUserId = "@alice:matrix.org"
-        let expectedUniqueId = "98088ZE98"
-        let expectedUniqueSuffix = "\(expectedUserId).\(expectedUniqueId)"
-        
-        let expectedFullEventTypeString = "\(kMXEventTypeStringBeaconInfoMSC3489).\(expectedUniqueSuffix)"
-        
-        let beaconInfoEventTypeComponents = MXBeaconInfoEventTypeComponents(eventTypeString: expectedFullEventTypeString)
-        
-        XCTAssertNotNil(beaconInfoEventTypeComponents)
-        
-        guard let beaconInfoEventTypeComponents = beaconInfoEventTypeComponents else {
-            return
-        }
-        
-        XCTAssertEqual(beaconInfoEventTypeComponents.uniqueSuffix, expectedUniqueSuffix)
-        XCTAssertEqual(beaconInfoEventTypeComponents.fullEventTypeString, expectedFullEventTypeString)
-    }
-    
-    func testBuildWithUniqueSuffixSucceed() throws {
-        
-        let expectedUserId = "@alice:matrix.org"
-        let expectedUniqueId = "98088ZE98"
-        let expectedUniqueSuffix = "\(expectedUserId).\(expectedUniqueId)"
-        
-        let expectedFullEventTypeString = "\(kMXEventTypeStringBeaconInfoMSC3489).\(expectedUniqueSuffix)"
-        
-        let beaconInfoEventTypeComponents = MXBeaconInfoEventTypeComponents(uniqueSuffix: expectedUniqueSuffix)
-        
-        XCTAssertNotNil(beaconInfoEventTypeComponents)
-        XCTAssertEqual(beaconInfoEventTypeComponents.uniqueSuffix, expectedUniqueSuffix)
-        XCTAssertEqual(beaconInfoEventTypeComponents.fullEventTypeString, expectedFullEventTypeString)
-    }
-    
-    func testBuildEventTypeFail() throws {
-        
-        let eventTypeString = "m.bacon_info.@alice:matrix.org.98088ZE98"
-        
-        let beaconInfoEventTypeComponents = MXBeaconInfoEventTypeComponents(eventTypeString: eventTypeString)
-        
-        XCTAssertFalse(MXBeaconInfoEventTypeComponents.isEventTypeStringBeaconInfo(eventTypeString))        
-        XCTAssertNil(beaconInfoEventTypeComponents)
-    }
 }
