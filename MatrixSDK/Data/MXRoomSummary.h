@@ -32,7 +32,6 @@
 @class MXRoomSync;
 @class MXInvitedRoomSync;
 @class MXRoomSyncSummary;
-@class MXBeaconInfo;
 @protocol MXStore;
 
 
@@ -345,9 +344,6 @@ FOUNDATION_EXPORT NSUInteger const MXRoomSummaryPaginationChunkSize;
  Parent space identifiers.
  */
 @property (nonatomic) NSSet<NSString*> *parentSpaceIds;
-
-/// Get all beacon info shared in the room
-@property (nonatomic) NSArray<MXBeaconInfo*> *beaconInfoEvents;
 
 /**
  Mark all messages as read.

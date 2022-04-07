@@ -968,7 +968,6 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
         _sentStatus = (MXRoomSummarySentStatus)[aDecoder decodeIntegerForKey:@"sentStatus"];
         _favoriteTagOrder = [aDecoder decodeObjectForKey:@"favoriteTagOrder"];
         _parentSpaceIds = [aDecoder decodeObjectForKey:@"parentSpaceIds"];
-        _beaconInfoEvents = [aDecoder decodeObjectForKey:@"beaconInfoEvents"];
         
         // Compute the trust if asked to do it automatically
         // or maintain its computation it has been already calcutated
@@ -998,7 +997,6 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     [aCoder encodeInteger:(NSInteger)_membership forKey:@"membership"];
     [aCoder encodeObject:_membersCount forKey:@"membersCount"];
     [aCoder encodeObject:@(_isConferenceUserRoom) forKey:@"isConferenceUserRoom"];
-    [aCoder encodeObject:_beaconInfoEvents forKey:@"beaconInfoEvents"];
 
     [aCoder encodeObject:_others forKey:@"others"];
     [aCoder encodeBool:_isEncrypted forKey:@"isEncrypted"];
