@@ -141,7 +141,6 @@ extension MockRoomSummary {
     }
     
     private func randomBeaconInfo() -> MXBeaconInfo {
-        let uniqueId = String(UUID().uuidString.prefix(16))
         
         let userId = "@alice\(UUID().uuidString.prefix(8)):matrix.org"
         let desc = "Live location of \(userId)"
@@ -150,7 +149,6 @@ extension MockRoomSummary {
         let timestamp = UInt64.random(in: 100000000...1000000000)
         
         return MXBeaconInfo(userId: userId,
-                            uniqueId: uniqueId,
                             description: desc,
                             timeout: timeout,
                             isLive: isLive,
