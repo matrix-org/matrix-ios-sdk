@@ -563,9 +563,6 @@ extern NSString *const kMXEventIdentifierKey;
  */
 - (BOOL)isVoiceMessage;
 
-/// Return YES if the event is beacon info
-- (BOOL)isBeaconInfo;
-
 /**
  Return YES if the event content has been edited.
  */

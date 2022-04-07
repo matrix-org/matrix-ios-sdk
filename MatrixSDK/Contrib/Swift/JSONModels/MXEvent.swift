@@ -79,7 +79,7 @@ public enum MXEventType: Equatable, Hashable {
     case pollResponse
     case pollEnd
     
-    case beaconInfo(_ uniqueSuffix: String)
+    case beaconInfo
 
     case custom(String)
     
@@ -134,10 +134,8 @@ public enum MXEventType: Equatable, Hashable {
         case .pollStart: return kMXEventTypeStringPollStartMSC3381
         case .pollResponse: return kMXEventTypeStringPollResponseMSC3381
         case .pollEnd: return kMXEventTypeStringPollEndMSC3381
-                      
-        case .beaconInfo(let uniqueSuffix):
-            let beaconInfoEventTypeComponents = MXBeaconInfoEventTypeComponents(uniqueSuffix: uniqueSuffix)
-            return beaconInfoEventTypeComponents.fullEventTypeString
+        case .beaconInfo:
+            return kMXEventTypeStringBeaconInfoMSC3489
 
         // Swift converts any constant with the suffix "Notification" as the type `Notification.Name`
         // The original value can be reached using the `rawValue` property.
@@ -148,12 +146,10 @@ public enum MXEventType: Equatable, Hashable {
     }
     
     public init(identifier: String) {
-        let events: [MXEventType] = [.roomName, .roomTopic, .roomAvatar, .roomMember, .roomCreate, .roomJoinRules, .roomPowerLevels, .roomAliases, .roomCanonicalAlias, .roomEncrypted, .roomEncryption, .roomGuestAccess, .roomHistoryVisibility, .roomKey, .roomForwardedKey, .roomKeyRequest, .roomMessage, .roomMessageFeedback, .roomRedaction, .roomThirdPartyInvite, .roomTag, .presence, .typing, .callInvite, .callCandidates, .callAnswer, .callSelectAnswer, .callHangup, .callReject, .callNegotiate, .callReplaces, .callRejectReplacement, .callAssertedIdentity, .callAssertedIdentityUnstable, .reaction, .receipt, .roomTombStone, .keyVerificationStart, .keyVerificationAccept, .keyVerificationKey, .keyVerificationMac, .keyVerificationCancel, .keyVerificationDone, .taggedEvents, .spaceChild, .spaceOrder, .pollStart, .pollResponse, .pollEnd]
+        let events: [MXEventType] = [.roomName, .roomTopic, .roomAvatar, .roomMember, .roomCreate, .roomJoinRules, .roomPowerLevels, .roomAliases, .roomCanonicalAlias, .roomEncrypted, .roomEncryption, .roomGuestAccess, .roomHistoryVisibility, .roomKey, .roomForwardedKey, .roomKeyRequest, .roomMessage, .roomMessageFeedback, .roomRedaction, .roomThirdPartyInvite, .roomTag, .presence, .typing, .callInvite, .callCandidates, .callAnswer, .callSelectAnswer, .callHangup, .callReject, .callNegotiate, .callReplaces, .callRejectReplacement, .callAssertedIdentity, .callAssertedIdentityUnstable, .reaction, .receipt, .roomTombStone, .keyVerificationStart, .keyVerificationAccept, .keyVerificationKey, .keyVerificationMac, .keyVerificationCancel, .keyVerificationDone, .taggedEvents, .spaceChild, .spaceOrder, .pollStart, .pollResponse, .pollEnd, .beaconInfo]
         
         if let type = events.first(where: { $0.identifier == identifier }) {
             self = type
-        } else if let beaconInfoEventTypeComponents = MXBeaconInfoEventTypeComponents(eventTypeString: identifier) {
-            self = .beaconInfo(beaconInfoEventTypeComponents.uniqueSuffix)
         } else {
             if identifier == kMXEventTypeStringPollStart {
                 self = .pollStart

@@ -532,11 +532,6 @@ NSString *const kMXJoinRulesContentKeyRoomId = @"room_id";
                                                              self.content[kMXMessageContentKeyVoiceMessageMSC3245]);
 }
 
-- (BOOL)isBeaconInfo
-{
-    return [MXBeaconInfoEventTypeComponents isEventTypeStringBeaconInfo:self.type];
-}
-
 - (MXEventContentLocation *)location
 {
     return [MXEventContentLocation modelFromJSON:self.content];
