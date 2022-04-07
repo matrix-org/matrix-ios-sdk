@@ -83,7 +83,7 @@ class MXLocationServiceTests: XCTestCase {
                     
                     _ = bobSession.listenToEvents { event, direction, customObject in
                         
-                        if event.isBeaconInfo() {
+                        if event.eventType == .beaconInfo {
                             
                             // Get the beacon info from the room state of the room
                             initialRoom.state { roomState in
