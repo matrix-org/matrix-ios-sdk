@@ -27,7 +27,6 @@ static NSString * const kLiveJSONKey = @"live";
 #pragma mark - Setup
 
 - (instancetype)initWithUserId:(NSString *)userId
-                      uniqueId:(NSString *)uniqueId
                    description:(NSString *)desc
                        timeout:(uint64_t)timeout
                         isLive:(BOOL)isLive
@@ -37,7 +36,6 @@ static NSString * const kLiveJSONKey = @"live";
     if (self)
     {
         _userId = userId;
-        _uniqueId = uniqueId;
         _desc = desc;
         _timeout = timeout;
         _isLive = isLive;
@@ -54,7 +52,6 @@ static NSString * const kLiveJSONKey = @"live";
     uint64_t timestamp = (uint64_t)[[NSDate date] timeIntervalSince1970] * 1000;
     
     return [self initWithUserId:nil
-                       uniqueId:nil
                     description:desc
                         timeout:timeout
                          isLive:isLive
@@ -63,7 +60,7 @@ static NSString * const kLiveJSONKey = @"live";
 
 - (instancetype)initWithMXEvent:(MXEvent*)event
 {
-    if (!event.isBeaconInfo)
+    if (event.eventType != MXEventTypeRoomMessage)
     {
         return nil;
     }
@@ -74,11 +71,8 @@ static NSString * const kLiveJSONKey = @"live";
     {
         return nil;
     }
-    
-    MXBeaconInfoEventTypeComponents *eventTypeComponents = [[MXBeaconInfoEventTypeComponents alloc] initWithEventTypeString:event.type];
-    
+
     return [self initWithUserId:event.stateKey
-                       uniqueId:eventTypeComponents.uniqueSuffix
                     description:beaconInfo.desc
                         timeout:beaconInfo.timeout
                          isLive:beaconInfo.isLive
@@ -168,26 +162,6 @@ static NSString * const kLiveJSONKey = @"live";
     };
 
     return content;
-}
-
-#pragma mark - Public
-
-- (BOOL)areIdentifiersEquals:(MXBeaconInfo *)beaconInfo
-{
-    BOOL areUserIdEquals = NO;
-    BOOL areUniqueIdEquals = NO;
-    
-    if (self.userId && beaconInfo.userId)
-    {
-        areUserIdEquals = [self.userId isEqualToString:beaconInfo.userId];
-    }
-    
-    if (self.uniqueId && beaconInfo.uniqueId)
-    {
-        areUniqueIdEquals = [self.uniqueId isEqualToString:beaconInfo.uniqueId];
-    }
-    
-    return areUserIdEquals && areUniqueIdEquals;
 }
 
 #pragma mark - Private

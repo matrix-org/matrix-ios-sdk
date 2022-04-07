@@ -32,9 +32,6 @@ NS_ASSUME_NONNULL_BEGIN
 /// Beacon user id
 @property (nonatomic, strong, readonly, nullable) NSString* userId;
 
-/// Beacon unique Id
-@property (nonatomic, strong, readonly, nullable) NSString* uniqueId;
-
 /// Beacon description
 @property (nonatomic, strong, readonly, nullable) NSString* desc;
 
@@ -55,7 +52,6 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark - Setup
 
 - (instancetype)initWithUserId:(nullable NSString *)userId
-                      uniqueId:(nullable NSString *)uniqueId
                    description:(nullable NSString *)desc
                        timeout:(uint64_t)timeout
                         isLive:(BOOL)isLive
@@ -69,12 +65,6 @@ NS_ASSUME_NONNULL_BEGIN
 /// Create the `MXBeaconInfo` object from a Matrix m.beacon_info event.
 /// @param event The m.beacon_info event.
 - (instancetype)initWithMXEvent:(MXEvent*)event;
-
-#pragma mark - Public methods
-
-/// Return YES if user id and unique id are equals.
-/// @param beaconInfo the other beacon info to compare.
-- (BOOL)areIdentifiersEquals:(MXBeaconInfo*)beaconInfo;
 
 @end
 
