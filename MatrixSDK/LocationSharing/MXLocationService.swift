@@ -97,9 +97,7 @@ public class MXLocationService: NSObject {
             completion(.failure(MXLocationServiceError.missingUserId))
             return nil
         }
-        
-        let beaconInfoEventTypeComponents = MXBeaconInfoEventTypeComponents(userId: userId)
-        let eventType: MXEventType = .beaconInfo(beaconInfoEventTypeComponents.uniqueSuffix)
+                
         let stateKey = userId
         
         let beaconInfo = MXBeaconInfo(description: description,
@@ -112,7 +110,7 @@ public class MXLocationService: NSObject {
             return nil
         }
         
-        return self.session.matrixRestClient.sendStateEvent(toRoom: roomId, eventType: eventType, content: eventContent, stateKey: stateKey) { response in
+        return self.session.matrixRestClient.sendStateEvent(toRoom: roomId, eventType: .beaconInfo, content: eventContent, stateKey: stateKey) { response in
             completion(response)
         }
     }
