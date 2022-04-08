@@ -30,11 +30,17 @@ public class MXCoreDataRoomSummaryStore: NSObject {
 
     private lazy var persistenceCoordinator: NSPersistentStoreCoordinator = {
         let result = NSPersistentStoreCoordinator(managedObjectModel: Self.managedObjectModel)
+        
+        let options: [AnyHashable : Any] = [
+            NSMigratePersistentStoresAutomaticallyOption: true,
+            NSInferMappingModelAutomaticallyOption: true
+        ]
+        
         do {
             try result.addPersistentStore(ofType: NSSQLiteStoreType,
                                           configurationName: nil,
                                           at: storeURL,
-                                          options: nil)
+                                          options: options)
         } catch {
             fatalError(error.localizedDescription)
         }
@@ -209,8 +215,7 @@ public class MXCoreDataRoomSummaryStore: NSObject {
             MXRoomSummaryMO.entityName,
             MXRoomLastMessageMO.entityName,
             MXUsersTrustLevelSummaryMO.entityName,
-            MXRoomMembersCountMO.entityName,
-            MXBeaconInfoMO.entityName
+            MXRoomMembersCountMO.entityName
         ]
         
         let moc = backgroundMoc
