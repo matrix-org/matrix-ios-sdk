@@ -403,18 +403,15 @@
 {
     NSMutableArray *beaconInfoEvents = [NSMutableArray new];
     
-    NSArray *stateEvents = [self stateEventsWithType:kMXMessageContentKeyExtensibleAssetTypeLiveLocation];
+    NSArray *stateEvents = [self stateEventsWithType:kMXEventTypeStringBeaconInfoMSC3489];
     
     for (MXEvent *event in stateEvents)
     {
-        if (event.eventType == MXEventTypeBeaconInfo)
+        MXBeaconInfo *beaconInfo = [[MXBeaconInfo alloc] initWithMXEvent:event];
+        
+        if (beaconInfo)
         {
-            MXBeaconInfo *beaconInfo = [[MXBeaconInfo alloc] initWithMXEvent:event];
-            
-            if (beaconInfo)
-            {
-                [beaconInfoEvents addObject:beaconInfo];
-            }
+            [beaconInfoEvents addObject:beaconInfo];
         }
     }
     
