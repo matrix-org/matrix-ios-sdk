@@ -51,11 +51,16 @@ public class MXLocationService: NSObject {
     /// Get all beacon info in a room
     /// - Parameter roomId: The room id of the room
     /// - Returns: Beacon info array
-    public func getAllBeaconInfo(inRoomWithId roomId: String) -> [MXBeaconInfo] {
-        guard let roomSummary = self.session.roomSummary(withRoomId: roomId), let beaconInfoEvents = roomSummary.beaconInfoEvents else {
-            return []
+    public func getAllBeaconInfo(inRoomWithId roomId: String, completion: @escaping ([MXBeaconInfo]) -> Void) {
+        
+        guard let room = self.session.room(withRoomId: roomId) else {
+            completion([])
+            return
         }
-        return beaconInfoEvents
+        
+        room.state { roomState in
+            completion(roomState?.beaconInfoEvents ?? [])
+        }
     }
     
     /// Get all beacon info of a user in a room
@@ -63,27 +68,28 @@ public class MXLocationService: NSObject {
     ///   - userId: The user id
     ///   - roomId: The room id
     /// - Returns: Beacon info array
-    public func getAllBeaconInfo(forUserId userId: String, inRoomWithId roomId: String) -> [MXBeaconInfo] {
-        let allBeaconInfo = self.getAllBeaconInfo(inRoomWithId: roomId)
-        return allBeaconInfo.filter( { return $0.userId == userId } )
+    public func getAllBeaconInfo(forUserId userId: String, inRoomWithId roomId: String, completion: @escaping ([MXBeaconInfo]) -> Void) {
+        self.getAllBeaconInfo(inRoomWithId: roomId) { allBeaconInfo in
+            
+            let userBeaconInfoList = allBeaconInfo.filter( { return $0.userId == userId })
+            completion(userBeaconInfoList)
+        }
     }
     
     /// Check if the current user is sharin is location in a room
     /// - Parameter roomId: The room id
     /// - Returns: true if the user if sharing is location
     public func isCurrentUserSharingIsLocation(inRoomWithId roomId: String) -> Bool {
-                
+        
         guard let myUserId = self.session.myUserId else {
             return false
         }
         
-        let allUserBeaconInfo = self.getAllBeaconInfo(forUserId: myUserId, inRoomWithId: roomId)
-        
-        // If a beacon is live return true
-        // TODO: Handle isLive with timestamp + timeout
-        return allUserBeaconInfo.contains { beaconInfo in
-            return beaconInfo.isLive
+        guard let roomSummary = self.session.roomSummary(withRoomId: roomId) else {
+            return false
         }
+        
+        return roomSummary.userIdsSharingLiveBeacon.contains(myUserId)
     }
     
     // MARK: - Private
