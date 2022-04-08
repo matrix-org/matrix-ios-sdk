@@ -93,7 +93,7 @@ internal class MockRoomSummary: NSObject, MXRoomSummaryProtocol {
     
     var parentSpaceIds: Set<String> = []
     
-    var beaconInfoEvents: [MXBeaconInfo] = []
+    var userIdsSharingLiveBeacon: Set<String> = []
     
     init(withRoomId roomId: String) {
         self.roomId = roomId
@@ -124,35 +124,4 @@ internal class MockRoomSummary: NSObject, MXRoomSummaryProtocol {
     override var description: String {
         return "<MockRoomSummary: \(roomId) \(String(describing: displayname))>"
     }
-}
-
-// MARK: - BeaconInfo management
-extension MockRoomSummary {
-    
-    func addRandomBeaconInfoEvents() {
-        
-        var randomBeaconInfoEvents: [MXBeaconInfo] = []
-        
-        for _ in 0...5 {
-            randomBeaconInfoEvents.append(self.randomBeaconInfo())
-        }
-        
-        self.beaconInfoEvents = randomBeaconInfoEvents
-    }
-    
-    private func randomBeaconInfo() -> MXBeaconInfo {
-        
-        let userId = "@alice\(UUID().uuidString.prefix(8)):matrix.org"
-        let desc = "Live location of \(userId)"
-        let timeout = UInt64.random(in: 10...600000)
-        let isLive = true
-        let timestamp = UInt64.random(in: 100000000...1000000000)
-        
-        return MXBeaconInfo(userId: userId,
-                            description: desc,
-                            timeout: timeout,
-                            isLive: isLive,
-                            timestamp: timestamp)
-    }
-    
 }
