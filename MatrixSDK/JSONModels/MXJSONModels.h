@@ -399,13 +399,13 @@ FOUNDATION_EXPORT NSString *const kMXRoomTagServerNotice;
 /**
  Presence definitions
  */
-typedef enum : NSUInteger
+typedef NS_ENUM(NSUInteger, MXPresence)
 {
     MXPresenceUnknown,    // The home server did not provide the information
     MXPresenceOnline,
     MXPresenceUnavailable,
     MXPresenceOffline
-} MXPresence;
+};
 
 /**
  Presence definitions - String version
