@@ -197,6 +197,11 @@ NSString * const MXKeyVerificationRequestDidChangeNotification = @"MXKeyVerifica
     {
         [self updateState:MXKeyVerificationRequestStateReady notifiy:YES];
     }
+    [self.manager notifyOthersOfAcceptanceWithTransactionId:self.requestId acceptedUserId:self.otherUser acceptedDeviceId: self.otherDevice success:^{
+        MXLogDebug(@"[MXKeyVerificationRequest] handleReady notified others of acceptance");
+    } failure:^(NSError * _Nonnull error) {
+        MXLogError(@"[MXKeyVerificationRequest] handleReady failed notify others of acceptance");
+    }];
 }
 
 - (void)handleCancel:(MXKeyVerificationCancel *)cancelContent

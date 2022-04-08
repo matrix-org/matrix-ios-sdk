@@ -203,6 +203,13 @@ FOUNDATION_EXPORT NSString *const MXKeyVerificationManagerNotificationTransactio
  */
 - (void)removeQRCodeTransactionWithTransactionId:(NSString*)transactionId;
 
+
+- (void)notifyOthersOfAcceptanceWithTransactionId:(NSString*)transactionId
+                               acceptedUserId:(NSString*)acceptedUserId
+                             acceptedDeviceId:(NSString*)acceptedDeviceId
+                                      success:(void(^)(void))success
+                                      failure:(void(^)(NSError *error))failure;
+
 @end
 
 NS_ASSUME_NONNULL_END
