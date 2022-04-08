@@ -178,43 +178,9 @@ class MXCoreDataRoomListDataManagerUnitTests: XCTestCase {
         fetcher.paginate()
     }
     
-    func testBeaconInfos() {
-        let fetcher = generateDefaultFetcher(generateBeaconInfoEvents: true)
-        Self.fetcher = fetcher
-        self.wait { expectation in
-            let delegate = MockRoomListDataFetcherDelegate(withBlock: {
-                XCTAssertEqual(fetcher.data?.counts.numberOfRooms, 10, "Fetcher should fetch all rooms except types: [.hidden, .conferenceUser, .space]")
-                XCTAssertEqual(fetcher.data?.counts.total?.numberOfRooms, 60, "Fetcher should be aware of all rooms except types: [.hidden, .conferenceUser, .space]")
-                
-                if let roomSummaries = fetcher.data?.rooms {
-                    
-                    for roomSummary in roomSummaries {
-                        
-                        let beaconInfoEvents = roomSummary.beaconInfoEvents
-                        
-                        for beaconInfo in beaconInfoEvents {
-                            
-                            let json = beaconInfo.jsonDictionary()!
-                            
-                            let beauti = String(data: try! JSONSerialization.data(withJSONObject: json, options: .prettyPrinted), encoding: .utf8 )!
-                            
-                            MXLog.debug("beaconInfo:\n \(beauti)")
-                        }
-                    }
-                }
-                
-                expectation.fulfill()
-            })
-            Self.delegate = delegate
-            fetcher.addDelegate(delegate)
-        }
-        
-        fetcher.paginate()
-    }
-    
     private func generateDefaultFetcher(generateBeaconInfoEvents: Bool = false) -> MXRoomListDataFetcher {
         let store = MXCoreDataRoomSummaryStore(withCredentials: Constants.credentials)
-        let roomSummaries = generateMockRoomSummaries(generateBeaconInfoEvents: generateBeaconInfoEvents)
+        let roomSummaries = generateMockRoomSummaries()
         XCTAssertEqual(roomSummaries.count, 90, "Generator must generate 90 rooms in total")
         //  insert all rooms into the store
         for summary in roomSummaries {
@@ -228,31 +194,19 @@ class MXCoreDataRoomListDataManagerUnitTests: XCTestCase {
     
     /// Generates 10 rooms per each type. Generates 90 rooms by default. Sorted by data types and lastEventDate ascending.
     private func generateMockRoomSummaries(numberOfRoomsPerType: [Int] = Array(repeating: 10, count: MXRoomSummaryDataTypes.all.count),
-                                           numberOfUntyped: Int = 10, generateBeaconInfoEvents: Bool = false) -> [MXRoomSummaryProtocol] {
+                                           numberOfUntyped: Int = 10) -> [MXRoomSummaryProtocol] {
         var result: [MockRoomSummary] = []
         
         for (index, numberOfRooms) in numberOfRoomsPerType.enumerated() {
             let safeIndex = index % MXRoomSummaryDataTypes.all.count
             let typed = (0..<numberOfRooms).map({ _ -> MockRoomSummary in
-                let summary = MockRoomSummary.generate(withTypes: MXRoomSummaryDataTypes.all[safeIndex])
-                
-                if generateBeaconInfoEvents {
-                    summary.addRandomBeaconInfoEvents()
-                }
-                
-                return summary
+                return MockRoomSummary.generate(withTypes: MXRoomSummaryDataTypes.all[safeIndex])
             })
             result.append(contentsOf: typed)
         }
         
         let untyped = (0..<numberOfUntyped).map({ _ -> MockRoomSummary in
-            let summary = MockRoomSummary.generate()
-            
-            if generateBeaconInfoEvents {
-                summary.addRandomBeaconInfoEvents()
-            }
-            
-            return summary
+            return MockRoomSummary.generate()
         })
         result.append(contentsOf: untyped)
         
