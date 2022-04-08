@@ -190,7 +190,7 @@ FOUNDATION_EXPORT NSString *const kMXEventTypeStringPollEnd;
 // Beacon
 
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringBeaconInfo;
-FOUNDATION_EXPORT NSString *const kMXEventTypeStringBeaconInfoMSC3489;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringBeaconInfoMSC3672;
 
 /**
  Types of room messages

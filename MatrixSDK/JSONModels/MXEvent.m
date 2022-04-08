@@ -100,7 +100,7 @@ NSString *const kMXEventTypeStringPollEnd             = @"m.poll.end";
 NSString *const kMXEventTypeStringPollEndMSC3381      = @"org.matrix.msc3381.poll.end";
 
 NSString *const kMXEventTypeStringBeaconInfo = @"m.beacon_info";
-NSString *const kMXEventTypeStringBeaconInfoMSC3489 = @"org.matrix.msc3489.beacon_info";
+NSString *const kMXEventTypeStringBeaconInfoMSC3672 = @"org.matrix.msc3672.beacon_info";
 
 NSString *const kMXMessageTypeKey                    = @"msgtype";
 NSString *const kMXMessageTypeText                   = @"m.text";

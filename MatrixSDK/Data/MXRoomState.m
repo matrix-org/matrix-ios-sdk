@@ -403,7 +403,7 @@
 {
     NSMutableArray *beaconInfoEvents = [NSMutableArray new];
     
-    NSArray *stateEvents = [self stateEventsWithType:kMXEventTypeStringBeaconInfoMSC3489];
+    NSArray *stateEvents = [self stateEventsWithType:kMXEventTypeStringBeaconInfoMSC3672];
     
     for (MXEvent *event in stateEvents)
     {

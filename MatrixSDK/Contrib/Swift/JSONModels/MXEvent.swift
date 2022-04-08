@@ -134,7 +134,7 @@ public enum MXEventType: Equatable, Hashable {
         case .pollStart: return kMXEventTypeStringPollStartMSC3381
         case .pollResponse: return kMXEventTypeStringPollResponseMSC3381
         case .pollEnd: return kMXEventTypeStringPollEndMSC3381
-        case .beaconInfo: return kMXEventTypeStringBeaconInfoMSC3489
+        case .beaconInfo: return kMXEventTypeStringBeaconInfoMSC3672
 
         // Swift converts any constant with the suffix "Notification" as the type `Notification.Name`
         // The original value can be reached using the `rawValue` property.
