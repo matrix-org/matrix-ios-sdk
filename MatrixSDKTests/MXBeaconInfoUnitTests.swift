@@ -30,11 +30,10 @@ class MXBeaconInfoUnitTests: XCTestCase {
         let expectedTimestamp: UInt64 = 1436829458432
         
         let eventContentJSON: [String : Any] = [
-            kMXEventTypeStringBeaconInfoMSC3489: [
-                "description": expectedDescription,
-                "timeout":  expectedTimeout,
-                "live": expectedIsLive,
-            ],
+            
+            "description": expectedDescription,
+            "timeout":  expectedTimeout,
+            "live": expectedIsLive,
             kMXMessageContentKeyExtensibleTimestampMSC3488: expectedTimestamp,
             kMXMessageContentKeyExtensibleAssetMSC3488: [
                 kMXMessageContentKeyExtensibleAssetType: kMXMessageContentKeyExtensibleAssetTypeLiveLocation
@@ -62,10 +61,8 @@ class MXBeaconInfoUnitTests: XCTestCase {
         let expectedTimestamp: TimeInterval = 1436829458432
         
         let eventContentJSON: [String : Any] = [
-            kMXEventTypeStringBeaconInfoMSC3489: [
-                "description": expectedDescription,
-                "live": expectedIsLive,
-            ],
+            "description": expectedDescription,
+            "live": expectedIsLive,
             kMXMessageContentKeyExtensibleTimestampMSC3488: expectedTimestamp,
             kMXMessageContentKeyExtensibleAssetMSC3488: [
                 kMXMessageContentKeyExtensibleAssetType: kMXMessageContentKeyExtensibleAssetTypeLiveLocation

@@ -89,16 +89,10 @@ static NSString * const kLiveJSONKey = @"live";
     BOOL isAssetTypeValid = NO;
     
     NSDictionary *assetDictionary = [self assetDictionayFromJSONDictionary:jsonDictionary];
+            
+    isLiveKeyExists = jsonDictionary[kLiveJSONKey] != nil;
+    MXJSONModelSetNumber(timeoutNumber, jsonDictionary[kTimeoutJSONKey]);
     
-    NSDictionary *beaconInfoContent;
-    
-    MXJSONModelSetDictionary(beaconInfoContent, jsonDictionary[kMXEventTypeStringBeaconInfoMSC3489]);
-    
-    if (beaconInfoContent)
-    {
-        isLiveKeyExists = beaconInfoContent[kLiveJSONKey] != nil;
-        MXJSONModelSetNumber(timeoutNumber, beaconInfoContent[kTimeoutJSONKey]);
-    }
     
     if (assetDictionary)
     {
@@ -111,7 +105,7 @@ static NSString * const kLiveJSONKey = @"live";
     
     MXJSONModelSetNumber(timestampNumber, jsonDictionary[kMXMessageContentKeyExtensibleTimestampMSC3488])
 
-    if (!timeoutNumber || !isLiveKeyExists || !isAssetTypeValid || !beaconInfoContent || !timestampNumber)
+    if (!timeoutNumber || !isLiveKeyExists || !isAssetTypeValid || !timestampNumber)
     {
         return nil;
     }
@@ -120,11 +114,11 @@ static NSString * const kLiveJSONKey = @"live";
     
     if (beaconInfo)
     {
-        MXJSONModelSetString(beaconInfo->_desc, beaconInfoContent[kDescriptionJSONKey]);
+        MXJSONModelSetString(beaconInfo->_desc, jsonDictionary[kDescriptionJSONKey]);
         
         beaconInfo->_timeout = [timeoutNumber unsignedLongLongValue];
         
-        MXJSONModelSetBoolean(beaconInfo->_isLive, beaconInfoContent[kLiveJSONKey]);
+        MXJSONModelSetBoolean(beaconInfo->_isLive, jsonDictionary[kLiveJSONKey]);
                 
         beaconInfo->_timestamp = [timestampNumber unsignedLongLongValue];
         
@@ -137,22 +131,14 @@ static NSString * const kLiveJSONKey = @"live";
 - (NSDictionary *)JSONDictionary
 {
     NSMutableDictionary *content = [NSMutableDictionary dictionary];
-
-    // Beacon info content
-    NSMutableDictionary *beaconInfoContent = [NSMutableDictionary dictionary];
     
     if (self.desc)
     {
-        beaconInfoContent[kDescriptionJSONKey] = self.desc;
+        content[kDescriptionJSONKey] = self.desc;
     }
     
-    beaconInfoContent[kTimeoutJSONKey] = @(self.timeout);
-    beaconInfoContent[kLiveJSONKey] = @(self.isLive);
-    
-    content[kMXEventTypeStringBeaconInfoMSC3489] = beaconInfoContent;
-    
-    // Timestamp
-    
+    content[kTimeoutJSONKey] = @(self.timeout);
+    content[kLiveJSONKey] = @(self.isLive);
     content[kMXMessageContentKeyExtensibleTimestampMSC3488] = @(self.timestamp);
 
     // Asset type
