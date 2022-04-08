@@ -146,8 +146,7 @@
     BOOL hasRoomMembersChange = NO;
     BOOL updated = NO;
     
-    NSArray *existingBeaconEvents = [self beaconInfoEventsFromRoomSummary:summary];
-    NSMutableArray *beaconInfoEvents = [NSMutableArray arrayWithArray:existingBeaconEvents];
+    NSMutableSet<NSString*>* userIdsSharingLiveBeacon = [summary.userIdsSharingLiveBeacon mutableCopy] ?: [NSMutableSet new] ;
     
     for (MXEvent *event in stateEvents)
     {
@@ -240,17 +239,25 @@
                 updated = YES;
                 [self checkRoomCreateStateEventPredecessorAndUpdateObsoleteRoomSummaryIfNeededWithCreateContent:createContent summary:summary session:session roomState:roomState];
                 [self checkRoomIsVirtualWithCreateEvent:event summary:summary session:session];
-            }
-                break;
                 
+                break;
+            }
+
+            case MXEventTypeBeaconInfo:
+            {
+                [self updateUserIdsSharingLiveBeacon:userIdsSharingLiveBeacon withStateEvent:event];
+                break;
+            }
             default:
                 break;
         }
-        
-        updated = [self addEvent:event toBeaconInfoEventsIfPossible:beaconInfoEvents];
     }
     
-    summary.beaconInfoEvents = beaconInfoEvents;
+    if (![userIdsSharingLiveBeacon isEqualToSet:summary.userIdsSharingLiveBeacon])
+    {
+        summary.userIdsSharingLiveBeacon = userIdsSharingLiveBeacon;
+        updated = YES;
+    }
 
     if (hasRoomMembersChange)
     {
@@ -803,65 +810,39 @@
 
 #pragma mark Beacon info
 
-- (NSArray<MXBeaconInfo*>*)beaconInfoEventsFromRoomSummary:(MXRoomSummary*)roomSummary
+- (BOOL)updateUserIdsSharingLiveBeacon:(NSMutableSet<NSString*>*)userIdsSharingLiveBeacon withStateEvent:(MXEvent*)stateEvent
 {
-    return roomSummary.beaconInfoEvents ?: @[];
-}
-
-- (BOOL)addEvent:(MXEvent*)event toBeaconInfoEventsIfPossible:(NSMutableArray<MXBeaconInfo*>*)beaconInfoEvents
-
-{
-    if (event.eventType != MXEventTypeBeaconInfo)
+    MXBeaconInfo *beaconInfo = [[MXBeaconInfo alloc] initWithMXEvent:stateEvent];
+    
+    NSString *userId = beaconInfo.userId;
+    
+    if (!beaconInfo || !userId)
     {
         return NO;
     }
-    
+        
     BOOL updated = NO;
     
-    MXBeaconInfo *beaconInfo = [[MXBeaconInfo alloc] initWithMXEvent:event];
+    BOOL isUserExist = [userIdsSharingLiveBeacon containsObject:userId];
     
-    if (beaconInfo && beaconInfo.userId)
+    if (beaconInfo.isLive)
     {
-        MXBeaconInfo *existingBeaconInfo = [self beaconInfoWithUserId:beaconInfo.userId inBeaconInfoEvents:beaconInfoEvents];
-        
-        if (existingBeaconInfo)
+        if (!isUserExist)
         {
-            if (existingBeaconInfo.timestamp < beaconInfo.timestamp)
-            {
-                [beaconInfoEvents removeObject:existingBeaconInfo];
-                [beaconInfoEvents addObject:beaconInfo];
-                updated = YES;
-            }
+            [userIdsSharingLiveBeacon addObject:userId];
+            updated = YES;
         }
-        else
+    }
+    else
+    {
+        if (isUserExist)
         {
-            [beaconInfoEvents addObject:beaconInfo];
+            [userIdsSharingLiveBeacon removeObject:userId];
             updated = YES;
         }
     }
     
     return updated;
-}
-
-- (nullable MXBeaconInfo*)beaconInfoWithUserId:(nonnull NSString*)userId inBeaconInfoEvents:(nonnull NSArray<MXBeaconInfo*>*)beaconInfoEvents
-{
-    MXBeaconInfo *beaconInfo;
-    
-    NSUInteger beaconInfoIndex = [beaconInfoEvents indexOfObjectPassingTest:^BOOL(MXBeaconInfo * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-        if ([obj.userId isEqualToString:userId])
-        {
-            *stop = YES;
-            return YES;
-        }
-        return NO;
-    }];
-    
-    if (beaconInfoIndex != NSNotFound)
-    {
-        beaconInfo = beaconInfoEvents[beaconInfoIndex];
-    }
-    
-    return beaconInfo;
 }
 
 @end
