@@ -60,7 +60,7 @@ static NSString * const kLiveJSONKey = @"live";
 
 - (instancetype)initWithMXEvent:(MXEvent*)event
 {
-    if (event.eventType != MXEventTypeRoomMessage)
+    if (event.eventType != MXEventTypeBeaconInfo)
     {
         return nil;
     }
