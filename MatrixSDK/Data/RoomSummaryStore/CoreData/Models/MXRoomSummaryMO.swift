@@ -64,7 +64,7 @@ public class MXRoomSummaryMO: NSManagedObject {
     @NSManaged public var s_membersCount: MXRoomMembersCountMO?
     @NSManaged public var s_trust: MXUsersTrustLevelSummaryMO?
     @NSManaged public var s_lastMessage: MXRoomLastMessageMO?
-    @NSManaged public var s_beaconInfoEvents: NSSet?
+    @NSManaged public var s_userIdsSharingLiveBeacon: [String]?
     
     @discardableResult
     internal static func insert(roomSummary summary: MXRoomSummaryProtocol,
@@ -150,33 +150,8 @@ public class MXRoomSummaryMO: NSManagedObject {
             }
             s_lastMessage = nil
         }
-        
-        self.update(withBeaconInfoEvents: summary.beaconInfoEvents, in: moc)
-    }
-    
-    private func update(withBeaconInfoEvents beaconInfoEvents: [MXBeaconInfo], in moc: NSManagedObjectContext) {
-        
-        // Update beacon info events
-        
-        if let existingBeaconInfoEvents = self.s_beaconInfoEvents {
-            self.removeFromS_beaconInfoEvents(existingBeaconInfoEvents)
-        }
-        
-        let allBeaconInfoMO: [MXBeaconInfoMO] = beaconInfoEvents.map { beaconInfo in
-            
-            let beaconInfoMO = MXBeaconInfoMO(context: moc)
-            beaconInfoMO.update(withBeaconInfo: beaconInfo)
-            
-            return beaconInfoMO
-        }
-        
-        do {
-            try moc.obtainPermanentIDs(for: allBeaconInfoMO)
-        } catch {
-            MXLog.error("[MXRoomSummaryMO] update: couldn't obtain permanent id for beacon infos: \(error)")
-        }
-        
-        self.addToS_beaconInfoEvents(NSSet(array: allBeaconInfoMO))
+                
+        s_userIdsSharingLiveBeacon = Array(summary.userIdsSharingLiveBeacon)
     }
     
     private func normalizeHash(_ hash: UInt) -> Int64 {
@@ -189,26 +164,10 @@ public class MXRoomSummaryMO: NSManagedObject {
     
 }
 
-// MARK: Generated accessors for s_beaconInfoEvents
-extension MXRoomSummaryMO {
-
-    @objc(addS_beaconInfoEventsObject:)
-    @NSManaged public func addToS_beaconInfoEvents(_ value: MXBeaconInfoMO)
-
-    @objc(removeS_beaconInfoEventsObject:)
-    @NSManaged public func removeFromS_beaconInfoEvents(_ value: MXBeaconInfoMO)
-
-    @objc(addS_beaconInfoEvents:)
-    @NSManaged public func addToS_beaconInfoEvents(_ values: NSSet)
-
-    @objc(removeS_beaconInfoEvents:)
-    @NSManaged public func removeFromS_beaconInfoEvents(_ values: NSSet)
-
-}
-
 //  MARK: - MXRoomSummaryProtocol
 
 extension MXRoomSummaryMO: MXRoomSummaryProtocol {
+    
     public var roomId: String {
         return s_identifier
     }
@@ -355,21 +314,11 @@ extension MXRoomSummaryMO: MXRoomSummaryProtocol {
         }
         return nil
     }
-        
-    public var beaconInfoEvents: [MXBeaconInfo] {
-        
-        guard let s_beaconInfoEvents = s_beaconInfoEvents, let allBeaconInfoMO = s_beaconInfoEvents.allObjects as? [MXBeaconInfoMO] else {
+    
+    public var userIdsSharingLiveBeacon: Set<String> {
+        guard let userIds = s_userIdsSharingLiveBeacon else {
             return []
         }
-        
-        let allBeaconInfo: [MXBeaconInfo] = allBeaconInfoMO.map { beaconInfoMO in
-            return MXBeaconInfo(userId: beaconInfoMO.s_userId,
-                                description: beaconInfoMO.s_description,
-                                timeout: UInt64(beaconInfoMO.s_timeout),
-                                isLive: beaconInfoMO.s_isLive,
-                                timestamp: UInt64(beaconInfoMO.s_timestamp))
-        }
-        
-        return allBeaconInfo
+        return Set(userIds)
     }
 }
