@@ -178,7 +178,7 @@ class MXCoreDataRoomListDataManagerUnitTests: XCTestCase {
         fetcher.paginate()
     }
     
-    private func generateDefaultFetcher(generateBeaconInfoEvents: Bool = false) -> MXRoomListDataFetcher {
+    private func generateDefaultFetcher() -> MXRoomListDataFetcher {
         let store = MXCoreDataRoomSummaryStore(withCredentials: Constants.credentials)
         let roomSummaries = generateMockRoomSummaries()
         XCTAssertEqual(roomSummaries.count, 90, "Generator must generate 90 rooms in total")

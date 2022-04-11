@@ -209,7 +209,8 @@ NSCharacterSet *uriComponentCharset;
             kMXEventTypeStringPollResponseMSC3381 : @(MXEventTypePollResponse),
             kMXEventTypeStringPollEnd : @(MXEventTypePollEnd),
             kMXEventTypeStringPollEndMSC3381 : @(MXEventTypePollEnd),
-            kMXEventTypeStringBeaconInfoMSC3672 : @(MXEventTypeBeaconInfo)
+            kMXEventTypeStringBeaconInfoMSC3672 : @(MXEventTypeBeaconInfo),
+            kMXEventTypeStringBeaconInfo : @(MXEventTypeBeaconInfo)
         };
 
         isEmailAddressRegex =  [NSRegularExpression regularExpressionWithPattern:[NSString stringWithFormat:@"^%@$", kMXToolsRegexStringForEmailAddress]
