@@ -23,7 +23,6 @@
 #import "MXEventRelations.h"
 #import "MXEventReferenceChunk.h"
 #import "MXEventContentLocation.h"
-#import "MatrixSDKSwiftHeader.h"
 
 #pragma mark - Constants definitions
 

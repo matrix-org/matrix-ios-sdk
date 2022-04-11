@@ -14,12 +14,12 @@
 // limitations under the License.
 //
 
-/// Type of asset being tracked
+/// Type of location asset being tracked
 /// See MSC 3488 for more details:  https://github.com/matrix-org/matrix-spec-proposals/blob/matthew/location/proposals/3488-location.md
 typedef NS_ENUM(NSUInteger, MXEventAssetType)
 {
-    MXEventAssetTypeUser,
-    MXEventAssetTypeGeneric,
-    MXEventAssetTypePin,
-    MXEventAssetTypeLiveLocation
+    MXEventAssetTypeGeneric, // A generic location without context
+    MXEventAssetTypeUser, // Static user location
+    MXEventAssetTypePin, // Pin location (POI)
+    MXEventAssetTypeLiveLocation // User live location
 };
