@@ -49,8 +49,9 @@ public class MXLocationService: NSObject {
     }
     
     /// Get all beacon info in a room
-    /// - Parameter roomId: The room id of the room
-    /// - Returns: Beacon info array
+    /// - Parameters:
+    ///   - roomId: The room id of the room
+    ///   - completion: Closure called when beacon fetching as ended. Give beacon info array as a result.
     public func getAllBeaconInfo(inRoomWithId roomId: String, completion: @escaping ([MXBeaconInfo]) -> Void) {
         
         guard let room = self.session.room(withRoomId: roomId) else {
@@ -67,7 +68,7 @@ public class MXLocationService: NSObject {
     /// - Parameters:
     ///   - userId: The user id
     ///   - roomId: The room id
-    /// - Returns: Beacon info array
+    ///   - completion: Closure called when beacon fetching as ended. Give beacon info array as a result.
     public func getAllBeaconInfo(forUserId userId: String, inRoomWithId roomId: String, completion: @escaping ([MXBeaconInfo]) -> Void) {
         self.getAllBeaconInfo(inRoomWithId: roomId) { allBeaconInfo in
             
