@@ -174,7 +174,7 @@ Use MXRoomSummary.displayname to get a computed room display name.
 @property (nonatomic, strong, readonly) MXRoomTombStoneContent *tombStoneContent;
 
 /// Beacon info events
-@property (nonatomic, readonly) NSArray<MXBeaconInfo*> *beaconInfoEvents;
+@property (nonatomic, readonly) NSArray<MXBeaconInfo*> *beaconInfos;
 
 /**
  Create a `MXRoomState` instance.

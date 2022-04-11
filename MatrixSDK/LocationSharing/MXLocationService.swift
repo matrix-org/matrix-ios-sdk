@@ -59,7 +59,7 @@ public class MXLocationService: NSObject {
         }
         
         room.state { roomState in
-            completion(roomState?.beaconInfoEvents ?? [])
+            completion(roomState?.beaconInfos ?? [])
         }
     }
     

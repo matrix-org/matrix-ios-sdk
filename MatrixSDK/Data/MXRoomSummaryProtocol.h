@@ -27,7 +27,6 @@
 
 @class MXSession;
 @class MXSpaceChildInfo;
-@class MXBeaconInfo;
 
 #ifndef MXRoomSummaryProtocol_h
 #define MXRoomSummaryProtocol_h

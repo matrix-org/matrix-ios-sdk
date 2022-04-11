@@ -88,7 +88,7 @@ class MXLocationServiceTests: XCTestCase {
                             // Get the beacon info from the room state of the room
                             initialRoom.state { roomState in
                                 
-                                let beaconInfo = roomState?.beaconInfoEvents.last
+                                let beaconInfo = roomState?.beaconInfos.last
                                 
                                 let beaconInfoStateEvent = roomState?.stateEvents.first(where: { event in
                                     event.eventId == eventId

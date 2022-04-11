@@ -26,7 +26,7 @@ static NSString * const kLiveJSONKey = @"live";
 
 #pragma mark - Setup
 
-- (nullable instancetype)initWithUserId:(NSString *)userId
+- (instancetype)initWithUserId:(NSString *)userId
                    description:(NSString *)desc
                        timeout:(uint64_t)timeout
                         isLive:(BOOL)isLive
@@ -58,7 +58,7 @@ static NSString * const kLiveJSONKey = @"live";
                       timestamp:timestamp];
 }
 
-- (instancetype)initWithMXEvent:(MXEvent*)event
+- (nullable instancetype)initWithMXEvent:(MXEvent*)event
 {
     if (event.eventType != MXEventTypeBeaconInfo)
     {
