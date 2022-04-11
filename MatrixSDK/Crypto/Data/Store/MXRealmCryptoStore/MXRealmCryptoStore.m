@@ -342,7 +342,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
         //  there is no Realm with this config
         return NO;
     }
-    return (nil != [MXRealmOlmAccount objectsInRealm:realm where:@"userId = %@", credentials.userId].firstObject);
+    return nil != [MXRealmOlmAccount objectInRealm:realm forPrimaryKey:credentials.userId];
 }
 
 + (instancetype)createStoreWithCredentials:(MXCredentials*)credentials
@@ -469,7 +469,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
 
 - (MXRealmOlmAccount*)accountInCurrentThread
 {
-    return [MXRealmOlmAccount objectsInRealm:self.realm where:@"userId = %@", userId].firstObject;
+    return [MXRealmOlmAccount objectInRealm:self.realm forPrimaryKey:userId];
 }
 
 - (void)open:(void (^)(void))onComplete failure:(void (^)(NSError *error))failure
@@ -564,7 +564,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
     
     [realm transactionWithName:@"[MXRealmCryptoStore] storeDeviceForUser" block:^{
         
-        MXRealmUser *realmUser = [MXRealmUser objectsInRealm:realm where:@"userId = %@", userID].firstObject;
+        MXRealmUser *realmUser = [MXRealmUser objectInRealm:realm forPrimaryKey:userID];
         if (!realmUser)
         {
             realmUser = [[MXRealmUser alloc] initWithValue:@{
@@ -596,7 +596,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
 
 - (MXDeviceInfo*)deviceWithDeviceId:(NSString*)deviceId forUser:(NSString*)userID
 {
-    MXRealmUser *realmUser = [MXRealmUser objectsInRealm:self.realm where:@"userId = %@", userID].firstObject;
+    MXRealmUser *realmUser = [MXRealmUser objectInRealm:self.realm forPrimaryKey:userID];
     
     MXRealmDeviceInfo *realmDevice = [[realmUser.devices objectsWhere:@"deviceId = %@", deviceId] firstObject];
     if (realmDevice)
@@ -626,7 +626,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
     
     [realm transactionWithName:@"[MXRealmCryptoStore] storeDevicesForUser" block:^{
         
-        MXRealmUser *realmUser = [MXRealmUser objectsInRealm:realm where:@"userId = %@", userID].firstObject;
+        MXRealmUser *realmUser = [MXRealmUser objectInRealm:realm forPrimaryKey:userID];;
         if (!realmUser)
         {
             realmUser = [[MXRealmUser alloc] initWithValue:@{
@@ -659,7 +659,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
 {
     NSMutableDictionary *devicesForUser;
     
-    MXRealmUser *realmUser = [MXRealmUser objectsInRealm:self.realm where:@"userId = %@", userID].firstObject;
+    MXRealmUser *realmUser = [MXRealmUser objectInRealm:self.realm forPrimaryKey:userID];
     if (realmUser)
     {
         devicesForUser = [NSMutableDictionary dictionary];
@@ -697,7 +697,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
     
     [realm transactionWithName:@"[MXRealmCryptoStore] storeCrossSigningKeys" block:^{
         
-        MXRealmUser *realmUser = [MXRealmUser objectsInRealm:realm where:@"userId = %@", crossSigningInfo.userId].firstObject;
+        MXRealmUser *realmUser = [MXRealmUser objectInRealm:realm forPrimaryKey:crossSigningInfo.userId];
         if (!realmUser)
         {
             realmUser = [[MXRealmUser alloc] initWithValue:@{
@@ -724,7 +724,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
 {
     MXCrossSigningInfo *crossSigningKeys;
     
-    MXRealmUser *realmUser = [MXRealmUser objectsInRealm:self.realm where:@"userId = %@", userId].firstObject;
+    MXRealmUser *realmUser = [MXRealmUser objectInRealm:self.realm forPrimaryKey:userId];
     if (realmUser)
     {
         crossSigningKeys = [NSKeyedUnarchiver unarchiveObjectWithData:realmUser.crossSigningKeys.data];
@@ -816,7 +816,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
 
 - (MXRealmRoomAlgorithm *)realmRoomAlgorithmForRoom:(NSString*)roomId inRealm:(RLMRealm*)realm
 {
-    return [MXRealmRoomAlgorithm objectsInRealm:realm where:@"roomId = %@", roomId].firstObject;
+    return [MXRealmRoomAlgorithm objectInRealm:realm forPrimaryKey:roomId];
 }
 
 
@@ -1052,7 +1052,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
     RLMRealm *realm = self.realm;
     [realm transactionWithName:@"[MXRealmCryptoStore] storeOutboundGroupSession" block:^{
         
-        MXRealmOlmOutboundGroupSession *realmSession = [MXRealmOlmOutboundGroupSession objectsInRealm:realm where:@"roomId = %@", roomId].firstObject;
+        MXRealmOlmOutboundGroupSession *realmSession = [MXRealmOlmOutboundGroupSession objectInRealm:realm forPrimaryKey:roomId];
         if (realmSession && [realmSession.sessionId isEqual:session.sessionIdentifier])
         {
             // Update the existing one
@@ -1089,7 +1089,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
 - (MXOlmOutboundGroupSession *)outboundGroupSessionWithRoomId:(NSString*)roomId
 {
     OLMOutboundGroupSession *session;
-    MXRealmOlmOutboundGroupSession *realmSession = [MXRealmOlmOutboundGroupSession objectsInRealm:self.realm where:@"roomId = %@", roomId].firstObject;
+    MXRealmOlmOutboundGroupSession *realmSession = [MXRealmOlmOutboundGroupSession objectInRealm:self.realm forPrimaryKey:roomId];
     
     MXLogDebug(@"[MXRealmCryptoStore] outboundGroupSessionWithRoomId: %@ -> %@", roomId, realmSession ? @"found" : @"not found");
     
@@ -1132,7 +1132,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
 {
     RLMRealm *realm = self.realm;
     [realm transactionWithName:@"[MXRealmCryptoStore] removeOutboundGroupSessionWithRoomId" block:^{
-        RLMResults<MXRealmOlmOutboundGroupSession *> *realmSessions = [MXRealmOlmOutboundGroupSession objectsInRealm:realm where:@"roomId = %@", roomId];
+        RLMResults<MXRealmOlmOutboundGroupSession *> *realmSessions = [MXRealmOlmOutboundGroupSession objectInRealm:realm forPrimaryKey:roomId];
         
         [realm deleteObjects:realmSessions];
         MXLogDebug(@"[MXRealmCryptoStore] removeOutboundGroupSessionWithRoomId%@: removed %lu entries", roomId, realmSessions.count);
@@ -1151,7 +1151,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
         {
             for (NSString *deviceId in [devices deviceIdsForUser:userId])
             {
-                MXRealmUser *realmUser = [MXRealmUser objectsInRealm:realm where:@"userId = %@", userId].firstObject;
+                MXRealmUser *realmUser = [MXRealmUser objectInRealm:realm forPrimaryKey:userId];
                 if (!realmUser)
                 {
                     MXLogDebug(@"[MXRealmCryptoStore] storeSharedDevices cannot find user with the ID %@", userId);
