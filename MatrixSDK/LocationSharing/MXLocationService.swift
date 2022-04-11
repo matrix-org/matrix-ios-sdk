@@ -23,7 +23,7 @@ public class MXLocationService: NSObject {
     
     // MARK: - Properties
     
-    private let session: MXSession
+    private unowned let session: MXSession
     
     // MARK: - Setup
     

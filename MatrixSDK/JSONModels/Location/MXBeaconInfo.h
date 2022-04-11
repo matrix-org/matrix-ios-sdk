@@ -64,7 +64,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 /// Create the `MXBeaconInfo` object from a Matrix m.beacon_info event.
 /// @param event The m.beacon_info event.
-- (instancetype)initWithMXEvent:(MXEvent*)event;
+- (nullable instancetype)initWithMXEvent:(MXEvent*)event;
 
 @end
 

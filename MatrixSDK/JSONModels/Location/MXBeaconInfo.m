@@ -26,7 +26,7 @@ static NSString * const kLiveJSONKey = @"live";
 
 #pragma mark - Setup
 
-- (instancetype)initWithUserId:(NSString *)userId
+- (nullable instancetype)initWithUserId:(NSString *)userId
                    description:(NSString *)desc
                        timeout:(uint64_t)timeout
                         isLive:(BOOL)isLive
