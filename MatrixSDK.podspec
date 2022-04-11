@@ -48,7 +48,7 @@ Pod::Spec.new do |s|
   end
 
   s.subspec 'JingleCallStack' do |ss|
-    ss.ios.deployment_target = "11.0"
+    ss.ios.deployment_target = "12.0"
     
     ss.source_files  = "MatrixSDKExtensions/VoIP/Jingle/**/*.{h,m}"
     
