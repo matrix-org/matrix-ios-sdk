@@ -44,7 +44,7 @@
         <attribute name="s_topic" optional="YES" attributeType="String"/>
         <attribute name="s_typeInt" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="s_typeString" optional="YES" attributeType="String"/>
-        <attribute name="s_userIdsSharingLiveBeacon" optional="YES" attributeType="Transformable"/>
+        <attribute name="s_userIdsSharingLiveBeacon" optional="YES" attributeType="String"/>
         <relationship name="s_lastMessage" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="MXRoomLastMessage" inverseName="s_ofRoom" inverseEntity="MXRoomLastMessage"/>
         <relationship name="s_membersCount" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="MXRoomMembersCount" inverseName="s_ofRoom" inverseEntity="MXRoomMembersCount"/>
         <relationship name="s_trust" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="MXUsersTrustLevelSummary" inverseName="s_ofRoom" inverseEntity="MXUsersTrustLevelSummary"/>
