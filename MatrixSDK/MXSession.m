@@ -245,6 +245,7 @@ typedef void (^MXOnResumeDone)(void);
         _threadingService = [[MXThreadingService alloc] initWithSession:self];
         _eventStreamService = [[MXEventStreamService alloc] init];
         _preferredSyncPresence = MXPresenceOnline;
+        _locationService = [[MXLocationService alloc] initWithSession:self];
         
         [self setIdentityServer:mxRestClient.identityServer andAccessToken:mxRestClient.credentials.identityServerAccessToken];
         

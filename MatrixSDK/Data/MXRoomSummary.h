@@ -345,6 +345,9 @@ FOUNDATION_EXPORT NSUInteger const MXRoomSummaryPaginationChunkSize;
  */
 @property (nonatomic) NSSet<NSString*> *parentSpaceIds;
 
+/// User ids of users sharing active beacon in the room
+@property (nonatomic) NSSet<NSString*> *userIdsSharingLiveBeacon;
+
 /**
  Mark all messages as read.
  */

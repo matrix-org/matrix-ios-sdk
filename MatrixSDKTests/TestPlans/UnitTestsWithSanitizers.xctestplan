@@ -45,6 +45,7 @@
         "MXAsyncTaskQueueUnitTests",
         "MXAuthenticationSessionUnitTests",
         "MXBackgroundTaskUnitTests",
+        "MXBeaconInfoUnitTests",
         "MXCoreDataRoomListDataManagerUnitTests",
         "MXCredentialsUnitTests",
         "MXDeviceListOperationsPoolUnitTests",
