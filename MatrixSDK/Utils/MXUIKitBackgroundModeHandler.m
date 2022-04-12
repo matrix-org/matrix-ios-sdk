@@ -79,6 +79,23 @@ static const NSTimeInterval BackgroundTimeRemainingThresholdToStartTasks = 5.0;
     return self;
 }
 
++ (NSLock *)reusableTasksReadWriteLock {
+    static NSLock *lock;
+
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        lock = [[NSLock alloc] init];
+    });
+    return lock;
+}
+
+- (void)accessReusableTasksWithBlock:(void(^)(void))block
+{
+    [[self.class reusableTasksReadWriteLock] lock];
+    block();
+    [[self.class reusableTasksReadWriteLock] unlock];
+}
+
 
 #pragma mark - MXBackgroundModeHandler
 
@@ -120,7 +137,9 @@ static const NSTimeInterval BackgroundTimeRemainingThresholdToStartTasks = 5.0;
     if (reusable)
     {
         //  first look in the cache
-        backgroundTask = [self.reusableTasks objectForKey:name];
+        [self accessReusableTasksWithBlock:^{
+            backgroundTask = [self.reusableTasks objectForKey:name];
+        }];
         
         //  create if not found or not running
         //  According to the documentation, a weak-values map table doesn't have to remove objects immediately when they are released, so also check the running state of the task.
@@ -131,7 +150,9 @@ static const NSTimeInterval BackgroundTimeRemainingThresholdToStartTasks = 5.0;
                 MXStrongifyAndReturnIfNil(self);
                 
                 //  remove when expired
-                [self.reusableTasks removeObjectForKey:task.name];
+                [self accessReusableTasksWithBlock:^{
+                    [self.reusableTasks removeObjectForKey:task.name];
+                }];
                 
                 if (expirationHandler)
                 {
@@ -143,7 +164,9 @@ static const NSTimeInterval BackgroundTimeRemainingThresholdToStartTasks = 5.0;
             //  cache the task if successfully created
             if (backgroundTask)
             {
-                [self.reusableTasks setObject:backgroundTask forKey:name];
+                [self accessReusableTasksWithBlock:^{
+                    [self.reusableTasks setObject:backgroundTask forKey:name];
+                }];
             }
         }
         else
