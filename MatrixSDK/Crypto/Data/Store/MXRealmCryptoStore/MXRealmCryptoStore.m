@@ -1132,7 +1132,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
 {
     RLMRealm *realm = self.realm;
     [realm transactionWithName:@"[MXRealmCryptoStore] removeOutboundGroupSessionWithRoomId" block:^{
-        RLMResults<MXRealmOlmOutboundGroupSession *> *realmSessions = [MXRealmOlmOutboundGroupSession objectInRealm:realm forPrimaryKey:roomId];
+        RLMResults<MXRealmOlmOutboundGroupSession *> *realmSessions = [MXRealmOlmOutboundGroupSession objectsInRealm:realm where:@"roomId = %@", roomId];
         
         [realm deleteObjects:realmSessions];
         MXLogDebug(@"[MXRealmCryptoStore] removeOutboundGroupSessionWithRoomId%@: removed %lu entries", roomId, realmSessions.count);
