@@ -22,7 +22,9 @@
 
 #import "MXDecrypting.h"
 
-@interface MXMegolmDecryption : NSObject <MXDecrypting>
+@protocol MXSharedHistoryKeyService;
+
+@interface MXMegolmDecryption : NSObject <MXDecrypting, MXSharedHistoryKeyService>
 
 @end
 

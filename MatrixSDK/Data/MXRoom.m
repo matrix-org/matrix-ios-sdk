@@ -80,6 +80,11 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
      FIFO queue of failure blocks waiting for [self members:].
      */
     NSMutableArray<void (^)(NSError *)> *pendingMembersFailureBlocks;
+    
+    /**
+     The manager for sharing keys of messages with invited users
+     */
+    MXSharedHistoryKeyManager *sharedHistoryKeyManager;
 }
 @end
 
@@ -116,6 +121,11 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
     {
         _roomId = roomId;
         mxSession = mxSession2;
+        
+        if (mxSession.crypto) {
+            MXMegolmDecryption *decryption = [[MXMegolmDecryption alloc] initWithCrypto:mxSession.crypto];
+            sharedHistoryKeyManager = [[MXSharedHistoryKeyManager alloc] initWithCrypto:mxSession.crypto service:decryption];
+        }
 
         if (store)
         {
@@ -1932,7 +1942,21 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
                        success:(void (^)(void))success
                        failure:(void (^)(NSError *error))failure
 {
+    if (MXSDKOptions.sharedInstance.enableRoomSharedHistoryOnInvite) {
+        [self shareRoomKeysWith:userId];
+    }
     return [mxSession.matrixRestClient inviteUser:userId toRoom:self.roomId success:success failure:failure];
+}
+
+- (void)shareRoomKeysWith:(NSString *)userId
+{
+    // The value of 20 is arbitrary and imprecise, we merely want to ensure that when a user is invited to a room
+    // they are able to read any immediately preciding messages that may be relevant to the invite.
+    NSInteger numberOfSharedMessage = 20;
+    id<MXEventsEnumerator> enumerator = [self enumeratorForStoredMessagesWithTypeIn:@[kMXEventTypeStringRoomMessage]];
+    [sharedHistoryKeyManager shareMessageKeysWithUserId:userId
+                                      messageEnumerator:enumerator
+                                                  limit:numberOfSharedMessage];
 }
 
 - (MXHTTPOperation*)inviteUserByEmail:(NSString*)email

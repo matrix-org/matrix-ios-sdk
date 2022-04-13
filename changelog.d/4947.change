@@ -1,1 +1,1 @@
-Crypto: Store `sharedHistory` flag for inbound Megolm sessions
+Crypto: Share Megolm session keys when inviting a new user
