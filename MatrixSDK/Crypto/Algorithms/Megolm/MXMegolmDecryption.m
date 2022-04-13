@@ -254,7 +254,15 @@
 
     MXLogDebug(@"[MXMegolmDecryption] onRoomKeyEvent: Adding key for megolm session %@|%@ from %@ event", senderKey, sessionId, event.type);
 
-    [olmDevice addInboundGroupSession:sessionId sessionKey:sessionKey roomId:roomId senderKey:senderKey forwardingCurve25519KeyChain:forwardingKeyChain keysClaimed:keysClaimed exportFormat:exportFormat];
+    BOOL sharedHistory = [crypto isRoomSharingHistory:roomId];
+    [olmDevice addInboundGroupSession:sessionId
+                           sessionKey:sessionKey
+                               roomId:roomId
+                            senderKey:senderKey
+         forwardingCurve25519KeyChain:forwardingKeyChain
+                          keysClaimed:keysClaimed
+                         exportFormat:exportFormat
+                        sharedHistory:sharedHistory];
 
     [crypto.backup maybeSendKeyBackup];
 

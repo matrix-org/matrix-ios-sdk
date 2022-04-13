@@ -579,13 +579,18 @@ public enum MXBackgroundSyncServiceError: Error {
             return
         }
         
-        olmDevice.addInboundGroupSession(sessionId,
-                                         sessionKey: sessionKey,
-                                         roomId: roomId,
-                                         senderKey: senderKey,
-                                         forwardingCurve25519KeyChain: forwardingKeyChain,
-                                         keysClaimed: keysClaimed,
-                                         exportFormat: exportFormat)
+        MXRoomState.load(from: store, withRoomId: roomId, matrixSession: nil) { [weak self] state in
+            
+            let sharedHistory = state?.historyVisibility == .worldReadable || state?.historyVisibility == .shared
+            self?.olmDevice.addInboundGroupSession(sessionId,
+                                             sessionKey: sessionKey,
+                                             roomId: roomId,
+                                             senderKey: senderKey,
+                                             forwardingCurve25519KeyChain: forwardingKeyChain,
+                                             keysClaimed: keysClaimed,
+                                             exportFormat: exportFormat,
+                                             sharedHistory: sharedHistory)
+        }
     }
     
     private func updateBackgroundServiceStoresIfNeeded() {

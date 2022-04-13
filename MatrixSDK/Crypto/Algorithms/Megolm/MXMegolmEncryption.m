@@ -147,6 +147,15 @@
     return outboundSession;
 }
 
+- (BOOL)isSessionSharingHistory:(MXOutboundSessionInfo *)session
+{
+    // We only store the `sharedHistory` flag on inbound sessions. To see if the current outbound session shares history
+    // see a corresponding inbound session with the same identifier.
+    MXOlmInboundGroupSession *matchingInboundSession = [crypto.store inboundGroupSessionWithId:session.sessionId
+                                                                                  andSenderKey:crypto.olmDevice.deviceCurve25519Key];
+    return matchingInboundSession.sharedHistory;
+}
+
 /*
  Get the list of devices which can encrypt data to.
 
@@ -239,72 +248,82 @@
                                    success:(void (^)(MXOutboundSessionInfo *session))success
                                    failure:(void (^)(NSError *))failure
 {
-    __block MXOutboundSessionInfo *session = self.outboundSession;
-
-    // Need to make a brand new session?
-    if (session && [session needsRotation:sessionRotationPeriodMsgs rotationPeriodMs:sessionRotationPeriodMs])
+    MXOutboundSessionInfo *session = [self createOrReuseSessionWithDevices:devicesInRoom];
+    if (!session.shareOperation)
     {
-        [crypto.olmDevice discardOutboundGroupSessionForRoomWithRoomId:roomId];
-        session = nil;
+        NSMutableDictionary<NSString* /* userId */, NSMutableArray<MXDeviceInfo*>*> *shareMap = [NSMutableDictionary dictionary];
+
+        for (NSString *userId in devicesInRoom.userIds)
+        {
+            for (NSString *deviceID in [devicesInRoom deviceIdsForUser:userId])
+            {
+                MXDeviceInfo *deviceInfo = [devicesInRoom objectForDevice:deviceID forUser:userId];
+
+                if (![session.sharedWithDevices objectForDevice:deviceID forUser:userId])
+                {
+                    if (!shareMap[userId])
+                    {
+                        shareMap[userId] = [NSMutableArray array];
+                    }
+                    [shareMap[userId] addObject:deviceInfo];
+                }
+            }
+        }
+
+        session.shareOperation = [self shareKey:session withDevices:shareMap success:^{
+
+            session.shareOperation = nil;
+            success(session);
+
+        } failure:^(NSError *error) {
+
+            session.shareOperation = nil;
+            failure(error);
+        }];
+    }
+    
+    return session.shareOperation;
+}
+
+- (MXOutboundSessionInfo *)createOrReuseSessionWithDevices:(MXUsersDevicesMap<MXDeviceInfo *> *)devicesInRoom
+{
+    MXOutboundSessionInfo *existingSession = self.outboundSession;
+    if (!existingSession || [self shouldResetSession:existingSession devices:devicesInRoom])
+    {
+        return [self prepareNewSession];
+    }
+    return existingSession;
+}
+
+- (BOOL)shouldResetSession:(MXOutboundSessionInfo *)session
+                   devices:(MXUsersDevicesMap<MXDeviceInfo *> *)devicesInRoom
+{
+    // Check if need to rotate due to message count or age of the session
+    if ([session needsRotation:sessionRotationPeriodMsgs rotationPeriodMs:sessionRotationPeriodMs])
+    {
+        return YES;
     }
 
     // Determine if we have shared with anyone we shouldn't have
-    if (session && [session sharedWithTooManyDevices:devicesInRoom])
+    else if ([session sharedWithTooManyDevices:devicesInRoom])
     {
-        [crypto.olmDevice discardOutboundGroupSessionForRoomWithRoomId:roomId];
-        session = nil;
+        return YES;
     }
-
-    if (!session)
+    
+    // Check if room's history visibility has changed
+    else if ([crypto isRoomSharingHistory:roomId] != [self isSessionSharingHistory:session])
     {
-        session = [self prepareNewSession];
+        return YES;
     }
-
-    if (session.shareOperation)
-    {
-        // Prep already in progress
-        return session.shareOperation;
-    }
-
-    // No share in progress: Share the current setup
-
-    NSMutableDictionary<NSString* /* userId */, NSMutableArray<MXDeviceInfo*>*> *shareMap = [NSMutableDictionary dictionary];
-
-    for (NSString *userId in devicesInRoom.userIds)
-    {
-        for (NSString *deviceID in [devicesInRoom deviceIdsForUser:userId])
-        {
-            MXDeviceInfo *deviceInfo = [devicesInRoom objectForDevice:deviceID forUser:userId];
-
-            if (![session.sharedWithDevices objectForDevice:deviceID forUser:userId])
-            {
-                if (!shareMap[userId])
-                {
-                    shareMap[userId] = [NSMutableArray array];
-                }
-                [shareMap[userId] addObject:deviceInfo];
-            }
-        }
-    }
-
-    session.shareOperation = [self shareKey:session withDevices:shareMap success:^{
-
-        session.shareOperation = nil;
-        success(session);
-
-    } failure:^(NSError *error) {
-
-        session.shareOperation = nil;
-        failure(error);
-    }];
-
-    return session.shareOperation;
+    
+    return NO;
 }
 
 - (MXOutboundSessionInfo*)prepareNewSession
 {
     MXOlmOutboundGroupSession *session = [crypto.olmDevice createOutboundGroupSessionForRoomWithRoomId:roomId];
-
+    
+    BOOL sharedHistory = [crypto isRoomSharingHistory:roomId];
     [crypto.olmDevice addInboundGroupSession:session.sessionId
                                   sessionKey:session.sessionKey
                                       roomId:roomId
@@ -314,6 +333,7 @@
                                                @"ed25519": crypto.olmDevice.deviceEd25519Key
                                                }
                                 exportFormat:NO
+                               sharedHistory:sharedHistory
      ];
 
     [crypto.backup maybeSendKeyBackup];

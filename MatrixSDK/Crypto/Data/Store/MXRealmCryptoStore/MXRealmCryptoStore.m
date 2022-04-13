@@ -32,7 +32,7 @@
 #import "MXBackgroundModeHandler.h"
 #import "RLMRealm+MatrixSDK.h"
 
-NSUInteger const kMXRealmCryptoStoreVersion = 17;
+NSUInteger const kMXRealmCryptoStoreVersion = 18;
 
 static NSString *const kMXRealmCryptoStoreFolder = @"MXRealmCryptoStore";
 
@@ -114,6 +114,7 @@ RLM_ARRAY_TYPE(MXRealmOlmSession)
 @interface MXRealmOlmInboundGroupSession : RLMObject
 @property NSString *sessionId;
 @property NSString *senderKey;
+@property NSString *roomId;
 @property NSData *olmInboundGroupSessionData;
 
 // A primary key is required to update `backedUp`.
@@ -122,6 +123,9 @@ RLM_ARRAY_TYPE(MXRealmOlmSession)
 
 // Indicate if the key has been backed up to the homeserver
 @property BOOL backedUp;
+
+@property BOOL sharedHistory;
+
 @end
 
 @implementation MXRealmOlmInboundGroupSession
@@ -950,8 +954,10 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
                 realmSession = [[MXRealmOlmInboundGroupSession alloc] initWithValue:@{
                     @"sessionId": session.session.sessionIdentifier,
                     @"senderKey": session.senderKey,
+                    @"roomId": session.roomId,
                     @"sessionIdSenderKey": sessionIdSenderKey,
-                    @"olmInboundGroupSessionData": [NSKeyedArchiver archivedDataWithRootObject:session]
+                    @"olmInboundGroupSessionData": [NSKeyedArchiver archivedDataWithRootObject:session],
+                    @"sharedHistory": @(session.sharedHistory)
                 }];
                 
                 [realm addObject:realmSession];
@@ -2149,6 +2155,8 @@ static BOOL shouldCompactOnLaunch = YES;
                         newObject[@"cryptoVersion"] = @(MXCryptoVersion2);
                     }
                 }];
+            case 17:
+                MXLogDebug(@"[MXRealmCryptoStore] Migration from schema #17 -> #18: Automatically adding MXRealmOlmInboundGroupSession.roomId and MXRealmOlmInboundGroupSession.sharedHistory");
         }
     }
     

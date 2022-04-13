@@ -1611,7 +1611,8 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
                                         @"sender_key": sessionData.senderKey,
                                         @"sender_claimed_keys": sessionData.senderClaimedKeys,
                                         @"forwarding_curve25519_key_chain": sessionData.forwardingCurve25519KeyChain ?  sessionData.forwardingCurve25519KeyChain : @[],
-                                        @"session_key": sessionData.sessionKey
+                                        @"session_key": sessionData.sessionKey,
+                                        @"shared_history": @(sessionData.sharedHistory)
                                         };
     OLMPkMessage *encryptedSessionBackupData = [_backupKey encryptMessage:[MXTools serialiseJSONObject:sessionBackupData] error:nil];
     if (![self checkOLMPkMessage:encryptedSessionBackupData])

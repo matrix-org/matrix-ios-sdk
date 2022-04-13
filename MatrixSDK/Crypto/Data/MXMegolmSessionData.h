@@ -55,6 +55,14 @@
 @property NSString *sessionKey;
 
 /**
+ Flag indicating whether the history of this room is considered as shared.
+ 
+ This is typically the case if room's `historyVisibility` is set to `world_readable` or `joined`.
+ In this case the keys are allowed to be shared with other users upon invite.
+ */
+@property BOOL sharedHistory;
+
+/**
  The algorithm used.
  */
 @property NSString *algorithm;
