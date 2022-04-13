@@ -28,7 +28,7 @@
 /**
  Construct an enumerator based on an array of event identifiers.
 
- @param messages the list of messages to enumerate on.
+ @param eventIds the list of eventIds to enumerate on.
  @param types an array of event types strings to use as a filter filter.
  @param dataSource object responsible for translating an event identifier into
                    the most recent version of the event.
