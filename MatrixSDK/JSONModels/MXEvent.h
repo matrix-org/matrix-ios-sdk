@@ -98,6 +98,7 @@ typedef NS_ENUM(NSInteger, MXEventType)
     MXEventTypePollEnd,
     MXEventTypeSpaceOrder,
     MXEventTypeBeaconInfo,
+    MXEventTypeBeacon,
 
     // The event is a custom event. Refer to its `MXEventTypeString` version
     MXEventTypeCustom = 1000
@@ -191,6 +192,8 @@ FOUNDATION_EXPORT NSString *const kMXEventTypeStringPollEnd;
 
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringBeaconInfo;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringBeaconInfoMSC3672;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringBeacon;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringBeaconMSC3672;
 
 /**
  Types of room messages

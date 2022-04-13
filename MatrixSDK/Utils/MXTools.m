@@ -137,7 +137,8 @@ NSCharacterSet *uriComponentCharset;
             @(MXEventTypePollStart) : kMXEventTypeStringPollStartMSC3381,
             @(MXEventTypePollResponse) : kMXEventTypeStringPollResponseMSC3381,
             @(MXEventTypePollEnd) : kMXEventTypeStringPollEndMSC3381,
-            @(MXEventTypeBeaconInfo) : kMXEventTypeStringBeaconInfoMSC3672
+            @(MXEventTypeBeaconInfo) : kMXEventTypeStringBeaconInfoMSC3672,
+            @(MXEventTypeBeacon) : kMXEventTypeStringBeaconMSC3672
         };
 
         eventTypeMapStringToEnum = @{
@@ -210,7 +211,8 @@ NSCharacterSet *uriComponentCharset;
             kMXEventTypeStringPollEnd : @(MXEventTypePollEnd),
             kMXEventTypeStringPollEndMSC3381 : @(MXEventTypePollEnd),
             kMXEventTypeStringBeaconInfoMSC3672 : @(MXEventTypeBeaconInfo),
-            kMXEventTypeStringBeaconInfo : @(MXEventTypeBeaconInfo)
+            kMXEventTypeStringBeaconInfo : @(MXEventTypeBeaconInfo),
+            kMXEventTypeStringBeacon : @(MXEventTypeBeacon)
         };
 
         isEmailAddressRegex =  [NSRegularExpression regularExpressionWithPattern:[NSString stringWithFormat:@"^%@$", kMXToolsRegexStringForEmailAddress]
