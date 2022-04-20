@@ -1,3 +1,20 @@
+## Changes in 0.23.3 (2022-04-20)
+
+🙌 Improvements
+
+- Location sharing: Handle live location sharing start event. ([#5903](https://github.com/vector-im/element-ios/issues/5903))
+- Add a preferred presence property to MXSession ([#5995](https://github.com/vector-im/element-ios/issues/5995))
+- Pods: Upgrade JitsiMeetSDK to 5.0.2 and re-enable building for ARM64 simulator. ([#6018](https://github.com/vector-im/element-ios/issues/6018))
+
+🐛 Bugfixes
+
+- MatrixSDK: Fix some crashes after 1.8.10. ([#6023](https://github.com/vector-im/element-ios/issues/6023))
+
+Others
+
+- Fix some warnings. ([#1440](https://github.com/matrix-org/matrix-ios-sdk/pull/1440))
+
+
 ## Changes in 0.23.2 (2022-04-05)
 
 🙌 Improvements
