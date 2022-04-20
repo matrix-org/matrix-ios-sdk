@@ -93,6 +93,8 @@ internal class MockRoomSummary: NSObject, MXRoomSummaryProtocol {
     
     var parentSpaceIds: Set<String> = []
     
+    var userIdsSharingLiveBeacon: Set<String> = []
+    
     init(withRoomId roomId: String) {
         self.roomId = roomId
         super.init()
@@ -122,5 +124,4 @@ internal class MockRoomSummary: NSObject, MXRoomSummaryProtocol {
     override var description: String {
         return "<MockRoomSummary: \(roomId) \(String(describing: displayname))>"
     }
-    
 }

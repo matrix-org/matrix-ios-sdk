@@ -199,11 +199,15 @@ class MXCoreDataRoomListDataManagerUnitTests: XCTestCase {
         
         for (index, numberOfRooms) in numberOfRoomsPerType.enumerated() {
             let safeIndex = index % MXRoomSummaryDataTypes.all.count
-            let typed = (0..<numberOfRooms).map({ _ in MockRoomSummary.generate(withTypes: MXRoomSummaryDataTypes.all[safeIndex]) })
+            let typed = (0..<numberOfRooms).map({ _ in
+                return MockRoomSummary.generate(withTypes: MXRoomSummaryDataTypes.all[safeIndex])
+            })
             result.append(contentsOf: typed)
         }
         
-        let untyped = (0..<numberOfUntyped).map({ _ in MockRoomSummary.generate() })
+        let untyped = (0..<numberOfUntyped).map({ _ in
+            return MockRoomSummary.generate()
+        })
         result.append(contentsOf: untyped)
         
         //  rename rooms by index

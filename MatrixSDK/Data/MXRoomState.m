@@ -399,6 +399,25 @@
     return roomTombStoneContent;
 }
 
+- (NSArray<MXBeaconInfo*>*)beaconInfoEvents
+{
+    NSMutableArray *beaconInfoEvents = [NSMutableArray new];
+    
+    NSArray *stateEvents = [self stateEventsWithType:kMXEventTypeStringBeaconInfoMSC3672];
+    
+    for (MXEvent *event in stateEvents)
+    {
+        MXBeaconInfo *beaconInfo = [[MXBeaconInfo alloc] initWithMXEvent:event];
+        
+        if (beaconInfo)
+        {
+            [beaconInfoEvents addObject:beaconInfo];
+        }
+    }
+    
+    return beaconInfoEvents;
+}
+
 #pragma mark - State events handling
 - (void)handleStateEvents:(NSArray<MXEvent *> *)events;
 {

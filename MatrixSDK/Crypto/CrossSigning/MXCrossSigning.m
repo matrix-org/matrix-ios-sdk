@@ -325,6 +325,9 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
     // Note: this may never resolve because this depends on other user's devices.
     // We could improve it a bit but we will never fix all cases
     dispatch_group_t onPrivateKeysReceivedGroup = dispatch_group_create();
+    __block BOOL secretReceivedForMSK = NO;
+    __block BOOL secretReceivedForUSK = NO;
+    __block BOOL secretReceivedForSSK = NO;
     
     __block NSString *mskRequestId, *uskRequestId, *sskRequestId;
     
@@ -352,7 +355,11 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
         if (isSecretValid)
         {
             [self.crypto.store storeSecret:secret withSecretId:MXSecretId.crossSigningMaster];
-            dispatch_group_leave(onPrivateKeysReceivedGroup);
+            if (!secretReceivedForMSK)
+            {
+                secretReceivedForMSK = YES;
+                dispatch_group_leave(onPrivateKeysReceivedGroup);
+            }
         }
         return isSecretValid;
     } failure:^(NSError * _Nonnull error) {
@@ -389,7 +396,11 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
         if (isSecretValid)
         {
             [self.crypto.store storeSecret:secret withSecretId:MXSecretId.crossSigningUserSigning];
-            dispatch_group_leave(onPrivateKeysReceivedGroup);
+            if (!secretReceivedForUSK)
+            {
+                secretReceivedForUSK = YES;
+                dispatch_group_leave(onPrivateKeysReceivedGroup);
+            }
         }
         return isSecretValid;
     } failure:^(NSError * _Nonnull error) {
@@ -426,7 +437,11 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
         if (isSecretValid)
         {
             [self.crypto.store storeSecret:secret withSecretId:MXSecretId.crossSigningSelfSigning];
-            dispatch_group_leave(onPrivateKeysReceivedGroup);
+            if (!secretReceivedForSSK)
+            {
+                secretReceivedForSSK = YES;
+                dispatch_group_leave(onPrivateKeysReceivedGroup);
+            }
         }
         return isSecretValid;
     } failure:^(NSError * _Nonnull error) {
