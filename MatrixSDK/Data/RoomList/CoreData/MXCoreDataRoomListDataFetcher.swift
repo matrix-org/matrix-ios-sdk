@@ -447,7 +447,8 @@ private class RoomSummaryForTotalCounts: NSObject, MXRoomSummaryProtocol {
     var sentStatus: MXRoomSummarySentStatus
     var spaceChildInfo: MXSpaceChildInfo?
     var parentSpaceIds: Set<String> = []
-
+    var userIdsSharingLiveBeacon: Set<String> = []
+    
     /// Initializer with a dictionary obtained by a fetch request, with result type `.dictionaryResultType`. Only parses some properties.
     /// - Parameter dictionary: Dictionary object representing an `MXRoomSummaryMO` instance
     init(withDictionary dictionary: [String: Any]) {

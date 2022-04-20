@@ -71,6 +71,9 @@ NS_ASSUME_NONNULL_BEGIN
 // The QR code is invalid
 + (instancetype)qrCodeInvalid;
 
+// Verification request accepted by another device
++ (instancetype)accepted;
+
 @end
 
 NS_ASSUME_NONNULL_END

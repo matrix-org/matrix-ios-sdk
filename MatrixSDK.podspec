@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
 
   s.name         = "MatrixSDK"
-  s.version      = "0.23.2"
+  s.version      = "0.23.3"
   s.summary      = "The iOS SDK to build apps compatible with Matrix (https://www.matrix.org)"
 
   s.description  = <<-DESC
@@ -48,7 +48,7 @@ Pod::Spec.new do |s|
   end
 
   s.subspec 'JingleCallStack' do |ss|
-    ss.ios.deployment_target = "11.0"
+    ss.ios.deployment_target = "12.0"
     
     ss.source_files  = "MatrixSDKExtensions/VoIP/Jingle/**/*.{h,m}"
     
@@ -60,11 +60,7 @@ Pod::Spec.new do |s|
     #ss.ios.dependency 'GoogleWebRTC', '~>1.1.21820'
     
     # Use WebRTC framework included in Jitsi Meet SDK
-    ss.ios.dependency 'JitsiMeetSDK', ' 3.10.2'
-
-    # JitsiMeetSDK has not yet binaries for arm64 simulator
-    ss.pod_target_xcconfig = { 'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'arm64' }
-    ss.user_target_xcconfig = { 'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'arm64' }
+    ss.ios.dependency 'JitsiMeetSDK', '5.0.2'
   end
 
 end

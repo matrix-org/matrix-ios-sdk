@@ -17,15 +17,9 @@
 #import <Foundation/Foundation.h>
 
 #import "MXJSONModel.h"
+#import "MXEventAssetType.h"
 
 NS_ASSUME_NONNULL_BEGIN
-
-typedef NS_ENUM(NSUInteger, MXEventAssetType)
-{
-    MXEventAssetTypeUser,
-    MXEventAssetTypePin,
-    MXEventAssetTypeGeneric
-};
 
 @interface MXEventContentLocation: MXJSONModel
 

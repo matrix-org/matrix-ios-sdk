@@ -97,6 +97,7 @@ typedef NS_ENUM(NSInteger, MXEventType)
     MXEventTypePollResponse,
     MXEventTypePollEnd,
     MXEventTypeSpaceOrder,
+    MXEventTypeBeaconInfo,
 
     // The event is a custom event. Refer to its `MXEventTypeString` version
     MXEventTypeCustom = 1000
@@ -186,6 +187,10 @@ FOUNDATION_EXPORT NSString *const kMXEventTypeStringPollResponse;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringPollEndMSC3381;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringPollEnd;
 
+// Beacon
+
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringBeaconInfo;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringBeaconInfoMSC3672;
 
 /**
  Types of room messages
@@ -275,6 +280,10 @@ FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleLocationMSC3488;
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleLocationURI;
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleLocationDescription;
 
+// Beacon
+
+FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleLocation;
+
 // Assets
 
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleAsset;
@@ -282,6 +291,8 @@ FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleAssetMSC3488;
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleAssetType;
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleAssetTypeUser;
 FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleAssetTypePin;
+// live user location tracking
+FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleAssetTypeLiveLocation;
 
 // Join Rules
 

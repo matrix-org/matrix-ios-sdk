@@ -27,6 +27,7 @@
 #import "MXStore.h"
 #import "MXRoomTombStoneContent.h"
 #import "MXRoomCreateContent.h"
+#import "MXBeaconInfo.h"
 
 @class MXSession;
 
@@ -171,6 +172,9 @@ Use MXRoomSummary.displayname to get a computed room display name.
  If any the state event content for event type `m.room.tombstone`
  */
 @property (nonatomic, strong, readonly) MXRoomTombStoneContent *tombStoneContent;
+
+/// Beacon info events
+@property (nonatomic, readonly) NSArray<MXBeaconInfo*> *beaconInfos;
 
 /**
  Create a `MXRoomState` instance.

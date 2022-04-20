@@ -349,6 +349,7 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
 @class MXThreadingService;
 @class MXCapabilities;
 @class MXEventStreamService;
+@class MXLocationService;
 
 #pragma mark - MXSession
 /**
@@ -498,6 +499,11 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
  Service  used to monitor live events of the session.
  */
 @property (nonatomic, readonly) MXEventStreamService *eventStreamService;
+
+/**
+ The module that manages location sharing.
+ */
+@property (nonatomic, readonly) MXLocationService *locationService;
 
 /**
  Flag indicating the session can be paused.
@@ -1637,5 +1643,13 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  @return the virtual room identifier for the given native room. May be nil.
  */
 - (NSString *)virtualRoomOf:(NSString *)nativeRoomId;
+
+#pragma mark - Presence
+
+/**
+ Preferred presence status for this session. Session will provide this value on syncs
+ while the application is in foreground. Defaults to MXPresenceOnline.
+ */
+@property (nonatomic) MXPresence preferredSyncPresence;
 
 @end
