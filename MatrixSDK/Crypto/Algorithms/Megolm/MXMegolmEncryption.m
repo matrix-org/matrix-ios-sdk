@@ -248,57 +248,63 @@
                                    success:(void (^)(MXOutboundSessionInfo *session))success
                                    failure:(void (^)(NSError *))failure
 {
-    MXOutboundSessionInfo *session = [self createOrReuseSessionWithDevices:devicesInRoom];
-    if (!session.shareOperation)
+    __block MXOutboundSessionInfo *session = self.outboundSession;
+
+    if (session && [self shouldResetSession:session devicesInRoom:devicesInRoom])
     {
-        NSMutableDictionary<NSString* /* userId */, NSMutableArray<MXDeviceInfo*>*> *shareMap = [NSMutableDictionary dictionary];
+        [crypto.olmDevice discardOutboundGroupSessionForRoomWithRoomId:roomId];
+        session = nil;
+    }
 
-        for (NSString *userId in devicesInRoom.userIds)
+    if (!session)
+    {
+        session = [self prepareNewSession];
+    }
+
+    if (session.shareOperation)
+    {
+        // Prep already in progress
+        return session.shareOperation;
+    }
+
+    // No share in progress: Share the current setup
+
+    NSMutableDictionary<NSString* /* userId */, NSMutableArray<MXDeviceInfo*>*> *shareMap = [NSMutableDictionary dictionary];
+
+    for (NSString *userId in devicesInRoom.userIds)
+    {
+        for (NSString *deviceID in [devicesInRoom deviceIdsForUser:userId])
         {
-            for (NSString *deviceID in [devicesInRoom deviceIdsForUser:userId])
-            {
-                MXDeviceInfo *deviceInfo = [devicesInRoom objectForDevice:deviceID forUser:userId];
+            MXDeviceInfo *deviceInfo = [devicesInRoom objectForDevice:deviceID forUser:userId];
 
-                if (![session.sharedWithDevices objectForDevice:deviceID forUser:userId])
+            if (![session.sharedWithDevices objectForDevice:deviceID forUser:userId])
+            {
+                if (!shareMap[userId])
                 {
-                    if (!shareMap[userId])
-                    {
-                        shareMap[userId] = [NSMutableArray array];
-                    }
-                    [shareMap[userId] addObject:deviceInfo];
+                    shareMap[userId] = [NSMutableArray array];
                 }
+                [shareMap[userId] addObject:deviceInfo];
             }
         }
-
-        session.shareOperation = [self shareKey:session withDevices:shareMap success:^{
-
-            session.shareOperation = nil;
-            success(session);
-
-        } failure:^(NSError *error) {
-
-            session.shareOperation = nil;
-            failure(error);
-        }];
     }
-    
+
+    session.shareOperation = [self shareKey:session withDevices:shareMap success:^{
+
+        session.shareOperation = nil;
+        success(session);
+
+    } failure:^(NSError *error) {
+
+        session.shareOperation = nil;
+        failure(error);
+    }];
+
     return session.shareOperation;
 }
 
-- (MXOutboundSessionInfo *)createOrReuseSessionWithDevices:(MXUsersDevicesMap<MXDeviceInfo *> *)devicesInRoom
+- (BOOL)shouldResetSession:(MXOutboundSessionInfo *)session devicesInRoom:(MXUsersDevicesMap<MXDeviceInfo *> *)devicesInRoom
 {
-    MXOutboundSessionInfo *existingSession = self.outboundSession;
-    if (!existingSession || [self shouldResetSession:existingSession devices:devicesInRoom])
-    {
-        return [self prepareNewSession];
-    }
-    return existingSession;
-}
-
-- (BOOL)shouldResetSession:(MXOutboundSessionInfo *)session
-                   devices:(MXUsersDevicesMap<MXDeviceInfo *> *)devicesInRoom
-{
-    // Check if need to rotate due to message count or age of the session
+    // Need to make a brand new session?
     if ([session needsRotation:sessionRotationPeriodMsgs rotationPeriodMs:sessionRotationPeriodMs])
     {
         return YES;
@@ -315,14 +321,13 @@
     {
         return YES;
     }
-    
     return NO;
 }
 
 - (MXOutboundSessionInfo*)prepareNewSession
 {
     MXOlmOutboundGroupSession *session = [crypto.olmDevice createOutboundGroupSessionForRoomWithRoomId:roomId];
-    
+
     BOOL sharedHistory = [crypto isRoomSharingHistory:roomId];
     [crypto.olmDevice addInboundGroupSession:session.sessionId
                                   sessionKey:session.sessionKey
