@@ -17,7 +17,7 @@
 import Foundation
 @testable import MatrixSDK
 
-class MXMegolmSessionDataTests: XCTestCase {
+class MXMegolmSessionDataUnitTests: XCTestCase {
     func testCanInitWithJSONDictionary() {
         let jsonDictionary: [String: Any] = [
             "sender_key": "A",

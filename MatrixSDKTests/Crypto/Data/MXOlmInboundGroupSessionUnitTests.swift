@@ -17,7 +17,7 @@
 import Foundation
 @testable import MatrixSDK
 
-class MXOlmInboundGroupSessionTests: XCTestCase {
+class MXOlmInboundGroupSessionUnitTests: XCTestCase {
     func testExportsCorrectSessionData() {
         let session = MXOlmInboundGroupSession()
         session.senderKey = "A"
