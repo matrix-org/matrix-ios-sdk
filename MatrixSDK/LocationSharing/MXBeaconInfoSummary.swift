@@ -17,26 +17,15 @@
 import Foundation
 
 /// MXBeaconInfoSummary summarize live location sharing for a user sharing his location in a room.
-/// It aggregates the start live location sharing state event  `m.beacon_info` with last live location event `m.beacon`.
 @objcMembers
-public class MXBeaconInfoSummary: NSObject {
+public class MXBeaconInfoSummary: NSObject, MXBeaconInfoSummaryProtocol {
     
     // MARK: - Properties
     
-    /// The beacon info identifier, currently the event id of the beacon info
     public let identifier: String
-    
-    /// User id of the beacon info
     public let userId: String
-    
-    /// Device id of where the beacon info was started.
-    /// Used by current user to determine if the device can emit beacons for a given beacon info.
     public private(set) var deviceId: String?
-    
-    /// Live location start event
     public private(set) var beaconInfo: MXBeaconInfo
-    
-    /// Last received location event
     public private(set) var lastBeacon: MXBeacon?
         
     public var expiringDate: UInt64 {

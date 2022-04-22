@@ -40,7 +40,7 @@ public class MXBeaconAggregations: NSObject {
     // MARK: - Public
     
     /// Get MXBeaconInfoSummary from the first beacon info event id
-    public func beaconInfoSummary(for eventId: String, inRoomWithId roomId: String) -> MXBeaconInfoSummary? {
+    public func beaconInfoSummary(for eventId: String, inRoomWithId roomId: String) -> MXBeaconInfoSummaryProtocol? {
         return self.beaconInfoSummaryStore.getBeaconInfoSummary(withIdentifier: eventId, inRoomWithId: roomId)
     }
     
@@ -76,7 +76,7 @@ public class MXBeaconAggregations: NSObject {
             return
         }
                 
-        guard let beaconInfoSummary = self.beaconInfoSummary(for: beacon.beaconInfoEventId, inRoomWithId: roomId), self.canAddBeacon(beacon, to: beaconInfoSummary) else {
+        guard let beaconInfoSummary = self.getBeaconInfoSummary(withIdentifier: beacon.beaconInfoEventId, inRoomWithId: roomId), self.canAddBeacon(beacon, to: beaconInfoSummary) else {
             return
         }
         
@@ -99,7 +99,7 @@ public class MXBeaconAggregations: NSObject {
     
     // MARK: Data update listener
     
-    public func listenToBeaconInfoSummaryUpdateInRoom(withId roomId: String, handler: @escaping (MXBeaconInfoSummary) -> Void) -> Any? {
+    public func listenToBeaconInfoSummaryUpdateInRoom(withId roomId: String, handler: @escaping (MXBeaconInfoSummaryProtocol) -> Void) -> Any? {
         let listener = MXBeaconInfoSummaryListener(roomId: roomId, notificationHandler: handler)
         
         listeners.append(listener)
@@ -125,7 +125,7 @@ public class MXBeaconAggregations: NSObject {
         
         var beaconInfoSummary: MXBeaconInfoSummary?
         
-        if let existingBeaconInfoSummary = self.beaconInfoSummary(for: eventId, inRoomWithId: roomId) {
+        if let existingBeaconInfoSummary = self.getBeaconInfoSummary(withIdentifier: eventId, inRoomWithId: roomId) {
 
             // If beacon info is older than existing one, do not take it into account
             if beaconInfo.timestamp > existingBeaconInfoSummary.beaconInfo.timestamp {
@@ -162,5 +162,9 @@ public class MXBeaconAggregations: NSObject {
         for listener in listeners where listener.roomId == roomId {
             listener.notificationHandler(beaconInfoSummary)
         }
+    }
+    
+    private func getBeaconInfoSummary(withIdentifier identifier: String, inRoomWithId roomId: String) -> MXBeaconInfoSummary? {
+        return self.beaconInfoSummaryStore.getBeaconInfoSummary(withIdentifier: identifier, inRoomWithId: roomId)
     }
 }

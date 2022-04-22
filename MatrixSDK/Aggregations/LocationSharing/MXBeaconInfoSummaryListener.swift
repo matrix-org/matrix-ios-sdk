@@ -26,7 +26,7 @@ public class MXBeaconInfoSummaryListener: NSObject {
     
     // MARK: - Setup
     
-    init(roomId: String, notificationHandler: @escaping ((MXBeaconInfoSummary) -> Void)) {
+    init(roomId: String, notificationHandler: @escaping ((MXBeaconInfoSummaryProtocol) -> Void)) {
         self.roomId = roomId
         self.notificationHandler = notificationHandler
         super.init()
