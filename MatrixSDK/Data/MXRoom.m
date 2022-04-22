@@ -1839,11 +1839,6 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
     return [mxSession.matrixRestClient setRoomHistoryVisibility:self.roomId historyVisibility:historyVisibility success:success failure:failure];
 }
 
-- (MXRoomHistoryVisibility)historyVisibility
-{
-    return liveTimeline.state.historyVisibility;
-}
-
 - (MXHTTPOperation*)setJoinRule:(MXRoomJoinRule)joinRule
                         success:(void (^)(void))success
                         failure:(void (^)(NSError *error))failure

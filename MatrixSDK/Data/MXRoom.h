@@ -668,14 +668,6 @@ FOUNDATION_EXPORT NSInteger const kMXRoomInvalidInviteSenderErrorCode;
                                  failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
- Current history visibility of the room.
- 
- Indicates whether the room's history is currently visible, i.e. whether `m.room.history_visibility`
- is currently equal to either `world_readable` or `shared`.
- */
-- (MXRoomHistoryVisibility)historyVisibility;
-
-/**
  Set the join rule of the room.
 
  @param joinRule the join rule to set.
