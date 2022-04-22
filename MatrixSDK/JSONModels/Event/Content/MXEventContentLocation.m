@@ -103,7 +103,7 @@
     }
     else if ([JSONDictionary[kMXMessageTypeKey] isEqualToString:kMXMessageTypeLocation])
     {
-        MXJSONModelSetString(geoURIString, JSONDictionary[geoURIString]);
+        MXJSONModelSetString(geoURIString, JSONDictionary[kMXMessageGeoURIKey]);
         
         if (!geoURIString)
         {
@@ -111,7 +111,7 @@
         }
         
         finalLocationDictionary = @{
-            geoURIString: geoURIString
+            kMXMessageGeoURIKey: geoURIString
         };
     }
     else
