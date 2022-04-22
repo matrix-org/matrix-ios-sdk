@@ -128,7 +128,7 @@
     
     MXEventContentRelatesTo *relatesTo = [[MXEventContentRelatesTo alloc] initWithRelationType:MXEventRelationTypeReference eventId:_beaconInfoEventId];
         
-    content[kMXEventRelationRelatesToKey] =  relatesTo.JSONDictionary;
+    content[kMXEventRelationRelatesToKey] = relatesTo.JSONDictionary;
     
     content[kMXMessageContentKeyExtensibleTimestampMSC3488] = @(self.timestamp);
 
