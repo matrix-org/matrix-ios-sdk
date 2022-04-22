@@ -183,4 +183,5 @@ FOUNDATION_EXPORT NSString *MatrixSDKVersion;
 #import "MXGroupSyncProfile.h"
 #import "MXDehydrationService.h"
 #import "MXBeaconInfo.h"
+#import "MXBeacon.h"
 #import "MXEventAssetType.h"

@@ -26,11 +26,14 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+@class MXBeaconAggregations;
+
 /**
  The `MXAggregations` class instance manages the Matrix aggregations API.
  */
 @interface MXAggregations : NSObject
 
+@property (nonatomic, strong, readonly) MXBeaconAggregations *beaconAggegations;
 
 #pragma mark - Reactions
 

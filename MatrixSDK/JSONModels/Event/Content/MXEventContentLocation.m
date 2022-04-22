@@ -16,6 +16,7 @@
 
 #import "MXEventContentLocation.h"
 #import "MXEvent.h"
+#import "MXLocation.h"
 
 #import "MatrixSDKSwiftHeader.h"
 
@@ -23,9 +24,35 @@
 
 @property (nonatomic) MXEventAssetTypeMapper *eventAssetTypeMapper;
 
+@property (nonatomic, strong) MXLocation *location;
+
 @end
 
 @implementation MXEventContentLocation
+
+#pragma mark - Properties
+
+- (double)latitude
+{
+    return self.location.latitude;
+}
+
+- (double)longitude
+{
+    return self.location.longitude;
+}
+
+- (NSString *)geoURI
+{
+    return self.location.geoURI;
+}
+
+- (NSString *)locationDescription
+{
+    return self.location.desc;
+}
+
+#pragma mark - Setup
 
 - (instancetype)initWithAssetType:(MXEventAssetType)assetType
                          latitude:(double)latitude
@@ -35,19 +62,30 @@
     if (self = [super init])
     {
         _assetType = assetType;
-        _latitude = latitude;
-        _longitude = longitude;
-        _locationDescription = description;
-        _geoURI = [NSString stringWithFormat:@"geo:%@,%@", @(self.latitude), @(self.longitude)];
+        _location = [[MXLocation alloc] initWithLatitude:latitude longitude:longitude description:description];
         _eventAssetTypeMapper = [[MXEventAssetTypeMapper alloc] init];
     }
     
     return self;
 }
 
+- (instancetype)initWithAssetType:(MXEventAssetType)assetType
+                         location:(MXLocation*)location
+{
+    if (self = [super init])
+    {
+        _assetType = assetType;
+        _location = location;
+        _eventAssetTypeMapper = [[MXEventAssetTypeMapper alloc] init];
+    }
+    
+    return self;
+}
+
+#pragma mark - Overrides
+
 + (instancetype)modelFromJSON:(NSDictionary *)JSONDictionary
 {
-    NSString *description;
     NSString *geoURIString;
     MXEventAssetType assetType;
     
@@ -57,16 +95,33 @@
         locationDictionary = JSONDictionary[kMXMessageContentKeyExtensibleLocation];
     }
     
+    NSDictionary *finalLocationDictionary;
+    
     if (locationDictionary)
     {
-        MXJSONModelSetString(geoURIString, locationDictionary[kMXMessageContentKeyExtensibleLocationURI]);
-        MXJSONModelSetString(description, locationDictionary[kMXMessageContentKeyExtensibleLocationDescription]);
+        finalLocationDictionary = locationDictionary;
     }
     else if ([JSONDictionary[kMXMessageTypeKey] isEqualToString:kMXMessageTypeLocation])
     {
         MXJSONModelSetString(geoURIString, JSONDictionary[kMXMessageGeoURIKey]);
+        
+        if (!geoURIString)
+        {
+            return nil;
+        }
+        
+        finalLocationDictionary = @{
+            kMXMessageGeoURIKey: geoURIString
+        };
     }
     else
+    {
+        return nil;
+    }
+    
+    MXLocation *location = [MXLocation modelFromJSON:finalLocationDictionary];
+    
+    if (!location)
     {
         return nil;
     }
@@ -79,35 +134,22 @@
     if (assetDictionary)
     {
         assetType = [[[MXEventAssetTypeMapper alloc] init] eventAssetTypeFrom:assetDictionary[kMXMessageContentKeyExtensibleAssetType]];
-    } else {
+    }
+    else
+    {
         // Should behave like m.self if assetType is nil
         assetType = MXEventAssetTypeUser;
     }
     
-    NSString *locationString = [[geoURIString componentsSeparatedByString:@":"].lastObject componentsSeparatedByString:@";"].firstObject;
-    NSArray *locationComponents = [locationString componentsSeparatedByString:@","];
-    
-    if (locationComponents.count != 2)
-    {
-        return nil;
-    }
-    
-    double latitude = [locationComponents.firstObject doubleValue];
-    double longitude = [locationComponents.lastObject doubleValue];
-    
-    return [[MXEventContentLocation alloc] initWithAssetType:assetType
-                                                    latitude:latitude
-                                                   longitude:longitude
-                                                 description:description];
+    return [[MXEventContentLocation alloc] initWithAssetType:assetType location:location];
 }
 
 - (NSDictionary *)JSONDictionary
 {
     NSMutableDictionary *content = [NSMutableDictionary dictionary];
     
-    NSMutableDictionary *locationContent = [NSMutableDictionary dictionary];
-    locationContent[kMXMessageContentKeyExtensibleLocationURI] = self.geoURI;
-    locationContent[kMXMessageContentKeyExtensibleLocationDescription] = self.locationDescription;
+    NSDictionary *locationContent = [self.location JSONDictionary];
+    
     content[kMXMessageContentKeyExtensibleLocationMSC3488] = locationContent;
     
     content[kMXMessageContentKeyExtensibleAssetMSC3488] = @{ kMXMessageContentKeyExtensibleAssetType: [_eventAssetTypeMapper eventKeyFrom:self.assetType] };

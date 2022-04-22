@@ -16,22 +16,19 @@
 
 import Foundation
 
-/// MXLocationService error
-public enum MXLocationServiceError: Int, Error {
-    case missingUserId
-    case roomNotFound
-    case unknown
-}
+@objcMembers
+public class MXBeaconInfoSummaryListener: NSObject {
 
-// MARK: - MXLocationService errors
-extension MXLocationServiceError: CustomNSError {
-    public static let errorDomain = "org.matrix.sdk.locationService"
-
-    public var errorCode: Int {
-        return Int(rawValue)
-    }
-
-    public var errorUserInfo: [String: Any] {
-        return [:]
+    // MARK: - Properties
+    
+    let roomId: String
+    let notificationHandler: ((MXBeaconInfoSummary) -> Void)
+    
+    // MARK: - Setup
+    
+    init(roomId: String, notificationHandler: @escaping ((MXBeaconInfoSummaryProtocol) -> Void)) {
+        self.roomId = roomId
+        self.notificationHandler = notificationHandler
+        super.init()
     }
 }
