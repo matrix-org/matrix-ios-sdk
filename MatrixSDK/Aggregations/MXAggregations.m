@@ -30,6 +30,8 @@
 #import "MXEventEditsListener.h"
 #import "MXAggregationPaginatedResponse_Private.h"
 
+#import "MatrixSDKSwiftHeader.h"
+
 @interface MXAggregations ()
 
 @property (nonatomic, weak) MXSession *mxSession;
@@ -37,6 +39,9 @@
 @property (nonatomic) MXAggregatedReactionsUpdater *aggregatedReactionsUpdater;
 @property (nonatomic) MXAggregatedEditsUpdater *aggregatedEditsUpdater;
 @property (nonatomic) MXAggregatedReferencesUpdater *aggregatedReferencesUpdater;
+
+@property (nonatomic, strong, readwrite) MXBeaconAggregations *beaconAggegations;
+@property (nonatomic, strong) id<MXBeaconInfoSummaryStoreProtocol> beaconInfoSummaryStore;
 
 @end
 
@@ -84,6 +89,10 @@
     else if ([listener isKindOfClass:[MXEventEditsListener class]])
     {
         [self.aggregatedEditsUpdater removeListener:listener];
+    }
+    else if ([listener isKindOfClass:[MXBeaconInfoSummaryListener class]])
+    {
+        [self.beaconAggegations removeListener:listener];
     }
 }
 
@@ -222,6 +231,7 @@
 {
     MXLogDebug(@"[MXAggregations] Reset data")
     [self.store deleteAll];
+    [self.beaconInfoSummaryStore deleteAllBeaconInfoSummaries];
 }
 
 
@@ -241,6 +251,13 @@
                                                                                   matrixStore:mxSession.store];
         self.aggregatedReferencesUpdater = [[MXAggregatedReferencesUpdater alloc] initWithMatrixSession:self.mxSession
                                                                                            matrixStore:mxSession.store];
+        
+        // TODO: Persist MXBeaconInfoSummary to Realm store
+        id<MXBeaconInfoSummaryStoreProtocol> beaconInfoSummaryStore = [MXBeaconInfoSummaryMemoryStore new];
+        
+        self.beaconInfoSummaryStore = beaconInfoSummaryStore;
+        
+        self.beaconAggegations = [[MXBeaconAggregations alloc] initWithSession:self.mxSession store:beaconInfoSummaryStore];
 
         [self registerListener];
     }
@@ -260,6 +277,7 @@
 - (void)resetDataInRoom:(NSString *)roomId
 {
     [self.aggregatedReactionsUpdater resetDataInRoom:roomId];
+    [self.beaconAggegations clearDataInRoomWithId:roomId];
 }
 
 
@@ -285,6 +303,15 @@
                 if (direction == MXTimelineDirectionForwards)
                 {
                     [self.aggregatedReactionsUpdater handleRedaction:event];
+                }
+                break;
+            case MXEventTypeBeaconInfo:
+                [self.beaconAggegations handleBeaconInfoWithEvent:event];
+                break;
+            case MXEventTypeBeacon:
+                if (direction == MXTimelineDirectionForwards)
+                {
+                    [self.beaconAggegations handleBeaconWithEvent:event];
                 }
                 break;
             default:
