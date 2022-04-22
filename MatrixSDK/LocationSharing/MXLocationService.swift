@@ -131,7 +131,7 @@ public class MXLocationService: NSObject {
         
         let beacon = MXBeacon(latitude: latitude, longitude: longitude, description: description, beaconInfoEventId: beaconInfoEventId)
         
-        guard let eventContent = beacon.jsonDictionary() as? [String : Any] else {
+        guard let eventContent = beacon.jsonDictionary() as? [String: Any] else {
             completion(.failure(MXLocationServiceError.unknown))
             return nil
         }
