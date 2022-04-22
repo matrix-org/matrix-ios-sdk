@@ -212,6 +212,7 @@ NSCharacterSet *uriComponentCharset;
             kMXEventTypeStringPollEndMSC3381 : @(MXEventTypePollEnd),
             kMXEventTypeStringBeaconInfoMSC3672 : @(MXEventTypeBeaconInfo),
             kMXEventTypeStringBeaconInfo : @(MXEventTypeBeaconInfo),
+            kMXEventTypeStringBeaconMSC3672 : @(MXEventTypeBeacon),
             kMXEventTypeStringBeacon : @(MXEventTypeBeacon)
         };
 
