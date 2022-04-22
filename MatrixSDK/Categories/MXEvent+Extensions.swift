@@ -34,7 +34,7 @@ public extension MXEvent {
         if displayNameChecker.isCondition(nil, satisfiedBy: self, roomState: nil, withJsonDict: nil) {
             return true
         }
-        guard let rule = session.notificationCenter.rule(matching: self, roomState: nil) else {
+        guard let rule = session.notificationCenter?.rule(matching: self, roomState: nil) else {
             return false
         }
 
