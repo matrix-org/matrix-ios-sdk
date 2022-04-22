@@ -34,7 +34,7 @@ public class MXBeaconInfoSummaryMemoryStore: NSObject, MXBeaconInfoSummaryStoreP
         }
         
         if let existingIndex = existingIndex {
-            beaconInfoSummaries.insert(beaconInfoSummary, at: existingIndex)
+            beaconInfoSummaries[existingIndex] = beaconInfoSummary
         } else {
             beaconInfoSummaries.append(beaconInfoSummary)
         }

@@ -85,6 +85,8 @@ public class MXBeaconInfoSummary: NSObject, MXBeaconInfoSummaryProtocol {
         return true
     }
     
+    /// Only set the device id after the beacon start if needed for current user only.
+    /// There is no reason to change it twice.
     @discardableResult
     func updateWithDeviceId(_ deviceId: String) -> Bool {
         guard self.deviceId != nil else {

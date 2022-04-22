@@ -164,6 +164,7 @@ public class MXBeaconAggregations: NSObject {
         }
     }
     
+    /// Get MXBeaconInfoSummary class instead of MXBeaconInfoSummaryProtocol to have access to internal methods
     private func getBeaconInfoSummary(withIdentifier identifier: String, inRoomWithId roomId: String) -> MXBeaconInfoSummary? {
         return self.beaconInfoSummaryStore.getBeaconInfoSummary(withIdentifier: identifier, inRoomWithId: roomId)
     }

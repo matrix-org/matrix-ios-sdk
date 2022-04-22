@@ -66,14 +66,7 @@
         return nil;
     }
     
-    MXBeacon *beacon = [MXBeacon modelFromJSON:event.content];
-    
-    if (!beacon)
-    {
-        return nil;
-    }
-
-    return [self initWithLocation:beacon.location timestamp:beacon.timestamp beaconInfoEventId:beacon.beaconInfoEventId];
+    return [MXBeacon modelFromJSON:event.content];
 }
 
 #pragma mark - Overrides
@@ -100,8 +93,6 @@
     MXJSONModelSetMXJSONModel(location, MXLocation, locationDictionary);
     
     MXJSONModelSetNumber(timestampNumber, JSONDictionary[kMXMessageContentKeyExtensibleTimestampMSC3488])
-    
-    MXJSONModelSetMXJSONModel(location, MXLocation, locationDictionary);
     
     MXJSONModelSetMXJSONModel(relatesTo, MXEventContentRelatesTo, JSONDictionary[kMXEventRelationRelatesToKey]);
     
