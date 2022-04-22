@@ -19,6 +19,8 @@
 #import "MXLocation.h"
 #import "MXEventContentRelatesTo.h"
 
+@class MXEvent;
+
 NS_ASSUME_NONNULL_BEGIN
 
 /// `MXBeacon` represents a real-time location beacon used for live location sharing.
@@ -45,6 +47,10 @@ NS_ASSUME_NONNULL_BEGIN
                        longitude:(double)longitude
                      description:(nullable NSString*)description
                beaconInfoEventId:(NSString*)beaconInfoEventId;
+
+/// Create the `MXBeacon` object from a Matrix m.beacon event.
+/// @param event The m.beacon event.
+- (nullable instancetype)initWithMXEvent:(MXEvent*)event;
 
 @end
 

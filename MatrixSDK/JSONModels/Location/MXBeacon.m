@@ -59,6 +59,23 @@
     return self;
 }
 
+- (nullable instancetype)initWithMXEvent:(MXEvent*)event
+{
+    if (event.eventType != MXEventTypeBeacon)
+    {
+        return nil;
+    }
+    
+    MXBeacon *beacon = [MXBeacon modelFromJSON:event.content];
+    
+    if (!beacon)
+    {
+        return nil;
+    }
+
+    return [self initWithLocation:beacon.location timestamp:beacon.timestamp beaconInfoEventId:beacon.beaconInfoEventId];
+}
+
 #pragma mark - Overrides
 
 + (instancetype)modelFromJSON:(NSDictionary *)JSONDictionary
