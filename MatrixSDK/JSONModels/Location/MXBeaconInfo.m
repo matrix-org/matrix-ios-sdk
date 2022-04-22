@@ -32,6 +32,16 @@ static NSString * const kLiveJSONKey = @"live";
                         isLive:(BOOL)isLive
                      timestamp:(uint64_t)timestamp
 {
+    return [self initWithUserId:userId description:desc timeout:timeout isLive:isLive timestamp:timestamp originalEvent:nil];
+}
+
+- (instancetype)initWithUserId:(NSString *)userId
+                   description:(NSString *)desc
+                       timeout:(uint64_t)timeout
+                        isLive:(BOOL)isLive
+                     timestamp:(uint64_t)timestamp
+                 originalEvent:(nullable MXEvent*)originalEvent
+{
     self = [super init];
     if (self)
     {
@@ -41,6 +51,7 @@ static NSString * const kLiveJSONKey = @"live";
         _isLive = isLive;
         _assetType = MXEventAssetTypeLiveLocation;
         _timestamp = timestamp;
+        _originalEvent = originalEvent;
     }
     return self;
 }
@@ -76,7 +87,8 @@ static NSString * const kLiveJSONKey = @"live";
                     description:beaconInfo.desc
                         timeout:beaconInfo.timeout
                          isLive:beaconInfo.isLive
-                      timestamp:beaconInfo.timestamp];
+                      timestamp:beaconInfo.timestamp
+                  originalEvent:event];
 }
 
 #pragma mark - Overrides

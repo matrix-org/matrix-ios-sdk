@@ -49,6 +49,9 @@ NS_ASSUME_NONNULL_BEGIN
 /// Milliseconds since UNIX epoch
 @property (nonatomic, readonly) uint64_t timestamp;
 
+/// The event used to build the MXBeaconInfo.
+@property (nonatomic, readonly, nullable) MXEvent *originalEvent;
+
 #pragma mark - Setup
 
 - (instancetype)initWithUserId:(nullable NSString *)userId
