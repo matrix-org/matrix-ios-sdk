@@ -146,7 +146,7 @@ public class MXBeaconAggregations: NSObject {
     private func canAddBeacon(_ beacon: MXBeacon, to beaconInfoSummary: MXBeaconInfoSummary) -> Bool {
     
         guard beaconInfoSummary.hasStopped == false, beaconInfoSummary.hasExpired == false,
-        beacon.timestamp < beaconInfoSummary.expiringDate else {
+        beacon.timestamp < beaconInfoSummary.expiryTimestamp else {
             return false
         }
         

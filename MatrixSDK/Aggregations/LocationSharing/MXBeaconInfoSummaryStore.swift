@@ -30,7 +30,7 @@ public class MXBeaconInfoSummaryMemoryStore: NSObject, MXBeaconInfoSummaryStoreP
         var beaconInfoSummaries: [MXBeaconInfoSummary] = self.beaconInfoSummaries[roomId] ?? []
         
         let existingIndex = beaconInfoSummaries.firstIndex { summary in
-            return summary.identifier == beaconInfoSummary.identifier
+            return summary.id == beaconInfoSummary.id
         }
         
         if let existingIndex = existingIndex {
@@ -48,7 +48,7 @@ public class MXBeaconInfoSummaryMemoryStore: NSObject, MXBeaconInfoSummaryStoreP
         }
         
         return roomBeaconInfoSummaries.first { beaconInfoSummary in
-            return beaconInfoSummary.identifier == identifier
+            return beaconInfoSummary.id == identifier
         }
     }
     

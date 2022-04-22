@@ -22,18 +22,18 @@ public class MXBeaconInfoSummary: NSObject, MXBeaconInfoSummaryProtocol {
     
     // MARK: - Properties
     
-    public let identifier: String
+    public let id: String
     public let userId: String
     public private(set) var deviceId: String?
     public private(set) var beaconInfo: MXBeaconInfo
     public private(set) var lastBeacon: MXBeacon?
         
-    public var expiringDate: UInt64 {
+    public var expiryTimestamp: UInt64 {
         return beaconInfo.timestamp + beaconInfo.timeout
     }
     
     public var hasExpired: Bool {
-        return Date().timeIntervalSince1970 > TimeInterval(expiringDate)
+        return Date().timeIntervalSince1970 * 1000 > TimeInterval(expiryTimestamp)
     }
     
     public var hasStopped: Bool {
@@ -53,7 +53,7 @@ public class MXBeaconInfoSummary: NSObject, MXBeaconInfoSummaryProtocol {
     public init(identifier: String,
          userId: String,
          beaconInfo: MXBeaconInfo) {
-        self.identifier = identifier
+        self.id = identifier
         self.userId = userId
         self.beaconInfo = beaconInfo
         
@@ -66,7 +66,7 @@ public class MXBeaconInfoSummary: NSObject, MXBeaconInfoSummaryProtocol {
     func updateWithBeaconInfo(_ beaconInfo: MXBeaconInfo) -> Bool {
         
         // TODO: Update this check for beacon info stop state event
-        guard let beaconInfoEventId =  beaconInfo.originalEvent?.eventId, beaconInfoEventId == self.identifier else {
+        guard let beaconInfoEventId =  beaconInfo.originalEvent?.eventId, beaconInfoEventId == self.id else {
             return false
         }
         
@@ -76,7 +76,7 @@ public class MXBeaconInfoSummary: NSObject, MXBeaconInfoSummaryProtocol {
     
     @discardableResult
     func updateWithLastBeacon(_ beacon: MXBeacon) -> Bool {
-        guard beacon.beaconInfoEventId == self.identifier else {
+        guard beacon.beaconInfoEventId == self.id else {
             return false
         }
         

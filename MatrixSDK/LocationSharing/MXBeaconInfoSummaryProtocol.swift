@@ -22,7 +22,7 @@ import Foundation
 public protocol MXBeaconInfoSummaryProtocol: AnyObject {
     
     /// First beacon info event id that start live location
-    var identifier: String { get }
+    var id: String { get }
     
     /// User id of the beacon info
     var userId: String { get }
@@ -33,8 +33,8 @@ public protocol MXBeaconInfoSummaryProtocol: AnyObject {
     /// Last received location event
     var lastBeacon: MXBeacon? { get }
         
-    /// Beacon info expiring date
-    var expiringDate: UInt64 { get }
+    /// Beacon info expiry timestamp in milliseconds
+    var expiryTimestamp: UInt64 { get }
     
     /// Indicate if beacon info has expired
     var hasExpired: Bool { get }

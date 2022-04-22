@@ -91,7 +91,7 @@ class MXBeaconAggregationsTests: XCTestCase {
             
             _ = bobSession.aggregations.beaconAggegations.listenToBeaconInfoSummaryUpdateInRoom(withId: initialRoom.roomId) { beaconInfoSummary in
                 
-                XCTAssertEqual(beaconInfoSummary.identifier, beaconInfoEventId)
+                XCTAssertEqual(beaconInfoSummary.id, beaconInfoEventId)
                                         
                 let beaconInfo = beaconInfoSummary.beaconInfo
                 
@@ -154,7 +154,7 @@ class MXBeaconAggregationsTests: XCTestCase {
                             
                             _ = bobSession.aggregations.beaconAggegations.listenToBeaconInfoSummaryUpdateInRoom(withId: initialRoom.roomId) { beaconInfoSummary in
                                 
-                                XCTAssertEqual(beaconInfoSummary.identifier, eventId)
+                                XCTAssertEqual(beaconInfoSummary.id, eventId)
                                 XCTAssertEqual(beaconInfoSummary.userId, userId)
                                                         
                                 let beaconInfo = beaconInfoSummary.beaconInfo
