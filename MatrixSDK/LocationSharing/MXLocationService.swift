@@ -77,9 +77,10 @@ public class MXLocationService: NSObject {
         }
     }
     
-    public func getCurrentUserAllBeaconInfo(inRoomWithId roomId: String, completion: @escaping ([MXBeaconInfo]) -> Void) {
+    public func getAllBeaconInfoForCurrentUser(inRoomWithId roomId: String, completion: @escaping ([MXBeaconInfo]) -> Void) {
         
         guard let myUserId = self.session.myUserId else {
+            completion([])
             return
         }
         
@@ -107,7 +108,7 @@ public class MXLocationService: NSObject {
     ///   - beaconInfoEventId: The associated beacon info event id
     ///   - latitude: Coordinate latitude
     ///   - longitude: Coordinate longitude
-    ///   - description: Beacon description
+    ///   - description: Beacon description. nil by default.
     ///   - threadId: the id of the thread to send the message. nil by default.
     ///   - roomId: The room id
     ///   - localEcho: a pointer to an MXEvent object.
@@ -117,11 +118,11 @@ public class MXLocationService: NSObject {
     public func sendBeacon(withBeaconInfoEventId beaconInfoEventId: String,
                            latitude: Double,
                            longitude: Double,
-                           description: String?,
-                           threadId: String?,
+                           description: String? = nil,
+                           threadId: String? = nil,
                            inRoomWithId roomId: String,
                            localEcho: inout MXEvent?,
-                                         completion: @escaping (MXResponse<String?>) -> Void) -> MXHTTPOperation? {
+                           completion: @escaping (MXResponse<String?>) -> Void) -> MXHTTPOperation? {
 
         guard let room = self.session.room(withRoomId: roomId) else {
             completion(.failure(MXLocationServiceError.roomNotFound))
