@@ -30,7 +30,7 @@ public class MXGeoURIComponents: NSObject {
     
     public convenience init?(geoURI: String) {
         
-        guard let (latitude, longitude) = type(of: self).parseCoordinates(from: geoURI) else {
+        guard let (latitude, longitude) = Self.parseCoordinates(from: geoURI) else {
             return nil
         }
         self.init(latitude: latitude, longitude: longitude)
@@ -39,13 +39,14 @@ public class MXGeoURIComponents: NSObject {
     public init(latitude: Double, longitude: Double) {
         self.latitude = latitude
         self.longitude = longitude
-        self.geoURI = type(of: self).geoURI(with: latitude, and: longitude)
+        self.geoURI = Self.geoURI(with: latitude, and: longitude)
         
         super.init()
     }
     
     // MARK: - Private
     
+    // Parse a geo URI string like "geo:53.99803101552848,-8.25347900390625;u=10"
     private class func parseCoordinates(from geoURIString: String) -> (Double, Double)? {
         
         guard let locationString = geoURIString.components(separatedBy: ":").last?.components(separatedBy: ";").first else {
@@ -65,7 +66,8 @@ public class MXGeoURIComponents: NSObject {
         return (latitude, longitude)
     }
     
+    // Return a geo URI string like "geo:53.99803101552848,-8.25347900390625"
     private class func geoURI(with latitude: Double, and longitude: Double) -> String {
-        return "geo:\(NSNumber(value: latitude)),\(NSNumber(value: longitude))"
+        return "geo:\(latitude),\(longitude)"
     }
 }
