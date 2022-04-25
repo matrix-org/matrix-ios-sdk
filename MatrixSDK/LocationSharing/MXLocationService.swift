@@ -115,28 +115,41 @@ public class MXLocationService: NSObject {
     ///   - completion: A closure called when the operation completes. Provides the event id of the event generated on the home server on success.
     /// - Returns: a `MXHTTPOperation` instance.
     @discardableResult
-    public func sendBeacon(withBeaconInfoEventId beaconInfoEventId: String,
-                           latitude: Double,
-                           longitude: Double,
-                           description: String? = nil,
-                           threadId: String? = nil,
-                           inRoomWithId roomId: String,
-                           localEcho: inout MXEvent?,
-                           completion: @escaping (MXResponse<String?>) -> Void) -> MXHTTPOperation? {
+    public func sendLocation(withBeaconInfoEventId beaconInfoEventId: String,
+                             latitude: Double,
+                             longitude: Double,
+                             description: String? = nil,
+                             threadId: String? = nil,
+                             inRoomWithId roomId: String,
+                             localEcho: inout MXEvent?,
+                             completion: @escaping (MXResponse<String?>) -> Void) -> MXHTTPOperation? {
 
-        guard let room = self.session.room(withRoomId: roomId) else {
-            completion(.failure(MXLocationServiceError.roomNotFound))
+        guard let myUserId = self.session.myUserId else {
+            completion(.failure(MXLocationServiceError.missingUserId))
             return nil
         }
         
-        let beacon = MXBeacon(latitude: latitude, longitude: longitude, description: description, beaconInfoEventId: beaconInfoEventId)
-        
-        guard let eventContent = beacon.jsonDictionary() as? [String: Any] else {
-            completion(.failure(MXLocationServiceError.unknown))
+        guard let beaconInfoSummary = self.session.aggregations.beaconAggegations.beaconInfoSummary(for: beaconInfoEventId, inRoomWithId: roomId) else {
+            completion(.failure(MXLocationServiceError.beaconInfoNotFound))
             return nil
         }
-
-        return room.sendEvent(.beacon, content: eventContent, threadId: threadId, localEcho: &localEcho, completion: completion)
+        
+        guard beaconInfoSummary.userId == myUserId else {
+            completion(.failure(MXLocationServiceError.beaconInfoDoNotBelongToUser))
+            return nil
+        }
+        
+        guard beaconInfoSummary.hasStopped == false else {
+            completion(.failure(MXLocationServiceError.beaconInfoAlreadyStopped))
+            return nil
+        }
+        
+        guard beaconInfoSummary.hasExpired == false else {
+            completion(.failure(MXLocationServiceError.beaconInfoExpired))
+            return nil
+        }
+        
+        return self.sendBeacon(withBeaconInfoEventId: beaconInfoEventId, latitude: latitude, longitude: longitude, description: description, threadId: threadId, inRoomWithId: roomId, localEcho: &localEcho, completion: completion)
     }
     
     // MARK: - Private
@@ -166,6 +179,31 @@ public class MXLocationService: NSObject {
         return self.session.matrixRestClient.sendStateEvent(toRoom: roomId, eventType: .beaconInfo, content: eventContent, stateKey: stateKey) { response in
             completion(response)
         }
+    }
+    
+    @discardableResult
+    private func sendBeacon(withBeaconInfoEventId beaconInfoEventId: String,
+                            latitude: Double,
+                            longitude: Double,
+                            description: String? = nil,
+                            threadId: String? = nil,
+                            inRoomWithId roomId: String,
+                            localEcho: inout MXEvent?,
+                            completion: @escaping (MXResponse<String?>) -> Void) -> MXHTTPOperation? {
+
+        guard let room = self.session.room(withRoomId: roomId) else {
+            completion(.failure(MXLocationServiceError.roomNotFound))
+            return nil
+        }
+        
+        let beacon = MXBeacon(latitude: latitude, longitude: longitude, description: description, beaconInfoEventId: beaconInfoEventId)
+        
+        guard let eventContent = beacon.jsonDictionary() as? [String: Any] else {
+            completion(.failure(MXLocationServiceError.unknown))
+            return nil
+        }
+
+        return room.sendEvent(.beacon, content: eventContent, threadId: threadId, localEcho: &localEcho, completion: completion)
     }
 }
 
