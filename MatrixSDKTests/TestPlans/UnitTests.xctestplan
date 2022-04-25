@@ -47,7 +47,6 @@
         "MXHTTPAdditionalHeadersUnitTests",
         "MXJSONModelUnitTests",
         "MXKeyProviderUnitTests",
-        "MXLoggerUnitTests",
         "MXMediaScanStoreUnitTests",
         "MXMegolmExportEncryptionUnitTests",
         "MXMegolmSessionDataUnitTests",
