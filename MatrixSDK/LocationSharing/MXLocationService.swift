@@ -33,6 +33,8 @@ public class MXLocationService: NSObject {
     
     // MARK: - Public
     
+    // MARK: User live location
+    
     /// Start live location sharing for current user
     /// - Parameters:
     ///   - roomId: The roomId where the location should be shared
@@ -46,61 +48,6 @@ public class MXLocationService: NSObject {
                                          timeout: TimeInterval,
                                          completion: @escaping (MXResponse<String>) -> Void) -> MXHTTPOperation? {
         return self.sendBeaconInfoEvent(withRoomId: roomId, description: description, timeout: timeout, completion: completion)
-    }
-    
-    /// Get all beacon info in a room
-    /// - Parameters:
-    ///   - roomId: The room id of the room
-    ///   - completion: Closure called when beacon fetching as ended. Give beacon info array as a result.
-    public func getAllBeaconInfo(inRoomWithId roomId: String, completion: @escaping ([MXBeaconInfo]) -> Void) {
-        
-        guard let room = self.session.room(withRoomId: roomId) else {
-            completion([])
-            return
-        }
-        
-        room.state { roomState in
-            completion(roomState?.beaconInfos ?? [])
-        }
-    }
-    
-    /// Get all beacon info of a user in a room
-    /// - Parameters:
-    ///   - userId: The user id
-    ///   - roomId: The room id
-    ///   - completion: Closure called when beacon fetching as ended. Give beacon info array as a result.
-    public func getAllBeaconInfo(forUserId userId: String, inRoomWithId roomId: String, completion: @escaping ([MXBeaconInfo]) -> Void) {
-        self.getAllBeaconInfo(inRoomWithId: roomId) { allBeaconInfo in
-            
-            let userBeaconInfoList = allBeaconInfo.filter( { return $0.userId == userId })
-            completion(userBeaconInfoList)
-        }
-    }
-    
-    public func getAllBeaconInfoForCurrentUser(inRoomWithId roomId: String, completion: @escaping ([MXBeaconInfo]) -> Void) {
-        
-        guard let myUserId = self.session.myUserId else {
-            completion([])
-            return
-        }
-        
-        self.getAllBeaconInfo(forUserId: myUserId, inRoomWithId: roomId, completion: completion)
-    }
-    
-    /// Check if the current user is sharin is location in a room
-    /// - Parameter roomId: The room id
-    /// - Returns: true if the user if sharing is location
-    public func isCurrentUserSharingIsLocation(inRoomWithId roomId: String) -> Bool {
-        
-        guard let myUserId = self.session.myUserId else {
-            return false
-        }
-        
-        guard let roomSummary = self.session.roomSummary(withRoomId: roomId) else {
-            return false
-        }
-        
-        return roomSummary.userIdsSharingLiveBeacon.contains(myUserId)
     }
         
     /// Send a beacon for an attached beacon info in a room
@@ -150,6 +97,63 @@ public class MXLocationService: NSObject {
         }
         
         return self.sendBeacon(withBeaconInfoEventId: beaconInfoEventId, latitude: latitude, longitude: longitude, description: description, threadId: threadId, inRoomWithId: roomId, localEcho: &localEcho, completion: completion)
+    }
+    
+    /// Check if the current user is sharin is location in a room
+    /// - Parameter roomId: The room id
+    /// - Returns: true if the user if sharing is location
+    public func isCurrentUserSharingIsLocation(inRoomWithId roomId: String) -> Bool {
+        
+        guard let myUserId = self.session.myUserId else {
+            return false
+        }
+        
+        guard let roomSummary = self.session.roomSummary(withRoomId: roomId) else {
+            return false
+        }
+        
+        return roomSummary.userIdsSharingLiveBeacon.contains(myUserId)
+    }
+    
+    // MARK: Beacon info
+    
+    /// Get all beacon info in a room
+    /// - Parameters:
+    ///   - roomId: The room id of the room
+    ///   - completion: Closure called when beacon fetching as ended. Give beacon info array as a result.
+    public func getAllBeaconInfo(inRoomWithId roomId: String, completion: @escaping ([MXBeaconInfo]) -> Void) {
+        
+        guard let room = self.session.room(withRoomId: roomId) else {
+            completion([])
+            return
+        }
+        
+        room.state { roomState in
+            completion(roomState?.beaconInfos ?? [])
+        }
+    }
+    
+    /// Get all beacon info of a user in a room
+    /// - Parameters:
+    ///   - userId: The user id
+    ///   - roomId: The room id
+    ///   - completion: Closure called when beacon fetching as ended. Give beacon info array as a result.
+    public func getAllBeaconInfo(forUserId userId: String, inRoomWithId roomId: String, completion: @escaping ([MXBeaconInfo]) -> Void) {
+        self.getAllBeaconInfo(inRoomWithId: roomId) { allBeaconInfo in
+            
+            let userBeaconInfoList = allBeaconInfo.filter( { return $0.userId == userId })
+            completion(userBeaconInfoList)
+        }
+    }
+    
+    public func getAllBeaconInfoForCurrentUser(inRoomWithId roomId: String, completion: @escaping ([MXBeaconInfo]) -> Void) {
+        
+        guard let myUserId = self.session.myUserId else {
+            completion([])
+            return
+        }
+        
+        self.getAllBeaconInfo(forUserId: myUserId, inRoomWithId: roomId, completion: completion)
     }
     
     // MARK: - Private
