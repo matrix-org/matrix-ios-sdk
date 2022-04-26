@@ -27,7 +27,7 @@ public class MXBeaconInfoSummaryMemoryStore: NSObject, MXBeaconInfoSummaryStoreP
     
     public func addOrUpdateBeaconInfoSummary(_ beaconInfoSummary: MXBeaconInfoSummary, inRoomWithId roomId: String) {
         
-        var beaconInfoSummaries: [MXBeaconInfoSummary] = self.beaconInfoSummaries[roomId] ?? []
+        var beaconInfoSummaries = self.getAllBeaconInfoSummaries(inRoomWithId: roomId)
         
         let existingIndex = beaconInfoSummaries.firstIndex { summary in
             return summary.id == beaconInfoSummary.id
@@ -52,12 +52,34 @@ public class MXBeaconInfoSummaryMemoryStore: NSObject, MXBeaconInfoSummaryStoreP
         }
     }
     
+    public func getAllBeaconInfoSummaries(inRoomWithId roomId: String) -> [MXBeaconInfoSummary] {
+        return self.beaconInfoSummaries[roomId] ?? []
+    }
+    
     public func deleteAllBeaconInfoSummaries(inRoomWithId roomId: String) {
         self.beaconInfoSummaries[roomId] = nil
     }
     
     public func deleteAllBeaconInfoSummaries() {
         self.beaconInfoSummaries = [:]
+    }
+    
+    public func getBeaconInfoSummary(withUserId userId: String,
+                                     description: String?,
+                                     timeout: UInt64,
+                                     timestamp: UInt64,
+                                     inRoomWithId roomId: String) -> MXBeaconInfoSummary? {
+        
+        let beaconInfoSummaries = self.getAllBeaconInfoSummaries(inRoomWithId: roomId)
+        
+        return beaconInfoSummaries.first { beaconInfoSummary in
+            let beaconInfo = beaconInfoSummary.beaconInfo
+            
+            return beaconInfo.userId == userId
+            && beaconInfo.desc == description
+            && beaconInfo.timeout == timeout
+            && beaconInfo.timestamp == timestamp
+        }
     }
 }
 

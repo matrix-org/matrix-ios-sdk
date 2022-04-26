@@ -25,6 +25,16 @@ import Foundation
     /// Get a MXBeaconInfoSummary from his identifier in a given room. The identifier is the first beacon info event id.
     func getBeaconInfoSummary(withIdentifier identifier: String, inRoomWithId roomId: String) -> MXBeaconInfoSummary?
     
+    /// Get a MXBeaconInfoSummary from exact property values
+    func getBeaconInfoSummary(withUserId userId: String,
+                              description: String?,
+                              timeout: UInt64,
+                              timestamp: UInt64,
+                              inRoomWithId roomId: String) -> MXBeaconInfoSummary?
+    
+    /// Get all MXBeaconInfoSummary in a room
+    func getAllBeaconInfoSummaries(inRoomWithId roomId: String) -> [MXBeaconInfoSummary]
+    
     /// Delete all MXBeaconInfoSummary in a room
     func deleteAllBeaconInfoSummaries(inRoomWithId roomId: String)
     
