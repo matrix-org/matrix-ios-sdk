@@ -59,6 +59,9 @@ NS_ASSUME_NONNULL_BEGIN
 /// The aliases of this room.
 @property (nonatomic, readonly) NSArray<NSString *> *aliases;
 
+/// The history visibility of the room.
+@property (nonatomic, readonly) MXRoomHistoryVisibility _Nullable historyVisibility;
+
 /// Join rule for the room.
 @property (nonatomic, readonly) MXRoomJoinRule _Nullable joinRule;
 

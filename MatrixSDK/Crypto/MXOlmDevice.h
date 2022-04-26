@@ -230,15 +230,18 @@ Determine if an incoming messages is a prekey message matching an existing sessi
  @param forwardingCurve25519KeyChain devices which forwarded this session to us (normally empty)
  @param keysClaimed Other keys the sender claims.
  @param exportFormat YES if the megolm keys are in export format (ie, they lack an ed25519 signature).
+ @param sharedHistory YES if the session was created whilst room's history was set to visible (i.e. `world_readable` or `shared`
  
  @return YES if the operation succeeds.
  */
-- (BOOL)addInboundGroupSession:(NSString*)sessionId sessionKey:(NSString*)sessionKey
+- (BOOL)addInboundGroupSession:(NSString*)sessionId
+                    sessionKey:(NSString*)sessionKey
                         roomId:(NSString*)roomId
                      senderKey:(NSString*)senderKey
   forwardingCurve25519KeyChain:(NSArray<NSString *> *)forwardingCurve25519KeyChain
                    keysClaimed:(NSDictionary<NSString*, NSString*>*)keysClaimed
-                  exportFormat:(BOOL)exportFormat;
+                  exportFormat:(BOOL)exportFormat
+                 sharedHistory:(BOOL)sharedHistory;
 
 /**
  Add previously-exported inbound group sessions to the session store.

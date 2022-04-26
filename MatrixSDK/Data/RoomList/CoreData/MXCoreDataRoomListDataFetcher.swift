@@ -410,6 +410,7 @@ private class RoomSummaryForTotalCounts: NSObject, MXRoomSummaryProtocol {
     var topic: String?
     var creatorUserId: String = ""
     var aliases: [String] = []
+    var historyVisibility: String? = nil
     var joinRule: String? = kMXRoomJoinRuleInvite
     var membership: MXMembership = .unknown
     var membershipTransitionState: MXMembershipTransitionState = .unknown
