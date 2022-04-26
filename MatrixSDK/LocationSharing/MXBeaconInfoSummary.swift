@@ -65,13 +65,33 @@ public class MXBeaconInfoSummary: NSObject, MXBeaconInfoSummaryProtocol {
     @discardableResult
     func updateWithBeaconInfo(_ beaconInfo: MXBeaconInfo) -> Bool {
         
-        // TODO: Update this check for beacon info stop state event
-        guard let beaconInfoEventId =  beaconInfo.originalEvent?.eventId, beaconInfoEventId == self.id else {
+        guard let beaconInfoEventId = beaconInfo.originalEvent?.eventId else {
             return false
         }
         
-        self.beaconInfo = beaconInfo
-        return true
+        guard beaconInfo.userId == self.userId else {
+            return false
+        }
+        
+        if beaconInfoEventId == self.id {
+            self.beaconInfo = beaconInfo
+            return true
+        } else if beaconInfoEventId != self.id
+                && self.beaconInfo.isLive == true
+                && beaconInfo.isLive == false
+                && beaconInfo.desc == self.beaconInfo.desc
+                && beaconInfo.timeout == self.beaconInfo.timeout
+                && beaconInfo.timestamp == self.beaconInfo.timestamp {
+            
+            // Beacon info with a different event id is only allowed when the beacon info is representing the stop state
+            
+            // Update current beacon info with `isLive` property to false
+            self.beaconInfo = self.beaconInfo.stopped()
+            
+            return true
+        }
+
+        return false
     }
     
     @discardableResult
