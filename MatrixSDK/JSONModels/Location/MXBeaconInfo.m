@@ -91,6 +91,16 @@ static NSString * const kLiveJSONKey = @"live";
                   originalEvent:event];
 }
 
+- (MXBeaconInfo*)stopped
+{
+    return [[[self class] alloc] initWithUserId:self.userId
+                                    description:self.desc
+                                        timeout:self.timeout
+                                         isLive:NO
+                                      timestamp:self.timestamp
+                                  originalEvent:self.originalEvent];
+}
+
 #pragma mark - Overrides
 
 + (id)modelFromJSON:(NSDictionary *)jsonDictionary
