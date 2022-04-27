@@ -25,6 +25,7 @@
 #import "MXCrypto_Private.h"
 #import "MXTools.h"
 #import "MatrixSDKSwiftHeader.h"
+#import "MXSharedHistoryKeyService.h"
 
 @interface MXMegolmDecryption ()
 {
@@ -212,11 +213,14 @@
     NSArray<NSString*> *forwardingKeyChain;
     BOOL exportFormat = NO;
     NSDictionary *keysClaimed;
+    BOOL sharedHistory = [crypto isRoomSharingHistory:roomId];
+    if (content[kMXSharedHistoryKeyName] != nil) {
+        MXJSONModelSetBoolean(sharedHistory, content[kMXSharedHistoryKeyName]);
+    }
 
     if (event.eventType == MXEventTypeRoomForwardedKey)
     {
         exportFormat = YES;
-
         MXJSONModelSetArray(forwardingKeyChain, content[@"forwarding_curve25519_key_chain"]);
         if (!forwardingKeyChain)
         {
@@ -254,7 +258,6 @@
 
     MXLogDebug(@"[MXMegolmDecryption] onRoomKeyEvent: Adding key for megolm session %@|%@ from %@ event", senderKey, sessionId, event.type);
 
-    BOOL sharedHistory = [crypto isRoomSharingHistory:roomId];
     [olmDevice addInboundGroupSession:sessionId
                            sessionKey:sessionKey
                                roomId:roomId
@@ -530,16 +533,17 @@
 
 #pragma mark - MXSharedHistoryKeyStore
 
-- (BOOL)hasSharedHistoryWithSessionId:(NSString *)sessionId senderKey:(NSString *)senderKey
+
+- (BOOL)hasSharedHistoryForSessionId:(NSString *)sessionId senderKey:(NSString *)senderKey
 {
     MXOlmInboundGroupSession *session = [crypto.store inboundGroupSessionWithId:sessionId
                                                                    andSenderKey:senderKey];
     return session.sharedHistory;
 }
 
-- (void)shareKeysWithRequest:(MXSharedHistoryKeyRequest *)request
-                     success:(void (^)(void))success
-                     failure:(void (^)(NSError *error))failure
+- (void)shareKeysForRequest:(MXSharedHistoryKeyRequest *)request
+                    success:(void (^)(void))success
+                    failure:(void (^)(NSError *))failure
 {
     [self shareKeysWitUserId:request.userId
                      devices:request.devices

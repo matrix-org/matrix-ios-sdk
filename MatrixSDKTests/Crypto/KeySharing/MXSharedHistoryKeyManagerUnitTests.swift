@@ -28,9 +28,9 @@ class MXSharedHistoryKeyManagerUnitTests: XCTestCase {
         }
     }
     
-    class SpyService: MXSharedHistoryKeyService {
+    class SpyService: NSObject, MXSharedHistoryKeyService {
         var sharedHistory: Set<String>?
-        func hasSharedHistory(sessionId: String, senderKey: String) -> Bool {
+        func hasSharedHistory(forSessionId sessionId: String!, senderKey: String!) -> Bool {
             guard let sharedHistory = sharedHistory else {
                 return true
             }
@@ -38,7 +38,7 @@ class MXSharedHistoryKeyManagerUnitTests: XCTestCase {
         }
         
         var requests = [MXSharedHistoryKeyRequest]()
-        func shareKeys(request: MXSharedHistoryKeyRequest, success: (() -> Void)?, failure: ((NSError?) -> Void)?) {
+        func shareKeys(for request: MXSharedHistoryKeyRequest!, success: (() -> Void)!, failure: ((Error?) -> Void)!) {
             requests.append(request)
             success?()
         }

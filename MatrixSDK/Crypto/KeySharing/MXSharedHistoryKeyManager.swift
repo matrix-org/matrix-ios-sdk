@@ -16,13 +16,6 @@
 
 import Foundation
 
-/// Object managing the session keys and responsible for executing key share requests
-@objc
-public protocol MXSharedHistoryKeyService {
-    func hasSharedHistory(sessionId: String, senderKey: String) -> Bool
-    func shareKeys(request: MXSharedHistoryKeyRequest, success: (() -> Void)?, failure: ((NSError?) -> Void)?)
-}
-
 /// Manager responsible for sharing keys of messages in a room with an invited user
 ///
 /// The intent of sharing keys with different users on invite is to allow them to see any immediate
@@ -79,7 +72,7 @@ public class MXSharedHistoryKeyManager: NSObject {
                 senderKey: session.senderKey
             )
             
-            service.shareKeys(request: request) {
+            service.shareKeys(for: request) {
                 // Success does not trigger any further action / user notification, so we only log the outcome
                 MXLog.debug("[MXSharedHistoryRoomKeyRequestManager] Shared key successfully")
             } failure: {
@@ -109,7 +102,7 @@ public class MXSharedHistoryKeyManager: NSObject {
             return nil
         }
         
-        guard service.hasSharedHistory(sessionId: sessionId, senderKey: senderKey) else {
+        guard service.hasSharedHistory(forSessionId: sessionId, senderKey: senderKey) else {
             MXLog.debug("[MXSharedHistoryRoomKeyRequestManager] Skipping keys for message without shared history")
             return nil
         }

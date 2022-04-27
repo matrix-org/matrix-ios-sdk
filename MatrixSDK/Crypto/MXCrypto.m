@@ -52,6 +52,7 @@
 #import "MXDeviceListResponse.h"
 
 #import "MatrixSDKSwiftHeader.h"
+#import "MXSharedHistoryKeyService.h"
 /**
  The store to use for crypto.
  */
@@ -2506,7 +2507,8 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
                          @"session_id": sessionId,
                          @"session_key": key[@"key"],
                          @"chain_index": key[@"chain_index"],
-                         @"forwarding_curve25519_key_chain": key[@"forwarding_curve25519_key_chain"]
+                         @"forwarding_curve25519_key_chain": key[@"forwarding_curve25519_key_chain"],
+                         kMXSharedHistoryKeyName: key[@"shared_history"]
                          }
                  };
     }
