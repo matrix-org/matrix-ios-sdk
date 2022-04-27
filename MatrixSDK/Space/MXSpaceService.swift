@@ -231,6 +231,20 @@ public class MXSpaceService: NSObject {
         return self.graph.orphanedRoomIds.contains(roomId) || self.graph.orphanedDirectRoomIds.contains(roomId)
     }
     
+    /// Returns the first ancestor which is a root space
+    /// - Parameters:
+    ///   - roomId: ID of the room
+    /// - Returns: Instance of the ancestor if found. `nil` otherwise
+    public func firstRootAncestorForRoom(withId roomId: String) -> MXSpace? {
+        if let ancestorIds = ancestorsPerRoomId[roomId] {
+            for ancestorId in ancestorIds where ancestorsPerRoomId[ancestorId] == nil {
+                return spacesPerId[ancestorId]
+            }
+        }
+        
+        return nil
+    }
+    
     /// Handle a sync response
     /// - Parameters:
     ///   - syncResponse: The sync response object
