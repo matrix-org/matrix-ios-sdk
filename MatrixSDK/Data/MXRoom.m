@@ -122,7 +122,8 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
         _roomId = roomId;
         mxSession = mxSession2;
         
-        if (mxSession.crypto) {
+        if (mxSession.crypto)
+        {
             MXMegolmDecryption *decryption = [[MXMegolmDecryption alloc] initWithCrypto:mxSession.crypto];
             sharedHistoryKeyManager = [[MXSharedHistoryKeyManager alloc] initWithCrypto:mxSession.crypto service:decryption];
         }
@@ -1942,7 +1943,8 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
                        success:(void (^)(void))success
                        failure:(void (^)(NSError *error))failure
 {
-    if (MXSDKOptions.sharedInstance.enableRoomSharedHistoryOnInvite) {
+    if (MXSDKOptions.sharedInstance.enableRoomSharedHistoryOnInvite)
+    {
         [self shareRoomKeysWith:userId];
     }
     return [mxSession.matrixRestClient inviteUser:userId toRoom:self.roomId success:success failure:failure];

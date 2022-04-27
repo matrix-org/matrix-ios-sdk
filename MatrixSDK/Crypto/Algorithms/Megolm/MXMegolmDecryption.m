@@ -369,17 +369,22 @@
                                                                    chainIndex:nil];
         
         MXUsersDevicesMap<NSDictionary*> *contentMap = [[MXUsersDevicesMap alloc] init];
-        for (MXDeviceInfo *deviceInfo in devices) {
+        for (MXDeviceInfo *deviceInfo in devices)
+        {
             MXOlmSessionResult *olmSessionResult = [results objectForDevice:deviceInfo.deviceId forUser:userId];
-            if (olmSessionResult.sessionId) {
+            if (olmSessionResult.sessionId)
+            {
                 NSDictionary *message = [self->crypto encryptMessage:payload forDevices:@[deviceInfo]];
                 [contentMap setObject:message forUser:userId andDevice:deviceInfo.deviceId];
-            } else {
+            }
+            else
+            {
                 MXLogDebug(@"[MXMegolmDecryption] No session with device %@, cannot share keys", deviceInfo.deviceId);
             }
         }
         
-        if (contentMap.count == 0) {
+        if (contentMap.count == 0)
+        {
             MXLogDebug(@"[MXMegolmDecryption] No devices available for user %@, cannot share keys", userId);
             if (success)
             {
