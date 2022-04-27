@@ -79,7 +79,7 @@ static NSUInteger requestCount = 0;
 }
 
 /**
- The access token used for authenticated requests.
+ Whether or not the client should send authenticated requests by default.
  */
 @property (nonatomic) BOOL isAuthenticatedClient;
 

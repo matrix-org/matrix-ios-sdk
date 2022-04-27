@@ -597,6 +597,34 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
     }];
 }
 
+- (MXHTTPOperation*)isUsernameAvailable:(NSString*)username
+                                success:(void (^)(MXUsernameAvailability *availability))success
+                                failure:(void (^)(NSError *error))failure
+{
+    NSDictionary* parameters = @{@"username": username};
+    
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"GET"
+                                    path:[NSString stringWithFormat:@"%@/register/available", apiPathPrefix]
+                              parameters:parameters
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
+                                     if (success)
+                                     {
+                                         __block MXUsernameAvailability *availability;
+                                         [self dispatchProcessing:^{
+                                             MXJSONModelSetMXJSONModel(availability, MXUsernameAvailability, JSONResponse);
+                                         } andCompletion:^{
+                                             success(availability);
+                                         }];
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
 - (MXHTTPOperation*)getRegisterSession:(void (^)(MXAuthenticationSession *authSession))success
                                failure:(void (^)(NSError *error))failure
 {

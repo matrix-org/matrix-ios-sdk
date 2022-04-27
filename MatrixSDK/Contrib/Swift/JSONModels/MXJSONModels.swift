@@ -23,6 +23,7 @@ public enum MXLoginFlowType: Equatable, Hashable {
     case recaptcha
     case OAuth2
     case emailIdentity
+    case msisdn
     case token
     case dummy
     case emailCode
@@ -34,6 +35,7 @@ public enum MXLoginFlowType: Equatable, Hashable {
         case .recaptcha: return kMXLoginFlowTypeRecaptcha
         case .OAuth2: return kMXLoginFlowTypeOAuth2
         case .emailIdentity: return kMXLoginFlowTypeEmailIdentity
+        case .msisdn: return kMXLoginFlowTypeMSISDN
         case .token: return kMXLoginFlowTypeToken
         case .dummy: return kMXLoginFlowTypeDummy
         case .emailCode: return kMXLoginFlowTypeEmailCode
@@ -42,8 +44,8 @@ public enum MXLoginFlowType: Equatable, Hashable {
     }
 
     public init(identifier: String) {
-        let flowTypess: [MXLoginFlowType] = [.password, .recaptcha, .OAuth2, .emailIdentity, .token, .dummy, .emailCode]
-        self = flowTypess.first(where: { $0.identifier == identifier }) ?? .other(identifier)
+        let flowTypes: [MXLoginFlowType] = [.password, .recaptcha, .OAuth2, .emailIdentity, .msisdn, .token, .dummy, .emailCode]
+        self = flowTypes.first(where: { $0.identifier == identifier }) ?? .other(identifier)
     }
 }
 
