@@ -145,41 +145,125 @@ class MXBeaconAggregationsTests: XCTestCase {
                 switch response {
                 case .success(let eventId):
                     
-                    var localEcho: MXEvent?
+                    var firstUpdateListener: Any?
                     
-                    locationService.sendBeacon(withBeaconInfoEventId: eventId, latitude: expectedBeaconLatitude, longitude: expectedBeaconLongitude, description: expectedBeaconDescription, threadId: nil, inRoomWithId: roomId, localEcho: &localEcho) { response in
+                    firstUpdateListener = bobSession.aggregations.beaconAggegations.listenToBeaconInfoSummaryUpdateInRoom(withId: roomId) { beaconInfoSummary in
                         
-                        switch response {
-                        case .success:
+                        if let firstUpdateListener = firstUpdateListener {
+                            bobSession.aggregations.removeListener(firstUpdateListener)
+                        }
+                        
+                        var localEcho: MXEvent?
+                        
+                        locationService.sendLocation(withBeaconInfoEventId: eventId, latitude: expectedBeaconLatitude, longitude: expectedBeaconLongitude, description: expectedBeaconDescription, threadId: nil, inRoomWithId: roomId, localEcho: &localEcho) { response in
                             
-                            _ = bobSession.aggregations.beaconAggegations.listenToBeaconInfoSummaryUpdateInRoom(withId: initialRoom.roomId) { beaconInfoSummary in
+                            switch response {
+                            case .success:
                                 
-                                XCTAssertEqual(beaconInfoSummary.id, eventId)
-                                XCTAssertEqual(beaconInfoSummary.userId, userId)
-                                                        
-                                let beaconInfo = beaconInfoSummary.beaconInfo
-                                
-                                XCTAssertEqual(beaconInfo.desc, expectedBeaconInfoDescription)
-                                XCTAssertEqual(beaconInfo.timeout, UInt64(expectedBeaconInfoTimeout))
-                                XCTAssertEqual(beaconInfo.isLive, expectedBeaconInfoIsLive)
-                                
-                                let beacon = beaconInfoSummary.lastBeacon
-                                
-                                XCTAssertNotNil(beacon)
-                                
-                                if let beacon = beacon {
-                                    XCTAssertEqual(beacon.location.desc, expectedBeaconDescription)
-                                    XCTAssertEqual(beacon.location.latitude, expectedBeaconLatitude)
-                                    XCTAssertEqual(beacon.location.longitude, expectedBeaconLongitude)
-                                }
+                                _ = bobSession.aggregations.beaconAggegations.listenToBeaconInfoSummaryUpdateInRoom(withId: initialRoom.roomId) { beaconInfoSummary in
+                                    
+                                    XCTAssertEqual(beaconInfoSummary.id, eventId)
+                                    XCTAssertEqual(beaconInfoSummary.userId, userId)
+                                                            
+                                    let beaconInfo = beaconInfoSummary.beaconInfo
+                                    
+                                    XCTAssertEqual(beaconInfo.desc, expectedBeaconInfoDescription)
+                                    XCTAssertEqual(beaconInfo.timeout, UInt64(expectedBeaconInfoTimeout))
+                                    XCTAssertEqual(beaconInfo.isLive, expectedBeaconInfoIsLive)
+                                    
+                                    let beacon = beaconInfoSummary.lastBeacon
+                                    
+                                    XCTAssertNotNil(beacon)
+                                    
+                                    if let beacon = beacon {
+                                        XCTAssertEqual(beacon.location.desc, expectedBeaconDescription)
+                                        XCTAssertEqual(beacon.location.latitude, expectedBeaconLatitude)
+                                        XCTAssertEqual(beacon.location.longitude, expectedBeaconLongitude)
+                                    }
 
+                                    expectation.fulfill()
+                                }
+                                
+                            case .failure(let error):
+                                XCTFail("Send beacon location fails with error: \(error)")
                                 expectation.fulfill()
                             }
-                            
-                        case .failure(let error):
-                            XCTFail("Send beacon location fails with error: \(error)")
-                            expectation.fulfill()
                         }
+                        
+                    }
+                case .failure(let error):
+                    XCTFail("Start location sharing fails with error: \(error)")
+                    expectation.fulfill()
+                }
+            }
+        }
+    }
+    
+    /// Test: Expect beacon info state event live property set to false after user has stopped to share is location
+    /// - Create a Bob session
+    /// - Create an initial room
+    /// - Start location sharing
+    /// - Expect a beacon info state event with live == false
+    func testStopLiveLocationSharingSucceed() {
+        let store = MXMemoryStore()
+        testData.doMXSessionTest(withBobAndARoom: self, andStore: store) { bobSession, initialRoom, expectation in
+            guard let bobSession = bobSession,
+                  let initialRoom = initialRoom,
+                  let expectation = expectation else {
+                XCTFail("Failed to setup test conditions")
+                return
+            }
+            
+            let locationService: MXLocationService = bobSession.locationService
+            
+            let expectedBeaconInfoDescription = "Live location description"
+            let expectedBeaconInfoTimeout: TimeInterval = 600000
+            let expectedBeaconInfoIsLive = false
+                        
+            let roomId: String = initialRoom.roomId
+            let userId: String = bobSession.myUserId
+            var beaconInfoEventId: String?
+            
+            locationService.startUserLocationSharing(withRoomId: roomId, description: expectedBeaconInfoDescription, timeout: expectedBeaconInfoTimeout) { response in
+                
+                switch response {
+                case .success(let eventId):
+                    
+                    beaconInfoEventId = eventId
+                    
+                    var firstUpdateListener: Any?
+                    
+                    firstUpdateListener = bobSession.aggregations.beaconAggegations.listenToBeaconInfoSummaryUpdateInRoom(withId: roomId) { beaconInfoSummary in
+                        
+                        if let firstUpdateListener = firstUpdateListener {
+                            bobSession.aggregations.removeListener(firstUpdateListener)
+                        }
+                        
+                        locationService.stopUserLocationSharing(withBeaconInfoEventId: eventId, roomId: roomId) { response in
+                            
+                            switch response {
+                            case .success:
+                                
+                                _ = bobSession.aggregations.beaconAggegations.listenToBeaconInfoSummaryUpdateInRoom(withId: roomId) { beaconInfoSummary in
+                                    
+                                    XCTAssertEqual(beaconInfoSummary.id, beaconInfoEventId)
+                                    XCTAssertEqual(beaconInfoSummary.userId, userId)
+                                                            
+                                    let beaconInfo = beaconInfoSummary.beaconInfo
+                                    
+                                    XCTAssertEqual(beaconInfo.desc, expectedBeaconInfoDescription)
+                                    XCTAssertEqual(beaconInfo.timeout, UInt64(expectedBeaconInfoTimeout))
+                                    XCTAssertEqual(beaconInfo.isLive, expectedBeaconInfoIsLive)
+
+                                    expectation.fulfill()
+                                }
+                                
+                            case .failure(let error):
+                                XCTFail("Stop location sharing fails with error: \(error)")
+                                expectation.fulfill()
+                            }
+                        }
+                        
                     }
                     
                 case .failure(let error):

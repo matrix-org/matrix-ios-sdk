@@ -195,7 +195,6 @@ NSString *const kMXMessageContentKeyExtensibleAssetMSC3488 = @"org.matrix.msc348
 NSString *const kMXMessageContentKeyExtensibleAssetType = @"type";
 NSString *const kMXMessageContentKeyExtensibleAssetTypeUser = @"m.self";
 NSString *const kMXMessageContentKeyExtensibleAssetTypePin = @"m.pin";
-NSString *const kMXMessageContentKeyExtensibleAssetTypeLiveLocation = @"m.self.live";
 
 // Join Rules
 

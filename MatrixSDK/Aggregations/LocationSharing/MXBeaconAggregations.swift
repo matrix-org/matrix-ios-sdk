@@ -125,7 +125,17 @@ public class MXBeaconAggregations: NSObject {
         
         var beaconInfoSummary: MXBeaconInfoSummary?
         
-        if let existingBeaconInfoSummary = self.getBeaconInfoSummary(withIdentifier: eventId, inRoomWithId: roomId) {
+        // A new beacon info is emitted to set a current one to stop state. This beacon info have a different event id.
+        if beaconInfo.isLive == false {
+            
+            // If no corresponding BeaconInfoSummary exists, discard this beacon info
+            if let existingBeaconInfoSummary = self.getBeaconInfoSummary(withStoppedBeaconInfo: beaconInfo, inRoomWithId: roomId), existingBeaconInfoSummary.hasStopped == false {
+                
+                existingBeaconInfoSummary.updateWithBeaconInfo(beaconInfo)
+                beaconInfoSummary = existingBeaconInfoSummary
+            }
+            
+        } else if let existingBeaconInfoSummary = self.getBeaconInfoSummary(withIdentifier: eventId, inRoomWithId: roomId) {
 
             // If beacon info is older than existing one, do not take it into account
             if beaconInfo.timestamp > existingBeaconInfoSummary.beaconInfo.timestamp {
@@ -167,5 +177,18 @@ public class MXBeaconAggregations: NSObject {
     /// Get MXBeaconInfoSummary class instead of MXBeaconInfoSummaryProtocol to have access to internal methods
     private func getBeaconInfoSummary(withIdentifier identifier: String, inRoomWithId roomId: String) -> MXBeaconInfoSummary? {
         return self.beaconInfoSummaryStore.getBeaconInfoSummary(withIdentifier: identifier, inRoomWithId: roomId)
+    }
+    
+    private func getBeaconInfoSummary(withStoppedBeaconInfo beaconInfo: MXBeaconInfo, inRoomWithId roomId: String) -> MXBeaconInfoSummary? {
+        
+        guard beaconInfo.isLive == false else {
+            return nil
+        }
+        
+        guard let userId = beaconInfo.userId else {
+            return nil
+        }
+        
+        return self.beaconInfoSummaryStore.getBeaconInfoSummary(withUserId: userId, description: beaconInfo.desc, timeout: beaconInfo.timeout, timestamp: beaconInfo.timestamp, inRoomWithId: roomId)
     }
 }

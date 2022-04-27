@@ -69,6 +69,12 @@ NS_ASSUME_NONNULL_BEGIN
 /// @param event The m.beacon_info event.
 - (nullable instancetype)initWithMXEvent:(MXEvent*)event;
 
+#pragma mark - Public
+
+/// Get the stopped beacon info version
+/// Keep original event as is and update the `isLive` property to false
+- (MXBeaconInfo*)stopped;
+
 @end
 
 NS_ASSUME_NONNULL_END
