@@ -55,6 +55,7 @@
         "MXQRCodeDataUnitTests",
         "MXReplyEventParserUnitTests",
         "MXResponseUnitTests",
+        "MXSharedHistoryKeyManagerUnitTests",
         "MXStoreRoomListDataManagerUnitTests",
         "MXSyncResponseUnitTests",
         "MXThreadEventTimelineUnitTests",
