@@ -533,12 +533,13 @@
 
 #pragma mark - MXSharedHistoryKeyStore
 
-
-- (BOOL)hasSharedHistoryForSessionId:(NSString *)sessionId senderKey:(NSString *)senderKey
+- (BOOL)hasSharedHistoryForRoomId:(NSString *)roomId
+                        sessionId:(NSString *)sessionId
+                        senderKey:(NSString *)senderKey
 {
     MXOlmInboundGroupSession *session = [crypto.store inboundGroupSessionWithId:sessionId
                                                                    andSenderKey:senderKey];
-    return session.sharedHistory;
+    return session.sharedHistory && [session.roomId isEqualToString:roomId];
 }
 
 - (void)shareKeysForRequest:(MXSharedHistoryKeyRequest *)request

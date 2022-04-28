@@ -32,8 +32,9 @@ FOUNDATION_EXPORT NSString *const kMXSharedHistoryKeyName;
 /**
  Check whether key for a given session (sessionId + senderKey) exists
  */
-- (BOOL)hasSharedHistoryForSessionId:(NSString *)sessionId
-                           senderKey:(NSString *)senderKey;
+- (BOOL)hasSharedHistoryForRoomId:(NSString *)roomId
+                        sessionId:(NSString *)sessionId
+                        senderKey:(NSString *)senderKey;
 
 /**
  Share keys for a given request, containing userId, list of devices and session to share
