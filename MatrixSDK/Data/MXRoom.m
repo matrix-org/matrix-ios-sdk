@@ -2834,6 +2834,9 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
     {
         [self.summary resetLastMessage:nil failure:nil commit:YES];
     }
+
+    //  save summary to update sentStatus
+    [self.summary save:NO];
 }
 
 - (void)updateOutgoingMessage:(NSString *)outgoingMessageEventId withOutgoingMessage:(MXEvent *)outgoingMessage
@@ -2882,6 +2885,9 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
             
             index++;
         }
+
+        //  save summary to update sentStatus
+        [self.summary save:NO];
         
         [mxSession.store commit];
     }
