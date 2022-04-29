@@ -16,13 +16,6 @@
 
 import Foundation
 
-/// Object managing the session keys and responsible for executing key share requests
-@objc
-public protocol MXSharedHistoryKeyService {
-    func hasSharedHistory(sessionId: String, senderKey: String) -> Bool
-    func shareKeys(request: MXSharedHistoryKeyRequest, success: (() -> Void)?, failure: ((NSError?) -> Void)?)
-}
-
 /// Manager responsible for sharing keys of messages in a room with an invited user
 ///
 /// The intent of sharing keys with different users on invite is to allow them to see any immediate
@@ -34,15 +27,16 @@ public protocol MXSharedHistoryKeyService {
 @objc
 public class MXSharedHistoryKeyManager: NSObject {
     struct SessionInfo: Hashable {
-        let roomId: String
         let sessionId: String
         let senderKey: String
     }
     
+    private let roomId: String
     private let crypto: MXCrypto
     private let service: MXSharedHistoryKeyService
     
-    @objc public init(crypto: MXCrypto, service: MXSharedHistoryKeyService) {
+    @objc public init(roomId: String, crypto: MXCrypto, service: MXSharedHistoryKeyService) {
+        self.roomId = roomId
         self.crypto = crypto
         self.service = service
     }
@@ -74,12 +68,12 @@ public class MXSharedHistoryKeyManager: NSObject {
             let request = MXSharedHistoryKeyRequest(
                 userId: userId,
                 devices: devices,
-                roomId: session.roomId,
+                roomId: roomId,
                 sessionId: session.sessionId,
                 senderKey: session.senderKey
             )
             
-            service.shareKeys(request: request) {
+            service.shareKeys(for: request) {
                 // Success does not trigger any further action / user notification, so we only log the outcome
                 MXLog.debug("[MXSharedHistoryRoomKeyRequestManager] Shared key successfully")
             } failure: {
@@ -101,21 +95,19 @@ public class MXSharedHistoryKeyManager: NSObject {
     private func sessionInfo(for message: MXEvent) -> SessionInfo? {
         let content = message.wireContent
         guard
-            let roomId = message.roomId,
             let sessionId = content?["session_id"] as? String,
             let senderKey = content?["sender_key"] as? String
         else {
             MXLog.debug("[MXSharedHistoryRoomKeyRequestManager] Cannot create key request")
             return nil
         }
-        
-        guard service.hasSharedHistory(sessionId: sessionId, senderKey: senderKey) else {
-            MXLog.debug("[MXSharedHistoryRoomKeyRequestManager] Skipping keys for message without shared history")
+
+        guard service.hasSharedHistory(forRoomId: roomId, sessionId: sessionId, senderKey: senderKey) else {
+            MXLog.debug("[MXSharedHistoryRoomKeyRequestManager] Skipping keys for message without shared history or mismatched room identifier")
             return nil
         }
         
         return .init(
-            roomId: roomId,
             sessionId: sessionId,
             senderKey: senderKey
         )

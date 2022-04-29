@@ -28,6 +28,7 @@
 #import "MXTools.h"
 #import "MXOutboundSessionInfo.h"
 #import <OLMKit/OLMKit.h>
+#import "MXSharedHistoryKeyService.h"
 
 
 @interface MXMegolmEncryption ()
@@ -354,6 +355,7 @@
 {
     NSString *sessionKey = session.session.sessionKey;
     NSUInteger chainIndex = session.session.messageIndex;
+    BOOL sharedHistory = [self isSessionSharingHistory:session];
 
     NSDictionary *payload = @{
                               @"type": kMXEventTypeStringRoomKey,
@@ -362,7 +364,8 @@
                                       @"room_id": roomId,
                                       @"session_id": session.sessionId,
                                       @"session_key": sessionKey,
-                                      @"chain_index": @(chainIndex)
+                                      @"chain_index": @(chainIndex),
+                                      kMXSharedHistoryKeyName: @(sharedHistory)
                                       }
                               };
 

@@ -125,7 +125,9 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
         if (mxSession.crypto)
         {
             MXMegolmDecryption *decryption = [[MXMegolmDecryption alloc] initWithCrypto:mxSession.crypto];
-            sharedHistoryKeyManager = [[MXSharedHistoryKeyManager alloc] initWithCrypto:mxSession.crypto service:decryption];
+            sharedHistoryKeyManager = [[MXSharedHistoryKeyManager alloc] initWithRoomId:roomId
+                                                                                 crypto:mxSession.crypto
+                                                                                service:decryption];
         }
 
         if (store)

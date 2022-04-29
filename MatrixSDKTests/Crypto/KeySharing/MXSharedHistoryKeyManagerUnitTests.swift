@@ -28,17 +28,25 @@ class MXSharedHistoryKeyManagerUnitTests: XCTestCase {
         }
     }
     
-    class SpyService: MXSharedHistoryKeyService {
-        var sharedHistory: Set<String>?
-        func hasSharedHistory(sessionId: String, senderKey: String) -> Bool {
+    class SpyService: NSObject, MXSharedHistoryKeyService {
+        struct SessionStub: Hashable {
+            let roomId: String
+            let sessionId: String
+            let senderKey: String
+        }
+        
+        var sharedHistory: Set<SessionStub>?
+        func hasSharedHistory(forRoomId roomId: String!, sessionId: String!, senderKey: String!) -> Bool {
             guard let sharedHistory = sharedHistory else {
                 return true
             }
-            return sharedHistory.contains(sessionId)
+            
+            let session = SessionStub(roomId: roomId, sessionId: sessionId, senderKey: senderKey)
+            return sharedHistory.contains(session)
         }
         
         var requests = [MXSharedHistoryKeyRequest]()
-        func shareKeys(request: MXSharedHistoryKeyRequest, success: (() -> Void)?, failure: ((NSError?) -> Void)?) {
+        func shareKeys(for request: MXSharedHistoryKeyRequest!, success: (() -> Void)!, failure: ((Error?) -> Void)!) {
             requests.append(request)
             success?()
         }
@@ -76,7 +84,6 @@ class MXSharedHistoryKeyManagerUnitTests: XCTestCase {
         crypto.devices.setObject(MXDeviceInfo(deviceId: "1"), forUser: "user1", andDevice: "1")
         
         service = SpyService()
-        manager = MXSharedHistoryKeyManager(crypto: crypto, service: service)
     }
     
     private func makeEvent(
@@ -84,7 +91,7 @@ class MXSharedHistoryKeyManagerUnitTests: XCTestCase {
         senderKey: String = "456"
     ) -> MXEvent {
         MXEvent(fromJSON: [
-            "room_id": "123",
+            "room_id": "ABC",
             "type": kMXEventTypeStringRoomEncrypted,
             "content": [
                 "session_id": sessionId,
@@ -93,13 +100,35 @@ class MXSharedHistoryKeyManagerUnitTests: XCTestCase {
         ])
     }
     
+    private func makeInboundSession(
+        roomId: String = "ABC",
+        sessionId: String = "123",
+        senderKey: String = "456"
+    ) -> SpyService.SessionStub {
+        return .init(roomId: roomId, sessionId: sessionId, senderKey: senderKey)
+    }
+    
+    private func shareKeys(
+        userId: String = "user1",
+        roomId: String = "ABC",
+        enumerator: MXEventsEnumerator? = nil,
+        limit: Int = .max
+    ) {
+        manager = MXSharedHistoryKeyManager(roomId: roomId, crypto: crypto, service: service)
+        manager.shareMessageKeys(
+            withUserId: userId,
+            messageEnumerator: enumerator ?? self.enumerator,
+            limit: limit
+        )
+    }
+    
     func testDoesNotCreateRequestIfNoKnownDevices() {
         enumerator.messages = [
             makeEvent(sessionId: "A", senderKey: "B")
         ]
         crypto.devices = MXUsersDevicesMap<MXDeviceInfo>()
         
-        manager.shareMessageKeys(withUserId: "user1", messageEnumerator: enumerator, limit: .max)
+        shareKeys()
         
         XCTAssertEqual(service.requests.count, 0)
     }
@@ -112,7 +141,7 @@ class MXSharedHistoryKeyManagerUnitTests: XCTestCase {
         crypto.devices.setObject(MXDeviceInfo(deviceId: "2"), forUser: "user1", andDevice: "2")
         crypto.devices.setObject(MXDeviceInfo(deviceId: "3"), forUser: "user2", andDevice: "3")
         
-        manager.shareMessageKeys(withUserId: "user1", messageEnumerator: enumerator, limit: .max)
+        shareKeys()
         
         XCTAssertEqual(service.requests.count, 1)
         XCTAssertEqual(
@@ -123,7 +152,7 @@ class MXSharedHistoryKeyManagerUnitTests: XCTestCase {
                     MXDeviceInfo(deviceId: "1"),
                     MXDeviceInfo(deviceId: "2")
                 ],
-                roomId: "123",
+                roomId: "ABC",
                 sessionId: "A",
                 senderKey: "B"
             )
@@ -141,7 +170,7 @@ class MXSharedHistoryKeyManagerUnitTests: XCTestCase {
             makeEvent(sessionId: "3", senderKey: "B"),
         ]
         
-        manager.shareMessageKeys(withUserId: "user1", messageEnumerator: enumerator, limit: .max)
+        shareKeys()
         
         let identifiers = service.requests.map { [$0.sessionId, $0.senderKey] }
         XCTAssertEqual(service.requests.count, 5)
@@ -161,7 +190,7 @@ class MXSharedHistoryKeyManagerUnitTests: XCTestCase {
             makeEvent(sessionId: "1"),
         ]
         
-        manager.shareMessageKeys(withUserId: "user1", messageEnumerator: enumerator, limit: 3)
+        shareKeys(limit: 3)
         
         let identifiers = service.requests.map { $0.sessionId }
         XCTAssertEqual(service.requests.count, 3)
@@ -177,16 +206,43 @@ class MXSharedHistoryKeyManagerUnitTests: XCTestCase {
             makeEvent(sessionId: "5"),
         ]
         service.sharedHistory = [
-            "1",
-            "2",
-            "4",
+            makeInboundSession(sessionId: "1"),
+            makeInboundSession(sessionId: "2"),
+            makeInboundSession(sessionId: "4"),
         ]
         
-        manager.shareMessageKeys(withUserId: "user1", messageEnumerator: enumerator, limit: .max)
+        shareKeys()
         
         let identifiers = service.requests.map { $0.sessionId }
         XCTAssertEqual(service.requests.count, 3)
         XCTAssertEqual(Set(identifiers), ["1", "2", "4"])
+    }
+    
+    func testIgnoresEventsWithMismatchedRoomId() {
+        enumerator.messages = [
+            makeEvent(sessionId: "1"),
+            makeEvent(sessionId: "2"),
+            makeEvent(sessionId: "3"),
+        ]
+        service.sharedHistory = [
+            makeInboundSession(
+                roomId: "XYZ",
+                sessionId: "1"
+            ),
+            makeInboundSession(
+                roomId: "ABC",
+                sessionId: "2"
+            ),
+            makeInboundSession(
+                roomId: "XYZ",
+                sessionId: "3"
+            ),
+        ]
+        
+        shareKeys(roomId: "ABC")
+        
+        XCTAssertEqual(service.requests.count, 1)
+        XCTAssertEqual(service.requests.first?.sessionId, "2")
     }
 }
 

@@ -21,8 +21,7 @@
 #ifdef MX_CRYPTO
 
 #import "MXDecrypting.h"
-
-@protocol MXSharedHistoryKeyService;
+#import "MXSharedHistoryKeyService.h"
 
 @interface MXMegolmDecryption : NSObject <MXDecrypting, MXSharedHistoryKeyService>
 
