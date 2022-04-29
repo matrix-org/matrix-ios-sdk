@@ -704,7 +704,7 @@
                                     [aliceSession1.crypto setDeviceVerification:MXDeviceVerified forDevice:aliceSession2.myDeviceId ofUser:aliceSession1.myUserId success:^{
                                         [aliceSession2.crypto setDeviceVerification:MXDeviceVerified forDevice:aliceSession1.myDeviceId ofUser:aliceSession1.myUserId success:^{
                                             
-                                            // Alice2 pagingates in the room to get the keys forwarded to her
+                                            // Alice2 paginates in the room to get the keys forwarded to her
                                             MXRoom *roomFromAlice2POV = [aliceSession2 roomWithRoomId:roomId];
                                             [roomFromAlice2POV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
                                                 [liveTimeline resetPagination];
