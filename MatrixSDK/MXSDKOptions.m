@@ -53,7 +53,7 @@ static MXSDKOptions *sharedOnceInstance = nil;
         _clientPermalinkBaseUrl = nil;
         _authEnableRefreshTokens = NO;
         _enableThreads = NO;
-        _enableRoomSharedHistoryOnInvite = YES;
+        _enableRoomSharedHistoryOnInvite = NO;
     }
     
     return self;
