@@ -600,6 +600,7 @@
             [expectation fulfill];
         };
         
+        [MXSDKOptions sharedInstance].enableRoomSharedHistoryOnInvite = YES;
         [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
         [matrixSDKTestsData doMXSessionTestWithBob:nil
                                        readyToTest:^(MXSession *bobSession, XCTestExpectation *expectation2)
@@ -677,6 +678,7 @@
             [expectation fulfill];
         };
         
+        [MXSDKOptions sharedInstance].enableRoomSharedHistoryOnInvite = YES;
         [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
         [matrixSDKTestsData doMXSessionTestWithBob:nil
                                        readyToTest:^(MXSession *bobSession, XCTestExpectation *expectation2)
