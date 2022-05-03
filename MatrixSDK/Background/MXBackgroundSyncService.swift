@@ -579,6 +579,7 @@ public enum MXBackgroundSyncServiceError: Error {
             return
         }
         
+        let sharedHistory = (content[kMXSharedHistoryKeyName] as? Bool) ?? isRoomSharingHistory(roomId: roomId)
         olmDevice.addInboundGroupSession(sessionId,
                                          sessionKey: sessionKey,
                                          roomId: roomId,
@@ -586,7 +587,7 @@ public enum MXBackgroundSyncServiceError: Error {
                                          forwardingCurve25519KeyChain: forwardingKeyChain,
                                          keysClaimed: keysClaimed,
                                          exportFormat: exportFormat,
-                                         sharedHistory: isRoomSharingHistory(roomId: roomId))
+                                         sharedHistory: sharedHistory)
     }
     
     private func isRoomSharingHistory(roomId: String) -> Bool {

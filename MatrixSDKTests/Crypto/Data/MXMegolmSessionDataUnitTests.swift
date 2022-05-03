@@ -25,7 +25,7 @@ class MXMegolmSessionDataUnitTests: XCTestCase {
             "room_id": "D",
             "session_id": "E",
             "session_key": "F",
-            "shared_history": true,
+            "org.matrix.msc3061.shared_history": true,
             "algorithm": "G",
             "forwarding_curve25519_key_chain": ["H", "I"]
         ]
@@ -61,7 +61,7 @@ class MXMegolmSessionDataUnitTests: XCTestCase {
             "room_id": "D",
             "session_id": "E",
             "session_key": "F",
-            "shared_history": true,
+            "org.matrix.msc3061.shared_history": true,
             "algorithm": "G",
             "forwarding_curve25519_key_chain": ["H", "I"]
         ])

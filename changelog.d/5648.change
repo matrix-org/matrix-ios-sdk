@@ -1,0 +1,1 @@
+Authentication: Add MXUsernameAvailability and isUsernameAvailable method on MXRestClient.

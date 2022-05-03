@@ -325,13 +325,27 @@ NS_REFINED_FOR_SWIFT;
 /**
  Check whether a username is already in use.
 
- @username the user name to test (This value must not be nil).
+ @param username the user name to test (This value must not be nil).
  @param callback A block object called when the operation is completed.
 
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)isUserNameInUse:(NSString*)username
-                           callback:(void (^)(BOOL isUserNameInUse))callback NS_REFINED_FOR_SWIFT;
+                           callback:(void (^)(BOOL isUserNameInUse))callback NS_REFINED_FOR_SWIFT __deprecated_msg("Use isUsernameAvailable instead.");
+
+/**
+ Checks whether a username is available.
+
+ @param username the user name to test (This value must not be nil).
+ @param success A block object called when the operation succeeds. It provides the server response
+ as an MXUsernameAvailability instance.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)isUsernameAvailable:(NSString*)username
+                                success:(void (^)(MXUsernameAvailability *availability))success
+                                failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 /**
  Get the list of register flows supported by the home server.
 
