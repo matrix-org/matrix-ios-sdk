@@ -67,7 +67,7 @@ public class MXLocationService: NSObject {
             return nil
         }
         
-        guard let beaconInfoSummary = self.session.aggregations.beaconAggegations.beaconInfoSummary(for: beaconInfoEventId, inRoomWithId: roomId) else {
+        guard let beaconInfoSummary = self.session.aggregations.beaconAggregations.beaconInfoSummary(for: beaconInfoEventId, inRoomWithId: roomId) else {
             completion(.failure(MXLocationServiceError.beaconInfoNotFound))
             return nil
         }
@@ -144,7 +144,7 @@ public class MXLocationService: NSObject {
             return nil
         }
         
-        guard let beaconInfoSummary = self.session.aggregations.beaconAggegations.beaconInfoSummary(for: beaconInfoEventId, inRoomWithId: roomId) else {
+        guard let beaconInfoSummary = self.session.aggregations.beaconAggregations.beaconInfoSummary(for: beaconInfoEventId, inRoomWithId: roomId) else {
             completion(.failure(MXLocationServiceError.beaconInfoNotFound))
             return nil
         }
@@ -231,7 +231,7 @@ public class MXLocationService: NSObject {
     ///   - roomId: The room id of the room
     /// - Returns: Room beacon info summaries
     public func getBeaconInfoSummaries(inRoomWithId roomId: String) -> [MXBeaconInfoSummaryProtocol] {
-        return self.session.aggregations.beaconAggegations.getBeaconInfoSummaries(inRoomWithId: roomId)
+        return self.session.aggregations.beaconAggregations.getBeaconInfoSummaries(inRoomWithId: roomId)
     }
     
     /// Get all live beacon info summaries in a room
