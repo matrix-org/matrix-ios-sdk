@@ -33,7 +33,7 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @interface MXAggregations : NSObject
 
-@property (nonatomic, strong, readonly) MXBeaconAggregations *beaconAggegations;
+@property (nonatomic, strong, readonly) MXBeaconAggregations *beaconAggregations;
 
 #pragma mark - Reactions
 

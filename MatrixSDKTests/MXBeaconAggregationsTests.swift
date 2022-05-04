@@ -49,7 +49,7 @@ class MXBeaconAggregationsTests: XCTestCase {
                 return
             }
             
-            XCTAssertNotNil(bobSession.aggregations.beaconAggegations, "Location service must be created")
+            XCTAssertNotNil(bobSession.aggregations.beaconAggregations, "Location service must be created")
             
             expectation.fulfill()
         }
@@ -89,7 +89,7 @@ class MXBeaconAggregationsTests: XCTestCase {
                 }
             }
             
-            _ = bobSession.aggregations.beaconAggegations.listenToBeaconInfoSummaryUpdateInRoom(withId: initialRoom.roomId) { beaconInfoSummary in
+            _ = bobSession.aggregations.beaconAggregations.listenToBeaconInfoSummaryUpdateInRoom(withId: initialRoom.roomId) { beaconInfoSummary in
                 
                 XCTAssertEqual(beaconInfoSummary.id, beaconInfoEventId)
                                         
@@ -100,7 +100,7 @@ class MXBeaconAggregationsTests: XCTestCase {
                 XCTAssertEqual(beaconInfo.isLive, expectedBeaconInfoIsLive)
                 
                 if let beaconInfoEventId = beaconInfoEventId {
-                    let fetchedBeaconInfoSummary = bobSession.aggregations.beaconAggegations.beaconInfoSummary(for: beaconInfoEventId, inRoomWithId: initialRoom.roomId)
+                    let fetchedBeaconInfoSummary = bobSession.aggregations.beaconAggregations.beaconInfoSummary(for: beaconInfoEventId, inRoomWithId: initialRoom.roomId)
                     
                     XCTAssertNotNil(fetchedBeaconInfoSummary)
                 }
@@ -147,7 +147,7 @@ class MXBeaconAggregationsTests: XCTestCase {
                     
                     var firstUpdateListener: Any?
                     
-                    firstUpdateListener = bobSession.aggregations.beaconAggegations.listenToBeaconInfoSummaryUpdateInRoom(withId: roomId) { beaconInfoSummary in
+                    firstUpdateListener = bobSession.aggregations.beaconAggregations.listenToBeaconInfoSummaryUpdateInRoom(withId: roomId) { beaconInfoSummary in
                         
                         if let firstUpdateListener = firstUpdateListener {
                             bobSession.aggregations.removeListener(firstUpdateListener)
@@ -160,7 +160,7 @@ class MXBeaconAggregationsTests: XCTestCase {
                             switch response {
                             case .success:
                                 
-                                _ = bobSession.aggregations.beaconAggegations.listenToBeaconInfoSummaryUpdateInRoom(withId: initialRoom.roomId) { beaconInfoSummary in
+                                _ = bobSession.aggregations.beaconAggregations.listenToBeaconInfoSummaryUpdateInRoom(withId: initialRoom.roomId) { beaconInfoSummary in
                                     
                                     XCTAssertEqual(beaconInfoSummary.id, eventId)
                                     XCTAssertEqual(beaconInfoSummary.userId, userId)
@@ -233,7 +233,7 @@ class MXBeaconAggregationsTests: XCTestCase {
                     
                     var firstUpdateListener: Any?
                     
-                    firstUpdateListener = bobSession.aggregations.beaconAggegations.listenToBeaconInfoSummaryUpdateInRoom(withId: roomId) { beaconInfoSummary in
+                    firstUpdateListener = bobSession.aggregations.beaconAggregations.listenToBeaconInfoSummaryUpdateInRoom(withId: roomId) { beaconInfoSummary in
                         
                         if let firstUpdateListener = firstUpdateListener {
                             bobSession.aggregations.removeListener(firstUpdateListener)
@@ -244,7 +244,7 @@ class MXBeaconAggregationsTests: XCTestCase {
                             switch response {
                             case .success:
                                 
-                                _ = bobSession.aggregations.beaconAggegations.listenToBeaconInfoSummaryUpdateInRoom(withId: roomId) { beaconInfoSummary in
+                                _ = bobSession.aggregations.beaconAggregations.listenToBeaconInfoSummaryUpdateInRoom(withId: roomId) { beaconInfoSummary in
                                     
                                     XCTAssertEqual(beaconInfoSummary.id, beaconInfoEventId)
                                     XCTAssertEqual(beaconInfoSummary.userId, userId)

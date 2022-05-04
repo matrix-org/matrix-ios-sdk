@@ -40,6 +40,10 @@ public class MXBeaconInfoSummary: NSObject, MXBeaconInfoSummaryProtocol {
         return !beaconInfo.isLive
     }
     
+    public var isActive: Bool {
+        return !(self.hasStopped || self.hasExpired)
+    }
+    
     // MARK: - Setup
     
     public convenience init?(beaconInfo: MXBeaconInfo) {
