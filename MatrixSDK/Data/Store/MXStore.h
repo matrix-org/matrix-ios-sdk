@@ -227,12 +227,33 @@
 #pragma mark -
 /**
  Store the text message partially typed by the user but not yet sent.
- 
+
+ @deprecated use storeAttributedPartialTextMessageForRoom
+
  @param roomId the id of the room.
  @param partialTextMessage the text to store. Nil to reset it.
  */
+- (void)storePartialTextMessageForRoom:(nonnull NSString*)roomId
+                    partialTextMessage:(nonnull NSString*)partialTextMessage __deprecated_msg("use storeAttributedPartialTextMessageForRoom");
+
+/**
+ The text message typed by the user but not yet sent.
+
+ @deprecated use attributedPartialTextMessageOfRoom
+
+ @param roomId the id of the room.
+ @return the text message. Can be nil.
+ */
+- (NSString* _Nullable)partialTextMessageOfRoom:(nonnull NSString*)roomId __deprecated_msg("use attributedPartialTextMessageOfRoom");
+
+/**
+ Store the text message partially typed by the user but not yet sent.
+
+ @param roomId the id of the room.
+ @param attributedPartialTextMessage the text to store. Nil to reset it.
+ */
 // @TODO(summary): Move to MXRoomSummary
-- (void)storePartialTextMessageForRoom:(nonnull NSString*)roomId partialTextMessage:(nonnull NSString*)partialTextMessage;
+- (void)storeAttributedPartialTextMessageForRoom:(nonnull NSString*)roomId attributedPartialTextMessage:(nonnull NSAttributedString*)attributedPartialTextMessage;
 
 /**
  The text message typed by the user but not yet sent.
@@ -240,8 +261,7 @@
  @param roomId the id of the room.
  @return the text message. Can be nil.
  */
-- (NSString* _Nullable)partialTextMessageOfRoom:(nonnull NSString*)roomId;
-
+- (NSAttributedString* _Nullable)attributedPartialTextMessageOfRoom:(nonnull NSString*)roomId;
 
 /**
  Returns the receipts list for an event in a dedicated room.

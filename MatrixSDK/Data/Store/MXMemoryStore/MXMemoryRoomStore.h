@@ -113,7 +113,14 @@
 
 /**
  The text message partially typed by the user but not yet sent in the room.
+
+ @deprecated use attributedPartialTextMessage
  */
-@property (nonatomic) NSString *partialTextMessage;
+@property (nonatomic) NSString *partialTextMessage __deprecated_msg("use attributedPartialTextMessage");
+
+/**
+ The text message partially typed by the user but not yet sent in the room.
+ */
+@property (nonatomic) NSAttributedString *attributedPartialTextMessage;
 
 @end

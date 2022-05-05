@@ -162,9 +162,18 @@ FOUNDATION_EXPORT NSInteger const kMXRoomInvalidInviteSenderErrorCode;
  The text message partially typed by the user but not yet sent.
  The value is stored by the session store. Thus, it can be retrieved
  when the application restarts.
+ 
+ @deprecated use attributedPartialTextMessage
+ */
+@property (nonatomic) NSString *partialTextMessage __deprecated_msg("use attributedPartialTextMessage");
+
+/**
+ The text message partially typed by the user but not yet sent.
+ The value is stored by the session store. Thus, it can be retrieved
+ when the application restarts.
  */
 // @TODO(summary): Move to MXRoomSummary
-@property (nonatomic) NSString *partialTextMessage;
+@property (nonatomic) NSAttributedString *attributedPartialTextMessage;
 
 /**
  The list of ids of users currently typing in this room.
