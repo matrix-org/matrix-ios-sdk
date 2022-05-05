@@ -42,6 +42,9 @@
     // key: roomId, value: the text message the user typed
     NSMutableDictionary *partialTextMessages;
 
+    // key: roomId, value: the text message the user typed
+    NSMutableDictionary *attributedPartialTextMessages;
+
     NSString *eventStreamToken;
 
     // All matrix users known by the user
@@ -72,6 +75,7 @@
         hasLoadedAllRoomMembersForRooms = [NSMutableDictionary dictionary];
         lastMessages = [NSMutableDictionary dictionary];
         partialTextMessages = [NSMutableDictionary dictionary];
+        attributedPartialTextMessages = [NSMutableDictionary dictionary];
         users = [NSMutableDictionary dictionary];
         groups = [NSMutableDictionary dictionary];
         roomSummaryStore = [[MXVoidRoomSummaryStore alloc] init];
@@ -168,6 +172,10 @@
     {
         [partialTextMessages removeObjectForKey:roomId];
     }
+    if (attributedPartialTextMessages[roomId])
+    {
+        [attributedPartialTextMessages removeObjectForKey:roomId];
+    }
     [roomSummaryStore removeSummaryOfRoom:roomId];
 }
 
@@ -180,6 +188,7 @@
     [hasLoadedAllRoomMembersForRooms removeAllObjects];
     [lastMessages removeAllObjects];
     [partialTextMessages removeAllObjects];
+    [attributedPartialTextMessages removeAllObjects];
     [roomSummaryStore removeAllSummaries];
 }
 
@@ -384,6 +393,23 @@
     return partialTextMessages[roomId];
 }
 
+- (void)storeAttributedPartialTextMessageForRoom:(NSString *)roomId attributedPartialTextMessage:(NSAttributedString *)attributedPartialTextMessage
+{
+    if (attributedPartialTextMessage)
+    {
+        attributedPartialTextMessages[roomId] = attributedPartialTextMessage;
+    }
+    else
+    {
+        [attributedPartialTextMessages removeObjectForKey:roomId];
+    }
+}
+
+- (NSAttributedString *)attributedPartialTextMessageOfRoom:(NSString *)roomId
+{
+    return attributedPartialTextMessages[roomId];
+}
+
 - (BOOL)isPermanent
 {
     return NO;
@@ -467,6 +493,7 @@
     [hasReachedHomeServerPaginations removeAllObjects];
     [lastMessages removeAllObjects];
     [partialTextMessages removeAllObjects];
+    [attributedPartialTextMessages removeAllObjects];
     [users removeAllObjects];
     [groups removeAllObjects];
 }
