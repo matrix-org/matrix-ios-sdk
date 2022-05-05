@@ -1,3 +1,22 @@
+## Changes in 0.23.4 (2022-05-05)
+
+🙌 Improvements
+
+- Crypto: Share Megolm session keys when inviting a new user ([#4947](https://github.com/vector-im/element-ios/issues/4947))
+- Authentication: Add MXUsernameAvailability and isUsernameAvailable method on MXRestClient. ([#5648](https://github.com/vector-im/element-ios/issues/5648))
+
+🐛 Bugfixes
+
+- MXSpaceService: added method firstRootAncestorForRoom ([#5965](https://github.com/vector-im/element-ios/issues/5965))
+- MXRoom: Update room summary after removing/refreshing unsent messages. ([#6040](https://github.com/vector-im/element-ios/issues/6040))
+
+🚧 In development 🚧
+
+- Location sharing: Handle live location beacon event. Handle beacon info + beacon data aggregation. ([#6021](https://github.com/vector-im/element-ios/issues/6021))
+- Location sharing: Handle stop live location sharing. ([#6070](https://github.com/vector-im/element-ios/issues/6070))
+- Location sharing: MXBeaconInfoSummary add isActive property. ([#6113](https://github.com/vector-im/element-ios/issues/6113))
+
+
 ## Changes in 0.23.3 (2022-04-20)
 
 🙌 Improvements
