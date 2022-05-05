@@ -16,7 +16,6 @@
 - Location sharing: Handle stop live location sharing. ([#6070](https://github.com/vector-im/element-ios/issues/6070))
 - Location sharing: MXBeaconInfoSummary add isActive property. ([#6113](https://github.com/vector-im/element-ios/issues/6113))
 
-
 ## Changes in 0.23.3 (2022-04-20)
 
 🙌 Improvements
