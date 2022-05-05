@@ -196,6 +196,14 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @property (nonatomic) BOOL enableThreads;
 
+/**
+ Enable sharing of session keys for an immediate historical context (e.g. last 10-20 messages)
+ when inviting a new user to a room with shared history.
+ 
+ @remark YES by default.
+ */
+@property (nonatomic) BOOL enableRoomSharedHistoryOnInvite;
+
 @end
 
 NS_ASSUME_NONNULL_END

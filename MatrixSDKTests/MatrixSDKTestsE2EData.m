@@ -24,6 +24,7 @@
 #import "MXDeviceListOperation.h"
 #import "MXFileStore.h"
 #import "MXNoStore.h"
+#import "MXTools.h"
 
 @interface MatrixSDKTestsE2EData ()
 
@@ -293,6 +294,19 @@
                  withPassword:(NSString*)password
                    onComplete:(void (^)(MXSession *newSession))onComplete
 {
+    [self loginUserOnANewDevice:testCase
+                    credentials:credentials
+                   withPassword:password
+                          store:[[MXNoStore alloc] init]
+                     onComplete:onComplete];
+}
+
+- (void)loginUserOnANewDevice:(XCTestCase*)testCase
+                  credentials:(MXCredentials*)credentials
+                 withPassword:(NSString*)password
+                        store:(id<MXStore>)store
+                   onComplete:(void (^)(MXSession *newSession))onComplete
+{
     [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
     
     MXRestClient *mxRestClient = [[MXRestClient alloc] initWithHomeServer:credentials.homeServer
@@ -307,13 +321,19 @@
         MXSession *newSession = [[MXSession alloc] initWithMatrixRestClient:mxRestClient2];
         [matrixSDKTestsData retain:newSession];
         
-        [newSession start:^{
-            [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
-            
-            onComplete(newSession);
-            
+        MXWeakify(newSession);
+        [newSession setStore:store success:^{
+            MXStrongifyAndReturnIfNil(newSession);
+            [newSession start:^{
+                [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
+                
+                onComplete(newSession);
+                
+            } failure:^(NSError *error) {
+                [matrixSDKTestsData breakTestCase:testCase reason:@"Cannot set up intial test conditions - error: %@", error];
+            }];
         } failure:^(NSError *error) {
-            [matrixSDKTestsData breakTestCase:testCase reason:@"Cannot set up intial test conditions - error: %@", error];
+            [matrixSDKTestsData breakTestCase:testCase reason:@"Cannot set up store - error: %@", error];
         }];
         
     } failure:^(NSError *error) {

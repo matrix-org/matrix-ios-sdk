@@ -52,6 +52,7 @@
 #import "MXDeviceListResponse.h"
 
 #import "MatrixSDKSwiftHeader.h"
+#import "MXSharedHistoryKeyService.h"
 /**
  The store to use for crypto.
  */
@@ -1894,6 +1895,13 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 #endif
 }
 
+- (BOOL)isRoomSharingHistory:(NSString *)roomId
+{
+    MXRoom *room = [_mxSession roomWithRoomId:roomId];
+    MXRoomHistoryVisibility visibility = room.summary.historyVisibility;
+    return [visibility isEqualToString:kMXRoomHistoryVisibilityWorldReadable] || [visibility isEqualToString:kMXRoomHistoryVisibilityShared];
+}
+
 - (void)setBlacklistUnverifiedDevicesInRoom:(NSString *)roomId blacklist:(BOOL)blacklist
 {
 #ifdef MX_CRYPTO
@@ -2499,7 +2507,8 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
                          @"session_id": sessionId,
                          @"session_key": key[@"key"],
                          @"chain_index": key[@"chain_index"],
-                         @"forwarding_curve25519_key_chain": key[@"forwarding_curve25519_key_chain"]
+                         @"forwarding_curve25519_key_chain": key[@"forwarding_curve25519_key_chain"],
+                         kMXSharedHistoryKeyName: key[@"shared_history"]
                          }
                  };
     }

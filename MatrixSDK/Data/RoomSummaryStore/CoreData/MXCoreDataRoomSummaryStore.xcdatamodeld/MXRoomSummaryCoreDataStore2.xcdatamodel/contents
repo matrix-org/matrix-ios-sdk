@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="20086" systemVersion="21E258" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+    <entity name="MXRoomLastMessage" representedClassName="MXRoomLastMessageMO" syncable="YES">
+        <attribute name="s_attributedText" optional="YES" attributeType="Binary" valueTransformerName=""/>
+        <attribute name="s_eventId" attributeType="String"/>
+        <attribute name="s_isEncrypted" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="s_originServerTs" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="s_others" optional="YES" attributeType="Binary"/>
+        <attribute name="s_sender" attributeType="String"/>
+        <attribute name="s_text" optional="YES" attributeType="String"/>
+        <relationship name="s_ofRoom" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="MXRoomSummary" inverseName="s_lastMessage" inverseEntity="MXRoomSummary"/>
+    </entity>
+    <entity name="MXRoomMembersCount" representedClassName="MXRoomMembersCountMO" syncable="YES">
+        <attribute name="s_invited" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="s_joined" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="s_members" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <relationship name="s_ofRoom" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="MXRoomSummary" inverseName="s_membersCount" inverseEntity="MXRoomSummary"/>
+    </entity>
+    <entity name="MXRoomSummary" representedClassName="MXRoomSummaryMO" syncable="YES">
+        <attribute name="s_aliases" optional="YES" attributeType="String"/>
+        <attribute name="s_avatar" optional="YES" attributeType="String"/>
+        <attribute name="s_creatorUserId" attributeType="String"/>
+        <attribute name="s_dataTypesInt" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="s_directUserId" optional="YES" attributeType="String"/>
+        <attribute name="s_displayName" optional="YES" attributeType="String"/>
+        <attribute name="s_favoriteTagOrder" optional="YES" attributeType="String"/>
+        <attribute name="s_hasAnyHighlight" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="s_hasAnyNotification" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="s_hasAnyUnread" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="s_hiddenFromUser" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="s_highlightCount" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="s_historyVisibility" optional="YES" attributeType="String"/>
+        <attribute name="s_identifier" attributeType="String"/>
+        <attribute name="s_isConferenceUserRoom" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="s_isEncrypted" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="s_joinRule" optional="YES" attributeType="String"/>
+        <attribute name="s_localUnreadEventCount" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="s_membershipInt" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="s_membershipTransitionStateInt" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="s_notificationCount" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="s_others" optional="YES" attributeType="Binary"/>
+        <attribute name="s_parentSpaceIds" optional="YES" attributeType="String"/>
+        <attribute name="s_sentStatusInt" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="s_storedHash" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="s_topic" optional="YES" attributeType="String"/>
+        <attribute name="s_typeInt" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="s_typeString" optional="YES" attributeType="String"/>
+        <attribute name="s_userIdsSharingLiveBeacon" optional="YES" attributeType="String"/>
+        <relationship name="s_lastMessage" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="MXRoomLastMessage" inverseName="s_ofRoom" inverseEntity="MXRoomLastMessage"/>
+        <relationship name="s_membersCount" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="MXRoomMembersCount" inverseName="s_ofRoom" inverseEntity="MXRoomMembersCount"/>
+        <relationship name="s_trust" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="MXUsersTrustLevelSummary" inverseName="s_ofRoom" inverseEntity="MXUsersTrustLevelSummary"/>
+        <uniquenessConstraints>
+            <uniquenessConstraint>
+                <constraint value="s_identifier"/>
+            </uniquenessConstraint>
+        </uniquenessConstraints>
+    </entity>
+    <entity name="MXUsersTrustLevelSummary" representedClassName="MXUsersTrustLevelSummaryMO" syncable="YES">
+        <attribute name="s_devicesCount" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="s_trustedDevicesCount" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="s_trustedUsersCount" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="s_usersCount" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <relationship name="s_ofRoom" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="MXRoomSummary" inverseName="s_trust" inverseEntity="MXRoomSummary"/>
+    </entity>
+    <elements>
+        <element name="MXRoomLastMessage" positionX="117" positionY="90" width="128" height="149"/>
+        <element name="MXRoomMembersCount" positionX="297.1484375" positionY="-66.14453125" width="128" height="89"/>
+        <element name="MXRoomSummary" positionX="-63" positionY="-18" width="128" height="509"/>
+        <element name="MXUsersTrustLevelSummary" positionX="236.4921875" positionY="519.4296875" width="128" height="104"/>
+    </elements>
+</model>

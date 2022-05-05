@@ -579,13 +579,21 @@ public enum MXBackgroundSyncServiceError: Error {
             return
         }
         
+        let sharedHistory = (content[kMXSharedHistoryKeyName] as? Bool) ?? isRoomSharingHistory(roomId: roomId)
         olmDevice.addInboundGroupSession(sessionId,
                                          sessionKey: sessionKey,
                                          roomId: roomId,
                                          senderKey: senderKey,
                                          forwardingCurve25519KeyChain: forwardingKeyChain,
                                          keysClaimed: keysClaimed,
-                                         exportFormat: exportFormat)
+                                         exportFormat: exportFormat,
+                                         sharedHistory: sharedHistory)
+    }
+    
+    private func isRoomSharingHistory(roomId: String) -> Bool {
+        let summary = roomSummary(forRoomId: roomId)
+        let visibility = MXRoomHistoryVisibility(identifier: summary?.historyVisibility)
+        return visibility == .worldReadable || visibility == .shared
     }
     
     private func updateBackgroundServiceStoresIfNeeded() {

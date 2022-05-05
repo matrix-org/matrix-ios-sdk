@@ -122,6 +122,7 @@ RLM_ARRAY_TYPE(MXRealmOlmSession)
 
 // Indicate if the key has been backed up to the homeserver
 @property BOOL backedUp;
+
 @end
 
 @implementation MXRealmOlmInboundGroupSession
@@ -951,7 +952,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
                     @"sessionId": session.session.sessionIdentifier,
                     @"senderKey": session.senderKey,
                     @"sessionIdSenderKey": sessionIdSenderKey,
-                    @"olmInboundGroupSessionData": [NSKeyedArchiver archivedDataWithRootObject:session]
+                    @"olmInboundGroupSessionData": [NSKeyedArchiver archivedDataWithRootObject:session],
                 }];
                 
                 [realm addObject:realmSession];

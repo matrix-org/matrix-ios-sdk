@@ -80,6 +80,7 @@ public enum MXEventType: Equatable, Hashable {
     case pollEnd
     
     case beaconInfo
+    case beacon
 
     case custom(String)
     
@@ -135,6 +136,7 @@ public enum MXEventType: Equatable, Hashable {
         case .pollResponse: return kMXEventTypeStringPollResponseMSC3381
         case .pollEnd: return kMXEventTypeStringPollEndMSC3381
         case .beaconInfo: return kMXEventTypeStringBeaconInfoMSC3672
+        case .beacon: return kMXEventTypeStringBeaconMSC3672
 
         // Swift converts any constant with the suffix "Notification" as the type `Notification.Name`
         // The original value can be reached using the `rawValue` property.
@@ -145,7 +147,7 @@ public enum MXEventType: Equatable, Hashable {
     }
     
     public init(identifier: String) {
-        let events: [MXEventType] = [.roomName, .roomTopic, .roomAvatar, .roomMember, .roomCreate, .roomJoinRules, .roomPowerLevels, .roomAliases, .roomCanonicalAlias, .roomEncrypted, .roomEncryption, .roomGuestAccess, .roomHistoryVisibility, .roomKey, .roomForwardedKey, .roomKeyRequest, .roomMessage, .roomMessageFeedback, .roomRedaction, .roomThirdPartyInvite, .roomTag, .presence, .typing, .callInvite, .callCandidates, .callAnswer, .callSelectAnswer, .callHangup, .callReject, .callNegotiate, .callReplaces, .callRejectReplacement, .callAssertedIdentity, .callAssertedIdentityUnstable, .reaction, .receipt, .roomTombStone, .keyVerificationStart, .keyVerificationAccept, .keyVerificationKey, .keyVerificationMac, .keyVerificationCancel, .keyVerificationDone, .taggedEvents, .spaceChild, .spaceOrder, .pollStart, .pollResponse, .pollEnd, .beaconInfo]
+        let events: [MXEventType] = [.roomName, .roomTopic, .roomAvatar, .roomMember, .roomCreate, .roomJoinRules, .roomPowerLevels, .roomAliases, .roomCanonicalAlias, .roomEncrypted, .roomEncryption, .roomGuestAccess, .roomHistoryVisibility, .roomKey, .roomForwardedKey, .roomKeyRequest, .roomMessage, .roomMessageFeedback, .roomRedaction, .roomThirdPartyInvite, .roomTag, .presence, .typing, .callInvite, .callCandidates, .callAnswer, .callSelectAnswer, .callHangup, .callReject, .callNegotiate, .callReplaces, .callRejectReplacement, .callAssertedIdentity, .callAssertedIdentityUnstable, .reaction, .receipt, .roomTombStone, .keyVerificationStart, .keyVerificationAccept, .keyVerificationKey, .keyVerificationMac, .keyVerificationCancel, .keyVerificationDone, .taggedEvents, .spaceChild, .spaceOrder, .pollStart, .pollResponse, .pollEnd, .beaconInfo, .beacon]
         
         if let type = events.first(where: { $0.identifier == identifier }) {
             self = type

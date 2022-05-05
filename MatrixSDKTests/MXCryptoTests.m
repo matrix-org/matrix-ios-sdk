@@ -3223,6 +3223,60 @@
     }];
 }
 
+- (void)testIsRoomSharingHistory
+{
+    [matrixSDKTestsE2EData doE2ETestWithAliceInARoom:self readyToTest:^(MXSession *session, NSString *roomId, XCTestExpectation *expectation) {
+        
+        __block NSInteger caseIndex = 0;
+        NSArray<NSArray *> *caseOutcomes = @[
+            @[kMXRoomHistoryVisibilityJoined, @(NO)],
+            @[kMXRoomHistoryVisibilityShared, @(YES)],
+            @[kMXRoomHistoryVisibilityInvited, @(NO)],
+            @[kMXRoomHistoryVisibilityWorldReadable, @(YES)]
+        ];
+        
+        // Visibility is set to shared by default
+        XCTAssertTrue([session.crypto isRoomSharingHistory:roomId]);
+        
+        MXRoom *room = [session roomWithRoomId:roomId];
+        [room liveTimeline:^(id<MXEventTimeline> liveTimeline) {
+            [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomHistoryVisibility] onEvent:^(MXEvent * _Nonnull event, MXTimelineDirection direction, MXRoomState * _Nullable roomState) {
+                
+                BOOL sharedHistory = [session.crypto isRoomSharingHistory:roomId];
+                BOOL expectsSharedHistory = [caseOutcomes[caseIndex].lastObject boolValue];
+                XCTAssertEqual(expectsSharedHistory, sharedHistory);
+                
+                caseIndex++;
+                if (caseIndex >= caseOutcomes.count) {
+                    [expectation fulfill];
+                }
+            }];
+        }];
+        
+        [room setHistoryVisibility:caseOutcomes[0][0] success:^{
+            [room setHistoryVisibility:caseOutcomes[1][0] success:^{
+                [room setHistoryVisibility:caseOutcomes[2][0] success:^{
+                    [room setHistoryVisibility:caseOutcomes[3][0] success:^{
+                        
+                    } failure:^(NSError *error) {
+                        XCTFail(@"Should not fail - error: %@", error);
+                        [expectation fulfill];
+                    }];
+                } failure:^(NSError *error) {
+                    XCTFail(@"Should not fail - error: %@", error);
+                    [expectation fulfill];
+                }];
+            } failure:^(NSError *error) {
+                XCTFail(@"Should not fail - error: %@", error);
+                [expectation fulfill];
+            }];
+        } failure:^(NSError *error) {
+            XCTFail(@"Should not fail - error: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
 @end
 
 #pragma clang diagnostic pop

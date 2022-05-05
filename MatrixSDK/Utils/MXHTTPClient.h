@@ -131,6 +131,11 @@ typedef NS_ENUM(NSUInteger, MXHTTPClientSSLPinningMode) {
  */
 @property (nonatomic, copy) MXHTTPClientTokenProviderHandler tokenProviderHandler;
 
+/**
+ Whether or not the client is able to send authenticated requests.
+ */
+@property (nonatomic, readonly) BOOL isAuthenticatedClient;
+
 #pragma mark - Public methods
 /**
  Create an instance to make requests to the server.

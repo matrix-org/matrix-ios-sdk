@@ -19,6 +19,11 @@ import Foundation
 /// MXLocationService error
 public enum MXLocationServiceError: Int, Error {
     case missingUserId
+    case roomNotFound
+    case beaconInfoNotFound
+    case beaconInfoAlreadyStopped
+    case beaconInfoDoNotBelongToUser
+    case beaconInfoExpired
     case unknown
 }
 

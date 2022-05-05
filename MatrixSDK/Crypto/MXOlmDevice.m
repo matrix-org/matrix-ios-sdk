@@ -337,12 +337,14 @@
 
 
 #pragma mark - Inbound group session
-- (BOOL)addInboundGroupSession:(NSString*)sessionId sessionKey:(NSString*)sessionKey
+- (BOOL)addInboundGroupSession:(NSString*)sessionId
+                    sessionKey:(NSString*)sessionKey
                         roomId:(NSString*)roomId
                      senderKey:(NSString*)senderKey
   forwardingCurve25519KeyChain:(NSArray<NSString *> *)forwardingCurve25519KeyChain
                    keysClaimed:(NSDictionary<NSString*, NSString*>*)keysClaimed
                   exportFormat:(BOOL)exportFormat
+                 sharedHistory:(BOOL)sharedHistory;
 {
     MXOlmInboundGroupSession *session;
     if (exportFormat)
@@ -385,6 +387,7 @@
     session.roomId = roomId;
     session.keysClaimed = keysClaimed;
     session.forwardingCurve25519KeyChain = forwardingCurve25519KeyChain;
+    session.sharedHistory = sharedHistory;
 
     [store storeInboundGroupSessions:@[session]];
 
@@ -596,7 +599,8 @@
                                    @"chain_index": messageIndex,
                                    @"key": sessionData.sessionKey,
                                    @"forwarding_curve25519_key_chain": forwardingCurve25519KeyChain ? forwardingCurve25519KeyChain : @[],
-                                   @"sender_claimed_ed25519_key": senderEd25519Key ? senderEd25519Key : [NSNull null]
+                                   @"sender_claimed_ed25519_key": senderEd25519Key ? senderEd25519Key : [NSNull null],
+                                   @"shared_history": @(sessionData.sharedHistory)
                                    };
     }
 

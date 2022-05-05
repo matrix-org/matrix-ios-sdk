@@ -107,8 +107,23 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
+    @available(*, deprecated, message: "Use isUsernameAvailable instead which calls the dedicated API and provides more information.")
     @nonobjc @discardableResult func isUserNameInUse(_ username: String, completion: @escaping (_ inUse: Bool) -> Void) -> MXHTTPOperation {
         return __isUserName(inUse: username, callback: completion)
+    }
+    
+    /**
+     Checks whether a username is available.
+     
+     - parameters:
+         - username: The user name to test.
+         - completion: A block object called when the operation is completed.
+         - response: Provides the server response as an `MXUsernameAvailability` instance.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func isUsernameAvailable(_ username: String, completion: @escaping (_ response: MXResponse<MXUsernameAvailability>) -> Void) -> MXHTTPOperation {
+        return __isUsernameAvailable(username, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
     /**

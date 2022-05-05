@@ -31,9 +31,7 @@ public class MXEventAssetTypeMapper: NSObject {
         case .pin:
             eventKey = kMXMessageContentKeyExtensibleAssetTypePin
         case .generic:
-            eventKey = ""
-        case .liveLocation:
-            eventKey = kMXMessageContentKeyExtensibleAssetTypeLiveLocation
+            eventKey = ""        
         @unknown default:
             eventKey = ""
         }
