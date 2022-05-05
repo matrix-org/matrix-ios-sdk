@@ -610,6 +610,12 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
  */
 - (BOOL)isRoomEncrypted:(NSString *)roomId;
 
+/**
+ Get the current shared history status of the room, which depends on its `m.room.history_visibility`
+ (history is considered shared if visibility is set to `shared` or `world_readable`)
+ */
+- (BOOL)isRoomSharingHistory:(NSString *)roomId;
+
 /**he
  Set the blacklist of unverified devices in a room.
  

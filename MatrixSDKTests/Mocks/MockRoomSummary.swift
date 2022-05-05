@@ -33,6 +33,8 @@ internal class MockRoomSummary: NSObject, MXRoomSummaryProtocol {
     
     var aliases: [String] = []
     
+    var historyVisibility: String? = nil
+    
     var joinRule: String? = kMXRoomJoinRuleInvite
     
     var membership: MXMembership = .join

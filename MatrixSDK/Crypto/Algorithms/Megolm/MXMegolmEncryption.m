@@ -28,6 +28,7 @@
 #import "MXTools.h"
 #import "MXOutboundSessionInfo.h"
 #import <OLMKit/OLMKit.h>
+#import "MXSharedHistoryKeyService.h"
 
 
 @interface MXMegolmEncryption ()
@@ -147,6 +148,15 @@
     return outboundSession;
 }
 
+- (BOOL)isSessionSharingHistory:(MXOutboundSessionInfo *)session
+{
+    // We only store the `sharedHistory` flag on inbound sessions. To see if the current outbound session shares history
+    // see a corresponding inbound session with the same identifier.
+    MXOlmInboundGroupSession *matchingInboundSession = [crypto.store inboundGroupSessionWithId:session.sessionId
+                                                                                  andSenderKey:crypto.olmDevice.deviceCurve25519Key];
+    return matchingInboundSession.sharedHistory;
+}
+
 /*
  Get the list of devices which can encrypt data to.
 
@@ -241,15 +251,7 @@
 {
     __block MXOutboundSessionInfo *session = self.outboundSession;
 
-    // Need to make a brand new session?
-    if (session && [session needsRotation:sessionRotationPeriodMsgs rotationPeriodMs:sessionRotationPeriodMs])
-    {
-        [crypto.olmDevice discardOutboundGroupSessionForRoomWithRoomId:roomId];
-        session = nil;
-    }
-
-    // Determine if we have shared with anyone we shouldn't have
-    if (session && [session sharedWithTooManyDevices:devicesInRoom])
+    if (session && [self shouldResetSession:session devicesInRoom:devicesInRoom])
     {
         [crypto.olmDevice discardOutboundGroupSessionForRoomWithRoomId:roomId];
         session = nil;
@@ -301,10 +303,33 @@
     return session.shareOperation;
 }
 
+- (BOOL)shouldResetSession:(MXOutboundSessionInfo *)session devicesInRoom:(MXUsersDevicesMap<MXDeviceInfo *> *)devicesInRoom
+{
+    // Need to make a brand new session?
+    if ([session needsRotation:sessionRotationPeriodMsgs rotationPeriodMs:sessionRotationPeriodMs])
+    {
+        return YES;
+    }
+
+    // Determine if we have shared with anyone we shouldn't have
+    else if ([session sharedWithTooManyDevices:devicesInRoom])
+    {
+        return YES;
+    }
+    
+    // Check if room's history visibility has changed
+    else if ([crypto isRoomSharingHistory:roomId] != [self isSessionSharingHistory:session])
+    {
+        return YES;
+    }
+    return NO;
+}
+
 - (MXOutboundSessionInfo*)prepareNewSession
 {
     MXOlmOutboundGroupSession *session = [crypto.olmDevice createOutboundGroupSessionForRoomWithRoomId:roomId];
 
+    BOOL sharedHistory = [crypto isRoomSharingHistory:roomId];
     [crypto.olmDevice addInboundGroupSession:session.sessionId
                                   sessionKey:session.sessionKey
                                       roomId:roomId
@@ -314,6 +339,7 @@
                                                @"ed25519": crypto.olmDevice.deviceEd25519Key
                                                }
                                 exportFormat:NO
+                               sharedHistory:sharedHistory
      ];
 
     [crypto.backup maybeSendKeyBackup];
@@ -329,6 +355,7 @@
 {
     NSString *sessionKey = session.session.sessionKey;
     NSUInteger chainIndex = session.session.messageIndex;
+    BOOL sharedHistory = [self isSessionSharingHistory:session];
 
     NSDictionary *payload = @{
                               @"type": kMXEventTypeStringRoomKey,
@@ -337,7 +364,8 @@
                                       @"room_id": roomId,
                                       @"session_id": session.sessionId,
                                       @"session_key": sessionKey,
-                                      @"chain_index": @(chainIndex)
+                                      @"chain_index": @(chainIndex),
+                                      kMXSharedHistoryKeyName: @(sharedHistory)
                                       }
                               };
 

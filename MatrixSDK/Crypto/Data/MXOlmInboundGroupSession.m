@@ -57,6 +57,7 @@
         sessionData.sessionId = _session.sessionIdentifier;
         sessionData.sessionKey = sessionKey;
         sessionData.algorithm = kMXCryptoMegolmAlgorithm;
+        sessionData.sharedHistory = _sharedHistory;
     }
     else
     {
@@ -97,6 +98,7 @@
         _forwardingCurve25519KeyChain = data.forwardingCurve25519KeyChain;
         _keysClaimed = data.senderClaimedKeys;
         _roomId = data.roomId;
+        _sharedHistory = data.sharedHistory;
     }
     return self;
 }
@@ -113,6 +115,7 @@
         _senderKey = [aDecoder decodeObjectForKey:@"senderKey"];
         _forwardingCurve25519KeyChain = [aDecoder decodeObjectForKey:@"forwardingCurve25519KeyChain"];
         _keysClaimed = [aDecoder decodeObjectForKey:@"keysClaimed"];
+        _sharedHistory = [[aDecoder decodeObjectForKey:@"sharedHistory"] boolValue];
     }
     return self;
 }
@@ -124,6 +127,7 @@
     [aCoder encodeObject:_senderKey forKey:@"senderKey"];
     [aCoder encodeObject:_keysClaimed forKey:@"keysClaimed"];
     [aCoder encodeObject:_forwardingCurve25519KeyChain forKey:@"forwardingCurve25519KeyChain"];
+    [aCoder encodeObject:@(_sharedHistory) forKey:@"sharedHistory"];
 }
 
 @end

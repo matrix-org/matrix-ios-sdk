@@ -36,7 +36,7 @@ class MXBeaconInfoUnitTests: XCTestCase {
             "live": expectedIsLive,
             kMXMessageContentKeyExtensibleTimestampMSC3488: expectedTimestamp,
             kMXMessageContentKeyExtensibleAssetMSC3488: [
-                kMXMessageContentKeyExtensibleAssetType: kMXMessageContentKeyExtensibleAssetTypeLiveLocation
+                kMXMessageContentKeyExtensibleAssetType: kMXMessageContentKeyExtensibleAssetTypeUser
             ]
         ]
 
@@ -51,7 +51,7 @@ class MXBeaconInfoUnitTests: XCTestCase {
         XCTAssertEqual(beaconInfo.timeout, expectedTimeout)
         XCTAssertEqual(beaconInfo.isLive, expectedIsLive)
         XCTAssertEqual(beaconInfo.timestamp, expectedTimestamp)
-        XCTAssertEqual(beaconInfo.assetType, MXEventAssetType.liveLocation)
+        XCTAssertEqual(beaconInfo.assetType, MXEventAssetType.user)
     }
     
     func testParsingFailMissingTimeout() throws {
@@ -65,7 +65,7 @@ class MXBeaconInfoUnitTests: XCTestCase {
             "live": expectedIsLive,
             kMXMessageContentKeyExtensibleTimestampMSC3488: expectedTimestamp,
             kMXMessageContentKeyExtensibleAssetMSC3488: [
-                kMXMessageContentKeyExtensibleAssetType: kMXMessageContentKeyExtensibleAssetTypeLiveLocation
+                kMXMessageContentKeyExtensibleAssetType: kMXMessageContentKeyExtensibleAssetTypeUser
             ]
         ]
         

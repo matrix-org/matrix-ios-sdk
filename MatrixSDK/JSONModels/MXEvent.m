@@ -100,6 +100,8 @@ NSString *const kMXEventTypeStringPollEndMSC3381      = @"org.matrix.msc3381.pol
 
 NSString *const kMXEventTypeStringBeaconInfo = @"m.beacon_info";
 NSString *const kMXEventTypeStringBeaconInfoMSC3672 = @"org.matrix.msc3672.beacon_info";
+NSString *const kMXEventTypeStringBeacon = @"m.beacon";
+NSString *const kMXEventTypeStringBeaconMSC3672 = @"org.matrix.msc3672.beacon";
 
 NSString *const kMXMessageTypeKey                    = @"msgtype";
 NSString *const kMXMessageTypeText                   = @"m.text";
@@ -193,7 +195,6 @@ NSString *const kMXMessageContentKeyExtensibleAssetMSC3488 = @"org.matrix.msc348
 NSString *const kMXMessageContentKeyExtensibleAssetType = @"type";
 NSString *const kMXMessageContentKeyExtensibleAssetTypeUser = @"m.self";
 NSString *const kMXMessageContentKeyExtensibleAssetTypePin = @"m.pin";
-NSString *const kMXMessageContentKeyExtensibleAssetTypeLiveLocation = @"m.self.live";
 
 // Join Rules
 

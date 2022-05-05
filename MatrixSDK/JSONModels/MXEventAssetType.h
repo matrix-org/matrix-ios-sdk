@@ -19,7 +19,6 @@
 typedef NS_ENUM(NSUInteger, MXEventAssetType)
 {
     MXEventAssetTypeGeneric, // A generic location without context
-    MXEventAssetTypeUser, // Static user location
-    MXEventAssetTypePin, // Pin location (POI)
-    MXEventAssetTypeLiveLocation // User live location
+    MXEventAssetTypeUser, // User location, it can be static or live depending of event type
+    MXEventAssetTypePin // Pin location (POI)
 };

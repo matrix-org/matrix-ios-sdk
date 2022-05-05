@@ -32,6 +32,16 @@ static NSString * const kLiveJSONKey = @"live";
                         isLive:(BOOL)isLive
                      timestamp:(uint64_t)timestamp
 {
+    return [self initWithUserId:userId description:desc timeout:timeout isLive:isLive timestamp:timestamp originalEvent:nil];
+}
+
+- (instancetype)initWithUserId:(NSString *)userId
+                   description:(NSString *)desc
+                       timeout:(uint64_t)timeout
+                        isLive:(BOOL)isLive
+                     timestamp:(uint64_t)timestamp
+                 originalEvent:(nullable MXEvent*)originalEvent
+{
     self = [super init];
     if (self)
     {
@@ -39,8 +49,9 @@ static NSString * const kLiveJSONKey = @"live";
         _desc = desc;
         _timeout = timeout;
         _isLive = isLive;
-        _assetType = MXEventAssetTypeLiveLocation;
+        _assetType = MXEventAssetTypeUser;
         _timestamp = timestamp;
+        _originalEvent = originalEvent;
     }
     return self;
 }
@@ -76,7 +87,18 @@ static NSString * const kLiveJSONKey = @"live";
                     description:beaconInfo.desc
                         timeout:beaconInfo.timeout
                          isLive:beaconInfo.isLive
-                      timestamp:beaconInfo.timestamp];
+                      timestamp:beaconInfo.timestamp
+                  originalEvent:event];
+}
+
+- (MXBeaconInfo*)stopped
+{
+    return [[[self class] alloc] initWithUserId:self.userId
+                                    description:self.desc
+                                        timeout:self.timeout
+                                         isLive:NO
+                                      timestamp:self.timestamp
+                                  originalEvent:self.originalEvent];
 }
 
 #pragma mark - Overrides
@@ -100,7 +122,7 @@ static NSString * const kLiveJSONKey = @"live";
         
         MXJSONModelSetString(assetTypeString, assetDictionary[kMXMessageContentKeyExtensibleAssetType]);
                              
-        isAssetTypeValid = [assetTypeString isEqualToString:kMXMessageContentKeyExtensibleAssetTypeLiveLocation];
+        isAssetTypeValid = [assetTypeString isEqualToString:kMXMessageContentKeyExtensibleAssetTypeUser];
     }
     
     MXJSONModelSetNumber(timestampNumber, jsonDictionary[kMXMessageContentKeyExtensibleTimestampMSC3488])
@@ -122,7 +144,7 @@ static NSString * const kLiveJSONKey = @"live";
                 
         beaconInfo->_timestamp = [timestampNumber unsignedLongLongValue];
         
-        beaconInfo->_assetType = MXEventAssetTypeLiveLocation;
+        beaconInfo->_assetType = MXEventAssetTypeUser;
     }
     
     return beaconInfo;
@@ -144,7 +166,7 @@ static NSString * const kLiveJSONKey = @"live";
     // Asset type
     
     content[kMXMessageContentKeyExtensibleAssetMSC3488] = @{
-        kMXMessageContentKeyExtensibleAssetType: kMXMessageContentKeyExtensibleAssetTypeLiveLocation
+        kMXMessageContentKeyExtensibleAssetType: kMXMessageContentKeyExtensibleAssetTypeUser
     };
 
     return content;

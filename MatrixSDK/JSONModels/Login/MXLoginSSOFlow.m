@@ -32,15 +32,15 @@ NSString *const MXLoginSSOFlowIdentityProvidersKey = @"identity_providers";
     
     if (loginFlow)
     {
-        NSArray *jsonIdentityProdivers;
+        NSArray *jsonIdentityProviders;
         
-        MXJSONModelSetArray(jsonIdentityProdivers, JSONDictionary[MXLoginSSOFlowIdentityProvidersKey]);
+        MXJSONModelSetArray(jsonIdentityProviders, JSONDictionary[MXLoginSSOFlowIdentityProvidersKey]);
         
         NSArray<MXLoginSSOIdentityProvider*> *identityProviders;
         
-        if (jsonIdentityProdivers)
+        if (jsonIdentityProviders)
         {
-            identityProviders = [MXLoginSSOIdentityProvider modelsFromJSON:jsonIdentityProdivers];
+            identityProviders = [MXLoginSSOIdentityProvider modelsFromJSON:jsonIdentityProviders];
         }
 
         if (!identityProviders)

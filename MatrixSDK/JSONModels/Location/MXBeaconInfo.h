@@ -49,6 +49,9 @@ NS_ASSUME_NONNULL_BEGIN
 /// Milliseconds since UNIX epoch
 @property (nonatomic, readonly) uint64_t timestamp;
 
+/// The event used to build the MXBeaconInfo.
+@property (nonatomic, readonly, nullable) MXEvent *originalEvent;
+
 #pragma mark - Setup
 
 - (instancetype)initWithUserId:(nullable NSString *)userId
@@ -65,6 +68,12 @@ NS_ASSUME_NONNULL_BEGIN
 /// Create the `MXBeaconInfo` object from a Matrix m.beacon_info event.
 /// @param event The m.beacon_info event.
 - (nullable instancetype)initWithMXEvent:(MXEvent*)event;
+
+#pragma mark - Public
+
+/// Get the stopped beacon info version
+/// Keep original event as is and update the `isLive` property to false
+- (MXBeaconInfo*)stopped;
 
 @end
 

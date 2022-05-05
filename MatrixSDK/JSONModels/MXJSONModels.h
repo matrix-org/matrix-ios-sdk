@@ -174,6 +174,18 @@ FOUNDATION_EXPORT NSString *const kMXLoginIdentifierTypePhone;
 @end
 
 /**
+ `MXUsernameAvailability` represents the response returned when checking for username availability.
+ */
+@interface MXUsernameAvailability : MXJSONModel
+
+    /**
+     A flag to indicate that the username is available. This should always be true when the server replies with 200 OK.
+     */
+    @property (nonatomic) BOOL available;
+
+@end
+
+/**
  `MXAuthenticationSession` represents an authentication session returned by the home server.
  */
 @interface MXAuthenticationSession : MXJSONModel

@@ -248,6 +248,9 @@
                 [self updateUserIdsSharingLiveBeacon:userIdsSharingLiveBeacon withStateEvent:event];
                 break;
             }
+            case MXEventTypeRoomHistoryVisibility:
+                summary.historyVisibility = roomState.historyVisibility;
+                break;
             default:
                 break;
         }

@@ -25,6 +25,7 @@
 #import "MXCrypto_Private.h"
 #import "MXTools.h"
 #import "MatrixSDKSwiftHeader.h"
+#import "MXSharedHistoryKeyService.h"
 
 @interface MXMegolmDecryption ()
 {
@@ -212,11 +213,14 @@
     NSArray<NSString*> *forwardingKeyChain;
     BOOL exportFormat = NO;
     NSDictionary *keysClaimed;
+    BOOL sharedHistory = [crypto isRoomSharingHistory:roomId];
+    if (content[kMXSharedHistoryKeyName] != nil) {
+        MXJSONModelSetBoolean(sharedHistory, content[kMXSharedHistoryKeyName]);
+    }
 
     if (event.eventType == MXEventTypeRoomForwardedKey)
     {
         exportFormat = YES;
-
         MXJSONModelSetArray(forwardingKeyChain, content[@"forwarding_curve25519_key_chain"]);
         if (!forwardingKeyChain)
         {
@@ -254,7 +258,14 @@
 
     MXLogDebug(@"[MXMegolmDecryption] onRoomKeyEvent: Adding key for megolm session %@|%@ from %@ event", senderKey, sessionId, event.type);
 
-    [olmDevice addInboundGroupSession:sessionId sessionKey:sessionKey roomId:roomId senderKey:senderKey forwardingCurve25519KeyChain:forwardingKeyChain keysClaimed:keysClaimed exportFormat:exportFormat];
+    [olmDevice addInboundGroupSession:sessionId
+                           sessionKey:sessionKey
+                               roomId:roomId
+                            senderKey:senderKey
+         forwardingCurve25519KeyChain:forwardingKeyChain
+                          keysClaimed:keysClaimed
+                         exportFormat:exportFormat
+                        sharedHistory:sharedHistory];
 
     [crypto.backup maybeSendKeyBackup];
 
@@ -320,50 +331,80 @@
     NSString *deviceId = keyRequest.deviceId;
     MXDeviceInfo *deviceInfo = [crypto.deviceList storedDevice:userId deviceId:deviceId];
     NSDictionary *body = keyRequest.requestBody;
+    NSString *roomId, *senderKey, *sessionId;
+    MXJSONModelSetString(roomId, body[@"room_id"]);
+    MXJSONModelSetString(senderKey, body[@"sender_key"]);
+    MXJSONModelSetString(sessionId, body[@"session_id"]);
+    
+    return [self shareKeysWitUserId:userId
+                            devices:@[deviceInfo]
+             forceEnsureOlmSessions:NO
+                             roomId:roomId
+                          sessionId:sessionId
+                          senderKey:senderKey
+                            success:success
+                            failure:failure];
+}
 
+#pragma mark - Private methods
+
+- (MXHTTPOperation *)shareKeysWitUserId:(NSString *)userId
+                                devices:(NSArray <MXDeviceInfo *> *)devices
+                 forceEnsureOlmSessions:(BOOL)forceEnsureOlmSessions
+                                 roomId:(NSString *)roomId
+                              sessionId:(NSString *)sessionId
+                              senderKey:(NSString *)senderKey
+                                success:(void (^)(void))success
+                                failure:(void (^)(NSError *error))failure
+{
     MXHTTPOperation *operation;
     MXWeakify(self);
     operation = [crypto ensureOlmSessionsForDevices:@{
-                                          userId: @[deviceInfo]
+                                          userId: devices
                                           }
-                                              force:NO
+                                              force:forceEnsureOlmSessions
                                 success:^(MXUsersDevicesMap<MXOlmSessionResult *> *results)
      {
-         MXStrongifyAndReturnIfNil(self);
+        MXStrongifyAndReturnIfNil(self);
+        NSDictionary *payload = [self->crypto buildMegolmKeyForwardingMessage:roomId
+                                                                    senderKey:senderKey
+                                                                    sessionId:sessionId
+                                                                   chainIndex:nil];
+        
+        MXUsersDevicesMap<NSDictionary*> *contentMap = [[MXUsersDevicesMap alloc] init];
+        for (MXDeviceInfo *deviceInfo in devices)
+        {
+            MXOlmSessionResult *olmSessionResult = [results objectForDevice:deviceInfo.deviceId forUser:userId];
+            if (olmSessionResult.sessionId)
+            {
+                NSDictionary *message = [self->crypto encryptMessage:payload forDevices:@[deviceInfo]];
+                [contentMap setObject:message forUser:userId andDevice:deviceInfo.deviceId];
+            }
+            else
+            {
+                MXLogDebug(@"[MXMegolmDecryption] No session with device %@, cannot share keys", deviceInfo.deviceId);
+            }
+        }
+        
+        if (contentMap.count == 0)
+        {
+            MXLogDebug(@"[MXMegolmDecryption] No devices available for user %@, cannot share keys", userId);
+            if (success)
+            {
+                success();
+            }
+            return;
+        }
 
-         MXOlmSessionResult *olmSessionResult = [results objectForDevice:deviceId forUser:userId];
-         if (!olmSessionResult.sessionId)
-         {
-             // no session with this device, probably because there
-             // were no one-time keys.
-             //
-             // ensureOlmSessionsForUsers has already done the logging,
-             // so just skip it.
-             if (success)
-             {
-                 success();
-             }
-             return;
-         }
+        MXLogDebug(@"[MXMegolmDecryption] shareKeysWithDevices: sharing keys for session %@|%@ with devices of user %@", senderKey, sessionId, userId);
 
-         NSString *roomId, *senderKey, *sessionId;
-         MXJSONModelSetString(roomId, body[@"room_id"]);
-         MXJSONModelSetString(senderKey, body[@"sender_key"]);
-         MXJSONModelSetString(sessionId, body[@"session_id"]);
-
-        MXLogDebug(@"[MXMegolmDecryption] shareKeysWithDevice: sharing keys for session %@|%@ with device %@:%@", senderKey, sessionId, userId, deviceId);
-
-         NSDictionary *payload = [self->crypto buildMegolmKeyForwardingMessage:roomId senderKey:senderKey sessionId:sessionId chainIndex:nil];
-
-         MXDeviceInfo *deviceInfo = olmSessionResult.device;
-
-         MXUsersDevicesMap<NSDictionary*> *contentMap = [[MXUsersDevicesMap alloc] init];
-         [contentMap setObject:[self->crypto encryptMessage:payload forDevices:@[deviceInfo]]
-                       forUser:userId andDevice:deviceId];
-
-         MXHTTPOperation *operation2 = [self->crypto.matrixRestClient sendToDevice:kMXEventTypeStringRoomEncrypted contentMap:contentMap txnId:nil success:success failure:failure];
+         MXHTTPOperation *operation2 = [self->crypto.matrixRestClient sendToDevice:kMXEventTypeStringRoomEncrypted
+                                                                        contentMap:contentMap
+                                                                             txnId:nil
+                                                                           success:success
+                                                                           failure:failure];
          [operation mutateTo:operation2];
-
+        
      } failure:failure];
 
     return operation;
@@ -488,6 +529,31 @@
     {
         MXLogDebug(@"[MXMegolmDecryption] requestKeysForEvent: ERROR: missing fields in event %@", event);
     }
+}
+
+#pragma mark - MXSharedHistoryKeyStore
+
+- (BOOL)hasSharedHistoryForRoomId:(NSString *)roomId
+                        sessionId:(NSString *)sessionId
+                        senderKey:(NSString *)senderKey
+{
+    MXOlmInboundGroupSession *session = [crypto.store inboundGroupSessionWithId:sessionId
+                                                                   andSenderKey:senderKey];
+    return session.sharedHistory && [session.roomId isEqualToString:roomId];
+}
+
+- (void)shareKeysForRequest:(MXSharedHistoryKeyRequest *)request
+                    success:(void (^)(void))success
+                    failure:(void (^)(NSError *))failure
+{
+    [self shareKeysWitUserId:request.userId
+                     devices:request.devices
+      forceEnsureOlmSessions:YES
+                      roomId:request.roomId
+                   sessionId:request.sessionId
+                   senderKey:request.senderKey
+                     success:success
+                     failure:failure];
 }
 
 @end

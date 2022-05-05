@@ -42,6 +42,7 @@ public class MXRoomSummaryMO: NSManagedObject {
     @NSManaged public var s_topic: String?
     @NSManaged public var s_creatorUserId: String
     @NSManaged public var s_aliases: String?
+    @NSManaged public var s_historyVisibility: String?
     @NSManaged public var s_joinRule: String?
     @NSManaged public var s_membershipInt: Int16
     @NSManaged public var s_membershipTransitionStateInt: Int16
@@ -86,6 +87,7 @@ public class MXRoomSummaryMO: NSManagedObject {
         s_topic = summary.topic
         s_creatorUserId = summary.creatorUserId
         s_aliases = summary.aliases.joined(separator: StringArrayDelimiter)
+        s_historyVisibility = summary.historyVisibility
         s_joinRule = summary.joinRule
         s_membershipInt = Int16(summary.membership.rawValue)
         s_membershipTransitionStateInt = Int16(summary.membershipTransitionState.rawValue)
@@ -198,6 +200,10 @@ extension MXRoomSummaryMO: MXRoomSummaryProtocol {
     
     public var aliases: [String] {
         return s_aliases?.components(separatedBy: StringArrayDelimiter) ?? []
+    }
+    
+    public var historyVisibility: String? {
+        return s_historyVisibility
     }
     
     public var joinRule: String? {
