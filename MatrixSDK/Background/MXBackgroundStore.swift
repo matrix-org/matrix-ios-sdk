@@ -201,19 +201,19 @@ class MXBackgroundStore: NSObject, MXStore {
     func deleteGroup(_ groupId: String) {
     }
 
-    @available(*, deprecated, message: "use storeAttributedPartialTextMessage")
+    @available(*, deprecated, message: "use storePartialAttributedTextMessage")
     func storePartialTextMessage(forRoom roomId: String, partialTextMessage: String) {
     }
 
-    @available(*, deprecated, message: "use attributedPartialTextMessage")
+    @available(*, deprecated, message: "use partialAttributedTextMessage")
     func partialTextMessage(ofRoom roomId: String) -> String? {
         return nil
     }
 
-    func storeAttributedPartialTextMessage(forRoom roomId: String, attributedPartialTextMessage: NSAttributedString) {
+    func storePartialAttributedTextMessage(forRoom roomId: String, partialAttributedTextMessage: NSAttributedString) {
     }
 
-    func attributedPartialTextMessage(ofRoom roomId: String) -> NSAttributedString? {
+    func partialAttributedTextMessage(ofRoom roomId: String) -> NSAttributedString? {
         return nil
     }
     

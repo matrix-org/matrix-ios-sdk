@@ -43,7 +43,7 @@
     NSMutableDictionary *partialTextMessages;
 
     // key: roomId, value: the text message the user typed
-    NSMutableDictionary *attributedPartialTextMessages;
+    NSMutableDictionary *partialAttributedTextMessages;
 
     NSString *eventStreamToken;
 
@@ -75,7 +75,7 @@
         hasLoadedAllRoomMembersForRooms = [NSMutableDictionary dictionary];
         lastMessages = [NSMutableDictionary dictionary];
         partialTextMessages = [NSMutableDictionary dictionary];
-        attributedPartialTextMessages = [NSMutableDictionary dictionary];
+        partialAttributedTextMessages = [NSMutableDictionary dictionary];
         users = [NSMutableDictionary dictionary];
         groups = [NSMutableDictionary dictionary];
         roomSummaryStore = [[MXVoidRoomSummaryStore alloc] init];
@@ -172,9 +172,9 @@
     {
         [partialTextMessages removeObjectForKey:roomId];
     }
-    if (attributedPartialTextMessages[roomId])
+    if (partialAttributedTextMessages[roomId])
     {
-        [attributedPartialTextMessages removeObjectForKey:roomId];
+        [partialAttributedTextMessages removeObjectForKey:roomId];
     }
     [roomSummaryStore removeSummaryOfRoom:roomId];
 }
@@ -188,7 +188,7 @@
     [hasLoadedAllRoomMembersForRooms removeAllObjects];
     [lastMessages removeAllObjects];
     [partialTextMessages removeAllObjects];
-    [attributedPartialTextMessages removeAllObjects];
+    [partialAttributedTextMessages removeAllObjects];
     [roomSummaryStore removeAllSummaries];
 }
 
@@ -393,21 +393,21 @@
     return partialTextMessages[roomId];
 }
 
-- (void)storeAttributedPartialTextMessageForRoom:(NSString *)roomId attributedPartialTextMessage:(NSAttributedString *)attributedPartialTextMessage
+- (void)storePartialAttributedTextMessageForRoom:(NSString *)roomId partialAttributedTextMessage:(NSAttributedString *)partialAttributedTextMessage
 {
-    if (attributedPartialTextMessage)
+    if (partialAttributedTextMessage)
     {
-        attributedPartialTextMessages[roomId] = attributedPartialTextMessage;
+        partialAttributedTextMessages[roomId] = partialAttributedTextMessage;
     }
     else
     {
-        [attributedPartialTextMessages removeObjectForKey:roomId];
+        [partialAttributedTextMessages removeObjectForKey:roomId];
     }
 }
 
-- (NSAttributedString *)attributedPartialTextMessageOfRoom:(NSString *)roomId
+- (NSAttributedString *)partialAttributedTextMessageOfRoom:(NSString *)roomId
 {
-    return attributedPartialTextMessages[roomId];
+    return partialAttributedTextMessages[roomId];
 }
 
 - (BOOL)isPermanent
@@ -493,7 +493,7 @@
     [hasReachedHomeServerPaginations removeAllObjects];
     [lastMessages removeAllObjects];
     [partialTextMessages removeAllObjects];
-    [attributedPartialTextMessages removeAllObjects];
+    [partialAttributedTextMessages removeAllObjects];
     [users removeAllObjects];
     [groups removeAllObjects];
 }

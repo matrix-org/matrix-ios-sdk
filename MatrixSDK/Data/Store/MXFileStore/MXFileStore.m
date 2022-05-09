@@ -450,9 +450,9 @@ static NSUInteger preloadOptions;
     }
 }
 
-- (void)storeAttributedPartialTextMessageForRoom:(NSString *)roomId attributedPartialTextMessage:(NSAttributedString *)attributedPartialTextMessage
+- (void)storePartialAttributedTextMessageForRoom:(NSString *)roomId partialAttributedTextMessage:(NSAttributedString *)partialAttributedTextMessage
 {
-    [super storeAttributedPartialTextMessageForRoom:roomId attributedPartialTextMessage:attributedPartialTextMessage];
+    [super storePartialAttributedTextMessageForRoom:roomId partialAttributedTextMessage:partialAttributedTextMessage];
 
     if (NSNotFound == [roomsToCommitForMessages indexOfObject:roomId])
     {
