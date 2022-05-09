@@ -22,7 +22,7 @@
 /**
  `MXRoomMember` is the information about a user in a room.
  */
-@interface MXRoomMember : NSObject<NSCoding>
+@interface MXRoomMember : NSObject
 
 /**
  The user id.
