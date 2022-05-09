@@ -34,7 +34,7 @@
 
         self.partialTextMessage = [aDecoder decodeObjectForKey:@"partialTextMessage"];
 
-        self.attributedPartialTextMessage = [aDecoder decodeObjectForKey:@"attributedPartialTextMessage"];
+        self.partialAttributedTextMessage = [aDecoder decodeObjectForKey:@"partialAttributedTextMessage"];
 
         // Rebuild the messagesByEventIds cache
         for (MXEvent *event in messages)
@@ -71,9 +71,9 @@
     {
         [aCoder encodeObject:self.partialTextMessage forKey:@"partialTextMessage"];
     }
-    if (self.attributedPartialTextMessage)
+    if (self.partialAttributedTextMessage)
     {
-        [aCoder encodeObject:self.attributedPartialTextMessage forKey:@"attributedPartialTextMessage"];
+        [aCoder encodeObject:self.partialAttributedTextMessage forKey:@"partialAttributedTextMessage"];
     }
 }
 
