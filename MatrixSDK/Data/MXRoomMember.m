@@ -106,33 +106,4 @@
     return [NSString stringWithFormat:@"<MXRoomMember: %p> userId: %@ - membership: %@", self, _userId, [MXTools membershipString:self.membership]];
 }
 
-#pragma mark NSCoding
-
-- (nullable instancetype)initWithCoder:(nonnull NSCoder *)coder {
-    if (self)
-    {
-        _userId = [coder decodeObjectForKey:@"userId"];
-        _displayname = [coder decodeObjectForKey:@"displayname"];
-        _avatarUrl = [coder decodeObjectForKey:@"avatarUrl"];
-        _membership = [coder decodeIntegerForKey:@"membership"];
-        _prevMembership = [coder decodeIntegerForKey:@"prevMembership"];
-        _originUserId = [coder decodeObjectForKey:@"originUserId"];
-        _thirdPartyInviteToken = [coder decodeObjectForKey:@"thirdPartyInviteToken"];
-        _originalEvent = [coder decodeObjectForKey:@"originalEvent"];
-    }
-
-    return self;
-}
-
-- (void)encodeWithCoder:(nonnull NSCoder *)coder {
-    [coder encodeObject:_userId forKey:@"userId"];
-    [coder encodeObject:_displayname forKey:@"displayname"];
-    [coder encodeObject:_avatarUrl forKey:@"avatarUrl"];
-    [coder encodeInteger:_membership forKey:@"membership"];
-    [coder encodeInteger:_prevMembership forKey:@"prevMembership"];
-    [coder encodeObject:_originUserId forKey:@"originUserId"];
-    [coder encodeObject:_thirdPartyInviteToken forKey:@"thirdPartyInviteToken"];
-    [coder encodeObject:_originalEvent forKey:@"originalEvent"];
-}
-
 @end
