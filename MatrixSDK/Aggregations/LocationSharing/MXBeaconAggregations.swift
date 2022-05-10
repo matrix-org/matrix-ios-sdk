@@ -44,6 +44,11 @@ public class MXBeaconAggregations: NSObject {
         return self.beaconInfoSummaryStore.getBeaconInfoSummary(withIdentifier: eventId, inRoomWithId: roomId)
     }
     
+    /// Get all MXBeaconInfoSummary in a room
+    public func getBeaconInfoSummaries(inRoomWithId roomId: String) -> [MXBeaconInfoSummaryProtocol] {
+        return self.beaconInfoSummaryStore.getAllBeaconInfoSummaries(inRoomWithId: roomId)
+    }
+    
     /// Update a MXBeaconInfoSummary device id that belongs to the current user.
     /// Enables to recognize that a beacon info has been started on the device
     public func updateBeaconInfoSummary(with eventId: String, deviceId: String, inRoomWithId roomId: String)  {
@@ -125,7 +130,7 @@ public class MXBeaconAggregations: NSObject {
         
         var beaconInfoSummary: MXBeaconInfoSummary?
         
-        // A new beacon info is emitted to set a current one to stop state. This beacon info have a different event id.
+        // A new beacon info is emitted to set a current one to stop state.        
         if beaconInfo.isLive == false {
             
             // If no corresponding BeaconInfoSummary exists, discard this beacon info

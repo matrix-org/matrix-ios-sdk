@@ -40,7 +40,7 @@
 @property (nonatomic) MXAggregatedEditsUpdater *aggregatedEditsUpdater;
 @property (nonatomic) MXAggregatedReferencesUpdater *aggregatedReferencesUpdater;
 
-@property (nonatomic, strong, readwrite) MXBeaconAggregations *beaconAggegations;
+@property (nonatomic, strong, readwrite) MXBeaconAggregations *beaconAggregations;
 @property (nonatomic, strong) id<MXBeaconInfoSummaryStoreProtocol> beaconInfoSummaryStore;
 
 @end
@@ -92,7 +92,7 @@
     }
     else if ([listener isKindOfClass:[MXBeaconInfoSummaryListener class]])
     {
-        [self.beaconAggegations removeListener:listener];
+        [self.beaconAggregations removeListener:listener];
     }
 }
 
@@ -257,7 +257,7 @@
         
         self.beaconInfoSummaryStore = beaconInfoSummaryStore;
         
-        self.beaconAggegations = [[MXBeaconAggregations alloc] initWithSession:self.mxSession store:beaconInfoSummaryStore];
+        self.beaconAggregations = [[MXBeaconAggregations alloc] initWithSession:self.mxSession store:beaconInfoSummaryStore];
 
         [self registerListener];
     }
@@ -277,7 +277,7 @@
 - (void)resetDataInRoom:(NSString *)roomId
 {
     [self.aggregatedReactionsUpdater resetDataInRoom:roomId];
-    [self.beaconAggegations clearDataInRoomWithId:roomId];
+    [self.beaconAggregations clearDataInRoomWithId:roomId];
 }
 
 
@@ -306,12 +306,12 @@
                 }
                 break;
             case MXEventTypeBeaconInfo:
-                [self.beaconAggegations handleBeaconInfoWithEvent:event];
+                [self.beaconAggregations handleBeaconInfoWithEvent:event];
                 break;
             case MXEventTypeBeacon:
                 if (direction == MXTimelineDirectionForwards)
                 {
-                    [self.beaconAggegations handleBeaconWithEvent:event];
+                    [self.beaconAggregations handleBeaconWithEvent:event];
                 }
                 break;
             default:

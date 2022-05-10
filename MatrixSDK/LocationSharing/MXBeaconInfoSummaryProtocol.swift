@@ -41,4 +41,7 @@ public protocol MXBeaconInfoSummaryProtocol: AnyObject {
     
     /// Indicate if beacon info has stopped
     var hasStopped: Bool { get }
+    
+    /// Indicate true if beacon info is not expired and beacon info is not stopped
+    var isActive: Bool { get }
 }
