@@ -24,6 +24,7 @@ public class MXBeaconInfoSummary: NSObject, MXBeaconInfoSummaryProtocol {
     
     public let id: String
     public let userId: String
+    public let roomId: String
     public private(set) var deviceId: String?
     public private(set) var beaconInfo: MXBeaconInfo
     public private(set) var lastBeacon: MXBeacon?
@@ -48,17 +49,19 @@ public class MXBeaconInfoSummary: NSObject, MXBeaconInfoSummaryProtocol {
     
     public convenience init?(beaconInfo: MXBeaconInfo) {
         
-        guard let identifier = beaconInfo.originalEvent?.eventId, let userId = beaconInfo.userId else {
+        guard let identifier = beaconInfo.originalEvent?.eventId, let userId = beaconInfo.userId, let roomId = beaconInfo.roomId else {
             return nil
         }
-        self.init(identifier: identifier, userId: userId, beaconInfo: beaconInfo)
+        self.init(identifier: identifier, userId: userId, roomId: roomId, beaconInfo: beaconInfo)
     }
     
     public init(identifier: String,
-         userId: String,
-         beaconInfo: MXBeaconInfo) {
+                userId: String,
+                roomId: String,
+                beaconInfo: MXBeaconInfo) {
         self.id = identifier
         self.userId = userId
+        self.roomId = roomId
         self.beaconInfo = beaconInfo
         
         super.init()
