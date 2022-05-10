@@ -86,6 +86,7 @@ public class MXLocationService: NSObject {
         
         // A new beacon info event is emitted with the same content as the original one execpt isLive = false
         let newBeaconInfo = MXBeaconInfo(userId: nil,
+                                         roomId: nil,
                                          description: initialBeaconInfo.desc,
                                          timeout: initialBeaconInfo.timeout,
                                          isLive: false,
