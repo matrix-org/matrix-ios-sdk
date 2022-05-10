@@ -47,7 +47,35 @@ public class MXLocationService: NSObject {
                                          description: String?,
                                          timeout: TimeInterval,
                                          completion: @escaping (MXResponse<String>) -> Void) -> MXHTTPOperation? {
-        return self.sendBeaconInfoEvent(withRoomId: roomId, description: description, timeout: timeout, completion: completion)
+        return self.sendBeaconInfoEvent(withRoomId: roomId, description: description, timeout: timeout) { response in
+            
+            switch response {
+            case .success(let eventId):
+                var listener: AnyObject?
+                
+                // Update corresponding beacon info summary with current device id
+                listener = self.session.aggregations.beaconAggregations.listenToBeaconInfoSummaryUpdateInRoom(withId: roomId) { [weak self] beaconInfoSummary in
+                    
+                    guard let self = self else {
+                        return
+                    }
+                    
+                    if beaconInfoSummary.id == eventId {
+                        if let listener = listener {
+                            self.session.aggregations.removeListener(listener)
+                        }
+                       
+                        if let myDeviceId = self.session.myDeviceId {
+                            self.session.aggregations.beaconAggregations.updateBeaconInfoSummary(with: eventId, deviceId: myDeviceId, inRoomWithId: roomId)
+                        }
+                    }
+                }
+            case .failure:
+                break
+            }
+            
+            completion(response)
+        }
     }
     
     @discardableResult

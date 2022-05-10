@@ -106,7 +106,7 @@ public class MXBeaconAggregations: NSObject {
     // MARK: Data update listener
     
     /// Listen to all beacon info summary updates in a room
-    public func listenToBeaconInfoSummaryUpdateInRoom(withId roomId: String, handler: @escaping (MXBeaconInfoSummaryProtocol) -> Void) -> Any? {
+    public func listenToBeaconInfoSummaryUpdateInRoom(withId roomId: String, handler: @escaping (MXBeaconInfoSummaryProtocol) -> Void) -> AnyObject? {
         let listener = MXBeaconInfoSummaryPerRoomListener(roomId: roomId, notificationHandler: handler)
         
         perRoomListeners.append(listener)
@@ -115,7 +115,7 @@ public class MXBeaconAggregations: NSObject {
     }
     
     /// Listen to all beacon info summary update in all rooms
-    public func listenToBeaconInfoSummaryUpdate(handler: @escaping (_ roomId: String, MXBeaconInfoSummaryProtocol) -> Void) -> Any? {
+    public func listenToBeaconInfoSummaryUpdate(handler: @escaping (_ roomId: String, MXBeaconInfoSummaryProtocol) -> Void) -> AnyObject? {
         let listener = MXBeaconInfoSummaryAllRoomListener(notificationHandler: handler)
         
         allRoomListeners.append(listener)
