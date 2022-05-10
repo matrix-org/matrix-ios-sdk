@@ -61,6 +61,7 @@ NSString *const kMXSessionDirectRoomsDidChangeNotification = @"kMXSessionDirectR
 NSString *const kMXSessionVirtualRoomsDidChangeNotification = @"kMXSessionVirtualRoomsDidChangeNotification";
 NSString *const kMXSessionAccountDataDidChangeNotification = @"kMXSessionAccountDataDidChangeNotification";
 NSString *const kMXSessionAccountDataDidChangeIdentityServerNotification = @"kMXSessionAccountDataDidChangeIdentityServerNotification";
+NSString *const kMXSessionAccountDataDidChangeBreadcrumbsNotification = @"kMXSessionAccountDataDidChangeBreadcrumbsNotification";
 NSString *const kMXSessionDidCorruptDataNotification = @"kMXSessionDidCorruptDataNotification";
 NSString *const kMXSessionCryptoDidCorruptDataNotification = @"kMXSessionCryptoDidCorruptDataNotification";
 NSString *const kMXSessionNewGroupInviteNotification = @"kMXSessionNewGroupInviteNotification";
@@ -1804,6 +1805,13 @@ typedef void (^MXOnResumeDone)(void);
                 {
                     [self refreshIdentityServerServiceTerms];
                 }
+            }
+            
+            if ([event[@"type"] isEqualToString:kMXAccountDataTypeBreadcrumbs])
+            {
+                [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionAccountDataDidChangeBreadcrumbsNotification
+                                                                    object:self
+                                                                  userInfo:nil];
             }
         }
 
@@ -4382,6 +4390,44 @@ typedef void (^MXOnResumeDone)(void);
     }];
 }
 
+- (void)updateBreadcrumbsWithRoomWithId:(NSString *)roomId
+                                success:(void (^)(void))success
+                                failure:(void (^)(NSError *error))failure
+{
+    NSArray<NSDictionary *> *events = self.accountData.accountData[@"events"];
+    
+    NSDictionary<NSString *, NSArray *> *breadcrumbs;
+    for (NSDictionary * event in events)
+    {
+        if ([event[@"type"] isEqualToString:kMXAccountDataTypeBreadcrumbs])
+        {
+            breadcrumbs = event[@"content"];
+        }
+    }
+    
+    NSMutableArray<NSString *> *recentRoomIds = breadcrumbs[kMXAccountDataTypeRecentRoomsKey] ? [NSMutableArray arrayWithArray:breadcrumbs[kMXAccountDataTypeRecentRoomsKey]] : [NSMutableArray array];
+    
+    NSInteger index = [recentRoomIds indexOfObject:roomId];
+    if (index != NSNotFound)
+    {
+        [recentRoomIds removeObjectAtIndex:index];
+    }
+    [recentRoomIds insertObject:roomId atIndex:0];
+    
+    [self setAccountData:@{kMXAccountDataTypeRecentRoomsKey : recentRoomIds}
+                 forType:kMXAccountDataTypeBreadcrumbs
+                 success:^{
+        if (success)
+        {
+            success();
+        }
+    } failure:^(NSError *error) {
+        if (failure)
+        {
+            failure(error);
+        }
+    }];
+}
 
 #pragma mark - Homeserver information
 - (MXWellKnown *)homeserverWellknown

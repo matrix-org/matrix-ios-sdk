@@ -26,7 +26,10 @@ typedef NS_OPTIONS(NSInteger, MXRoomSummaryDataTypes)
     MXRoomSummaryDataTypesServerNotice = 1 << 4,
     MXRoomSummaryDataTypesHidden = 1 << 5,
     MXRoomSummaryDataTypesSpace = 1 << 6,
-    MXRoomSummaryDataTypesConferenceUser = 1 << 7
+    MXRoomSummaryDataTypesConferenceUser = 1 << 7,
+    MXRoomSummaryDataTypesNotDirect = 1 << 8,
+    MXRoomSummaryDataTypesUnread = 1 << 9,
+    MXRoomSummaryDataTypesRead = 1 << 10,
 };
 
 #endif /* MXRoomSummaryDataTypes_h */

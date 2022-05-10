@@ -51,6 +51,7 @@ NSString *const kMXAccountDataTypeDirect = @"m.direct";
 NSString *const kMXAccountDataTypeUserWidgets = @"m.widgets";
 NSString *const kMXAccountDataTypeIdentityServer = @"m.identity_server";
 NSString *const kMXAccountDataTypeAcceptedTerms = @"m.accepted_terms";
+NSString *const kMXAccountDataTypeBreadcrumbs = @"im.vector.setting.breadcrumbs";
 
 /**
  Account data keys
@@ -58,6 +59,7 @@ NSString *const kMXAccountDataTypeAcceptedTerms = @"m.accepted_terms";
 NSString *const kMXAccountDataKeyIgnoredUser = @"ignored_users";
 NSString *const kMXAccountDataKeyIdentityServer = @"base_url";
 NSString *const kMXAccountDataTypeAcceptedTermsKey = @"accepted";
+NSString *const kMXAccountDataTypeRecentRoomsKey = @"recent_rooms";
 
 /**
  Types of third party media.

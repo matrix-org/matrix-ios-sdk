@@ -47,6 +47,8 @@ public struct MXRoomListDataSortOptions: Equatable {
     /// Related fetcher will be refreshed automatically when updated.
     public var unreadMessagesFirst: Bool
     
+    public var alphabetical: Bool
+    
     /// Initializer
     /// - Parameters:
     ///   - sentStatus: flag to sort by sent status
@@ -58,6 +60,7 @@ public struct MXRoomListDataSortOptions: Equatable {
                 lastEventDate: Bool = true,
                 favoriteTag: Bool = false,
                 suggested: Bool = true,
+                alphabetical: Bool = false,
                 missedNotificationsFirst: Bool,
                 unreadMessagesFirst: Bool) {
         self.invitesFirst = invitesFirst
@@ -65,6 +68,7 @@ public struct MXRoomListDataSortOptions: Equatable {
         self.lastEventDate = lastEventDate
         self.favoriteTag = favoriteTag
         self.suggested = suggested
+        self.alphabetical = alphabetical
         self.missedNotificationsFirst = missedNotificationsFirst
         self.unreadMessagesFirst = unreadMessagesFirst
     }
