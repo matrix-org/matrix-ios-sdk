@@ -24,7 +24,8 @@ public class MXBeaconAggregations: NSObject {
     
     private unowned let session: MXSession
     
-    private var listeners: [MXBeaconInfoSummaryListener] = []
+    private var perRoomListeners: [MXBeaconInfoSummaryPerRoomListener] = []
+    private var allRoomListeners: [MXBeaconInfoSummaryAllRoomListener] = []
     
     private var beaconInfoSummaryStore: MXBeaconInfoSummaryStoreProtocol
     
@@ -104,20 +105,30 @@ public class MXBeaconAggregations: NSObject {
     
     // MARK: Data update listener
     
+    /// Listen to all beacon info summary updates in a room
     public func listenToBeaconInfoSummaryUpdateInRoom(withId roomId: String, handler: @escaping (MXBeaconInfoSummaryProtocol) -> Void) -> Any? {
-        let listener = MXBeaconInfoSummaryListener(roomId: roomId, notificationHandler: handler)
+        let listener = MXBeaconInfoSummaryPerRoomListener(roomId: roomId, notificationHandler: handler)
         
-        listeners.append(listener)
+        perRoomListeners.append(listener)
+
+        return listener
+    }
+    
+    /// Listen to all beacon info summary update in all rooms
+    public func listenToBeaconInfoSummaryUpdate(handler: @escaping (_ roomId: String, MXBeaconInfoSummaryProtocol) -> Void) -> Any? {
+        let listener = MXBeaconInfoSummaryAllRoomListener(notificationHandler: handler)
+        
+        allRoomListeners.append(listener)
 
         return listener
     }
 
     public func removeListener(_ listener: Any) {
-        guard let beaconInfoSummaryListener = listener as? MXBeaconInfoSummaryListener else {
-            return
+        if let perRoomListener = listener as? MXBeaconInfoSummaryPerRoomListener {
+            perRoomListeners.removeAll(where: { $0 === perRoomListener })
+        } else if let allRoomListener = listener as? MXBeaconInfoSummaryAllRoomListener {
+            allRoomListeners.removeAll(where: { $0 === allRoomListener })
         }
-        
-        listeners.removeAll(where: { $0 === beaconInfoSummaryListener })
     }
     
     // MARK: - Private
@@ -174,8 +185,12 @@ public class MXBeaconAggregations: NSObject {
     
     private func notifyBeaconInfoSummaryListeners(ofRoomWithId roomId: String, beaconInfoSummary: MXBeaconInfoSummary) {
         
-        for listener in listeners where listener.roomId == roomId {
+        for listener in perRoomListeners where listener.roomId == roomId {
             listener.notificationHandler(beaconInfoSummary)
+        }
+        
+        for listener in allRoomListeners {
+            listener.notificationHandler(roomId, beaconInfoSummary)
         }
     }
     

@@ -90,7 +90,7 @@
     {
         [self.aggregatedEditsUpdater removeListener:listener];
     }
-    else if ([listener isKindOfClass:[MXBeaconInfoSummaryListener class]])
+    else if ([listener isKindOfClass:[MXBeaconInfoSummaryPerRoomListener class]] || [listener isKindOfClass:[MXBeaconInfoSummaryAllRoomListener class]])
     {
         [self.beaconAggregations removeListener:listener];
     }
