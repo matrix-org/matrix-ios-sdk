@@ -200,9 +200,21 @@ NS_ASSUME_NONNULL_BEGIN
  Enable sharing of session keys for an immediate historical context (e.g. last 10-20 messages)
  when inviting a new user to a room with shared history.
  
- @remark YES by default.
+ @remark NO by default.
  */
 @property (nonatomic) BOOL enableRoomSharedHistoryOnInvite;
+
+#if DEBUG
+
+/**
+ Enable Crypto module V2, a work-in-progress and NOT production-ready implementation
+ of [matrix-rust-sdk](https://github.com/matrix-org/matrix-rust-sdk/tree/main/crates/matrix-sdk-crypto).
+ 
+ @remark NO by default.
+ */
+@property (nonatomic) BOOL enableCryptoV2;
+
+#endif
 
 @end
 
