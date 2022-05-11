@@ -38,6 +38,7 @@
         "MXBeaconInfoUnitTests",
         "MXCoreDataRoomListDataManagerUnitTests",
         "MXCredentialsUnitTests",
+        "MXCryptoRequestsUnitTests",
         "MXDeviceListOperationsPoolUnitTests",
         "MXErrorUnitTests",
         "MXEventAnnotationUnitTests",

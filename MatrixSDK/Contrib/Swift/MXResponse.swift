@@ -207,6 +207,39 @@ internal func uncurryResponse<T>(_ response: MXResponse<T>, success: @escaping (
     }
 }
 
+/// Async wrapper over callback-based functions returning `MXResponse<T>`
+///
+/// Example:
+///
+/// ```
+/// // Legacy callback approach
+/// room.members { response
+///     switch response {
+///     case .succes:
+///         ...
+///     case. failure:
+///         ...
+///     }
+/// }
+///
+/// // Async approach
+/// let members = try await performCallbackRequest {
+///     room.members($0)
+/// }
+/// ```
+@available(iOS 13.0.0, *)
+internal func performCallbackRequest<T>(_ request: (@escaping (MXResponse<T>) -> Void) -> Void) async throws -> T {
+    return try await withCheckedThrowingContinuation { continuation in
+        request {
+            switch $0 {
+            case .success(let response):
+                continuation.resume(returning: response)
+            case .failure(let error):
+                continuation.resume(throwing: error)
+            }
+        }
+    }
+}
 
 /**
  Reports ongoing progress of a process, and encapsulates relevant

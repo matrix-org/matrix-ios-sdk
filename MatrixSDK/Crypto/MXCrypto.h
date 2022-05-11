@@ -272,6 +272,11 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
 - (void)handleRoomKeyEvent:(MXEvent*)event onComplete:(void (^)(void))onComplete;
 
 /**
+ Handle the sync response that may contain crypto-related events
+ */
+- (void)handleSyncResponse:(MXSyncResponse *)syncResponse;
+
+/**
  Handle the completion of a /sync.
 
  This is called after the processing of each successful /sync response.
