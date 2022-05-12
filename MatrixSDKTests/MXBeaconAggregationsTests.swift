@@ -164,6 +164,7 @@ class MXBeaconAggregationsTests: XCTestCase {
                                     
                                     XCTAssertEqual(beaconInfoSummary.id, eventId)
                                     XCTAssertEqual(beaconInfoSummary.userId, userId)
+                                    XCTAssertEqual(beaconInfoSummary.roomId, roomId)
                                                             
                                     let beaconInfo = beaconInfoSummary.beaconInfo
                                     
@@ -248,6 +249,7 @@ class MXBeaconAggregationsTests: XCTestCase {
                                     
                                     XCTAssertEqual(beaconInfoSummary.id, beaconInfoEventId)
                                     XCTAssertEqual(beaconInfoSummary.userId, userId)
+                                    XCTAssertEqual(beaconInfoSummary.roomId, roomId)
                                                             
                                     let beaconInfo = beaconInfoSummary.beaconInfo
                                     

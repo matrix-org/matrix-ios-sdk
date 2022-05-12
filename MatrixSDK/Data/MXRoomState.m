@@ -399,7 +399,7 @@
     return roomTombStoneContent;
 }
 
-- (NSArray<MXBeaconInfo*>*)beaconInfoEvents
+- (NSArray<MXBeaconInfo*>*)beaconInfos
 {
     NSMutableArray *beaconInfoEvents = [NSMutableArray new];
     

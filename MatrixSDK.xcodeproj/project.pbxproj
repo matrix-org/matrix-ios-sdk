@@ -791,6 +791,10 @@
 		B135066F27EA44C800BD3276 /* MXLocationServiceError.swift in Sources */ = {isa = PBXBuildFile; fileRef = B135066D27EA44C800BD3276 /* MXLocationServiceError.swift */; };
 		B135067427EB201E00BD3276 /* MXLocationServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B135067327EB201E00BD3276 /* MXLocationServiceTests.swift */; };
 		B135067527EB201E00BD3276 /* MXLocationServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B135067327EB201E00BD3276 /* MXLocationServiceTests.swift */; };
+		B1432B51282AB29A00737CA6 /* MXBeaconInfoSummaryAllRoomListener.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1432B4F282AB29A00737CA6 /* MXBeaconInfoSummaryAllRoomListener.swift */; };
+		B1432B52282AB29A00737CA6 /* MXBeaconInfoSummaryAllRoomListener.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1432B4F282AB29A00737CA6 /* MXBeaconInfoSummaryAllRoomListener.swift */; };
+		B1432B53282AB29A00737CA6 /* MXBeaconInfoSummaryPerRoomListener.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1432B50282AB29A00737CA6 /* MXBeaconInfoSummaryPerRoomListener.swift */; };
+		B1432B54282AB29A00737CA6 /* MXBeaconInfoSummaryPerRoomListener.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1432B50282AB29A00737CA6 /* MXBeaconInfoSummaryPerRoomListener.swift */; };
 		B146D47121A5939100D8C2C6 /* MXRealmHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = B146D46F21A5939000D8C2C6 /* MXRealmHelper.m */; };
 		B146D47221A5939100D8C2C6 /* MXRealmHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = B146D47021A5939000D8C2C6 /* MXRealmHelper.h */; };
 		B146D47421A5945800D8C2C6 /* MXAntivirusScanStatus.h in Headers */ = {isa = PBXBuildFile; fileRef = B146D47321A5945800D8C2C6 /* MXAntivirusScanStatus.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1386,8 +1390,6 @@
 		B1EE98DA280723BE00AB63F0 /* MXBeaconInfoSummary.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1EE98D8280723BE00AB63F0 /* MXBeaconInfoSummary.swift */; };
 		B1EE98DC280865A200AB63F0 /* MXBeaconAggregations.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1EE98DB280865A200AB63F0 /* MXBeaconAggregations.swift */; };
 		B1EE98DD280865A200AB63F0 /* MXBeaconAggregations.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1EE98DB280865A200AB63F0 /* MXBeaconAggregations.swift */; };
-		B1F04B0D2811E79D00103EBE /* MXBeaconInfoSummaryListener.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1F04B0C2811E79D00103EBE /* MXBeaconInfoSummaryListener.swift */; };
-		B1F04B0E2811E79D00103EBE /* MXBeaconInfoSummaryListener.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1F04B0C2811E79D00103EBE /* MXBeaconInfoSummaryListener.swift */; };
 		B1F04B102811E7B600103EBE /* MXBeaconInfoSummaryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1F04B0F2811E7B600103EBE /* MXBeaconInfoSummaryStore.swift */; };
 		B1F04B112811E7B600103EBE /* MXBeaconInfoSummaryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1F04B0F2811E7B600103EBE /* MXBeaconInfoSummaryStore.swift */; };
 		B1F04B132811E9D300103EBE /* MXBeaconInfoSummaryStoreProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1F04B122811E9D300103EBE /* MXBeaconInfoSummaryStoreProtocol.swift */; };
@@ -2452,6 +2454,8 @@
 		B135066627EA0FFB00BD3276 /* MXBeaconInfoUnitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXBeaconInfoUnitTests.swift; sourceTree = "<group>"; };
 		B135066D27EA44C800BD3276 /* MXLocationServiceError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXLocationServiceError.swift; sourceTree = "<group>"; };
 		B135067327EB201E00BD3276 /* MXLocationServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXLocationServiceTests.swift; sourceTree = "<group>"; };
+		B1432B4F282AB29A00737CA6 /* MXBeaconInfoSummaryAllRoomListener.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MXBeaconInfoSummaryAllRoomListener.swift; sourceTree = "<group>"; };
+		B1432B50282AB29A00737CA6 /* MXBeaconInfoSummaryPerRoomListener.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MXBeaconInfoSummaryPerRoomListener.swift; sourceTree = "<group>"; };
 		B146D46F21A5939000D8C2C6 /* MXRealmHelper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXRealmHelper.m; sourceTree = "<group>"; };
 		B146D47021A5939000D8C2C6 /* MXRealmHelper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXRealmHelper.h; sourceTree = "<group>"; };
 		B146D47321A5945800D8C2C6 /* MXAntivirusScanStatus.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXAntivirusScanStatus.h; sourceTree = "<group>"; };
@@ -2555,7 +2559,6 @@
 		B1EE98D328048ACF00AB63F0 /* MXGeoURIComponentsUnitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXGeoURIComponentsUnitTests.swift; sourceTree = "<group>"; };
 		B1EE98D8280723BE00AB63F0 /* MXBeaconInfoSummary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXBeaconInfoSummary.swift; sourceTree = "<group>"; };
 		B1EE98DB280865A200AB63F0 /* MXBeaconAggregations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXBeaconAggregations.swift; sourceTree = "<group>"; };
-		B1F04B0C2811E79D00103EBE /* MXBeaconInfoSummaryListener.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXBeaconInfoSummaryListener.swift; sourceTree = "<group>"; };
 		B1F04B0F2811E7B600103EBE /* MXBeaconInfoSummaryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXBeaconInfoSummaryStore.swift; sourceTree = "<group>"; };
 		B1F04B122811E9D300103EBE /* MXBeaconInfoSummaryStoreProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXBeaconInfoSummaryStoreProtocol.swift; sourceTree = "<group>"; };
 		B1F04B152811EFF700103EBE /* MXBeaconAggregationsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXBeaconAggregationsTests.swift; sourceTree = "<group>"; };
@@ -4454,7 +4457,8 @@
 				B1EE98DB280865A200AB63F0 /* MXBeaconAggregations.swift */,
 				B1F04B0F2811E7B600103EBE /* MXBeaconInfoSummaryStore.swift */,
 				B1F04B122811E9D300103EBE /* MXBeaconInfoSummaryStoreProtocol.swift */,
-				B1F04B0C2811E79D00103EBE /* MXBeaconInfoSummaryListener.swift */,
+				B1432B4F282AB29A00737CA6 /* MXBeaconInfoSummaryAllRoomListener.swift */,
+				B1432B50282AB29A00737CA6 /* MXBeaconInfoSummaryPerRoomListener.swift */,
 			);
 			path = LocationSharing;
 			sourceTree = "<group>";
@@ -6144,7 +6148,6 @@
 				32CEEF5123B0AB030039BA98 /* MXCrossSigning.m in Sources */,
 				32720D9F222EAA6F0086FFF5 /* MXAutoDiscovery.m in Sources */,
 				3297912923A93D4B00F7BB9B /* MXKeyVerification.m in Sources */,
-				B1F04B0D2811E79D00103EBE /* MXBeaconInfoSummaryListener.swift in Sources */,
 				32C78B6A256CFC4D008130B1 /* MXCryptoMigration.m in Sources */,
 				EC8A53B725B1BC77004E0802 /* MXCallCandidatesEventContent.m in Sources */,
 				32D2CC0623422462002BD8CA /* MX3PidAddManager.m in Sources */,
@@ -6237,6 +6240,7 @@
 				EC131B0A2758D56600712964 /* MXThreadNotificationsCount.swift in Sources */,
 				EC1848C52685F64D00865E16 /* MXiOSAudioOutputRoute.swift in Sources */,
 				EC60EE08265CFFF400B39A4E /* MXGroupSyncProfile.m in Sources */,
+				B1432B53282AB29A00737CA6 /* MXBeaconInfoSummaryPerRoomListener.swift in Sources */,
 				B19A30A0240424BD00FB6F35 /* MXQRCodeTransaction.m in Sources */,
 				C63E78B01F26588000AC692F /* MXRoomPowerLevels.swift in Sources */,
 				EC0B943F271DB68F00B4D440 /* MXVoidRoomSummaryStore.m in Sources */,
@@ -6304,6 +6308,7 @@
 				18C26C3D273C031900805154 /* PollAggregator.swift in Sources */,
 				F03EF5051DF01596009DF592 /* MXLRUCache.m in Sources */,
 				EC8A53AF25B1BC77004E0802 /* MXCallAnswerEventContent.m in Sources */,
+				B1432B51282AB29A00737CA6 /* MXBeaconInfoSummaryAllRoomListener.swift in Sources */,
 				32A30B191FB4813400C8309E /* MXIncomingRoomKeyRequestManager.m in Sources */,
 				323F3F9320D3F0C700D26D6A /* MXRoomEventFilter.m in Sources */,
 				3275FD9921A6B53300B9C13D /* MXLoginPolicyData.m in Sources */,
@@ -6691,7 +6696,6 @@
 				B14EF20D2397E90400758AF0 /* MXUsersDevicesMap.m in Sources */,
 				B14EF20E2397E90400758AF0 /* MXKeyBackupVersionTrust.m in Sources */,
 				B14EF20F2397E90400758AF0 /* MXRoomState.swift in Sources */,
-				B1F04B0E2811E79D00103EBE /* MXBeaconInfoSummaryListener.swift in Sources */,
 				B14EF2102397E90400758AF0 /* MXReplyEventBodyParts.m in Sources */,
 				B14EF2112397E90400758AF0 /* MXIncomingRoomKeyRequestCancellation.m in Sources */,
 				B14EF2122397E90400758AF0 /* MXMemoryRoomStore.m in Sources */,
@@ -6784,6 +6788,7 @@
 				B14EF23D2397E90400758AF0 /* MXCallManager.m in Sources */,
 				B14EF23E2397E90400758AF0 /* MXPeekingRoom.m in Sources */,
 				B14EF23F2397E90400758AF0 /* MXEncryptedContentFile.m in Sources */,
+				B1432B54282AB29A00737CA6 /* MXBeaconInfoSummaryPerRoomListener.swift in Sources */,
 				EC8A539625B1BC77004E0802 /* MXUserModel.m in Sources */,
 				EC0B9440271DB68F00B4D440 /* MXVoidRoomSummaryStore.m in Sources */,
 				B14EF2402397E90400758AF0 /* MXSessionEventListener.m in Sources */,
@@ -6851,6 +6856,7 @@
 				B135066427E9CB6400BD3276 /* MXBeaconInfo.m in Sources */,
 				18C26C3E273C032900805154 /* PollAggregator.swift in Sources */,
 				B14EF25C2397E90400758AF0 /* MXRoomTombStoneContent.m in Sources */,
+				B1432B52282AB29A00737CA6 /* MXBeaconInfoSummaryAllRoomListener.swift in Sources */,
 				B14EF25D2397E90400758AF0 /* MXImage.swift in Sources */,
 				B14EF25E2397E90400758AF0 /* (null) in Sources */,
 				32B090E3261F709B002924AA /* MXAsyncTaskQueue.swift in Sources */,

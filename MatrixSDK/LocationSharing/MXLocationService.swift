@@ -47,7 +47,35 @@ public class MXLocationService: NSObject {
                                          description: String?,
                                          timeout: TimeInterval,
                                          completion: @escaping (MXResponse<String>) -> Void) -> MXHTTPOperation? {
-        return self.sendBeaconInfoEvent(withRoomId: roomId, description: description, timeout: timeout, completion: completion)
+        return self.sendBeaconInfoEvent(withRoomId: roomId, description: description, timeout: timeout) { response in
+            
+            switch response {
+            case .success(let eventId):
+                var listener: AnyObject?
+                
+                // Update corresponding beacon info summary with current device id
+                listener = self.session.aggregations.beaconAggregations.listenToBeaconInfoSummaryUpdateInRoom(withId: roomId) { [weak self] beaconInfoSummary in
+                    
+                    guard let self = self else {
+                        return
+                    }
+                    
+                    if beaconInfoSummary.id == eventId {
+                        if let listener = listener {
+                            self.session.aggregations.removeListener(listener)
+                        }
+                       
+                        if let myDeviceId = self.session.myDeviceId {
+                            self.session.aggregations.beaconAggregations.updateBeaconInfoSummary(with: eventId, deviceId: myDeviceId, inRoomWithId: roomId)
+                        }
+                    }
+                }
+            case .failure:
+                break
+            }
+            
+            completion(response)
+        }
     }
     
     @discardableResult
@@ -86,6 +114,7 @@ public class MXLocationService: NSObject {
         
         // A new beacon info event is emitted with the same content as the original one execpt isLive = false
         let newBeaconInfo = MXBeaconInfo(userId: nil,
+                                         roomId: nil,
                                          description: initialBeaconInfo.desc,
                                          timeout: initialBeaconInfo.timeout,
                                          isLive: false,
@@ -167,20 +196,28 @@ public class MXLocationService: NSObject {
         return self.sendBeacon(withBeaconInfoEventId: beaconInfoEventId, latitude: latitude, longitude: longitude, description: description, threadId: threadId, inRoomWithId: roomId, localEcho: &localEcho, completion: completion)
     }
     
-    /// Check if the current user is sharin is location in a room
+    /// Check if the current user is sharing is location in a room
     /// - Parameter roomId: The room id
     /// - Returns: true if the user if sharing is location
-    public func isCurrentUserSharingIsLocation(inRoomWithId roomId: String) -> Bool {
+    public func isCurrentUserSharingLocation(inRoomWithId roomId: String) -> Bool {
         
         guard let myUserId = self.session.myUserId else {
             return false
         }
         
-        guard let roomSummary = self.session.roomSummary(withRoomId: roomId) else {
+        return self.getLiveBeaconInfoSummaries(for: myUserId, inRoomWithId: roomId).isEmpty == false
+    }
+    
+    /// Check if the current user is sharing is location in a room and the sharing is not expired
+    /// - Parameter roomId: The room id
+    /// - Returns: true if the user if sharing is location
+    public func isCurrentUserSharingActiveLocation(inRoomWithId roomId: String) -> Bool {
+        
+        guard let myUserId = self.session.myUserId else {
             return false
         }
         
-        return roomSummary.userIdsSharingLiveBeacon.contains(myUserId)
+        return self.getActiveBeaconInfoSummaries(for: myUserId, inRoomWithId: roomId).isEmpty == false
     }
     
     // MARK: Beacon info
@@ -234,6 +271,17 @@ public class MXLocationService: NSObject {
         return self.session.aggregations.beaconAggregations.getBeaconInfoSummaries(inRoomWithId: roomId)
     }
     
+    /// Get all beacon info summaries in a room for a user
+    /// - Parameters:
+    ///   - roomId: The room id of the room
+    ///   - userId: The user id
+    /// - Returns: Room beacon info summaries
+    public func getBeaconInfoSummaries(for userId: String, inRoomWithId roomId: String) -> [MXBeaconInfoSummaryProtocol] {
+        return self.session.aggregations.beaconAggregations.getBeaconInfoSummaries(inRoomWithId: roomId).filter { beaconInfoSummary in
+            beaconInfoSummary.userId == userId
+        }
+    }
+    
     /// Get all live beacon info summaries in a room
     /// - Parameters:
     ///   - roomId: The room id of the room
@@ -266,6 +314,19 @@ public class MXLocationService: NSObject {
     public func getActiveBeaconInfoSummaries(inRoomWithId roomId: String) -> [MXBeaconInfoSummaryProtocol] {
         
         let beaconInfoSummaries = self.getBeaconInfoSummaries(inRoomWithId: roomId)
+        return beaconInfoSummaries.filter { beaconInfoSummary in
+            return beaconInfoSummary.isActive
+        }
+    }
+    
+    /// Get all active (live and not expired) beacon info summaries in a room for a user.
+    /// - Parameters:
+    ///   - userId: The user id
+    ///   - roomId: The room id of the room
+    /// - Returns: Room live beacon info summaries
+    public func getActiveBeaconInfoSummaries(for userId: String, inRoomWithId roomId: String) -> [MXBeaconInfoSummaryProtocol] {
+        
+        let beaconInfoSummaries = self.getBeaconInfoSummaries(for: userId, inRoomWithId: roomId)
         return beaconInfoSummaries.filter { beaconInfoSummary in
             return beaconInfoSummary.isActive
         }
