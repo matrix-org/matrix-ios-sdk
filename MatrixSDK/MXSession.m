@@ -1930,8 +1930,11 @@ typedef void (^MXOnResumeDone)(void);
 {
     BOOL isInValidState = _state == MXSessionStateStoreDataReady || _state == MXSessionStatePaused;
     if (!isInValidState) {
-        MXLogFailure(@"[MXSession] state is not valid to handle background sync cache, investigate why the method was called");
-        completion();
+        MXLogFailure(@"[MXSession] state %@ is not valid to handle background sync cache, investigate why the method was called", [MXTools readableSessionState:_state]);
+        if (completion)
+        {
+            completion();
+        }
         return;
     }
 
