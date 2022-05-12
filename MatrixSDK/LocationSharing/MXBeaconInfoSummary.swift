@@ -116,7 +116,7 @@ public class MXBeaconInfoSummary: NSObject, MXBeaconInfoSummaryProtocol {
     /// There is no reason to change it twice.
     @discardableResult
     func updateWithDeviceId(_ deviceId: String) -> Bool {
-        guard self.deviceId != nil else {
+        guard self.deviceId == nil else {
             return false
         }
         self.deviceId = deviceId
