@@ -20,6 +20,7 @@ typedef NS_ENUM(NSInteger, MXRoomType) {
     MXRoomTypeNone,
     MXRoomTypeRoom,
     MXRoomTypeSpace,
+    MXRoomTypeVideo,
     // The room type is custom. Refer to the room type string version.
     MXRoomTypeCustom
 };
@@ -30,3 +31,4 @@ typedef NSString *const MXRoomTypeString NS_TYPED_EXTENSIBLE_ENUM;
 static MXRoomTypeString const MXRoomTypeStringRoomMSC1840 = @"org.matrix.msc1840.messaging";
 static MXRoomTypeString const MXRoomTypeStringRoom = @"m.message";
 static MXRoomTypeString const MXRoomTypeStringSpace = @"m.space";
+static MXRoomTypeString const MXRoomTypeStringVideo = @"io.element.video";
