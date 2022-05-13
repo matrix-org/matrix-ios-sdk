@@ -387,7 +387,7 @@
     session.roomId = roomId;
     session.keysClaimed = keysClaimed;
     session.forwardingCurve25519KeyChain = forwardingCurve25519KeyChain;
-    session.sharedHistory = sharedHistory;
+    session.sharedHistory = MXSDKOptions.sharedInstance.enableRoomSharedHistoryOnInvite && sharedHistory;
 
     [store storeInboundGroupSessions:@[session]];
 
@@ -594,13 +594,14 @@
 
         MXMegolmSessionData *sessionData = [session exportSessionDataAtMessageIndex:[messageIndex unsignedIntegerValue]];
         NSArray<NSString*> *forwardingCurve25519KeyChain = sessionData.forwardingCurve25519KeyChain;
+        BOOL sharedHistory = MXSDKOptions.sharedInstance.enableRoomSharedHistoryOnInvite && sessionData.sharedHistory;
 
         inboundGroupSessionKey = @{
                                    @"chain_index": messageIndex,
                                    @"key": sessionData.sessionKey,
                                    @"forwarding_curve25519_key_chain": forwardingCurve25519KeyChain ? forwardingCurve25519KeyChain : @[],
                                    @"sender_claimed_ed25519_key": senderEd25519Key ? senderEd25519Key : [NSNull null],
-                                   @"shared_history": @(sessionData.sharedHistory)
+                                   @"shared_history": @(sharedHistory)
                                    };
     }
 
