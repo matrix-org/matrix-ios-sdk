@@ -387,7 +387,12 @@
     session.roomId = roomId;
     session.keysClaimed = keysClaimed;
     session.forwardingCurve25519KeyChain = forwardingCurve25519KeyChain;
-    session.sharedHistory = MXSDKOptions.sharedInstance.enableRoomSharedHistoryOnInvite && sharedHistory;
+    
+    // If we already have a session stored, the sharedHistory flag will not be overwritten
+    if (!existingSession && MXSDKOptions.sharedInstance.enableRoomSharedHistoryOnInvite)
+    {
+        session.sharedHistory = sharedHistory;
+    }
 
     [store storeInboundGroupSessions:@[session]];
 
@@ -424,6 +429,12 @@
             {
                 MXLogDebug(@"[MXOlmDevice] importInboundGroupSessions: Skip it. The index of the incoming session is higher (%@ vs %@)", @(session.session.firstKnownIndex), @(existingSession.session.firstKnownIndex));
                 continue;
+            }
+            
+            if (existingSession.sharedHistory != session.sharedHistory)
+            {
+                MXLogDebug(@"[MXOlmDevice] importInboundGroupSessions: Existing value of sharedHistory = %d is not allowed to be overriden by the updated session", existingSession.sharedHistory);
+                session.sharedHistory = existingSession.sharedHistory;
             }
         }
 

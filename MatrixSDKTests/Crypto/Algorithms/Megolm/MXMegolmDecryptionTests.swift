@@ -64,8 +64,8 @@ class MXMegolmDecryptionTests: XCTestCase {
         
         override func inboundGroupSession(
             withId sessionId: String!,
-            andSenderKey senderKey: String!) -> MXOlmInboundGroupSession!
-        {
+            andSenderKey senderKey: String!
+        ) -> MXOlmInboundGroupSession! {
             return sessions["\(sessionId!)-\(senderKey!)"]
         }
     }
@@ -98,6 +98,12 @@ class MXMegolmDecryptionTests: XCTestCase {
             return session
         }
     }
+    
+    let roomId1 = "ABC"
+    let roomId2 = "XYZ"
+    let sessionId1 = "123"
+    let sessionId2 = "999"
+    let senderKey = "456"
     
     var device: SpyDevice!
     var store: CryptoStoreStub!
@@ -157,8 +163,8 @@ class MXMegolmDecryptionTests: XCTestCase {
             (
                 Configuration(
                     sharedHistory: true,
-                    sessionId: "999",
-                    roomId: "ABC"
+                    sessionId: sessionId2,
+                    roomId: roomId1
                 ),
                 false
             ),
@@ -167,8 +173,8 @@ class MXMegolmDecryptionTests: XCTestCase {
             (
                 Configuration(
                     sharedHistory: true,
-                    sessionId: "123",
-                    roomId: "XYZ"
+                    sessionId: sessionId1,
+                    roomId: roomId2
                 ),
                 false
             ),
@@ -177,8 +183,8 @@ class MXMegolmDecryptionTests: XCTestCase {
             (
                 Configuration(
                     sharedHistory: false,
-                    sessionId: "123",
-                    roomId: "ABC"
+                    sessionId: sessionId1,
+                    roomId: roomId1
                 ),
                 false
             ),
@@ -187,8 +193,8 @@ class MXMegolmDecryptionTests: XCTestCase {
             (
                 Configuration(
                     sharedHistory: true,
-                    sessionId: "123",
-                    roomId: "ABC"
+                    sessionId: sessionId1,
+                    roomId: roomId1
                 ),
                 true
             )
@@ -200,10 +206,10 @@ class MXMegolmDecryptionTests: XCTestCase {
             session.roomId = config.roomId
             
             store.sessions = [
-                "\(config.sessionId)-456": session
+                "\(config.sessionId)-\(senderKey)": session
             ]
             
-            let hasSharedHistory = decryption.hasSharedHistory(forRoomId: "ABC", sessionId: "123", senderKey: "456")
+            let hasSharedHistory = decryption.hasSharedHistory(forRoomId: roomId1, sessionId: sessionId1, senderKey: senderKey)
             XCTAssertEqual(hasSharedHistory, expectedValue)
         }
     }
@@ -213,12 +219,12 @@ class MXMegolmDecryptionTests: XCTestCase {
     /// Create a room key event with some random but valid data that can be used to create a new inbound session.
     private func makeRoomKeyEvent(sharedHistory: Bool? = nil) -> MXEvent? {
         let event = MXEvent(fromJSON: [
-            "sender_key": "123",
+            "sender_key": senderKey,
         ])
         
         var content: [String: Any] = [
-            "room_id": "ABC",
-            "session_id": "XYZ",
+            "room_id": roomId1,
+            "session_id": sessionId1,
             "session_key": "123",
             "algorithm": "456",
         ]

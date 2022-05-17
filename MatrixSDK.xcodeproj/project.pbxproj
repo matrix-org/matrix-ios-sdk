@@ -1777,6 +1777,8 @@
 		ED44F01B28180F4000452A5D /* MXSharedHistoryKeyManagerUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED44F01728180F1C00452A5D /* MXSharedHistoryKeyManagerUnitTests.swift */; };
 		ED5AE8C52816C8CF00105072 /* MXCoreDataRoomSummaryStore.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = ED5AE8C22816C8CF00105072 /* MXCoreDataRoomSummaryStore.xcdatamodeld */; };
 		ED5AE8C62816C8CF00105072 /* MXCoreDataRoomSummaryStore.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = ED5AE8C22816C8CF00105072 /* MXCoreDataRoomSummaryStore.xcdatamodeld */; };
+		ED5C95CE2833E85600843D82 /* MXOlmDeviceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED5C95CD2833E85600843D82 /* MXOlmDeviceTests.swift */; };
+		ED5C95CF2833E85600843D82 /* MXOlmDeviceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED5C95CD2833E85600843D82 /* MXOlmDeviceTests.swift */; };
 		ED88999127F2065D00718486 /* MXRoomAliasResolution.h in Headers */ = {isa = PBXBuildFile; fileRef = ED88998F27F2065C00718486 /* MXRoomAliasResolution.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		ED88999227F2065D00718486 /* MXRoomAliasResolution.h in Headers */ = {isa = PBXBuildFile; fileRef = ED88998F27F2065C00718486 /* MXRoomAliasResolution.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		ED88999327F2065D00718486 /* MXRoomAliasResolution.m in Sources */ = {isa = PBXBuildFile; fileRef = ED88999027F2065D00718486 /* MXRoomAliasResolution.m */; };
@@ -2788,6 +2790,7 @@
 		ED44F01728180F1C00452A5D /* MXSharedHistoryKeyManagerUnitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXSharedHistoryKeyManagerUnitTests.swift; sourceTree = "<group>"; };
 		ED5AE8C32816C8CF00105072 /* MXRoomSummaryCoreDataStore2.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = MXRoomSummaryCoreDataStore2.xcdatamodel; sourceTree = "<group>"; };
 		ED5AE8C42816C8CF00105072 /* MXRoomSummaryCoreDataStore.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = MXRoomSummaryCoreDataStore.xcdatamodel; sourceTree = "<group>"; };
+		ED5C95CD2833E85600843D82 /* MXOlmDeviceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXOlmDeviceTests.swift; sourceTree = "<group>"; };
 		ED88998F27F2065C00718486 /* MXRoomAliasResolution.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXRoomAliasResolution.h; sourceTree = "<group>"; };
 		ED88999027F2065D00718486 /* MXRoomAliasResolution.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXRoomAliasResolution.m; sourceTree = "<group>"; };
 		ED8943D327E34762000FC39C /* MXMemoryRoomStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXMemoryRoomStoreTests.swift; sourceTree = "<group>"; };
@@ -4902,6 +4905,7 @@
 				ED44F01628180F1300452A5D /* KeySharing */,
 				ED35652A281150230002BF6A /* Data */,
 				ED21F67B28104BA1002FF83D /* Algorithms */,
+				ED5C95CD2833E85600843D82 /* MXOlmDeviceTests.swift */,
 			);
 			path = Crypto;
 			sourceTree = "<group>";
@@ -6519,6 +6523,7 @@
 				32B0E3E723A3864C0054FF1A /* MXEventReferenceUnitTests.swift in Sources */,
 				32720DA2222EB5650086FFF5 /* MXAutoDiscoveryTests.m in Sources */,
 				ED8943D427E34762000FC39C /* MXMemoryRoomStoreTests.swift in Sources */,
+				ED5C95CE2833E85600843D82 /* MXOlmDeviceTests.swift in Sources */,
 				327E37B91A977810007F026F /* MXLoggerUnitTests.m in Sources */,
 				18937E7C273A5AE500902626 /* MXPollRelationTests.m in Sources */,
 				32792BE12296C64200F4FC9D /* MXAggregatedEditsTests.m in Sources */,
@@ -7068,6 +7073,7 @@
 				B1E09A412397FD820057C069 /* MXAccountDataTests.m in Sources */,
 				B1E09A2D2397FD750057C069 /* MXRestClientNoAuthAPITests.m in Sources */,
 				ED8943D527E34762000FC39C /* MXMemoryRoomStoreTests.swift in Sources */,
+				ED5C95CF2833E85600843D82 /* MXOlmDeviceTests.swift in Sources */,
 				B1E09A332397FD750057C069 /* MXRoomStateTests.m in Sources */,
 				18937E7D273A5AE500902626 /* MXPollRelationTests.m in Sources */,
 				B1E09A352397FD7D0057C069 /* MXEventTests.m in Sources */,
