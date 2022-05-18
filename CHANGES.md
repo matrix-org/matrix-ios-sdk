@@ -12,6 +12,10 @@
 
 - MXBeaconInfoSummary: Add room id and support device id update after start location sharing. ([#5722](https://github.com/vector-im/element-ios/issues/5722))
 
+Others
+
+- Update check for server-side threads support to match spec. ([#1460](https://github.com/matrix-org/matrix-ios-sdk/pull/1460))
+
 
 ## Changes in 0.23.4 (2022-05-05)
 
