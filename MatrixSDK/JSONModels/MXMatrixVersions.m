@@ -111,8 +111,8 @@ static NSString* const kJSONKeyMSC3440 = @"org.matrix.msc3440.stable";
 
 - (BOOL)supportsThreads
 {
-    return [self serverSupportsVersion:MXMatrixClientServerAPIVersion.v1_3]
-        || [self serverSupportsFeature:kJSONKeyMSC3440];
+    // TODO: Check for v1.3 or whichever spec version formally specifies MSC3440.
+    return [self serverSupportsFeature:kJSONKeyMSC3440];
 }
 
 #pragma mark - Private

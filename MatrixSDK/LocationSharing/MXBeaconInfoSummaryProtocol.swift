@@ -27,6 +27,14 @@ public protocol MXBeaconInfoSummaryProtocol: AnyObject {
     /// User id of the beacon info
     var userId: String { get }
     
+    /// Device id where location sharing started
+    /// Only set from the user device and stored locally.
+    /// This property stay nil on all other devices.
+    var deviceId: String? { get }
+    
+    /// Room id of the beacon info
+    var roomId: String { get }
+    
     /// Live location start event
     var beaconInfo: MXBeaconInfo { get }
     
