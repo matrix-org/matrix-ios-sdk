@@ -23,5 +23,6 @@
 #import "MXBackgroundTask.h"
 #import "MXUIKitBackgroundModeHandler.h"
 #import "MXApplicationProtocol.h"
+#import "MXCrypto_Private.h"
 
 #endif /* MatrixSDKTests_Bridging_Header_h */
