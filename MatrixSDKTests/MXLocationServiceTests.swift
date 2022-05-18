@@ -182,7 +182,7 @@ class MXLocationServiceTests: XCTestCase {
                             dispatchGroup.leave()
                         }
                         
-                        let isCurrentUserSharingLocation = locationService.isCurrentUserSharingIsLocation(inRoomWithId: roomId)
+                        let isCurrentUserSharingLocation = locationService.isCurrentUserSharingLocation(inRoomWithId: roomId)
                         
                         XCTAssertTrue(isCurrentUserSharingLocation)
                         

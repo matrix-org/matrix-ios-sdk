@@ -115,7 +115,7 @@
         _senderKey = [aDecoder decodeObjectForKey:@"senderKey"];
         _forwardingCurve25519KeyChain = [aDecoder decodeObjectForKey:@"forwardingCurve25519KeyChain"];
         _keysClaimed = [aDecoder decodeObjectForKey:@"keysClaimed"];
-        _sharedHistory = [[aDecoder decodeObjectForKey:@"sharedHistory"] boolValue];
+        _sharedHistory = [[aDecoder decodeObjectForKey:@"sharedHistory_v2"] boolValue];
     }
     return self;
 }
@@ -127,7 +127,7 @@
     [aCoder encodeObject:_senderKey forKey:@"senderKey"];
     [aCoder encodeObject:_keysClaimed forKey:@"keysClaimed"];
     [aCoder encodeObject:_forwardingCurve25519KeyChain forKey:@"forwardingCurve25519KeyChain"];
-    [aCoder encodeObject:@(_sharedHistory) forKey:@"sharedHistory"];
+    [aCoder encodeObject:@(_sharedHistory) forKey:@"sharedHistory_v2"];
 }
 
 @end

@@ -355,7 +355,7 @@
 {
     NSString *sessionKey = session.session.sessionKey;
     NSUInteger chainIndex = session.session.messageIndex;
-    BOOL sharedHistory = [self isSessionSharingHistory:session];
+    BOOL sharedHistory = MXSDKOptions.sharedInstance.enableRoomSharedHistoryOnInvite && [self isSessionSharingHistory:session];
 
     NSDictionary *payload = @{
                               @"type": kMXEventTypeStringRoomKey,
