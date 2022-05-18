@@ -1,3 +1,18 @@
+## Changes in 0.23.5 (2022-05-18)
+
+✨ Features
+
+- Add `io.element.video` room type. ([#6149](https://github.com/vector-im/element-ios/issues/6149))
+
+🙌 Improvements
+
+- Rooms: support for attributedPartialTextMessage storage ([#3526](https://github.com/vector-im/element-ios/issues/3526))
+
+🚧 In development 🚧
+
+- MXBeaconInfoSummary: Add room id and support device id update after start location sharing. ([#5722](https://github.com/vector-im/element-ios/issues/5722))
+
+
 ## Changes in 0.23.4 (2022-05-05)
 
 🙌 Improvements
