@@ -3109,10 +3109,9 @@
 // - Alice and bob in a megolm encrypted room
 // - Send a blank m.room.encryption event
 // -> The room should be still marked as encrypted
-// -> It must be impossible to send a messages (because the algorithm is not supported)
-// - Fix e2e algorithm in the room
-// -> The room should be still marked as encrypted with the right algorithm
-// -> It must be possible to send message again
+// - Send a message
+// -> The room algorithm is restored to the one present in Crypto store
+// -> It is possible to send a message
 // -> The message must be e2e encrypted
 - (void)testEncryptionAlgorithmChange
 {
@@ -3142,11 +3141,9 @@
                 XCTAssertEqual(liveTimeline.state.encryptionAlgorithm.length, 0);   // with a nil algorithm
                 XCTAssertTrue(roomFromAlicePOV.summary.isEncrypted);
                 
-                // -> It must be impossible to send a messages (because the algorithm is not supported)
+                // -> It is still possible to send a message because crypto will use backup algorithm (which can never be removed)
                 [roomFromAlicePOV sendTextMessage:@"An encrypted message" threadId:nil success:^(NSString *eventId) {
-                    XCTFail(@"It should not possible to send encrypted message anymore");
-                } failure:^(NSError *error) {
-
+                    
                     // - Fix e2e algorithm in the room
                     [roomFromAlicePOV enableEncryptionWithAlgorithm:kMXCryptoMegolmAlgorithm success:^{
                         
@@ -3161,17 +3158,26 @@
                             [expectation fulfill];
                         }];
                         
-                        [roomFromAlicePOV listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
-                            // -> The message must be e2e encrypted
-                            XCTAssertTrue(event.isEncrypted);
-                            XCTAssertEqualObjects(event.wireContent[@"algorithm"], kMXCryptoMegolmAlgorithm);
-                            [expectation fulfill];
-                        }];
-                        
                     } failure:^(NSError *error) {
                         XCTFail(@"The request should not fail - NSError: %@", error);
                         [expectation fulfill];
                     }];
+                    
+                } failure:^(NSError *error) {
+                    XCTFail(@"Cannot send message");
+                    [expectation fulfill];
+                }];
+                
+                __block NSInteger recievedMessages = 0;
+                [roomFromAlicePOV listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+                    // -> The message must be e2e encrypted
+                    XCTAssertTrue(event.isEncrypted);
+                    XCTAssertEqualObjects(event.wireContent[@"algorithm"], kMXCryptoMegolmAlgorithm);
+                    
+                    recievedMessages += 1;
+                    if (recievedMessages == 2) {
+                        [expectation fulfill];
+                    }
                 }];
             }];
         }];
@@ -3236,6 +3242,7 @@
         ];
         
         // Visibility is set to not shared by default
+        MXSDKOptions.sharedInstance.enableRoomSharedHistoryOnInvite = NO;
         XCTAssertFalse([session.crypto isRoomSharingHistory:roomId]);
         
         // But can be enabled with a build flag
