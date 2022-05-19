@@ -1897,6 +1897,11 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 
 - (BOOL)isRoomSharingHistory:(NSString *)roomId
 {
+    if (!MXSDKOptions.sharedInstance.enableRoomSharedHistoryOnInvite)
+    {
+        return NO;
+    }
+    
     MXRoom *room = [self.mxSession roomWithRoomId:roomId];
     MXRoomHistoryVisibility visibility = room.summary.historyVisibility;
     return [visibility isEqualToString:kMXRoomHistoryVisibilityWorldReadable] || [visibility isEqualToString:kMXRoomHistoryVisibilityShared];
