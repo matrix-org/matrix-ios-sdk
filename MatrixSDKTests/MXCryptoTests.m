@@ -3235,7 +3235,11 @@
             @[kMXRoomHistoryVisibilityWorldReadable, @(YES)]
         ];
         
-        // Visibility is set to shared by default
+        // Visibility is set to not shared by default
+        XCTAssertFalse([session.crypto isRoomSharingHistory:roomId]);
+        
+        // But can be enabled with a build flag
+        MXSDKOptions.sharedInstance.enableRoomSharedHistoryOnInvite = YES;
         XCTAssertTrue([session.crypto isRoomSharingHistory:roomId]);
         
         MXRoom *room = [session roomWithRoomId:roomId];

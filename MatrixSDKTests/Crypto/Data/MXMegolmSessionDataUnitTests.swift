@@ -19,6 +19,8 @@ import Foundation
 
 class MXMegolmSessionDataUnitTests: XCTestCase {
     func testCanInitWithJSONDictionary() {
+        MXSDKOptions.sharedInstance().enableRoomSharedHistoryOnInvite = true
+        
         let jsonDictionary: [String: Any] = [
             "sender_key": "A",
             "sender_claimed_keys": ["B": "C"],
@@ -40,6 +42,18 @@ class MXMegolmSessionDataUnitTests: XCTestCase {
         XCTAssertEqual(data?.sharedHistory, true)
         XCTAssertEqual(data?.algorithm, "G")
         XCTAssertEqual(data?.forwardingCurve25519KeyChain, ["H", "I"])
+    }
+    
+    func testIgnoreSharedHistoryIfFlagDisabled() {
+        MXSDKOptions.sharedInstance().enableRoomSharedHistoryOnInvite = false
+        let jsonDictionary: [String: Any] = [
+            "org.matrix.msc3061.shared_history": true,
+        ]
+        
+        let data = MXMegolmSessionData(fromJSON: jsonDictionary)
+        
+        XCTAssertNotNil(data)
+        XCTAssertEqual(data?.sharedHistory, false)
     }
     
     func testJsonDictionary() {
