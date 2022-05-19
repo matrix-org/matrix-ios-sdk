@@ -49,7 +49,8 @@ class MXMegolmEncryptionTests: XCTestCase {
         return store?.inboundGroupSessions().last?.sharedHistory == true
     }
     
-    func testResetsSessionIfRoomVisibilityChanges() {
+    func test_resetsSession_ifRoomVisibilityChanges() {
+        MXSDKOptions.sharedInstance().enableRoomSharedHistoryOnInvite = true
         
         // The following tests that oubound session Id (and therefore the related inbound session Id)
         // is reset whenever the room's history visibility changes from shared to not shared.
@@ -110,6 +111,80 @@ class MXMegolmEncryptionTests: XCTestCase {
                                         XCTAssertEqual(sessionIds5.inbound.count, 3)
                                         XCTAssertEqual(sessionIds5.inbound, sessionIds1.outbound + sessionIds3.outbound + sessionIds5.outbound)
                                         XCTAssertTrue(self.isSharedHistoryInLastSession(for: session))
+                                    
+                                        session?.close()
+                                        expectation?.fulfill()
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    func test_doesNotResetsSession_ifRoomVisibilityChanges_andFeatureDisabled() {
+        MXSDKOptions.sharedInstance().enableRoomSharedHistoryOnInvite = false
+        
+        // The following tests that if the feature is disabled, then outbound session Id
+        // is not reset when room visibility changes
+        e2eData.doE2ETestWithAlice(inARoom: self) { session, roomId, expectation in
+            
+            let room = session?.room(withRoomId: roomId)
+            
+            // 1st set of messages
+            room?.sendTextMessages(messages: ["Hi", "Hello"]) { _ in
+                
+                // After first few messages we only expect one inbound and one outbound session
+                let sessionIds1 = self.storedSessionIds(in: session)
+                XCTAssertEqual(sessionIds1.outbound.count, 1)
+                XCTAssertEqual(sessionIds1.inbound.count, 1)
+                XCTAssertEqual(sessionIds1.inbound, sessionIds1.outbound)
+                XCTAssertFalse(self.isSharedHistoryInLastSession(for: session))
+                
+                // 2nd set of messages
+                room?.sendTextMessages(messages: ["Hi", "Hello"]) { _ in
+                    
+                    // After second batch of messages nothing has changed that would require resetting
+                    // of sessions, therefore sessionIds are unchanged
+                    let sessionIds2 = self.storedSessionIds(in: session)
+                    XCTAssertEqual(sessionIds2, sessionIds1)
+                    XCTAssertFalse(self.isSharedHistoryInLastSession(for: session))
+                    
+                    // Changing room visibility from shared by default to more restrictive will not reset session keys
+                    room?.setHistoryVisibility(.joined) { _ in
+                        
+                        // 3rd set of messages
+                        room?.sendTextMessages(messages: ["Hi", "Hello"]) { _ in
+                            
+                            // Sessions are identical as before
+                            let sessionIds3 = self.storedSessionIds(in: session)
+                            XCTAssertEqual(sessionIds3.outbound.count, 1)
+                            XCTAssertEqual(sessionIds3.outbound, sessionIds2.outbound)
+                            XCTAssertEqual(sessionIds3.inbound.count, 1)
+                            XCTAssertEqual(sessionIds3.inbound, sessionIds1.outbound)
+                            XCTAssertFalse(self.isSharedHistoryInLastSession(for: session))
+                            
+                            // 4th set of messages
+                            room?.sendTextMessages(messages: ["Hi", "Hello"]) { _ in
+                                // After fourth batch of messages nothing has changed that would require resetting
+                                // of sessions, therefore sessionIds are unchanged
+                                let sessionIds4 = self.storedSessionIds(in: session)
+                                XCTAssertEqual(sessionIds4, sessionIds3)
+                                XCTAssertFalse(self.isSharedHistoryInLastSession(for: session))
+                                
+                                // Final visibility change back to shared will still not reset sessions
+                                room?.setHistoryVisibility(.worldReadable) { _ in
+                                    room?.sendTextMessages(messages: ["Hi", "Hello"]) { _ in
+                                        
+                                        // Sessions are still identical as before
+                                        let sessionIds5 = self.storedSessionIds(in: session)
+                                        XCTAssertEqual(sessionIds5.outbound.count, 1)
+                                        XCTAssertEqual(sessionIds5.outbound, sessionIds4.outbound)
+                                        XCTAssertEqual(sessionIds5.inbound.count, 1)
+                                        XCTAssertEqual(sessionIds5.inbound, sessionIds1.outbound)
+                                        XCTAssertFalse(self.isSharedHistoryInLastSession(for: session))
                                     
                                         session?.close()
                                         expectation?.fulfill()

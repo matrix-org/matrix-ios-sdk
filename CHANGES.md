@@ -1,3 +1,8 @@
+## Changes in 0.23.6 (2022-05-19)
+
+No significant changes.
+
+
 ## Changes in 0.23.5 (2022-05-18)
 
 ✨ Features
