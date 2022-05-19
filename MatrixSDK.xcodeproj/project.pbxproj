@@ -1763,8 +1763,8 @@
 		ECF29BDF264195320053E6D6 /* MXAssertedIdentityModel.h in Headers */ = {isa = PBXBuildFile; fileRef = ECF29BDD264195320053E6D6 /* MXAssertedIdentityModel.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		ECF29BE52641953C0053E6D6 /* MXAssertedIdentityModel.m in Sources */ = {isa = PBXBuildFile; fileRef = ECF29BE42641953C0053E6D6 /* MXAssertedIdentityModel.m */; };
 		ECF29BE62641953C0053E6D6 /* MXAssertedIdentityModel.m in Sources */ = {isa = PBXBuildFile; fileRef = ECF29BE42641953C0053E6D6 /* MXAssertedIdentityModel.m */; };
-		ED21F68528104DA2002FF83D /* MXMegolmEncryptionUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED21F68428104DA2002FF83D /* MXMegolmEncryptionUnitTests.swift */; };
-		ED21F68628104DA2002FF83D /* MXMegolmEncryptionUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED21F68428104DA2002FF83D /* MXMegolmEncryptionUnitTests.swift */; };
+		ED21F68528104DA2002FF83D /* MXMegolmEncryptionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED21F68428104DA2002FF83D /* MXMegolmEncryptionTests.swift */; };
+		ED21F68628104DA2002FF83D /* MXMegolmEncryptionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED21F68428104DA2002FF83D /* MXMegolmEncryptionTests.swift */; };
 		ED35652C281150310002BF6A /* MXOlmInboundGroupSessionUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED35652B281150310002BF6A /* MXOlmInboundGroupSessionUnitTests.swift */; };
 		ED35652D281150310002BF6A /* MXOlmInboundGroupSessionUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED35652B281150310002BF6A /* MXOlmInboundGroupSessionUnitTests.swift */; };
 		ED35652F281153480002BF6A /* MXMegolmSessionDataUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED35652E281153480002BF6A /* MXMegolmSessionDataUnitTests.swift */; };
@@ -2781,7 +2781,7 @@
 		ECF29BD2264194BB0053E6D6 /* MXCallAssertedIdentityEventContent.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXCallAssertedIdentityEventContent.m; sourceTree = "<group>"; };
 		ECF29BDD264195320053E6D6 /* MXAssertedIdentityModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXAssertedIdentityModel.h; sourceTree = "<group>"; };
 		ECF29BE42641953C0053E6D6 /* MXAssertedIdentityModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXAssertedIdentityModel.m; sourceTree = "<group>"; };
-		ED21F68428104DA2002FF83D /* MXMegolmEncryptionUnitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXMegolmEncryptionUnitTests.swift; sourceTree = "<group>"; };
+		ED21F68428104DA2002FF83D /* MXMegolmEncryptionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXMegolmEncryptionTests.swift; sourceTree = "<group>"; };
 		ED2F344856EFFCA383E37B22 /* Pods-SDK-MatrixSDK.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SDK-MatrixSDK.release.xcconfig"; path = "Target Support Files/Pods-SDK-MatrixSDK/Pods-SDK-MatrixSDK.release.xcconfig"; sourceTree = "<group>"; };
 		ED35652B281150310002BF6A /* MXOlmInboundGroupSessionUnitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXOlmInboundGroupSessionUnitTests.swift; sourceTree = "<group>"; };
 		ED35652E281153480002BF6A /* MXMegolmSessionDataUnitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXMegolmSessionDataUnitTests.swift; sourceTree = "<group>"; };
@@ -4922,7 +4922,7 @@
 			isa = PBXGroup;
 			children = (
 				EDCC4E70282EC362002949FF /* MXMegolmDecryptionUnitTests.swift */,
-				ED21F68428104DA2002FF83D /* MXMegolmEncryptionUnitTests.swift */,
+				ED21F68428104DA2002FF83D /* MXMegolmEncryptionTests.swift */,
 			);
 			path = Megolm;
 			sourceTree = "<group>";
@@ -6533,7 +6533,7 @@
 				32D8CAC219DEE6ED002AF8A0 /* MXRestClientNoAuthAPITests.m in Sources */,
 				32FCAB4D19E578860049C555 /* MXRestClientTests.m in Sources */,
 				32C78BA7256D227D008130B1 /* MXCryptoMigrationTests.m in Sources */,
-				ED21F68528104DA2002FF83D /* MXMegolmEncryptionUnitTests.swift in Sources */,
+				ED21F68528104DA2002FF83D /* MXMegolmEncryptionTests.swift in Sources */,
 				ED44F01A28180F4000452A5D /* MXSharedHistoryKeyManagerUnitTests.swift in Sources */,
 				322985CB26FAF898001890BC /* MXSession.swift in Sources */,
 				EC131B192779D8D500712964 /* MXThreadEventTimelineUnitTests.swift in Sources */,
@@ -7083,7 +7083,7 @@
 				32B477902638133D00EA5800 /* MXAggregatedReferenceUnitTests.m in Sources */,
 				EC116598270FCA8B0089FA56 /* MXBackgroundTaskUnitTests.swift in Sources */,
 				B1E09A322397FD750057C069 /* MXRoomTests.m in Sources */,
-				ED21F68628104DA2002FF83D /* MXMegolmEncryptionUnitTests.swift in Sources */,
+				ED21F68628104DA2002FF83D /* MXMegolmEncryptionTests.swift in Sources */,
 				ED44F01B28180F4000452A5D /* MXSharedHistoryKeyManagerUnitTests.swift in Sources */,
 				322985CC26FAF898001890BC /* MXSession.swift in Sources */,
 				EC131B1A2779D8D500712964 /* MXThreadEventTimelineUnitTests.swift in Sources */,
