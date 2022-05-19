@@ -450,6 +450,16 @@ static NSUInteger preloadOptions;
     }
 }
 
+- (void)storePartialAttributedTextMessageForRoom:(NSString *)roomId partialAttributedTextMessage:(NSAttributedString *)partialAttributedTextMessage
+{
+    [super storePartialAttributedTextMessageForRoom:roomId partialAttributedTextMessage:partialAttributedTextMessage];
+
+    if (NSNotFound == [roomsToCommitForMessages indexOfObject:roomId])
+    {
+        [roomsToCommitForMessages addObject:roomId];
+    }
+}
+
 - (void)storeHasLoadedAllRoomMembersForRoom:(NSString *)roomId andValue:(BOOL)value
 {
     // XXX: To remove once https://github.com/vector-im/element-ios/issues/3807 is fixed

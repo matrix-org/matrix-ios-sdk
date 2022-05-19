@@ -183,6 +183,18 @@
     return roomStore.partialTextMessage;
 }
 
+- (void)storePartialAttributedTextMessageForRoom:(NSString *)roomId partialAttributedTextMessage:(NSAttributedString *)partialAttributedTextMessage
+{
+    MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
+    roomStore.partialAttributedTextMessage = partialAttributedTextMessage;
+}
+
+- (NSAttributedString *)partialAttributedTextMessageOfRoom:(NSString *)roomId
+{
+    MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
+    return roomStore.partialAttributedTextMessage;
+}
+
 - (void)loadReceiptsForRoom:(NSString *)roomId completion:(void (^)(void))completion
 {
     [self getOrCreateRoomReceiptsStore:roomId];

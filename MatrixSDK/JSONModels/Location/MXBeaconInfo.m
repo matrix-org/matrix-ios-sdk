@@ -27,15 +27,17 @@ static NSString * const kLiveJSONKey = @"live";
 #pragma mark - Setup
 
 - (instancetype)initWithUserId:(NSString *)userId
+                        roomId:(NSString *)roomId
                    description:(NSString *)desc
                        timeout:(uint64_t)timeout
                         isLive:(BOOL)isLive
                      timestamp:(uint64_t)timestamp
 {
-    return [self initWithUserId:userId description:desc timeout:timeout isLive:isLive timestamp:timestamp originalEvent:nil];
+    return [self initWithUserId:userId roomId:roomId description:desc timeout:timeout isLive:isLive timestamp:timestamp originalEvent:nil];
 }
 
 - (instancetype)initWithUserId:(NSString *)userId
+                        roomId:(NSString *)roomId
                    description:(NSString *)desc
                        timeout:(uint64_t)timeout
                         isLive:(BOOL)isLive
@@ -46,6 +48,7 @@ static NSString * const kLiveJSONKey = @"live";
     if (self)
     {
         _userId = userId;
+        _roomId = roomId;
         _desc = desc;
         _timeout = timeout;
         _isLive = isLive;
@@ -63,6 +66,7 @@ static NSString * const kLiveJSONKey = @"live";
     uint64_t timestamp = (uint64_t)[[NSDate date] timeIntervalSince1970] * 1000;
     
     return [self initWithUserId:nil
+                         roomId:nil
                     description:desc
                         timeout:timeout
                          isLive:isLive
@@ -84,6 +88,7 @@ static NSString * const kLiveJSONKey = @"live";
     }
 
     return [self initWithUserId:event.stateKey
+                         roomId:event.roomId
                     description:beaconInfo.desc
                         timeout:beaconInfo.timeout
                          isLive:beaconInfo.isLive
@@ -94,6 +99,7 @@ static NSString * const kLiveJSONKey = @"live";
 - (MXBeaconInfo*)stopped
 {
     return [[[self class] alloc] initWithUserId:self.userId
+                                         roomId:self.roomId
                                     description:self.desc
                                         timeout:self.timeout
                                          isLive:NO

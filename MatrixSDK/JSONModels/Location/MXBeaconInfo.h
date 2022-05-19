@@ -32,6 +32,9 @@ NS_ASSUME_NONNULL_BEGIN
 /// Beacon user id
 @property (nonatomic, strong, readonly, nullable) NSString* userId;
 
+/// Beacon room id
+@property (nonatomic, strong, readonly, nullable) NSString* roomId;
+
 /// Beacon description
 @property (nonatomic, strong, readonly, nullable) NSString* desc;
 
@@ -55,6 +58,7 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark - Setup
 
 - (instancetype)initWithUserId:(nullable NSString *)userId
+                        roomId:(nullable NSString *)roomId
                    description:(nullable NSString *)desc
                        timeout:(uint64_t)timeout
                         isLive:(BOOL)isLive

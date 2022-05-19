@@ -213,8 +213,9 @@
     NSArray<NSString*> *forwardingKeyChain;
     BOOL exportFormat = NO;
     NSDictionary *keysClaimed;
-    BOOL sharedHistory = [crypto isRoomSharingHistory:roomId];
-    if (content[kMXSharedHistoryKeyName] != nil) {
+    BOOL sharedHistory = NO;
+    if (content[kMXSharedHistoryKeyName] != nil)
+    {
         MXJSONModelSetBoolean(sharedHistory, content[kMXSharedHistoryKeyName]);
     }
 

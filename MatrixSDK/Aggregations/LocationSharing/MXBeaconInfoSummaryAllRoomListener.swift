@@ -1,4 +1,4 @@
-// 
+//
 // Copyright 2022 The Matrix.org Foundation C.I.C
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,17 +17,15 @@
 import Foundation
 
 @objcMembers
-public class MXBeaconInfoSummaryListener: NSObject {
+public class MXBeaconInfoSummaryAllRoomListener: NSObject {
 
     // MARK: - Properties
-    
-    let roomId: String
-    let notificationHandler: ((MXBeaconInfoSummary) -> Void)
+        
+    let notificationHandler: ((_ roomId: String, MXBeaconInfoSummaryProtocol) -> Void)
     
     // MARK: - Setup
     
-    init(roomId: String, notificationHandler: @escaping ((MXBeaconInfoSummaryProtocol) -> Void)) {
-        self.roomId = roomId
+    init(notificationHandler: @escaping ((_ roomId: String,  MXBeaconInfoSummaryProtocol) -> Void)) {
         self.notificationHandler = notificationHandler
         super.init()
     }
