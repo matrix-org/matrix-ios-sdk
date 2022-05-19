@@ -17,7 +17,7 @@
 import Foundation
 @testable import MatrixSDK
 
-class MXMegolmEncryptionTests: XCTestCase {
+class MXMegolmEncryptionUnitTests: XCTestCase {
     struct SessionIds: Equatable {
         let inbound: [String]
         let outbound: [String]
