@@ -29,8 +29,7 @@
   "testTargets" : [
     {
       "selectedTests" : [
-        "MXAesUnitTests",
-        "MXCryptoTests\/testEnableCrypto"
+        "MXCryptoTests"
       ],
       "target" : {
         "containerPath" : "container:MatrixSDK.xcodeproj",

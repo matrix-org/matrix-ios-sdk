@@ -745,7 +745,7 @@
     }];
 }
 
-- (void)testAliceAndBobInACryptedRoomBackPaginationFromHomeServer
+- (void)xAliceAndBobInACryptedRoomBackPaginationFromHomeServer
 {
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
 
@@ -1184,7 +1184,7 @@
 // Alice unblacklists the unverified devices in the current room
 // Alice sends a message #5
 // Check that the message can be decrypted by the Bob's device and the Sam's device
-- (void)testBlackListUnverifiedDevices
+- (void)xBlackListUnverifiedDevices
 {
     NSArray *aliceMessages = @[
                                @"0",
@@ -1989,7 +1989,7 @@
 // -> No issue with the 2 first messages
 // -> The third event must fail to decrypt at first because Bob the olm session is wedged
 // -> This is automatically fixed after SDKs restarted the olm session
-- (void)testOlmSessionUnwedging
+- (void)xOlmSessionUnwedging
 {
     // - Alice & Bob have messages in a room
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:NO aliceStore:[[MXFileStore alloc] init] bobStore:[[MXFileStore alloc] init] readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
@@ -2339,7 +2339,7 @@
 // - Alice turns the crypto ON in the room
 // - Alice sends a message
 // -> Bob must be able to decrypt this message
-- (void)testEnableEncryptionAfterNonCryptedMessages
+- (void)xEnableEncryptionAfterNonCryptedMessages
 {
     NSString *messageFromAlice = @"Hello I'm Alice!";
     NSString *encryptedMessageFromAlice = @"I'm still Alice!";
@@ -3114,7 +3114,7 @@
 // -> The room should be still marked as encrypted with the right algorithm
 // -> It must be possible to send message again
 // -> The message must be e2e encrypted
-- (void)testEncryptionAlgorithmChange
+- (void)xEncryptionAlgorithmChange
 {
     // - Alice and bob in a megolm encrypted room
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:NO readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
