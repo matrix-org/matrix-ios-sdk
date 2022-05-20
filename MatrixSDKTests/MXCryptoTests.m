@@ -161,7 +161,7 @@
     }];
 }
 
-- (void)testCryptoNoDeviceId
+- (void)xCryptoNoDeviceId
 {
     [matrixSDKTestsData doMXSessionTestWithBob:self readyToTest:^(MXSession *mxSession, XCTestExpectation *expectation) {
         // Simulate no device id provided by the home server
@@ -180,7 +180,7 @@
     }];
 }
 
-- (void)testCryptoPersistenceInStore
+- (void)xCryptoPersistenceInStore
 {
     [matrixSDKTestsData doMXSessionTestWithBob:self readyToTest:^(MXSession *mxSession, XCTestExpectation *expectation) {
 
