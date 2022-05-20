@@ -11,14 +11,27 @@ on:
 
 jobs:
   crypto-tests:
-    name: Crypto Tests
+    name: Crypto Tests with Synapse
     runs-on: macos-11
 
     steps:
       - uses: actions/checkout@v2
 
-      # Common cache
-      # Note: GH actions do not support yaml anchor yet. We need to duplicate this for every job
+      # Cache for python env for Synapse
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - name: Cache pip
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip
+          restore-keys: |
+            ${{ runner.os }}-pip-
+            ${{ runner.os }}-
+
+      # Cache for Xcode env
       - uses: actions/cache@v2
         with:
           path: Pods
@@ -32,8 +45,14 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gems-
 
-      # Common setup
-      # Note: GH actions do not support yaml anchor yet. We need to duplicate this for every job
+      - name: Start synapse server
+        run: |
+          python3 -m venv .synapse
+          source .synapse/bin/activate
+          pip install synapse matrix-synapse
+          curl -sL https://raw.githubusercontent.com/matrix-org/synapse/develop/demo/start.sh \
+            | sed s/127.0.0.1/0.0.0.0/g | bash -s -- "--no-rate-limit"
+
       - name: Bundle install
         run: |
           bundle config path vendor/bundle
