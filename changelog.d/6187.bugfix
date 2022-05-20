@@ -1,0 +1,1 @@
+Fixed crashes on invalid casting of MXUser to MXMyUser causing unrecognized selectors on the mxSession property.
