@@ -7383,6 +7383,10 @@
 				SUPPORTED_PLATFORMS = macosx;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
+				WARNING_CFLAGS = (
+					"-Wno-nullability-completeness",
+					"-Wno-implicit-retain-self",
+				);
 			};
 			name = Debug;
 		};
@@ -7411,6 +7415,10 @@
 				SKIP_INSTALL = YES;
 				SUPPORTED_PLATFORMS = macosx;
 				SWIFT_VERSION = 5.0;
+				WARNING_CFLAGS = (
+					"-Wno-nullability-completeness",
+					"-Wno-implicit-retain-self",
+				);
 			};
 			name = Release;
 		};
