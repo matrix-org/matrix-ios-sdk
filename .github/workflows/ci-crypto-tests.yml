@@ -46,12 +46,11 @@ jobs:
             ${{ runner.os }}-gems-
 
       - name: Start synapse server
-        run: |
-          python3 -m venv .synapse
-          source .synapse/bin/activate
-          pip install synapse matrix-synapse
-          curl -sL https://raw.githubusercontent.com/matrix-org/synapse/develop/demo/start.sh \
-            | sed s/127.0.0.1/0.0.0.0/g | bash -s -- "--no-rate-limit"
+        uses: michaelkaye/setup-matrix-synapse@v1.0.3
+        with:
+          uploadLogs: true
+          httpPort: 8080
+          disableRateLimiting: true
 
       - name: Bundle install
         run: |
