@@ -402,7 +402,7 @@ typedef void (^MXOnResumeDone)(void);
                 }
                 else
                 {
-                    self->_myUser = [[MXMyUser alloc] initWithUserId:self->matrixRestClient.credentials.userId];
+                    self->_myUser = [[MXMyUser alloc] initWithUserId:myUser.userId andDisplayname:myUser.displayname andAvatarUrl:myUser.avatarUrl];
                 }
                 
                 self->_myUser.mxSession = self;
