@@ -17,7 +17,7 @@
 import Foundation
 @testable import MatrixSDK
 
-class MXOlmDeviceTests: XCTestCase {
+class MXOlmDeviceUnitTests: XCTestCase {
     
     /// Stubbed olm session that overrides first known index
     class MXOlmSessionStub: MXOlmInboundGroupSession {

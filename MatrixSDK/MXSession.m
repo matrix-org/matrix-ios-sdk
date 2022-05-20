@@ -395,9 +395,17 @@ typedef void (^MXOnResumeDone)(void);
 
                 // Create myUser from the store
                 MXUser *myUser = [self.store userWithUserId:self->matrixRestClient.credentials.userId];
-
+                
                 // My user is a MXMyUser object
-                self->_myUser = (MXMyUser*)myUser;
+                if ([myUser isKindOfClass:[MXMyUser class]])
+                {
+                    self->_myUser = (MXMyUser *)myUser;
+                }
+                else
+                {
+                    self->_myUser = [[MXMyUser alloc] initWithUserId:myUser.userId andDisplayname:myUser.displayname andAvatarUrl:myUser.avatarUrl];
+                }
+                
                 self->_myUser.mxSession = self;
                 
                 // Use the cached agreement to identity server terms.
