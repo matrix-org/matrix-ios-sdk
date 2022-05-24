@@ -35,6 +35,9 @@ import Foundation
     /// Get all MXBeaconInfoSummary in a room
     func getAllBeaconInfoSummaries(inRoomWithId roomId: String) -> [MXBeaconInfoSummary]
     
+    /// Get all MXBeaconInfoSummary for a user
+    func getAllBeaconInfoSummaries(forUserId userId: String) -> [MXBeaconInfoSummary]
+    
     /// Delete all MXBeaconInfoSummary in a room
     func deleteAllBeaconInfoSummaries(inRoomWithId roomId: String)
     
