@@ -15,7 +15,6 @@
 //
 
 import Realm
-import UIKit
 
 extension RLMRealm {
     
