@@ -1,0 +1,1 @@
+MXTools: generateTransactionId no longer returns an optional in Swift. 
