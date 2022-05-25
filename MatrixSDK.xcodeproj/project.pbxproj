@@ -4331,6 +4331,8 @@
 			children = (
 				B16C2446283AA85E00F5D1FE /* RLMSupport.swift */,
 				B141DF0D283CDD180023867A /* Realm+MatrixSDK.swift */,
+				EC11658B270F3ABF0089FA56 /* RLMRealm+MatrixSDK.h */,
+				EC11658C270F3ABF0089FA56 /* RLMRealm+MatrixSDK.m */,
 				B146D47021A5939000D8C2C6 /* MXRealmHelper.h */,
 				B146D46F21A5939000D8C2C6 /* MXRealmHelper.m */,
 			);
@@ -5035,8 +5037,6 @@
 				3259D02126037A7200C365DB /* NSArray.swift */,
 				321CFDEC225264C4004D31DF /* NSArray+MatrixSDK.h */,
 				321CFDED225264C4004D31DF /* NSArray+MatrixSDK.m */,
-				EC11658B270F3ABF0089FA56 /* RLMRealm+MatrixSDK.h */,
-				EC11658C270F3ABF0089FA56 /* RLMRealm+MatrixSDK.m */,
 				A780624D27B2CE74005780C0 /* FileManager+AppGroupContainer.swift */,
 				A780624C27B2CE74005780C0 /* FileManager+Backup.swift */,
 			);
