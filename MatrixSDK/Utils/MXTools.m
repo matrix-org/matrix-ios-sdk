@@ -523,7 +523,7 @@ NSCharacterSet *uriComponentCharset;
     return [[NSProcessInfo processInfo] globallyUniqueString];
 }
 
-+ (NSString *)generateTransactionId
++ (NSString * _Nonnull)generateTransactionId
 {
     return [NSString stringWithFormat:@"m%u.%tu", arc4random_uniform(INT32_MAX), transactionIdCount++];
 }
