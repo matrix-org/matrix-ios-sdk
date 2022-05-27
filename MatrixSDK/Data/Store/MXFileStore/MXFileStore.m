@@ -2271,7 +2271,7 @@ static NSUInteger preloadOptions;
         NSKeyedUnarchiver *unarchiver = [[NSKeyedUnarchiver alloc] initForReadingFromData:data error:&error];
         if (error && !unarchiver)
         {
-            MXLogFailure(@"[MXFileStore] Cannot create unarchiver with error: '%@", error.debugDescription);
+            MXLogFailure(@"[MXFileStore] Cannot create unarchiver with error: '%@'", error.debugDescription);
             return nil;
         }
         unarchiver.requiresSecureCoding = NO;
