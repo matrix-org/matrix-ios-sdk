@@ -29,6 +29,7 @@
   "testTargets" : [
     {
       "selectedTests" : [
+        "MXCryptoShareTests",
         "MXCryptoTests\/testAliceAndBlockedBob",
         "MXCryptoTests\/testAliceAndBobInACryptedRoom",
         "MXCryptoTests\/testAliceAndBobInACryptedRoom2",
@@ -71,7 +72,8 @@
         "MXCryptoTests\/testRestoreOlmOutboundKey",
         "MXCryptoTests\/testRoomIsEncrypted",
         "MXCryptoTests\/testRoomKeyReshare",
-        "MXCryptoTests\/testSendReplyToTextMessage"
+        "MXCryptoTests\/testSendReplyToTextMessage",
+        "MXMegolmEncryptionTests",
       ],
       "target" : {
         "containerPath" : "container:MatrixSDK.xcodeproj",
