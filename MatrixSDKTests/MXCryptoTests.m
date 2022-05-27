@@ -3242,6 +3242,7 @@
         ];
         
         // Visibility is set to not shared by default
+        MXSDKOptions.sharedInstance.enableRoomSharedHistoryOnInvite = NO;
         XCTAssertFalse([session.crypto isRoomSharingHistory:roomId]);
         
         // But can be enabled with a build flag
