@@ -276,9 +276,11 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
                         // If it's non-refresh token auth return the access token,
                         // or if it is refresh token auth and access token is valid also return it.
                         MXLogDebug(@"[MXRestClient] tokenProviderHandler: %@ success token %@, %tu", logId, self.credentials.refreshToken, (NSUInteger)self.credentials.accessTokenExpiresAt)
-                        dispatch_async(self.completionQueue, ^{
-                            success(self.credentials.accessToken);
-                        });
+                        if (self.completionQueue) {
+                            dispatch_async(self.completionQueue, ^{
+                                success(self.credentials.accessToken);
+                            });
+                        }
                         return;
                     }
                     
