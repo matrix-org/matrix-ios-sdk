@@ -266,9 +266,11 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
                         dispatch_async(self.completionQueue, ^{
                             BOOL isSoftLogout = [MXRestClient isSoftLogout:mxError];
                             MXLogDebug(@"[MXRestClient] tokenProviderHandler: %@: non-refresh(access token) token auth failed", logId);
-                            self.unauthenticatedHandler(mxError, isSoftLogout, NO, ^{
-                                failure(error);
-                            });
+                            if (unauthenticatedHandler) {
+                                self.unauthenticatedHandler(mxError, isSoftLogout, NO, ^{
+                                    failure(error);
+                                });
+                            }
                         });
                         return;
                     }
