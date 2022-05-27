@@ -7191,13 +7191,6 @@
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "";
 				VERSION_INFO_PREFIX = "";
-				WARNING_CFLAGS = (
-					"-Wno-implicit-retain-self",
-					"-Wno-nullability-completeness",
-					"-Wno-unguarded-availability-new",
-					"-Wno-deprecated-declarations",
-					"-Wno-deprecated-implementations",
-				);
 			};
 			name = Debug;
 		};
@@ -7254,13 +7247,6 @@
 				VALIDATE_PRODUCT = YES;
 				VERSIONING_SYSTEM = "";
 				VERSION_INFO_PREFIX = "";
-				WARNING_CFLAGS = (
-					"-Wno-implicit-retain-self",
-					"-Wno-nullability-completeness",
-					"-Wno-unguarded-availability-new",
-					"-Wno-deprecated-declarations",
-					"-Wno-deprecated-implementations",
-				);
 			};
 			name = Release;
 		};
