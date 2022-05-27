@@ -52,6 +52,7 @@
         "MXCryptoTests\/testDownloadKeysWithUnreachableHS",
         "MXCryptoTests\/testEnableCrypto",
         "MXCryptoTests\/testEnableEncryptionAfterNonCryptedMessages",
+        "MXCryptoTests\/testEncryptionAlgorithmChange",
         "MXCryptoTests\/testEnsureSingleOlmSession",
         "MXCryptoTests\/testExportImportRoomKeysWithPassword",
         "MXCryptoTests\/testExportRoomKeys",
