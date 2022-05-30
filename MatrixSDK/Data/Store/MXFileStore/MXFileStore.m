@@ -2243,7 +2243,13 @@ static NSUInteger preloadOptions;
     if (@available(iOS 11.0, *))
     {
         NSError *error;
-        NSData *data = [self loadDataFromFile:file];
+        NSData *data = [NSData dataWithContentsOfFile:file];
+        if (!data)
+        {
+            MXLogDebug(@"[MXFileStore] No data to load at file %@", file);
+            return nil;
+        }
+        
         id object = [NSKeyedUnarchiver unarchivedObjectOfClasses:classes fromData:data error:&error];
         if (object)
         {
@@ -2275,7 +2281,12 @@ static NSUInteger preloadOptions;
     if (@available(iOS 11.0, *))
     {
         NSError *error;
-        NSData *data = [self loadDataFromFile:file];
+        NSData *data = [NSData dataWithContentsOfFile:file];
+        if (!data)
+        {
+            MXLogDebug(@"[MXFileStore] No data to load at file %@", file);
+            return nil;
+        }
         NSKeyedUnarchiver *unarchiver = [[NSKeyedUnarchiver alloc] initForReadingFromData:data error:&error];
         if (error && !unarchiver)
         {
@@ -2301,17 +2312,6 @@ static NSUInteger preloadOptions;
     {
         return [NSKeyedUnarchiver unarchiveObjectWithFile:file];
     }
-}
-
-- (NSData *)loadDataFromFile:(NSString *)file
-{
-    NSData *data = [NSData dataWithContentsOfFile:file];
-    if (!data)
-    {
-        MXLogDebug(@"[MXFileStore] No data to load at file %@", file);
-        return nil;
-    }
-    return data;
 }
 
 /**
