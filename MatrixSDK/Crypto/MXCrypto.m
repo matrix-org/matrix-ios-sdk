@@ -394,6 +394,12 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
     [startOperation cancel];
     startOperation = nil;
 
+    if (_myDevice == nil)
+    {
+        MXLogDebug(@"[MXCrypto] close: already closed");
+        return;
+    }
+
     MXWeakify(self);
     dispatch_sync(_cryptoQueue, ^{
         MXStrongifyAndReturnIfNil(self);
