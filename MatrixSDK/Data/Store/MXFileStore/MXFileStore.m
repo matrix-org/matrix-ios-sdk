@@ -671,6 +671,14 @@ static NSUInteger preloadOptions;
     return metaData.areAllIdentityServerTermsAgreed;
 }
 
+- (NSArray<NSString *> *)roomIds
+{
+    NSArray<NSString *> *roomIDs = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:self->storeRoomsPath error:nil];
+    NSMutableArray<NSString *> *result = [roomIDs mutableCopy];
+    [result removeObjectsInArray:roomsToCommitForDeletion];
+    return result;
+}
+
 #pragma mark - Matrix filters
 - (void)setSyncFilterId:(NSString *)syncFilterId
 {
