@@ -88,25 +88,7 @@ public class MXBeaconInfoSummaryRealmStore: NSObject {
     private func realmConfiguration(for userId: String) throws -> RLMRealmConfiguration {
         let realmConfiguration = RLMRealmConfiguration.default()
         
-        let rootDirectoryURL: URL
-        
-        do {
-            rootDirectoryURL = try FileManager.default.url(for: .cachesDirectory, in: .userDomainMask, appropriateFor: nil, create: true).appendingPathComponent(userId)
-        } catch {
-            MXLog.error("[MXBeaconInfoSummaryRealmStore] Fail to get user directory")
-            
-            throw error
-        }
-        
-        let realmFileFolderURL = rootDirectoryURL.appendingPathComponent(Database.folderName, isDirectory: true)
-        let realmFileURL = realmFileFolderURL.appendingPathComponent(Database.filename, isDirectory: false).appendingPathExtension(Database.fileExtension)
-        
-        do {
-            try FileManager.default.createDirectory(at: realmFileFolderURL, withIntermediateDirectories: true, attributes: nil)
-        } catch {
-            MXLog.error("[MXBeaconInfoSummaryRealmStore] Fail to create Realm folder \(realmFileFolderURL) with error: \(error)")
-            throw error
-        }
+        let realmFileURL = try self.getStoreURL(for: userId)
 
         realmConfiguration.fileURL = realmFileURL
         realmConfiguration.deleteRealmIfMigrationNeeded = true
@@ -119,6 +101,42 @@ public class MXBeaconInfoSummaryRealmStore: NSObject {
         ]
 
         return realmConfiguration
+    }
+    
+    private func getStoreURL(for userId: String) throws -> URL {
+        
+        let userDirectoryURL: URL
+        
+        do {
+            
+            let rootDirectoryURL: URL
+            
+            // Store the Realm file in the shared container if possible
+            if let containerURL = FileManager.default.applicationGroupContainerURL() {
+                rootDirectoryURL = containerURL
+            } else {
+                rootDirectoryURL = try FileManager.default.url(for: .cachesDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
+            }
+            
+            userDirectoryURL = rootDirectoryURL.appendingPathComponent(userId)
+            
+        } catch {
+            MXLog.error("[MXBeaconInfoSummaryRealmStore] Fail to get user directory")
+            
+            throw error
+        }
+        
+        let realmFileFolderURL = userDirectoryURL.appendingPathComponent(Database.folderName, isDirectory: true)
+        let realmFileURL = realmFileFolderURL.appendingPathComponent(Database.filename, isDirectory: false).appendingPathExtension(Database.fileExtension)
+        
+        do {
+            try FileManager.default.createDirectory(at: realmFileFolderURL, withIntermediateDirectories: true, attributes: nil)
+        } catch {
+            MXLog.error("[MXBeaconInfoSummaryRealmStore] Fail to create Realm folder \(realmFileFolderURL) with error: \(error)")
+            throw error
+        }
+        
+        return realmFileURL
     }
     
     private func realmBeaconInfoSummaryResults(in realm: RLMRealm, with roomId: String) -> RLMResults<MXRealmBeaconInfoSummary> {
