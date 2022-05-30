@@ -299,6 +299,53 @@
     }];
 }
 
+- (void)testRoomStateIsStoredAndRestored
+{
+    [self doTestWithMXFileStoreAndMessagesLimit:10 readyToTest:^(MXRoom *room) {
+        MXFileStore *fileStore = mxSession.store;
+        
+        // Load pre-existing room state
+        [fileStore stateOfRoom:room.roomId success:^(NSArray<MXEvent *> * _Nonnull originalEvents) {
+            
+            MXEvent *name = [MXEvent modelFromJSON:@{
+                @"type": kMXEventTypeStringRoomName,
+                @"content": @{
+                    @"name": @"Room 1"
+                }
+            }];
+            NSArray *extendedEvents = [originalEvents arrayByAddingObject:name];
+
+            // Save all existing events plus one additional
+            [fileStore storeStateForRoom:room.roomId stateEvents:extendedEvents];
+            [fileStore commitWithCompletion:^{
+                
+                // Need to fetch state of room twice due to a caching issue
+                [fileStore stateOfRoom:room.roomId success:^(NSArray<MXEvent *> * _Nonnull _stateEvents) {
+                    [fileStore stateOfRoom:room.roomId success:^(NSArray<MXEvent *> * _Nonnull stateEvents) {
+                        
+                        // Loaded state should include an extra event that was archived and unarchived
+                        XCTAssertTrue(stateEvents.count);
+                        XCTAssertEqual(stateEvents.count, extendedEvents.count);
+                        XCTAssertNotEqual(stateEvents.count, originalEvents.count);
+                        [expectation fulfill];
+                        
+                    } failure:^(NSError * _Nonnull error) {
+                        XCTFail(@"Cannot load state - error: %@", error);
+                        [expectation fulfill];
+                    }];
+                } failure:^(NSError * _Nonnull error) {
+                    XCTFail(@"Cannot load state - error: %@", error);
+                    [expectation fulfill];
+                }];
+            }];
+            
+        } failure:^(NSError * _Nonnull error) {
+            XCTFail(@"Cannot load state - error: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
 @end
 
 #pragma clang diagnostic pop
