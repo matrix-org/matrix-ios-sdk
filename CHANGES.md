@@ -17,6 +17,7 @@
 Others
 
 - MXFileStore: Add extra logs when saving and loading room state ([#1478](https://github.com/matrix-org/matrix-ios-sdk/pull/1478))
+- MXBackgroundSyncServiceTests: Add tests for outdated gappy syncs. ([#6142](https://github.com/vector-im/element-ios/issues/6142))
 
 
 ## Changes in 0.23.6 (2022-05-19)
