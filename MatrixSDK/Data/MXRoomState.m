@@ -129,7 +129,7 @@
                     [roomState handleStateEvents:events];
                     onComplete(roomState);
                 } failure:^(NSError *error) {
-                    MXLogError(@"[MXRoomState] loadRoomStateFromStore(%@): Failed to load any events from api", loadEventId);
+                    MXLogError(@"[MXRoomState] loadRoomStateFromStore(%@): Failed to load any events from api with error %@", loadEventId, error);
                     
                     onComplete(roomState);
                 }];
