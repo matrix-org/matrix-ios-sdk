@@ -93,6 +93,9 @@ NSString *const kMXCredentialsNewRefreshTokenDataKey = @"refresh_token_data";
  */
 #define PREEMPT_REFRESH_EXPIRATION_INTERVAL 60000
 
+/// Maximum number of caracters for a URL
+static const NSInteger kUrlMaxLength = 2048;
+
 /**
  Authentication flow: register or login
  */
@@ -2416,14 +2419,21 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
         for (NSString *viaServer in viaServers)
         {
             NSString *value = [MXTools encodeURIComponent:viaServer];
+            NSString *parameter = [NSString stringWithFormat:@"server_name=%@", value];
+            
+            // Check if we reach the maximum length for the URL. If so, we just skip the remaining via servers.
+            if (path.length + queryParameters.length + parameter.length > kUrlMaxLength)
+            {
+                break;
+            }
 
             if (!queryParameters)
             {
-                queryParameters = [NSMutableString stringWithFormat:@"?server_name=%@", value];
+                queryParameters = [NSMutableString stringWithFormat:@"?%@", parameter];
             }
             else
             {
-                [queryParameters appendFormat:@"&server_name=%@", value];
+                [queryParameters appendFormat:@"&%@", parameter];
             }
         }
 
