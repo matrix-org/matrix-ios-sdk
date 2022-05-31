@@ -282,6 +282,14 @@ public class MXLocationService: NSObject {
         }
     }
     
+    /// Get all beacon info summaries for a user
+    /// - Parameters:
+    ///   - userId: The user id
+    /// - Returns: Room beacon info summaries
+    public func getBeaconInfoSummaries(for userId: String) -> [MXBeaconInfoSummaryProtocol] {
+        return self.session.aggregations.beaconAggregations.getBeaconInfoSummaries(for: userId)
+    }
+    
     /// Get all live beacon info summaries in a room
     /// - Parameters:
     ///   - roomId: The room id of the room
