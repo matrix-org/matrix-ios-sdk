@@ -2251,9 +2251,8 @@ static NSUInteger preloadOptions;
         }
         
         id object = [NSKeyedUnarchiver unarchivedObjectOfClasses:classes fromData:data error:&error];
-        if (object)
+        if (object && !error)
         {
-            MXLogDebug(@"[MXFileStore] Loaded object from class");
             return object;
         }
         else
@@ -2297,9 +2296,8 @@ static NSUInteger preloadOptions;
         
         // Seems to be an implementation detaul
         id object = [unarchiver decodeTopLevelObjectForKey:NSKeyedArchiveRootObjectKey error:&error];
-        if (object)
+        if (object && !error)
         {
-            MXLogDebug(@"[MXFileStore] Loaded object from class");
             return object;
         }
         else

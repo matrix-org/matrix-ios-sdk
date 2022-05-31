@@ -112,13 +112,34 @@
                matrixSession:(MXSession *)matrixSession
                   onComplete:(void (^)(MXRoomState *roomState))onComplete
 {
+    NSString *loadEventId = [NSUUID UUID].UUIDString;
+    MXLogDebug(@"[MXRoomState] loadRoomStateFromStore(%@): Loading state for room %@", loadEventId, roomId)
+    
     MXRoomState *roomState = [[MXRoomState alloc] initWithRoomId:roomId andMatrixSession:matrixSession andDirection:YES];
     if (roomState)
     {
         [store stateOfRoom:roomId success:^(NSArray<MXEvent *> * _Nonnull stateEvents) {
-            [roomState handleStateEvents:stateEvents];
+            if (!stateEvents.count) {
+                MXLogWarning(@"[MXRoomState] loadRoomStateFromStore(%@): No state events stored, loading from api", loadEventId);
+                
+                [matrixSession.matrixRestClient stateOfRoom:roomId success:^(NSArray *JSONData) {
+                    NSArray<MXEvent *> *events = [MXEvent modelsFromJSON:JSONData];
+                    MXLogDebug(@"[MXRoomState] loadRoomStateFromStore(%@): Loaded %lu events from api", loadEventId, events.count);
+                    
+                    [roomState handleStateEvents:events];
+                    onComplete(roomState);
+                } failure:^(NSError *error) {
+                    MXLogError(@"[MXRoomState] loadRoomStateFromStore(%@): Failed to load any events from api", loadEventId);
+                    
+                    onComplete(roomState);
+                }];
+            } else {
+                MXLogDebug(@"[MXRoomState] loadRoomStateFromStore(%@): Initializing with %lu state events", loadEventId, stateEvents.count);
+                
+                [roomState handleStateEvents:stateEvents];
+                onComplete(roomState);
+            }
 
-            onComplete(roomState);
         } failure:nil];
     }
 }

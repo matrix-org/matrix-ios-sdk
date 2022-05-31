@@ -822,16 +822,13 @@
 {
     [self.matrixSDKTestsData doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
-        [bobRestClient stateOfRoom:roomId success:^(NSDictionary *JSONData) {
+        [bobRestClient stateOfRoom:roomId success:^(NSArray *JSONData) {
             
             XCTAssertNotNil(JSONData);
-            
-            XCTAssert([JSONData isKindOfClass:[NSArray class]]);
-            NSArray *states = (NSArray*)JSONData;
-            XCTAssertGreaterThan(states.count, 0);
+            XCTAssertGreaterThan(JSONData.count, 0);
             
             // Check that all provided events are state events
-            for (NSDictionary *eventDict in states)
+            for (NSDictionary *eventDict in JSONData)
             {
                 MXEvent *event = [MXEvent modelFromJSON:eventDict];
                 

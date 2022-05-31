@@ -1444,7 +1444,7 @@ NS_REFINED_FOR_SWIFT;
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)stateOfRoom:(NSString*)roomId
-                        success:(void (^)(NSDictionary *JSONData))success
+                        success:(void (^)(NSArray *JSONData))success
                         failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**

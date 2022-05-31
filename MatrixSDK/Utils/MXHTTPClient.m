@@ -349,7 +349,7 @@ static NSUInteger requestCount = 0;
             });
         }
         
-    } downloadProgress:nil completionHandler:^(NSURLResponse * _Nonnull theResponse, NSDictionary *JSONResponse, NSError * _Nullable error) {
+    } downloadProgress:nil completionHandler:^(NSURLResponse * _Nonnull theResponse, id JSONResponse, NSError * _Nullable error) {
         NSHTTPURLResponse *response = (NSHTTPURLResponse*)theResponse;
         mxHTTPOperation.httpResponse = response;
 

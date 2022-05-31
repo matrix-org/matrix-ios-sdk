@@ -2780,7 +2780,7 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
 }
 
 - (MXHTTPOperation*)stateOfRoom:(NSString*)roomId
-                        success:(void (^)(NSDictionary *JSONData))success
+                        success:(void (^)(NSArray *JSONData))success
                         failure:(void (^)(NSError *error))failure
 {
     NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/state", apiPathPrefix, roomId];
@@ -2789,7 +2789,7 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
     return [httpClient requestWithMethod:@"GET"
                                     path:path
                               parameters:nil
-                                 success:^(NSDictionary *JSONResponse) {
+                                 success:^(id JSONResponse) {
                                      MXStrongifyAndReturnIfNil(self);
 
                                      if (success)
