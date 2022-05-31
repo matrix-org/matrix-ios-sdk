@@ -1,3 +1,24 @@
+## Changes in 0.23.7 (2022-05-31)
+
+🐛 Bugfixes
+
+- MXSession: Recreate room summaries when detected missing. ([#5924](https://github.com/vector-im/element-ios/issues/5924))
+- Fixed crashes on invalid casting of MXUser to MXMyUser causing unrecognized selectors on the mxSession property. ([#6187](https://github.com/vector-im/element-ios/issues/6187))
+- MXCoreDataRoomSummaryStore: Make removing a room summary synchronous. ([#6218](https://github.com/vector-im/element-ios/issues/6218))
+
+⚠️ API Changes
+
+- MXTools: generateTransactionId no longer returns an optional in Swift. ([#1477](https://github.com/matrix-org/matrix-ios-sdk/pull/1477))
+
+🚧 In development 🚧
+
+- Location sharing: Persist beacon info summaries to disk. ([#6199](https://github.com/vector-im/element-ios/issues/6199))
+
+Others
+
+- MXFileStore: Add extra logs when saving and loading room state ([#1478](https://github.com/matrix-org/matrix-ios-sdk/pull/1478))
+
+
 ## Changes in 0.23.6 (2022-05-19)
 
 No significant changes.
