@@ -17,7 +17,7 @@
 import Foundation
 @testable import MatrixSDK
 
-class MXMegolmDecryptionTests: XCTestCase {
+class MXMegolmDecryptionUnitTests: XCTestCase {
     /// Spy session used to assert on the results of the test
     struct SpySession: Equatable {
         let sharedHistory: Bool

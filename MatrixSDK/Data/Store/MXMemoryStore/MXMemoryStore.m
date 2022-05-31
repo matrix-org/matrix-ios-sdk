@@ -357,6 +357,11 @@
     return NO;
 }
 
+- (NSArray<NSString *> *)roomIds
+{
+    return roomStores.allKeys;
+}
+
 #pragma mark - Matrix users
 - (void)storeUser:(MXUser *)user
 {

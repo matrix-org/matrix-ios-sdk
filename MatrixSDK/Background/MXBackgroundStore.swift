@@ -283,6 +283,10 @@ class MXBackgroundStore: NSObject, MXStore {
     var roomSummaryStore: MXRoomSummaryStore {
         return self
     }
+
+    var roomIds: [String] {
+        return []
+    }
     
 }
 

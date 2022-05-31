@@ -16,7 +16,7 @@
 
 import Foundation
 
-class MXMemoryRoomStoreTests: XCTestCase {
+class MXMemoryRoomStoreUnitTests: XCTestCase {
     func test_messagesEnumeratorForRoom_containsCorrectEvents() {
         let events = (1...50).map(MXEvent.fixture)
         let store = MXMemoryRoomStore()

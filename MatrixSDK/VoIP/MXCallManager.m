@@ -159,7 +159,7 @@ NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
     // Hang up all calls
     for (MXCall *call in calls)
     {
-        [call hangup];
+        [call hangupWithReason:MXCallHangupReasonUserHangup signal:NO];
     }
     [calls removeAllObjects];
     calls = nil;
