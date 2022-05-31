@@ -63,7 +63,7 @@
 
  @return the transaction id.
  */
-+ (NSString*)generateTransactionId;
++ (NSString* _Nonnull)generateTransactionId;
 
 /**
  Removing new line characters from NSString.

@@ -52,6 +52,22 @@ public class MXBeaconInfoSummaryMemoryStore: NSObject, MXBeaconInfoSummaryStoreP
         }
     }
     
+    public func getAllBeaconInfoSummaries(forUserId userId: String) -> [MXBeaconInfoSummary] {
+        
+        var userSummaries: [MXBeaconInfoSummary] = []
+        
+        for (_, roomSummaries) in self.beaconInfoSummaries {
+            
+            let userRoomSummaries = roomSummaries.filter { summary in
+                summary.userId == userId
+            }
+            
+            userSummaries.append(contentsOf: userRoomSummaries)
+        }
+        
+        return userSummaries
+    }
+    
     public func getAllBeaconInfoSummaries(inRoomWithId roomId: String) -> [MXBeaconInfoSummary] {
         return self.beaconInfoSummaries[roomId] ?? []
     }

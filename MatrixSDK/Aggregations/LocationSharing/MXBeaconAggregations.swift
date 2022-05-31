@@ -50,6 +50,11 @@ public class MXBeaconAggregations: NSObject {
         return self.beaconInfoSummaryStore.getAllBeaconInfoSummaries(inRoomWithId: roomId)
     }
     
+    /// Get all MXBeaconInfoSummary for a user
+    public func getBeaconInfoSummaries(for userId: String) -> [MXBeaconInfoSummaryProtocol] {
+        return self.beaconInfoSummaryStore.getAllBeaconInfoSummaries(forUserId: userId)
+    }
+    
     /// Update a MXBeaconInfoSummary device id that belongs to the current user.
     /// Enables to recognize that a beacon info has been started on the device
     public func updateBeaconInfoSummary(with eventId: String, deviceId: String, inRoomWithId roomId: String)  {
@@ -62,6 +67,7 @@ public class MXBeaconAggregations: NSObject {
         }
         
         if beaconInfoSummary.updateWithDeviceId(deviceId) {
+            self.beaconInfoSummaryStore.addOrUpdateBeaconInfoSummary(beaconInfoSummary, inRoomWithId: roomId)
             self.notifyBeaconInfoSummaryListeners(ofRoomWithId: roomId, beaconInfoSummary: beaconInfoSummary)
         }
     }
@@ -87,6 +93,7 @@ public class MXBeaconAggregations: NSObject {
         }
         
         if beaconInfoSummary.updateWithLastBeacon(beacon) {
+            self.beaconInfoSummaryStore.addOrUpdateBeaconInfoSummary(beaconInfoSummary, inRoomWithId: roomId)
             self.notifyBeaconInfoSummaryListeners(ofRoomWithId: roomId, beaconInfoSummary: beaconInfoSummary)
         }
     }
@@ -164,7 +171,6 @@ public class MXBeaconAggregations: NSObject {
         
         if let beaconInfoSummary = beaconInfoSummary {
             self.beaconInfoSummaryStore.addOrUpdateBeaconInfoSummary(beaconInfoSummary, inRoomWithId: roomId)
-            
             self.notifyBeaconInfoSummaryListeners(ofRoomWithId: roomId, beaconInfoSummary: beaconInfoSummary)
         }
     }

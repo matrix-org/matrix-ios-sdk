@@ -180,7 +180,7 @@ public class MXCoreDataRoomSummaryStore: NSObject {
     private func saveSummary(_ summary: MXRoomSummaryProtocol) {
         let moc = backgroundMoc
         
-        moc.perform { [weak self] in
+        moc.performAndWait { [weak self] in
             guard let self = self else { return }
             if let existing = self.fetchSummaryMO(forRoomId: summary.roomId, in: moc) {
                 existing.update(withRoomSummary: summary, in: moc)
@@ -200,7 +200,7 @@ public class MXCoreDataRoomSummaryStore: NSObject {
     private func deleteSummary(forRoomId roomId: String) {
         let moc = backgroundMoc
         
-        moc.perform { [weak self] in
+        moc.performAndWait { [weak self] in
             guard let self = self else { return }
             if let existing = self.fetchSummaryMO(forRoomId: roomId, in: moc) {
                 moc.delete(existing)
@@ -220,7 +220,7 @@ public class MXCoreDataRoomSummaryStore: NSObject {
         
         let moc = backgroundMoc
         
-        moc.perform { [weak self] in
+        moc.performAndWait { [weak self] in
             guard let self = self else { return }
             do {
                 for entityName in entityNames {

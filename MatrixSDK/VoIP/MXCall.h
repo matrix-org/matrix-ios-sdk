@@ -138,14 +138,25 @@ extern NSString *const kMXCallSupportsTransferringStatusDidChange;
 - (void)answer;
 
 /**
- Hang up a call in progress or reject an incoming call.
+ Hang up a call in progress or reject an incoming call. If an in progress call, calls -[MXCall hangupWithReason:signal] method with `MXCallHangupReasonUserHangup` and `YES`.
  */
 - (void)hangup;
 
 /**
- Hang up a call with a reason in progress.
+ Hang up a call in progress with a reason.
+
+ @param reason hangup reason
  */
 - (void)hangupWithReason:(MXCallHangupReason)reason;
+
+/**
+ Hang up a call in progress with a reason and a signalling flag.
+
+ @param reason hangup reason
+ @param signal signal the hang up or not
+ */
+- (void)hangupWithReason:(MXCallHangupReason)reason
+                  signal:(BOOL)signal;
 
 #pragma mark - Hold
 

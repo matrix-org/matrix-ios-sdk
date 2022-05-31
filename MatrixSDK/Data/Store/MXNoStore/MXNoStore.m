@@ -287,6 +287,11 @@
 {
 }
 
+- (NSArray<NSString *> *)roomIds
+{
+    return @[];
+}
+
 #pragma mark - Matrix users
 - (void)storeUser:(MXUser *)user
 {
