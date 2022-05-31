@@ -2422,7 +2422,7 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
             NSString *parameter = [NSString stringWithFormat:@"server_name=%@", value];
             
             // Check if we reach the maximum length for the URL. If so, we just skip the remaining via servers.
-            if (path.length + queryParameters.length + parameter.length > kUrlMaxLength)
+            if (path.length + queryParameters.length + parameter.length + 1 > kUrlMaxLength)
             {
                 break;
             }
