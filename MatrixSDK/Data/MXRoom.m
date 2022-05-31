@@ -549,7 +549,7 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
                             failure:(void (^)(NSError *error))failure
 {
     
-    MXLogDebug(@"[MXRoom] sendEventOfType: %@", eventTypeString);
+    MXLogDebug(@"[MXRoom] sendEventOfType: %@ in room %@", eventTypeString, self.roomId);
 
     __block MXRoomOperation *roomOperation;
 
