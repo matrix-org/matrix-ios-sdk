@@ -31,7 +31,7 @@ public extension MXTools {
     @objc
     static func urlString(base: String, queryParameters: [String]) -> String {
         var urlString = base
-        var hasQueryParameters = urlString.firstIndex(of: "?") != nil
+        var hasQueryParameters = urlString.contains("?")
         for parameter in queryParameters {
             let parameterFormat = !hasQueryParameters ? "?\(parameter)" : "&\(parameter)"
             
