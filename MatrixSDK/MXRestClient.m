@@ -2415,29 +2415,14 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
     // Add all servers as query parameters
     if (viaServers.count)
     {
-        NSMutableString *queryParameters;
+        NSMutableArray<NSString *> *queryParameters = [NSMutableArray new];
         for (NSString *viaServer in viaServers)
         {
             NSString *value = [MXTools encodeURIComponent:viaServer];
-            NSString *parameter = [NSString stringWithFormat:@"server_name=%@", value];
-            
-            // Check if we reach the maximum length for the URL. If so, we just skip the remaining via servers.
-            if (path.length + queryParameters.length + parameter.length + 1 > kUrlMaxLength)
-            {
-                break;
-            }
-
-            if (!queryParameters)
-            {
-                queryParameters = [NSMutableString stringWithFormat:@"?%@", parameter];
-            }
-            else
-            {
-                [queryParameters appendFormat:@"&%@", parameter];
-            }
+            [queryParameters addObject:[NSString stringWithFormat:@"server_name=%@", value]];
         }
 
-        path = [path stringByAppendingString:queryParameters];
+        path = [MXTools urlStringWithBase:path queryParameters:queryParameters];
     }
 
     MXWeakify(self);

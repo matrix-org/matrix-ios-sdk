@@ -18,6 +18,8 @@ import Foundation
 
 public extension MXTools {
     
+    @objc static let kMXUrlMaxLength = 2028
+
     /// Readable session state
     /// - Parameter state: session state
     /// - Returns: textual representation for the session state in a human readable way
@@ -26,4 +28,20 @@ public extension MXTools {
         return state.description
     }
     
+    @objc
+    static func urlString(base: String, queryParameters: [String]) -> String {
+        var urlString = base
+        var hasQueryParameters = urlString.firstIndex(of: "?") != nil
+        for parameter in queryParameters {
+            let parameterFormat = !hasQueryParameters ? "?\(parameter)" : "&\(parameter)"
+            
+            guard urlString.count + parameterFormat.count <= kMXUrlMaxLength else {
+                break
+            }
+            
+            hasQueryParameters = true
+            urlString.append(parameterFormat)
+        }
+        return urlString
+    }
 }
