@@ -29,7 +29,7 @@
 #import "MatrixSDKSwiftHeader.h"
 #import "MXFileRoomSummaryStore.h"
 
-static NSUInteger const kMXFileVersion = 79;
+static NSUInteger const kMXFileVersion = 80;
 
 static NSString *const kMXFileStoreFolder = @"MXFileStore";
 static NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
@@ -2251,9 +2251,8 @@ static NSUInteger preloadOptions;
         }
         
         id object = [NSKeyedUnarchiver unarchivedObjectOfClasses:classes fromData:data error:&error];
-        if (object)
+        if (object && !error)
         {
-            MXLogDebug(@"[MXFileStore] Loaded object from class");
             return object;
         }
         else
@@ -2297,9 +2296,8 @@ static NSUInteger preloadOptions;
         
         // Seems to be an implementation detaul
         id object = [unarchiver decodeTopLevelObjectForKey:NSKeyedArchiveRootObjectKey error:&error];
-        if (object)
+        if (object && !error)
         {
-            MXLogDebug(@"[MXFileStore] Loaded object from class");
             return object;
         }
         else
