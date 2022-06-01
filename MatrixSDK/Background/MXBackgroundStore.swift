@@ -39,8 +39,8 @@ class MXBackgroundStore: NSObject, MXStore {
     init(withCredentials credentials: MXCredentials) {
         fileStore = MXFileStore(credentials: credentials)
         storeService = MXStoreService(store: fileStore, credentials: credentials)
-        //  load real eventStreamToken
-        fileStore.loadMetaData()
+        //  load real eventStreamToken without enabling clear data
+        fileStore.loadMetaData(false)
     }
     
     //  Return real eventStreamToken, to be able to launch a meaningful background sync
