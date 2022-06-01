@@ -80,8 +80,8 @@
         return nil;
     }
     
-    NSString *finalText;
-    NSString *finalFormattedText;
+    NSString *compatibilityText;
+    NSString *compatibilityFormattedText;
     
     if (event.isReplyEvent)
     {
@@ -90,45 +90,50 @@
         
         if (replyEventParts)
         {
-            finalText = [NSString stringWithFormat:@"%@%@", replyEventParts.bodyParts.replyTextPrefix, text];
+            compatibilityText = [NSString stringWithFormat:@"%@ * %@", replyEventParts.bodyParts.replyTextPrefix, text];
             NSString *formattedReplyText = formattedText ?: text;
-            finalFormattedText = [NSString stringWithFormat:@"%@%@", replyEventParts.formattedBodyParts.replyTextPrefix, formattedReplyText];
+            if (replyEventParts.formattedBodyParts.replyTextPrefix)
+            {
+                compatibilityFormattedText = [NSString stringWithFormat:@"%@ * %@", replyEventParts.formattedBodyParts.replyTextPrefix, formattedReplyText];
+            }
         }
         else
         {
             MXLogDebug(@"[MXAggregations] replaceTextMessageEvent: Fail to parse reply event: %@", event.eventId);
-            failure(nil);
-            return nil;
+
+            // This enables edition of replies that don't provide a fallback mx-reply body.
+            compatibilityText = [NSString stringWithFormat:@"* %@", text];
+            compatibilityFormattedText = [NSString stringWithFormat:@"* %@", formattedText];
         }
     }
     else
     {
-        finalText = text;
-        finalFormattedText = formattedText;
+        compatibilityText = [NSString stringWithFormat:@"* %@", text];
+        compatibilityFormattedText = [NSString stringWithFormat:@"* %@", formattedText];
     }
     
     NSMutableDictionary *content = [NSMutableDictionary new];
     NSMutableDictionary *compatibilityContent = [NSMutableDictionary dictionaryWithDictionary:@{ kMXMessageTypeKey: messageType,
-                                                                                                 kMXMessageBodyKey: [NSString stringWithFormat:@"* %@", finalText] }];
-    
-    NSMutableDictionary *newContent = [NSMutableDictionary dictionaryWithDictionary:@{ kMXMessageTypeKey: messageType,
-                                                                                       kMXMessageBodyKey: finalText }];
-    
-    
-    if (finalFormattedText)
+                                                                                                 kMXMessageBodyKey: compatibilityText
+                                                                                              }];
+    if (compatibilityFormattedText)
     {
         // Send the HTML formatted string
-        
         [compatibilityContent addEntriesFromDictionary:@{
-                                                         @"formatted_body": [NSString stringWithFormat:@"* %@", finalFormattedText],
-                                                         @"format": kMXRoomMessageFormatHTML
-                                                         }];
-        
-        
+            @"formatted_body": compatibilityFormattedText,
+            @"format": kMXRoomMessageFormatHTML
+        }];
+
+    }
+
+    NSMutableDictionary *newContent = [NSMutableDictionary dictionaryWithDictionary:@{ kMXMessageTypeKey: messageType,
+                                                                                       kMXMessageBodyKey: text }];
+    if (formattedText)
+    {
         [newContent addEntriesFromDictionary:@{
-                                               @"formatted_body": finalFormattedText,
-                                               @"format": kMXRoomMessageFormatHTML
-                                               }];
+            @"formatted_body": formattedText,
+            @"format": kMXRoomMessageFormatHTML
+        }];
     }
     
     
