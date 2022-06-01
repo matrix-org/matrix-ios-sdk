@@ -1,0 +1,1 @@
+MXRestClient: limit the query length to 2048 for joinRoom

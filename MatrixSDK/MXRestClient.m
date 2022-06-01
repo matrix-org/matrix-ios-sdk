@@ -2412,22 +2412,14 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
     // Add all servers as query parameters
     if (viaServers.count)
     {
-        NSMutableString *queryParameters;
+        NSMutableArray<NSString *> *queryParameters = [NSMutableArray new];
         for (NSString *viaServer in viaServers)
         {
             NSString *value = [MXTools encodeURIComponent:viaServer];
-
-            if (!queryParameters)
-            {
-                queryParameters = [NSMutableString stringWithFormat:@"?server_name=%@", value];
-            }
-            else
-            {
-                [queryParameters appendFormat:@"&server_name=%@", value];
-            }
+            [queryParameters addObject:[NSString stringWithFormat:@"server_name=%@", value]];
         }
 
-        path = [path stringByAppendingString:queryParameters];
+        path = [MXTools urlStringWithBase:path queryParameters:queryParameters];
     }
 
     MXWeakify(self);
