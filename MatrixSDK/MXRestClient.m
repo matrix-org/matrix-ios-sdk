@@ -93,9 +93,6 @@ NSString *const kMXCredentialsNewRefreshTokenDataKey = @"refresh_token_data";
  */
 #define PREEMPT_REFRESH_EXPIRATION_INTERVAL 60000
 
-/// Maximum number of caracters for a URL
-static const NSInteger kUrlMaxLength = 2048;
-
 /**
  Authentication flow: register or login
  */
