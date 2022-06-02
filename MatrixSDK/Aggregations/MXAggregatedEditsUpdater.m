@@ -101,7 +101,7 @@
         {
             MXLogDebug(@"[MXAggregations] replaceTextMessageEvent: Fail to parse reply event: %@", event.eventId);
 
-            // This enables edition of replies that don't provide a fallback mx-reply body.
+            // This enables editing replies that don't provide a fallback mx-reply body.
             compatibilityText = [NSString stringWithFormat:@"* %@", text];
             compatibilityFormattedText = [NSString stringWithFormat:@"* %@", formattedText];
         }
