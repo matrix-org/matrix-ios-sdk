@@ -47,35 +47,45 @@ public class MXLocationService: NSObject {
                                          description: String?,
                                          timeout: TimeInterval,
                                          completion: @escaping (MXResponse<String>) -> Void) -> MXHTTPOperation? {
-        return self.sendBeaconInfoEvent(withRoomId: roomId, description: description, timeout: timeout) { response in
+        
+        var operation: MXHTTPOperation?
+        
+        // Stop existing beacon if needed
+        // Note: Only one live beacon per user per room is allowed
+        operation = self.stopUserLocationSharing(inRoomWithId: roomId) { stopLocationSharingResponse in
             
-            switch response {
-            case .success(let eventId):
-                var listener: AnyObject?
+            operation = self.sendBeaconInfoEvent(withRoomId: roomId, description: description, timeout: timeout) { response in
                 
-                // Update corresponding beacon info summary with current device id
-                listener = self.session.aggregations.beaconAggregations.listenToBeaconInfoSummaryUpdateInRoom(withId: roomId) { [weak self] beaconInfoSummary in
+                switch response {
+                case .success(let eventId):
+                    var listener: AnyObject?
                     
-                    guard let self = self else {
-                        return
-                    }
-                    
-                    if beaconInfoSummary.id == eventId {
-                        if let listener = listener {
-                            self.session.aggregations.removeListener(listener)
+                    // Update corresponding beacon info summary with current device id
+                    listener = self.session.aggregations.beaconAggregations.listenToBeaconInfoSummaryUpdateInRoom(withId: roomId) { [weak self] beaconInfoSummary in
+                        
+                        guard let self = self else {
+                            return
                         }
-                       
-                        if let myDeviceId = self.session.myDeviceId {
-                            self.session.aggregations.beaconAggregations.updateBeaconInfoSummary(with: eventId, deviceId: myDeviceId, inRoomWithId: roomId)
+                        
+                        if beaconInfoSummary.id == eventId {
+                            if let listener = listener {
+                                self.session.aggregations.removeListener(listener)
+                            }
+                           
+                            if let myDeviceId = self.session.myDeviceId {
+                                self.session.aggregations.beaconAggregations.updateBeaconInfoSummary(with: eventId, deviceId: myDeviceId, inRoomWithId: roomId)
+                            }
                         }
                     }
+                case .failure:
+                    break
                 }
-            case .failure:
-                break
+                
+                completion(response)
             }
-            
-            completion(response)
         }
+        
+        return operation
     }
     
     @discardableResult
@@ -277,9 +287,7 @@ public class MXLocationService: NSObject {
     ///   - userId: The user id
     /// - Returns: Room beacon info summaries
     public func getBeaconInfoSummaries(for userId: String, inRoomWithId roomId: String) -> [MXBeaconInfoSummaryProtocol] {
-        return self.session.aggregations.beaconAggregations.getBeaconInfoSummaries(inRoomWithId: roomId).filter { beaconInfoSummary in
-            beaconInfoSummary.userId == userId
-        }
+        return self.session.aggregations.beaconAggregations.getBeaconInfoSummaries(for: userId, inRoomWithId: roomId)
     }
     
     /// Get all beacon info summaries for a user

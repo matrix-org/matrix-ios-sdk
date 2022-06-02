@@ -231,6 +231,22 @@ extension MXBeaconInfoSummaryRealmStore: MXBeaconInfoSummaryStoreProtocol {
         return self.mapper.beaconInfoSummary(from: realmBeaconInfoSummary)
     }
     
+    public func getBeaconInfoSummaries(for userId: String, inRoomWithId roomId: String) -> [MXBeaconInfoSummary] {
+
+        guard let realm = self.realm else {
+            return []
+        }
+        
+        let roomPredicate = BeaconInfoSummaryPredicate.room(roomId)
+        let userPredicate = BeaconInfoSummaryPredicate.user(userId)
+        
+        let predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [roomPredicate, userPredicate])
+
+        let realmSummaries = self.realmBeaconInfoSummaryResults(in: realm, with: predicate)
+        
+        return self.beaconInfoSummaries(from: realmSummaries)
+    }
+    
     public func getAllBeaconInfoSummaries(forUserId userId: String) -> [MXBeaconInfoSummary] {
         
         guard let realm = self.realm else {
@@ -253,6 +269,28 @@ extension MXBeaconInfoSummaryRealmStore: MXBeaconInfoSummaryStoreProtocol {
         let realmSummaries = self.realmBeaconInfoSummaryResults(in: realm, with: roomId)
         
         return self.beaconInfoSummaries(from: realmSummaries)
+    }
+    
+    public func deleteBeaconInfoSummary(with identifier: String, inRoomWithId roomId: String) {
+        guard let realm = self.realm else {
+            return
+        }
+        
+        do {
+            try realm.mx_transaction(name: "[MXBeaconInfoSummaryRealmStore] deleteBeaconInfoSummary(with identifier:, inRoomWithId:)") {
+                
+                let identifierPredicate = BeaconInfoSummaryPredicate.identifier(identifier)
+                let roomPredicate = BeaconInfoSummaryPredicate.room(roomId)
+                
+                let predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [identifierPredicate, roomPredicate])
+                
+                let realmBeaconInfoSummaries = self.realmBeaconInfoSummaryResults(in: realm, with: predicate)
+                
+                realm.deleteObjects(realmBeaconInfoSummaries)
+            }
+        } catch {
+            MXLog.error("[MXBeaconInfoSummaryRealmStore] deleteAllBeaconInfoSummaries failed with error: \(error)")
+        }
     }
     
     public func deleteAllBeaconInfoSummaries(inRoomWithId roomId: String) {
