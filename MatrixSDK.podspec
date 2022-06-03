@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
 
   s.name         = "MatrixSDK"
-  s.version      = "0.23.7"
+  s.version      = "0.23.8"
   s.summary      = "The iOS SDK to build apps compatible with Matrix (https://www.matrix.org)"
 
   s.description  = <<-DESC
@@ -43,7 +43,7 @@ Pod::Spec.new do |s|
 
       # Requirements for e2e encryption
       ss.dependency 'OLMKit', '~> 3.2.5'
-      ss.dependency 'Realm', '10.26.0'
+      ss.dependency 'Realm', '10.27.0'
       ss.dependency 'libbase58', '~> 0.1.4'
   end
 

@@ -1,5 +1,5 @@
 // 
-// Copyright 2020 The Matrix.org Foundation C.I.C
+// Copyright 2022 The Matrix.org Foundation C.I.C
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,16 +14,21 @@
 // limitations under the License.
 //
 
-#ifndef MatrixSDKTests_Bridging_Header_h
-#define MatrixSDKTests_Bridging_Header_h
+#ifndef MXRestClientStub_h
+#define MXRestClientStub_h
 
-#import "MatrixSDKTestsData.h"
-#import "MatrixSDKTestsE2EData.h"
-#import "MXDeviceListOperationsPool.h"
-#import "MXBackgroundTask.h"
-#import "MXUIKitBackgroundModeHandler.h"
-#import "MXApplicationProtocol.h"
-#import "MXCrypto_Private.h"
-#import "MXRestClientStub.h"
+#import "MXRestClient.h"
 
-#endif /* MatrixSDKTests_Bridging_Header_h */
+/**
+ Stubbed version of MXRestClient which can be used in unit tests without making any actual API calls
+ */
+@interface MXRestClientStub : MXRestClient
+
+/**
+ Stubbed data that will be returned when calling `stateOfRoom` instead of making HTTP requests
+ */
+@property (nonatomic, strong) NSDictionary<NSString *, NSArray <NSDictionary *>*> *stubbedStatePerRoom;
+
+@end
+
+#endif /* MXRestClientStub_h */

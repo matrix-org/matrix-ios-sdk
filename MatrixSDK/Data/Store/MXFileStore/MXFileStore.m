@@ -29,7 +29,7 @@
 #import "MatrixSDKSwiftHeader.h"
 #import "MXFileRoomSummaryStore.h"
 
-static NSUInteger const kMXFileVersion = 79;
+static NSUInteger const kMXFileVersion = 80;
 
 static NSString *const kMXFileStoreFolder = @"MXFileStore";
 static NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
@@ -1597,11 +1597,18 @@ static NSUInteger preloadOptions;
 #pragma mark - MXFileStore metadata
 - (void)loadMetaData
 {
+    [self loadMetaData:YES];
+}
+
+- (void)loadMetaData:(BOOL)enableClearData
+{
+    MXLogDebug(@"[MXFileStore] loadMetaData: enableClearData: %@", enableClearData ? @"YES" : @"NO");
+
     NSString *metaDataFile = [storePath stringByAppendingPathComponent:kMXFileStoreMedaDataFile];
     
     @try
     {
-        metaData = [NSKeyedUnarchiver unarchiveObjectWithFile:metaDataFile];
+        metaData = [self loadRootObjectWithoutSecureCodingFromFile:metaDataFile];
     }
     @catch (NSException *exception)
     {
@@ -1623,7 +1630,10 @@ static NSUInteger preloadOptions;
     {
         MXLogDebug(@"[MXFileStore] loadMetaData: event stream token is missing");
         [self logFiles];
-        [self deleteAllData];
+        if (enableClearData)
+        {
+            [self deleteAllData];
+        }
     }
 }
 
@@ -1665,7 +1675,7 @@ static NSUInteger preloadOptions;
             self->backupEventStreamToken = self->metaData.eventStreamToken;
 
             // Store new data
-            [NSKeyedArchiver archiveRootObject:self->metaData toFile:file];
+            [self saveObject:self->metaData toFile:file];
 
 #if DEBUG
             MXLogDebug(@"[MXFileStore commit] lasted %.0fms for metadata", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
@@ -2251,9 +2261,8 @@ static NSUInteger preloadOptions;
         }
         
         id object = [NSKeyedUnarchiver unarchivedObjectOfClasses:classes fromData:data error:&error];
-        if (object)
+        if (object && !error)
         {
-            MXLogDebug(@"[MXFileStore] Loaded object from class");
             return object;
         }
         else
@@ -2297,9 +2306,8 @@ static NSUInteger preloadOptions;
         
         // Seems to be an implementation detaul
         id object = [unarchiver decodeTopLevelObjectForKey:NSKeyedArchiveRootObjectKey error:&error];
-        if (object)
+        if (object && !error)
         {
-            MXLogDebug(@"[MXFileStore] Loaded object from class");
             return object;
         }
         else

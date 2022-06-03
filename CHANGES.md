@@ -1,3 +1,22 @@
+## Changes in 0.23.8 (2022-06-03)
+
+🐛 Bugfixes
+
+- Room state: Reload room state if detected empty on disk ([#1483](https://github.com/matrix-org/matrix-ios-sdk/pull/1483))
+- Remove unwanted parts from replies new_content body/formatted_body ([#3517](https://github.com/vector-im/element-ios/issues/3517))
+- MXBackgroundStore: Avoid clearing file store if event stream token is missing. ([#5924](https://github.com/vector-im/element-ios/issues/5924))
+- MXRestClient: limit the query length to 2048 for joinRoom ([#6224](https://github.com/vector-im/element-ios/issues/6224))
+- Bump realm to 10.27.0 to fix crypto performance issue. ([#6239](https://github.com/vector-im/element-ios/issues/6239))
+
+🚧 In development 🚧
+
+- Location sharing: Authorize only one live beacon info per member and per room. ([#6100](https://github.com/vector-im/element-ios/issues/6100))
+
+Others
+
+- Crypto: Add more logs when encrypting messages ([#1476](https://github.com/matrix-org/matrix-ios-sdk/pull/1476))
+
+
 ## Changes in 0.23.7 (2022-05-31)
 
 🐛 Bugfixes
