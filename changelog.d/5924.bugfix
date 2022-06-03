@@ -1,1 +1,0 @@
-MXBackgroundStore: Avoid clearing file store if event stream token is missing.
