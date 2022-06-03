@@ -52,6 +52,17 @@ public class MXBeaconInfoSummaryMemoryStore: NSObject, MXBeaconInfoSummaryStoreP
         }
     }
     
+    public func getBeaconInfoSummaries(for userId: String, inRoomWithId roomId: String) -> [MXBeaconInfoSummary] {
+        
+        guard let roomBeaconInfoSummaries = self.beaconInfoSummaries[roomId] else {
+            return []
+        }
+        
+        return roomBeaconInfoSummaries.filter { beaconInfoSummary in
+            beaconInfoSummary.userId == userId
+        }
+    }
+    
     public func getAllBeaconInfoSummaries(forUserId userId: String) -> [MXBeaconInfoSummary] {
         
         var userSummaries: [MXBeaconInfoSummary] = []
@@ -70,6 +81,19 @@ public class MXBeaconInfoSummaryMemoryStore: NSObject, MXBeaconInfoSummaryStoreP
     
     public func getAllBeaconInfoSummaries(inRoomWithId roomId: String) -> [MXBeaconInfoSummary] {
         return self.beaconInfoSummaries[roomId] ?? []
+    }
+    
+    public func deleteBeaconInfoSummary(with identifier: String, inRoomWithId roomId: String) {
+        
+        guard let beaconInfoSummaries = self.beaconInfoSummaries[roomId] else {
+            return
+        }
+        
+        let updatedBeaconInfoSummaries =  beaconInfoSummaries.filter { summary in
+            summary.id == identifier
+        }
+        
+        self.beaconInfoSummaries[roomId] = updatedBeaconInfoSummaries
     }
     
     public func deleteAllBeaconInfoSummaries(inRoomWithId roomId: String) {

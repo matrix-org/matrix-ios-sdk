@@ -2412,22 +2412,14 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
     // Add all servers as query parameters
     if (viaServers.count)
     {
-        NSMutableString *queryParameters;
+        NSMutableArray<NSString *> *queryParameters = [NSMutableArray new];
         for (NSString *viaServer in viaServers)
         {
             NSString *value = [MXTools encodeURIComponent:viaServer];
-
-            if (!queryParameters)
-            {
-                queryParameters = [NSMutableString stringWithFormat:@"?server_name=%@", value];
-            }
-            else
-            {
-                [queryParameters appendFormat:@"&server_name=%@", value];
-            }
+            [queryParameters addObject:[NSString stringWithFormat:@"server_name=%@", value]];
         }
 
-        path = [path stringByAppendingString:queryParameters];
+        path = [MXTools urlStringWithBase:path queryParameters:queryParameters];
     }
 
     MXWeakify(self);
@@ -2780,7 +2772,7 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
 }
 
 - (MXHTTPOperation*)stateOfRoom:(NSString*)roomId
-                        success:(void (^)(NSDictionary *JSONData))success
+                        success:(void (^)(NSArray *JSONData))success
                         failure:(void (^)(NSError *error))failure
 {
     NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/state", apiPathPrefix, roomId];
@@ -2789,7 +2781,7 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
     return [httpClient requestWithMethod:@"GET"
                                     path:path
                               parameters:nil
-                                 success:^(NSDictionary *JSONResponse) {
+                                 success:^(id JSONResponse) {
                                      MXStrongifyAndReturnIfNil(self);
 
                                      if (success)

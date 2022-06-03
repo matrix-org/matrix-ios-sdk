@@ -32,11 +32,18 @@ import Foundation
                               timestamp: UInt64,
                               inRoomWithId roomId: String) -> MXBeaconInfoSummary?
     
+    
+    /// Get all MXBeaconInfoSummary in a room for a user
+    func getBeaconInfoSummaries(for userId: String, inRoomWithId roomId: String) -> [MXBeaconInfoSummary]
+    
     /// Get all MXBeaconInfoSummary in a room
     func getAllBeaconInfoSummaries(inRoomWithId roomId: String) -> [MXBeaconInfoSummary]
     
     /// Get all MXBeaconInfoSummary for a user
     func getAllBeaconInfoSummaries(forUserId userId: String) -> [MXBeaconInfoSummary]
+    
+    /// Delete MXBeaconInfoSummary with given identifier in a room
+    func deleteBeaconInfoSummary(with identifier: String, inRoomWithId: String)
     
     /// Delete all MXBeaconInfoSummary in a room
     func deleteAllBeaconInfoSummaries(inRoomWithId roomId: String)

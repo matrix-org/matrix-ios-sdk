@@ -763,6 +763,49 @@ class MXBackgroundSyncServiceTests: XCTestCase {
         }
     }
 
+    // MXBackgroundSyncService must not affect file storage when event stream token is missing
+    // - Alice and Bob are in an encrypted room
+    // - Alice sends a message
+    // - Bob uses the MXBackgroundSyncService to fetch it
+    // -> MXBackgroundSyncService must fail without clearing Bob's file store
+    func testFileStoreEffect() {
+        createStoreScenario(messageCountChunks: [1]) { (aliceSession, bobSession, bobBgSyncService, roomId, eventIdsChunks, expectation) in
+
+            //  clear Bob's store
+            bobSession.store.deleteAllData()
+
+            //  store mock event to Bob's store
+            guard let mockEvent = MXEvent(fromJSON: [
+                "event_id": "mock_event_id",
+                "room_id": "mock_room_id",
+                "type": kMXEventTypeStringRoomMessage,
+                "content": [
+                    kMXMessageTypeKey: kMXMessageTypeText,
+                    kMXMessageBodyKey: "text"
+                ]
+            ]) else {
+                XCTFail("Failed to setup initial conditions")
+                expectation.fulfill()
+                return
+            }
+            bobSession.store.storeEvent(forRoom: mockEvent.roomId,
+                                        event: mockEvent,
+                                        direction: .forwards)
+
+            //  run bg sync service for a random event
+            bobBgSyncService.event(withEventId: "any", inRoom: mockEvent.roomId) { response in
+                switch response {
+                case .success:
+                    XCTFail("Should not success fetching the event")
+                case .failure:
+                    //  check that Bob's store still has the mock event
+                    XCTAssertNotNil(bobSession.store.event(withEventId:mockEvent.eventId,
+                                                           inRoom:mockEvent.roomId), "Bob's store must still have the mock event")
+                    expectation.fulfill()
+                }
+            }
+        }
+    }
     
     // MARK: - Cache tests
     

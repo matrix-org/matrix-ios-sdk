@@ -1,5 +1,5 @@
 // 
-// Copyright 2020 The Matrix.org Foundation C.I.C
+// Copyright 2022 The Matrix.org Foundation C.I.C
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,16 +14,15 @@
 // limitations under the License.
 //
 
-#ifndef MatrixSDKTests_Bridging_Header_h
-#define MatrixSDKTests_Bridging_Header_h
-
-#import "MatrixSDKTestsData.h"
-#import "MatrixSDKTestsE2EData.h"
-#import "MXDeviceListOperationsPool.h"
-#import "MXBackgroundTask.h"
-#import "MXUIKitBackgroundModeHandler.h"
-#import "MXApplicationProtocol.h"
-#import "MXCrypto_Private.h"
+#import <Foundation/Foundation.h>
 #import "MXRestClientStub.h"
 
-#endif /* MatrixSDKTests_Bridging_Header_h */
+@implementation MXRestClientStub
+
+- (MXHTTPOperation *)stateOfRoom:(NSString *)roomId success:(void (^)(NSArray *))success failure:(void (^)(NSError *))failure
+{
+    success(self.stubbedStatePerRoom[roomId]);
+    return [[MXHTTPOperation alloc] init];
+}
+
+@end
