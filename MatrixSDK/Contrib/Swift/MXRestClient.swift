@@ -75,7 +75,7 @@ public extension MXRestClient {
      
      - returns: a `MXRestClient` instance.
      */
-    @nonobjc convenience init(homeServer: URL, unrecognizedCertificateHandler handler: MXHTTPClientOnUnrecognizedCertificate?) {
+    @nonobjc required convenience init(homeServer: URL, unrecognizedCertificateHandler handler: MXHTTPClientOnUnrecognizedCertificate?) {
         self.init(__homeServer: homeServer.absoluteString, andOnUnrecognizedCertificateBlock: handler)
     }
     
