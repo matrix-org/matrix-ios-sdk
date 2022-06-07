@@ -1178,6 +1178,8 @@ static Class DefaultAlgorithmClass;
                 }
                 else
                 {
+                    keyBackupVersionTrust.usable = YES;
+
                     MXKeyBackupVersionTrustSignature *signature = [MXKeyBackupVersionTrustSignature new];
                     signature.keys = deviceId;
                     signature.valid = valid;
