@@ -55,7 +55,7 @@ public class MXGeoURIComponents: NSObject {
         
         let locationComponents = locationString.components(separatedBy: ",")
         
-        guard locationComponents.count == 2 else {
+        guard locationComponents.count >= 2 else {
             return nil
         }
         
