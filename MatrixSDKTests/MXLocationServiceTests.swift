@@ -198,6 +198,233 @@ class MXLocationServiceTests: XCTestCase {
             }
         }
     }
+        
+    /// Test: Expect to have only one live beacon info shared in the room after current user start location sharing twice
+    /// - Create a Bob session
+    /// - Create an initial room
+    /// - Start location sharing once
+    /// - Start location sharing twice
+    /// - Expect Bob to have only one beacon info summary available in the room
+    func testStartingLiveLocationSharingTwice() {
+        let store = MXMemoryStore()
+        
+        testData.doMXSessionTest(withBobAndARoom: self, andStore: store) { bobSession, initialRoom, expectation in
+            guard let bobSession = bobSession,
+                  let initialRoom = initialRoom,
+                  let expectation = expectation else {
+                XCTFail("Failed to setup test conditions")
+                return
+            }
+            
+            let locationService: MXLocationService = bobSession.locationService
+            
+            let expectedBeaconInfoDescription = "Live location description"
+            let expectedBeaconInfoTimeout: TimeInterval = 600000
+            let roomId: String = initialRoom.roomId
+            
+            locationService.startUserLocationSharing(withRoomId: initialRoom.roomId, description: expectedBeaconInfoDescription, timeout: expectedBeaconInfoTimeout) { response in
+                
+                switch response {
+                case .success(let firstBeaconInfoEventId):
+                    
+                    locationService.startUserLocationSharing(withRoomId: initialRoom.roomId, description: expectedBeaconInfoDescription, timeout: expectedBeaconInfoTimeout) { response in
+                        
+                        switch response {
+                        case .success(let secondBeaconInfoEventId):
+                            // Wait for room summary update and check if beacon info are populated in the room summary
+                            
+                            var firstUpdateListener: Any?
+                            
+                            firstUpdateListener = bobSession.aggregations.beaconAggregations.listenToBeaconInfoSummaryUpdateInRoom(withId: initialRoom.roomId) { beaconInfoSummary in
+                                
+                                guard beaconInfoSummary.deviceId != nil else {
+                                    // Device id not yet set
+                                    return
+                                }
+                                
+                                guard beaconInfoSummary.id == secondBeaconInfoEventId else {
+                                    return
+                                }
+                                
+                                if let firstUpdateListener = firstUpdateListener {
+                                    bobSession.aggregations.removeListener(firstUpdateListener)
+                                }
+                                
+                                let beaconInfoSummaries = locationService.getBeaconInfoSummaries(inRoomWithId: roomId)
+                                
+                                XCTAssertEqual(beaconInfoSummaries.count, 2)
+                                
+                                // We should have only one live beacon info in the room
+                                let liveBeaconInfoSummaries = locationService.getLiveBeaconInfoSummaries(inRoomWithId: roomId)
+                                
+                                XCTAssertEqual(liveBeaconInfoSummaries.count, 1)
+                                
+                                // Check first beacon info summary from Alice
+                                let firstBeaconInfoSummary = bobSession.aggregations.beaconAggregations.beaconInfoSummary(for: firstBeaconInfoEventId, inRoomWithId: roomId)
+                                
+                                XCTAssertNotNil(firstBeaconInfoSummary)
+                                
+                                if let firstBeaconInfoSummary = firstBeaconInfoSummary {
+                                    XCTAssertFalse(firstBeaconInfoSummary.beaconInfo.isLive)
+                                }
+                                
+                                // Check last beacon info summary from Alice
+                                let secondBeaconInfoSummary = bobSession.aggregations.beaconAggregations.beaconInfoSummary(for: secondBeaconInfoEventId, inRoomWithId: roomId)
+                                
+                                XCTAssertNotNil(secondBeaconInfoSummary)
+                                
+                                if let secondBeaconInfoSummary = secondBeaconInfoSummary {
+                                    XCTAssertTrue(secondBeaconInfoSummary.beaconInfo.isLive)
+                                }
+                                
+                                expectation.fulfill()
+                            }
+                        case .failure(let error):
+                            XCTFail("Start location sharing fails with error: \(error)")
+                            expectation.fulfill()
+                        }
+                    }
+                case .failure(let error):
+                    XCTFail("Start location sharing fails with error: \(error)")
+                    expectation.fulfill()
+                }
+            }
+        }
+    }
+    
+    /// Test: Expect to have only one live beacon info shared in the room after starting location sharing twice by another user
+    /// - Create a Bob and Alice session
+    /// - Create an initial room
+    /// - Alice start location sharing once
+    /// - Alice start location sharing twice
+    /// - Expect Bob to see only one beacon info summary from Alice available in the room
+    func testStartingLiveLocationSharingTwiceOtherUser() {
+                
+        let aliceStore = MXMemoryStore()
+        let bobStore = MXMemoryStore()
+        testData.doTestWithAliceAndBob(inARoom: self, aliceStore: aliceStore, bobStore: bobStore) { (aliceSession, bobSession, roomId, expectation) in
+        
+            guard let aliceSession = aliceSession,
+                  let bobSession = bobSession,
+                  let roomId = roomId,
+                  let expectation = expectation else {
+                XCTFail("Failed to setup test conditions")                
+                return
+            }
+            
+            guard let room = bobSession.room(withRoomId: roomId) else {
+                XCTFail("Failed to retrieve room")
+                expectation.fulfill()
+                return
+            }
+            
+            let expectedBeaconInfoDescription = "Live location description"
+            let expectedBeaconInfoTimeout: TimeInterval = 600000
+            let expectedPowerLevel = 50
+            
+            // Allow Alice to send beacon info state event
+            room.setPowerLevel(ofUser: aliceSession.myUserId, powerLevel: expectedPowerLevel, completion: { response in
+                
+                switch response {
+                case .success:
+                    
+                    guard let aliceRoom = aliceSession.room(withRoomId: roomId) else {
+                        XCTFail("Failed to retrieve room")
+                        expectation.fulfill()
+                        return
+                    }
+                    
+                    aliceRoom.liveTimeline { liveTimeline in
+                        
+                        guard let liveTimeline = liveTimeline else {
+                            XCTFail("liveTimeline is nil")
+                            expectation.fulfill()
+                            return
+                        }
+                        
+                        _ = liveTimeline.listenToEvents([.roomPowerLevels], { event, direction, state in
+                            
+                            XCTAssertEqual(liveTimeline.state?.powerLevels.powerLevelOfUser(withUserID: aliceSession.myUserId), expectedPowerLevel);
+                            
+                            let aliceLocationService: MXLocationService = aliceSession.locationService
+                            
+                            // Alice start location sharing once
+                            aliceLocationService.startUserLocationSharing(withRoomId: roomId, description: expectedBeaconInfoDescription, timeout: expectedBeaconInfoTimeout) { response in
+                                
+                                switch response {
+                                case .success(let firstBeaconInfoEventId):
+                                    
+                                    // Alice start location sharing twice
+                                    aliceLocationService.startUserLocationSharing(withRoomId: roomId, description: expectedBeaconInfoDescription, timeout: expectedBeaconInfoTimeout) { response in
+                                        
+                                        switch response {
+                                        case .success(let secondBeaconInfoEventId):
+                                            // Wait for room summary update and check if beacon info are populated in the room summary
+                                            
+                                            var firstUpdateListener: Any?
+                                            
+                                            firstUpdateListener = bobSession.aggregations.beaconAggregations.listenToBeaconInfoSummaryUpdateInRoom(withId: roomId) { beaconInfoSummary in
+                                                
+                                                guard beaconInfoSummary.id == secondBeaconInfoEventId else {
+                                                    return
+                                                }
+                                                
+                                                if let firstUpdateListener = firstUpdateListener {
+                                                    bobSession.aggregations.removeListener(firstUpdateListener)
+                                                }
+                                                
+                                                let bobLocationService: MXLocationService = bobSession.locationService
+                                                
+                                                let beaconInfoSummaries = bobLocationService.getBeaconInfoSummaries(inRoomWithId: roomId)
+                                                
+                                                XCTAssertEqual(beaconInfoSummaries.count, 2)
+
+                                                let liveBeaconInfoSummaries = bobLocationService.getLiveBeaconInfoSummaries(inRoomWithId: roomId)
+                                                
+                                                // Bob should see only one live beacon info summary in the room from Alice
+                                                XCTAssertEqual(liveBeaconInfoSummaries.count, 1)
+                                                
+                                                
+                                                // Check first beacon info summary from Alice
+                                                let firstBeaconInfoSummary = bobSession.aggregations.beaconAggregations.beaconInfoSummary(for: firstBeaconInfoEventId, inRoomWithId: roomId)
+                                                
+                                                XCTAssertNotNil(firstBeaconInfoSummary)
+                                                
+                                                if let firstBeaconInfoSummary = firstBeaconInfoSummary {
+                                                    XCTAssertFalse(firstBeaconInfoSummary.beaconInfo.isLive)
+                                                }
+                                                
+                                                // Check last beacon info summary from Alice
+                                                let secondBeaconInfoSummary = bobSession.aggregations.beaconAggregations.beaconInfoSummary(for: secondBeaconInfoEventId, inRoomWithId: roomId)
+                                                
+                                                XCTAssertNotNil(secondBeaconInfoSummary)
+                                                
+                                                if let secondBeaconInfoSummary = secondBeaconInfoSummary {
+                                                    XCTAssertTrue(secondBeaconInfoSummary.beaconInfo.isLive)
+                                                }
+                                                
+                                                expectation.fulfill()
+                                            }
+                                        case .failure(let error):
+                                            XCTFail("Start location sharing fails with error: \(error)")
+                                            expectation.fulfill()
+                                        }
+                                    }
+                                case .failure(let error):
+                                    XCTFail("Start location sharing fails with error: \(error)")
+                                    expectation.fulfill()
+                                }
+                            }
+                            
+                        })
+                    }
+                case .failure(let error):
+                    XCTFail("Set power level fails with error: \(error)")
+                    expectation.fulfill()
+                }
+            })
+        }
+    }
     
     // MARK: - Private
     

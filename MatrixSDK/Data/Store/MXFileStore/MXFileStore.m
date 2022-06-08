@@ -29,7 +29,7 @@
 #import "MatrixSDKSwiftHeader.h"
 #import "MXFileRoomSummaryStore.h"
 
-static NSUInteger const kMXFileVersion = 79;
+static NSUInteger const kMXFileVersion = 80;
 
 static NSString *const kMXFileStoreFolder = @"MXFileStore";
 static NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
@@ -568,7 +568,12 @@ static NSUInteger preloadOptions;
 
     if (!stateEvents)
     {
-        stateEvents =[NSKeyedUnarchiver unarchiveObjectWithFile:[self stateFileForRoom:roomId forBackup:NO]];
+        NSString *file = [self stateFileForRoom:roomId forBackup:NO];
+        stateEvents = [self loadRootObjectWithoutSecureCodingFromFile:file];
+        if (!stateEvents || !stateEvents.count)
+        {
+            MXLogWarning(@"[MXFileStore] stateOfRoom: no state was loaded for room %@", roomId);
+        }
 
         if (NO == [NSThread isMainThread])
         {
@@ -669,6 +674,14 @@ static NSUInteger preloadOptions;
 - (BOOL)areAllIdentityServerTermsAgreed
 {
     return metaData.areAllIdentityServerTermsAgreed;
+}
+
+- (NSArray<NSString *> *)roomIds
+{
+    NSArray<NSString *> *roomIDs = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:self->storeRoomsPath error:nil];
+    NSMutableArray<NSString *> *result = [roomIDs mutableCopy];
+    [result removeObjectsInArray:roomsToCommitForDeletion];
+    return result;
 }
 
 #pragma mark - Matrix filters
@@ -1377,6 +1390,8 @@ static NSUInteger preloadOptions;
             for (NSString *roomId in roomsToCommit)
             {
                 NSArray *stateEvents = roomsToCommit[roomId];
+                
+                MXLogDebug(@"[MXFileStore commit] saveRoomsState: saving %lu events for room %@", stateEvents.count, roomId);
 
                 NSString *file = [self stateFileForRoom:roomId forBackup:NO];
                 NSString *backupFile = [self stateFileForRoom:roomId forBackup:YES];
@@ -1390,7 +1405,7 @@ static NSUInteger preloadOptions;
 
                 // Store new data
                 [self checkFolderExistenceForRoom:roomId forBackup:NO];
-                [NSKeyedArchiver archiveRootObject:stateEvents toFile:file];
+                [self saveObject:stateEvents toFile:file];
             }
 #if DEBUG
             MXLogDebug(@"[MXFileStore commit] lasted %.0fms for %tu rooms state", [[NSDate date] timeIntervalSinceDate:startDate] * 1000, roomsToCommit.count);
@@ -1582,11 +1597,18 @@ static NSUInteger preloadOptions;
 #pragma mark - MXFileStore metadata
 - (void)loadMetaData
 {
+    [self loadMetaData:YES];
+}
+
+- (void)loadMetaData:(BOOL)enableClearData
+{
+    MXLogDebug(@"[MXFileStore] loadMetaData: enableClearData: %@", enableClearData ? @"YES" : @"NO");
+
     NSString *metaDataFile = [storePath stringByAppendingPathComponent:kMXFileStoreMedaDataFile];
     
     @try
     {
-        metaData = [NSKeyedUnarchiver unarchiveObjectWithFile:metaDataFile];
+        metaData = [self loadRootObjectWithoutSecureCodingFromFile:metaDataFile];
     }
     @catch (NSException *exception)
     {
@@ -1608,7 +1630,10 @@ static NSUInteger preloadOptions;
     {
         MXLogDebug(@"[MXFileStore] loadMetaData: event stream token is missing");
         [self logFiles];
-        [self deleteAllData];
+        if (enableClearData)
+        {
+            [self deleteAllData];
+        }
     }
 }
 
@@ -1650,7 +1675,7 @@ static NSUInteger preloadOptions;
             self->backupEventStreamToken = self->metaData.eventStreamToken;
 
             // Store new data
-            [NSKeyedArchiver archiveRootObject:self->metaData toFile:file];
+            [self saveObject:self->metaData toFile:file];
 
 #if DEBUG
             MXLogDebug(@"[MXFileStore commit] lasted %.0fms for metadata", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
@@ -2185,6 +2210,9 @@ static NSUInteger preloadOptions;
 
 #pragma mark - Tools
 
+/**
+ Save an object to file using a newer `NSKeyedArchiver` API if available, and log any potential errors
+ */
 - (void)saveObject:(id)object toFile:(NSString *)file
 {
     if (@available(iOS 11.0, *))
@@ -2193,7 +2221,7 @@ static NSUInteger preloadOptions;
         NSData *data = [NSKeyedArchiver archivedDataWithRootObject:object requiringSecureCoding:NO error:&error];
         if (error)
         {
-            MXLogDebug(@"[MXFileStore] Failed archiving root object with error: '%@'", error.localizedDescription);
+            MXLogFailure(@"[MXFileStore] Failed archiving root object with error: '%@'", error.debugDescription);
             return;
         }
         
@@ -2204,7 +2232,7 @@ static NSUInteger preloadOptions;
         }
         else
         {
-            MXLogDebug(@"[MXFileStore] Failed saving data with error: '%@'", error.localizedDescription);
+            MXLogFailure(@"[MXFileStore] Failed saving data with error: '%@'", error.debugDescription);
         }
     }
     else
@@ -2213,10 +2241,18 @@ static NSUInteger preloadOptions;
     }
 }
 
+/**
+ Load an object from file using a newer `NSKeyedUnarchiver` API if available, and log any potential errors
+ 
+ @discussion
+ Newer `NSKeyedUnarchiver` API sets `requiresSecureCoding` to `YES` by default, meaning that the caller
+ needs to provide a set of classes expected to be decoded. All of these classes must implement `NSSecureCoding`.
+ */
 - (id)loadObjectOfClasses:(NSSet<Class> *)classes fromFile:(NSString *)file
 {
     if (@available(iOS 11.0, *))
     {
+        NSError *error;
         NSData *data = [NSData dataWithContentsOfFile:file];
         if (!data)
         {
@@ -2224,16 +2260,59 @@ static NSUInteger preloadOptions;
             return nil;
         }
         
-        NSError *error;
         id object = [NSKeyedUnarchiver unarchivedObjectOfClasses:classes fromData:data error:&error];
-        if (object)
+        if (object && !error)
         {
-            MXLogDebug(@"[MXFileStore] Loaded object from class");
             return object;
         }
         else
         {
-            MXLogDebug(@"[MXFileStore] Failed loading object from class with error: '%@'", error.localizedDescription);
+            MXLogFailure(@"[MXFileStore] Failed loading object from class with error: '%@'", error.debugDescription);
+            return nil;
+        }
+    }
+    else
+    {
+        return [NSKeyedUnarchiver unarchiveObjectWithFile:file];
+    }
+}
+
+/**
+ Load an object from file using a newer `NSKeyedUnarchiver` API if available, and log any potential errors
+ 
+ @discussion
+ An equivalent of `loadObjectOfClasses` but setting `requiresSecureCoding` to NO. Because of this the caller
+ does not have to specify classes to be decoded, and can archive / unarchive classes that do not implement
+ `NSSecureCoding` protocol.
+ */
+- (id)loadRootObjectWithoutSecureCodingFromFile:(NSString *)file
+{
+    if (@available(iOS 11.0, *))
+    {
+        NSError *error;
+        NSData *data = [NSData dataWithContentsOfFile:file];
+        if (!data)
+        {
+            MXLogDebug(@"[MXFileStore] No data to load at file %@", file);
+            return nil;
+        }
+        NSKeyedUnarchiver *unarchiver = [[NSKeyedUnarchiver alloc] initForReadingFromData:data error:&error];
+        if (error && !unarchiver)
+        {
+            MXLogFailure(@"[MXFileStore] Cannot create unarchiver with error: '%@'", error.debugDescription);
+            return nil;
+        }
+        unarchiver.requiresSecureCoding = NO;
+        
+        // Seems to be an implementation detaul
+        id object = [unarchiver decodeTopLevelObjectForKey:NSKeyedArchiveRootObjectKey error:&error];
+        if (object && !error)
+        {
+            return object;
+        }
+        else
+        {
+            MXLogFailure(@"[MXFileStore] Failed loading object from class with error: '%@'", error.debugDescription);
             return nil;
         }
     }

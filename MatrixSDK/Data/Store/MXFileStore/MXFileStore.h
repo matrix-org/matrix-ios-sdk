@@ -166,9 +166,16 @@ typedef NS_OPTIONS(NSInteger, MXFileStorePreloadOptions)
 #pragma mark - Sync API (Do not use them on the main thread)
 
 /**
- Load metadata for the store. Sets eventStreamToken.
+ Calls `loadMetaData:` with `enableClearData` as YES.
  */
 - (void)loadMetaData;
+
+/**
+ Load metadata for the store. Sets eventStreamToken.
+
+ @param enableClearData flag to enable clearing data in case of eventStreamToken is missing.
+ */
+- (void)loadMetaData:(BOOL)enableClearData;
 
 /**
  Get the room store for a given room.

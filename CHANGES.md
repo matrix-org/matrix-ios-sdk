@@ -1,3 +1,44 @@
+## Changes in 0.23.8 (2022-06-03)
+
+🐛 Bugfixes
+
+- Room state: Reload room state if detected empty on disk ([#1483](https://github.com/matrix-org/matrix-ios-sdk/pull/1483))
+- Remove unwanted parts from replies new_content body/formatted_body ([#3517](https://github.com/vector-im/element-ios/issues/3517))
+- MXBackgroundStore: Avoid clearing file store if event stream token is missing. ([#5924](https://github.com/vector-im/element-ios/issues/5924))
+- MXRestClient: limit the query length to 2048 for joinRoom ([#6224](https://github.com/vector-im/element-ios/issues/6224))
+- Bump realm to 10.27.0 to fix crypto performance issue. ([#6239](https://github.com/vector-im/element-ios/issues/6239))
+
+🚧 In development 🚧
+
+- Location sharing: Authorize only one live beacon info per member and per room. ([#6100](https://github.com/vector-im/element-ios/issues/6100))
+
+Others
+
+- Crypto: Add more logs when encrypting messages ([#1476](https://github.com/matrix-org/matrix-ios-sdk/pull/1476))
+
+
+## Changes in 0.23.7 (2022-05-31)
+
+🐛 Bugfixes
+
+- MXSession: Recreate room summaries when detected missing. ([#5924](https://github.com/vector-im/element-ios/issues/5924))
+- Fixed crashes on invalid casting of MXUser to MXMyUser causing unrecognized selectors on the mxSession property. ([#6187](https://github.com/vector-im/element-ios/issues/6187))
+- MXCoreDataRoomSummaryStore: Make removing a room summary synchronous. ([#6218](https://github.com/vector-im/element-ios/issues/6218))
+
+⚠️ API Changes
+
+- MXTools: generateTransactionId no longer returns an optional in Swift. ([#1477](https://github.com/matrix-org/matrix-ios-sdk/pull/1477))
+
+🚧 In development 🚧
+
+- Location sharing: Persist beacon info summaries to disk. ([#6199](https://github.com/vector-im/element-ios/issues/6199))
+
+Others
+
+- MXFileStore: Add extra logs when saving and loading room state ([#1478](https://github.com/matrix-org/matrix-ios-sdk/pull/1478))
+- MXBackgroundSyncServiceTests: Add tests for outdated gappy syncs. ([#6142](https://github.com/vector-im/element-ios/issues/6142))
+
+
 ## Changes in 0.23.6 (2022-05-19)
 
 No significant changes.

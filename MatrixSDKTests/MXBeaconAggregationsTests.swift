@@ -83,29 +83,41 @@ class MXBeaconAggregationsTests: XCTestCase {
                 switch response {
                 case .success(let eventId):
                     beaconInfoEventId = eventId
+                    
+                    var firstUpdateListener: Any?
+                    
+                    firstUpdateListener = bobSession.aggregations.beaconAggregations.listenToBeaconInfoSummaryUpdateInRoom(withId: initialRoom.roomId) { beaconInfoSummary in
+                        
+                        guard beaconInfoSummary.deviceId != nil else {
+                            // Device id not yet set
+                            return
+                        }
+                        
+                        if let firstUpdateListener = firstUpdateListener {
+                            bobSession.aggregations.removeListener(firstUpdateListener)
+                        }
+                        
+                        XCTAssertEqual(beaconInfoSummary.id, beaconInfoEventId)
+                                                
+                        let beaconInfo = beaconInfoSummary.beaconInfo
+                        
+                        XCTAssertEqual(beaconInfo.desc, expectedBeaconInfoDescription)
+                        XCTAssertEqual(beaconInfo.timeout, UInt64(expectedBeaconInfoTimeout))
+                        XCTAssertEqual(beaconInfo.isLive, expectedBeaconInfoIsLive)
+                        
+                        if let beaconInfoEventId = beaconInfoEventId {
+                            let fetchedBeaconInfoSummary = bobSession.aggregations.beaconAggregations.beaconInfoSummary(for: beaconInfoEventId, inRoomWithId: initialRoom.roomId)
+                            
+                            XCTAssertNotNil(fetchedBeaconInfoSummary)
+                        }
+                        
+                        expectation.fulfill()
+                    }
+                    
                 case .failure(let error):
                     XCTFail("Start location sharing fails with error: \(error)")
                     expectation.fulfill()
                 }
-            }
-            
-            _ = bobSession.aggregations.beaconAggregations.listenToBeaconInfoSummaryUpdateInRoom(withId: initialRoom.roomId) { beaconInfoSummary in
-                
-                XCTAssertEqual(beaconInfoSummary.id, beaconInfoEventId)
-                                        
-                let beaconInfo = beaconInfoSummary.beaconInfo
-                
-                XCTAssertEqual(beaconInfo.desc, expectedBeaconInfoDescription)
-                XCTAssertEqual(beaconInfo.timeout, UInt64(expectedBeaconInfoTimeout))
-                XCTAssertEqual(beaconInfo.isLive, expectedBeaconInfoIsLive)
-                
-                if let beaconInfoEventId = beaconInfoEventId {
-                    let fetchedBeaconInfoSummary = bobSession.aggregations.beaconAggregations.beaconInfoSummary(for: beaconInfoEventId, inRoomWithId: initialRoom.roomId)
-                    
-                    XCTAssertNotNil(fetchedBeaconInfoSummary)
-                }
-                
-                expectation.fulfill()
             }
         }
     }
@@ -200,6 +212,14 @@ class MXBeaconAggregationsTests: XCTestCase {
         }
     }
     
+    func test() {
+        let timestamp: UInt64 = 1653326016000
+        
+        let timestampInt = Int(timestamp)
+        
+        XCTAssertEqual(timestampInt, 1653326016000)
+    }
+    
     /// Test: Expect beacon info state event live property set to false after user has stopped to share is location
     /// - Create a Bob session
     /// - Create an initial room
@@ -236,9 +256,22 @@ class MXBeaconAggregationsTests: XCTestCase {
                     
                     firstUpdateListener = bobSession.aggregations.beaconAggregations.listenToBeaconInfoSummaryUpdateInRoom(withId: roomId) { beaconInfoSummary in
                         
+                        guard beaconInfoSummary.deviceId != nil else {
+                            // Device id not yet set
+                            return
+                        }
+                        
                         if let firstUpdateListener = firstUpdateListener {
                             bobSession.aggregations.removeListener(firstUpdateListener)
                         }
+                        
+                        
+                        if let beaconInfoEventId = beaconInfoEventId {
+                            let retrievedBeaconInfoSummary = bobSession.aggregations.beaconAggregations.beaconInfoSummary(for: beaconInfoEventId, inRoomWithId: roomId)
+                            XCTAssertNotNil(retrievedBeaconInfoSummary)
+                        }
+                                                
+                        XCTAssertEqual(beaconInfoSummary.id, beaconInfoEventId)
                         
                         locationService.stopUserLocationSharing(withBeaconInfoEventId: eventId, roomId: roomId) { response in
                             

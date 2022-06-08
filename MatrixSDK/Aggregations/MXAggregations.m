@@ -252,8 +252,7 @@
         self.aggregatedReferencesUpdater = [[MXAggregatedReferencesUpdater alloc] initWithMatrixSession:self.mxSession
                                                                                            matrixStore:mxSession.store];
         
-        // TODO: Persist MXBeaconInfoSummary to a file database
-        id<MXBeaconInfoSummaryStoreProtocol> beaconInfoSummaryStore = [MXBeaconInfoSummaryMemoryStore new];
+        id<MXBeaconInfoSummaryStoreProtocol> beaconInfoSummaryStore = [[MXBeaconInfoSummaryRealmStore alloc] initWithSession:self.mxSession];
         
         self.beaconInfoSummaryStore = beaconInfoSummaryStore;
         

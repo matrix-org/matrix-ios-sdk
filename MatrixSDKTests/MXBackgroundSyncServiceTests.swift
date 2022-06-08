@@ -763,6 +763,49 @@ class MXBackgroundSyncServiceTests: XCTestCase {
         }
     }
 
+    // MXBackgroundSyncService must not affect file storage when event stream token is missing
+    // - Alice and Bob are in an encrypted room
+    // - Alice sends a message
+    // - Bob uses the MXBackgroundSyncService to fetch it
+    // -> MXBackgroundSyncService must fail without clearing Bob's file store
+    func testFileStoreEffect() {
+        createStoreScenario(messageCountChunks: [1]) { (aliceSession, bobSession, bobBgSyncService, roomId, eventIdsChunks, expectation) in
+
+            //  clear Bob's store
+            bobSession.store.deleteAllData()
+
+            //  store mock event to Bob's store
+            guard let mockEvent = MXEvent(fromJSON: [
+                "event_id": "mock_event_id",
+                "room_id": "mock_room_id",
+                "type": kMXEventTypeStringRoomMessage,
+                "content": [
+                    kMXMessageTypeKey: kMXMessageTypeText,
+                    kMXMessageBodyKey: "text"
+                ]
+            ]) else {
+                XCTFail("Failed to setup initial conditions")
+                expectation.fulfill()
+                return
+            }
+            bobSession.store.storeEvent(forRoom: mockEvent.roomId,
+                                        event: mockEvent,
+                                        direction: .forwards)
+
+            //  run bg sync service for a random event
+            bobBgSyncService.event(withEventId: "any", inRoom: mockEvent.roomId) { response in
+                switch response {
+                case .success:
+                    XCTFail("Should not success fetching the event")
+                case .failure:
+                    //  check that Bob's store still has the mock event
+                    XCTAssertNotNil(bobSession.store.event(withEventId:mockEvent.eventId,
+                                                           inRoom:mockEvent.roomId), "Bob's store must still have the mock event")
+                    expectation.fulfill()
+                }
+            }
+        }
+    }
     
     // MARK: - Cache tests
     
@@ -1098,6 +1141,142 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                     }
                 }
             })
+        }
+    }
+
+    // Test sync response cache and timeline events with outdated and gappy sync responses.
+    //
+    // - Have Bob background service cache filled with a normal sync response
+    // -> Generate a to-device event from Alice for Bob
+    // -> Mark Bob's data outdated
+    // -> Have a gappy sync for Bob
+    // -> Generate another to-device event from Alice for Bob
+    // -> Have another gappy sync for Bob
+    // -> Mark Bob's data outdated again
+    // -> Bob's cached data must be there after an outdate
+    // - Resume Bob session
+    // -> Sync response cache should persist at least 2 to-device events
+    // -> Sync response cache should have only 10 timeline events (should discard old timeline events and only keep the last one)
+    // - Resume Bob session
+    // -> Room store must be flushed
+    // -> Room pagination token must be stored
+    // -> Room store must contain the last 10 events only
+    // - Make a backwards pagination in the room
+    // -> Timeline should fetch all events without a gap
+    // -> All timeline events should be decrypted
+    // -> The background service cache must be reset after session resume
+    func testStoreWithGappyAndOutdatedSync() {
+        self.createStoreScenario(messageCountChunks: [1]) { aliceSession, bobSession, bobBgSyncService, roomId, eventIdsChunks, expectation in
+            guard let firstEventId = eventIdsChunks.first?.first,
+                let aliceRoom = aliceSession.room(withRoomId: roomId) else {
+                XCTFail("Cannot set up initial test conditions")
+                expectation.fulfill()
+                return
+            }
+
+            let syncResponseStore = MXSyncResponseFileStore(withCredentials: bobSession.credentials)
+            let syncResponseStoreManager = MXSyncResponseStoreManager(syncResponseStore: syncResponseStore)
+
+            self.addToDeviceEventToStore(of: bobBgSyncService, otherSession: aliceSession, roomId: roomId) { responseToDevice in
+                switch responseToDevice {
+                case .success:
+                    syncResponseStoreManager.markDataOutdated()
+
+                    self.fillStore(of: bobBgSyncService, room: aliceRoom, messageCount: Constants.numberOfMessagesForLimitedTest) { _ in
+                        self.addToDeviceEventToStore(of: bobBgSyncService, otherSession: aliceSession, roomId: roomId) { responseToDevice2 in
+                            switch responseToDevice2 {
+                            case .success:
+                                self.fillStore(of: bobBgSyncService, room: aliceRoom, messageCount: Constants.numberOfMessagesForLimitedTest) { _ in
+
+                                    // -> There must be only 1 (merged) cached sync response
+                                    XCTAssertEqual(syncResponseStore.syncResponseIds.count, 1)
+
+                                    guard let firstCachedSyncResponse = syncResponseStoreManager.firstSyncResponse() else {
+                                        XCTFail("Cannot set up initial test conditions")
+                                        expectation.fulfill()
+                                        return
+                                    }
+
+                                    XCTAssertGreaterThanOrEqual(firstCachedSyncResponse.syncResponse.toDevice!.events.count, 2)
+                                    let timelineOld = firstCachedSyncResponse.syncResponse.rooms!.join![roomId]!.timeline
+                                    XCTAssertEqual(timelineOld.events.count, 10)
+                                    XCTAssertTrue(timelineOld.limited)
+                                    XCTAssertNotNil(timelineOld.prevBatch)
+
+                                    syncResponseStoreManager.markDataOutdated()
+
+                                    guard let outdatedCachedSyncResponseId = syncResponseStore.outdatedSyncResponseIds.last,
+                                          let outdatedCachedSyncResponse = try? syncResponseStore.syncResponse(withId: outdatedCachedSyncResponseId) else {
+                                        XCTFail("Cannot set up initial test conditions")
+                                        expectation.fulfill()
+                                        return
+                                    }
+
+                                    //  check that when outdated, data still in the cache
+                                    XCTAssertGreaterThanOrEqual(outdatedCachedSyncResponse.syncResponse.toDevice!.events.count, 2)
+                                    let timelineNew = outdatedCachedSyncResponse.syncResponse.rooms!.join![roomId]!.timeline
+                                    XCTAssertEqual(timelineNew.events.count, 10)
+                                    XCTAssertTrue(timelineNew.limited)
+                                    XCTAssertNotNil(timelineNew.prevBatch)
+
+                                    var roomStoreFlushed = false
+
+                                    NotificationCenter.default.addObserver(forName: .mxRoomDidFlushData, object: nil, queue: .main) { _ in
+                                        roomStoreFlushed = true
+                                    }
+
+                                    bobSession.resume {
+                                        XCTAssertTrue(roomStoreFlushed)
+                                        XCTAssertEqual(timelineNew.prevBatch, bobSession.store!.paginationToken(ofRoom: roomId))
+                                        XCTAssertEqual(bobSession.store!.messagesEnumerator(forRoom: roomId).remaining, 10)
+
+                                        XCTAssertEqual(syncResponseStore.syncResponseIds.count, 0)
+                                        XCTAssertEqual(syncResponseStore.outdatedSyncResponseIds.count, 0)
+
+                                        guard let bobRoom = bobSession.room(withRoomId: roomId) else {
+                                            XCTFail("Cannot set up initial test conditions")
+                                            expectation.fulfill()
+                                            return
+                                        }
+
+                                        bobRoom.liveTimeline { timeline in
+                                            timeline?.resetPagination()
+
+                                            var eventsListened: [MXEvent] = []
+
+                                            _ = timeline?.listenToEvents { event, direction, roomState in
+                                                eventsListened.append(event)
+                                            }
+                                            let numberOfEvents = 2*Constants.numberOfMessagesForLimitedTest + 1
+                                            timeline?.paginate(UInt(numberOfEvents), direction: .backwards, onlyFromStore: false, completion: { response in
+                                                //  check all events fetched
+                                                XCTAssertEqual(eventsListened.count, numberOfEvents)
+                                                XCTAssertTrue(eventsListened.contains(where: { $0.eventId == firstEventId }))
+
+                                                //  check all events decrypted
+                                                for event in eventsListened {
+                                                    if event.isEncrypted && event.clear == nil {
+                                                        XCTFail("Event not decrypted")
+                                                    }
+                                                }
+                                                expectation.fulfill()
+                                            })
+                                        }
+                                    }
+                                }
+                            case .failure(let error):
+                                XCTFail("Cannot set up initial test conditions - error: \(error)")
+                                expectation.fulfill()
+                                return
+                            }
+                        }
+                    }
+                case .failure(let error):
+                    XCTFail("Cannot set up initial test conditions - error: \(error)")
+                    expectation.fulfill()
+                    return
+                }
+            }
         }
     }
     

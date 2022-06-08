@@ -15,8 +15,6 @@
 		02CAD439217DD12F0074700B /* MXContentScanResult.m in Sources */ = {isa = PBXBuildFile; fileRef = 02CAD434217DD12F0074700B /* MXContentScanResult.m */; };
 		02CAD43A217DD12F0074700B /* MXContentScanEncryptedBody.m in Sources */ = {isa = PBXBuildFile; fileRef = 02CAD436217DD12F0074700B /* MXContentScanEncryptedBody.m */; };
 		02CAD43B217DD12F0074700B /* MXContentScanEncryptedBody.h in Headers */ = {isa = PBXBuildFile; fileRef = 02CAD437217DD12F0074700B /* MXContentScanEncryptedBody.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		0696FFB36962606A28BEC38E /* libPods-MatrixSDK-MatrixSDK-iOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B57EF0A39A7649D55CA1208A /* libPods-MatrixSDK-MatrixSDK-iOS.a */; };
-		15C934E526232442DE7A79DE /* libPods-MatrixSDKTests-iOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7290AD6ED063E2E323E9485C /* libPods-MatrixSDKTests-iOS.a */; };
 		180F858427A2AF3000F4E5A5 /* MXWellKnownTileServerConfig.h in Headers */ = {isa = PBXBuildFile; fileRef = 180F858227A2AF3000F4E5A5 /* MXWellKnownTileServerConfig.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		180F858527A2AF3000F4E5A5 /* MXWellKnownTileServerConfig.h in Headers */ = {isa = PBXBuildFile; fileRef = 180F858227A2AF3000F4E5A5 /* MXWellKnownTileServerConfig.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		180F858627A2AF3000F4E5A5 /* MXWellKnownTileServerConfig.m in Sources */ = {isa = PBXBuildFile; fileRef = 180F858327A2AF3000F4E5A5 /* MXWellKnownTileServerConfig.m */; };
@@ -651,6 +649,7 @@
 		32FE41371D0AB7070060835E /* MXEnumConstants.m in Sources */ = {isa = PBXBuildFile; fileRef = 32FE41351D0AB7070060835E /* MXEnumConstants.m */; };
 		32FFB4F0217E146A00C96002 /* MXRecoveryKey.h in Headers */ = {isa = PBXBuildFile; fileRef = 32FFB4EE217E146A00C96002 /* MXRecoveryKey.h */; };
 		32FFB4F1217E146A00C96002 /* MXRecoveryKey.m in Sources */ = {isa = PBXBuildFile; fileRef = 32FFB4EF217E146A00C96002 /* MXRecoveryKey.m */; };
+		3489B40A85709695DC4EB17C /* Pods_MatrixSDK_MatrixSDK_iOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F669A7EDB909643AE4F39F80 /* Pods_MatrixSDK_MatrixSDK_iOS.framework */; };
 		3A0AF06B2705A11400679D1A /* MXSpaceGraphData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A0AF06A2705A11400679D1A /* MXSpaceGraphData.swift */; };
 		3A0AF06C2705A11400679D1A /* MXSpaceGraphData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A0AF06A2705A11400679D1A /* MXSpaceGraphData.swift */; };
 		3A108A3A2580E9C2005EEBE9 /* MXKeyProvider.h in Headers */ = {isa = PBXBuildFile; fileRef = 3A108A392580E9C2005EEBE9 /* MXKeyProvider.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -710,7 +709,6 @@
 		3AD4F232274B922D003F47FE /* MXRoomAliasAvailabilityChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AD4F230274B922C003F47FE /* MXRoomAliasAvailabilityChecker.swift */; };
 		3AF85F9226FC7AE800A9E67B /* MXSpaceNotificationState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AF85F9126FC7AE800A9E67B /* MXSpaceNotificationState.swift */; };
 		3AF85F9326FC7AE800A9E67B /* MXSpaceNotificationState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AF85F9126FC7AE800A9E67B /* MXSpaceNotificationState.swift */; };
-		3B60DCAB92D470B91262BF0C /* libPods-MatrixSDKTests-macOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 15D7F292D95EB58AEE801C4E /* libPods-MatrixSDKTests-macOS.a */; };
 		66398BA527A4085B00466E89 /* MXRefreshResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = 66398BA427A4085B00466E89 /* MXRefreshResponse.m */; };
 		66398BA627A4085B00466E89 /* MXRefreshResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = 66398BA427A4085B00466E89 /* MXRefreshResponse.m */; };
 		66836AB727CFA17200515780 /* MXEventStreamService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66836AB527CFA17200515780 /* MXEventStreamService.swift */; };
@@ -744,7 +742,7 @@
 		92634B831EF2E3C400DB9F60 /* MXCallKitConfiguration.m in Sources */ = {isa = PBXBuildFile; fileRef = 92634B811EF2E3C400DB9F60 /* MXCallKitConfiguration.m */; };
 		9274AFE81EE580240009BEB6 /* MXCallKitAdapter.h in Headers */ = {isa = PBXBuildFile; fileRef = 9274AFE61EE580240009BEB6 /* MXCallKitAdapter.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		9274AFE91EE580240009BEB6 /* MXCallKitAdapter.m in Sources */ = {isa = PBXBuildFile; fileRef = 9274AFE71EE580240009BEB6 /* MXCallKitAdapter.m */; };
-		9CC8EFC1457B94FB58DFF1F7 /* libPods-MatrixSDK-MatrixSDK-macOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FA84A2BE7767F3645CAEC2AF /* libPods-MatrixSDK-MatrixSDK-macOS.a */; };
+		9D048036EF67C9F68CBB699D /* Pods_MatrixSDKTests_iOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6B65C8F8759926F01C0453AA /* Pods_MatrixSDKTests_iOS.framework */; };
 		A780624E27B2CE74005780C0 /* FileManager+Backup.swift in Sources */ = {isa = PBXBuildFile; fileRef = A780624C27B2CE74005780C0 /* FileManager+Backup.swift */; };
 		A780624F27B2CE74005780C0 /* FileManager+Backup.swift in Sources */ = {isa = PBXBuildFile; fileRef = A780624C27B2CE74005780C0 /* FileManager+Backup.swift */; };
 		A780625027B2CE74005780C0 /* FileManager+AppGroupContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A780624D27B2CE74005780C0 /* FileManager+AppGroupContainer.swift */; };
@@ -791,6 +789,8 @@
 		B135066F27EA44C800BD3276 /* MXLocationServiceError.swift in Sources */ = {isa = PBXBuildFile; fileRef = B135066D27EA44C800BD3276 /* MXLocationServiceError.swift */; };
 		B135067427EB201E00BD3276 /* MXLocationServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B135067327EB201E00BD3276 /* MXLocationServiceTests.swift */; };
 		B135067527EB201E00BD3276 /* MXLocationServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B135067327EB201E00BD3276 /* MXLocationServiceTests.swift */; };
+		B141DF0E283CDD180023867A /* Realm+MatrixSDK.swift in Sources */ = {isa = PBXBuildFile; fileRef = B141DF0D283CDD180023867A /* Realm+MatrixSDK.swift */; };
+		B141DF0F283CDD180023867A /* Realm+MatrixSDK.swift in Sources */ = {isa = PBXBuildFile; fileRef = B141DF0D283CDD180023867A /* Realm+MatrixSDK.swift */; };
 		B1432B51282AB29A00737CA6 /* MXBeaconInfoSummaryAllRoomListener.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1432B4F282AB29A00737CA6 /* MXBeaconInfoSummaryAllRoomListener.swift */; };
 		B1432B52282AB29A00737CA6 /* MXBeaconInfoSummaryAllRoomListener.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1432B4F282AB29A00737CA6 /* MXBeaconInfoSummaryAllRoomListener.swift */; };
 		B1432B53282AB29A00737CA6 /* MXBeaconInfoSummaryPerRoomListener.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1432B50282AB29A00737CA6 /* MXBeaconInfoSummaryPerRoomListener.swift */; };
@@ -1239,6 +1239,16 @@
 		B165B81225C3307E003CF7F7 /* MXLoginSSOIdentityProviderBrand.h in Headers */ = {isa = PBXBuildFile; fileRef = B165B81025C3307E003CF7F7 /* MXLoginSSOIdentityProviderBrand.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B1660F1C260A20B900C3AA12 /* MXSpaceServiceTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1660F1B260A20B900C3AA12 /* MXSpaceServiceTest.swift */; };
 		B1660F1D260A20B900C3AA12 /* MXSpaceServiceTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1660F1B260A20B900C3AA12 /* MXSpaceServiceTest.swift */; };
+		B16C2447283AA85E00F5D1FE /* RLMSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = B16C2446283AA85E00F5D1FE /* RLMSupport.swift */; };
+		B16C2448283AA85E00F5D1FE /* RLMSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = B16C2446283AA85E00F5D1FE /* RLMSupport.swift */; };
+		B16C244F283AB05700F5D1FE /* MXRealmBeacon.swift in Sources */ = {isa = PBXBuildFile; fileRef = B16C244E283AB05700F5D1FE /* MXRealmBeacon.swift */; };
+		B16C2450283AB05700F5D1FE /* MXRealmBeacon.swift in Sources */ = {isa = PBXBuildFile; fileRef = B16C244E283AB05700F5D1FE /* MXRealmBeacon.swift */; };
+		B16C2452283AB08E00F5D1FE /* MXRealmBeaconInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = B16C2451283AB08E00F5D1FE /* MXRealmBeaconInfo.swift */; };
+		B16C2453283AB08E00F5D1FE /* MXRealmBeaconInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = B16C2451283AB08E00F5D1FE /* MXRealmBeaconInfo.swift */; };
+		B16C2455283AB0DE00F5D1FE /* MXRealmBeaconMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = B16C2454283AB0DE00F5D1FE /* MXRealmBeaconMapper.swift */; };
+		B16C2456283AB0DE00F5D1FE /* MXRealmBeaconMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = B16C2454283AB0DE00F5D1FE /* MXRealmBeaconMapper.swift */; };
+		B16C2458283AB10B00F5D1FE /* MXRealmBeaconInfoSummary.swift in Sources */ = {isa = PBXBuildFile; fileRef = B16C2457283AB10B00F5D1FE /* MXRealmBeaconInfoSummary.swift */; };
+		B16C2459283AB10B00F5D1FE /* MXRealmBeaconInfoSummary.swift in Sources */ = {isa = PBXBuildFile; fileRef = B16C2457283AB10B00F5D1FE /* MXRealmBeaconInfoSummary.swift */; };
 		B16C56E2261D0A9D00604765 /* MXSpaceChildInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = B16C56E1261D0A9D00604765 /* MXSpaceChildInfo.swift */; };
 		B16C56E3261D0A9D00604765 /* MXSpaceChildInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = B16C56E1261D0A9D00604765 /* MXSpaceChildInfo.swift */; };
 		B16F35A225F916A00029AE98 /* MXRoomTypeMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = B16F35A125F9169F0029AE98 /* MXRoomTypeMapper.swift */; };
@@ -1270,6 +1280,8 @@
 		B18B0E6725FBDC3000E32151 /* MXSpace.swift in Sources */ = {isa = PBXBuildFile; fileRef = B18B0E6625FBDC2F00E32151 /* MXSpace.swift */; };
 		B18B0E6825FBDC3000E32151 /* MXSpace.swift in Sources */ = {isa = PBXBuildFile; fileRef = B18B0E6625FBDC2F00E32151 /* MXSpace.swift */; };
 		B18D23F727ECF199004C4277 /* MXLocationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B135065827E8C75D00BD3276 /* MXLocationService.swift */; };
+		B190AC812833FA8900D6F0C4 /* MXBeaconInfoSummaryRealmStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B190AC802833FA8900D6F0C4 /* MXBeaconInfoSummaryRealmStore.swift */; };
+		B190AC822833FA8900D6F0C4 /* MXBeaconInfoSummaryRealmStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B190AC802833FA8900D6F0C4 /* MXBeaconInfoSummaryRealmStore.swift */; };
 		B19A309C240424BD00FB6F35 /* MXQRCodeTransaction.h in Headers */ = {isa = PBXBuildFile; fileRef = B19A3099240424BD00FB6F35 /* MXQRCodeTransaction.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B19A309D240424BD00FB6F35 /* MXQRCodeTransaction.h in Headers */ = {isa = PBXBuildFile; fileRef = B19A3099240424BD00FB6F35 /* MXQRCodeTransaction.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B19A309E240424BD00FB6F35 /* MXQRCodeTransaction_Private.h in Headers */ = {isa = PBXBuildFile; fileRef = B19A309A240424BD00FB6F35 /* MXQRCodeTransaction_Private.h */; };
@@ -1322,6 +1334,8 @@
 		B1A0270126162110001AADFF /* MXSpaceChildrenResponse.h in Headers */ = {isa = PBXBuildFile; fileRef = B1A026FE26162110001AADFF /* MXSpaceChildrenResponse.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B1A0270226162110001AADFF /* MXSpaceChildrenResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = B1A026FF26162110001AADFF /* MXSpaceChildrenResponse.m */; };
 		B1A0270326162110001AADFF /* MXSpaceChildrenResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = B1A026FF26162110001AADFF /* MXSpaceChildrenResponse.m */; };
+		B1B44319283D00CA00BB26F4 /* MXMegolmDecryptionUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1B44318283D00CA00BB26F4 /* MXMegolmDecryptionUnitTests.swift */; };
+		B1B4431A283D00CA00BB26F4 /* MXMegolmDecryptionUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1B44318283D00CA00BB26F4 /* MXMegolmDecryptionUnitTests.swift */; };
 		B1C854EE25E7B497005867D0 /* MXRoomType.h in Headers */ = {isa = PBXBuildFile; fileRef = B1C854ED25E7B492005867D0 /* MXRoomType.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B1C854EF25E7B498005867D0 /* MXRoomType.h in Headers */ = {isa = PBXBuildFile; fileRef = B1C854ED25E7B492005867D0 /* MXRoomType.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B1DDC9D62418098200D208E3 /* MXIncomingSASTransaction_Private.h in Headers */ = {isa = PBXBuildFile; fileRef = B1DDC9D52418098200D208E3 /* MXIncomingSASTransaction_Private.h */; };
@@ -1390,8 +1404,8 @@
 		B1EE98DA280723BE00AB63F0 /* MXBeaconInfoSummary.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1EE98D8280723BE00AB63F0 /* MXBeaconInfoSummary.swift */; };
 		B1EE98DC280865A200AB63F0 /* MXBeaconAggregations.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1EE98DB280865A200AB63F0 /* MXBeaconAggregations.swift */; };
 		B1EE98DD280865A200AB63F0 /* MXBeaconAggregations.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1EE98DB280865A200AB63F0 /* MXBeaconAggregations.swift */; };
-		B1F04B102811E7B600103EBE /* MXBeaconInfoSummaryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1F04B0F2811E7B600103EBE /* MXBeaconInfoSummaryStore.swift */; };
-		B1F04B112811E7B600103EBE /* MXBeaconInfoSummaryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1F04B0F2811E7B600103EBE /* MXBeaconInfoSummaryStore.swift */; };
+		B1F04B102811E7B600103EBE /* MXBeaconInfoSummaryMemoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1F04B0F2811E7B600103EBE /* MXBeaconInfoSummaryMemoryStore.swift */; };
+		B1F04B112811E7B600103EBE /* MXBeaconInfoSummaryMemoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1F04B0F2811E7B600103EBE /* MXBeaconInfoSummaryMemoryStore.swift */; };
 		B1F04B132811E9D300103EBE /* MXBeaconInfoSummaryStoreProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1F04B122811E9D300103EBE /* MXBeaconInfoSummaryStoreProtocol.swift */; };
 		B1F04B142811E9D300103EBE /* MXBeaconInfoSummaryStoreProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1F04B122811E9D300103EBE /* MXBeaconInfoSummaryStoreProtocol.swift */; };
 		B1F04B162811EFF700103EBE /* MXBeaconAggregationsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1F04B152811EFF700103EBE /* MXBeaconAggregationsTests.swift */; };
@@ -1418,6 +1432,8 @@
 		C6F9358A1E5B3BE600FC34BF /* MXEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6F935861E5B3BE600FC34BF /* MXEvent.swift */; };
 		C6F9358B1E5B3BE600FC34BF /* MXJSONModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6F935871E5B3BE600FC34BF /* MXJSONModels.swift */; };
 		C6FE1EF01E65C4F7008587E4 /* MXAnalyticsDelegate.h in Headers */ = {isa = PBXBuildFile; fileRef = C6FE1EEF1E65C4F7008587E4 /* MXAnalyticsDelegate.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		E3027C6D988FD215E02CB33A /* Pods_MatrixSDKTests_macOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 101542DD85B938AF4EAF8A94 /* Pods_MatrixSDKTests_macOS.framework */; };
+		E546D7C181017A4043F19887 /* Pods_MatrixSDK_MatrixSDK_macOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E61A2EC65F9822D383157D48 /* Pods_MatrixSDK_MatrixSDK_macOS.framework */; };
 		EC05473425FF8A3C0047ECD7 /* MXVirtualRoomInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = EC05473225FF8A3C0047ECD7 /* MXVirtualRoomInfo.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		EC05473525FF8A3C0047ECD7 /* MXVirtualRoomInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = EC05473225FF8A3C0047ECD7 /* MXVirtualRoomInfo.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		EC05473625FF8A3C0047ECD7 /* MXVirtualRoomInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = EC05473325FF8A3C0047ECD7 /* MXVirtualRoomInfo.m */; };
@@ -1775,6 +1791,10 @@
 		ED44F01528180EAB00452A5D /* MXSharedHistoryKeyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED44F01328180EAB00452A5D /* MXSharedHistoryKeyManager.swift */; };
 		ED44F01A28180F4000452A5D /* MXSharedHistoryKeyManagerUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED44F01728180F1C00452A5D /* MXSharedHistoryKeyManagerUnitTests.swift */; };
 		ED44F01B28180F4000452A5D /* MXSharedHistoryKeyManagerUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED44F01728180F1C00452A5D /* MXSharedHistoryKeyManagerUnitTests.swift */; };
+		ED51943928462D130006EEC6 /* MXRoomStateUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED51943828462D130006EEC6 /* MXRoomStateUnitTests.swift */; };
+		ED51943A28462D130006EEC6 /* MXRoomStateUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED51943828462D130006EEC6 /* MXRoomStateUnitTests.swift */; };
+		ED51943C284630090006EEC6 /* MXRestClientStub.m in Sources */ = {isa = PBXBuildFile; fileRef = ED51943B284630090006EEC6 /* MXRestClientStub.m */; };
+		ED51943D284630090006EEC6 /* MXRestClientStub.m in Sources */ = {isa = PBXBuildFile; fileRef = ED51943B284630090006EEC6 /* MXRestClientStub.m */; };
 		ED5AE8C52816C8CF00105072 /* MXCoreDataRoomSummaryStore.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = ED5AE8C22816C8CF00105072 /* MXCoreDataRoomSummaryStore.xcdatamodeld */; };
 		ED5AE8C62816C8CF00105072 /* MXCoreDataRoomSummaryStore.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = ED5AE8C22816C8CF00105072 /* MXCoreDataRoomSummaryStore.xcdatamodeld */; };
 		ED5C95CE2833E85600843D82 /* MXOlmDeviceUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED5C95CD2833E85600843D82 /* MXOlmDeviceUnitTests.swift */; };
@@ -1797,8 +1817,6 @@
 		EDBCF33A281A8D3D00ED5044 /* MXSharedHistoryKeyService.m in Sources */ = {isa = PBXBuildFile; fileRef = EDBCF338281A8D3D00ED5044 /* MXSharedHistoryKeyService.m */; };
 		EDC2A0E628369E740039F3D6 /* CryptoTests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = EDC2A0E528369E740039F3D6 /* CryptoTests.xctestplan */; };
 		EDC2A0E728369E740039F3D6 /* CryptoTests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = EDC2A0E528369E740039F3D6 /* CryptoTests.xctestplan */; };
-		EDCC4E71282EC362002949FF /* MXMegolmDecryptionUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDCC4E70282EC362002949FF /* MXMegolmDecryptionUnitTests.swift */; };
-		EDCC4E72282EC362002949FF /* MXMegolmDecryptionUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDCC4E70282EC362002949FF /* MXMegolmDecryptionUnitTests.swift */; };
 		EDF4678727E3331D00435913 /* EventsEnumeratorDataSourceStub.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDF4678627E3331D00435913 /* EventsEnumeratorDataSourceStub.swift */; };
 		EDF4678827E3331D00435913 /* EventsEnumeratorDataSourceStub.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDF4678627E3331D00435913 /* EventsEnumeratorDataSourceStub.swift */; };
 		F0173EAC1FCF0E8900B5F6A3 /* MXGroup.h in Headers */ = {isa = PBXBuildFile; fileRef = F0173EAA1FCF0E8800B5F6A3 /* MXGroup.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1865,7 +1883,8 @@
 		02CAD434217DD12F0074700B /* MXContentScanResult.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXContentScanResult.m; sourceTree = "<group>"; };
 		02CAD436217DD12F0074700B /* MXContentScanEncryptedBody.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXContentScanEncryptedBody.m; sourceTree = "<group>"; };
 		02CAD437217DD12F0074700B /* MXContentScanEncryptedBody.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXContentScanEncryptedBody.h; sourceTree = "<group>"; };
-		15D7F292D95EB58AEE801C4E /* libPods-MatrixSDKTests-macOS.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-MatrixSDKTests-macOS.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		07A279C2DC9BE095AB590A6E /* Pods-MatrixSDK-MatrixSDK-macOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MatrixSDK-MatrixSDK-macOS.debug.xcconfig"; path = "Target Support Files/Pods-MatrixSDK-MatrixSDK-macOS/Pods-MatrixSDK-MatrixSDK-macOS.debug.xcconfig"; sourceTree = "<group>"; };
+		101542DD85B938AF4EAF8A94 /* Pods_MatrixSDKTests_macOS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_MatrixSDKTests_macOS.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		180F858227A2AF3000F4E5A5 /* MXWellKnownTileServerConfig.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXWellKnownTileServerConfig.h; sourceTree = "<group>"; };
 		180F858327A2AF3000F4E5A5 /* MXWellKnownTileServerConfig.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXWellKnownTileServerConfig.m; sourceTree = "<group>"; };
 		18121F73273E6CED00B68ADF /* MXPollBuilderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXPollBuilderTests.swift; sourceTree = "<group>"; };
@@ -1888,7 +1907,8 @@
 		18C26C4C273C0E9A00805154 /* MXPollAggregatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXPollAggregatorTests.swift; sourceTree = "<group>"; };
 		18C26C51273C16C700805154 /* MXEventContentPollStart.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXEventContentPollStart.h; sourceTree = "<group>"; };
 		18C26C52273C16C700805154 /* MXEventContentPollStart.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXEventContentPollStart.m; sourceTree = "<group>"; };
-		19B6947FC794531CEEDCFA7F /* Pods-MatrixSDKTests-macOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MatrixSDKTests-macOS.release.xcconfig"; path = "Target Support Files/Pods-MatrixSDKTests-macOS/Pods-MatrixSDKTests-macOS.release.xcconfig"; sourceTree = "<group>"; };
+		1D18B4F281A93ADB785B4800 /* Pods-MatrixSDKTests-iOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MatrixSDKTests-iOS.release.xcconfig"; path = "Target Support Files/Pods-MatrixSDKTests-iOS/Pods-MatrixSDKTests-iOS.release.xcconfig"; sourceTree = "<group>"; };
+		2D8EE909E54EE5334E1FD271 /* Pods-MatrixSDKTests-macOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MatrixSDKTests-macOS.release.xcconfig"; path = "Target Support Files/Pods-MatrixSDKTests-macOS/Pods-MatrixSDKTests-macOS.release.xcconfig"; sourceTree = "<group>"; };
 		3209682F26396385005D64ED /* AllTestsWithSanitizers.xctestplan */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = AllTestsWithSanitizers.xctestplan; sourceTree = "<group>"; };
 		3209683026396385005D64ED /* UnitTestsWithSanitizers.xctestplan */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = UnitTestsWithSanitizers.xctestplan; sourceTree = "<group>"; };
 		320A883A217F4E35002EA952 /* MXMegolmBackupCreationInfo.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXMegolmBackupCreationInfo.h; sourceTree = "<group>"; };
@@ -2367,7 +2387,6 @@
 		32FFB4ED217DC0E900C96002 /* MXKeyBackup_Private.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXKeyBackup_Private.h; sourceTree = "<group>"; };
 		32FFB4EE217E146A00C96002 /* MXRecoveryKey.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXRecoveryKey.h; sourceTree = "<group>"; };
 		32FFB4EF217E146A00C96002 /* MXRecoveryKey.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXRecoveryKey.m; sourceTree = "<group>"; };
-		373B3662A92DBDD847639FA2 /* Pods-SDK-MatrixSDKTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SDK-MatrixSDKTests.debug.xcconfig"; path = "Target Support Files/Pods-SDK-MatrixSDKTests/Pods-SDK-MatrixSDKTests.debug.xcconfig"; sourceTree = "<group>"; };
 		3A0AF06A2705A11400679D1A /* MXSpaceGraphData.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MXSpaceGraphData.swift; sourceTree = "<group>"; };
 		3A108A392580E9C2005EEBE9 /* MXKeyProvider.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXKeyProvider.h; sourceTree = "<group>"; };
 		3A108A7C25810C96005EEBE9 /* MXKeyData.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXKeyData.h; sourceTree = "<group>"; };
@@ -2398,21 +2417,17 @@
 		3AC13801264482A100EE1E74 /* MXExportedOlmDevice.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXExportedOlmDevice.m; sourceTree = "<group>"; };
 		3AD4F230274B922C003F47FE /* MXRoomAliasAvailabilityChecker.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MXRoomAliasAvailabilityChecker.swift; sourceTree = "<group>"; };
 		3AF85F9126FC7AE800A9E67B /* MXSpaceNotificationState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXSpaceNotificationState.swift; sourceTree = "<group>"; };
-		492C3485159D57C2116EDCBD /* Pods-SDK-MatrixSDK-macOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SDK-MatrixSDK-macOS.debug.xcconfig"; path = "Target Support Files/Pods-SDK-MatrixSDK-macOS/Pods-SDK-MatrixSDK-macOS.debug.xcconfig"; sourceTree = "<group>"; };
-		6257D945D115DA658F44E8D4 /* Pods-SDK-MatrixSDK-macOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SDK-MatrixSDK-macOS.release.xcconfig"; path = "Target Support Files/Pods-SDK-MatrixSDK-macOS/Pods-SDK-MatrixSDK-macOS.release.xcconfig"; sourceTree = "<group>"; };
+		415A2B7BEAF8D5462A575DAF /* Pods-MatrixSDK-MatrixSDK-iOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MatrixSDK-MatrixSDK-iOS.release.xcconfig"; path = "Target Support Files/Pods-MatrixSDK-MatrixSDK-iOS/Pods-MatrixSDK-MatrixSDK-iOS.release.xcconfig"; sourceTree = "<group>"; };
 		66398BA427A4085B00466E89 /* MXRefreshResponse.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXRefreshResponse.m; sourceTree = "<group>"; };
 		66398BA727A408C000466E89 /* MXRefreshResponse.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXRefreshResponse.h; sourceTree = "<group>"; };
 		66836AB527CFA17200515780 /* MXEventStreamService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MXEventStreamService.swift; sourceTree = "<group>"; };
 		66836AB627CFA17200515780 /* MXLiveEventListener.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MXLiveEventListener.swift; sourceTree = "<group>"; };
 		66AC9D21278CE626002E9B8F /* MXRefreshTokenData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXRefreshTokenData.h; sourceTree = "<group>"; };
 		66AC9D22278CE626002E9B8F /* MXRefreshTokenData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXRefreshTokenData.m; sourceTree = "<group>"; };
-		6869D206EA7C7FB05EAB75B0 /* Pods-MatrixSDKTests-iOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MatrixSDKTests-iOS.release.xcconfig"; path = "Target Support Files/Pods-MatrixSDKTests-iOS/Pods-MatrixSDKTests-iOS.release.xcconfig"; sourceTree = "<group>"; };
+		6B65C8F8759926F01C0453AA /* Pods_MatrixSDKTests_iOS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_MatrixSDKTests_iOS.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		71DE22DC1BC7C51200284153 /* MXReceiptData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXReceiptData.m; sourceTree = "<group>"; };
 		71DE22DD1BC7C51200284153 /* MXReceiptData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXReceiptData.h; sourceTree = "<group>"; };
-		7290AD6ED063E2E323E9485C /* libPods-MatrixSDKTests-iOS.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-MatrixSDKTests-iOS.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		75D89328164DEA38CC1189B7 /* Pods-MatrixSDK-MatrixSDK-macOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MatrixSDK-MatrixSDK-macOS.release.xcconfig"; path = "Target Support Files/Pods-MatrixSDK-MatrixSDK-macOS/Pods-MatrixSDK-MatrixSDK-macOS.release.xcconfig"; sourceTree = "<group>"; };
-		775030056EB357D01FEE2309 /* Pods-SDK-MatrixSDK.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SDK-MatrixSDK.debug.xcconfig"; path = "Target Support Files/Pods-SDK-MatrixSDK/Pods-SDK-MatrixSDK.debug.xcconfig"; sourceTree = "<group>"; };
-		7BF82739B6409F68A1C900FA /* Pods-MatrixSDKTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MatrixSDKTests.debug.xcconfig"; path = "Target Support Files/Pods-MatrixSDKTests/Pods-MatrixSDKTests.debug.xcconfig"; sourceTree = "<group>"; };
+		74B6BABAFA35199D61B18B6F /* Pods-MatrixSDKTests-iOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MatrixSDKTests-iOS.debug.xcconfig"; path = "Target Support Files/Pods-MatrixSDKTests-iOS/Pods-MatrixSDKTests-iOS.debug.xcconfig"; sourceTree = "<group>"; };
 		8EC511022568216B00EC4E5B /* MXTaggedEventInfo.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXTaggedEventInfo.h; sourceTree = "<group>"; };
 		8EC511032568216B00EC4E5B /* MXTaggedEventInfo.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXTaggedEventInfo.m; sourceTree = "<group>"; };
 		8EC51108256822B400EC4E5B /* MXTaggedEvents.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXTaggedEvents.h; sourceTree = "<group>"; };
@@ -2460,6 +2475,7 @@
 		B135066627EA0FFB00BD3276 /* MXBeaconInfoUnitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXBeaconInfoUnitTests.swift; sourceTree = "<group>"; };
 		B135066D27EA44C800BD3276 /* MXLocationServiceError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXLocationServiceError.swift; sourceTree = "<group>"; };
 		B135067327EB201E00BD3276 /* MXLocationServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXLocationServiceTests.swift; sourceTree = "<group>"; };
+		B141DF0D283CDD180023867A /* Realm+MatrixSDK.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Realm+MatrixSDK.swift"; sourceTree = "<group>"; };
 		B1432B4F282AB29A00737CA6 /* MXBeaconInfoSummaryAllRoomListener.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MXBeaconInfoSummaryAllRoomListener.swift; sourceTree = "<group>"; };
 		B1432B50282AB29A00737CA6 /* MXBeaconInfoSummaryPerRoomListener.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MXBeaconInfoSummaryPerRoomListener.swift; sourceTree = "<group>"; };
 		B146D46F21A5939000D8C2C6 /* MXRealmHelper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXRealmHelper.m; sourceTree = "<group>"; };
@@ -2507,6 +2523,11 @@
 		B14EF36B2397E90400758AF0 /* MatrixSDK.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = MatrixSDK.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		B165B81025C3307E003CF7F7 /* MXLoginSSOIdentityProviderBrand.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXLoginSSOIdentityProviderBrand.h; sourceTree = "<group>"; };
 		B1660F1B260A20B900C3AA12 /* MXSpaceServiceTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXSpaceServiceTest.swift; sourceTree = "<group>"; };
+		B16C2446283AA85E00F5D1FE /* RLMSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RLMSupport.swift; sourceTree = "<group>"; };
+		B16C244E283AB05700F5D1FE /* MXRealmBeacon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXRealmBeacon.swift; sourceTree = "<group>"; };
+		B16C2451283AB08E00F5D1FE /* MXRealmBeaconInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXRealmBeaconInfo.swift; sourceTree = "<group>"; };
+		B16C2454283AB0DE00F5D1FE /* MXRealmBeaconMapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXRealmBeaconMapper.swift; sourceTree = "<group>"; };
+		B16C2457283AB10B00F5D1FE /* MXRealmBeaconInfoSummary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXRealmBeaconInfoSummary.swift; sourceTree = "<group>"; };
 		B16C56E1261D0A9D00604765 /* MXSpaceChildInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXSpaceChildInfo.swift; sourceTree = "<group>"; };
 		B16F35A125F9169F0029AE98 /* MXRoomTypeMapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXRoomTypeMapper.swift; sourceTree = "<group>"; };
 		B1710B1E2613D01400A9B429 /* MXSpaceChildrenRequestParameters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXSpaceChildrenRequestParameters.swift; sourceTree = "<group>"; };
@@ -2528,6 +2549,7 @@
 		B18B0E4325FB73C300E32151 /* MXSpaceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXSpaceService.swift; sourceTree = "<group>"; };
 		B18B0E4925FB783B00E32151 /* MXSpaceCreationParameters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXSpaceCreationParameters.swift; sourceTree = "<group>"; };
 		B18B0E6625FBDC2F00E32151 /* MXSpace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXSpace.swift; sourceTree = "<group>"; };
+		B190AC802833FA8900D6F0C4 /* MXBeaconInfoSummaryRealmStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXBeaconInfoSummaryRealmStore.swift; sourceTree = "<group>"; };
 		B19A3099240424BD00FB6F35 /* MXQRCodeTransaction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXQRCodeTransaction.h; sourceTree = "<group>"; };
 		B19A309A240424BD00FB6F35 /* MXQRCodeTransaction_Private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXQRCodeTransaction_Private.h; sourceTree = "<group>"; };
 		B19A309B240424BD00FB6F35 /* MXQRCodeTransaction.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXQRCodeTransaction.m; sourceTree = "<group>"; };
@@ -2554,6 +2576,7 @@
 		B1A026F526161EF5001AADFF /* MXSpaceChildSummaryResponse.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXSpaceChildSummaryResponse.m; sourceTree = "<group>"; };
 		B1A026FE26162110001AADFF /* MXSpaceChildrenResponse.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXSpaceChildrenResponse.h; sourceTree = "<group>"; };
 		B1A026FF26162110001AADFF /* MXSpaceChildrenResponse.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXSpaceChildrenResponse.m; sourceTree = "<group>"; };
+		B1B44318283D00CA00BB26F4 /* MXMegolmDecryptionUnitTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MXMegolmDecryptionUnitTests.swift; sourceTree = "<group>"; };
 		B1C854ED25E7B492005867D0 /* MXRoomType.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXRoomType.h; sourceTree = "<group>"; };
 		B1DDC9D52418098200D208E3 /* MXIncomingSASTransaction_Private.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXIncomingSASTransaction_Private.h; sourceTree = "<group>"; };
 		B1E09A0E2397FA950057C069 /* MatrixSDKTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MatrixSDKTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -2565,17 +2588,12 @@
 		B1EE98D328048ACF00AB63F0 /* MXGeoURIComponentsUnitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXGeoURIComponentsUnitTests.swift; sourceTree = "<group>"; };
 		B1EE98D8280723BE00AB63F0 /* MXBeaconInfoSummary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXBeaconInfoSummary.swift; sourceTree = "<group>"; };
 		B1EE98DB280865A200AB63F0 /* MXBeaconAggregations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXBeaconAggregations.swift; sourceTree = "<group>"; };
-		B1F04B0F2811E7B600103EBE /* MXBeaconInfoSummaryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXBeaconInfoSummaryStore.swift; sourceTree = "<group>"; };
+		B1F04B0F2811E7B600103EBE /* MXBeaconInfoSummaryMemoryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXBeaconInfoSummaryMemoryStore.swift; sourceTree = "<group>"; };
 		B1F04B122811E9D300103EBE /* MXBeaconInfoSummaryStoreProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXBeaconInfoSummaryStoreProtocol.swift; sourceTree = "<group>"; };
 		B1F04B152811EFF700103EBE /* MXBeaconAggregationsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXBeaconAggregationsTests.swift; sourceTree = "<group>"; };
 		B1F04B192812A4E000103EBE /* MXBeaconInfoSummaryProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXBeaconInfoSummaryProtocol.swift; sourceTree = "<group>"; };
 		B1F939F426289F2600D0E525 /* MXSpaceChildContentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXSpaceChildContentTests.swift; sourceTree = "<group>"; };
 		B2EC7E2227F483DB00F40C26 /* MXEventAssetTypeMapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXEventAssetTypeMapper.swift; sourceTree = "<group>"; };
-		B57EF0A39A7649D55CA1208A /* libPods-MatrixSDK-MatrixSDK-iOS.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-MatrixSDK-MatrixSDK-iOS.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		BD0431D223F108AED4C70A42 /* Pods-SDK-MatrixSDK-iOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SDK-MatrixSDK-iOS.debug.xcconfig"; path = "Target Support Files/Pods-SDK-MatrixSDK-iOS/Pods-SDK-MatrixSDK-iOS.debug.xcconfig"; sourceTree = "<group>"; };
-		BD96770F88F116285272DB47 /* Pods-MatrixSDKTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MatrixSDKTests.release.xcconfig"; path = "Target Support Files/Pods-MatrixSDKTests/Pods-MatrixSDKTests.release.xcconfig"; sourceTree = "<group>"; };
-		BF36F42EE4A1F5E7F26C5BA9 /* Pods-MatrixSDKTests-macOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MatrixSDKTests-macOS.debug.xcconfig"; path = "Target Support Files/Pods-MatrixSDKTests-macOS/Pods-MatrixSDKTests-macOS.debug.xcconfig"; sourceTree = "<group>"; };
-		C387874E4837E1FC668170EA /* Pods-SDK-MatrixSDKTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SDK-MatrixSDKTests.release.xcconfig"; path = "Target Support Files/Pods-SDK-MatrixSDKTests/Pods-SDK-MatrixSDKTests.release.xcconfig"; sourceTree = "<group>"; };
 		C602B58B1F2268F700B67D87 /* MXRoom.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MXRoom.swift; sourceTree = "<group>"; };
 		C602B58D1F22A8D700B67D87 /* MXImage.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MXImage.swift; sourceTree = "<group>"; };
 		C61A4AF31E5DD88400442158 /* Dummy.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Dummy.swift; sourceTree = "<group>"; };
@@ -2591,9 +2609,10 @@
 		C6F935861E5B3BE600FC34BF /* MXEvent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MXEvent.swift; sourceTree = "<group>"; };
 		C6F935871E5B3BE600FC34BF /* MXJSONModels.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MXJSONModels.swift; sourceTree = "<group>"; };
 		C6FE1EEF1E65C4F7008587E4 /* MXAnalyticsDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXAnalyticsDelegate.h; sourceTree = "<group>"; };
-		D507DA07A90048BDE70C6795 /* Pods-MatrixSDKTests-iOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MatrixSDKTests-iOS.debug.xcconfig"; path = "Target Support Files/Pods-MatrixSDKTests-iOS/Pods-MatrixSDKTests-iOS.debug.xcconfig"; sourceTree = "<group>"; };
-		DCDFA3ABCED99811646ED8B6 /* Pods-SDK-MatrixSDK-iOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SDK-MatrixSDK-iOS.release.xcconfig"; path = "Target Support Files/Pods-SDK-MatrixSDK-iOS/Pods-SDK-MatrixSDK-iOS.release.xcconfig"; sourceTree = "<group>"; };
-		E9B11A2D50665ADBB4B2F5C5 /* Pods-MatrixSDK-MatrixSDK-iOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MatrixSDK-MatrixSDK-iOS.release.xcconfig"; path = "Target Support Files/Pods-MatrixSDK-MatrixSDK-iOS/Pods-MatrixSDK-MatrixSDK-iOS.release.xcconfig"; sourceTree = "<group>"; };
+		D6E6641895924FF16C6E5767 /* Pods-MatrixSDK-MatrixSDK-iOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MatrixSDK-MatrixSDK-iOS.debug.xcconfig"; path = "Target Support Files/Pods-MatrixSDK-MatrixSDK-iOS/Pods-MatrixSDK-MatrixSDK-iOS.debug.xcconfig"; sourceTree = "<group>"; };
+		E4E572A32459F0F8110BBFAC /* Pods-MatrixSDKTests-macOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MatrixSDKTests-macOS.debug.xcconfig"; path = "Target Support Files/Pods-MatrixSDKTests-macOS/Pods-MatrixSDKTests-macOS.debug.xcconfig"; sourceTree = "<group>"; };
+		E5463BF2B60AC232D46943D5 /* Pods-MatrixSDK-MatrixSDK-macOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MatrixSDK-MatrixSDK-macOS.release.xcconfig"; path = "Target Support Files/Pods-MatrixSDK-MatrixSDK-macOS/Pods-MatrixSDK-MatrixSDK-macOS.release.xcconfig"; sourceTree = "<group>"; };
+		E61A2EC65F9822D383157D48 /* Pods_MatrixSDK_MatrixSDK_macOS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_MatrixSDK_MatrixSDK_macOS.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		EC05473225FF8A3C0047ECD7 /* MXVirtualRoomInfo.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXVirtualRoomInfo.h; sourceTree = "<group>"; };
 		EC05473325FF8A3C0047ECD7 /* MXVirtualRoomInfo.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXVirtualRoomInfo.m; sourceTree = "<group>"; };
 		EC05478025FF99450047ECD7 /* MXRoomAccountDataUpdater.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXRoomAccountDataUpdater.h; sourceTree = "<group>"; };
@@ -2784,12 +2803,14 @@
 		ECF29BDD264195320053E6D6 /* MXAssertedIdentityModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXAssertedIdentityModel.h; sourceTree = "<group>"; };
 		ECF29BE42641953C0053E6D6 /* MXAssertedIdentityModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXAssertedIdentityModel.m; sourceTree = "<group>"; };
 		ED21F68428104DA2002FF83D /* MXMegolmEncryptionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXMegolmEncryptionTests.swift; sourceTree = "<group>"; };
-		ED2F344856EFFCA383E37B22 /* Pods-SDK-MatrixSDK.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SDK-MatrixSDK.release.xcconfig"; path = "Target Support Files/Pods-SDK-MatrixSDK/Pods-SDK-MatrixSDK.release.xcconfig"; sourceTree = "<group>"; };
 		ED35652B281150310002BF6A /* MXOlmInboundGroupSessionUnitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXOlmInboundGroupSessionUnitTests.swift; sourceTree = "<group>"; };
 		ED35652E281153480002BF6A /* MXMegolmSessionDataUnitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXMegolmSessionDataUnitTests.swift; sourceTree = "<group>"; };
 		ED44F01028180BCC00452A5D /* MXSharedHistoryKeyRequest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MXSharedHistoryKeyRequest.swift; sourceTree = "<group>"; };
 		ED44F01328180EAB00452A5D /* MXSharedHistoryKeyManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MXSharedHistoryKeyManager.swift; sourceTree = "<group>"; };
 		ED44F01728180F1C00452A5D /* MXSharedHistoryKeyManagerUnitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXSharedHistoryKeyManagerUnitTests.swift; sourceTree = "<group>"; };
+		ED51943828462D130006EEC6 /* MXRoomStateUnitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXRoomStateUnitTests.swift; sourceTree = "<group>"; };
+		ED51943B284630090006EEC6 /* MXRestClientStub.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXRestClientStub.m; sourceTree = "<group>"; };
+		ED51943E284630100006EEC6 /* MXRestClientStub.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXRestClientStub.h; sourceTree = "<group>"; };
 		ED5AE8C32816C8CF00105072 /* MXRoomSummaryCoreDataStore2.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = MXRoomSummaryCoreDataStore2.xcdatamodel; sourceTree = "<group>"; };
 		ED5AE8C42816C8CF00105072 /* MXRoomSummaryCoreDataStore.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = MXRoomSummaryCoreDataStore.xcdatamodel; sourceTree = "<group>"; };
 		ED5C95CD2833E85600843D82 /* MXOlmDeviceUnitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXOlmDeviceUnitTests.swift; sourceTree = "<group>"; };
@@ -2802,8 +2823,6 @@
 		EDBCF335281A8AB900ED5044 /* MXSharedHistoryKeyService.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXSharedHistoryKeyService.h; sourceTree = "<group>"; };
 		EDBCF338281A8D3D00ED5044 /* MXSharedHistoryKeyService.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXSharedHistoryKeyService.m; sourceTree = "<group>"; };
 		EDC2A0E528369E740039F3D6 /* CryptoTests.xctestplan */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CryptoTests.xctestplan; sourceTree = "<group>"; };
-		EDC74874AB2D86EFEE912B04 /* Pods-MatrixSDK-MatrixSDK-macOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MatrixSDK-MatrixSDK-macOS.debug.xcconfig"; path = "Target Support Files/Pods-MatrixSDK-MatrixSDK-macOS/Pods-MatrixSDK-MatrixSDK-macOS.debug.xcconfig"; sourceTree = "<group>"; };
-		EDCC4E70282EC362002949FF /* MXMegolmDecryptionUnitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXMegolmDecryptionUnitTests.swift; sourceTree = "<group>"; };
 		EDF4678627E3331D00435913 /* EventsEnumeratorDataSourceStub.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsEnumeratorDataSourceStub.swift; sourceTree = "<group>"; };
 		F0173EAA1FCF0E8800B5F6A3 /* MXGroup.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXGroup.h; sourceTree = "<group>"; };
 		F0173EAB1FCF0E8900B5F6A3 /* MXGroup.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXGroup.m; sourceTree = "<group>"; };
@@ -2821,8 +2840,7 @@
 		F08B8D5B1E014711006171A8 /* NSData+MatrixSDK.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSData+MatrixSDK.m"; sourceTree = "<group>"; };
 		F0C34CB91C18C80000C36F09 /* MXSDKOptions.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXSDKOptions.h; sourceTree = "<group>"; };
 		F0C34CBA1C18C93700C36F09 /* MXSDKOptions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXSDKOptions.m; sourceTree = "<group>"; };
-		FA84A2BE7767F3645CAEC2AF /* libPods-MatrixSDK-MatrixSDK-macOS.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-MatrixSDK-MatrixSDK-macOS.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		FFC02CAD08EAF4683778E451 /* Pods-MatrixSDK-MatrixSDK-iOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MatrixSDK-MatrixSDK-iOS.debug.xcconfig"; path = "Target Support Files/Pods-MatrixSDK-MatrixSDK-iOS/Pods-MatrixSDK-MatrixSDK-iOS.debug.xcconfig"; sourceTree = "<group>"; };
+		F669A7EDB909643AE4F39F80 /* Pods_MatrixSDK_MatrixSDK_iOS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_MatrixSDK_MatrixSDK_iOS.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -2830,7 +2848,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0696FFB36962606A28BEC38E /* libPods-MatrixSDK-MatrixSDK-iOS.a in Frameworks */,
+				3489B40A85709695DC4EB17C /* Pods_MatrixSDK_MatrixSDK_iOS.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2839,7 +2857,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				3226DC3819DEED3B00866530 /* MatrixSDK.framework in Frameworks */,
-				15C934E526232442DE7A79DE /* libPods-MatrixSDKTests-iOS.a in Frameworks */,
+				9D048036EF67C9F68CBB699D /* Pods_MatrixSDKTests_iOS.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2847,7 +2865,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				9CC8EFC1457B94FB58DFF1F7 /* libPods-MatrixSDK-MatrixSDK-macOS.a in Frameworks */,
+				E546D7C181017A4043F19887 /* Pods_MatrixSDK_MatrixSDK_macOS.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2856,7 +2874,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B1E09A132397FA950057C069 /* MatrixSDK.framework in Frameworks */,
-				3B60DCAB92D470B91262BF0C /* libPods-MatrixSDKTests-macOS.a in Frameworks */,
+				E3027C6D988FD215E02CB33A /* Pods_MatrixSDKTests_macOS.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2900,13 +2918,13 @@
 			path = Data;
 			sourceTree = "<group>";
 		};
-		10FA4A5252784B85B27DEA5B /* Frameworks */ = {
+		0A3A436ED42FC8689721A09E /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				B57EF0A39A7649D55CA1208A /* libPods-MatrixSDK-MatrixSDK-iOS.a */,
-				FA84A2BE7767F3645CAEC2AF /* libPods-MatrixSDK-MatrixSDK-macOS.a */,
-				7290AD6ED063E2E323E9485C /* libPods-MatrixSDKTests-iOS.a */,
-				15D7F292D95EB58AEE801C4E /* libPods-MatrixSDKTests-macOS.a */,
+				F669A7EDB909643AE4F39F80 /* Pods_MatrixSDK_MatrixSDK_iOS.framework */,
+				E61A2EC65F9822D383157D48 /* Pods_MatrixSDK_MatrixSDK_macOS.framework */,
+				6B65C8F8759926F01C0453AA /* Pods_MatrixSDKTests_iOS.framework */,
+				101542DD85B938AF4EAF8A94 /* Pods_MatrixSDKTests_macOS.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -3669,6 +3687,8 @@
 				329571971B024D2B00ABB3BA /* MXMockCallStackCall.h */,
 				329571981B024D2B00ABB3BA /* MXMockCallStackCall.m */,
 				ECE3DFA7270CF69500FB4C96 /* MockRoomSummary.swift */,
+				ED51943E284630100006EEC6 /* MXRestClientStub.h */,
+				ED51943B284630090006EEC6 /* MXRestClientStub.m */,
 			);
 			path = Mocks;
 			sourceTree = "<group>";
@@ -3848,7 +3868,7 @@
 				32C6F93919DD814400EA4E9C /* MatrixSDKTests */,
 				32C6F92E19DD814400EA4E9C /* Products */,
 				916911E77039455CC9D0900C /* Pods */,
-				10FA4A5252784B85B27DEA5B /* Frameworks */,
+				0A3A436ED42FC8689721A09E /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -3972,6 +3992,7 @@
 				3281E8A119E2DE4300976E1A /* MXSessionTests.m */,
 				32A27D1E19EC335300BAFADE /* MXRoomTests.m */,
 				3265CB3A1A151C3800E24B2F /* MXRoomStateTests.m */,
+				ED51943828462D130006EEC6 /* MXRoomStateUnitTests.swift */,
 				3246BDC41A1A0789000A7D62 /* MXRoomStateDynamicTests.m */,
 				328DDEC01A07E57E008C7DC8 /* MXJSONModelTests.m */,
 				329FB17B1A0A963700A5E88E /* MXRoomMemberTests.m */,
@@ -4208,24 +4229,14 @@
 		916911E77039455CC9D0900C /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				775030056EB357D01FEE2309 /* Pods-SDK-MatrixSDK.debug.xcconfig */,
-				ED2F344856EFFCA383E37B22 /* Pods-SDK-MatrixSDK.release.xcconfig */,
-				492C3485159D57C2116EDCBD /* Pods-SDK-MatrixSDK-macOS.debug.xcconfig */,
-				6257D945D115DA658F44E8D4 /* Pods-SDK-MatrixSDK-macOS.release.xcconfig */,
-				373B3662A92DBDD847639FA2 /* Pods-SDK-MatrixSDKTests.debug.xcconfig */,
-				C387874E4837E1FC668170EA /* Pods-SDK-MatrixSDKTests.release.xcconfig */,
-				7BF82739B6409F68A1C900FA /* Pods-MatrixSDKTests.debug.xcconfig */,
-				BD96770F88F116285272DB47 /* Pods-MatrixSDKTests.release.xcconfig */,
-				BD0431D223F108AED4C70A42 /* Pods-SDK-MatrixSDK-iOS.debug.xcconfig */,
-				DCDFA3ABCED99811646ED8B6 /* Pods-SDK-MatrixSDK-iOS.release.xcconfig */,
-				FFC02CAD08EAF4683778E451 /* Pods-MatrixSDK-MatrixSDK-iOS.debug.xcconfig */,
-				E9B11A2D50665ADBB4B2F5C5 /* Pods-MatrixSDK-MatrixSDK-iOS.release.xcconfig */,
-				EDC74874AB2D86EFEE912B04 /* Pods-MatrixSDK-MatrixSDK-macOS.debug.xcconfig */,
-				75D89328164DEA38CC1189B7 /* Pods-MatrixSDK-MatrixSDK-macOS.release.xcconfig */,
-				D507DA07A90048BDE70C6795 /* Pods-MatrixSDKTests-iOS.debug.xcconfig */,
-				6869D206EA7C7FB05EAB75B0 /* Pods-MatrixSDKTests-iOS.release.xcconfig */,
-				BF36F42EE4A1F5E7F26C5BA9 /* Pods-MatrixSDKTests-macOS.debug.xcconfig */,
-				19B6947FC794531CEEDCFA7F /* Pods-MatrixSDKTests-macOS.release.xcconfig */,
+				D6E6641895924FF16C6E5767 /* Pods-MatrixSDK-MatrixSDK-iOS.debug.xcconfig */,
+				415A2B7BEAF8D5462A575DAF /* Pods-MatrixSDK-MatrixSDK-iOS.release.xcconfig */,
+				07A279C2DC9BE095AB590A6E /* Pods-MatrixSDK-MatrixSDK-macOS.debug.xcconfig */,
+				E5463BF2B60AC232D46943D5 /* Pods-MatrixSDK-MatrixSDK-macOS.release.xcconfig */,
+				74B6BABAFA35199D61B18B6F /* Pods-MatrixSDKTests-iOS.debug.xcconfig */,
+				1D18B4F281A93ADB785B4800 /* Pods-MatrixSDKTests-iOS.release.xcconfig */,
+				E4E572A32459F0F8110BBFAC /* Pods-MatrixSDKTests-macOS.debug.xcconfig */,
+				2D8EE909E54EE5334E1FD271 /* Pods-MatrixSDKTests-macOS.release.xcconfig */,
 			);
 			path = Pods;
 			sourceTree = "<group>";
@@ -4330,6 +4341,10 @@
 		B146D46E21A5939000D8C2C6 /* Realm */ = {
 			isa = PBXGroup;
 			children = (
+				B16C2446283AA85E00F5D1FE /* RLMSupport.swift */,
+				B141DF0D283CDD180023867A /* Realm+MatrixSDK.swift */,
+				EC11658B270F3ABF0089FA56 /* RLMRealm+MatrixSDK.h */,
+				EC11658C270F3ABF0089FA56 /* RLMRealm+MatrixSDK.m */,
 				B146D47021A5939000D8C2C6 /* MXRealmHelper.h */,
 				B146D46F21A5939000D8C2C6 /* MXRealmHelper.m */,
 			);
@@ -4408,6 +4423,28 @@
 			path = Login;
 			sourceTree = "<group>";
 		};
+		B16C2449283AB00500F5D1FE /* Store */ = {
+			isa = PBXGroup;
+			children = (
+				B1F04B122811E9D300103EBE /* MXBeaconInfoSummaryStoreProtocol.swift */,
+				B1F04B0F2811E7B600103EBE /* MXBeaconInfoSummaryMemoryStore.swift */,
+				B16C244A283AB00D00F5D1FE /* Realm */,
+			);
+			path = Store;
+			sourceTree = "<group>";
+		};
+		B16C244A283AB00D00F5D1FE /* Realm */ = {
+			isa = PBXGroup;
+			children = (
+				B190AC802833FA8900D6F0C4 /* MXBeaconInfoSummaryRealmStore.swift */,
+				B16C244E283AB05700F5D1FE /* MXRealmBeacon.swift */,
+				B16C2451283AB08E00F5D1FE /* MXRealmBeaconInfo.swift */,
+				B16C2454283AB0DE00F5D1FE /* MXRealmBeaconMapper.swift */,
+				B16C2457283AB10B00F5D1FE /* MXRealmBeaconInfoSummary.swift */,
+			);
+			path = Realm;
+			sourceTree = "<group>";
+		};
 		B182B08423167A1C0057972E /* IdentityServer */ = {
 			isa = PBXGroup;
 			children = (
@@ -4465,8 +4502,7 @@
 			isa = PBXGroup;
 			children = (
 				B1EE98DB280865A200AB63F0 /* MXBeaconAggregations.swift */,
-				B1F04B0F2811E7B600103EBE /* MXBeaconInfoSummaryStore.swift */,
-				B1F04B122811E9D300103EBE /* MXBeaconInfoSummaryStoreProtocol.swift */,
+				B16C2449283AB00500F5D1FE /* Store */,
 				B1432B4F282AB29A00737CA6 /* MXBeaconInfoSummaryAllRoomListener.swift */,
 				B1432B50282AB29A00737CA6 /* MXBeaconInfoSummaryPerRoomListener.swift */,
 			);
@@ -4925,7 +4961,7 @@
 		ED21F67C28104BA7002FF83D /* Megolm */ = {
 			isa = PBXGroup;
 			children = (
-				EDCC4E70282EC362002949FF /* MXMegolmDecryptionUnitTests.swift */,
+				B1B44318283D00CA00BB26F4 /* MXMegolmDecryptionUnitTests.swift */,
 				ED21F68428104DA2002FF83D /* MXMegolmEncryptionTests.swift */,
 			);
 			path = Megolm;
@@ -5013,8 +5049,6 @@
 				3259D02126037A7200C365DB /* NSArray.swift */,
 				321CFDEC225264C4004D31DF /* NSArray+MatrixSDK.h */,
 				321CFDED225264C4004D31DF /* NSArray+MatrixSDK.m */,
-				EC11658B270F3ABF0089FA56 /* RLMRealm+MatrixSDK.h */,
-				EC11658C270F3ABF0089FA56 /* RLMRealm+MatrixSDK.m */,
 				A780624D27B2CE74005780C0 /* FileManager+AppGroupContainer.swift */,
 				A780624C27B2CE74005780C0 /* FileManager+Backup.swift */,
 			);
@@ -5766,7 +5800,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 32C6F94019DD814400EA4E9C /* Build configuration list for PBXNativeTarget "MatrixSDK-iOS" */;
 			buildPhases = (
-				385E87177134AE6EBD88F314 /* [CP] Check Pods Manifest.lock */,
+				0DB6FF2608894C80212AA2D5 /* [CP] Check Pods Manifest.lock */,
 				32C6F92A19DD814400EA4E9C /* Headers */,
 				32C6F92819DD814400EA4E9C /* Sources */,
 				32C6F92919DD814400EA4E9C /* Frameworks */,
@@ -5786,7 +5820,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 32C6F94319DD814400EA4E9C /* Build configuration list for PBXNativeTarget "MatrixSDKTests-iOS" */;
 			buildPhases = (
-				C2C917F29486D249CC00ACCF /* [CP] Check Pods Manifest.lock */,
+				BBA28E8D0F027A434CEA072E /* [CP] Check Pods Manifest.lock */,
 				32C6F93419DD814400EA4E9C /* Sources */,
 				32C6F93519DD814400EA4E9C /* Frameworks */,
 				32C6F93619DD814400EA4E9C /* Resources */,
@@ -5805,7 +5839,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = B14EF3682397E90400758AF0 /* Build configuration list for PBXNativeTarget "MatrixSDK-macOS" */;
 			buildPhases = (
-				C9A686A24B8547C17FE45FC5 /* [CP] Check Pods Manifest.lock */,
+				5D8FA9840B71A5066BEF8748 /* [CP] Check Pods Manifest.lock */,
 				B14EF2962397E90400758AF0 /* Headers */,
 				B14EF1C92397E90400758AF0 /* Sources */,
 				B14EF2942397E90400758AF0 /* Frameworks */,
@@ -5825,7 +5859,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = B1E09A182397FA950057C069 /* Build configuration list for PBXNativeTarget "MatrixSDKTests-macOS" */;
 			buildPhases = (
-				355F283773D2FC5798247A88 /* [CP] Check Pods Manifest.lock */,
+				05551793032C3BDC40B40573 /* [CP] Check Pods Manifest.lock */,
 				B1E09A0A2397FA950057C069 /* Sources */,
 				B1E09A0B2397FA950057C069 /* Frameworks */,
 				B1E09A0C2397FA950057C069 /* Resources */,
@@ -5926,7 +5960,7 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		355F283773D2FC5798247A88 /* [CP] Check Pods Manifest.lock */ = {
+		05551793032C3BDC40B40573 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -5948,7 +5982,7 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		385E87177134AE6EBD88F314 /* [CP] Check Pods Manifest.lock */ = {
+		0DB6FF2608894C80212AA2D5 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -5970,29 +6004,7 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		C2C917F29486D249CC00ACCF /* [CP] Check Pods Manifest.lock */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
-				"${PODS_ROOT}/Manifest.lock",
-			);
-			name = "[CP] Check Pods Manifest.lock";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-MatrixSDKTests-iOS-checkManifestLockResult.txt",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
-			showEnvVarsInLog = 0;
-		};
-		C9A686A24B8547C17FE45FC5 /* [CP] Check Pods Manifest.lock */ = {
+		5D8FA9840B71A5066BEF8748 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -6008,6 +6020,28 @@
 			);
 			outputPaths = (
 				"$(DERIVED_FILE_DIR)/Pods-MatrixSDK-MatrixSDK-macOS-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		BBA28E8D0F027A434CEA072E /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-MatrixSDKTests-iOS-checkManifestLockResult.txt",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -6033,11 +6067,13 @@
 				32481A851C03572900782AD3 /* MXRoomAccountData.m in Sources */,
 				EC1165B027107E330089FA56 /* MXRoomListDataManager.swift in Sources */,
 				327E9AD92284803100A98BC1 /* MXEventAnnotationChunk.m in Sources */,
+				B16C244F283AB05700F5D1FE /* MXRealmBeacon.swift in Sources */,
 				18C26C55273C16C800805154 /* MXEventContentPollStart.m in Sources */,
 				327A5F56239805F600ED6329 /* MXKeyVerificationCancel.m in Sources */,
 				B146D4FB21A5BF7200D8C2C6 /* MXRealmEventScanStore.m in Sources */,
 				B146D4D921A5A44E00D8C2C6 /* MXScanRealmFileProvider.m in Sources */,
 				EC1165C627107E330089FA56 /* MXRoomListDataFetcher.swift in Sources */,
+				B16C2447283AA85E00F5D1FE /* RLMSupport.swift in Sources */,
 				EC60ED69265CFC7200B39A4E /* MXPresenceSyncResponse.m in Sources */,
 				3259D02326037A7200C365DB /* NSArray.swift in Sources */,
 				B146D50321A5C6D700D8C2C6 /* MXScanManager.m in Sources */,
@@ -6106,6 +6142,7 @@
 				EC1165BE27107E330089FA56 /* MXSuggestedRoomListDataFetcher.swift in Sources */,
 				324DD2A2246AE1EF00377005 /* MXEncryptedSecretContent.m in Sources */,
 				329FB1761A0A3A1600A5E88E /* MXRoomMember.m in Sources */,
+				B16C2455283AB0DE00F5D1FE /* MXRealmBeaconMapper.swift in Sources */,
 				3251D41F25AF01D7001E6E77 /* MXUIKitApplicationStateService.swift in Sources */,
 				B1136965230AC9D900E2B2FA /* MXIdentityService.m in Sources */,
 				66836AB727CFA17200515780 /* MXEventStreamService.swift in Sources */,
@@ -6154,6 +6191,7 @@
 				32A1513A1DAD292400400192 /* MXMegolmEncryption.m in Sources */,
 				EC60EDFE265CFFD200B39A4E /* MXInvitedGroupSync.m in Sources */,
 				8EC5110C256822B400EC4E5B /* MXTaggedEvents.m in Sources */,
+				B16C2452283AB08E00F5D1FE /* MXRealmBeaconInfo.swift in Sources */,
 				32F945F71FAB83D900622468 /* MXIncomingRoomKeyRequest.m in Sources */,
 				32D2CC09234336D6002BD8CA /* MX3PidAddManager.swift in Sources */,
 				F0173EAD1FCF0E8900B5F6A3 /* MXGroup.m in Sources */,
@@ -6213,6 +6251,7 @@
 				ECDA763B27B6B74C000C48CF /* MXCapabilities.m in Sources */,
 				EC0B94242718E3EE00B4D440 /* MXCoreDataRoomListDataFetcher.swift in Sources */,
 				C6F935881E5B3BE600FC34BF /* MX3PID.swift in Sources */,
+				B16C2458283AB10B00F5D1FE /* MXRealmBeaconInfoSummary.swift in Sources */,
 				B146D47821A5950800D8C2C6 /* MXMediaScan.m in Sources */,
 				3A108AA425810FE5005EEBE9 /* MXRawDataKey.m in Sources */,
 				C6F9358A1E5B3BE600FC34BF /* MXEvent.swift in Sources */,
@@ -6282,6 +6321,7 @@
 				EC383BAC254030DF002FBBE6 /* MXBackgroundStore.swift in Sources */,
 				EC0B942A2718F55C00B4D440 /* MXCoreDataRoomListDataManager.swift in Sources */,
 				32A31BC920D401FC005916C7 /* MXRoomFilter.m in Sources */,
+				B190AC812833FA8900D6F0C4 /* MXBeaconInfoSummaryRealmStore.swift in Sources */,
 				EC11658F270F3ABF0089FA56 /* RLMRealm+MatrixSDK.m in Sources */,
 				32A151471DAF7C0C00400192 /* MXDeviceInfo.m in Sources */,
 				ECDA764E27BA963D000C48CF /* MXBooleanCapability.m in Sources */,
@@ -6327,7 +6367,7 @@
 				323F3F9320D3F0C700D26D6A /* MXRoomEventFilter.m in Sources */,
 				3275FD9921A6B53300B9C13D /* MXLoginPolicyData.m in Sources */,
 				EC1848C92686176D00865E16 /* MXiOSAudioOutputRouterDelegate.swift in Sources */,
-				B1F04B102811E7B600103EBE /* MXBeaconInfoSummaryStore.swift in Sources */,
+				B1F04B102811E7B600103EBE /* MXBeaconInfoSummaryMemoryStore.swift in Sources */,
 				3240969E1F9F751600DBA607 /* MXPushRuleSenderNotificationPermissionConditionChecker.m in Sources */,
 				71DE22E01BC7C51200284153 /* MXReceiptData.m in Sources */,
 				B14766B923D9D9420091F721 /* MXUsersTrustLevelSummary.m in Sources */,
@@ -6387,6 +6427,7 @@
 				ECDA763527B527BA000C48CF /* MXEvent+Extensions.swift in Sources */,
 				B146D4F321A5AF7F00D8C2C6 /* MXRealmEventScan.m in Sources */,
 				B14EECD92577DE7A00448735 /* MXLoginSSOIdentityProvider.m in Sources */,
+				B141DF0E283CDD180023867A /* Realm+MatrixSDK.swift in Sources */,
 				32B090E2261F709B002924AA /* MXAsyncTaskQueue.swift in Sources */,
 				322691371E5EFF8700966A6E /* MXDeviceListOperationsPool.m in Sources */,
 				C6F935801E5B3ACA00FC34BF /* MXResponse.swift in Sources */,
@@ -6461,6 +6502,7 @@
 				32B477822638133C00EA5800 /* MXFilterUnitTests.m in Sources */,
 				322985CF26FBAE7B001890BC /* TestObserver.swift in Sources */,
 				32DC15D71A8DFF0D006F9AD3 /* MXNotificationCenterTests.m in Sources */,
+				ED51943928462D130006EEC6 /* MXRoomStateUnitTests.swift in Sources */,
 				329571991B024D2B00ABB3BA /* MXMockCallStack.m in Sources */,
 				EDB4209227DF77390036AF39 /* MXEventsEnumeratorOnArrayTests.swift in Sources */,
 				3281E8A819E41A2000976E1A /* MatrixSDKTestsData.m in Sources */,
@@ -6510,9 +6552,9 @@
 				3A7B8D0E267FCF7200D9DD96 /* MXDehydrationTests.m in Sources */,
 				3281E8A019E2CC1200976E1A /* MXHTTPClientTests.m in Sources */,
 				321809B919EEBF3000377451 /* MXEventTests.m in Sources */,
+				B1B44319283D00CA00BB26F4 /* MXMegolmDecryptionUnitTests.swift in Sources */,
 				EDF4678727E3331D00435913 /* EventsEnumeratorDataSourceStub.swift in Sources */,
 				EC746C59274E61EF002AD24C /* MXThreadingServiceTests.swift in Sources */,
-				EDCC4E71282EC362002949FF /* MXMegolmDecryptionUnitTests.swift in Sources */,
 				32A31BC120D3F4C4005916C7 /* MXFilterTests.m in Sources */,
 				32B477842638133C00EA5800 /* MXAggregatedReferenceUnitTests.m in Sources */,
 				32B0E3E423A384D40054FF1A /* MXAggregatedReferenceTests.m in Sources */,
@@ -6544,6 +6586,7 @@
 				322985CB26FAF898001890BC /* MXSession.swift in Sources */,
 				EC131B192779D8D500712964 /* MXThreadEventTimelineUnitTests.swift in Sources */,
 				B135067427EB201E00BD3276 /* MXLocationServiceTests.swift in Sources */,
+				ED51943C284630090006EEC6 /* MXRestClientStub.m in Sources */,
 				18C26C4F273C0EB300805154 /* MXPollAggregatorTests.swift in Sources */,
 				ED35652F281153480002BF6A /* MXMegolmSessionDataUnitTests.swift in Sources */,
 				32EEA83F2603CA140041425B /* MXRestClientExtensionsTests.m in Sources */,
@@ -6583,11 +6626,13 @@
 				181FD5D72660C791008EC084 /* MXLogObjcWrapper.m in Sources */,
 				EC1165B127107E330089FA56 /* MXRoomListDataManager.swift in Sources */,
 				324DD2C2246D658500377005 /* MXHkdfSha256.m in Sources */,
+				B16C2450283AB05700F5D1FE /* MXRealmBeacon.swift in Sources */,
 				18C26C56273C16C800805154 /* MXEventContentPollStart.m in Sources */,
 				EC1165AF27107E330089FA56 /* MXRoomListDataSortOptions.swift in Sources */,
 				B14EF1CE2397E90400758AF0 /* MXScanRealmFileProvider.m in Sources */,
 				B14EF1CF2397E90400758AF0 /* MXScanManager.m in Sources */,
 				3291DC8623DF52E20009732F /* MXRoomCreationParameters.m in Sources */,
+				B16C2448283AA85E00F5D1FE /* RLMSupport.swift in Sources */,
 				B14EF1D02397E90400758AF0 /* MXInvite3PID.m in Sources */,
 				B14EF1D12397E90400758AF0 /* MXPushRuleDisplayNameCondtionChecker.m in Sources */,
 				B14EF1D22397E90400758AF0 /* MXFilter.m in Sources */,
@@ -6656,6 +6701,7 @@
 				EC1165BF27107E330089FA56 /* MXSuggestedRoomListDataFetcher.swift in Sources */,
 				B14EF1F72397E90400758AF0 /* MXLoginTerms.m in Sources */,
 				B14EF1F82397E90400758AF0 /* MXReplyEventParts.m in Sources */,
+				B16C2456283AB0DE00F5D1FE /* MXRealmBeaconMapper.swift in Sources */,
 				3259D02426037A7200C365DB /* NSArray.swift in Sources */,
 				3A108A8125810C96005EEBE9 /* MXKeyData.m in Sources */,
 				66836AB827CFA17200515780 /* MXEventStreamService.swift in Sources */,
@@ -6704,6 +6750,7 @@
 				B14EF2082397E90400758AF0 /* MX3PidAddManager.m in Sources */,
 				ECD2899026EB3B3400F268CF /* MXRoomListData.swift in Sources */,
 				B14EF2092397E90400758AF0 /* MXCallKitConfiguration.m in Sources */,
+				B16C2453283AB08E00F5D1FE /* MXRealmBeaconInfo.swift in Sources */,
 				324DD2A9246AE81300377005 /* MXSecretStorageKeyContent.m in Sources */,
 				B14EF20A2397E90400758AF0 /* MXRoomState.m in Sources */,
 				3AF85F9326FC7AE800A9E67B /* MXSpaceNotificationState.swift in Sources */,
@@ -6763,6 +6810,7 @@
 				EC0B94252718E3EF00B4D440 /* MXCoreDataRoomListDataFetcher.swift in Sources */,
 				B14EF22A2397E90400758AF0 /* MXReplyEventFormattedBodyParts.m in Sources */,
 				ECD2899626EB3B4200F268CF /* MXStoreRoomListDataFetcher.swift in Sources */,
+				B16C2459283AB10B00F5D1FE /* MXRealmBeaconInfoSummary.swift in Sources */,
 				324AAC7A2399140D00380A66 /* MXKeyVerificationMac.m in Sources */,
 				B14EF22B2397E90400758AF0 /* MXFileStoreMetaData.m in Sources */,
 				EC8A53A825B1BC77004E0802 /* MXCallCapabilitiesModel.m in Sources */,
@@ -6832,6 +6880,7 @@
 				EC0B942B2718F55C00B4D440 /* MXCoreDataRoomListDataManager.swift in Sources */,
 				324DD2B9246C21C700377005 /* MXSecretStorageKeyCreationInfo.m in Sources */,
 				B135066F27EA44C800BD3276 /* MXLocationServiceError.swift in Sources */,
+				B190AC822833FA8900D6F0C4 /* MXBeaconInfoSummaryRealmStore.swift in Sources */,
 				B14EF24B2397E90400758AF0 /* MXServiceTermsRestClient.m in Sources */,
 				EC1165C527107E330089FA56 /* MXRoomListDataFilterOptions.swift in Sources */,
 				3A858DE227528EEB006322C1 /* MXHomeserverCapabilitiesService.swift in Sources */,
@@ -6877,7 +6926,7 @@
 				B14EF25E2397E90400758AF0 /* (null) in Sources */,
 				32B090E3261F709B002924AA /* MXAsyncTaskQueue.swift in Sources */,
 				B14EF25F2397E90400758AF0 /* MXServerNoticeContent.m in Sources */,
-				B1F04B112811E7B600103EBE /* MXBeaconInfoSummaryStore.swift in Sources */,
+				B1F04B112811E7B600103EBE /* MXBeaconInfoSummaryMemoryStore.swift in Sources */,
 				B14EF2602397E90400758AF0 /* MXContentScanResult.m in Sources */,
 				B14EF2612397E90400758AF0 /* MXRealmAggregationsStore.m in Sources */,
 				EC383BB72541C518002FBBE6 /* MXBackgroundPushRulesManager.swift in Sources */,
@@ -6937,6 +6986,7 @@
 				323F877E25546170009E9E67 /* MXBaseProfiler.m in Sources */,
 				ECDA763627B527BA000C48CF /* MXEvent+Extensions.swift in Sources */,
 				3AC135DC2640335100EE1E74 /* MXDehydrationService.m in Sources */,
+				B141DF0F283CDD180023867A /* Realm+MatrixSDK.swift in Sources */,
 				B14EF27C2397E90400758AF0 /* MXRestClient.swift in Sources */,
 				32AF929A24115D8B0008A0FD /* MXPendingSecretShareRequest.m in Sources */,
 				B14EF27D2397E90400758AF0 /* MXKeyBackup.m in Sources */,
@@ -7011,6 +7061,7 @@
 				B1E09A392397FD7D0057C069 /* MXMyUserTests.m in Sources */,
 				322985D026FBAE7B001890BC /* TestObserver.swift in Sources */,
 				B1E09A202397FCE90057C069 /* MXCryptoBackupTests.m in Sources */,
+				ED51943A28462D130006EEC6 /* MXRoomStateUnitTests.swift in Sources */,
 				B1E09A3B2397FD820057C069 /* MXStoreNoStoreTests.m in Sources */,
 				EDB4209327DF77390036AF39 /* MXEventsEnumeratorOnArrayTests.swift in Sources */,
 				32B4778E2638133D00EA5800 /* MXFilterUnitTests.m in Sources */,
@@ -7060,9 +7111,9 @@
 				32D5D16423E400A600E3E37C /* MXRoomSummaryTrustTests.m in Sources */,
 				B1E09A1B2397FCE90057C069 /* MXAggregatedReactionTests.m in Sources */,
 				B1E09A3F2397FD820057C069 /* MXNotificationCenterTests.m in Sources */,
+				B1B4431A283D00CA00BB26F4 /* MXMegolmDecryptionUnitTests.swift in Sources */,
 				EDF4678827E3331D00435913 /* EventsEnumeratorDataSourceStub.swift in Sources */,
 				EC746C5A274E61EF002AD24C /* MXThreadingServiceTests.swift in Sources */,
-				EDCC4E72282EC362002949FF /* MXMegolmDecryptionUnitTests.swift in Sources */,
 				B1E09A222397FCE90057C069 /* MXRoomSummaryTests.m in Sources */,
 				B1E09A3A2397FD820057C069 /* MXStoreTests.m in Sources */,
 				B1E09A342397FD750057C069 /* MXRoomStateDynamicTests.m in Sources */,
@@ -7094,6 +7145,7 @@
 				322985CC26FAF898001890BC /* MXSession.swift in Sources */,
 				EC131B1A2779D8D500712964 /* MXThreadEventTimelineUnitTests.swift in Sources */,
 				B135067527EB201E00BD3276 /* MXLocationServiceTests.swift in Sources */,
+				ED51943D284630090006EEC6 /* MXRestClientStub.m in Sources */,
 				18C26C50273C0EB400805154 /* MXPollAggregatorTests.swift in Sources */,
 				ED356530281153480002BF6A /* MXMegolmSessionDataUnitTests.swift in Sources */,
 				32C78BA8256D227D008130B1 /* MXCryptoMigrationTests.m in Sources */,
@@ -7252,7 +7304,7 @@
 		};
 		32C6F94119DD814400EA4E9C /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = FFC02CAD08EAF4683778E451 /* Pods-MatrixSDK-MatrixSDK-iOS.debug.xcconfig */;
+			baseConfigurationReference = D6E6641895924FF16C6E5767 /* Pods-MatrixSDK-MatrixSDK-iOS.debug.xcconfig */;
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "";
@@ -7260,6 +7312,7 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				GCC_PREPROCESSOR_DEFINITIONS = "$(inherited)";
 				HEADER_SEARCH_PATHS = "$(inherited)";
 				INFOPLIST_FILE = MatrixSDK/Info.plist;
@@ -7279,7 +7332,7 @@
 		};
 		32C6F94219DD814400EA4E9C /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = E9B11A2D50665ADBB4B2F5C5 /* Pods-MatrixSDK-MatrixSDK-iOS.release.xcconfig */;
+			baseConfigurationReference = 415A2B7BEAF8D5462A575DAF /* Pods-MatrixSDK-MatrixSDK-iOS.release.xcconfig */;
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "";
@@ -7287,6 +7340,7 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				GCC_PREPROCESSOR_DEFINITIONS = "$(inherited)";
 				HEADER_SEARCH_PATHS = "$(inherited)";
 				INFOPLIST_FILE = MatrixSDK/Info.plist;
@@ -7305,7 +7359,7 @@
 		};
 		32C6F94419DD814400EA4E9C /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = D507DA07A90048BDE70C6795 /* Pods-MatrixSDKTests-iOS.debug.xcconfig */;
+			baseConfigurationReference = 74B6BABAFA35199D61B18B6F /* Pods-MatrixSDKTests-iOS.debug.xcconfig */;
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = NO;
@@ -7334,7 +7388,7 @@
 		};
 		32C6F94519DD814400EA4E9C /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 6869D206EA7C7FB05EAB75B0 /* Pods-MatrixSDKTests-iOS.release.xcconfig */;
+			baseConfigurationReference = 1D18B4F281A93ADB785B4800 /* Pods-MatrixSDKTests-iOS.release.xcconfig */;
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = NO;
@@ -7359,7 +7413,7 @@
 		};
 		B14EF3692397E90400758AF0 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = EDC74874AB2D86EFEE912B04 /* Pods-MatrixSDK-MatrixSDK-macOS.debug.xcconfig */;
+			baseConfigurationReference = 07A279C2DC9BE095AB590A6E /* Pods-MatrixSDK-MatrixSDK-macOS.debug.xcconfig */;
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "";
@@ -7367,6 +7421,7 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				GCC_PREPROCESSOR_DEFINITIONS = "$(inherited)";
 				HEADER_SEARCH_PATHS = "$(inherited)";
 				INFOPLIST_FILE = "$(SRCROOT)/MatrixSDK/Info.plist";
@@ -7388,7 +7443,7 @@
 		};
 		B14EF36A2397E90400758AF0 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 75D89328164DEA38CC1189B7 /* Pods-MatrixSDK-MatrixSDK-macOS.release.xcconfig */;
+			baseConfigurationReference = E5463BF2B60AC232D46943D5 /* Pods-MatrixSDK-MatrixSDK-macOS.release.xcconfig */;
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "";
@@ -7416,7 +7471,7 @@
 		};
 		B1E09A162397FA950057C069 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = BF36F42EE4A1F5E7F26C5BA9 /* Pods-MatrixSDKTests-macOS.debug.xcconfig */;
+			baseConfigurationReference = E4E572A32459F0F8110BBFAC /* Pods-MatrixSDKTests-macOS.debug.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -7429,6 +7484,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				HEADER_SEARCH_PATHS = "$(inherited)";
 				INFOPLIST_FILE = MatrixSDKTests/Info.plist;
@@ -7448,7 +7504,7 @@
 		};
 		B1E09A172397FA950057C069 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 19B6947FC794531CEEDCFA7F /* Pods-MatrixSDKTests-macOS.release.xcconfig */;
+			baseConfigurationReference = 2D8EE909E54EE5334E1FD271 /* Pods-MatrixSDKTests-macOS.release.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CLANG_ANALYZER_NONNULL = YES;

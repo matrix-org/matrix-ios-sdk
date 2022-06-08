@@ -1,5 +1,9 @@
 # Uncomment this line to define a global platform for your project
 
+# Expose Objective-C frameworks to Swift
+# Build and link dependencies as static frameworks
+use_frameworks! :linkage => :static
+
 abstract_target 'MatrixSDK' do
     
     pod 'AFNetworking', '~> 4.0.0'
@@ -10,7 +14,7 @@ abstract_target 'MatrixSDK' do
     pod 'OLMKit', '~> 3.2.5', :inhibit_warnings => true
     #pod 'OLMKit', :path => '../olm/OLMKit.podspec'
     
-    pod 'Realm', '10.16.0'
+    pod 'Realm', '10.27.0'
     pod 'libbase58', '~> 0.1.4'
     
     target 'MatrixSDK-iOS' do
