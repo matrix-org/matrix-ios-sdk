@@ -924,7 +924,9 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
                                  }];
 }
 
-- (MXHTTPOperation*)changePassword:(NSString*)oldPassword with:(NSString*)newPassword
+- (MXHTTPOperation*)changePassword:(NSString*)oldPassword
+                              with:(NSString*)newPassword
+                     logoutDevices:(BOOL)logoutDevices
                            success:(void (^)(void))success
                            failure:(void (^)(NSError *error))failure
 {
@@ -943,7 +945,8 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
                                              @"user": self.credentials.userId,
                                              @"password": oldPassword,
                                            },
-                                 @"new_password": newPassword
+                                 @"new_password": newPassword,
+                                 @"logout_devices": @(logoutDevices)
                                  };
 
     MXWeakify(self);
