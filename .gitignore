@@ -18,6 +18,8 @@ DerivedData
 *.ipa
 *.xcuserstate
 *.DS_Store
+.vscode/
+vendor/
 
 # CocoaPods
 #
