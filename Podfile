@@ -2,6 +2,12 @@
 
 # Expose Objective-C frameworks to Swift
 # Build and link dependencies as static frameworks
+
+source 'https://github.com/CocoaPods/Specs'
+
+# Temporary pointer to MatrixSDKCrypto, will be moved to main CocoaPods Specs
+source 'https://github.com/Anderas/Specs'
+
 use_frameworks! :linkage => :static
 
 abstract_target 'MatrixSDK' do
@@ -18,7 +24,9 @@ abstract_target 'MatrixSDK' do
     pod 'libbase58', '~> 0.1.4'
     
     target 'MatrixSDK-iOS' do
-        platform :ios, '9.0'
+        platform :ios, '11.0'
+        
+        pod 'MatrixSDKCrypto', "0.1.0", :configurations => ['DEBUG']
         
         target 'MatrixSDKTests-iOS' do
             inherit! :search_paths

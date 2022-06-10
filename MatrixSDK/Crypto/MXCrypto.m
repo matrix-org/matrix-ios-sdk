@@ -145,7 +145,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 
 #ifdef MX_CRYPTO
     
-    #if DEBUG
+    #if DEBUG && TARGET_OS_IPHONE
     // If running non-production build AND build flag enabled,
     // switch to work-in-progress Rust implementation of crypto.
     if (MXSDKOptions.sharedInstance.enableCryptoV2)
@@ -171,7 +171,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 {
 #ifdef MX_CRYPTO
     
-    #if DEBUG
+    #if DEBUG && TARGET_OS_IPHONE
     // If running non-production build AND build flag enabled,
     // switch to work-in-progress Rust implementation of crypto.
     if (MXSDKOptions.sharedInstance.enableCryptoV2)

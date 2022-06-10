@@ -7,10 +7,11 @@
 
 import Foundation
 
-#if DEBUG
+#if DEBUG && os(iOS)
 
+import MatrixSDKCrypto
 
- /// A work-in-progress subclass of `MXCrypto` which uses [matrix-rust-sdk](https://github.com/matrix-org/matrix-rust-sdk/tree/main/crates/matrix-sdk-crypto)
+/// A work-in-progress subclass of `MXCrypto` which uses [matrix-rust-sdk](https://github.com/matrix-org/matrix-rust-sdk/tree/main/crates/matrix-sdk-crypto)
 /// under the hood.
 ///
 /// This subclass serves as a skeleton to enable itterative implementation of matrix-rust-sdk without affecting existing
@@ -65,6 +66,17 @@ public class MXCryptoV2: MXCrypto {
     public override var crossSigning: MXCrossSigning! {
         warnNotImplemented()
         return nil
+    }
+    
+    private let machine: OlmMachine
+    public override init() {
+        do {
+            machine = try OlmMachine(userId: "", deviceId: "", path: "", passphrase: nil)
+        } catch {
+            fatalError("[MXCryptoV2] init: cannot create olm machine with error \(error)")
+        }
+        
+        super.init()
     }
     
     public override class func createCrypto(withMatrixSession mxSession: MXSession!) -> MXCrypto! {
