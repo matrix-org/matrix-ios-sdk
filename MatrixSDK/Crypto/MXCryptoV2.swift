@@ -9,17 +9,16 @@ import Foundation
 
 #if DEBUG
 
-/**
- A work-in-progress subclass of `MXCrypto` which uses [matrix-rust-sdk](https://github.com/matrix-org/matrix-rust-sdk/tree/main/crates/matrix-sdk-crypto)
- under the hood.
- 
- This subclass serves as a skeleton to enable itterative implementation of matrix-rust-sdk without affecting existing
- production code. It is a subclass because `MXCrypto` does not define a reusable protocol, and to define one would require
- further risky refactors across the application.
- 
- Another benefit of using a subclass and overriding every method with new implementation is that existing integration tests
- for crypto-related functionality can still run (and eventually pass) without any changes.
- */
+
+ /// A work-in-progress subclass of `MXCrypto` which uses [matrix-rust-sdk](https://github.com/matrix-org/matrix-rust-sdk/tree/main/crates/matrix-sdk-crypto)
+/// under the hood.
+///
+/// This subclass serves as a skeleton to enable itterative implementation of matrix-rust-sdk without affecting existing
+/// production code. It is a subclass because `MXCrypto` does not define a reusable protocol, and to define one would require
+/// further risky refactors across the application.
+///
+/// Another benefit of using a subclass and overriding every method with new implementation is that existing integration tests
+/// for crypto-related functionality can still run (and eventually pass) without any changes.
 @objcMembers
 public class MXCryptoV2: MXCrypto {
     
@@ -313,10 +312,9 @@ public class MXCryptoV2: MXCrypto {
     
     // MARK: - Private
     
-    /**
-     Convenience function which logs methods that are being called by the application,
-     but are not yet implemented via the Rust component.
-     */
+    
+    /// Convenience function which logs methods that are being called by the application,
+    /// but are not yet implemented via the Rust component.
     private static func warnNotImplemented(ignore: Bool = false, _ function: String = #function) {
         MXLog.debug("[MXCryptoV2] function `\(function)` not implemented, ignored: \(ignore)")
     }
