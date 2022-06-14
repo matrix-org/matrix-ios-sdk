@@ -1,3 +1,17 @@
+## Changes in 0.23.9 (2022-06-14)
+
+🐛 Bugfixes
+
+- Fix a crash on start if the user has a very large number of unread events in a room ([#1490](https://github.com/matrix-org/matrix-ios-sdk/pull/1490))
+- Prevent invalid room names on member count underflows. ([#6227](https://github.com/vector-im/element-ios/issues/6227))
+- Location sharing: Fix geo URI parsing with altitude component. ([#6247](https://github.com/vector-im/element-ios/issues/6247))
+
+⚠️ API Changes
+
+- MXRestClient: Add `logoutDevices` parameter to `changePassword` method. ([#6175](https://github.com/vector-im/element-ios/issues/6175))
+- Mark MXRestClient init as `required` for mocking. ([#6179](https://github.com/vector-im/element-ios/issues/6179))
+
+
 ## Changes in 0.23.8 (2022-06-03)
 
 🐛 Bugfixes
