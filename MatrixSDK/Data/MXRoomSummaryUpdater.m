@@ -507,8 +507,11 @@
             }
             default:
             {
-                NSString *memberName = [self memberNameFromRoomState:roomState withIdentifier:memberIdentifiers.firstObject];
-                displayName = [_roomNameStringLocalizer moreThanTwoMembers:memberName count:@(memberCount - 2)];
+                if (memberCount > 2)
+                {
+                    NSString *memberName = [self memberNameFromRoomState:roomState withIdentifier:memberIdentifiers.firstObject];
+                    displayName = [_roomNameStringLocalizer moreThanTwoMembers:memberName count:@(memberCount - 2)];
+                }
                 break;
             }
         }

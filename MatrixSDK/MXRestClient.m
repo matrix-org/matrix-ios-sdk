@@ -266,9 +266,11 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
                         dispatch_async(self.completionQueue, ^{
                             BOOL isSoftLogout = [MXRestClient isSoftLogout:mxError];
                             MXLogDebug(@"[MXRestClient] tokenProviderHandler: %@: non-refresh(access token) token auth failed", logId);
-                            self.unauthenticatedHandler(mxError, isSoftLogout, NO, ^{
-                                failure(error);
-                            });
+                            if (unauthenticatedHandler) {
+                                self.unauthenticatedHandler(mxError, isSoftLogout, NO, ^{
+                                    failure(error);
+                                });
+                            }
                         });
                         return;
                     }
@@ -276,9 +278,11 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
                         // If it's non-refresh token auth return the access token,
                         // or if it is refresh token auth and access token is valid also return it.
                         MXLogDebug(@"[MXRestClient] tokenProviderHandler: %@ success token %@, %tu", logId, self.credentials.refreshToken, (NSUInteger)self.credentials.accessTokenExpiresAt)
-                        dispatch_async(self.completionQueue, ^{
-                            success(self.credentials.accessToken);
-                        });
+                        if (self.completionQueue) {
+                            dispatch_async(self.completionQueue, ^{
+                                success(self.credentials.accessToken);
+                            });
+                        }
                         return;
                     }
                     
@@ -920,7 +924,9 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
                                  }];
 }
 
-- (MXHTTPOperation*)changePassword:(NSString*)oldPassword with:(NSString*)newPassword
+- (MXHTTPOperation*)changePassword:(NSString*)oldPassword
+                              with:(NSString*)newPassword
+                     logoutDevices:(BOOL)logoutDevices
                            success:(void (^)(void))success
                            failure:(void (^)(NSError *error))failure
 {
@@ -939,7 +945,8 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
                                              @"user": self.credentials.userId,
                                              @"password": oldPassword,
                                            },
-                                 @"new_password": newPassword
+                                 @"new_password": newPassword,
+                                 @"logout_devices": @(logoutDevices)
                                  };
 
     MXWeakify(self);
