@@ -97,16 +97,18 @@ public enum MXBackgroundSyncServiceError: Error {
     /// - Parameters:
     ///   - eventId: The event identifier for the desired event
     ///   - roomId: The room identifier for the desired event
+    ///   - allowSync:Whether to check local stores on every request so that we use up-to-data data from the MXSession store
     ///   - completion: Completion block to be called. Always called in main thread.
     public func event(withEventId eventId: String,
                       inRoom roomId: String,
+                      allowSync: Bool = true,
                       completion: @escaping (MXResponse<MXEvent>) -> Void) {
         // Process one request at a time
         let stopwatch = MXStopwatch()
         asyncTaskQueue.async { (taskCompleted) in
             MXLog.debug("[MXBackgroundSyncService] event: Start processing \(eventId) after waiting for \(stopwatch.readable())")
             
-            self._event(withEventId: eventId, inRoom: roomId) { response in
+            self._event(withEventId: eventId, inRoom: roomId, allowSync: allowSync) { response in
                 completion(response)
                 taskCompleted()
             }
@@ -195,11 +197,45 @@ public enum MXBackgroundSyncServiceError: Error {
                                          currentUserDisplayName:  roomState.members.member(withUserId: currentUserId)?.displayname)
     }
     
+    /// Fetch room account data for given roomId.
+    /// - Parameters:
+    ///   - roomId: The room identifier for the desired room.
+    ///   - completion: Completion block to be called. Always called in main thread.
+    public func roomAccountData(forRoomId roomId: String,
+                                completion: @escaping (MXResponse<MXRoomAccountData>) -> Void) {
+        processingQueue.async {
+            guard let accountData = self.store.accountData?(ofRoom: roomId) else {
+                Queues.dispatchQueue.async {
+                    completion(.failure(MXBackgroundSyncServiceError.unknown))
+                }
+                return
+            }
+            
+            Queues.dispatchQueue.async {
+                completion(.success(accountData))
+            }
+        }
+    }
+    
+    public func readMarkerEvent(forRoomId roomId: String, completion: @escaping (MXResponse<MXEvent>) -> Void) {
+        roomAccountData(forRoomId: roomId) { [weak self] response in
+            guard let self = self else { return }
+            
+            switch response {
+            case .failure(let error):
+                completion(.failure(error))
+                return
+            case .success(let roomAccountData):
+                self._event(withEventId: roomAccountData.readMarkerEventId, inRoom: roomId, allowSync: false, completion: completion)
+            }
+        }
+    }
+    
     //  MARK: - Private
     
     private func _event(withEventId eventId: String,
                         inRoom roomId: String,
-                        allowSync: Bool = true,
+                        allowSync: Bool,
                         completion: @escaping (MXResponse<MXEvent>) -> Void) {
         MXLog.debug("[MXBackgroundSyncService] fetchEvent: \(eventId). allowSync: \(allowSync)")
         
@@ -628,25 +664,4 @@ public enum MXBackgroundSyncServiceError: Error {
             cryptoStore.reset()
         }
     }
-    
-    /// Fetch room account data for given roomId.
-    /// - Parameters:
-    ///   - roomId: The room identifier for the desired room.
-    ///   - completion: Completion block to be called. Always called in main thread.
-    public func roomAccountData(forRoomId roomId: String,
-                                completion: @escaping (MXResponse<MXRoomAccountData>) -> Void) {
-        processingQueue.async {
-            guard let accountData = self.store.accountData?(ofRoom: roomId) else {
-                Queues.dispatchQueue.async {
-                    completion(.failure(MXBackgroundSyncServiceError.unknown))
-                }
-                return
-            }
-            
-            Queues.dispatchQueue.async {
-                completion(.success(accountData))
-            }
-        }
-    }
-    
 }
