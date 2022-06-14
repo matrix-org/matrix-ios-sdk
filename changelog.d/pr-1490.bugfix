@@ -1,1 +1,0 @@
-Fix a crash on start if the user has a very large number of unread events in a room
