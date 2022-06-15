@@ -13,7 +13,7 @@ import Foundation
  /// A work-in-progress subclass of `MXCrypto` which uses [matrix-rust-sdk](https://github.com/matrix-org/matrix-rust-sdk/tree/main/crates/matrix-sdk-crypto)
 /// under the hood.
 ///
-/// This subclass serves as a skeleton to enable itterative implementation of matrix-rust-sdk without affecting existing
+/// This subclass serves as a skeleton to enable iterative implementation of matrix-rust-sdk without affecting existing
 /// production code. It is a subclass because `MXCrypto` does not define a reusable protocol, and to define one would require
 /// further risky refactors across the application.
 ///
