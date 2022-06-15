@@ -45,9 +45,7 @@ Pod::Spec.new do |s|
       ss.dependency 'OLMKit', '~> 3.2.5'
       ss.dependency 'Realm', '10.27.0'
       ss.dependency 'libbase58', '~> 0.1.4'
-      
-      # Experimental / not production-ready Rust-based crypto library, iOS-only
-      ss.dependency 'MatrixSDKCrypto', '~> 0.1.0', :configurations => ["DEBUG"]
+      ss.ios.dependency 'MatrixSDK/CryptoSDK'
   end
 
   s.subspec 'JingleCallStack' do |ss|
@@ -64,6 +62,12 @@ Pod::Spec.new do |s|
     
     # Use WebRTC framework included in Jitsi Meet SDK
     ss.ios.dependency 'JitsiMeetSDK', '5.0.2'
+  end
+  
+  # Experimental / NOT production-ready Rust-based crypto library, iOS-only
+  s.subspec 'CryptoSDK' do |ss|
+    ss.platform = :ios
+    ss.dependency 'MatrixSDKCrypto', '0.1.0', :configurations => ["DEBUG"]
   end
 
 end
