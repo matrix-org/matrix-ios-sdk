@@ -51,12 +51,11 @@ DEPENDENCIES:
   - SwiftyBeaver (= 1.9.5)
 
 SPEC REPOS:
-  https://github.com/Anderas/Specs:
-    - MatrixSDKCrypto
-  https://github.com/CocoaPods/Specs.git:
+  trunk:
     - AFNetworking
     - GZIP
     - libbase58
+    - MatrixSDKCrypto
     - OHHTTPStubs
     - OLMKit
     - Realm
@@ -66,12 +65,12 @@ SPEC CHECKSUMS:
   AFNetworking: 7864c38297c79aaca1500c33288e429c3451fdce
   GZIP: 416858efbe66b41b206895ac6dfd5493200d95b3
   libbase58: 7c040313537b8c44b6e2d15586af8e21f7354efd
-  MatrixSDKCrypto: ad273f9e5a419f0f68bd870c48b60476ff9ddc1b
+  MatrixSDKCrypto: 4b9146d5ef484550341be056a164c6930038028e
   OHHTTPStubs: 90eac6d8f2c18317baeca36698523dc67c513831
   OLMKit: 9fb4799c4a044dd2c06bda31ec31a12191ad30b5
   Realm: 9ca328bd7e700cc19703799785e37f77d1a130f2
   SwiftyBeaver: 84069991dd5dca07d7069100985badaca7f0ce82
 
-PODFILE CHECKSUM: 4b5356e6434e30884da73bfde339091e513e73f1
+PODFILE CHECKSUM: 4b52e348559f40f3b97ae8ed50d22a7c5043c6f6
 
 COCOAPODS: 1.11.3
