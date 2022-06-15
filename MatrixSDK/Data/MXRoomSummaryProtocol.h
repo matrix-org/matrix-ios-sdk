@@ -79,6 +79,9 @@ NS_ASSUME_NONNULL_BEGIN
 /// displayed to the end user.
 @property (nonatomic, readonly) BOOL isConferenceUserRoom;
 
+/// Flag indicating if the room is a sip soom with at least one sip participant.
+@property (nonatomic, readonly) BOOL isSipCallRoom;
+
 /// Indicate whether this room should be hidden from the user.
 @property (nonatomic, readonly) BOOL hiddenFromUser;
 

@@ -285,6 +285,13 @@
             summary.isConferenceUserRoom = roomState.isConferenceUserRoom;
             updated = YES;
         }
+        
+        BOOL isSipCallRoom = [self shouldListAsSipCallRoom:roomState];
+        if (summary.isSipCallRoom != isSipCallRoom)
+        {
+            summary.isSipCallRoom = isSipCallRoom;
+            updated = YES;
+        }
     }
 
     if (summary.membership == MXMembershipInvite)
@@ -752,6 +759,19 @@
     }];
 
     return otherMembers;
+}
+
+- (BOOL)shouldListAsSipCallRoom:(MXRoomState*)roomState
+{
+    for (MXRoomMember *member in roomState.members.members)
+    {
+        if ([member.userId hasPrefix:@"@_sip_sip="])
+        {
+            return YES;
+        }
+    }
+
+    return NO;
 }
 
 - (BOOL)shouldHideRoomWithRoomTypeString:(NSString*)roomTypeString

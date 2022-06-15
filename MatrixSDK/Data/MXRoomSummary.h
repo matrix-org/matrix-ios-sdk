@@ -219,6 +219,11 @@ FOUNDATION_EXPORT NSUInteger const MXRoomSummaryPaginationChunkSize;
 @property (nonatomic) BOOL isConferenceUserRoom;
 
 /**
+ Flag indicating if the room is a sip soom with at least one sip participant.
+ */
+@property (nonatomic) BOOL isSipCallRoom;
+
+/**
  Indicate whether this room should be hidden from the user.
  */
 @property (nonatomic) BOOL hiddenFromUser;

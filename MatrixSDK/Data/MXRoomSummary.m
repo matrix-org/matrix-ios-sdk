@@ -235,6 +235,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     _membershipTransitionState = summary.membershipTransitionState;
     _membersCount = summary.membersCount;
     _isConferenceUserRoom = summary.isConferenceUserRoom;
+    _isSipCallRoom = summary.isSipCallRoom;
     _hiddenFromUser = summary.hiddenFromUser;
     _storedHash = summary.storedHash;
     _lastMessage = summary.lastMessage;
@@ -952,6 +953,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
         _membershipTransitionState = [MXRoomSummary membershipTransitionStateForMembership:_membership];
         _membersCount = [aDecoder decodeObjectForKey:@"membersCount"];
         _isConferenceUserRoom = [(NSNumber*)[aDecoder decodeObjectForKey:@"isConferenceUserRoom"] boolValue];
+        _isSipCallRoom = [(NSNumber*)[aDecoder decodeObjectForKey:@"isSipCallRoom"] boolValue];
 
         _others = [aDecoder decodeObjectForKey:@"others"];
         _isEncrypted = [aDecoder decodeBoolForKey:@"isEncrypted"];
@@ -1001,6 +1003,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     [aCoder encodeInteger:(NSInteger)_membership forKey:@"membership"];
     [aCoder encodeObject:_membersCount forKey:@"membersCount"];
     [aCoder encodeObject:@(_isConferenceUserRoom) forKey:@"isConferenceUserRoom"];
+    [aCoder encodeObject:@(_isSipCallRoom) forKey:@"isSipCallRoom"];
 
     [aCoder encodeObject:_others forKey:@"others"];
     [aCoder encodeBool:_isEncrypted forKey:@"isEncrypted"];
@@ -1106,7 +1109,10 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     {
         result |= MXRoomSummaryDataTypesConferenceUser;
     }
-    
+    if (self.isSipCallRoom)
+    {
+        result |= MXRoomSummaryDataTypesSipCall;
+    }
     return result;
 }
 
