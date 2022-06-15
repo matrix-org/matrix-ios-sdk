@@ -47,7 +47,7 @@ Pod::Spec.new do |s|
       ss.dependency 'libbase58', '~> 0.1.4'
       
       # Experimental / not production-ready Rust-based crypto library, iOS-only
-      ss.ios.dependency 'MatrixSDKCrypto', :configurations => ['DEBUG']
+      ss.dependency 'MatrixSDKCrypto', '~> 0.1.0', :configurations => ["DEBUG"]
   end
 
   s.subspec 'JingleCallStack' do |ss|
