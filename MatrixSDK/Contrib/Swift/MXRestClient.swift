@@ -288,13 +288,14 @@ public extension MXRestClient {
      - parameters:
          - old: the current password to update.
          - new: the new password.
+         - logoutDevices flag to log out all devices
          - completion: A block object called when the operation completes
          - response: indicates whether the operation succeeded or not.
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func changePassword(from old: String, to new: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
-        return __changePassword(old, with: new, success: currySuccess(completion), failure: curryFailure(completion))
+    @nonobjc @discardableResult func changePassword(from old: String, to new: String, logoutDevices: Bool, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
+        return __changePassword(old, with: new, logoutDevices: logoutDevices, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
     

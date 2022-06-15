@@ -1,1 +1,0 @@
-Prevent invalid room names on member count underflows.
