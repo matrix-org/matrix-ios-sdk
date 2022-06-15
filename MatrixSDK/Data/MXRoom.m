@@ -3643,7 +3643,7 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
     if (!crypto)
     {
 #ifdef MX_CRYPTO
-        MXLogFailure(@"[MXRoom] checkEncryptionState: Crypto module is not present");
+        MXLogError(@"[MXRoom] checkEncryptionState: Crypto module is not present");
 #endif
         return;
     }
@@ -3659,7 +3659,7 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
     {
         if (self.summary.isEncrypted)
         {
-            MXLogFailure(@"[MXRoom] checkEncryptionState: Crypto and state store do not match");
+            MXLogError(@"[MXRoom] checkEncryptionState: Crypto and state store do not match");
         }
         else
         {
