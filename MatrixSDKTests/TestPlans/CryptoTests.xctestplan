@@ -71,7 +71,6 @@
         "MXCryptoTests\/testMXDeviceListDidUpdateUsersDevicesNotification",
         "MXCryptoTests\/testMXSDKOptionsEnableCryptoWhenOpeningMXSession",
         "MXCryptoTests\/testMXSessionEventWithEventId",
-        "MXCryptoTests\/testMultipleDownloadKeys",
         "MXCryptoTests\/testReplayAttack",
         "MXCryptoTests\/testReplayAttackForEventEdits",
         "MXCryptoTests\/testRestoreOlmOutboundKey",
