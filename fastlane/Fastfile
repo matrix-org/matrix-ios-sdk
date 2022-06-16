@@ -94,6 +94,7 @@ platform :ios do
       cobertura_xml: true,
       output_directory: "./build/test",
       workspace: "MatrixSDK.xcworkspace",
+      proj: "MatrixSDK.xcodeproj",
       scheme: "MatrixSDK-macOS",
     )
   end
