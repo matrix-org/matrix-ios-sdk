@@ -19,6 +19,8 @@ import Network
 import AFNetworking
 
 // MARK: - MXNetworkMonitor notification constants
+@available(iOS 12.0, *)
+@available(macOS 10.14, *)
 extension MXNetworkMonitor {
     /// Posted each time the reachability changes
     public static let reachabilityDidChange = Notification.Name("MXNetworkMonitorReachabilityDidChange")
@@ -26,6 +28,7 @@ extension MXNetworkMonitor {
 
 /// `MXNetworkMonitor` enables to monitor network reachability.
 @available(iOS 12.0, *)
+@available(macOS 10.14, *)
 @objcMembers
 @objc class MXNetworkMonitor: NSObject {
     
