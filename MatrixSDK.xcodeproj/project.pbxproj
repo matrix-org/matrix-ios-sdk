@@ -693,6 +693,8 @@
 		3A858DE327529183006322C1 /* MXRoomCapabilityType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A858DE027517C0E006322C1 /* MXRoomCapabilityType.swift */; };
 		3A858DE8275511A4006322C1 /* MXRoomAliasAvailabilityCheckerResultTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A858DE7275511A4006322C1 /* MXRoomAliasAvailabilityCheckerResultTests.swift */; };
 		3A858DE9275511A4006322C1 /* MXRoomAliasAvailabilityCheckerResultTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A858DE7275511A4006322C1 /* MXRoomAliasAvailabilityCheckerResultTests.swift */; };
+		3A96C30D285A308900430BB3 /* MXNetworkMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A96C30C285A308900430BB3 /* MXNetworkMonitor.swift */; };
+		3A96C30E285A364500430BB3 /* MXNetworkMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A96C30C285A308900430BB3 /* MXNetworkMonitor.swift */; };
 		3AB5EBB4270B332B0058703A /* MXSpaceStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AB5EBB3270B332B0058703A /* MXSpaceStore.swift */; };
 		3AB5EBB5270B332B0058703A /* MXSpaceStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AB5EBB3270B332B0058703A /* MXSpaceStore.swift */; };
 		3AB5EBB7270ED1C00058703A /* MXSpaceFileStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AB5EBB6270ED1C00058703A /* MXSpaceFileStore.swift */; };
@@ -2411,6 +2413,7 @@
 		3A858DDB275120D1006322C1 /* MXHomeserverCapabilitiesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXHomeserverCapabilitiesTests.swift; sourceTree = "<group>"; };
 		3A858DE027517C0E006322C1 /* MXRoomCapabilityType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXRoomCapabilityType.swift; sourceTree = "<group>"; };
 		3A858DE7275511A4006322C1 /* MXRoomAliasAvailabilityCheckerResultTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXRoomAliasAvailabilityCheckerResultTests.swift; sourceTree = "<group>"; };
+		3A96C30C285A308900430BB3 /* MXNetworkMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXNetworkMonitor.swift; sourceTree = "<group>"; };
 		3AB5EBB3270B332B0058703A /* MXSpaceStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXSpaceStore.swift; sourceTree = "<group>"; };
 		3AB5EBB6270ED1C00058703A /* MXSpaceFileStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXSpaceFileStore.swift; sourceTree = "<group>"; };
 		3AC135D72640335100EE1E74 /* MXDehydrationService.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXDehydrationService.h; sourceTree = "<group>"; };
@@ -3890,6 +3893,7 @@
 		32C6F92F19DD814400EA4E9C /* MatrixSDK */ = {
 			isa = PBXGroup;
 			children = (
+				3A96C30B285A306C00430BB3 /* Network */,
 				66836AB427CFA17200515780 /* EventStream */,
 				3A858DD82750EE0A006322C1 /* HomeServer */,
 				ECCA02B9273485A100B6F34F /* Threads */,
@@ -4209,6 +4213,14 @@
 				3A858DE027517C0E006322C1 /* MXRoomCapabilityType.swift */,
 			);
 			path = HomeServer;
+			sourceTree = "<group>";
+		};
+		3A96C30B285A306C00430BB3 /* Network */ = {
+			isa = PBXGroup;
+			children = (
+				3A96C30C285A308900430BB3 /* MXNetworkMonitor.swift */,
+			);
+			path = Network;
 			sourceTree = "<group>";
 		};
 		3AC1379326432ED500EE1E74 /* Dehydration */ = {
@@ -6388,6 +6400,7 @@
 				B17982F62119E4A2001FD722 /* MXRoomTombStoneContent.m in Sources */,
 				C602B58E1F22A8D700B67D87 /* MXImage.swift in Sources */,
 				B105CD9D261E0B70006EB204 /* MXSpaceChildrenSummary.swift in Sources */,
+				3A96C30D285A308900430BB3 /* MXNetworkMonitor.swift in Sources */,
 				32A9F8E0244720B10069C65B /* MXThrottler.m in Sources */,
 				189CC083265E362600BE1FD8 /* MXLog.swift in Sources */,
 				EC8A53E425B1BCC6004E0802 /* MXThirdPartyUsersResponse.m in Sources */,
@@ -6948,6 +6961,7 @@
 				EC8A53B825B1BC77004E0802 /* MXCallCandidatesEventContent.m in Sources */,
 				B19A30D124042F0800FB6F35 /* MXSelfVerifyingMasterKeyTrustedQRCodeData.m in Sources */,
 				B14EF2652397E90400758AF0 /* MXIdentityServerRestClient.m in Sources */,
+				3A96C30E285A364500430BB3 /* MXNetworkMonitor.swift in Sources */,
 				B14EF2662397E90400758AF0 /* MXSDKOptions.m in Sources */,
 				EC8A53DF25B1BCC6004E0802 /* MXThirdpartyProtocolsResponse.m in Sources */,
 				B19A30C32404268600FB6F35 /* MXVerifyingAnotherUserQRCodeData.m in Sources */,
