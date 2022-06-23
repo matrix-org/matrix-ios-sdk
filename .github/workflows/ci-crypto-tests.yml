@@ -14,6 +14,12 @@ jobs:
     name: Crypto Tests with Synapse
     runs-on: macos-11
 
+    concurrency:
+      # When running on develop, use the sha to allow all runs of this workflow to run concurrently.
+      # Otherwise only allow a single run of this workflow on each branch, automatically cancelling older runs.
+      group: ${{ github.ref == 'refs/heads/develop' && format('crypto-develop-{0}', github.sha) || format('crypto-{0}', github.ref) }}
+      cancel-in-progress: true
+
     steps:
       - uses: actions/checkout@v2
 
