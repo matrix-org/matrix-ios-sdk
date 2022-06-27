@@ -145,7 +145,7 @@
     // Populate multipart form data
     NSError *error;
     MXWeakify(self);
-    NSMutableURLRequest *request = [[AFHTTPRequestSerializer serializer] multipartFormRequestWithMethod:@"POST" URLString:apiPath parameters:nil constructingBodyWithBlock:^(id<AFMultipartFormData> formData) {
+    NSMutableURLRequest *request = [[AFJSONRequestSerializer serializer] multipartFormRequestWithMethod:@"POST" URLString:apiPath parameters:nil constructingBodyWithBlock:^(id<AFMultipartFormData> formData) {
         MXStrongifyAndReturnIfNil(self);
 
         // Fill params defined in https://github.com/matrix-org/rageshake#post-apisubmit
