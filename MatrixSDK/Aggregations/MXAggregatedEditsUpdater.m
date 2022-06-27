@@ -213,6 +213,21 @@
 
 #pragma mark - Data update
 
+- (void)handleReplaceOf:(MXEvent *)event withEventWithId:(NSString *)replaceEventId
+{
+    MXEvent *replaceEvent = [self.matrixStore eventWithEventId:replaceEventId inRoom:event.roomId];
+    
+    if ([replaceEvent.relatesTo.relationType isEqualToString:MXEventRelationTypeReplace])
+    {
+        MXLogDebug(@"[MXAggregations] handleReplaceOf: replacing event %@ with %@", event.eventId, replaceEventId);
+        [self handleReplace:replaceEvent];
+    }
+    else
+    {
+        MXLogWarning(@"[MXAggregations] handleReplaceOf: replaceEvent type %@ instead of expected type %@", event.relatesTo.relationType, MXEventRelationTypeReplace);
+    }
+}
+
 - (void)handleReplace:(MXEvent *)replaceEvent
 {
     NSString *roomId = replaceEvent.roomId;

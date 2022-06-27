@@ -40,6 +40,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)removeListener:(id)listener;
 
 #pragma mark - Data update
+- (void)handleReplaceOf:(MXEvent *)event withEventWithId:(NSString *)replaceEventId;
 - (void)handleReplace:(MXEvent *)replaceEvent;
 //- (void)handleRedaction:(MXEvent *)event;     // TODO(@steve): phase:2. We do not need to handle redaction of an edit for MVP
 

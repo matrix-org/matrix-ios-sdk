@@ -43,6 +43,8 @@
 @property (nonatomic, strong, readwrite) MXBeaconAggregations *beaconAggregations;
 @property (nonatomic, strong) id<MXBeaconInfoSummaryStoreProtocol> beaconInfoSummaryStore;
 
+@property (nonatomic, strong) NSMutableDictionary<NSString *, NSString *> *replacementEvents;
+
 @end
 
 
@@ -258,6 +260,8 @@
         
         self.beaconAggregations = [[MXBeaconAggregations alloc] initWithSession:self.mxSession store:beaconInfoSummaryStore];
 
+        self.replacementEvents = [NSMutableDictionary new];
+
         [self registerListener];
     }
     
@@ -285,15 +289,31 @@
 - (void)registerListener
 {
     [self.mxSession listenToEvents:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
-
         switch (event.eventType) {
             case MXEventTypePollStart:
             case MXEventTypeRoomMessage:
-                if (direction == MXTimelineDirectionForwards
-                    && [event.relatesTo.relationType isEqualToString:MXEventRelationTypeReplace])
+                if ([event.relatesTo.relationType isEqualToString:MXEventRelationTypeReplace])
                 {
-                    [self.aggregatedEditsUpdater handleReplace:event];
+                    if (direction == MXTimelineDirectionForwards)
+                    {
+                        [self.aggregatedEditsUpdater handleReplace:event];
+                    }
+                    else
+                    {
+                        self.replacementEvents[event.relatesTo.eventId] = event.eventId;
+                    }
                 }
+                else
+                {
+                    if (direction == MXTimelineDirectionBackwards)
+                    {
+                        if (self.replacementEvents[event.eventId])
+                        {
+                            [self.aggregatedEditsUpdater handleReplaceOf:event withEventWithId:self.replacementEvents[event.eventId]];
+                        }
+                    }
+                }
+                
                 break;
             case MXEventTypeReaction:
                 [self.aggregatedReactionsUpdater handleReaction:event direction:direction];
