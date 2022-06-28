@@ -1,3 +1,29 @@
+## Changes in 0.23.10 (2022-06-28)
+
+✨ Features
+
+- Add missing "user_busy" MXCallHangupEvent ([#1342](https://github.com/vector-im/element-ios/issues/1342))
+
+🐛 Bugfixes
+
+- Handle empty pagination end token on timeline end reached ([#6347](https://github.com/vector-im/element-ios/issues/6347))
+
+⚠️ API Changes
+
+- Drop support for iOS 10 and 32-bit architectures ([#1501](https://github.com/matrix-org/matrix-ios-sdk/pull/1501))
+
+🧱 Build
+
+- CI: Add concurrency to GitHub Actions. ([#5039](https://github.com/vector-im/element-ios/issues/5039))
+- Add Codecov for unit tests coverage. ([#6306](https://github.com/vector-im/element-ios/issues/6306))
+
+Others
+
+- Crypto: Subclass MXCrypto to enable work-in-progress Rust sdk ([#1496](https://github.com/matrix-org/matrix-ios-sdk/pull/1496))
+- MXBackgroundSyncService - Expose separate method for fetching a particular room's read marker event without causing extra syncs. ([#1500](https://github.com/matrix-org/matrix-ios-sdk/pull/1500))
+- Crypto: Integrate new Rust-based MatrixSDKCrypto framework for DEBUG builds ([#1501](https://github.com/matrix-org/matrix-ios-sdk/pull/1501))
+
+
 ## Changes in 0.23.9 (2022-06-14)
 
 🐛 Bugfixes
