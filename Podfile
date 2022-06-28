@@ -18,7 +18,9 @@ abstract_target 'MatrixSDK' do
     pod 'libbase58', '~> 0.1.4'
     
     target 'MatrixSDK-iOS' do
-        platform :ios, '9.0'
+        platform :ios, '11.0'
+        
+        pod 'MatrixSDKCrypto', "0.1.0", :configurations => ['DEBUG']
         
         target 'MatrixSDKTests-iOS' do
             inherit! :search_paths

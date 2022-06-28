@@ -54,6 +54,10 @@ static MXSDKOptions *sharedOnceInstance = nil;
         _authEnableRefreshTokens = NO;
         _enableThreads = NO;
         _enableRoomSharedHistoryOnInvite = NO;
+        
+        #if DEBUG
+        _enableCryptoV2 = NO;
+        #endif
     }
     
     return self;
