@@ -591,7 +591,8 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 - (void)handlePaginationResponse:(MXPaginationResponse*)paginatedResponse direction:(MXTimelineDirection)direction onComplete:(void (^)(void))onComplete
 {
     // Check pagination end - @see SPEC-319 ticket
-    if (paginatedResponse.chunk.count == 0 && [paginatedResponse.start isEqualToString:paginatedResponse.end])
+    // End token might be ommited when end of the timeline is reached: https://github.com/matrix-org/synapse/pull/12903
+    if (paginatedResponse.chunk.count == 0 && (paginatedResponse.end == nil || [paginatedResponse.start isEqualToString:paginatedResponse.end]))
     {
         // Store the fact we run out of items
         if (direction == MXTimelineDirectionBackwards)
