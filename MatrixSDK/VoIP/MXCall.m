@@ -1084,9 +1084,9 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
 
     // Incoming call
 
-    if (_state >= MXCallStateRinging)
+    if (_state >= MXCallStateWaitLocalMedia)
     {
-        //  already ringing, do nothing
+        //  already processed invite, do nothing
         return;
     }
 
@@ -1124,9 +1124,13 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
     [callStackCallOperationQueue addOperationWithBlock:^{
         MXStrongifyAndReturnIfNil(self);
         
+        MXLogDebug(@"[MXCall][%@] processing block", self.callId)
+        
         MXWeakify(self);
         [self->callStackCall startCapturingMediaWithVideo:self.isVideoCall success:^{
             MXStrongifyAndReturnIfNil(self);
+            
+            MXLogDebug(@"[MXCall][%@] capturing media", self.callId)
             
 #if TARGET_OS_IPHONE
             [self.audioOutputRouter reroute];
@@ -1136,6 +1140,7 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
                                      success:^{
                 MXStrongifyAndReturnIfNil(self);
                 
+                MXLogDebug(@"[MXCall][%@] successfully handled offer", self.callId)
                 // Check whether the call has not been ended.
                 if (self.state != MXCallStateEnded)
                 {
