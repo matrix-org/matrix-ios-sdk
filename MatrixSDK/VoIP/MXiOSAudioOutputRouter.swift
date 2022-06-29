@@ -232,14 +232,7 @@ public class MXiOSAudioOutputRouter: NSObject {
 fileprivate extension AVAudioSession {
     
     var outputRoutes: [MXiOSAudioOutputRoute] {
-        let oldCategory = category
-        try? setCategory(.multiRoute)
-        
-        let result = currentRoute.outputs.map({ MXiOSAudioOutputRoute(withPort: $0) })
-        
-        try? setCategory(oldCategory)
-        
-        return result
+        return currentRoute.outputs.map({ MXiOSAudioOutputRoute(withPort: $0) })
     }
     
 }
