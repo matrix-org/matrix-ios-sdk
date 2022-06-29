@@ -16,30 +16,33 @@ public extension MXCrypto {
     /// - running on iOS
     /// - enabling `enableCryptoV2` feature flag
     @objc static func createCryptoV2IfAvailable(session: MXSession!) -> MXCrypto? {
-        guard #available(iOS 13.0.0, *) else {
+        #if os(iOS)
+            guard #available(iOS 13.0.0, *) else {
+                return nil
+            }
+            guard MXSDKOptions.sharedInstance().enableCryptoV2 else {
+                return nil
+            }
+            
+            guard
+                let session = session,
+                let restClient = session.matrixRestClient,
+                let userId = restClient.credentials?.userId,
+                let deviceId = restClient.credentials?.deviceId
+            else {
+                MXLog.error("[MXCryptoV2] Cannot create Crypto V2, missing properties")
+                return nil
+            }
+            
+            do {
+                return try MXCryptoV2(userId: userId, deviceId: deviceId, session: session, restClient: restClient)
+            } catch {
+                MXLog.error("[MXCryptoV2] Error creating cryptoV2 \(error)")
+                return nil
+            }
+        #else
             return nil
-        }
-        
-        guard MXSDKOptions.sharedInstance().enableCryptoV2 else {
-            return nil
-        }
-        
-        guard
-            let session = session,
-            let restClient = session.matrixRestClient,
-            let userId = restClient.credentials?.userId,
-            let deviceId = restClient.credentials?.deviceId
-        else {
-            MXLog.error("[MXCryptoV2] Cannot create Crypto V2, missing properties")
-            return nil
-        }
-        
-        do {
-            return try MXCryptoV2(userId: userId, deviceId: deviceId, session: session, restClient: restClient)
-        } catch {
-            MXLog.error("[MXCryptoV2] Error creating cryptoV2 \(error)")
-            return nil
-        }
+        #endif
     }
 }
 #endif

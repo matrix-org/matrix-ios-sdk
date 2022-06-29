@@ -7,13 +7,11 @@
 
 import Foundation
 
-#if DEBUG && os(iOS)
-
-import MatrixSDKCrypto
+#if DEBUG
 
 /// Convenience class to delegate network requests originating in Rust crypto module
 /// to the native REST API client
-@available(iOS 13.0.0, *)
+@available(iOS 13.0.0, macOS 10.15.0, *)
 struct MXCryptoRequests {
     private let restClient: MXRestClient
     init(restClient: MXRestClient) {
@@ -56,8 +54,8 @@ struct MXCryptoRequests {
     }
 }
 
-@available(iOS 13.0.0, *)
 /// Convenience structs mapping Rust requests to data for native REST API requests
+@available(iOS 13.0.0, macOS 10.15.0, *)
 extension MXCryptoRequests {
     enum Error: Swift.Error {
         case cannotCreateRequest
