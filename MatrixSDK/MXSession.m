@@ -1858,6 +1858,7 @@ typedef void (^MXOnResumeDone)(void);
             }
         }
 
+        [self validateAccountData];
         self.store.userAccountData = _accountData.accountData;
         
         // Trigger a global notification for the account data update
@@ -1867,6 +1868,20 @@ typedef void (^MXOnResumeDone)(void);
                                                                 object:self
                                                               userInfo:nil];
         }
+    }
+}
+
+/**
+ Private method to validate local account data and report any potential state corruption
+ */
+- (void)validateAccountData
+{
+    // Detecting an issue where more than one valid SSSS key is present on the client
+    // https://github.com/vector-im/element-ios/issues/4569
+    NSInteger keysCount = self.crypto.secretStorage.numberOfValidKeys;
+    if (keysCount > 1)
+    {
+        MXLogError(@"[MXSession] validateAccountData: Detected %ld valid SSSS keys, should only have one at most", keysCount)
     }
 }
 

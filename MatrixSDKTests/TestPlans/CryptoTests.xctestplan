@@ -29,6 +29,7 @@
   "testTargets" : [
     {
       "selectedTests" : [
+        "MXCryptoSecretStorageTests",
         "MXCryptoShareTests\/testShareHistoryKeysWithInvitedUser",
         "MXCryptoShareTests\/testSharedHistoryPreservedWhenForwardingKeys",
         "MXCryptoTests\/testAliceAndBlockedBob",
