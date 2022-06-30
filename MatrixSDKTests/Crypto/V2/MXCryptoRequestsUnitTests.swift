@@ -35,7 +35,7 @@ class MXCryptoRequestsUnitTests: XCTestCase {
             XCTAssertEqual(request.eventType, "A")
             XCTAssertEqual(request.contentMap.map, body)
         } catch {
-            XCTFail("\(error)")
+            XCTFail("Failed creating to device request with error - \(error)")
         }
     }
     
@@ -63,7 +63,7 @@ class MXCryptoRequestsUnitTests: XCTestCase {
             ])
             XCTAssertEqual(request.deviceId, "A")
         } catch {
-            XCTFail("\(error)")
+            XCTFail("Failed creating upload keys request with error - \(error)")
         }
     }
     
