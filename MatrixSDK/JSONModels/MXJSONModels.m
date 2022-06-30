@@ -1068,7 +1068,7 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
 /**
  The original JSON used to create the response model
  */
-@property (nonatomic, strong) NSDictionary *responseJSON;
+@property (nonatomic, copy) NSDictionary *responseJSON;
 @end
 
 @implementation MXKeysUploadResponse
@@ -1102,7 +1102,7 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
 /**
  The original JSON used to create the response model
  */
-@property (nonatomic, strong) NSDictionary *responseJSON;
+@property (nonatomic, copy) NSDictionary *responseJSON;
 @end
 
 @implementation MXKeysQueryResponse
@@ -1207,7 +1207,7 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
 /**
  The original JSON used to create the response model
  */
-@property (nonatomic, strong) NSDictionary *responseJSON;
+@property (nonatomic, copy) NSDictionary *responseJSON;
 @end
 
 @implementation MXKeysClaimResponse
