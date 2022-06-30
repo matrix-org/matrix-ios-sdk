@@ -69,10 +69,16 @@ class MXCryptoMachine {
     }
     
     static func storeURL(for userId: String) throws -> URL {
-        guard let sharedContainerURL = FileManager.default.applicationGroupContainerURL() else {
+        let container: URL
+        if let sharedContainerURL = FileManager.default.applicationGroupContainerURL() {
+            container = sharedContainerURL
+        } else if let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first {
+            container = url
+        } else {
             throw Error.invalidStorage
         }
-        return sharedContainerURL
+
+        return container
             .appendingPathComponent(Self.storeFolder)
             .appendingPathComponent(userId)
     }
