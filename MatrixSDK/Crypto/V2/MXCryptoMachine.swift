@@ -103,7 +103,7 @@ class MXCryptoMachine {
         }
     }
     
-    func ensureOlmChanel(roomId: String, users: [String]) async throws {
+    func ensureOlmChannel(roomId: String, users: [String]) async throws {
         try await getMissingSessions(users: users)
         try await shareRoomKey(roomId: roomId, users: users)
         
@@ -120,7 +120,7 @@ class MXCryptoMachine {
             throw Error.nothingToEncrypt
         }
         
-        try await ensureOlmChanel(roomId: roomId, users: users)
+        try await ensureOlmChannel(roomId: roomId, users: users)
         let event = try machine.encrypt(roomId: roomId, eventType: eventType as String, content: content)
         return MXTools.deserialiseJSONString(event) as? [String: Any] ?? [:]
     }

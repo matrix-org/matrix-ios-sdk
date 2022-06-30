@@ -237,7 +237,7 @@ private class MXCryptoV2: MXCrypto {
         Task {
             do {
                 let users = try await getRoomUserIds(for: room)
-                try await machine.ensureOlmChanel(roomId: roomId, users: users)
+                try await machine.ensureOlmChannel(roomId: roomId, users: users)
                 await MainActor.run {
                     success?()
                 }
