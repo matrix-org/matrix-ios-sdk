@@ -112,13 +112,6 @@ class MXCryptoMachine {
     func ensureOlmChannel(roomId: String, users: [String]) async throws {
         try await getMissingSessions(users: users)
         try await shareRoomKey(roomId: roomId, users: users)
-        
-        let requests = try machine.shareRoomKey(roomId: roomId, users: users)
-        for req in requests {
-            if case .toDevice = req {
-                try await handleRequest(req)
-            }
-        }
     }
     
     func encrypt(_ content: [AnyHashable: Any], roomId: String, eventType: String, users: [String]) async throws -> [String: Any] {
