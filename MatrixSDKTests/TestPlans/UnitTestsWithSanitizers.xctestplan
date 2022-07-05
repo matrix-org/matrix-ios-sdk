@@ -75,7 +75,8 @@
         "MXSyncResponseUnitTests",
         "MXThreadEventTimelineUnitTests",
         "MXThreadingServiceUnitTests",
-        "MXToolsUnitTests"
+        "MXToolsUnitTests",
+        "MXTaskQueueUnitTests",
       ],
       "target" : {
         "containerPath" : "container:MatrixSDK.xcodeproj",

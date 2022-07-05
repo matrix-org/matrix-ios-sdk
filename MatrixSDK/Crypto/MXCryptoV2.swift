@@ -237,7 +237,7 @@ private class MXCryptoV2: MXCrypto {
         Task {
             do {
                 let users = try await getRoomUserIds(for: room)
-                try await machine.ensureOlmChannel(roomId: roomId, users: users)
+                try await machine.shareRoomKeysIfNecessary(roomId: roomId, users: users)
                 await MainActor.run {
                     success?()
                 }
@@ -292,10 +292,12 @@ private class MXCryptoV2: MXCrypto {
     }
     
     public override func onSyncCompleted(_ oldSyncToken: String!, nextSyncToken: String!, catchingUp: Bool) {
-        do {
-            try machine.processOutgoingRequests()
-        } catch {
-            MXLog.error("[MXCryptoV2] onSyncCompleted: error processing outgoing requests \(error)")
+        Task {
+            do {
+                try await machine.completeSync()
+            } catch {
+                MXLog.error("[MXCryptoV2] onSyncCompleted: error processing outgoing requests \(error)")
+            }
         }
     }
     
@@ -481,7 +483,6 @@ private class MXCryptoV2: MXCrypto {
             .compactMap(\.userId)
             .filter { $0 != userId } ?? []
     }
-    
     
     /// Convenience function which logs methods that are being called by the application,
     /// but are not yet implemented via the Rust component.

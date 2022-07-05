@@ -27,6 +27,16 @@ import MatrixSDKCrypto
 /// - performing network requests and marking them as completed on behalf of the Rust machine
 @available(iOS 13.0.0, *)
 class MXCryptoMachine {
+    actor RoomQueues {
+        private var queues = [String: MXTaskQueue]()
+        
+        func getQueue(for roomId: String) -> MXTaskQueue {
+            let queue = queues[roomId] ?? MXTaskQueue()
+            queues[roomId] = queue
+            return queue
+        }
+    }
+    
     private static let storeFolder = "MXCryptoStore"
     
     enum Error: Swift.Error {
@@ -53,6 +63,8 @@ class MXCryptoMachine {
     
     private let machine: OlmMachine
     private let requests: MXCryptoRequests
+    private let serialQueue = MXTaskQueue()
+    private var roomQueues = RoomQueues()
 
     init(userId: String, deviceId: String, restClient: MXRestClient) throws {
         requests = MXCryptoRequests(restClient: restClient)
@@ -68,7 +80,7 @@ class MXCryptoMachine {
         setLogger(logger: self)
     }
     
-    static func storeURL(for userId: String) throws -> URL {
+    private static func storeURL(for userId: String) throws -> URL {
         let container: URL
         if let sharedContainerURL = FileManager.default.applicationGroupContainerURL() {
             container = sharedContainerURL
@@ -89,7 +101,6 @@ class MXCryptoMachine {
         deviceOneTimeKeysCounts: [String: NSNumber],
         unusedFallbackKeys: [String]?
     ) throws {
-        
         let events = toDevice?.jsonString() ?? "[]"
         let deviceChanges = DeviceLists(
             changed: deviceLists?.changed ?? [],
@@ -109,9 +120,22 @@ class MXCryptoMachine {
         }
     }
     
-    func ensureOlmChannel(roomId: String, users: [String]) async throws {
-        try await getMissingSessions(users: users)
-        try await shareRoomKey(roomId: roomId, users: users)
+    func completeSync() async throws {
+        try await serialQueue.sync { [weak self] in
+            try await self?.processOutgoingRequests()
+        }
+    }
+    
+    func shareRoomKeysIfNecessary(roomId: String, users: [String]) async throws {
+        try await serialQueue.sync { [weak self] in
+            try await self?.updateTrackedUsers(users: users)
+            try await self?.getMissingSessions(users: users)
+        }
+        
+        let roomQueue = await roomQueues.getQueue(for: roomId)
+        try await roomQueue.sync { [weak self] in
+            try await self?.shareRoomKey(roomId: roomId, users: users)
+        }
     }
     
     func encrypt(_ content: [AnyHashable: Any], roomId: String, eventType: String, users: [String]) async throws -> [String: Any] {
@@ -119,7 +143,7 @@ class MXCryptoMachine {
             throw Error.nothingToEncrypt
         }
         
-        try await ensureOlmChannel(roomId: roomId, users: users)
+        try await shareRoomKeysIfNecessary(roomId: roomId, users: users)
         let event = try machine.encrypt(roomId: roomId, eventType: eventType as String, content: content)
         return MXTools.deserialiseJSONString(event) as? [String: Any] ?? [:]
     }
@@ -133,19 +157,9 @@ class MXCryptoMachine {
         return try MXEventDecryptionResult(event: result)
     }
     
-    func processOutgoingRequests() throws {
-        let requests = try machine.outgoingRequests()
-        Task {
-            for request in requests {
-                try await handleRequest(request)
-            }
-        }
-    }
-    
     // MARK: - Requests
     
     private func handleRequest(_ request: Request) async throws {
-        
         switch request {
         case .toDevice(let requestId, let eventType, let body):
             try await requests.sendToDevice(request: .init(eventType: eventType, body: body))
@@ -180,6 +194,11 @@ class MXCryptoMachine {
     
     // MARK: - Private
     
+    private func updateTrackedUsers(users: [String]) async throws {
+        machine.updateTrackedUsers(users: users)
+        try await processOutgoingRequests()
+    }
+    
     private func getMissingSessions(users: [String]) async throws {
         guard
             let request = try machine.getMissingSessions(users: users),
@@ -192,9 +211,30 @@ class MXCryptoMachine {
     
     private func shareRoomKey(roomId: String, users: [String]) async throws {
         let requests = try machine.shareRoomKey(roomId: roomId, users: users)
-        for req in requests {
-            if case .toDevice = req {
-                try await handleRequest(req)
+        await withThrowingTaskGroup(of: Void.self) { [weak self] group in
+            guard let self = self else { return }
+            
+            for request in requests {
+                guard case .toDevice = request else {
+                    continue
+                }
+                
+                group.addTask {
+                    try await self.handleRequest(request)
+                }
+            }
+        }
+    }
+    
+    private func processOutgoingRequests() async throws {
+        let requests = try machine.outgoingRequests()
+        await withThrowingTaskGroup(of: Void.self) { [weak self] group in
+            guard let self = self else { return }
+            
+            for request in requests {
+                group.addTask {
+                    try await self.handleRequest(request)
+                }
             }
         }
     }
