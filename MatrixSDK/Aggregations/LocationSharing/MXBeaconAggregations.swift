@@ -50,6 +50,16 @@ public class MXBeaconAggregations: NSObject {
         return self.beaconInfoSummaryStore.getAllBeaconInfoSummaries(inRoomWithId: roomId)
     }
     
+    /// Get all MXBeaconInfoSummary in a room for a user
+    public func getBeaconInfoSummaries(for userId: String, inRoomWithId roomId: String) -> [MXBeaconInfoSummaryProtocol] {
+        return self.beaconInfoSummaryStore.getBeaconInfoSummaries(for: userId, inRoomWithId: roomId)
+    }
+    
+    /// Get all MXBeaconInfoSummary for a user
+    public func getBeaconInfoSummaries(for userId: String) -> [MXBeaconInfoSummaryProtocol] {
+        return self.beaconInfoSummaryStore.getAllBeaconInfoSummaries(forUserId: userId)
+    }
+    
     /// Update a MXBeaconInfoSummary device id that belongs to the current user.
     /// Enables to recognize that a beacon info has been started on the device
     public func updateBeaconInfoSummary(with eventId: String, deviceId: String, inRoomWithId roomId: String)  {
@@ -62,6 +72,7 @@ public class MXBeaconAggregations: NSObject {
         }
         
         if beaconInfoSummary.updateWithDeviceId(deviceId) {
+            self.beaconInfoSummaryStore.addOrUpdateBeaconInfoSummary(beaconInfoSummary, inRoomWithId: roomId)
             self.notifyBeaconInfoSummaryListeners(ofRoomWithId: roomId, beaconInfoSummary: beaconInfoSummary)
         }
     }
@@ -87,6 +98,7 @@ public class MXBeaconAggregations: NSObject {
         }
         
         if beaconInfoSummary.updateWithLastBeacon(beacon) {
+            self.beaconInfoSummaryStore.addOrUpdateBeaconInfoSummary(beaconInfoSummary, inRoomWithId: roomId)
             self.notifyBeaconInfoSummaryListeners(ofRoomWithId: roomId, beaconInfoSummary: beaconInfoSummary)
         }
     }
@@ -152,19 +164,64 @@ public class MXBeaconAggregations: NSObject {
             }
             
         } else if let existingBeaconInfoSummary = self.getBeaconInfoSummary(withIdentifier: eventId, inRoomWithId: roomId) {
-
+            // Check if a beacon info summary exist with the same beacon info event id
             // If beacon info is older than existing one, do not take it into account
             if beaconInfo.timestamp > existingBeaconInfoSummary.beaconInfo.timestamp {
                 existingBeaconInfoSummary.updateWithBeaconInfo(beaconInfo)
                 beaconInfoSummary = existingBeaconInfoSummary
             }
         } else {
-            beaconInfoSummary = MXBeaconInfoSummary(beaconInfo: beaconInfo)
+            
+            var shouldStopNewBeaconInfo = false
+            
+            if let userId = beaconInfo.userId {
+                
+                // Retrieve existing live beacon info summaries for the user
+                let existingLiveBeaconInfoSummaries = self.beaconInfoSummaryStore.getBeaconInfoSummaries(for: userId, inRoomWithId: roomId).sorted { firstSummary, secondSummary in
+                    firstSummary.beaconInfo.timestamp < secondSummary.beaconInfo.timestamp
+                }
+                
+                let beaconInfoSummariesToStop: [MXBeaconInfoSummary]
+                
+                let lastBeaconInfoSummary = existingLiveBeaconInfoSummaries.last
+                
+                if let lastBeaconInfoSummary = lastBeaconInfoSummary, beaconInfo.timestamp < lastBeaconInfoSummary.beaconInfo.timestamp {
+                        // The received live beacon info is older than last existing one mark it as stopped
+                        shouldStopNewBeaconInfo = true
+                        
+                        // Do not stop the last live beacon info
+                        beaconInfoSummariesToStop = existingLiveBeaconInfoSummaries.filter({ summary in
+                            summary.id != lastBeaconInfoSummary.id
+                        })
+                } else {
+                    // Received beacon info is newer than existing one, stop other beacon info
+                    beaconInfoSummariesToStop = existingLiveBeaconInfoSummaries
+                }
+                
+                // Stop other existing live beacon info summaries
+                for beaconInfoSummary in beaconInfoSummariesToStop {
+                    let stoppedBeaconInfo = beaconInfoSummary.beaconInfo.stopped()
+                    beaconInfoSummary.updateWithBeaconInfo(stoppedBeaconInfo)
+                    self.beaconInfoSummaryStore.addOrUpdateBeaconInfoSummary(beaconInfoSummary, inRoomWithId: roomId)
+                    self.notifyBeaconInfoSummaryListeners(ofRoomWithId: roomId, beaconInfoSummary: beaconInfoSummary)
+                }
+            }
+            
+            let finalBeaconInfo: MXBeaconInfo
+            
+            // We can only have one **live** beacon info per user and per room
+            // If the received live beacon info is older than other existing live, mark it as stopped
+            if shouldStopNewBeaconInfo {
+                finalBeaconInfo = beaconInfo.stopped()
+            } else {
+                finalBeaconInfo = beaconInfo
+            }
+            
+            beaconInfoSummary = MXBeaconInfoSummary(beaconInfo: finalBeaconInfo)
         }
         
         if let beaconInfoSummary = beaconInfoSummary {
             self.beaconInfoSummaryStore.addOrUpdateBeaconInfoSummary(beaconInfoSummary, inRoomWithId: roomId)
-            
             self.notifyBeaconInfoSummaryListeners(ofRoomWithId: roomId, beaconInfoSummary: beaconInfoSummary)
         }
     }
@@ -197,6 +254,14 @@ public class MXBeaconAggregations: NSObject {
     /// Get MXBeaconInfoSummary class instead of MXBeaconInfoSummaryProtocol to have access to internal methods
     private func getBeaconInfoSummary(withIdentifier identifier: String, inRoomWithId roomId: String) -> MXBeaconInfoSummary? {
         return self.beaconInfoSummaryStore.getBeaconInfoSummary(withIdentifier: identifier, inRoomWithId: roomId)
+    }
+    
+    private func getLiveBeaconInfoSummaries(for userId: String, inRoomWithId roomId: String) -> [MXBeaconInfoSummary] {
+        
+        let beaconInfoSummaries = self.beaconInfoSummaryStore.getBeaconInfoSummaries(for: userId, inRoomWithId: roomId)
+        return beaconInfoSummaries.filter { beaconInfoSummary in
+            return beaconInfoSummary.beaconInfo.isLive
+        }
     }
     
     private func getBeaconInfoSummary(withStoppedBeaconInfo beaconInfo: MXBeaconInfo, inRoomWithId roomId: String) -> MXBeaconInfoSummary? {

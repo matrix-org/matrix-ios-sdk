@@ -448,6 +448,140 @@
     }];
 }
 
+// Test various scenarios in which encryption of a room is disabled, incl:
+// - event is not a message, but a reaction
+// - crypto module is not present
+// - room encryption is not set but is fixed
+// - room encryption is not set in neither crypto nor summary store
+- (void)testAliceInACryptedRoomWithoutEncryption
+{
+    [matrixSDKTestsE2EData doE2ETestWithAliceInARoom:self
+                                         readyToTest:^(MXSession *session, NSString *roomId, XCTestExpectation *expectation)
+     {
+        // Prepare room and event to be sent
+        MXCrypto *crypto = session.crypto;
+        MXRoom *room = [session roomWithRoomId:roomId];
+        NSString *message = @"Hello myself!";
+        NSDictionary *content = @{
+            kMXMessageTypeKey: kMXMessageTypeText,
+            kMXMessageBodyKey: message
+        };
+        
+        void (^failureBlock)(NSError *) = ^(NSError *error)
+        {
+            XCTFail("Test failure - %@", error);
+            [expectation fulfill];
+        };
+        
+        // A few helper methods that enable or disable aspects of state which is usually
+        // not mutable in production code, but could happen as a result of data race,
+        // or memory / state corruption
+        void (^enableCryptoModule)(BOOL) = ^(BOOL isCryptoEnabled){
+            [session setValue:isCryptoEnabled ? crypto : nil forKey:@"crypto"];
+        };
+        
+        void (^enableRoomAlgorithm)(BOOL) = ^(BOOL isAlgorithmEnabled){
+            [crypto.store storeAlgorithmForRoom:roomId algorithm:isAlgorithmEnabled ? @"abc" : nil];
+        };
+        
+        void (^enableSummaryEncryption)(BOOL) = ^(BOOL isSummaryEncrypted){
+            [room.summary setValue:@(isSummaryEncrypted) forKey:@"_isEncrypted"];
+        };
+        
+        // Room is encrypted by default
+        XCTAssertTrue(room.summary.isEncrypted);
+        
+        // 1. Send the first event as message
+        [self sendEventOfType:kMXEventTypeStringRoomMessage
+                      content:content
+                         room:room
+                      success:^(MXEvent *event) {
+            
+            // At this point we expect the message to be properly encrypted
+            XCTAssertEqual(event.wireEventType, MXEventTypeRoomEncrypted);
+            XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:message senderSession:session]);
+            
+            // 2. Send an event of reaction type, which does not require encryption
+            [self sendEventOfType:kMXEventTypeStringReaction
+                          content:content
+                             room:room
+                          success:^(MXEvent *event) {
+                
+                // Event is indeed not encrypted
+                XCTAssertTrue(room.summary.isEncrypted);
+                XCTAssertNotEqual(event.wireEventType, MXEventTypeRoomEncrypted);
+                
+                // 3. Send the third message whilst simulating the loss of crypto module
+                // (e.g. some corruption or memory deallocation)
+                enableCryptoModule(NO);
+                [self sendEventOfType:kMXEventTypeStringRoomMessage
+                              content:content
+                                 room:room
+                              success:^(MXEvent *event) {
+                
+                    // Event is not encrypted, even though it should be (error logs will be printed)
+                    XCTAssertTrue(room.summary.isEncrypted);
+                    XCTAssertNotEqual(event.wireEventType, MXEventTypeRoomEncrypted);
+                
+                    // 4. Re-enable crypto module but erase the encryption for the room (both in crypto store and summary).
+                    // This is not possible in production code, but simulates data corruption or memory less
+                    enableCryptoModule(YES);
+                    enableRoomAlgorithm(NO);
+                    enableSummaryEncryption(NO);
+                    [self sendEventOfType:kMXEventTypeStringRoomMessage
+                                  content:content
+                                     room:room
+                                  success:^(MXEvent *event) {
+                        
+                        // Event indeed not encrypted
+                        XCTAssertFalse(room.summary.isEncrypted);
+                        XCTAssertNotEqual(event.wireEventType, MXEventTypeRoomEncrypted);
+                        
+                        // 5. This time we store an algoritm in crypto store but keep summary as not encrypted. We expect
+                        // the state of the summary to be restored and for the event to be encrypted again
+                        enableRoomAlgorithm(YES);
+                        enableSummaryEncryption(NO);
+                        [self sendEventOfType:kMXEventTypeStringRoomMessage
+                                      content:content
+                                         room:room
+                                      success:^(MXEvent *event) {
+                            
+                            // The system detects that there is an inconsistency between crypto and summary store,
+                            // and restores the encryption
+                            XCTAssertTrue(room.summary.isEncrypted);
+                            XCTAssertEqual(event.wireEventType, MXEventTypeRoomEncrypted);
+                            XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:message senderSession:session]);
+                            [expectation fulfill];
+                            
+                        } failure:failureBlock];
+                    } failure:failureBlock];
+                } failure:failureBlock];
+            } failure:failureBlock];
+        } failure:failureBlock];
+    }];
+}
+
+- (void)sendEventOfType:(MXEventTypeString)eventTypeString
+                content:(NSDictionary *)content
+                   room:(MXRoom *)room
+                success:(void(^)(MXEvent *))success
+                failure:(void(^)(NSError *error))failure
+{
+    __block id listener = [room listenToEventsOfTypes:@[eventTypeString]
+                                              onEvent:^(MXEvent * _Nonnull event, MXTimelineDirection direction, MXRoomState * _Nullable roomState)
+    {
+        [room removeListener:listener];
+        success(event);
+    }];
+    
+    [room sendEventOfType:eventTypeString
+                  content:content
+                 threadId:nil
+                localEcho:nil
+                  success:nil
+                  failure:failure];
+}
+
 - (void)testAliceInACryptedRoomAfterInitialSync
 {
     [matrixSDKTestsE2EData doE2ETestWithAliceInARoom:self readyToTest:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
@@ -3109,10 +3243,9 @@
 // - Alice and bob in a megolm encrypted room
 // - Send a blank m.room.encryption event
 // -> The room should be still marked as encrypted
-// -> It must be impossible to send a messages (because the algorithm is not supported)
-// - Fix e2e algorithm in the room
-// -> The room should be still marked as encrypted with the right algorithm
-// -> It must be possible to send message again
+// - Send a message
+// -> The room algorithm is restored to the one present in Crypto store
+// -> It is possible to send a message
 // -> The message must be e2e encrypted
 - (void)testEncryptionAlgorithmChange
 {
@@ -3142,11 +3275,9 @@
                 XCTAssertEqual(liveTimeline.state.encryptionAlgorithm.length, 0);   // with a nil algorithm
                 XCTAssertTrue(roomFromAlicePOV.summary.isEncrypted);
                 
-                // -> It must be impossible to send a messages (because the algorithm is not supported)
+                // -> It is still possible to send a message because crypto will use backup algorithm (which can never be removed)
                 [roomFromAlicePOV sendTextMessage:@"An encrypted message" threadId:nil success:^(NSString *eventId) {
-                    XCTFail(@"It should not possible to send encrypted message anymore");
-                } failure:^(NSError *error) {
-
+                    
                     // - Fix e2e algorithm in the room
                     [roomFromAlicePOV enableEncryptionWithAlgorithm:kMXCryptoMegolmAlgorithm success:^{
                         
@@ -3161,17 +3292,26 @@
                             [expectation fulfill];
                         }];
                         
-                        [roomFromAlicePOV listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
-                            // -> The message must be e2e encrypted
-                            XCTAssertTrue(event.isEncrypted);
-                            XCTAssertEqualObjects(event.wireContent[@"algorithm"], kMXCryptoMegolmAlgorithm);
-                            [expectation fulfill];
-                        }];
-                        
                     } failure:^(NSError *error) {
                         XCTFail(@"The request should not fail - NSError: %@", error);
                         [expectation fulfill];
                     }];
+                    
+                } failure:^(NSError *error) {
+                    XCTFail(@"Cannot send message");
+                    [expectation fulfill];
+                }];
+                
+                __block NSInteger recievedMessages = 0;
+                [roomFromAlicePOV listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+                    // -> The message must be e2e encrypted
+                    XCTAssertTrue(event.isEncrypted);
+                    XCTAssertEqualObjects(event.wireContent[@"algorithm"], kMXCryptoMegolmAlgorithm);
+                    
+                    recievedMessages += 1;
+                    if (recievedMessages == 2) {
+                        [expectation fulfill];
+                    }
                 }];
             }];
         }];
@@ -3236,6 +3376,7 @@
         ];
         
         // Visibility is set to not shared by default
+        MXSDKOptions.sharedInstance.enableRoomSharedHistoryOnInvite = NO;
         XCTAssertFalse([session.crypto isRoomSharingHistory:roomId]);
         
         // But can be enabled with a build flag

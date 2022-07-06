@@ -50,6 +50,8 @@
  */
 @property (nonatomic, weak, nullable) MXStoreService *storeService;
 
+@property (nonatomic, readonly, nonnull) NSArray<NSString*> *roomIds;
+
 #pragma mark - Room data
 
 /**

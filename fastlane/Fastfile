@@ -89,6 +89,14 @@ platform :ios do
       output_directory: "./build/test",
       open_report: !is_ci?
     )
+
+    slather(
+      cobertura_xml: true,
+      output_directory: "./build/test",
+      workspace: "MatrixSDK.xcworkspace",
+      proj: "MatrixSDK.xcodeproj",
+      scheme: "MatrixSDK-macOS",
+    )
   end
 
 

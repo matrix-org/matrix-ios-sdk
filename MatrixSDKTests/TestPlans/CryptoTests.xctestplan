@@ -1,0 +1,90 @@
+{
+  "configurations" : [
+    {
+      "id" : "1FA4678B-FC03-4484-997A-D8629931F24B",
+      "name" : "Configuration 1",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "codeCoverage" : {
+      "targets" : [
+        {
+          "containerPath" : "container:MatrixSDK.xcodeproj",
+          "identifier" : "B14EF1C72397E90400758AF0",
+          "name" : "MatrixSDK-macOS"
+        }
+      ]
+    },
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:MatrixSDK.xcodeproj",
+      "identifier" : "B14EF1C72397E90400758AF0",
+      "name" : "MatrixSDK-macOS"
+    },
+    "uiTestingScreenshotsLifetime" : "keepNever",
+    "userAttachmentLifetime" : "keepNever"
+  },
+  "testTargets" : [
+    {
+      "selectedTests" : [
+        "MXCryptoShareTests\/testShareHistoryKeysWithInvitedUser",
+        "MXCryptoShareTests\/testSharedHistoryPreservedWhenForwardingKeys",
+        "MXCryptoTests\/testAliceAndBlockedBob",
+        "MXCryptoTests\/testAliceAndBobInACryptedRoom",
+        "MXCryptoTests\/testAliceAndBobInACryptedRoom2",
+        "MXCryptoTests\/testAliceAndBobInACryptedRoomBackPaginationFromMemoryStore",
+        "MXCryptoTests\/testAliceAndBobInACryptedRoomFromInitialSync",
+        "MXCryptoTests\/testAliceAndBobWithNewDevice",
+        "MXCryptoTests\/testAliceAndNotCryptedBobInACryptedRoom",
+        "MXCryptoTests\/testAliceDecryptOldMessageWithANewDeviceInACryptedRoom",
+        "MXCryptoTests\/testAliceInACryptedRoom",
+        "MXCryptoTests\/testAliceInACryptedRoomAfterInitialSync",
+        "MXCryptoTests\/testAliceWithNewDeviceAndBob",
+        "MXCryptoTests\/testAliceWithNewDeviceAndBobWithNewDevice",
+        "MXCryptoTests\/testBadSummaryIsEncryptedState",
+        "MXCryptoTests\/testCryptoNoDeviceId",
+        "MXCryptoTests\/testCryptoPersistenceInStore",
+        "MXCryptoTests\/testDeviceInvalidationWhileSending",
+        "MXCryptoTests\/testDiscardAndRestoreOlmOutboundKey",
+        "MXCryptoTests\/testDownloadKeysForUserWithNoDevice",
+        "MXCryptoTests\/testDownloadKeysWithUnreachableHS",
+        "MXCryptoTests\/testEnableCrypto",
+        "MXCryptoTests\/testEnableEncryptionAfterNonCryptedMessages",
+        "MXCryptoTests\/testEncryptionAlgorithmChange",
+        "MXCryptoTests\/testEnsureSingleOlmSession",
+        "MXCryptoTests\/testExportImportRoomKeysWithPassword",
+        "MXCryptoTests\/testExportRoomKeys",
+        "MXCryptoTests\/testFallbackKeySignatures",
+        "MXCryptoTests\/testFirstMessageSentWhileSessionWasPaused",
+        "MXCryptoTests\/testHasKeysToDecryptEvent",
+        "MXCryptoTests\/testImportRoomKeys",
+        "MXCryptoTests\/testImportRoomKeysWithWrongPassword",
+        "MXCryptoTests\/testIncomingRoomKeyRequest",
+        "MXCryptoTests\/testInvitedMemberInACryptedRoom",
+        "MXCryptoTests\/testInvitedMemberInACryptedRoom2",
+        "MXCryptoTests\/testIsRoomSharingHistory",
+        "MXCryptoTests\/testLateRoomKey",
+        "MXCryptoTests\/testLeftAndJoinedBob",
+        "MXCryptoTests\/testLeftBobAndAliceWithNewDevice",
+        "MXCryptoTests\/testMXDeviceListDidUpdateUsersDevicesNotification",
+        "MXCryptoTests\/testMXSDKOptionsEnableCryptoWhenOpeningMXSession",
+        "MXCryptoTests\/testMXSessionEventWithEventId",
+        "MXCryptoTests\/testReplayAttack",
+        "MXCryptoTests\/testReplayAttackForEventEdits",
+        "MXCryptoTests\/testRestoreOlmOutboundKey",
+        "MXCryptoTests\/testRoomIsEncrypted",
+        "MXCryptoTests\/testRoomKeyReshare",
+        "MXCryptoTests\/testSendReplyToTextMessage",
+        "MXMegolmEncryptionTests"
+      ],
+      "target" : {
+        "containerPath" : "container:MatrixSDK.xcodeproj",
+        "identifier" : "B1E09A0D2397FA950057C069",
+        "name" : "MatrixSDKTests-macOS"
+      }
+    }
+  ],
+  "version" : 1
+}

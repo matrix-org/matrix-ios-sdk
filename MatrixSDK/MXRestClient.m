@@ -268,9 +268,11 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
                         dispatch_async(self.completionQueue, ^{
                             BOOL isSoftLogout = [MXRestClient isSoftLogout:mxError];
                             MXLogDebug(@"[MXRestClient] tokenProviderHandler: %@: non-refresh(access token) token auth failed", logId);
-                            self.unauthenticatedHandler(mxError, isSoftLogout, NO, ^{
-                                failure(error);
-                            });
+                            if (unauthenticatedHandler) {
+                                self.unauthenticatedHandler(mxError, isSoftLogout, NO, ^{
+                                    failure(error);
+                                });
+                            }
                         });
                         return;
                     }
@@ -278,9 +280,11 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
                         // If it's non-refresh token auth return the access token,
                         // or if it is refresh token auth and access token is valid also return it.
                         MXLogDebug(@"[MXRestClient] tokenProviderHandler: %@ success token %@, %tu", logId, self.credentials.refreshToken, (NSUInteger)self.credentials.accessTokenExpiresAt)
-                        dispatch_async(self.completionQueue, ^{
-                            success(self.credentials.accessToken);
-                        });
+                        if (self.completionQueue) {
+                            dispatch_async(self.completionQueue, ^{
+                                success(self.credentials.accessToken);
+                            });
+                        }
                         return;
                     }
                     
@@ -922,7 +926,9 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
                                  }];
 }
 
-- (MXHTTPOperation*)changePassword:(NSString*)oldPassword with:(NSString*)newPassword
+- (MXHTTPOperation*)changePassword:(NSString*)oldPassword
+                              with:(NSString*)newPassword
+                     logoutDevices:(BOOL)logoutDevices
                            success:(void (^)(void))success
                            failure:(void (^)(NSError *error))failure
 {
@@ -941,7 +947,8 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
                                              @"user": self.credentials.userId,
                                              @"password": oldPassword,
                                            },
-                                 @"new_password": newPassword
+                                 @"new_password": newPassword,
+                                 @"logout_devices": @(logoutDevices)
                                  };
 
     MXWeakify(self);
@@ -2414,22 +2421,14 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
     // Add all servers as query parameters
     if (viaServers.count)
     {
-        NSMutableString *queryParameters;
+        NSMutableArray<NSString *> *queryParameters = [NSMutableArray new];
         for (NSString *viaServer in viaServers)
         {
             NSString *value = [MXTools encodeURIComponent:viaServer];
-
-            if (!queryParameters)
-            {
-                queryParameters = [NSMutableString stringWithFormat:@"?server_name=%@", value];
-            }
-            else
-            {
-                [queryParameters appendFormat:@"&server_name=%@", value];
-            }
+            [queryParameters addObject:[NSString stringWithFormat:@"server_name=%@", value]];
         }
 
-        path = [path stringByAppendingString:queryParameters];
+        path = [MXTools urlStringWithBase:path queryParameters:queryParameters];
     }
 
     MXWeakify(self);
@@ -2782,7 +2781,7 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
 }
 
 - (MXHTTPOperation*)stateOfRoom:(NSString*)roomId
-                        success:(void (^)(NSDictionary *JSONData))success
+                        success:(void (^)(NSArray *JSONData))success
                         failure:(void (^)(NSError *error))failure
 {
     NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/state", apiPathPrefix, roomId];
@@ -2791,7 +2790,7 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
     return [httpClient requestWithMethod:@"GET"
                                     path:path
                               parameters:nil
-                                 success:^(NSDictionary *JSONResponse) {
+                                 success:^(id JSONResponse) {
                                      MXStrongifyAndReturnIfNil(self);
 
                                      if (success)

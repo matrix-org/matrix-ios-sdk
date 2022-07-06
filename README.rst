@@ -1,3 +1,5 @@
+.. image:: https://codecov.io/gh/matrix-org/matrix-ios-sdk/branch/develop/graph/badge.svg?token=2c9mzJoVpu:target: https://codecov.io/gh/matrix-org/matrix-ios-sdk
+
 Matrix iOS SDK
 ==============
 

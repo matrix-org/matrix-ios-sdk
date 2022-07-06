@@ -40,6 +40,20 @@ class MXGeoURIComponentsUnitTests: XCTestCase {
         XCTAssertEqual(geoURIComponents.longitude, expectedLongitude)
     }
     
+    func testParsingWithAltitudeSucceed() throws {
+                
+        let geoURIString = "geo:53.99803101552848,-8.25347900390625,0;u=164"
+        
+        let latitude: Double = 53.99803101552848
+        let longitude: Double = -8.25347900390625
+        
+        let geoURIComponents = MXGeoURIComponents(geoURI: geoURIString)
+        
+        XCTAssertNotNil(geoURIComponents)
+        XCTAssertEqual(geoURIComponents?.latitude, latitude)
+        XCTAssertEqual(geoURIComponents?.longitude, longitude)
+    }
+    
     func testParsingFails() throws {
         
         let geoURIString = "geo:53.99803101552848.-8.25347900390625"

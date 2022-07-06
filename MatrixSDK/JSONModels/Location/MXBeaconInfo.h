@@ -64,6 +64,14 @@ NS_ASSUME_NONNULL_BEGIN
                         isLive:(BOOL)isLive
                      timestamp:(uint64_t)timestamp;
 
+- (instancetype)initWithUserId:(nullable NSString *)userId
+                        roomId:(nullable NSString *)roomId
+                   description:(nullable NSString *)desc
+                       timeout:(uint64_t)timeout
+                        isLive:(BOOL)isLive
+                     timestamp:(uint64_t)timestamp
+                 originalEvent:(nullable MXEvent*)originalEvent;
+
 - (instancetype)initWithDescription:(nullable NSString*)desc
                             timeout:(uint64_t)timeout
                              isLive:(BOOL)isLive;

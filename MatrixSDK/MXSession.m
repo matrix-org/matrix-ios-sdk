@@ -422,28 +422,71 @@ typedef void (^MXOnResumeDone)(void);
 
                 // Load MXRoomSummaries from the store
                 NSDate *startDate2 = [NSDate date];
-                NSArray<NSString*> *roomIds = self.store.roomSummaryStore.rooms;
-                
-                MXLogDebug(@"[MXSession] Read %lu room ids in %.0fms", (unsigned long)roomIds.count, [[NSDate date] timeIntervalSinceDate:startDate2] * 1000);
 
-                // Create MXRooms from their states stored in the store
-                NSDate *startDate3 = [NSDate date];
-                for (NSString *roomId in roomIds)
+                dispatch_group_t dispatchGroupRooms = dispatch_group_create();
+                NSUInteger numberOfSummaries = self.store.roomSummaryStore.countOfRooms;
+                taskProfile.units = numberOfSummaries;
+                NSArray<NSString *> *roomIDs = self.store.roomIds;
+                BOOL fixSummariesLastMessages = NO;
+                if (numberOfSummaries < roomIDs.count)
                 {
-                    [self loadRoom:roomId];
+                    MXLogWarning(@"[MXFileStore] Detected missing rooms, expected: %tu, got: %tu", roomIDs.count, numberOfSummaries);
+
+                    fixSummariesLastMessages = YES;
+                    //  remove all room summaries
+                    [self.store.roomSummaryStore removeAllSummaries];
+
+                    //  recreate room summaries
+                    for (NSString *roomID in roomIDs)
+                    {
+                        dispatch_group_enter(dispatchGroupRooms);
+
+                        [MXRoomState loadRoomStateFromStore:self.store
+                                                 withRoomId:roomID
+                                              matrixSession:self
+                                                 onComplete:^(MXRoomState *roomState) {
+                            MXRoomSummary *summary = [self getOrCreateRoomSummary:roomID];
+                            [self.roomSummaryUpdateDelegate session:self
+                                                  updateRoomSummary:summary
+                                                    withStateEvents:roomState.stateEvents
+                                                          roomState:roomState];
+                            [summary save:YES];
+                            dispatch_group_leave(dispatchGroupRooms);
+                        }];
+                    }
                 }
 
-                MXLogDebug(@"[MXSession] Built %lu MXRooms in %.0fms", (unsigned long)self->rooms.count, [[NSDate date] timeIntervalSinceDate:startDate3] * 1000);
-                
-                taskProfile.units = self->rooms.count;
-                [MXSDKOptions.sharedInstance.profiler stopMeasuringTaskWithProfile:taskProfile];
-                
-                MXLogDebug(@"[MXSession] Total time to mount SDK data from MXStore: %.0fms", taskProfile.duration * 1000);
-                
-                [self setState:MXSessionStateStoreDataReady];
-                
-                // The SDK client can use this data
-                onStoreDataReady();
+                dispatch_group_notify(dispatchGroupRooms, dispatch_get_main_queue(), ^{
+
+                    NSArray<NSString*> *roomIds = self.store.roomSummaryStore.rooms;
+
+                    MXLogDebug(@"[MXSession] Read %lu room ids in %.0fms", (unsigned long)roomIds.count, [[NSDate date] timeIntervalSinceDate:startDate2] * 1000);
+
+                    // Create MXRooms from their states stored in the store
+                    NSDate *startDate3 = [NSDate date];
+                    for (NSString *roomId in roomIds)
+                    {
+                        [self loadRoom:roomId];
+                    }
+
+                    MXLogDebug(@"[MXSession] Built %lu MXRooms in %.0fms", (unsigned long)self->rooms.count, [[NSDate date] timeIntervalSinceDate:startDate3] * 1000);
+
+                    if (fixSummariesLastMessages)
+                    {
+                        [self fixRoomsSummariesLastMessageWithMaxServerPaginationCount:MXRoomSummaryPaginationChunkSize
+                                                                                 force:YES
+                                                                            completion:nil];
+                    }
+
+                    taskProfile.units = self->rooms.count;
+                    [MXSDKOptions.sharedInstance.profiler stopMeasuringTaskWithProfile:taskProfile];
+                    MXLogDebug(@"[MXSession] Total time to mount SDK data from MXStore: %.0fms", taskProfile.duration * 1000);
+
+                    [self setState:MXSessionStateStoreDataReady];
+
+                    // The SDK client can use this data
+                    onStoreDataReady();
+                });
             }
             else
             {

@@ -548,6 +548,8 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
                             success:(void (^)(NSString *eventId))success
                             failure:(void (^)(NSError *error))failure
 {
+    
+    MXLogDebug(@"[MXRoom] sendEventOfType: %@ in room %@", eventTypeString, self.roomId);
 
     __block MXRoomOperation *roomOperation;
 
@@ -611,16 +613,15 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
         [self handleNextOperationAfter:roomOperation];
     };
     
-    [self checkEncryptionState];
-
-    // Check whether the content must be encrypted before sending
-    if (mxSession.crypto
-        && self.summary.isEncrypted
-        && [self isEncryptionRequiredForEventType:eventTypeString])
+    if ([self shouldEncryptEventOfType:eventTypeString])
     {
+        MXLogDebug(@"[MXRoom] sendEventOfType(MXCrypto): Processing as encrypted event");
+        
         // Check whether the provided content is already encrypted
         if ([eventTypeString isEqualToString:kMXEventTypeStringRoomEncrypted])
         {
+            MXLogDebug(@"[MXRoom] sendEventOfType(MXCrypto): Event already encrypted");
+            
             // We handle here the case where we have to resent an encrypted message event.
             if (event)
             {
@@ -763,6 +764,8 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
     }
     else
     {
+        MXLogDebug(@"[MXRoom] sendEventOfType: Processing as unencrypted event");
+        
         // Check whether a local echo is required
         if ([eventTypeString isEqualToString:kMXEventTypeStringRoomMessage]
             || [eventTypeString isEqualToString:kMXEventTypeStringSticker])
@@ -1006,7 +1009,7 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
 {
     __block MXRoomOperation *roomOperation;
     
-    [self checkEncryptionState];
+    [self validateEncryptionStateConsistency];
 
     double endRange = 1.0;
     
@@ -1271,7 +1274,7 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
     NSData *videoThumbnailData = [newRep representationUsingType:NSJPEGFileType properties: @{NSImageCompressionFactor: @0.8}];
 #endif
     
-    [self checkEncryptionState];
+    [self validateEncryptionStateConsistency];
     
     // Use the uploader id as fake URL for this image data
     // The URL does not need to be valid as the MediaManager will get the data
@@ -1622,7 +1625,7 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
 {
     __block MXRoomOperation *roomOperation;
     
-    [self checkEncryptionState];
+    [self validateEncryptionStateConsistency];
     
     NSData *fileData = [NSData dataWithContentsOfFile:fileLocalURL.path];
     
@@ -3634,15 +3637,67 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
  This method ensures that the MXCryptoStore and the MXStore are aligned. If the bug happens, it should be autofixed
  by this code.
  */
-- (void)checkEncryptionState
+- (void)validateEncryptionStateConsistency
 {
-    if ([mxSession.crypto isRoomEncrypted:self.roomId]
-            && !self.summary.isEncrypted)
+    MXCrypto *crypto = mxSession.crypto;
+    if (!crypto)
+    {
+#ifdef MX_CRYPTO
+        MXLogError(@"[MXRoom] checkEncryptionState: Crypto module is not present");
+#endif
+        return;
+    }
+    
+    BOOL isEncryptedInStore = [crypto isRoomEncrypted:self.roomId];
+    if (isEncryptedInStore && !self.summary.isEncrypted)
     {
         MXLogError(@"[MXRoom] checkEncryptionState: summary.isEncrypted is wrong for room %@. Fix it.", self.roomId);
         self.summary.isEncrypted = YES;
         [self.summary save:YES];
     }
+    else if (!isEncryptedInStore)
+    {
+        if (self.summary.isEncrypted)
+        {
+            MXLogError(@"[MXRoom] checkEncryptionState: Crypto and state store do not match");
+        }
+        else
+        {
+            MXLogDebug(@"[MXRoom] checkEncryptionState: Room is not encrypted");
+        }
+    }
+}
+
+/**
+ Check whether the content must be encrypted before sending
+ */
+- (BOOL)shouldEncryptEventOfType:(MXEventTypeString)eventTypeString
+{
+    // Ensures that state between summary and crypto store is consistent,
+    // otherwise log an error
+    [self validateEncryptionStateConsistency];
+    
+    if (!mxSession.crypto)
+    {
+#ifdef MX_CRYPTO
+        MXLogError(@"[MXRoom] shouldEncryptEventOfType: Not encrypting, crypto module not present");
+#endif
+        return NO;
+    }
+    
+    if (!self.summary.isEncrypted)
+    {
+        MXLogDebug(@"[MXRoom] shouldEncryptEventOfType: Not encrypting, room not encrypted");
+        return NO;
+    }
+    
+    if (![self isEncryptionRequiredForEventType:eventTypeString])
+    {
+        MXLogDebug(@"[MXRoom] shouldEncryptEventOfType: Not encrypting, %@ does not require encryption", eventTypeString);
+        return NO;
+    }
+    
+    return YES;
 }
 
 - (void)membersTrustLevelSummaryWithForceDownload:(BOOL)forceDownload success:(void (^)(MXUsersTrustLevelSummary *usersTrustLevelSummary))success failure:(void (^)(NSError *error))failure

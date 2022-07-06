@@ -701,30 +701,40 @@
                                     
                                     // Initially Alice2 has no keys
                                     XCTAssertEqual([self numberOfKeysInSession:aliceSession2], 0);
-                        
-                                    // Make each Alice device trust each other
-                                    [aliceSession1.crypto setDeviceVerification:MXDeviceVerified forDevice:aliceSession2.myDeviceId ofUser:aliceSession1.myUserId success:^{
-                                        [aliceSession2.crypto setDeviceVerification:MXDeviceVerified forDevice:aliceSession1.myDeviceId ofUser:aliceSession1.myUserId success:^{
-                                            
-                                            // Alice2 paginates in the room to get the keys forwarded to her
-                                            MXRoom *roomFromAlice2POV = [aliceSession2 roomWithRoomId:roomId];
-                                            [roomFromAlice2POV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
-                                                [liveTimeline resetPagination];
-                                                [liveTimeline paginate:10 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
-                                                    
-                                                    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+                                    
+                                    __block id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionNewRoomNotification
+                                                                                                            object:aliceSession2
+                                                                                                             queue:[NSOperationQueue mainQueue]
+                                                                                                        usingBlock:^(NSNotification *notif)
+                                                           {
+                                        if (!observer) { return; }
+                                        [[NSNotificationCenter defaultCenter] removeObserver:observer];
+                                        observer = nil;
+                                        
+                                        // Make each Alice device trust each other
+                                        [aliceSession1.crypto setDeviceVerification:MXDeviceVerified forDevice:aliceSession2.myDeviceId ofUser:aliceSession1.myUserId success:^{
+                                            [aliceSession2.crypto setDeviceVerification:MXDeviceVerified forDevice:aliceSession1.myDeviceId ofUser:aliceSession1.myUserId success:^{
+                                                
+                                                // Alice2 paginates in the room to get the keys forwarded to her
+                                                MXRoom *roomFromAlice2POV = [aliceSession2 roomWithRoomId:roomId];
+                                                [roomFromAlice2POV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
+                                                    [liveTimeline resetPagination];
+                                                    [liveTimeline paginate:10 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
                                                         
-                                                        // Alice2 now has all 3 keys, despite only two of them having shared history
-                                                        XCTAssertEqual([self numberOfKeysInSession:aliceSession2], 3);
-                                                        
-                                                        // Now Alice2 invites Bob into the conversation
-                                                        [roomFromAlice2POV inviteUser:bobSession.myUser.userId success:^{
-                                                        } failure:failureBlock];
-                                                    });
-                                                } failure:failureBlock];
-                                            }];
+                                                        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+                                                            
+                                                            // Alice2 now has all 3 keys, despite only two of them having shared history
+                                                            XCTAssertEqual([self numberOfKeysInSession:aliceSession2], 3);
+                                                            
+                                                            // Now Alice2 invites Bob into the conversation
+                                                            [roomFromAlice2POV inviteUser:bobSession.myUser.userId success:^{
+                                                            } failure:failureBlock];
+                                                        });
+                                                    } failure:failureBlock];
+                                                }];
+                                            } failure:failureBlock];
                                         } failure:failureBlock];
-                                    } failure:failureBlock];
+                                    }];
                                 }];
                             } failure:failureBlock];
                         } failure:failureBlock];

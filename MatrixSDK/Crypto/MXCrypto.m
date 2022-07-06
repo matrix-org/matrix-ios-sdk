@@ -144,7 +144,16 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
     __block MXCrypto *crypto;
 
 #ifdef MX_CRYPTO
-
+    
+    #if DEBUG && TARGET_OS_IPHONE
+    // If running non-production build AND build flag enabled,
+    // switch to work-in-progress Rust implementation of crypto.
+    if (MXSDKOptions.sharedInstance.enableCryptoV2)
+    {
+        return [[MXCryptoV2 alloc] init];
+    }
+    #endif
+    
     dispatch_queue_t cryptoQueue = [MXCrypto dispatchQueueForUser:mxSession.matrixRestClient.credentials.userId];
     dispatch_sync(cryptoQueue, ^{
 
@@ -161,6 +170,16 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 + (void)checkCryptoWithMatrixSession:(MXSession*)mxSession complete:(void (^)(MXCrypto *crypto))complete
 {
 #ifdef MX_CRYPTO
+    
+    #if DEBUG && TARGET_OS_IPHONE
+    // If running non-production build AND build flag enabled,
+    // switch to work-in-progress Rust implementation of crypto.
+    if (MXSDKOptions.sharedInstance.enableCryptoV2)
+    {
+        complete([[MXCryptoV2 alloc] init]);
+        return;
+    }
+    #endif
 
     MXLogDebug(@"[MXCrypto] checkCryptoWithMatrixSession for %@", mxSession.matrixRestClient.credentials.userId);
 
@@ -393,6 +412,12 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 
     [startOperation cancel];
     startOperation = nil;
+
+    if (_myDevice == nil)
+    {
+        MXLogDebug(@"[MXCrypto] close: already closed");
+        return;
+    }
 
     MXWeakify(self);
     dispatch_sync(_cryptoQueue, ^{

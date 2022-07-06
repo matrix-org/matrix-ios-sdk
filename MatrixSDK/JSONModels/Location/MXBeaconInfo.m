@@ -36,9 +36,9 @@ static NSString * const kLiveJSONKey = @"live";
     return [self initWithUserId:userId roomId:roomId description:desc timeout:timeout isLive:isLive timestamp:timestamp originalEvent:nil];
 }
 
-- (instancetype)initWithUserId:(NSString *)userId
-                        roomId:(NSString *)roomId
-                   description:(NSString *)desc
+- (instancetype)initWithUserId:(nullable NSString *)userId
+                        roomId:(nullable NSString *)roomId
+                   description:(nullable NSString *)desc
                        timeout:(uint64_t)timeout
                         isLive:(BOOL)isLive
                      timestamp:(uint64_t)timestamp

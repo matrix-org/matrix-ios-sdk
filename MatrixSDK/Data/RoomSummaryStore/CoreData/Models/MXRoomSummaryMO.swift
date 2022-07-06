@@ -98,9 +98,9 @@ public class MXRoomSummaryMO: NSManagedObject {
             s_others = nil
         }
         s_isEncrypted = summary.isEncrypted
-        s_localUnreadEventCount = Int16(summary.localUnreadEventCount)
-        s_notificationCount = Int16(summary.notificationCount)
-        s_highlightCount = Int16(summary.highlightCount)
+        s_localUnreadEventCount = Int16(min(summary.localUnreadEventCount, UInt(Int16.max)))
+        s_notificationCount = Int16(min(summary.notificationCount, UInt(Int16.max)))
+        s_highlightCount = Int16(min(summary.highlightCount, UInt(Int16.max)))
         s_hasAnyUnread = summary.hasAnyUnread
         s_hasAnyNotification = summary.hasAnyNotification
         s_hasAnyHighlight = summary.hasAnyHighlight

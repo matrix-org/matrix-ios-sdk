@@ -298,6 +298,23 @@
         updated = [self session:session updateRoomSummary:summary withServerRoomSummary:nil roomState:roomState];
     }
 
+    NSUInteger memberCount = roomState.membersCount.members;
+    if (memberCount > 1
+        && (!summary.displayname || [summary.displayname isEqualToString:_roomNameStringLocalizer.emptyRoom]))
+    {
+        // Data are missing to compute the display name
+        MXLogDebug(@"[MXRoomSummaryUpdater] updateRoomSummary: Computed an unexpected \"Empty Room\" name. memberCount: %@", @(memberCount));
+        summary.displayname = [self fixUnexpectedEmptyRoomDisplayname:memberCount
+                                                              session:session
+                                                            roomState:roomState];
+        updated = YES;
+    }
+
+    if (!summary.avatar)
+    {
+        updated = [self updateSummaryAvatar:summary session:session withServerRoomSummary:nil roomState:roomState];
+    }
+
     return updated;
 }
 
@@ -490,8 +507,11 @@
             }
             default:
             {
-                NSString *memberName = [self memberNameFromRoomState:roomState withIdentifier:memberIdentifiers.firstObject];
-                displayName = [_roomNameStringLocalizer moreThanTwoMembers:memberName count:@(memberCount - 2)];
+                if (memberCount > 2)
+                {
+                    NSString *memberName = [self memberNameFromRoomState:roomState withIdentifier:memberIdentifiers.firstObject];
+                    displayName = [_roomNameStringLocalizer moreThanTwoMembers:memberName count:@(memberCount - 2)];
+                }
                 break;
             }
         }
