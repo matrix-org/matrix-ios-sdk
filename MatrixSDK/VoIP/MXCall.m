@@ -161,7 +161,7 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
 
         callStackCall.delegate = self;
 
-        callStackCallDispatchQueue = dispatch_queue_create("callStackCallDispatchQueue", DISPATCH_QUEUE_SERIAL);
+        callStackCallDispatchQueue = dispatch_queue_create("org.matrix.sdk.MXCall.queue", DISPATCH_QUEUE_SERIAL);
         callStackCallOperationQueue = [[NSOperationQueue alloc] init];
         callStackCallOperationQueue.qualityOfService = NSQualityOfServiceUserInteractive;
         callStackCallOperationQueue.maxConcurrentOperationCount = 1;
