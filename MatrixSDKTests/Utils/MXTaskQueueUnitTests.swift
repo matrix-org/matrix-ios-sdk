@@ -27,7 +27,7 @@ class MXTaskQueueUnitTests: XCTestCase {
     
     /// An operation within or outside of a task used to assert test results
     struct Operation: Hashable {
-        enum Kind {
+        enum Kind: CaseIterable {
             case taskStart
             case taskEnd
             case nonTask
@@ -88,95 +88,76 @@ class MXTaskQueueUnitTests: XCTestCase {
         queue = MXTaskQueue()
     }
     
-    func test_executeWithoutQueue_willOverlapTasks() async {
+    // MARK: - No queue tests
+    
+    func test_noQueue_performsAllOperations() async {
         let taskIds = ["A", "B", "C"]
         for id in taskIds {
-            let exp = expectation(description: "exp")
+            let exp = expectation(description: "exp\(id)")
             executeWorkWithoutQueue(id) {
                 exp.fulfill()
             }
         }
         
         await waitForExpectations(timeout: 1)
+        await XCTAssertAllOperationsPerformed(taskIds)
+    }
+    
+    func test_noQueue_overlapsTasks() async {
+        let taskIds = ["A", "B", "C"]
+        for id in taskIds {
+            let exp = expectation(description: "exp\(id)")
+            executeWorkWithoutQueue(id) {
+                exp.fulfill()
+            }
+        }
         
-        let count = await timeline.numberOfOperations
-        XCTAssertEqual(count, taskIds.count * 3)
+        await waitForExpectations(timeout: 1)
         await XCTAssertTasksOverlap(taskIds)
     }
     
-    func test_executeWithSyncQueue_willNotOverlapTasks() async {
+    // MARK: - Sync queue tests
+    
+    func test_syncQueue_performsAllOperations() async {
         let taskIds = ["A", "B", "C"]
         for id in taskIds {
-            let exp = expectation(description: "exp")
+            let exp = expectation(description: "exp\(id)")
             executeWorkOnSyncQueue(id) {
                 exp.fulfill()
             }
         }
         
         await waitForExpectations(timeout: 1)
-        
-        let count = await timeline.numberOfOperations
-        XCTAssertEqual(count, taskIds.count * 3)
-        await XCTAssertTasksDoNotOverlap(taskIds)
+        await XCTAssertAllOperationsPerformed(taskIds)
     }
     
-    func test_executeWithSyncQueue_willAddNonTaskLast() async {
+    func test_syncQueue_doesNotOverlapTasks() async {
         let taskIds = ["A", "B", "C"]
         for id in taskIds {
-            let exp = expectation(description: "exp")
+            let exp = expectation(description: "exp\(id)")
             executeWorkOnSyncQueue(id) {
                 exp.fulfill()
             }
         }
         
         await waitForExpectations(timeout: 1)
-        
-        let count = await timeline.numberOfOperations
-        XCTAssertEqual(count, taskIds.count * 3)
-        
-        for id in taskIds {
-            let order = await timeline.operationOrder(for: id)
-            XCTAssertEqual(order, [.taskStart, .taskEnd, .nonTask])
-        }
-    }
-    
-    func test_executedWithAsyncQueue_willNotOverlapTasks() async {
-        let taskIds = ["A", "B", "C"]
-        for id in taskIds {
-            let exp = expectation(description: "exp")
-            executeWorkOnAsyncQueue(id) {
-                exp.fulfill()
-            }
-        }
-        
-        await waitForExpectations(timeout: 1)
-        
-        let count = await timeline.numberOfOperations
-        XCTAssertEqual(count, taskIds.count * 3)
         await XCTAssertTasksDoNotOverlap(taskIds)
     }
     
-    func test_executeWithAsyncQueue_willAddNonTaskFirst() async {
+    func test_syncQueue_addsNonTaskLast() async {
         let taskIds = ["A", "B", "C"]
         for id in taskIds {
-            let exp = expectation(description: "exp")
-            executeWorkOnAsyncQueue(id) {
+            let exp = expectation(description: "exp\(id)")
+            executeWorkOnSyncQueue(id) {
                 exp.fulfill()
             }
         }
         
         await waitForExpectations(timeout: 1)
-        
-        let count = await timeline.numberOfOperations
-        XCTAssertEqual(count, taskIds.count * 3)
-        
-        for id in taskIds {
-            let order = await timeline.operationOrder(for: id)
-            XCTAssertEqual(order, [.nonTask, .taskStart, .taskEnd], "Order for task \(id) is incorrect")
-        }
+        await XCTAssertTaskOrderEqual(taskIds, expectedOrder: [.taskStart, .taskEnd, .nonTask])
     }
     
-    func test_syncQueueCanThrowError() async throws {
+    func test_syncQueue_throwsError() async throws {
         do {
             try await queue.sync {
                 throw Error.dummy
@@ -189,7 +170,7 @@ class MXTaskQueueUnitTests: XCTestCase {
         }
     }
     
-    func test_queuePerformsDifferentTaskTypes() async throws {
+    func test_syncQueue_performsDifferentTaskTypes() async throws {
         var results = [Any]()
 
         try await queue.sync {
@@ -206,6 +187,47 @@ class MXTaskQueueUnitTests: XCTestCase {
         XCTAssertEqual(results[0] as? Int, 1)
         XCTAssertEqual(results[1] as? String, "ABC")
         XCTAssertEqual(results[2] as? Bool, true)
+    }
+    
+    // MARK: - Async queue tests
+    
+    func test_asyncQueue_performsAllOperations() async {
+        let taskIds = ["A", "B", "C"]
+        for id in taskIds {
+            let exp = expectation(description: "exp\(id)")
+            executeWorkOnAsyncQueue(id) {
+                exp.fulfill()
+            }
+        }
+        
+        await waitForExpectations(timeout: 1)
+        await XCTAssertAllOperationsPerformed(taskIds)
+    }
+    
+    func test_asyncQueue_doesNotOverlapTasks() async {
+        let taskIds = ["A", "B", "C"]
+        for id in taskIds {
+            let exp = expectation(description: "exp\(id)")
+            executeWorkOnAsyncQueue(id) {
+                exp.fulfill()
+            }
+        }
+        
+        await waitForExpectations(timeout: 1)
+        await XCTAssertTasksDoNotOverlap(taskIds)
+    }
+    
+    func test_asyncQueue_addsNonTaskFirst() async {
+        let taskIds = ["A", "B", "C"]
+        for id in taskIds {
+            let exp = expectation(description: "exp\(id)")
+            executeWorkOnAsyncQueue(id) {
+                exp.fulfill()
+            }
+        }
+        
+        await waitForExpectations(timeout: 1)
+        await XCTAssertTaskOrderEqual(taskIds, expectedOrder: [.nonTask, .taskStart, .taskEnd])
     }
     
     // MARK: - Execution helpers
@@ -276,6 +298,18 @@ class MXTaskQueueUnitTests: XCTestCase {
             try await Task.sleep(nanoseconds: UInt64(timeInterval * 1e9))
         } catch {
             XCTFail("Error sleeping \(error)")
+        }
+    }
+    
+    private func XCTAssertAllOperationsPerformed(_ taskIds: [String], file: StaticString = #file, line: UInt = #line) async {
+        let count = await timeline.numberOfOperations
+        XCTAssertEqual(count, taskIds.count * Operation.Kind.allCases.count)
+    }
+    
+    private func XCTAssertTaskOrderEqual(_ taskIds: [String], expectedOrder: [Operation.Kind], file: StaticString = #file, line: UInt = #line) async {
+        for id in taskIds {
+            let realOrder = await timeline.operationOrder(for: id)
+            XCTAssertEqual(realOrder, expectedOrder, "Order for task \(id) is incorrect")
         }
     }
     
