@@ -44,9 +44,9 @@
     [MXLog logError:message file:file function:function line:line];
 }
 
-+ (void)logFailure:(NSString *)message file:(NSString *)file function:(NSString *)function line:(NSUInteger)line
++ (void)logFailure:(NSString *)message details:(nullable NSDictionary<NSString *, id> *)details file:(NSString *)file function:(NSString *)function line:(NSUInteger)line
 {
-    [MXLog logFailure:message file:file function:function line:line];
+    [MXLog logFailure:message details:details file:file function:function line:line];
 }
 
 @end
