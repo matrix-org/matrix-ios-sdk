@@ -1129,7 +1129,7 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
     [callStackCallOperationQueue addOperationWithBlock:^{
         MXStrongifyAndReturnIfNil(self);
         
-        MXLogDebug(@"[MXCall][%@] processing block", self.callId)
+        MXLogDebug(@"[MXCall][%@] start processing invite block", self.callId)
         
         MXWeakify(self);
         [self->callStackCall startCapturingMediaWithVideo:self.isVideoCall success:^{
