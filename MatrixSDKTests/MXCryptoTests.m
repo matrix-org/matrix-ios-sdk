@@ -597,8 +597,8 @@
         [aliceSession2 setStore:[[MXMemoryStore alloc] init] success:^{
 
             [self restartSession:aliceSession2
-              waitingForRoomId:roomId
-                       success:^(MXRoom *roomFromAlicePOV) {
+                waitingForRoomId:roomId
+                         success:^(MXRoom *roomFromAlicePOV) {
 
                 XCTAssert(aliceSession2.crypto, @"MXSession must recall that it has crypto engaged");
 
@@ -754,8 +754,8 @@
             XCTAssert(bobSession.crypto, @"MXSession must recall that it has crypto engaged");
             
             [self restartSession:bobSession
-              waitingForRoomId:roomId
-                       success:^(MXRoom * roomFromBobPOV) {
+                waitingForRoomId:roomId
+                         success:^(MXRoom * roomFromBobPOV) {
 
                 __block NSUInteger paginatedMessagesCount = 0;
 
@@ -3439,9 +3439,9 @@
  and adding small delays to ensure all updates have really completed.
  */
 - (void)restartSession:(MXSession *)session
-    waitingForRoomId:(NSString *)roomId
-             success:(void (^)(MXRoom *))success
-             failure:(void (^)(NSError *))failure
+      waitingForRoomId:(NSString *)roomId
+               success:(void (^)(MXRoom *))success
+               failure:(void (^)(NSError *))failure
 {
     __block id observer;
     
@@ -3450,9 +3450,9 @@
         
         // Wait until we know that the room has actually been created
         observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionNewRoomNotification
-                                                          object:nil
-                                                           queue:[NSOperationQueue mainQueue]
-                                                      usingBlock:^(NSNotification * notification) {
+                                                                     object:nil
+                                                                      queue:[NSOperationQueue mainQueue]
+                                                                 usingBlock:^(NSNotification * notification) {
             if ([notification.userInfo[kMXSessionNotificationRoomIdKey] isEqualToString:roomId])
             {
                 [[NSNotificationCenter defaultCenter] removeObserver:observer];
