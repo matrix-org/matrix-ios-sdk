@@ -112,10 +112,13 @@ private var logger: SwiftyBeaver.Type = {
                              details: @autoclosure () -> [String: Any]? = nil,
                              _ file: String = #file, _ function: String = #function, line: Int = #line, context: Any? = nil) {
         logger.error(formattedMessage(message(), details: details()), file, function, line: line, context: context)
+        
+        #if !DEBUG
         if let details = details() {
             // Tracking errors via analytics as an experiment (provided user consent), but only if details explicitly specified
             MXSDKOptions.sharedInstance().analyticsDelegate?.trackNonFatalIssue("\(message())", details: details)
         }
+        #endif
     }
     
     @available(swift, obsoleted: 5.4)
@@ -127,6 +130,7 @@ private var logger: SwiftyBeaver.Type = {
                                details: @autoclosure () -> [String: Any]? = nil,
                                _ file: String = #file, _ function: String = #function, line: Int = #line, context: Any? = nil) {
         logger.error(formattedMessage(message(), details: details()), file, function, line: line, context: context)
+        
         #if DEBUG
         assertionFailure("\(message())")
         #else
