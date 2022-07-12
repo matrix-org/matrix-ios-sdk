@@ -408,7 +408,9 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
     [RLMRealm deleteFilesForConfiguration:config error:&error];
     if (error)
     {
-        MXLogError(@"[MXRealmCryptoStore] deleteStore: Error: %@", error);
+        MXLogErrorWithDetails(@"[MXRealmCryptoStore] deleteStore error", @{
+            @"error": error
+        });
         
         if (!readOnly)
         {
@@ -425,7 +427,9 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
             }
             else
             {
-                MXLogError(@"[MXRealmCryptoStore] deleteStore: Cannot open realm. Error: %@", error);
+                MXLogErrorWithDetails(@"[MXRealmCryptoStore] deleteStore: Cannot open realm.", @{
+                    @"error": error
+                });
             }
         }
     }
@@ -888,7 +892,9 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
         }
         else
         {
-            MXLogError(@"[MXRealmCryptoStore] performSessionOperationWithDevice. Error: olm session %@ not found", sessionId);
+            MXLogErrorWithDetails(@"[MXRealmCryptoStore] performSessionOperationWithDevice. Error: olm session not found", @{
+                @"sessionId": sessionId
+            });
             block(nil);
         }
     }];
@@ -1005,13 +1011,17 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
             }
             else
             {
-                MXLogError(@"[MXRealmCryptoStore] performSessionOperationWithGroupSessionWithId. Error: Cannot build MXOlmInboundGroupSession for megolm session %@", sessionId);
+                MXLogErrorWithDetails(@"[MXRealmCryptoStore] performSessionOperationWithGroupSessionWithId. Error: Cannot build MXOlmInboundGroupSession for megolm session", @{
+                    @"sessionId": sessionId
+                });
                 block(nil);
             }
         }
         else
         {
-            MXLogError(@"[MXRealmCryptoStore] performSessionOperationWithGroupSessionWithId. Error: megolm session %@ not found", sessionId);
+            MXLogErrorWithDetails(@"[MXRealmCryptoStore] performSessionOperationWithGroupSessionWithId. Error: megolm session not found", @{
+                @"sessionId": sessionId
+            });
             block(nil);
         }
     }];

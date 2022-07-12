@@ -271,6 +271,9 @@ typedef void (^HandleOfferBlock)(dispatch_block_t);
     HandleOfferBlock handleOfferBlock = ^(dispatch_block_t completion){
         RTCSessionDescription *sessionDescription = [[RTCSessionDescription alloc] initWithType:RTCSdpTypeOffer sdp:sdpOffer];
         MXWeakify(self);
+        MXLogDebug(@"[MXJingleCallStackCall] handleOffer: willSetRemoteDescription with peerConnection: %@ sdp: %@",
+                   self->peerConnection,
+                   sdpOffer);
         [self->peerConnection setRemoteDescription:sessionDescription completionHandler:^(NSError * _Nullable error) {
             MXLogDebug(@"[MXJingleCallStackCall] handleOffer: setRemoteDescription: error: %@", error);
             

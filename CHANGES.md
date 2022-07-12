@@ -1,3 +1,26 @@
+## Changes in 0.23.11 (2022-07-12)
+
+✨ Features
+
+- Analytics: Track non-fatal issues if consent provided ([#1503](https://github.com/matrix-org/matrix-ios-sdk/pull/1503))
+- Crypto: Integrate Rust-based OlmMachine to encrypt / decrypt messages ([#6357](https://github.com/vector-im/element-ios/issues/6357))
+
+🙌 Improvements
+
+- Include ID server access token when making a 3pid invite (and creating a room). ([#6385](https://github.com/vector-im/element-ios/issues/6385))
+
+🐛 Bugfixes
+
+- MXiOSAudioOutputRouter: fixed issue that prevents the system to properly switch from built-in to bluetooth output. ([#5368](https://github.com/vector-im/element-ios/issues/5368))
+- Fix MXCall answer not being sent to server in some cases ([#6359](https://github.com/vector-im/element-ios/issues/6359))
+
+Others
+
+- Integration tests should wait until the room is ready ([#1516](https://github.com/matrix-org/matrix-ios-sdk/pull/1516))
+- Analytics: Log errors with details in analytics ([#1517](https://github.com/matrix-org/matrix-ios-sdk/pull/1517))
+- Secret Storage: Detect multiple valid SSSS keys ([#4569](https://github.com/vector-im/element-ios/issues/4569))
+
+
 ## Changes in 0.23.10 (2022-06-28)
 
 ✨ Features

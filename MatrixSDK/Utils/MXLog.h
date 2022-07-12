@@ -33,9 +33,17 @@
 }
 
 #define MXLogError(message, ...) { \
-    [MXLogObjcWrapper logError:[NSString stringWithFormat: message, ##__VA_ARGS__] file:@__FILE__ function:[NSString stringWithFormat:@"%s", __FUNCTION__] line:__LINE__]; \
+    [MXLogObjcWrapper logError:[NSString stringWithFormat: message, ##__VA_ARGS__] details:nil file:@__FILE__ function:[NSString stringWithFormat:@"%s", __FUNCTION__] line:__LINE__]; \
+}
+
+#define MXLogErrorWithDetails(message, dictionary) { \
+    [MXLogObjcWrapper logError:message details:dictionary file:@__FILE__ function:[NSString stringWithFormat:@"%s", __FUNCTION__] line:__LINE__]; \
 }
 
 #define MXLogFailure(message, ...) { \
-    [MXLogObjcWrapper logFailure:[NSString stringWithFormat: message, ##__VA_ARGS__] file:@__FILE__ function:[NSString stringWithFormat:@"%s", __FUNCTION__] line:__LINE__]; \
+    [MXLogObjcWrapper logFailure:[NSString stringWithFormat: message, ##__VA_ARGS__] details:nil file:@__FILE__ function:[NSString stringWithFormat:@"%s", __FUNCTION__] line:__LINE__]; \
+}
+
+#define MXLogFailureWithDetails(message, dictionary) { \
+    [MXLogObjcWrapper logFailure:message details:dictionary file:@__FILE__ function:[NSString stringWithFormat:@"%s", __FUNCTION__] line:__LINE__]; \
 }

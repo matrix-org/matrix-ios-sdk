@@ -115,6 +115,17 @@ NS_ASSUME_NONNULL_BEGIN
                            isReply:(BOOL)isReply
                       startsThread:(BOOL)startsThread;
 
+#pragma mark - Health metrics
+
+/**
+ Report a non-fatal issue, i.e. an internal error that did not result in a crash
+ 
+ @param issue the description of the issue that occured
+ @param details a dictionary of additional context-dependent details about the issue
+ */
+- (void)trackNonFatalIssue:(NSString *)issue
+                   details:(nullable NSDictionary <NSString *, id> *)details;
+
 @end
 
 NS_ASSUME_NONNULL_END
