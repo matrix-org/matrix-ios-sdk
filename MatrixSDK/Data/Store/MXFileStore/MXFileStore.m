@@ -902,7 +902,11 @@ static NSUInteger preloadOptions;
                 }
                 @catch (NSException *exception)
                 {
-                    MXLogError(@"[MXFileStore] Warning: MXFileRoomStore file for room %@ has been corrupted. Exception: %@", roomId, exception);
+                    NSDictionary *logDetails = @{
+                        @"roomId": roomId ?: @"",
+                        @"exception": exception
+                    };
+                    MXLogErrorWithDetails(@"[MXFileStore] Warning: MXFileRoomStore file for room has been corrupted", logDetails);
                     [self logFiles];
                     [self deleteAllData];
                 }
@@ -941,7 +945,11 @@ static NSUInteger preloadOptions;
                 }
                 @catch (NSException *exception)
                 {
-                    MXLogError(@"[MXFileStore] Warning: MXFileRoomOutgoingMessagesStore file for room %@ has been corrupted. Exception: %@", roomId, exception);
+                    NSDictionary *logDetails = @{
+                        @"roomId": roomId ?: @"",
+                        @"exception": exception
+                    };
+                    MXLogErrorWithDetails(@"[MXFileStore] Warning: MXFileRoomOutgoingMessagesStore file for room as been corrupted", logDetails);
                     [self logFiles];
                     [self deleteAllData];
                 }
@@ -981,7 +989,11 @@ static NSUInteger preloadOptions;
                 }
                 @catch (NSException *exception)
                 {
-                    MXLogError(@"[MXFileStore] Warning: loadReceipts file for room %@ has been corrupted. Exception: %@", roomId, exception);
+                    NSDictionary *logDetails = @{
+                        @"roomId": roomId ?: @"",
+                        @"exception": exception
+                    };
+                    MXLogErrorWithDetails(@"[MXFileStore] Warning: loadReceipts file for room as been corrupted", logDetails);
                     
                     // We used to reset the store and force a full initial sync but this makes the app
                     // start very slowly.

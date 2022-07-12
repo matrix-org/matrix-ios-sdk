@@ -87,7 +87,7 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
     MXSecretStorageKeyContent *keyContent = [_secretStorage keyWithKeyId:self.recoveryId];
     if (!keyContent)
     {
-        // No recovery at all
+        MXLogError(@"[MXRecoveryService] usePassphrase: no recovery key exists");
         return NO;
     }
     
@@ -190,6 +190,7 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
     MXSecretStorageKeyContent *keyContent = [_secretStorage keyWithKeyId:self.recoveryId];
     if (!keyContent)
     {
+        MXLogError(@"[MXRecoveryService] checkPrivateKey: no recovery key exists");
         complete(NO);
         return;
     }

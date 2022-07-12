@@ -31,9 +31,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (void)logWarning:(NSString *)message file:(NSString *)file function:(NSString *)function line:(NSUInteger)line;
 
-+ (void)logError:(NSString *)message file:(NSString *)file function:(NSString *)function line:(NSUInteger)line;
++ (void)logError:(NSString *)message details:(nullable NSDictionary<NSString *, id> *)details file:(NSString *)file function:(NSString *)function line:(NSUInteger)line;
 
-+ (void)logFailure:(NSString *)message file:(NSString *)file function:(NSString *)function line:(NSUInteger)line;
++ (void)logFailure:(NSString *)message details:(nullable NSDictionary<NSString *, id> *)details file:(NSString *)file function:(NSString *)function line:(NSUInteger)line;
 
 @end
 

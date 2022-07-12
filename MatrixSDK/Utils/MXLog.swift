@@ -108,30 +108,39 @@ private var logger: SwiftyBeaver.Type = {
         logger.warning(message, file, function, line: line)
     }
     
-    public static func error(_ message: @autoclosure () -> Any, _
-                                file: String = #file, _ function: String = #function, line: Int = #line, context: Any? = nil) {
-        logger.error(message(), file, function, line: line, context: context)
+    public static func error(_ message: @autoclosure () -> Any,
+                             details: @autoclosure () -> [String: Any]? = nil,
+                             _ file: String = #file, _ function: String = #function, line: Int = #line, context: Any? = nil) {
+        logger.error(formattedMessage(message(), details: details()), file, function, line: line, context: context)
+        
+        #if !DEBUG
+        if let details = details() {
+            // Tracking errors via analytics as an experiment (provided user consent), but only if details explicitly specified
+            MXSDKOptions.sharedInstance().analyticsDelegate?.trackNonFatalIssue("\(message())", details: details)
+        }
+        #endif
     }
     
     @available(swift, obsoleted: 5.4)
-    @objc public static func logError(_ message: String, file: String, function: String, line: Int) {
-        logger.error(message, file, function, line: line)
+    @objc public static func logError(_ message: String, details: [String: Any]? = nil, file: String, function: String, line: Int) {
+        error(message, details: details, context: nil)
     }
     
-    public static func failure(_ message: @autoclosure () -> Any, _
-                                file: String = #file, _ function: String = #function, line: Int = #line, context: Any? = nil) {
-        logger.error(message(), file, function, line: line, context: context)
+    public static func failure(_ message: @autoclosure () -> Any,
+                               details: @autoclosure () -> [String: Any]? = nil,
+                               _ file: String = #file, _ function: String = #function, line: Int = #line, context: Any? = nil) {
+        logger.error(formattedMessage(message(), details: details()), file, function, line: line, context: context)
+        
         #if DEBUG
         assertionFailure("\(message())")
+        #else
+        MXSDKOptions.sharedInstance().analyticsDelegate?.trackNonFatalIssue("\(message())", details: details())
         #endif
     }
     
     @available(swift, obsoleted: 5.4)
-    @objc public static func logFailure(_ message: String, file: String, function: String, line: Int) {
-        logger.error(message, file, function, line: line)
-        #if DEBUG
-        assertionFailure(message)
-        #endif
+    @objc public static func logFailure(_ message: String, details: [String: Any]? = nil, file: String, function: String, line: Int) {
+        failure(message, details: details, file, function, line: line, context: nil)
     }
     
     // MARK: - Private
@@ -176,5 +185,12 @@ private var logger: SwiftyBeaver.Type = {
         
         logger.removeAllDestinations()
         logger.addDestination(consoleDestination)
+    }
+    
+    fileprivate static func formattedMessage(_ message: Any, details: [String: Any]? = nil) -> String {
+        guard let details = details else {
+            return "\(message)"
+        }
+        return "\(message) - \(details)"
     }
 }
