@@ -303,13 +303,13 @@ class MXTaskQueueUnitTests: XCTestCase {
     
     private func XCTAssertAllOperationsPerformed(_ taskIds: [String], file: StaticString = #file, line: UInt = #line) async {
         let count = await timeline.numberOfOperations
-        XCTAssertEqual(count, taskIds.count * Operation.Kind.allCases.count)
+        XCTAssertEqual(count, taskIds.count * Operation.Kind.allCases.count, file: file, line: line)
     }
     
     private func XCTAssertTaskOrderEqual(_ taskIds: [String], expectedOrder: [Operation.Kind], file: StaticString = #file, line: UInt = #line) async {
         for id in taskIds {
             let realOrder = await timeline.operationOrder(for: id)
-            XCTAssertEqual(realOrder, expectedOrder, "Order for task \(id) is incorrect")
+            XCTAssertEqual(realOrder, expectedOrder, "Order for task \(id) is incorrect", file: file, line: line)
         }
     }
     
