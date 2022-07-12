@@ -71,6 +71,11 @@
     return accountDataDict[eventType];
 }
 
+- (NSDictionary<NSString *,id> *)allAccountDataEvents
+{
+    return accountDataDict.copy;
+}
+
 - (NSDictionary<NSString *, id> *)accountData
 {
     // Rebuild the dictionary as sent by the homeserver
