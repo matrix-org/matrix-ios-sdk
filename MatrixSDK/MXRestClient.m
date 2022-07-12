@@ -1412,7 +1412,7 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
                                                success:(void (^)(NSDictionary *updatedParameters))success
                                                failure:(void (^)(NSError *error))failure
 {
-    MXHTTPOperation *operation = [self useIdentityAccessToken:^(NSString * _Nullable accessToken) {
+    MXHTTPOperation *operation = [self getIdentityAccessTokenIfNecessary:^(NSString * _Nullable accessToken) {
         if (accessToken)
         {
             NSMutableDictionary *updatedParameters = [NSMutableDictionary dictionaryWithDictionary:parameters];
@@ -1435,8 +1435,7 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
                                                     success:(void (^)(NSArray<NSDictionary *> *updatedArray))success
                                                     failure:(void (^)(NSError *error))failure
 {
-    MXHTTPOperation *operation = [self useIdentityAccessToken:^(NSString * _Nullable accessToken) {
-                
+    MXHTTPOperation *operation = [self getIdentityAccessTokenIfNecessary:^(NSString * _Nullable accessToken) {
         if (accessToken)
         {
             NSMutableArray *updatedArray = [NSMutableArray arrayWithCapacity:invite3PIDArray.count];
@@ -1466,8 +1465,8 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
  @param success A block called when the access token was retrieved, or when no access token is required.
  @param failure A block called when an error occurs.
  */
-- (MXHTTPOperation*)useIdentityAccessToken:(void (^)(NSString * _Nullable accessToken))success
-                                   failure:(void (^)(NSError *error))failure
+- (MXHTTPOperation*)getIdentityAccessTokenIfNecessary:(void (^)(NSString * _Nullable accessToken))success
+                                              failure:(void (^)(NSError *error))failure
 {
     MXHTTPOperation *operation;
 
