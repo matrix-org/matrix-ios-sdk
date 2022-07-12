@@ -530,6 +530,8 @@ typedef void (^MXOnResumeDone)(void);
 {
     MXLogDebug(@"[MXSession] handleSyncResponse: Received %tu joined rooms, %tu invited rooms, %tu left rooms, %tu toDevice events.", syncResponse.rooms.join.count, syncResponse.rooms.invite.count, syncResponse.rooms.leave.count, syncResponse.toDevice.events.count);
     
+    [self.crypto handleSyncResponse:syncResponse];
+    
     // Check whether this is the initial sync
     BOOL isInitialSync = !self.isEventStreamInitialised;
 
