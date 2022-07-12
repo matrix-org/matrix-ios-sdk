@@ -27,10 +27,14 @@ class MXTaskQueueUnitTests: XCTestCase {
     
     /// An operation within or outside of a task used to assert test results
     struct Operation: Hashable {
-        enum Kind: CaseIterable {
+        enum Kind: String, CaseIterable, CustomStringConvertible {
             case taskStart
             case taskEnd
             case nonTask
+            
+            var description: String {
+                return rawValue
+            }
         }
         
         let id: String
@@ -154,7 +158,7 @@ class MXTaskQueueUnitTests: XCTestCase {
         }
         
         await waitForExpectations(timeout: 1)
-        await XCTAssertTaskOrderEqual(taskIds, expectedOrder: [.taskStart, .taskEnd, .nonTask])
+        await XCTAssertOperationOrderEquals(taskIds, order: [.taskStart, .taskEnd, .nonTask])
     }
     
     func test_syncQueue_throwsError() async throws {
@@ -217,7 +221,7 @@ class MXTaskQueueUnitTests: XCTestCase {
         await XCTAssertTasksDoNotOverlap(taskIds)
     }
     
-    func test_asyncQueue_addsNonTaskFirst() async {
+    func test_asyncQueue_addsNonTaskBeforeTaskEnd() async {
         let taskIds = ["A", "B", "C"]
         for id in taskIds {
             let exp = expectation(description: "exp\(id)")
@@ -227,7 +231,12 @@ class MXTaskQueueUnitTests: XCTestCase {
         }
         
         await waitForExpectations(timeout: 1)
-        await XCTAssertTaskOrderEqual(taskIds, expectedOrder: [.nonTask, .taskStart, .taskEnd])
+        
+        // For the async variant `nonTask` could happen before or after `taskStart` but
+        // always before `taskEnd`. Instead of asserting the entire flow deterministically
+        // we assert relative positions
+        await XCTAssertOperationOrder(taskIds, first: .taskStart, second: .taskEnd)
+        await XCTAssertOperationOrder(taskIds, first: .nonTask, second: .taskEnd)
     }
     
     // MARK: - Execution helpers
@@ -301,18 +310,33 @@ class MXTaskQueueUnitTests: XCTestCase {
         }
     }
     
+    /// Assert that for every task id all operations (task start, task end and non task) are performed
     private func XCTAssertAllOperationsPerformed(_ taskIds: [String], file: StaticString = #file, line: UInt = #line) async {
         let count = await timeline.numberOfOperations
         XCTAssertEqual(count, taskIds.count * Operation.Kind.allCases.count, file: file, line: line)
     }
     
-    private func XCTAssertTaskOrderEqual(_ taskIds: [String], expectedOrder: [Operation.Kind], file: StaticString = #file, line: UInt = #line) async {
+    /// Assert that operations for each task happen in the exact order specified
+    private func XCTAssertOperationOrderEquals(_ taskIds: [String], order: [Operation.Kind], file: StaticString = #file, line: UInt = #line) async {
         for id in taskIds {
             let realOrder = await timeline.operationOrder(for: id)
-            XCTAssertEqual(realOrder, expectedOrder, "Order for task \(id) is incorrect", file: file, line: line)
+            XCTAssertEqual(realOrder, order, "Order for task \(id) is incorrect", file: file, line: line)
         }
     }
     
+    /// Assert that for every task a given operation occurs before another operation
+    private func XCTAssertOperationOrder(_ taskIds: [String], first: Operation.Kind, second: Operation.Kind, file: StaticString = #file, line: UInt = #line) async {
+        for id in taskIds {
+            let realOrder = await timeline.operationOrder(for: id)
+            guard let firstIndex = realOrder.firstIndex(of: first), let secondIndex = realOrder.firstIndex(of: second) else {
+                XCTFail("Cannot find given operations", file: file, line: line)
+                return
+            }
+            XCTAssertLessThan(firstIndex, secondIndex, "Operation \(first) does not happen before \(second)", file: file, line: line)
+        }
+    }
+    
+    /// Assert that the operations of different tasks overlap (i.e. second task starts before the first task finishes)
     private func XCTAssertTasksOverlap(_ taskIds: [String], file: StaticString = #file, line: UInt = #line) async {
         for i in 0 ..< taskIds.count {
             for j in i + 1 ..< taskIds.count {
@@ -322,6 +346,7 @@ class MXTaskQueueUnitTests: XCTestCase {
         }
     }
     
+    /// Assert that the operations of different tasks do not overlap (i.e. second task does not start until the firs task has finished)
     private func XCTAssertTasksDoNotOverlap(_ taskIds: [String], file: StaticString = #file, line: UInt = #line) async {
         for i in 0 ..< taskIds.count {
             for j in i + 1 ..< taskIds.count {
