@@ -1,3 +1,40 @@
+## Changes in 0.23.11 (2022-07-12)
+
+✨ Features
+
+- Analytics: Track non-fatal issues if consent provided ([#1503](https://github.com/matrix-org/matrix-ios-sdk/pull/1503))
+- Add missing "user_busy" MXCallHangupEvent ([#1342](https://github.com/vector-im/element-ios/issues/1342))
+- Crypto: Integrate Rust-based OlmMachine to encrypt / decrypt messages ([#6357](https://github.com/vector-im/element-ios/issues/6357))
+
+🙌 Improvements
+
+- Include ID server access token when making a 3pid invite (and creating a room). ([#6385](https://github.com/vector-im/element-ios/issues/6385))
+
+🐛 Bugfixes
+
+- MXiOSAudioOutputRouter: fixed issue that prevents the system to properly switch from built-in to bluetooth output. ([#5368](https://github.com/vector-im/element-ios/issues/5368))
+- Handle empty pagination end token on timeline end reached ([#6347](https://github.com/vector-im/element-ios/issues/6347))
+- Fix MXCall answer not being sent to server in some cases ([#6359](https://github.com/vector-im/element-ios/issues/6359))
+
+⚠️ API Changes
+
+- Drop support for iOS 10 and 32-bit architectures ([#1501](https://github.com/matrix-org/matrix-ios-sdk/pull/1501))
+
+🧱 Build
+
+- CI: Add concurrency to GitHub Actions. ([#5039](https://github.com/vector-im/element-ios/issues/5039))
+- Add Codecov for unit tests coverage. ([#6306](https://github.com/vector-im/element-ios/issues/6306))
+
+Others
+
+- Crypto: Subclass MXCrypto to enable work-in-progress Rust sdk ([#1496](https://github.com/matrix-org/matrix-ios-sdk/pull/1496))
+- MXBackgroundSyncService - Expose separate method for fetching a particular room's read marker event without causing extra syncs. ([#1500](https://github.com/matrix-org/matrix-ios-sdk/pull/1500))
+- Crypto: Integrate new Rust-based MatrixSDKCrypto framework for DEBUG builds ([#1501](https://github.com/matrix-org/matrix-ios-sdk/pull/1501))
+- Integration tests should wait until the room is ready ([#1516](https://github.com/matrix-org/matrix-ios-sdk/pull/1516))
+- Analytics: Log errors with details in analytics ([#1517](https://github.com/matrix-org/matrix-ios-sdk/pull/1517))
+- Secret Storage: Detect multiple valid SSSS keys ([#4569](https://github.com/vector-im/element-ios/issues/4569))
+
+
 ## Changes in 0.23.10 (2022-06-28)
 
 ✨ Features
