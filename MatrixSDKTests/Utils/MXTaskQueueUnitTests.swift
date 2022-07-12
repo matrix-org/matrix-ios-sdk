@@ -158,7 +158,7 @@ class MXTaskQueueUnitTests: XCTestCase {
         }
         
         await waitForExpectations(timeout: 1)
-        await XCTAssertTaskOrderEquals(taskIds, expectedOrder: [.taskStart, .taskEnd, .nonTask])
+        await XCTAssertOperationOrderEquals(taskIds, order: [.taskStart, .taskEnd, .nonTask])
     }
     
     func test_syncQueue_throwsError() async throws {
@@ -235,8 +235,8 @@ class MXTaskQueueUnitTests: XCTestCase {
         // For the async variant `nonTask` could happen before or after `taskStart` but
         // always before `taskEnd`. Instead of asserting the entire flow deterministically
         // we assert relative positions
-        await XCTAssertOperationBefore(taskIds, operation: .taskStart, before: .taskEnd)
-        await XCTAssertOperationBefore(taskIds, operation: .nonTask, before: .taskEnd)
+        await XCTAssertOperationOrder(taskIds, first: .taskStart, second: .taskEnd)
+        await XCTAssertOperationOrder(taskIds, first: .nonTask, second: .taskEnd)
     }
     
     // MARK: - Execution helpers
@@ -317,22 +317,22 @@ class MXTaskQueueUnitTests: XCTestCase {
     }
     
     /// Assert that operations for each task happen in the exact order specified
-    private func XCTAssertTaskOrderEquals(_ taskIds: [String], expectedOrder: [Operation.Kind], file: StaticString = #file, line: UInt = #line) async {
+    private func XCTAssertOperationOrderEquals(_ taskIds: [String], order: [Operation.Kind], file: StaticString = #file, line: UInt = #line) async {
         for id in taskIds {
             let realOrder = await timeline.operationOrder(for: id)
-            XCTAssertEqual(realOrder, expectedOrder, "Order for task \(id) is incorrect", file: file, line: line)
+            XCTAssertEqual(realOrder, order, "Order for task \(id) is incorrect", file: file, line: line)
         }
     }
     
     /// Assert that for every task a given operation occurs before another operation
-    private func XCTAssertOperationBefore(_ taskIds: [String], operation: Operation.Kind, before: Operation.Kind, file: StaticString = #file, line: UInt = #line) async {
+    private func XCTAssertOperationOrder(_ taskIds: [String], first: Operation.Kind, second: Operation.Kind, file: StaticString = #file, line: UInt = #line) async {
         for id in taskIds {
             let realOrder = await timeline.operationOrder(for: id)
-            guard let index = realOrder.firstIndex(of: operation), let beforeIndex = realOrder.firstIndex(of: before) else {
+            guard let firstIndex = realOrder.firstIndex(of: first), let secondIndex = realOrder.firstIndex(of: second) else {
                 XCTFail("Cannot find given operations", file: file, line: line)
                 return
             }
-            XCTAssertLessThan(index, beforeIndex, "Operation \(operation) does not happen before \(before)", file: file, line: line)
+            XCTAssertLessThan(firstIndex, secondIndex, "Operation \(first) does not happen before \(second)", file: file, line: line)
         }
     }
     
