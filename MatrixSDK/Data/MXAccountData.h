@@ -62,6 +62,13 @@
 - (NSDictionary *)accountDataForEventType:(NSString*)eventType;
 
 /**
+ Get all account data events
+ 
+ @return dictionary of the user account_data events, keyed by event type
+ */
+- (NSDictionary <NSString *, id>*)allAccountDataEvents;
+
+/**
  The account data as sent by the homeserver /sync response.
  */
 @property (nonatomic, readonly) NSDictionary<NSString *, id> *accountData;

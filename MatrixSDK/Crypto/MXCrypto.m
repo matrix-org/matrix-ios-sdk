@@ -145,12 +145,10 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 
 #ifdef MX_CRYPTO
     
-    #if DEBUG && TARGET_OS_IPHONE
-    // If running non-production build AND build flag enabled,
-    // switch to work-in-progress Rust implementation of crypto.
-    if (MXSDKOptions.sharedInstance.enableCryptoV2)
-    {
-        return [[MXCryptoV2 alloc] init];
+    #if DEBUG
+    MXCrypto *cryptoV2 = [self createCryptoV2IfAvailableWithSession:mxSession];
+    if (cryptoV2) {
+        return cryptoV2;
     }
     #endif
     
@@ -171,12 +169,10 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 {
 #ifdef MX_CRYPTO
     
-    #if DEBUG && TARGET_OS_IPHONE
-    // If running non-production build AND build flag enabled,
-    // switch to work-in-progress Rust implementation of crypto.
-    if (MXSDKOptions.sharedInstance.enableCryptoV2)
-    {
-        complete([[MXCryptoV2 alloc] init]);
+    #if DEBUG
+    MXCrypto *cryptoV2 = [self createCryptoV2IfAvailableWithSession:mxSession];
+    if (cryptoV2) {
+        complete(cryptoV2);
         return;
     }
     #endif
@@ -904,6 +900,13 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
     // We will be checking this often enough for it not to warrant automatic retries.
     self.uploadFallbackKeyOperation = [self generateAndUploadFallbackKey];
 #endif
+}
+
+- (void)handleSyncResponse:(MXSyncResponse *)syncResponse
+{
+    // Not implemented, the default `MXCrypto` instead uses more specific functions
+    // such as `handleRoomKeyEvent` and `handleDeviceUnusedFallbackKeys`. The method
+    // is possibly used by `MXCrypto` subclasses.
 }
 
 - (void)onSyncCompleted:(NSString *)oldSyncToken nextSyncToken:(NSString *)nextSyncToken catchingUp:(BOOL)catchingUp

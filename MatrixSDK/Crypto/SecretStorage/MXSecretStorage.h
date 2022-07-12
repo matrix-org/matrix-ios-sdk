@@ -140,6 +140,11 @@ typedef NS_ENUM(NSUInteger, MXSecretStorageErrorCode)
  */
 - (nullable MXSecretStorageKeyContent *)defaultKey;
 
+/**
+ Count all non-empty SSSS keys in user's account_data
+ */
+- (NSInteger)numberOfValidKeys;
+
 
 #pragma mark - Secret storage
 

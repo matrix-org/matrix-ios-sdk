@@ -68,6 +68,11 @@ NSString *const kMXAccountDataTypeRecentRoomsKey = @"recent_rooms";
 NSString *const kMX3PIDMediumEmail  = @"email";
 NSString *const kMX3PIDMediumMSISDN = @"msisdn";
 
+// Room creation dictionary key for third party id invites.
+NSString *const kMXInvite3PIDKey = @"invite_3pid";
+// Third party id invite key for access token.
+NSString *const kMX3PIDAccessTokenKey = @"id_access_token";
+
 /**
  MXRestClient error domain
  */
@@ -1409,9 +1414,67 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
                                                success:(void (^)(NSDictionary *updatedParameters))success
                                                failure:(void (^)(NSError *error))failure
 {
+    MXHTTPOperation *operation = [self getIdentityAccessTokenIfNecessary:^(NSString * _Nullable accessToken) {
+        if (accessToken)
+        {
+            NSMutableDictionary *updatedParameters = [NSMutableDictionary dictionaryWithDictionary:parameters];
+            updatedParameters[kMX3PIDAccessTokenKey] = accessToken;
+            
+            success(updatedParameters);
+        }
+        else
+        {
+            success(parameters);
+        }
+        
+    } failure:failure];
+
+    return operation;
+}
+
+// Add the "id_access_token" parameter to all invites if the HS requires it.
+- (MXHTTPOperation*)addIdentityAccessTokenToInvite3PIDArray:(NSArray<NSDictionary *> *)invite3PIDArray
+                                                    success:(void (^)(NSArray<NSDictionary *> *updatedArray))success
+                                                    failure:(void (^)(NSError *error))failure
+{
+    MXHTTPOperation *operation = [self getIdentityAccessTokenIfNecessary:^(NSString * _Nullable accessToken) {
+        if (accessToken)
+        {
+            NSMutableArray *updatedArray = [NSMutableArray arrayWithCapacity:invite3PIDArray.count];
+            for (NSDictionary *invite in invite3PIDArray)
+            {
+                NSMutableDictionary *updatedInvite = [NSMutableDictionary dictionaryWithDictionary:invite];
+                updatedInvite[kMX3PIDAccessTokenKey] = accessToken;
+                
+                [updatedArray addObject:updatedInvite];
+            }
+            
+            success(updatedArray);
+        }
+        else
+        {
+            success(invite3PIDArray);
+        }
+        
+    } failure:failure];
+    
+    return operation;
+}
+
+/**
+ Gets the identity access token from the handler if available and the HS requires it.
+ 
+ @param success A block called when the access token was retrieved, or when no access token is required.
+ @param failure A block called when an error occurs.
+ */
+- (MXHTTPOperation*)getIdentityAccessTokenIfNecessary:(void (^)(NSString * _Nullable accessToken))success
+                                              failure:(void (^)(NSError *error))failure
+{
     MXHTTPOperation *operation;
 
+    MXWeakify(self);
     operation = [self supportedMatrixVersions:^(MXMatrixVersions *matrixVersions) {
+        MXStrongifyAndReturnIfNil(self);
 
         MXHTTPOperation *operation2;
         if (matrixVersions.doesServerAcceptIdentityAccessToken)
@@ -1421,13 +1484,10 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
                 MXWeakify(self);
                 operation2 = self.identityServerAccessTokenHandler(^(NSString *accessToken) {
                     MXStrongifyAndReturnIfNil(self);
-
+                    
                     if (accessToken)
                     {
-                        NSMutableDictionary *updatedParameters = [NSMutableDictionary dictionaryWithDictionary:parameters];
-                        updatedParameters[@"id_access_token"] = accessToken;
-
-                        success(updatedParameters);
+                        success(accessToken);
                     }
                     else
                     {
@@ -1435,7 +1495,7 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
                         NSError *error = [NSError errorWithDomain:kMXRestClientErrorDomain code:MXRestClientErrorMissingIdentityServerAccessToken userInfo:nil];
                         [self dispatchFailure:error inBlock:failure];
                     }
-
+                    
                 }, ^(NSError *error) {
                     failure(error);
                 });
@@ -1449,7 +1509,7 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
         }
         else
         {
-            success(parameters);
+            success(nil);
         }
         
         [operation mutateTo:operation2];
@@ -2525,7 +2585,7 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
     operation = [self addIdentityAccessTokenToParameters:parameters success:^(NSDictionary *updatedParameters) {
         MXStrongifyAndReturnIfNil(self);
 
-        MXHTTPOperation *operation2 = [self inviteByThreePidToRoom:roomId parameters:parameters success:success failure:failure];
+        MXHTTPOperation *operation2 = [self inviteByThreePidToRoom:roomId parameters:updatedParameters success:success failure:failure];
         
         [operation mutateTo:operation2];
 
@@ -2657,7 +2717,26 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
                                      success:(void (^)(MXCreateRoomResponse *response))success
                                      failure:(void (^)(NSError *error))failure
 {
-    return [self createRoom:parameters.JSONDictionary success:success failure:failure];
+    MXHTTPOperation *operation;
+    
+    NSMutableDictionary *jsonDictionary = [NSMutableDictionary dictionaryWithDictionary:parameters.JSONDictionary];
+    NSArray<NSDictionary *> *invite3PIDArray = jsonDictionary[kMXInvite3PIDKey];
+    if (invite3PIDArray && invite3PIDArray.count)
+    {
+        MXWeakify(self);
+        operation = [self addIdentityAccessTokenToInvite3PIDArray:invite3PIDArray success:^(NSArray<NSDictionary *> *updatedArray) {
+            MXStrongifyAndReturnIfNil(self);
+            
+            jsonDictionary[kMXInvite3PIDKey] = updatedArray;
+            MXHTTPOperation *operation2 = [self createRoom:jsonDictionary success:success failure:failure];
+            [operation mutateTo:operation2];
+            
+        } failure:failure];
+    } else {
+        operation = [self createRoom:jsonDictionary success:success failure:failure];
+    }
+
+    return operation;
 }
 
 - (MXHTTPOperation*)createRoom:(NSDictionary*)parameters
