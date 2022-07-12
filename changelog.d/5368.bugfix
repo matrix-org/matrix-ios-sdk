@@ -1,1 +1,0 @@
-MXiOSAudioOutputRouter: fixed issue that prevents the system to properly switch from built-in to bluetooth output.
