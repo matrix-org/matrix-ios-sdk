@@ -2158,34 +2158,8 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
                     replyContentFormattedBody:(NSString**)replyContentFormattedBody
                               stringLocalizer:(id<MXSendReplyEventStringLocalizerProtocol>)stringLocalizer
 {
-    if (eventToReply.eventType == MXEventTypePollStart)
-    {
-        NSString *question = [MXEventContentPollStart modelFromJSON:eventToReply.content].question;
-
-        *replyContentBody = [self replyMessageBodyFromSender:eventToReply.sender
-                                           senderMessageBody:question
-                                      isSenderMessageAnEmote:NO
-                                     isSenderMessageAReplyTo:eventToReply.isReplyEvent
-                                                replyMessage:textMessage];
-        
-        // As formatted body is mandatory for a reply message, use non formatted to build it
-        NSString *finalFormattedTextMessage = formattedTextMessage ?: textMessage;
-        
-        *replyContentFormattedBody = [self replyMessageFormattedBodyFromEventToReply:eventToReply
-                                                          senderMessageFormattedBody:question
-                                                              isSenderMessageAnEmote:NO
-                                                               replyFormattedMessage:finalFormattedTextMessage
-                                                                     stringLocalizer:stringLocalizer];
-        return;
-    }
-    
     NSString *msgtype;
     MXJSONModelSetString(msgtype, eventToReply.content[kMXMessageTypeKey]);
-    
-    if (!msgtype)
-    {
-        return;
-    }
     
     BOOL eventToReplyIsAlreadyAReply = eventToReply.isReplyEvent;
     BOOL isSenderMessageAnEmote = [msgtype isEqualToString:kMXMessageTypeEmote];
@@ -2193,9 +2167,26 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
     NSString *senderMessageBody;
     NSString *senderMessageFormattedBody;
     
-    if (eventToReply.location)
+    if (eventToReply.eventType == MXEventTypePollStart)
+    {
+        NSString *question = [MXEventContentPollStart modelFromJSON:eventToReply.content].question;
+        
+        senderMessageBody = question;
+        senderMessageFormattedBody = senderMessageBody;
+    }
+    else if (eventToReply.eventType == MXEventTypeBeaconInfo)
+    {
+        senderMessageBody = stringLocalizer.senderSentTheirLiveLocation;
+        senderMessageFormattedBody = senderMessageBody;
+    }
+    else if (eventToReply.location)
     {
         senderMessageBody = stringLocalizer.senderSentTheirLocation;
+        senderMessageFormattedBody = senderMessageBody;
+    }
+    else if (eventToReply.eventType == MXEventTypeBeaconInfo)
+    {
+        senderMessageBody = stringLocalizer.senderSentTheirLiveLocation;
         senderMessageFormattedBody = senderMessageBody;
     }
     else if ([msgtype isEqualToString:kMXMessageTypeText]
@@ -2431,6 +2422,11 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
 - (BOOL)canReplyToEvent:(MXEvent *)eventToReply
 {
     if(eventToReply.eventType == MXEventTypePollStart)
+    {
+        return YES;
+    }
+    
+    if(eventToReply.eventType == MXEventTypeBeaconInfo)
     {
         return YES;
     }
