@@ -2158,34 +2158,8 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
                     replyContentFormattedBody:(NSString**)replyContentFormattedBody
                               stringLocalizer:(id<MXSendReplyEventStringLocalizerProtocol>)stringLocalizer
 {
-    if (eventToReply.eventType == MXEventTypePollStart)
-    {
-        NSString *question = [MXEventContentPollStart modelFromJSON:eventToReply.content].question;
-
-        *replyContentBody = [self replyMessageBodyFromSender:eventToReply.sender
-                                           senderMessageBody:question
-                                      isSenderMessageAnEmote:NO
-                                     isSenderMessageAReplyTo:eventToReply.isReplyEvent
-                                                replyMessage:textMessage];
-        
-        // As formatted body is mandatory for a reply message, use non formatted to build it
-        NSString *finalFormattedTextMessage = formattedTextMessage ?: textMessage;
-        
-        *replyContentFormattedBody = [self replyMessageFormattedBodyFromEventToReply:eventToReply
-                                                          senderMessageFormattedBody:question
-                                                              isSenderMessageAnEmote:NO
-                                                               replyFormattedMessage:finalFormattedTextMessage
-                                                                     stringLocalizer:stringLocalizer];
-        return;
-    }
-    
     NSString *msgtype;
     MXJSONModelSetString(msgtype, eventToReply.content[kMXMessageTypeKey]);
-    
-    if (!msgtype)
-    {
-        return;
-    }
     
     BOOL eventToReplyIsAlreadyAReply = eventToReply.isReplyEvent;
     BOOL isSenderMessageAnEmote = [msgtype isEqualToString:kMXMessageTypeEmote];
@@ -2193,10 +2167,23 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
     NSString *senderMessageBody;
     NSString *senderMessageFormattedBody;
     
-    if (eventToReply.location)
+    if (eventToReply.eventType == MXEventTypePollStart)
+    {
+        NSString *question = [MXEventContentPollStart modelFromJSON:eventToReply.content].question;
+        
+        senderMessageBody = question;
+    }
+    else if (eventToReply.eventType == MXEventTypeBeaconInfo)
+    {
+        senderMessageBody = stringLocalizer.senderSentTheirLiveLocation;
+    }
+    else if (eventToReply.location)
     {
         senderMessageBody = stringLocalizer.senderSentTheirLocation;
-        senderMessageFormattedBody = senderMessageBody;
+    }
+    else if (eventToReply.eventType == MXEventTypeBeaconInfo)
+    {
+        senderMessageBody = stringLocalizer.senderSentTheirLiveLocation;
     }
     else if ([msgtype isEqualToString:kMXMessageTypeText]
         || [msgtype isEqualToString:kMXMessageTypeNotice]
@@ -2217,32 +2204,33 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
     else if ([msgtype isEqualToString:kMXMessageTypeImage])
     {
         senderMessageBody = stringLocalizer.senderSentAnImage;
-        senderMessageFormattedBody = senderMessageBody;
     }
     else if ([msgtype isEqualToString:kMXMessageTypeVideo])
     {
         senderMessageBody = stringLocalizer.senderSentAVideo;
-        senderMessageFormattedBody = senderMessageBody;
     }
     else if (eventToReply.isVoiceMessage)
     {
         senderMessageBody = stringLocalizer.senderSentAVoiceMessage;
-        senderMessageFormattedBody = senderMessageBody;
     }
     else if ([msgtype isEqualToString:kMXMessageTypeAudio])
     {
         senderMessageBody = stringLocalizer.senderSentAnAudioFile;
-        senderMessageFormattedBody = senderMessageBody;
     }
     else if ([msgtype isEqualToString:kMXMessageTypeFile])
     {
         senderMessageBody = stringLocalizer.senderSentAFile;
-        senderMessageFormattedBody = senderMessageBody;
     }
     else
     {
         // Other message types are not supported
         MXLogDebug(@"[MXRoom] Reply to message type %@ is not supported", msgtype);
+    }
+    
+    if (!senderMessageFormattedBody)
+    {
+        // As formatted body is mandatory for a reply message, if no formatted body has been defined use non formatted body
+        senderMessageFormattedBody = senderMessageBody;
     }
     
     if (senderMessageBody && senderMessageFormattedBody)
@@ -2431,6 +2419,11 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
 - (BOOL)canReplyToEvent:(MXEvent *)eventToReply
 {
     if(eventToReply.eventType == MXEventTypePollStart)
+    {
+        return YES;
+    }
+    
+    if(eventToReply.eventType == MXEventTypeBeaconInfo)
     {
         return YES;
     }
