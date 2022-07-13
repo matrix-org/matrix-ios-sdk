@@ -97,8 +97,6 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
      Operation queue to collect operations before turn server response received.
      */
     NSOperationQueue *callStackCallOperationQueue;
-
-    dispatch_queue_t callStackCallDispatchQueue;
 }
 
 /**
@@ -161,11 +159,10 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
 
         callStackCall.delegate = self;
 
-        callStackCallDispatchQueue = dispatch_queue_create("org.matrix.sdk.MXCall.queue", DISPATCH_QUEUE_SERIAL);
         callStackCallOperationQueue = [[NSOperationQueue alloc] init];
         callStackCallOperationQueue.qualityOfService = NSQualityOfServiceUserInteractive;
         callStackCallOperationQueue.maxConcurrentOperationCount = 1;
-        callStackCallOperationQueue.underlyingQueue = callStackCallDispatchQueue;
+        callStackCallOperationQueue.underlyingQueue = dispatch_get_main_queue();
         callStackCallOperationQueue.suspended = YES;
 
         // Set up TURN/STUN servers if we have them
