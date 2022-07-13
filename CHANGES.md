@@ -1,3 +1,10 @@
+## Changes in 0.23.12 (2022-07-13)
+
+🐛 Bugfixes
+
+- Fix JingleCallStack UI threading crashes ([#6415](https://github.com/vector-im/element-ios/issues/6415))
+
+
 ## Changes in 0.23.11 (2022-07-12)
 
 ✨ Features
