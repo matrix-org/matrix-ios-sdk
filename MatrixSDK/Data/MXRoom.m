@@ -2172,22 +2172,18 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
         NSString *question = [MXEventContentPollStart modelFromJSON:eventToReply.content].question;
         
         senderMessageBody = question;
-        senderMessageFormattedBody = senderMessageBody;
     }
     else if (eventToReply.eventType == MXEventTypeBeaconInfo)
     {
         senderMessageBody = stringLocalizer.senderSentTheirLiveLocation;
-        senderMessageFormattedBody = senderMessageBody;
     }
     else if (eventToReply.location)
     {
         senderMessageBody = stringLocalizer.senderSentTheirLocation;
-        senderMessageFormattedBody = senderMessageBody;
     }
     else if (eventToReply.eventType == MXEventTypeBeaconInfo)
     {
         senderMessageBody = stringLocalizer.senderSentTheirLiveLocation;
-        senderMessageFormattedBody = senderMessageBody;
     }
     else if ([msgtype isEqualToString:kMXMessageTypeText]
         || [msgtype isEqualToString:kMXMessageTypeNotice]
@@ -2208,32 +2204,33 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
     else if ([msgtype isEqualToString:kMXMessageTypeImage])
     {
         senderMessageBody = stringLocalizer.senderSentAnImage;
-        senderMessageFormattedBody = senderMessageBody;
     }
     else if ([msgtype isEqualToString:kMXMessageTypeVideo])
     {
         senderMessageBody = stringLocalizer.senderSentAVideo;
-        senderMessageFormattedBody = senderMessageBody;
     }
     else if (eventToReply.isVoiceMessage)
     {
         senderMessageBody = stringLocalizer.senderSentAVoiceMessage;
-        senderMessageFormattedBody = senderMessageBody;
     }
     else if ([msgtype isEqualToString:kMXMessageTypeAudio])
     {
         senderMessageBody = stringLocalizer.senderSentAnAudioFile;
-        senderMessageFormattedBody = senderMessageBody;
     }
     else if ([msgtype isEqualToString:kMXMessageTypeFile])
     {
         senderMessageBody = stringLocalizer.senderSentAFile;
-        senderMessageFormattedBody = senderMessageBody;
     }
     else
     {
         // Other message types are not supported
         MXLogDebug(@"[MXRoom] Reply to message type %@ is not supported", msgtype);
+    }
+    
+    if (!senderMessageFormattedBody)
+    {
+        // As formatted body is mandatory for a reply message, if no formatted body has been defined use non formatted body
+        senderMessageFormattedBody = senderMessageBody;
     }
     
     if (senderMessageBody && senderMessageFormattedBody)
