@@ -230,10 +230,12 @@
     
     // - Alice gets the requests notification
     [self observeKeyVerificationRequestInSession:aliceSession block:^(MXKeyVerificationRequest * _Nullable requestFromAlicePOV) {
+        XCTAssertNotNil(requestFromAlicePOV.requestId);
+        XCTAssertNotNil(requestId);
         XCTAssertEqualObjects(requestFromAlicePOV.requestId, requestId);
         
         // Wait a bit
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 5 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
             
             XCTAssertEqualObjects(requestFromAlicePOV.methods, methods);
             XCTAssertEqualObjects(requestFromAlicePOV.otherMethods, methods);

@@ -423,7 +423,7 @@
                                 XCTAssertFalse(newAliceSession.crypto.crossSigning.canCrossSign);
                                 
                                 // - Let's wait for the magic of gossip to happen
-                                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 2 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+                                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 5 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
 
                                     // -> Cross-signing should be fully enabled
                                     XCTAssertEqual(newAliceSession.crypto.crossSigning.state, MXCrossSigningStateCanCrossSign);
@@ -989,7 +989,6 @@
             
             NSString *bobUserId = bobSession.myUserId;
             NSString *bobDeviceId = bobSession.myDeviceId;
-
             
             // - Alice self-verifies it with Alice2
             // This simulates a self verification and trigger cross-signing behind the shell
@@ -998,7 +997,7 @@
                     [aliceSession3.crypto setUserVerification:YES forUser:aliceUserId success:^{
                         
                         // Wait a bit to make background requests for cross-signing happen
-                        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 2 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+                        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 5 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
                             
                             // -> Alice3 should see all devices in the party as trusted thanks to cross-signing
                             XCTAssertEqual(aliceSession3.crypto.crossSigning.state, MXCrossSigningStateCanCrossSign);
@@ -1015,12 +1014,12 @@
                             
                             // -> Alice3 should see Bob as trusted thanks to cross-signing
                             [aliceSession3.crypto downloadKeys:@[bobUserId] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
-                                
+
                                 XCTAssertTrue([aliceSession3.crypto trustLevelForUser:bobUserId].isCrossSigningVerified);
                                 XCTAssertTrue([aliceSession3.crypto deviceTrustLevelForDevice:bobDeviceId ofUser:bobUserId].isCrossSigningVerified);
-                                
+
                                 [expectation fulfill];
-                                
+
                             } failure:^(NSError *error) {
                                 XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                                 [expectation fulfill];
