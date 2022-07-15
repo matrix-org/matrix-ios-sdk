@@ -15,6 +15,9 @@
  */
 
 #import <Foundation/Foundation.h>
+#import "MXWarnings.h"
+
+MX_ASSUME_MISSING_NULLABILITY_BEGIN
 
 /**
  Call states.
@@ -123,3 +126,5 @@ typedef enum : NSUInteger
 @property (nonatomic) NSDictionary<NSString*, NSString*> *others;
 
 @end
+
+MX_ASSUME_MISSING_NULLABILITY_END

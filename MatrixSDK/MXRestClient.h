@@ -1046,7 +1046,7 @@ NS_REFINED_FOR_SWIFT;
 - (MXHTTPOperation*)setRoomJoinRule:(NSString*)roomId
                            joinRule:(MXRoomJoinRule)joinRule
                             success:(void (^)(void))success
-                            failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT __deprecated_msg("Use [setRoomJoinRule:forRoomWithId:allowedParentIds:success:failure:] instead");
+                            failure:(void (^)(NSError *error))failure __deprecated_msg("Use [setRoomJoinRule:forRoomWithId:allowedParentIds:success:failure:] instead");
 
 /**
  Set the join rule of a room.
@@ -1078,7 +1078,7 @@ NS_REFINED_FOR_SWIFT;
  */
 - (MXHTTPOperation*)joinRuleOfRoom:(NSString*)roomId
                            success:(void (^)(MXRoomJoinRule joinRule))success
-                           failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT __deprecated_msg("Use [joinRuleOfRoomWithId:success:failure:] instead");
+                           failure:(void (^)(NSError *error))failure __deprecated_msg("Use [joinRuleOfRoomWithId:success:failure:] instead");
 
 /**
  Get the enhanced join rule of a room.

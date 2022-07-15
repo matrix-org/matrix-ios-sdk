@@ -19,10 +19,13 @@
 
 #import "MXEventUnsignedData.h"
 #import "MXEventContentRelatesTo.h"
+#import "MXWarnings.h"
 
 @class MXEventDecryptionResult;
 @class MXEncryptedContentFile;
 @class MXEventContentLocation;
+
+MX_ASSUME_MISSING_NULLABILITY_BEGIN
 
 /**
  Types of Matrix events
@@ -732,3 +735,5 @@ extern NSString *const kMXEventIdentifierKey;
 - (NSArray<MXEncryptedContentFile*>*)getEncryptedContentFiles;
 
 @end
+
+MX_ASSUME_MISSING_NULLABILITY_END

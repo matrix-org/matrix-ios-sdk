@@ -47,6 +47,8 @@
 @class MXSession;
 @class MXUsersTrustLevelSummary;
 
+MX_ASSUME_MISSING_NULLABILITY_BEGIN
+
 #pragma mark - Notifications
 
 /**
@@ -1343,3 +1345,5 @@ Remove a tag applied on an event of the room
 - (void)membersTrustLevelSummaryWithForceDownload:(BOOL)forceDownload success:(void (^)(MXUsersTrustLevelSummary *usersTrustLevelSummary))success failure:(void (^)(NSError *error))failure;
 
 @end
+
+MX_ASSUME_MISSING_NULLABILITY_END
