@@ -103,7 +103,10 @@
 
             // This enables editing replies that don't provide a fallback mx-reply body.
             compatibilityText = [NSString stringWithFormat:@"* %@", text];
-            compatibilityFormattedText = [NSString stringWithFormat:@"* %@", formattedText];
+            if (formattedText)
+            {
+                compatibilityFormattedText = [NSString stringWithFormat:@"* %@", formattedText];
+            }
         }
     }
     else
