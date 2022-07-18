@@ -37,6 +37,13 @@ protocol MXCryptoSyncing {
 protocol MXCryptoDevicesSource {
     var deviceCurve25519Key: String? { get }
     var deviceEd25519Key: String? { get }
+    func device(userId: String, deviceId: String) -> Device?
+    func devices(userId: String) -> [Device]
+}
+
+protocol MXCryptoUserIdentitySource {
+    func userIdentity(userId: String) -> UserIdentity?
+    func isUserVerified(userId: String) -> Bool
 }
 
 @available(iOS 13.0.0, *)
@@ -44,6 +51,12 @@ protocol MXCryptoEventEncrypting {
     func shareRoomKeysIfNecessary(roomId: String, users: [String]) async throws
     func encrypt(_ content: [AnyHashable: Any], roomId: String, eventType: String, users: [String]) async throws -> [String: Any]
     func decryptEvent(_ event: MXEvent) throws -> MXEventDecryptionResult
+}
+
+@available(iOS 13.0.0, *)
+protocol MXCryptoCrossSigning {
+    func crossSigningStatus() -> CrossSigningStatus
+    func bootstrapCrossSigning(authParams: [AnyHashable: Any]) async throws
 }
 
 #endif

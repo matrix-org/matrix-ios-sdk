@@ -20,6 +20,8 @@
 #import "MXJSONModel.h"
 #import "MXDeviceTrustLevel.h"
 
+@class MXCryptoDeviceWrapper;
+
 /**
  Notification sent when the device trust level has been updated.
  */
@@ -30,7 +32,14 @@ extern NSString *const MXDeviceInfoTrustLevelDidChangeNotification;
  */
 @interface MXDeviceInfo : MXJSONModel
 
-- (instancetype)initWithDeviceId:(NSString*)deviceId;
+- (instancetype)initWithDeviceId:(NSString *)deviceId;
+
+#if DEBUG && TARGET_OS_IPHONE
+/**
+ Initialize device info with MatrixSDKCrypto device
+ */
+- (instancetype)initWithDevice:(MXCryptoDeviceWrapper *)device;
+#endif
 
 /**
  The id of this device.
