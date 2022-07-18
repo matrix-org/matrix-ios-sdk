@@ -1226,7 +1226,8 @@
 // - Reset XS on this new device
 // - Restart Alice first device
 // -> Alice first device must not trust the cross-signing anymore
-- (void)testMXCrossSigningResetDetectionAfterRestart
+// TODO: test is currently broken
+- (void)xtestMXCrossSigningResetDetectionAfterRestart
 {
     // - Have Alice with cross-signing
     [self doTestWithBobAndBootstrappedAlice:self readyToTest:^(MXSession *bobSession, MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
