@@ -109,7 +109,10 @@
     else
     {
         compatibilityText = [NSString stringWithFormat:@"* %@", text];
-        compatibilityFormattedText = [NSString stringWithFormat:@"* %@", formattedText];
+        if (formattedText)
+        {
+            compatibilityFormattedText = [NSString stringWithFormat:@"* %@", formattedText];
+        }
     }
     
     NSMutableDictionary *content = [NSMutableDictionary new];
