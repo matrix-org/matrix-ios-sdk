@@ -19,6 +19,8 @@
 #import "MXEvent.h"
 #import "MXRoomCreateContent.h"
 
+#warning File has not been annotated with nullability, see MX_ASSUME_MISSING_NULLABILITY_BEGIN
+
 @interface MXRoomAccountData ()
 
 @property (nonatomic, readwrite) MXVirtualRoomInfo *virtualRoomInfo;

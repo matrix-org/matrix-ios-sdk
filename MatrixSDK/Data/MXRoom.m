@@ -46,6 +46,8 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 NSInteger const kMXRoomAlreadyJoinedErrorCode = 9001;
 NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
 
+#warning File has not been annotated with nullability, see MX_ASSUME_MISSING_NULLABILITY_BEGIN
+
 @interface MXRoom ()
 {
     /**
