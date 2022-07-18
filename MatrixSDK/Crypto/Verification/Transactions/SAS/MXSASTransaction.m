@@ -46,14 +46,17 @@ NSArray<NSString*> *kKnownShortCodes;
 static NSArray<MXEmojiRepresentation*> *kSasEmojis;
 
 
-@implementation MXSASTransaction
+@implementation MXDefaultSASTransaction
+
+@synthesize state = _state;
+@synthesize sasBytes = _sasBytes;
 
 - (NSString *)sasDecimal
 {
     NSString *sasDecimal;
     if (_sasBytes && [self.accepted.shortAuthenticationString containsObject:MXKeyVerificationSASModeDecimal])
     {
-        sasDecimal = [[MXSASTransaction decimalRepresentationForSas:_sasBytes] componentsJoinedByString:@" "];
+        sasDecimal = [[MXDefaultSASTransaction decimalRepresentationForSas:_sasBytes] componentsJoinedByString:@" "];
     }
 
     return sasDecimal;
@@ -64,7 +67,7 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
     NSArray *sasEmoji;
     if (_sasBytes && [self.accepted.shortAuthenticationString containsObject:MXKeyVerificationSASModeEmoji])
     {
-        sasEmoji = [MXSASTransaction emojiRepresentationForSas:_sasBytes];
+        sasEmoji = [MXDefaultSASTransaction emojiRepresentationForSas:_sasBytes];
     }
 
     return sasEmoji;

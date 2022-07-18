@@ -34,7 +34,7 @@
 
 @interface MXKeyVerificationManager (Testing)
 
-- (MXKeyVerificationTransaction*)transactionWithTransactionId:(NSString*)transactionId;
+- (id<MXKeyVerificationTransaction>)transactionWithTransactionId:(NSString*)transactionId;
 - (MXQRCodeTransaction*)qrCodeTransactionWithTransactionId:(NSString*)transactionId;
 
 @end
@@ -77,7 +77,7 @@
 {
     id observer = [[NSNotificationCenter defaultCenter] addObserverForName:MXKeyVerificationManagerNewTransactionNotification object:session.crypto.keyVerificationManager queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
         
-        MXKeyVerificationTransaction *transaction = notif.userInfo[MXKeyVerificationManagerNotificationTransactionKey];
+        id<MXKeyVerificationTransaction>transaction = notif.userInfo[MXKeyVerificationManagerNotificationTransactionKey];
         if (transaction.isIncoming && [transaction isKindOfClass:MXIncomingSASTransaction.class])
         {
             block((MXIncomingSASTransaction*)transaction);
@@ -95,7 +95,7 @@
 {
     id observer = [[NSNotificationCenter defaultCenter] addObserverForName:MXKeyVerificationManagerNewTransactionNotification object:session.crypto.keyVerificationManager queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
         
-        MXKeyVerificationTransaction *transaction = notif.userInfo[MXKeyVerificationManagerNotificationTransactionKey];
+        id<MXKeyVerificationTransaction>transaction = notif.userInfo[MXKeyVerificationManagerNotificationTransactionKey];
         if ([transaction isKindOfClass:MXQRCodeTransaction.class])
         {
             block((MXQRCodeTransaction*)transaction);
@@ -109,7 +109,7 @@
     [observers addObject:observer];
 }
 
-- (void)observeTransactionUpdate:(MXKeyVerificationTransaction*)transaction block:(void (^)(void))block
+- (void)observeTransactionUpdate:(id<MXKeyVerificationTransaction>)transaction block:(void (^)(void))block
 {
     id observer = [[NSNotificationCenter defaultCenter] addObserverForName:MXKeyVerificationTransactionDidChangeNotification object:transaction queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
         block();
@@ -118,15 +118,15 @@
     [observers addObject:observer];
 }
 
-- (void)observeKeyVerificationRequestChangeWithBlock:(void (^)(MXKeyVerificationRequest * _Nullable request))block
+- (void)observeKeyVerificationRequestChangeWithBlock:(void (^)(id<MXKeyVerificationRequest> _Nullable request))block
 {
     id observer = [[NSNotificationCenter defaultCenter] addObserverForName:MXKeyVerificationRequestDidChangeNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
         
-        MXKeyVerificationRequest *request = notif.object;
+        id<MXKeyVerificationRequest>request = notif.object;
         
-        if ([request isKindOfClass:MXKeyVerificationRequest.class])
+        if ([request conformsToProtocol:@protocol(MXKeyVerificationRequest)])
         {
-            block((MXKeyVerificationRequest*)request);
+            block((id<MXKeyVerificationRequest>)request);
         }
         else
         {
@@ -149,14 +149,14 @@
 }
 
 
-- (void)observeKeyVerificationRequestInSession:(MXSession*)session block:(void (^)(MXKeyVerificationRequest * _Nullable request))block
+- (void)observeKeyVerificationRequestInSession:(MXSession*)session block:(void (^)(id<MXKeyVerificationRequest> _Nullable request))block
 {
     id observer = [[NSNotificationCenter defaultCenter] addObserverForName:MXKeyVerificationManagerNewRequestNotification object:session.crypto.keyVerificationManager queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
         
-        MXKeyVerificationRequest *request = notif.userInfo[MXKeyVerificationManagerNotificationRequestKey];
-        if ([request isKindOfClass:MXKeyVerificationRequest.class])
+        id<MXKeyVerificationRequest> request = notif.userInfo[MXKeyVerificationManagerNotificationRequestKey];
+        if ([request conformsToProtocol:@protocol(MXKeyVerificationRequest)])
         {
-            block((MXKeyVerificationRequest*)request);
+            block((id<MXKeyVerificationRequest>)request);
         }
         else
         {
@@ -196,7 +196,7 @@
                 [aliceSession2.crypto.keyVerificationManager requestVerificationByToDeviceWithUserId:alice.userId
                                                                                         deviceIds:@[alice.deviceId]
                                                                                           methods:@[MXKeyVerificationMethodSAS, @"toto"]
-                                                                                          success:^(MXKeyVerificationRequest *requestFromBobPOV)
+                                                                                          success:^(id<MXKeyVerificationRequest> requestFromBobPOV)
                  {
                      requestId = requestFromBobPOV.requestId;
                      
@@ -213,7 +213,7 @@
                 __block MXOutgoingSASTransaction *sasTransactionFromAlicePOV;
                 
                 // - Alice gets the requests notification
-                [self observeKeyVerificationRequestInSession:aliceSession1 block:^(MXKeyVerificationRequest * _Nullable requestFromAlicePOV) {
+                [self observeKeyVerificationRequestInSession:aliceSession1 block:^(id<MXKeyVerificationRequest> _Nullable requestFromAlicePOV) {
                     XCTAssertEqualObjects(requestFromAlicePOV.requestId, requestId);
                     
                     // Wait a bit
@@ -229,12 +229,12 @@
                         // - Alice accepts it
                         [requestFromAlicePOV acceptWithMethods:@[MXKeyVerificationMethodSAS] success:^{
                             
-                            MXKeyVerificationRequest *requestFromAlicePOV2 = aliceSession1.crypto.keyVerificationManager.pendingRequests.firstObject;
+                            id<MXKeyVerificationRequest> requestFromAlicePOV2 = aliceSession1.crypto.keyVerificationManager.pendingRequests.firstObject;
                             XCTAssertNotNil(requestFromAlicePOV2);
                             XCTAssertEqualObjects(requestFromAlicePOV2.myMethods, @[MXKeyVerificationMethodSAS]);
                             
                             // - Alice begins a SAS verification
-                            [aliceSession1.crypto.keyVerificationManager beginKeyVerificationFromRequest:requestFromAlicePOV2 method:MXKeyVerificationMethodSAS success:^(MXKeyVerificationTransaction * _Nonnull transactionFromAlicePOV) {
+                            [aliceSession1.crypto.keyVerificationManager beginKeyVerificationFromRequest:requestFromAlicePOV2 method:MXKeyVerificationMethodSAS success:^(id<MXKeyVerificationTransaction> _Nonnull transactionFromAlicePOV) {
                                 
                                 XCTAssertEqualObjects(transactionFromAlicePOV.transactionId, requestFromAlicePOV.requestId);
                                 
@@ -402,7 +402,7 @@
                                                                                         roomId:roomId
                                                                                   fallbackText:fallbackText
                                                                                        methods:@[MXKeyVerificationMethodSAS, @"toto"]
-                                                                                       success:^(MXKeyVerificationRequest *request)
+                                                                                       success:^(id<MXKeyVerificationRequest> request)
                  {
                      requestId = request.requestId;
                  }
@@ -434,12 +434,12 @@
                          // Wait a bit
                          dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
                              // - Alice rejects the incoming request
-                             MXKeyVerificationRequest *requestFromAlicePOV = aliceSession.crypto.keyVerificationManager.pendingRequests.firstObject;
+                             id<MXKeyVerificationRequest> requestFromAlicePOV = aliceSession.crypto.keyVerificationManager.pendingRequests.firstObject;
                              XCTAssertNotNil(requestFromAlicePOV);
                              
                              [requestFromAlicePOV acceptWithMethods:@[MXKeyVerificationMethodSAS] success:^{
                                  
-                                 [aliceSession.crypto.keyVerificationManager beginKeyVerificationFromRequest:requestFromAlicePOV method:MXKeyVerificationMethodSAS success:^(MXKeyVerificationTransaction * _Nonnull transactionFromAlicePOV) {
+                                 [aliceSession.crypto.keyVerificationManager beginKeyVerificationFromRequest:requestFromAlicePOV method:MXKeyVerificationMethodSAS success:^(id<MXKeyVerificationTransaction> _Nonnull transactionFromAlicePOV) {
 
                                      XCTAssertEqualObjects(transactionFromAlicePOV.transactionId, event.eventId);
                                      
@@ -636,7 +636,7 @@
                                                                                      roomId:roomId
                                                                                fallbackText:fallbackText
                                                                                     methods:@[MXKeyVerificationMethodQRCodeShow, MXKeyVerificationMethodQRCodeScan, MXKeyVerificationMethodReciprocate]
-                                                                                    success:^(MXKeyVerificationRequest *request)
+                                                                                    success:^(id<MXKeyVerificationRequest> request)
                  {
                      requestId = request.requestId;
                  }
@@ -666,7 +666,7 @@
                          // Wait a bit
                          dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
                              // - Alice accepts the incoming request
-                             MXKeyVerificationRequest *requestFromAlicePOV = aliceSession.crypto.keyVerificationManager.pendingRequests.firstObject;
+                             id<MXKeyVerificationRequest> requestFromAlicePOV = aliceSession.crypto.keyVerificationManager.pendingRequests.firstObject;
                              XCTAssertNotNil(requestFromAlicePOV);
                              
                              [requestFromAlicePOV acceptWithMethods:@[MXKeyVerificationMethodQRCodeShow, MXKeyVerificationMethodReciprocate] success:^{
@@ -808,7 +808,7 @@
                                           onEvent:checkDoneDone];
                 
                 // -> Bob gets the requests notification
-                [self observeKeyVerificationRequestChangeWithBlock:^(MXKeyVerificationRequest * _Nullable request) {
+                [self observeKeyVerificationRequestChangeWithBlock:^(id<MXKeyVerificationRequest> _Nullable request) {
                     
                     if (!request.isFromMyUser)
                     {
@@ -818,8 +818,8 @@
                     XCTAssertEqualObjects(request.requestId, requestId);
                     XCTAssertTrue(request.isFromMyUser);
                     
-                    MXKeyVerificationRequest *requestFromAlicePOV = aliceSession.crypto.keyVerificationManager.pendingRequests.firstObject;
-                    MXKeyVerificationRequest *requestFromBobPOV = bobSession.crypto.keyVerificationManager.pendingRequests.firstObject;
+                    id<MXKeyVerificationRequest> requestFromAlicePOV = aliceSession.crypto.keyVerificationManager.pendingRequests.firstObject;
+                    id<MXKeyVerificationRequest> requestFromBobPOV = bobSession.crypto.keyVerificationManager.pendingRequests.firstObject;
                     
                     XCTAssertNotNil(requestFromAlicePOV);
                     XCTAssertEqual(requestFromAlicePOV.transport, MXKeyVerificationTransportDirectMessage);

@@ -24,13 +24,23 @@
 #pragma mark - Constants
 NSString * const MXKeyVerificationRequestDidChangeNotification = @"MXKeyVerificationRequestDidChangeNotification";
 
-@interface MXKeyVerificationRequest()
+@interface MXDefaultKeyVerificationRequest()
 
 @property (nonatomic, readwrite) MXKeyVerificationRequestState state;
 
 @end
 
-@implementation MXKeyVerificationRequest
+@implementation MXDefaultKeyVerificationRequest
+
+@synthesize event = _event;
+@synthesize fromDevice = _fromDevice;
+@synthesize methods = _methods;
+@synthesize otherDevice = _otherDevice;
+@synthesize otherUser = _otherUser;
+@synthesize reasonCancelCode = _reasonCancelCode;
+@synthesize requestId = _requestId;
+@synthesize timestamp = _timestamp;
+@synthesize transport = _transport;
 
 #pragma mark - SDK-Private methods -
 
