@@ -214,10 +214,12 @@
                                                                               methods:@[MXKeyVerificationMethodSAS, @"toto"]
                                                                               success:^(id<MXKeyVerificationRequest> requestFromBobPOV)
      {
-         requestId = requestFromBobPOV.requestId;
+        XCTAssertNotNil(requestFromBobPOV);
+        XCTAssertNotNil(requestFromBobPOV.requestId);
+        requestId = requestFromBobPOV.requestId;
          
-         XCTAssertEqualObjects(requestFromBobPOV.otherUser, alice.userId);
-         XCTAssertNil(requestFromBobPOV.otherDevice);
+        XCTAssertEqualObjects(requestFromBobPOV.otherUser, alice.userId);
+        XCTAssertNil(requestFromBobPOV.otherDevice);
      }
                                                                               failure:^(NSError * _Nonnull error)
      {
@@ -230,12 +232,15 @@
     
     // - Alice gets the requests notification
     [self observeKeyVerificationRequestInSession:aliceSession block:^(id<MXKeyVerificationRequest> _Nullable requestFromAlicePOV) {
-        XCTAssertNotNil(requestFromAlicePOV.requestId);
-        XCTAssertNotNil(requestId);
-        XCTAssertEqualObjects(requestFromAlicePOV.requestId, requestId);
         
-        // Wait a bit
+        // Wait a bit, `requestVerification` could complete after it sends out a few events observed by Alice's session
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 5 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+            
+            XCTAssertNotNil(requestId);
+            XCTAssertNotNil(requestFromAlicePOV);
+            XCTAssertNotNil(requestFromAlicePOV.requestId);
+            
+            XCTAssertEqualObjects(requestFromAlicePOV.requestId, requestId);
             
             XCTAssertEqualObjects(requestFromAlicePOV.methods, methods);
             XCTAssertEqualObjects(requestFromAlicePOV.otherMethods, methods);
@@ -385,8 +390,7 @@
 /**
  Same tests as testVerificationByToDeviceFullFlow but with bob with 2 sessions
  */
-// TODO: Test currently broken
-- (void)xtestVerificationByToDeviceFullFlowWith2Devices
+- (void)testVerificationByToDeviceFullFlowWith2Devices
 {
     // - Alice and Bob are in a room
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:YES aliceStore:[[MXMemoryStore alloc] init] bobStore:[[MXMemoryStore alloc] init] readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
@@ -401,8 +405,7 @@
 /**
  Same tests as testVerificationByToDeviceFullFlow but with only alice verifying her 2 devices.
  */
-// TODO: Test currently broken
-- (void)xtestVerificationByToDeviceSelfVerificationFullFlow
+- (void)testVerificationByToDeviceSelfVerificationFullFlow
 {
     // - Alice and Bob are in a room
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:YES aliceStore:[[MXMemoryStore alloc] init] bobStore:[[MXMemoryStore alloc] init] readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
@@ -952,8 +955,7 @@
 /**
  Nomical case: The full flow
  */
-// TODO: test is currently broken
-- (void)xtestVerificationByDMFullFlow
+- (void)testVerificationByDMFullFlow
 {
     // - Alice and Bob are in a room
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:YES aliceStore:[[MXMemoryStore alloc] init] bobStore:[[MXMemoryStore alloc] init] readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
