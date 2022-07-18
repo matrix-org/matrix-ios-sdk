@@ -25,7 +25,7 @@
 /**
  The `MXKeyVerificationRequest` extension exposes internal operations.
  */
-@interface MXKeyVerificationRequest ()
+@interface MXDefaultKeyVerificationRequest ()
 
 @property (nonatomic, readonly, weak) MXKeyVerificationManager *manager;
 

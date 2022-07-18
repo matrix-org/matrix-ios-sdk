@@ -32,7 +32,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  The `MXKeyVerificationTransaction` extension exposes internal operations.
  */
-@interface MXKeyVerificationTransaction ()
+@interface MXDefaultKeyVerificationTransaction ()
 
 @property (nonatomic, readonly, weak) MXKeyVerificationManager *manager;
 @property (nonatomic, readwrite) NSString *transactionId;
