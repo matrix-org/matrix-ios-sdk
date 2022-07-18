@@ -39,6 +39,7 @@ FOUNDATION_EXPORT NSArray<NSString*> *kKnownShortCodes;
  */
 @interface MXDefaultSASTransaction ()
 
+@property (nonatomic) MXSASTransactionState state;
 @property (nonatomic) OLMSAS *olmSAS;
 @property (nonatomic, nullable) MXSASKeyVerificationStart *startContent;
 @property (nonatomic) MXKeyVerificationAccept *accepted;

@@ -73,6 +73,9 @@ import MatrixSDKCrypto
 /// for crypto-related functionality can still run (and eventually pass) without any changes.
 @available(iOS 13.0.0, *)
 private class MXCryptoV2: MXCrypto {
+    enum Error: Swift.Error {
+        case missingRoom
+    }
     
     public override var deviceCurve25519Key: String! {
         return machine.deviceCurve25519Key
@@ -93,8 +96,7 @@ private class MXCryptoV2: MXCrypto {
     }
     
     public override var keyVerificationManager: MXKeyVerificationManager! {
-        log.debug("Not implemented")
-        return MXKeyVerificationManager()
+        return keyVerification
     }
     
     public override var recoveryService: MXRecoveryService! {
@@ -125,6 +127,7 @@ private class MXCryptoV2: MXCrypto {
     private let trustLevelSource: MXTrustLevelSource
     
     private let crossSign: MXCrossSigningV2
+    private let keyVerification: MXKeyVerificationManagerV2
     
     private let log = MXNamedLog(name: "MXCryptoV2")
     
@@ -152,6 +155,17 @@ private class MXCryptoV2: MXCrypto {
             restClient: restClient
         )
         
+        keyVerification = MXKeyVerificationManagerV2(
+            verification: machine,
+            getOrCreateDMRoomId: { [weak session] userId in
+                // Note: assuming that DM already exists, fail otherwise. Will be updated in future PR
+                guard let roomId = session?.directJoinedRoom(withUserId: userId)?.roomId else {
+                    throw Error.missingRoom
+                }
+                return roomId
+            }
+        )
+        
         super.init()
     }
     
@@ -174,7 +188,7 @@ private class MXCryptoV2: MXCrypto {
     
     // MARK: - Start / close
     
-    public override func start(_ onComplete: (() -> Void)!, failure: ((Error?) -> Void)!) {
+    public override func start(_ onComplete: (() -> Void)!, failure: ((Swift.Error?) -> Void)!) {
         onComplete?()
         log.debug("Not implemented")
     }
@@ -192,7 +206,7 @@ private class MXCryptoV2: MXCrypto {
         withType eventType: String!,
         in room: MXRoom!,
         success: (([AnyHashable : Any]?, String?) -> Void)!,
-        failure: ((Error?) -> Void)!
+        failure: ((Swift.Error?) -> Void)!
     ) -> MXHTTPOperation! {
         guard let content = eventContent, let eventType = eventType, let roomId = room?.roomId else {
             log.failure("Missing data to encrypt")
@@ -265,7 +279,7 @@ private class MXCryptoV2: MXCrypto {
     public override func ensureEncryption(
         inRoom roomId: String!,
         success: (() -> Void)!,
-        failure: ((Error?) -> Void)!
+        failure: ((Swift.Error?) -> Void)!
     ) -> MXHTTPOperation! {
         guard let roomId = roomId, let room = session?.room(withRoomId: roomId) else {
             log.failure("Missing room")
@@ -338,6 +352,7 @@ private class MXCryptoV2: MXCrypto {
                 log.failure("Error processing outgoing requests", error: error)
             }
         }
+        keyVerification.updatePendingRequests()
     }
     
     // MARK: - Trust level
@@ -361,7 +376,7 @@ private class MXCryptoV2: MXCrypto {
     public override func trustLevelSummary(
         forUserIds userIds: [String]!,
         success: ((MXUsersTrustLevelSummary?) -> Void)!,
-        failure: ((Error?) -> Void)!
+        failure: ((Swift.Error?) -> Void)!
     ) {
         guard let userIds = userIds else {
             log.failure("Missing user ids")
@@ -399,7 +414,7 @@ private class MXCryptoV2: MXCrypto {
         return device(withDeviceId: deviceId, ofUser: userId)
     }
     
-    public override func setDeviceVerification(_ verificationStatus: MXDeviceVerification, forDevice deviceId: String!, ofUser userId: String!, success: (() -> Void)!, failure: ((Error?) -> Void)!) {
+    public override func setDeviceVerification(_ verificationStatus: MXDeviceVerification, forDevice deviceId: String!, ofUser userId: String!, success: (() -> Void)!, failure: ((Swift.Error?) -> Void)!) {
         log.debug("Not implemented")
     }
     
@@ -407,7 +422,7 @@ private class MXCryptoV2: MXCrypto {
         log.debug("Not implemented")
     }
     
-    public override func setUserVerification(_ verificationStatus: Bool, forUser userId: String!, success: (() -> Void)!, failure: ((Error?) -> Void)!) {
+    public override func setUserVerification(_ verificationStatus: Bool, forUser userId: String!, success: (() -> Void)!, failure: ((Swift.Error?) -> Void)!) {
         log.debug("Not implemented")
     }
     
@@ -419,7 +434,7 @@ private class MXCryptoV2: MXCrypto {
         _ userIds: [String]!,
         forceDownload: Bool,
         success: ((MXUsersDevicesMap<MXDeviceInfo>?, [String: MXCrossSigningInfo]?) -> Void)!,
-        failure: ((Error?) -> Void)!
+        failure: ((Swift.Error?) -> Void)!
     ) -> MXHTTPOperation! {
         // Note: Download keys currently ignores the `forceDownload` flag and returns local data only
         success?(
@@ -474,19 +489,19 @@ private class MXCryptoV2: MXCrypto {
         log.debug("Not implemented")
     }
     
-    public override func exportRoomKeys(_ success: (([[AnyHashable : Any]]?) -> Void)!, failure: ((Error?) -> Void)!) {
+    public override func exportRoomKeys(_ success: (([[AnyHashable : Any]]?) -> Void)!, failure: ((Swift.Error?) -> Void)!) {
         log.debug("Not implemented")
     }
     
-    public override func exportRoomKeys(withPassword password: String!, success: ((Data?) -> Void)!, failure: ((Error?) -> Void)!) {
+    public override func exportRoomKeys(withPassword password: String!, success: ((Data?) -> Void)!, failure: ((Swift.Error?) -> Void)!) {
         log.debug("Not implemented")
     }
     
-    public override func importRoomKeys(_ keys: [[AnyHashable : Any]]!, success: ((UInt, UInt) -> Void)!, failure: ((Error?) -> Void)!) {
+    public override func importRoomKeys(_ keys: [[AnyHashable : Any]]!, success: ((UInt, UInt) -> Void)!, failure: ((Swift.Error?) -> Void)!) {
         log.debug("Not implemented")
     }
     
-    public override func importRoomKeys(_ keyFile: Data!, withPassword password: String!, success: ((UInt, UInt) -> Void)!, failure: ((Error?) -> Void)!) {
+    public override func importRoomKeys(_ keyFile: Data!, withPassword password: String!, success: ((UInt, UInt) -> Void)!, failure: ((Swift.Error?) -> Void)!) {
         log.debug("Not implemented")
     }
     
@@ -494,7 +509,7 @@ private class MXCryptoV2: MXCrypto {
         // Not implemented, handled automatically by CryptoMachine
     }
     
-    public override func accept(_ keyRequest: MXIncomingRoomKeyRequest!, success: (() -> Void)!, failure: ((Error?) -> Void)!) {
+    public override func accept(_ keyRequest: MXIncomingRoomKeyRequest!, success: (() -> Void)!, failure: ((Swift.Error?) -> Void)!) {
         log.debug("Not implemented")
     }
     

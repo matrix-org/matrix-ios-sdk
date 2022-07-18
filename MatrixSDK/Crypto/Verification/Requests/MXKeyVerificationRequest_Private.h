@@ -19,6 +19,8 @@
 #import "MXKeyVerificationReady.h"
 #import "MXKeyVerificationCancel.h"
 
+MX_ASSUME_MISSING_NULLABILITY_BEGIN
+
 @class MXKeyVerificationManager, MXHTTPOperation;
 
 
@@ -31,6 +33,7 @@
 
 - (instancetype)initWithEvent:(MXEvent*)event andManager:(MXKeyVerificationManager*)manager;
 
+@property (nonatomic, nullable) MXTransactionCancelCode *reasonCancelCode;
 @property (nonatomic) BOOL isFromMyUser;
 @property (nonatomic) BOOL isFromMyDevice;
 
@@ -42,3 +45,5 @@
 - (void)handleCancel:(MXKeyVerificationCancel*)cancelContent;
 
 @end
+
+MX_ASSUME_MISSING_NULLABILITY_END

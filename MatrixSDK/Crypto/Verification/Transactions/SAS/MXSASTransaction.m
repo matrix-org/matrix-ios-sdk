@@ -567,6 +567,11 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
                    ];
 }
 
++ (NSArray<MXEmojiRepresentation*> *)allEmojiRepresentations
+{
+    return kSasEmojis;
+}
+
 + (NSArray<MXEmojiRepresentation*> *)emojiRepresentationForSas:(NSData*)sas
 {
     UInt8 *sasBytes = (UInt8 *)sas.bytes;

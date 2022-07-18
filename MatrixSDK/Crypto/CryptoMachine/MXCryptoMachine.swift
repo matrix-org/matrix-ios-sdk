@@ -46,6 +46,11 @@ class MXCryptoMachine {
         case invalidEvent
         case nothingToEncrypt
         case missingRoom
+        case missingVerificationContent
+        case missingVerificationRequest
+        case missingVerification
+        case missingEmojis
+        case cannotCancelVerification
     }
     
     private let machine: OlmMachine
@@ -362,6 +367,102 @@ extension MXCryptoMachine: MXCryptoCrossSigning {
             requests.uploadSigningKeys(request: result.uploadSigningKeysRequest, authParams: authParams),
             requests.uploadSignatures(request: result.signatureRequest)
         ]
+    }
+}
+
+@available(iOS 13.0.0, *)
+extension MXCryptoMachine: MXCryptoVerification {
+    func requestVerification(userId: String, roomId: String, methods: [String]) async throws -> VerificationRequest {
+        guard let content = try machine.verificationRequestContent(userId: userId, methods: methods) else {
+            throw Error.missingVerificationContent
+        }
+        
+        let eventId = try await sendRoomMessage(
+            roomId: roomId,
+            eventType: kMXEventTypeStringRoomMessage,
+            content: content
+        )
+        guard let eventId = eventId else {
+            throw Error.invalidEvent
+        }
+        
+        let request = try machine.requestVerification(
+            userId: userId,
+            roomId: roomId,
+            eventId: eventId,
+            methods: methods
+        )
+        
+        guard let request = request else {
+            throw Error.missingVerificationRequest
+        }
+        return request
+    }
+    
+    func verificationRequest(userId: String, flowId: String) -> VerificationRequest? {
+        return machine.getVerificationRequest(userId: userId, flowId: flowId)
+    }
+    
+    func verification(userId: String, flowId: String) -> Verification? {
+        return machine.getVerification(userId: userId, flowId: flowId)
+    }
+
+    func beginSasVerification(userId: String, flowId: String) async throws -> Sas {
+        guard let result = try machine.startSasVerification(userId: userId, flowId: flowId) else {
+            throw Error.missingVerification
+        }
+        try await handleOutgoingVerificationRequest(result.request)
+        return result.sas
+    }
+
+    func confirmVerification(userId: String, flowId: String) async throws {
+        let result = try machine.confirmVerification(userId: userId, flowId: flowId)
+        guard let result = result else {
+            throw Error.missingVerification
+        }
+        
+        if let request = result.signatureRequest {
+            try await requests.uploadSignatures(request: request)
+        }
+        
+        try await withThrowingTaskGroup(of: Void.self) { group in
+            for request in result.requests {
+                group.addTask {
+                    try await self.handleOutgoingVerificationRequest(request)
+                }
+            }
+            
+            try await group.waitForAll()
+        }
+    }
+    
+    func cancelVerification(userId: String, flowId: String, cancelCode: String) async throws {
+        guard let request = machine.cancelVerification(userId: userId, flowId: flowId, cancelCode: cancelCode) else {
+            throw Error.cannotCancelVerification
+        }
+        try await handleOutgoingVerificationRequest(request)
+    }
+
+    func emojiIndexes(sas: Sas) throws -> [Int] {
+        guard let indexes = machine.getEmojiIndex(userId: sas.otherUserId, flowId: sas.flowId) else {
+            throw Error.missingEmojis
+        }
+        return indexes.map(Int.init)
+    }
+    
+    // MARK: - Private
+    
+    private func handleOutgoingVerificationRequest(_ request: OutgoingVerificationRequest) async throws {
+        guard case .inRoom(let requestId, let roomId, let eventType, let content) = request else {
+            assertionFailure("Not yet implemented")
+            return
+        }
+        
+        let _ = try await sendRoomMessage(
+            roomId: roomId,
+            eventType: eventType,
+            content: content
+        )
     }
 }
 
