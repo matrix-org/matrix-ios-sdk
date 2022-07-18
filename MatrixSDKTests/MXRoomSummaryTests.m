@@ -1173,7 +1173,10 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
                     [store openWithCredentials:aliceRestClient.credentials onComplete:^{
 
                         // A hack to directly read the file built by MXFileStore
+                        #pragma clang diagnostic push
+                        #pragma clang diagnostic ignored "-Wundeclared-selector"
                         NSString *roomSummaryFile = [store performSelector:@selector(summaryFileForRoom:forBackup:) withObject:roomId withObject:NSNull.null];
+                        #pragma clang diagnostic pop
                         XCTAssert(roomSummaryFile.length);
                         XCTAssertGreaterThan(roomSummaryFile.length, 0);
                         [store close];

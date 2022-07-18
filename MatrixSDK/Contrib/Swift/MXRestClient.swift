@@ -699,27 +699,6 @@ public extension MXRestClient {
         return __historyVisibility(ofRoom: roomId, success: currySuccess(transform: MXRoomHistoryVisibility.init, completion), failure: curryFailure(completion))
     }
     
-    
-    
-    
-    
-    
-    
-    /**
-     Set the join rule of a room.
-     
-     - parameters:
-        - roomId: the id of the room.
-        - joinRule: the rule to set.
-        - completion: A block object called when the operation completes.
-        - response: Indicates whether the operation was successful.
-     
-     - returns: a `MXHTTPOperation` instance.
-     */
-    @nonobjc @discardableResult func setJoinRule(ofRoom roomId: String, joinRule: MXRoomJoinRule, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
-        return __setRoomJoinRule(roomId, joinRule: joinRule.identifier, success: currySuccess(completion), failure: curryFailure(completion))
-    }
-    
     /**
      Set the join rule of a room.
      
@@ -734,20 +713,6 @@ public extension MXRestClient {
      */
     @nonobjc @discardableResult func setRoomJoinRule(_ joinRule: MXRoomJoinRule, forRoomWithId roomId: String, allowedParentIds: [String]?, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
         return __setRoomJoinRule(joinRule.identifier, forRoomWithId: roomId, allowedParentIds: allowedParentIds, success: currySuccess(completion), failure: curryFailure(completion))
-    }
-    
-    /**
-     Get the join rule of a room.
-     
-     - parameters:
-        - roomId: the id of the room.
-        - completion: A block object called when the operation completes.
-        - response: Provides the room join rule on success.
-     
-     - returns: a `MXHTTPOperation` instance.
-     */
-    @nonobjc @discardableResult func joinRule(ofRoom roomId: String, completion: @escaping (_ response: MXResponse<MXRoomJoinRule>) -> Void) -> MXHTTPOperation {
-        return __joinRule(ofRoom: roomId, success: currySuccess(transform: MXRoomJoinRule.init, completion), failure: curryFailure(completion))
     }
     
     /**
