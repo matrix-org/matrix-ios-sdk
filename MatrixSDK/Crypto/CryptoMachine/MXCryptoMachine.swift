@@ -45,22 +45,6 @@ class MXCryptoMachine {
         case nothingToEncrypt
     }
     
-    var deviceCurve25519Key: String? {
-        guard let key = machine.identityKeys()["curve25519"] else {
-            log(error: "Cannot get device curve25519 key")
-            return nil
-        }
-        return key
-    }
-    
-    var deviceEd25519Key: String? {
-        guard let key = machine.identityKeys()["ed25519"] else {
-            log(error: "Cannot get device ed25519 key")
-            return nil
-        }
-        return key
-    }
-    
     private let machine: OlmMachine
     private let requests: MXCryptoRequests
     private let serialQueue = MXTaskQueue()
@@ -94,7 +78,10 @@ class MXCryptoMachine {
             .appendingPathComponent(Self.storeFolder)
             .appendingPathComponent(userId)
     }
-    
+}
+
+@available(iOS 13.0.0, *)
+extension MXCryptoMachine: MXCryptoSyncing {
     func handleSyncResponse(
         toDevice: MXToDeviceSyncResponse?,
         deviceLists: MXDeviceListResponse?,
@@ -126,38 +113,7 @@ class MXCryptoMachine {
         }
     }
     
-    func shareRoomKeysIfNecessary(roomId: String, users: [String]) async throws {
-        try await serialQueue.sync { [weak self] in
-            try await self?.updateTrackedUsers(users: users)
-            try await self?.getMissingSessions(users: users)
-        }
-        
-        let roomQueue = await roomQueues.getQueue(for: roomId)
-        try await roomQueue.sync { [weak self] in
-            try await self?.shareRoomKey(roomId: roomId, users: users)
-        }
-    }
-    
-    func encrypt(_ content: [AnyHashable: Any], roomId: String, eventType: String, users: [String]) async throws -> [String: Any] {
-        guard let content = MXTools.serialiseJSONObject(content) else {
-            throw Error.nothingToEncrypt
-        }
-        
-        try await shareRoomKeysIfNecessary(roomId: roomId, users: users)
-        let event = try machine.encrypt(roomId: roomId, eventType: eventType as String, content: content)
-        return MXTools.deserialiseJSONString(event) as? [String: Any] ?? [:]
-    }
-    
-    func decryptEvent(_ event: MXEvent) throws -> MXEventDecryptionResult {
-        guard let roomId = event.roomId, let event = event.jsonString() else {
-            throw Error.invalidEvent
-        }
-        
-        let result = try machine.decryptRoomEvent(event: event, roomId: roomId)
-        return try MXEventDecryptionResult(event: result)
-    }
-    
-    // MARK: - Requests
+    // MARK: - Private
     
     private func handleRequest(_ request: Request) async throws {
         switch request {
@@ -192,6 +148,72 @@ class MXCryptoMachine {
         try self.machine.markRequestAsSent(requestId: requestId, requestType: requestType, response: response?.jsonString() ?? "")
     }
     
+    private func processOutgoingRequests() async throws {
+        let requests = try machine.outgoingRequests()
+        await withThrowingTaskGroup(of: Void.self) { [weak self] group in
+            guard let self = self else { return }
+            
+            for request in requests {
+                group.addTask {
+                    try await self.handleRequest(request)
+                }
+            }
+        }
+    }
+}
+
+@available(iOS 13.0.0, *)
+extension MXCryptoMachine: MXCryptoDevicesSource {
+    var deviceCurve25519Key: String? {
+        guard let key = machine.identityKeys()["curve25519"] else {
+            log(error: "Cannot get device curve25519 key")
+            return nil
+        }
+        return key
+    }
+    
+    var deviceEd25519Key: String? {
+        guard let key = machine.identityKeys()["ed25519"] else {
+            log(error: "Cannot get device ed25519 key")
+            return nil
+        }
+        return key
+    }
+}
+
+@available(iOS 13.0.0, *)
+extension MXCryptoMachine: MXCryptoEventEncrypting {
+    func shareRoomKeysIfNecessary(roomId: String, users: [String]) async throws {
+        try await serialQueue.sync { [weak self] in
+            try await self?.updateTrackedUsers(users: users)
+            try await self?.getMissingSessions(users: users)
+        }
+        
+        let roomQueue = await roomQueues.getQueue(for: roomId)
+        try await roomQueue.sync { [weak self] in
+            try await self?.shareRoomKey(roomId: roomId, users: users)
+        }
+    }
+    
+    func encrypt(_ content: [AnyHashable: Any], roomId: String, eventType: String, users: [String]) async throws -> [String: Any] {
+        guard let content = MXTools.serialiseJSONObject(content) else {
+            throw Error.nothingToEncrypt
+        }
+        
+        try await shareRoomKeysIfNecessary(roomId: roomId, users: users)
+        let event = try machine.encrypt(roomId: roomId, eventType: eventType as String, content: content)
+        return MXTools.deserialiseJSONString(event) as? [String: Any] ?? [:]
+    }
+    
+    func decryptEvent(_ event: MXEvent) throws -> MXEventDecryptionResult {
+        guard let roomId = event.roomId, let event = event.jsonString() else {
+            throw Error.invalidEvent
+        }
+        
+        let result = try machine.decryptRoomEvent(event: event, roomId: roomId)
+        return try MXEventDecryptionResult(event: result)
+    }
+    
     // MARK: - Private
     
     private func updateTrackedUsers(users: [String]) async throws {
@@ -219,19 +241,6 @@ class MXCryptoMachine {
                     continue
                 }
                 
-                group.addTask {
-                    try await self.handleRequest(request)
-                }
-            }
-        }
-    }
-    
-    private func processOutgoingRequests() async throws {
-        let requests = try machine.outgoingRequests()
-        await withThrowingTaskGroup(of: Void.self) { [weak self] group in
-            guard let self = self else { return }
-            
-            for request in requests {
                 group.addTask {
                     try await self.handleRequest(request)
                 }
