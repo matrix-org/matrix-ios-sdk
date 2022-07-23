@@ -1,0 +1,24 @@
+{
+  "configurations" : [
+    {
+      "id" : "FBC4E845-6EC4-4E21-9D46-61B9D0202049",
+      "name" : "Configuration 1",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:MatrixSDK.xcodeproj",
+        "identifier" : "B1E09A0D2397FA950057C069",
+        "name" : "MatrixSDKTests-macOS"
+      }
+    }
+  ],
+  "version" : 1
+}
