@@ -315,6 +315,8 @@
 		32618E7220ED2DF500E1D2EA /* MXFilterJSONModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 32618E7020ED2DF500E1D2EA /* MXFilterJSONModel.m */; };
 		32618E7B20EFA45B00E1D2EA /* MXRoomMembers.h in Headers */ = {isa = PBXBuildFile; fileRef = 32618E7920EFA45B00E1D2EA /* MXRoomMembers.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32618E7C20EFA45B00E1D2EA /* MXRoomMembers.m in Sources */ = {isa = PBXBuildFile; fileRef = 32618E7A20EFA45B00E1D2EA /* MXRoomMembers.m */; };
+		326277F1288BC21A009A0508 /* AllWorkingTests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = 326277F0288BC219009A0508 /* AllWorkingTests.xctestplan */; };
+		326277F2288BC21A009A0508 /* AllWorkingTests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = 326277F0288BC219009A0508 /* AllWorkingTests.xctestplan */; };
 		32637ED41E5B00400011E20D /* MXDeviceList.h in Headers */ = {isa = PBXBuildFile; fileRef = 32637ED21E5B00400011E20D /* MXDeviceList.h */; };
 		32637ED51E5B00400011E20D /* MXDeviceList.m in Sources */ = {isa = PBXBuildFile; fileRef = 32637ED31E5B00400011E20D /* MXDeviceList.m */; };
 		3264DB911CEC528D00B99881 /* MXAccountData.h in Headers */ = {isa = PBXBuildFile; fileRef = 3264DB8F1CEC528D00B99881 /* MXAccountData.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -2117,6 +2119,7 @@
 		32618E7020ED2DF500E1D2EA /* MXFilterJSONModel.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXFilterJSONModel.m; sourceTree = "<group>"; };
 		32618E7920EFA45B00E1D2EA /* MXRoomMembers.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXRoomMembers.h; sourceTree = "<group>"; };
 		32618E7A20EFA45B00E1D2EA /* MXRoomMembers.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXRoomMembers.m; sourceTree = "<group>"; };
+		326277F0288BC219009A0508 /* AllWorkingTests.xctestplan */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = AllWorkingTests.xctestplan; sourceTree = "<group>"; };
 		32637ED21E5B00400011E20D /* MXDeviceList.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXDeviceList.h; sourceTree = "<group>"; };
 		32637ED31E5B00400011E20D /* MXDeviceList.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXDeviceList.m; sourceTree = "<group>"; };
 		3264DB8F1CEC528D00B99881 /* MXAccountData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXAccountData.h; sourceTree = "<group>"; };
@@ -3742,6 +3745,7 @@
 		3298ABD42637FA3100E40B06 /* TestPlans */ = {
 			isa = PBXGroup;
 			children = (
+				326277F0288BC219009A0508 /* AllWorkingTests.xctestplan */,
 				3298ABD52637FA3100E40B06 /* AllTests.xctestplan */,
 				3209682F26396385005D64ED /* AllTestsWithSanitizers.xctestplan */,
 				EDC2A0E528369E740039F3D6 /* CryptoTests.xctestplan */,
@@ -5982,6 +5986,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				3298ABD62637FA3100E40B06 /* AllTests.xctestplan in Resources */,
+				326277F1288BC21A009A0508 /* AllWorkingTests.xctestplan in Resources */,
 				3209683326396385005D64ED /* UnitTestsWithSanitizers.xctestplan in Resources */,
 				3298ABDD2637FB1900E40B06 /* UnitTests.xctestplan in Resources */,
 				3209683126396385005D64ED /* AllTestsWithSanitizers.xctestplan in Resources */,
@@ -6001,6 +6006,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				3298ABD72637FA3100E40B06 /* AllTests.xctestplan in Resources */,
+				326277F2288BC21A009A0508 /* AllWorkingTests.xctestplan in Resources */,
 				3209683426396385005D64ED /* UnitTestsWithSanitizers.xctestplan in Resources */,
 				3298ABDE2637FB1900E40B06 /* UnitTests.xctestplan in Resources */,
 				3209683226396385005D64ED /* AllTestsWithSanitizers.xctestplan in Resources */,
