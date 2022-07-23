@@ -27,16 +27,6 @@
 
 @implementation MXMegolmExportEncryptionUnitTests
 
-- (void)setUp
-{
-    [super setUp];
-}
-
-- (void)tearDown
-{
-    [super tearDown];
-}
-
 - (void)testDecrypt
 {
     NSArray *TEST_VECTORS = @[

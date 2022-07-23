@@ -29,6 +29,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
     }
 
     override func setUp() {
+        super.setUp()
         testData = MatrixSDKTestsData()
         e2eTestData = MatrixSDKTestsE2EData(matrixSDKTestsData: testData)
     }
@@ -37,6 +38,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
         testData = nil
         e2eTestData = nil
         bgSyncService = nil
+        super.tearDown()
     }
     
     

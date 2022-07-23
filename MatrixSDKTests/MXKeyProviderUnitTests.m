@@ -29,6 +29,7 @@
 @implementation MXKeyProviderUnitTests
 
 - (void)setUp {
+    [super setUp];
     self.isEncryptionAvailable = YES;
     NSData *iv = [@"baB6pgMP9erqSaKF" dataUsingEncoding:NSUTF8StringEncoding];
     NSData *aesKey = [@"6fXK17pQFUrFqOnxt3wrqz8RHkQUT9vQ" dataUsingEncoding:NSUTF8StringEncoding];
@@ -37,7 +38,7 @@
 }
 
 - (void)tearDown {
-    // Put teardown code here. This method is called after the invocation of each test method in the class.
+    [super tearDown];
 }
 
 - (void)testNoDelegateSet {

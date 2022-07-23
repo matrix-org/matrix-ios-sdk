@@ -47,15 +47,6 @@
 #pragma mark - MXPushRuleTests helper methods
 @implementation MXPushRuleUnitTests
 
-- (void)setUp
-{
-    [super setUp];
-}
-
-- (void)tearDown
-{
-    [super tearDown];
-}
 
 - (MXPushRule *)contentRuleWithPattern:(NSString*)pattern
 {

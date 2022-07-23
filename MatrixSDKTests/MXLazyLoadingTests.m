@@ -49,10 +49,10 @@ NSString * const bobMessage = @"I am Bob";
 
 - (void)tearDown
 {
-    [super tearDown];
     [MXHTTPClient removeAllDelays];
-
     matrixSDKTestsData = nil;
+    
+    [super tearDown];
 }
 
 /**
