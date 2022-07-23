@@ -34,6 +34,7 @@ class MXCoreDataRoomListDataManagerUnitTests: XCTestCase {
     }
     
     override class func setUp() {
+        super.setUp()
         MXSDKOptions.sharedInstance().roomListDataManagerClass = MXCoreDataRoomListDataManager.self
         MXRealmCryptoStore.deleteAllStores()
     }
@@ -42,6 +43,7 @@ class MXCoreDataRoomListDataManagerUnitTests: XCTestCase {
         fetcher?.stop()
         fetcher = nil
         delegate = nil
+        super.tearDown()
     }
     
     private var basicFetchOptions: MXRoomListDataFetchOptions {

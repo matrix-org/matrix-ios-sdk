@@ -25,16 +25,6 @@
 
 @implementation MXToolsUnitTests
 
-- (void)setUp
-{
-    [super setUp];
-}
-
-- (void)tearDown
-{
-    [super tearDown];
-}
-
 - (void)testGenerateSecret
 {
     NSString *secret = [MXTools generateSecret];

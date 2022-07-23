@@ -48,6 +48,8 @@
 - (void)tearDown
 {
     matrixSDKTestsData = nil;
+    
+    [super tearDown];
 }
 
 // Create a room with an event with a reaction on it

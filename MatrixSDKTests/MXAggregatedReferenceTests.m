@@ -53,6 +53,8 @@ static NSString* const kThreadedMessage1Text = @"Morning!";
 {
     matrixSDKTestsData = nil;
     matrixSDKTestsE2EData = nil;
+    
+    [super tearDown];
 }
 
 
