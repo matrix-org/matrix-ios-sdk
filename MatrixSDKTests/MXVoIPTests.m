@@ -22,6 +22,9 @@
 #import "MXMockCallStack.h"
 #import "MXMockCallStackCall.h"
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wnonnull"
+
 @interface MXVoIPTests : XCTestCase
 {
     MatrixSDKTestsData *matrixSDKTestsData;
@@ -136,3 +139,5 @@
 
 
 @end
+
+#pragma clang diagnostic pop

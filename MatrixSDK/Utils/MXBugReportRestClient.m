@@ -37,6 +37,8 @@
 #import <MatrixKit/MatrixKit.h>
 #endif
 
+#warning File has not been annotated with nullability, see MX_ASSUME_MISSING_NULLABILITY_BEGIN
+
 @interface MXBugReportRestClient ()
 {
     // The bug report API server URL.

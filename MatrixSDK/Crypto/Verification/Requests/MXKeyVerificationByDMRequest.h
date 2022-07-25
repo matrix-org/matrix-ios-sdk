@@ -27,7 +27,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  An handler on an interactive request for verification by Direct Message.
  */
-@interface MXKeyVerificationByDMRequest : MXKeyVerificationRequest
+@interface MXKeyVerificationByDMRequest : MXDefaultKeyVerificationRequest
 
 @property (nonatomic, readonly) NSString *roomId;
 @property (nonatomic, readonly) NSString *eventId;

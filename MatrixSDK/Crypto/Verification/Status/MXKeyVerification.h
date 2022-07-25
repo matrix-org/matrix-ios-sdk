@@ -54,8 +54,8 @@ typedef NS_ENUM(NSInteger, MXKeyVerificationState)
 @property (nonatomic) MXKeyVerificationState state;
 
 // Those values may be not provided if there are not in progress
-@property (nonatomic, nullable) MXKeyVerificationRequest *request;
-@property (nonatomic, nullable) MXKeyVerificationTransaction *transaction;
+@property (nonatomic, nullable) id<MXKeyVerificationRequest> request;
+@property (nonatomic, nullable) id<MXKeyVerificationTransaction> transaction;
 
 @property (nonatomic, readonly) BOOL isRequestAccepted;
 

@@ -1,1 +1,0 @@
-MXBackgroundSyncService - Expose separate method for fetching a particular room's read marker event without causing extra syncs.

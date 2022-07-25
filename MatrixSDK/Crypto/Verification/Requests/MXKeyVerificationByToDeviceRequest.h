@@ -26,7 +26,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  An handler on an interactive request for verification by to_device events.
  */
-@interface MXKeyVerificationByToDeviceRequest : MXKeyVerificationRequest
+@interface MXKeyVerificationByToDeviceRequest : MXDefaultKeyVerificationRequest
 
 @property (nonatomic, readonly) MXKeyVerificationRequestByToDeviceJSONModel *request;
 

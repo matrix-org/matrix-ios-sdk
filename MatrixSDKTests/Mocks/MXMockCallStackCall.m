@@ -100,6 +100,10 @@
     });
 }
 
+- (BOOL)sendDTMF:(NSString * _Nonnull)tones {
+    return YES;
+}
+
 
 - (BOOL)sendDTMF:(NSString * _Nonnull)tones duration:(NSUInteger)duration interToneGap:(NSUInteger)interToneGap {
     return YES;
