@@ -93,9 +93,18 @@ internal class MXRecentsRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
             }
         }
         
-        guard let recentRoomIds = breadcrumbs?[kMXAccountDataTypeRecentRoomsKey] else {
+        guard var recentRoomIds = breadcrumbs?[kMXAccountDataTypeRecentRoomsKey] else {
             MXLog.error("[MXRecentsRoomListDataFetcher] cannot retrieve recent rooms")
             return
+        }
+        
+        if let query = fetchOptions.filterOptions.query?.lowercased(), !query.isEmpty {
+            recentRoomIds = recentRoomIds.filter({ roomId in
+                guard let summary = session?.roomSummary(withRoomId: roomId) else {
+                    return false
+                }
+                return summary.displayname.lowercased().contains(query)
+            })
         }
         
         guard self.recentRoomIds != recentRoomIds else {
