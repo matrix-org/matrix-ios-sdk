@@ -1167,24 +1167,28 @@ static Class DefaultAlgorithmClass;
                 signature.valid = valid;
                 [signatures addObject:signature];
             }
-            else // Try interpreting it as the MSK public key
+            else if ([deviceId isEqualToString:crypto.crossSigning.myUserCrossSigningKeys.masterKeys.keys])
             {
                 NSError *error;
                 BOOL valid = [crypto.crossSigning.crossSigningTools pkVerifyObject:authData.JSONDictionary userId:myUserId publicKey:deviceId error:&error];
                 
                 if (!valid)
                 {
-                    MXLogDebug(@"[MXKeyBackup] trustForKeyBackupVersion: Signature with unknown key %@", deviceId);
+                    MXLogDebug(@"[MXKeyBackup] trustForKeyBackupVersion: Signature with cross-signing master key is invalid");
                 }
                 else
                 {
                     keyBackupVersionTrust.usable = YES;
-
-                    MXKeyBackupVersionTrustSignature *signature = [MXKeyBackupVersionTrustSignature new];
-                    signature.keys = deviceId;
-                    signature.valid = valid;
-                    [signatures addObject:signature];
                 }
+
+                MXKeyBackupVersionTrustSignature *signature = [MXKeyBackupVersionTrustSignature new];
+                signature.keys = deviceId;
+                signature.valid = valid;
+                [signatures addObject:signature];
+            }
+            else
+            {
+                MXLogDebug(@"[MXKeyBackup] trustForKeyBackupVersion: Signature with unknown key %@", deviceId);
             }
         }
     }
