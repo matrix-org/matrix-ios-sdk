@@ -13,6 +13,28 @@
   },
   "testTargets" : [
     {
+      "skippedTests" : [
+        "MXCrossSigningTests",
+        "MXCryptoBackupTests",
+        "MXCryptoRecoveryServiceTests",
+        "MXCryptoShareTests",
+        "MXCryptoTests",
+        "MXLazyLoadingTests",
+        "MXLocationServiceTests",
+        "MXMegolmEncryptionTests",
+        "MXRestClientExtensionsTests",
+        "MXRestClientNoAuthAPITests",
+        "MXRoomSummaryTests",
+        "MXRoomSummaryTrustTests",
+        "MXRoomTests",
+        "MXSessionTests",
+        "MXStoreFileStoreTests",
+        "MXStoreMemoryStoreTests",
+        "MXStoreRoomListDataManagerUnitTests",
+        "MXThreadingServiceTests",
+        "MXThreadingServiceUnitTests",
+        "MXUserTests"
+      ],
       "target" : {
         "containerPath" : "container:MatrixSDK.xcodeproj",
         "identifier" : "B1E09A0D2397FA950057C069",
