@@ -38,23 +38,20 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gems-
 
+      # Set up a synapse server
+      - name: Start synapse server
+        uses: michaelkaye/setup-matrix-synapse@v1.0.3
+        with:
+          uploadLogs: true
+          httpPort: 8080
+          disableRateLimiting: true
+
       # Common setup
       # Note: GH actions do not support yaml anchor yet. We need to duplicate this for every job
       - name: Bundle install
         run: |
           bundle config path vendor/bundle
           bundle install --jobs 4 --retry 3
-
-      # Set up a synapse server
-      - uses: actions/setup-python@v4
-        with:
-          python-version: 3.8
-      - uses: michaelkaye/setup-matrix-synapse@v1.0.3
-        with:
-          uploadLogs: true
-          httpPort: 8080
-          disableRateLimiting: true
-          public_baseurl: "http://localhost:8080/"
 
       # Main step
       - name: Integration tests
@@ -74,5 +71,6 @@ jobs:
           name: MatrixSDK-macOS.xcresult
           path: build/test/MatrixSDK-macOS.xcresult/
 
+      # Upload coverage
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
