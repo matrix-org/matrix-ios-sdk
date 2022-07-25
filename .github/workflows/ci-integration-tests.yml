@@ -69,6 +69,7 @@ jobs:
 
       # Main step
       - name: Integration tests
+        continue-on-error: true
         run: bundle exec fastlane test testplan:AllWorkingTests
 
       # Store artifacts
