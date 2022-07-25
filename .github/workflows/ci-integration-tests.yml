@@ -45,6 +45,17 @@ jobs:
           bundle config path vendor/bundle
           bundle install --jobs 4 --retry 3
 
+      # Set up a synapse server
+      - uses: actions/setup-python@v4
+        with:
+          python-version: 3.8
+      - uses: michaelkaye/setup-matrix-synapse@v1.0.3
+        with:
+          uploadLogs: true
+          httpPort: 8080
+          disableRateLimiting: true
+          public_baseurl: "http://localhost:8080/"
+
       # Main step
       - name: Integration tests
         run: bundle exec fastlane test testplan:AllWorkingTests
