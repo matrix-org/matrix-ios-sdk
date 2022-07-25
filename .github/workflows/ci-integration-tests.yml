@@ -38,7 +38,21 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gems-
 
-      # Set up a synapse server
+      # Cache for python env for Synapse
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - name: Cache pip
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip
+          restore-keys: |
+            ${{ runner.os }}-pip-
+            ${{ runner.os }}-
+
+      # Set up a Synapse server
       - name: Start synapse server
         uses: michaelkaye/setup-matrix-synapse@v1.0.3
         with:
