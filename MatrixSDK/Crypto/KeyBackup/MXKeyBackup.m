@@ -1139,18 +1139,18 @@ static Class DefaultAlgorithmClass;
     for (NSString *keyId in mySigs)
     {
         // XXX: is this how we're supposed to get the device id?
-        NSString *deviceId;
+        NSString *deviceIdOrCrossSigningKey;
         NSArray<NSString *> *components = [keyId componentsSeparatedByString:@":"];
         if (components.count == 2)
         {
-            deviceId = components[1];
+            deviceIdOrCrossSigningKey = components[1];
         }
 
-        if (deviceId)
+        if (deviceIdOrCrossSigningKey)
         {
             BOOL valid = NO;
 
-            MXDeviceInfo *device = [self->crypto.deviceList storedDevice:myUserId deviceId:deviceId];
+            MXDeviceInfo *device = [self->crypto.deviceList storedDevice:myUserId deviceId:deviceIdOrCrossSigningKey];
             if (device)
             {
                 NSError *error;
@@ -1162,15 +1162,15 @@ static Class DefaultAlgorithmClass;
                 }
                 
                 MXKeyBackupVersionTrustSignature *signature = [MXKeyBackupVersionTrustSignature new];
-                signature.deviceId = deviceId;
+                signature.deviceId = device.deviceId;
                 signature.device = device;
                 signature.valid = valid;
                 [signatures addObject:signature];
             }
-            else if ([deviceId isEqualToString:crypto.crossSigning.myUserCrossSigningKeys.masterKeys.keys])
+            else if ([deviceIdOrCrossSigningKey isEqualToString:crypto.crossSigning.myUserCrossSigningKeys.masterKeys.keys])
             {
                 NSError *error;
-                BOOL valid = [crypto.crossSigning.crossSigningTools pkVerifyObject:authData.JSONDictionary userId:myUserId publicKey:deviceId error:&error];
+                BOOL valid = [crypto.crossSigning.crossSigningTools pkVerifyObject:authData.JSONDictionary userId:myUserId publicKey:deviceIdOrCrossSigningKey error:&error];
                 
                 if (!valid)
                 {
@@ -1182,13 +1182,13 @@ static Class DefaultAlgorithmClass;
                 }
 
                 MXKeyBackupVersionTrustSignature *signature = [MXKeyBackupVersionTrustSignature new];
-                signature.keys = deviceId;
+                signature.keys = deviceIdOrCrossSigningKey;
                 signature.valid = valid;
                 [signatures addObject:signature];
             }
             else
             {
-                MXLogDebug(@"[MXKeyBackup] trustForKeyBackupVersion: Signature with unknown key %@", deviceId);
+                MXLogDebug(@"[MXKeyBackup] trustForKeyBackupVersion: Signature with unknown key %@", deviceIdOrCrossSigningKey);
             }
         }
     }
