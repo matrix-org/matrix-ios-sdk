@@ -271,6 +271,36 @@ public class MXLocationService: NSObject {
         self.getAllBeaconInfo(forUserId: myUserId, inRoomWithId: roomId, completion: completion)
     }
     
+    /// Get stopped beacon info from the orginal start beacon info event id
+    public func getStoppedBeaconInfo(for beaconInfoEventId: String, inRoomWithId roomId: String, completion: @escaping (MXBeaconInfo?) -> Void) {
+        
+        guard let beaconInfoSummary = self.session.aggregations.beaconAggregations.beaconInfoSummary(for: beaconInfoEventId, inRoomWithId: roomId) else {
+            completion(nil)
+            return
+        }
+        
+        // Do not go further is the beacon info is not stopped
+        guard beaconInfoSummary.beaconInfo.isLive == false else {
+            completion(nil)
+            return
+        }
+        
+        let originalBeaconInfo = beaconInfoSummary.beaconInfo
+        
+        self.session.locationService.getAllBeaconInfo(inRoomWithId: beaconInfoSummary.roomId) { beaconInfos in
+            
+            let stoppedBeaconInfo = beaconInfos.first { beaconInfo in
+                return beaconInfo.isLive == false
+                && beaconInfo.userId == originalBeaconInfo.userId
+                && beaconInfo.desc == originalBeaconInfo.desc
+                && beaconInfo.timeout == originalBeaconInfo.timeout
+                && beaconInfo.timestamp == originalBeaconInfo.timestamp
+            }
+            
+            completion(stoppedBeaconInfo)
+        }
+    }
+    
     // MARK: - Beacon info summary
     
     /// Get all beacon info summaries in a room
