@@ -17,7 +17,7 @@ jobs:
     concurrency:
       # When running on develop, use the sha to allow all runs of this workflow to run concurrently.
       # Otherwise only allow a single run of this workflow on each branch, automatically cancelling older runs.
-      group: ${{ github.ref == 'refs/heads/develop' && format('tests-develop-{0}', github.sha) || format('tests-{0}', github.ref) }}
+      group: ${{ github.ref == 'refs/heads/develop' && format('tests-integration-develop-{0}', github.sha) || format('tests-integration-{0}', github.ref) }}
       cancel-in-progress: true
 
     steps:
@@ -89,3 +89,5 @@ jobs:
       # Upload coverage
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
+        with:
+          verbose: true
