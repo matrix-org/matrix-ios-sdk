@@ -78,18 +78,12 @@ class MXSpaceFileStore: MXSpaceStore {
         
         let fileUrl = storeUrl.appendingPathComponent(Constants.fileStoreGraphFile)
         
-        do {
-            guard let graph = try? NSKeyedUnarchiver.unarchiveObject(withFile: fileUrl.path) as? MXSpaceGraphData else {
-                MXLog.warning("[MXSpaceStore] loadSpaceGraphData: found no archived graph")
-                return nil
-            }
-            
-            return graph
-        } catch {
-            MXLog.warning("[MXSpaceStore] loadSpaceGraphData: failed with error: \(error)")
+        guard let graph = NSKeyedUnarchiver.unarchiveObject(withFile: fileUrl.path) as? MXSpaceGraphData else {
+            MXLog.warning("[MXSpaceStore] loadSpaceGraphData: found no archived graph")
+            return nil
         }
         
-        return nil
+        return graph
     }
 
     // MARK - Private

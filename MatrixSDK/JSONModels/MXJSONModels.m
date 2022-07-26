@@ -32,6 +32,8 @@ static NSString* const kMXLoginFlowTypeKey = @"type";
 
 #pragma mark - Implementation
 
+#warning File has not been annotated with nullability, see MX_ASSUME_MISSING_NULLABILITY_BEGIN
+
 @implementation MXPublicRoom
 
 + (id)modelFromJSON:(NSDictionary *)JSONDictionary

@@ -29,9 +29,11 @@
   "testTargets" : [
     {
       "selectedTests" : [
+        "MXCrossSigningTests",
+        "MXCrossSigningVerificationTests",
+        "MXCryptoKeyVerificationTests",
         "MXCryptoSecretStorageTests",
-        "MXCryptoShareTests\/testShareHistoryKeysWithInvitedUser",
-        "MXCryptoShareTests\/testSharedHistoryPreservedWhenForwardingKeys",
+        "MXCryptoShareTests",
         "MXCryptoTests",
         "MXMegolmEncryptionTests"
       ],

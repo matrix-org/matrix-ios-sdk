@@ -98,7 +98,7 @@
     return operation;
 }
 
-- (nullable MXKeyVerification*)keyVerificationFromRequest:(nullable MXKeyVerificationRequest*)request andTransaction:(nullable MXKeyVerificationTransaction*)transaction
+- (nullable MXKeyVerification*)keyVerificationFromRequest:(nullable id<MXKeyVerificationRequest>)request andTransaction:(nullable id<MXKeyVerificationTransaction>)transaction
 {
     if (!request && !transaction)
     {
@@ -140,7 +140,7 @@
 {
     MXKeyVerification *keyVerification;
 
-    MXKeyVerificationRequest *request = [self verificationRequestInDMEvent:originalEvent events:events];
+    id<MXKeyVerificationRequest> request = [self verificationRequestInDMEvent:originalEvent events:events];
 
     if (request)
     {
@@ -334,7 +334,7 @@
     return state;
 }
 
-- (MXKeyVerificationState)stateFromRequest:(nullable MXKeyVerificationRequest*)request andTransaction:(nullable MXKeyVerificationTransaction*)transaction
+- (MXKeyVerificationState)stateFromRequest:(nullable id<MXKeyVerificationRequest>)request andTransaction:(nullable id<MXKeyVerificationTransaction>)transaction
 {
     MXKeyVerificationState keyVerificationState = MXKeyVerificationStateRequestPending;
     
@@ -377,9 +377,9 @@
                     break;
             }
         }
-        else if ([transaction isKindOfClass:MXSASTransaction.class])
+        else if ([transaction conformsToProtocol:@protocol(MXSASTransaction)])
         {
-            MXSASTransaction *sasTransaction = (MXSASTransaction*)transaction;
+            id<MXSASTransaction> sasTransaction = (id<MXSASTransaction>)transaction;
             
             switch (sasTransaction.state) {
                 case MXSASTransactionStateVerified:

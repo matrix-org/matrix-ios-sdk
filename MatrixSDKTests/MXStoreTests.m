@@ -783,6 +783,11 @@
     }];
 }
 
+- (void)checkLastMessageIgnoreProfileChange:(MXRoom *)room
+{
+    // Not implemented
+}
+
 - (void)checkPaginateWhenJoiningAgainAfterLeft:(MXRoom*)room
 {
     [matrixSDKTestsData doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {

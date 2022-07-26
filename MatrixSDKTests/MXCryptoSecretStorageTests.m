@@ -23,6 +23,9 @@
 #import "MatrixSDKTestsData.h"
 #import "MatrixSDKTestsE2EData.h"
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warc-retain-cycles"
+#pragma clang diagnostic ignored "-Wdeprecated"
 
 // Secret for the qkEmh7mHZBySbXqroxiz7fM18fJuXnnt SSSS key
 NSString *jsSDKDataPassphrase = @"ILoveMatrix&Riot";
@@ -273,7 +276,7 @@ UInt8 privateKeyBytes[] = {
     [matrixSDKTestsE2EData doE2ETestWithAliceInARoom:self readyToTest:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
         
         // - Create a new secret storage key
-        MXSecretStorage *secretStorage = aliceSession.crypto.secretStorage;
+        __weak MXSecretStorage *secretStorage = aliceSession.crypto.secretStorage;
         [secretStorage createKeyWithKeyId:nil keyName:nil passphrase:nil success:^(MXSecretStorageKeyCreationInfo * _Nonnull keyCreationInfo) {
             
             // - Set it as default
@@ -605,3 +608,5 @@ UInt8 privateKeyBytes[] = {
 }
 
 @end
+
+#pragma clang diagnostic pop

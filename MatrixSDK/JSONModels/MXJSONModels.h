@@ -26,6 +26,9 @@
 #import "MXWellKnown.h"
 #import "MXCrossSigningInfo.h"
 #import "MXEnumConstants.h"
+#import "MXWarnings.h"
+
+MX_ASSUME_MISSING_NULLABILITY_BEGIN
 
 @class MXEvent, MXDeviceInfo, MXKey, MXUser;
 
@@ -1510,3 +1513,5 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
     @property (nonatomic, nullable) MXRoomVersionCapabilities *roomVersions;
 
 @end
+
+MX_ASSUME_MISSING_NULLABILITY_END

@@ -55,7 +55,7 @@ NS_ASSUME_NONNULL_BEGIN
  
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)sendToOtherInRequest:(MXKeyVerificationRequest*)request
+- (MXHTTPOperation*)sendToOtherInRequest:(id<MXKeyVerificationRequest>)request
                                eventType:(NSString*)eventType
                                  content:(NSDictionary*)content
                                  success:(dispatch_block_t)success
@@ -68,11 +68,11 @@ NS_ASSUME_NONNULL_BEGIN
  @param success a block called when the operation succeeds.
  @param failure a block called when the operation fails.
  */
-- (void)cancelVerificationRequest:(MXKeyVerificationRequest*)request
+- (void)cancelVerificationRequest:(id<MXKeyVerificationRequest>)request
                           success:(void(^)(void))success
                           failure:(void(^)(NSError *error))failure;
 
-- (BOOL)isRequestStillValid:(MXKeyVerificationRequest*)request;
+- (BOOL)isRequestStillValid:(id<MXKeyVerificationRequest>)request;
 
 - (void)removePendingRequestWithRequestId:(NSString*)requestId;
 
@@ -91,7 +91,7 @@ NS_ASSUME_NONNULL_BEGIN
                                       success:(void(^)(MXQRCodeTransaction *transaction))success
                                       failure:(void(^)(NSError *error))failure;
 
-- (void)createQRCodeTransactionFromRequest:(MXKeyVerificationRequest*)request
+- (void)createQRCodeTransactionFromRequest:(id<MXKeyVerificationRequest>)request
                                 qrCodeData:(nullable MXQRCodeData*)qrCodeData
                                    success:(void(^)(MXQRCodeTransaction *transaction))success
                                    failure:(void(^)(NSError *error))failure;
@@ -112,7 +112,7 @@ NS_ASSUME_NONNULL_BEGIN
 
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)sendToOtherInTransaction:(MXKeyVerificationTransaction*)transaction
+- (MXHTTPOperation*)sendToOtherInTransaction:(id<MXKeyVerificationTransaction>)transaction
                                    eventType:(NSString*)eventType
                                      content:(NSDictionary*)content
                                      success:(void (^)(void))success
@@ -126,7 +126,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
  */
-- (void)cancelTransaction:(MXKeyVerificationTransaction*)transaction
+- (void)cancelTransaction:(id<MXKeyVerificationTransaction>)transaction
                      code:(MXTransactionCancelCode*)code
                   success:(void (^)(void))success
                   failure:(void (^)(NSError *error))failure;

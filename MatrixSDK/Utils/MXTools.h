@@ -31,6 +31,8 @@
 #import "MXCallSessionDescription.h"
 #import "MXCallRejectReplacementEventContent.h"
 
+MX_ASSUME_MISSING_NULLABILITY_BEGIN
+
 @interface MXTools : NSObject
 
 + (MXEventTypeString)eventTypeString:(MXEventType)eventType;
@@ -354,3 +356,5 @@ FOUNDATION_EXPORT NSString *const kMXToolsRegexStringForMatrixGroupIdentifier;
 + (BOOL)isRunningUnitTests;
 
 @end
+
+MX_ASSUME_MISSING_NULLABILITY_END
