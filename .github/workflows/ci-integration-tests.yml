@@ -69,19 +69,21 @@ jobs:
 
       # Main step
       - name: Integration tests
-        continue-on-error: true
         run: bundle exec fastlane test testplan:AllWorkingTests
 
       # Store artifacts
       - uses: actions/upload-artifact@v2
+        if: always()
         with:
           name: report.html
           path: build/test/report.html
       - uses: actions/upload-artifact@v2
+        if: always()
         with:
           name: report.junit
           path: build/test/report.junit
       - uses: actions/upload-artifact@v2
+        if: always()
         with:
           name: MatrixSDK-macOS.xcresult
           path: build/test/MatrixSDK-macOS.xcresult/
@@ -89,5 +91,4 @@ jobs:
       # Upload coverage
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
-        with:
-          verbose: true
+        if: always()
