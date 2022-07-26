@@ -43,7 +43,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  An handler on an interactive verification request.
  */
-@interface MXKeyVerificationRequest : NSObject
+@protocol MXKeyVerificationRequest <NSObject>
 
 /**
 Accept an incoming key verification request.
@@ -104,6 +104,13 @@ Accept an incoming key verification request.
 // Shortcuts of methods according to the point of view
 @property (nonatomic, readonly, nullable) NSArray<NSString*> *myMethods;
 @property (nonatomic, readonly, nullable) NSArray<NSString*> *otherMethods;
+
+@end
+
+/**
+ Default implementation of verification request used by the SDK
+ */
+@interface MXDefaultKeyVerificationRequest : NSObject <MXKeyVerificationRequest>
 
 @end
 

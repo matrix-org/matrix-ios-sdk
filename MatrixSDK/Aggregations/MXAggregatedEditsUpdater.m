@@ -103,13 +103,19 @@
 
             // This enables editing replies that don't provide a fallback mx-reply body.
             compatibilityText = [NSString stringWithFormat:@"* %@", text];
-            compatibilityFormattedText = [NSString stringWithFormat:@"* %@", formattedText];
+            if (formattedText.length > 0)
+            {
+                compatibilityFormattedText = [NSString stringWithFormat:@"* %@", formattedText];
+            }
         }
     }
     else
     {
         compatibilityText = [NSString stringWithFormat:@"* %@", text];
-        compatibilityFormattedText = [NSString stringWithFormat:@"* %@", formattedText];
+        if (formattedText.length > 0)
+        {
+            compatibilityFormattedText = [NSString stringWithFormat:@"* %@", formattedText];
+        }
     }
     
     NSMutableDictionary *content = [NSMutableDictionary new];
@@ -128,7 +134,7 @@
 
     NSMutableDictionary *newContent = [NSMutableDictionary dictionaryWithDictionary:@{ kMXMessageTypeKey: messageType,
                                                                                        kMXMessageBodyKey: text }];
-    if (formattedText)
+    if (formattedText.length > 0)
     {
         [newContent addEntriesFromDictionary:@{
             @"formatted_body": formattedText,

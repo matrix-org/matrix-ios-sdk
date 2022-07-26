@@ -48,7 +48,7 @@ typedef enum : NSUInteger
 /**
  An handler on an interactive device verification based on Short Authentication Code.
  */
-@interface MXSASTransaction : MXKeyVerificationTransaction
+@protocol MXSASTransaction <MXKeyVerificationTransaction>
 
 @property (nonatomic) MXSASTransactionState state;
 
@@ -73,6 +73,12 @@ typedef enum : NSUInteger
  */
 - (void)confirmSASMatch;
 
+@end
+
+/**
+ Default implementation of SAS transaction used by the SDK
+ */
+@interface MXDefaultSASTransaction : MXDefaultKeyVerificationTransaction <MXSASTransaction>
 @end
 
 NS_ASSUME_NONNULL_END

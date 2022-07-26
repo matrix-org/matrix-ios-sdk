@@ -103,7 +103,7 @@ FOUNDATION_EXPORT NSString *const MXKeyVerificationManagerNotificationTransactio
 - (void)requestVerificationByToDeviceWithUserId:(NSString*)userId
                                       deviceIds:(nullable NSArray<NSString*>*)deviceIds
                                         methods:(NSArray<NSString*>*)methods
-                                        success:(void(^)(MXKeyVerificationRequest *request))success
+                                        success:(void(^)(id<MXKeyVerificationRequest> request))success
                                         failure:(void(^)(NSError *error))failure;
 
 /**
@@ -120,13 +120,13 @@ FOUNDATION_EXPORT NSString *const MXKeyVerificationManagerNotificationTransactio
                                    roomId:(nullable NSString*)roomId
                              fallbackText:(NSString*)fallbackText
                                   methods:(NSArray<NSString*>*)methods
-                                  success:(void(^)(MXKeyVerificationRequest *request))success
+                                  success:(void(^)(id<MXKeyVerificationRequest> request))success
                                   failure:(void(^)(NSError *error))failure;
 
 /**
  All pending verification requests.
  */
-@property (nonatomic, readonly) NSArray<MXKeyVerificationRequest*> *pendingRequests;
+@property (nonatomic, readonly) NSArray<id<MXKeyVerificationRequest>> *pendingRequests;
 
 
 #pragma mark - Transactions
@@ -143,7 +143,7 @@ FOUNDATION_EXPORT NSString *const MXKeyVerificationManagerNotificationTransactio
 - (void)beginKeyVerificationWithUserId:(NSString*)userId
                            andDeviceId:(NSString*)deviceId
                                 method:(NSString*)method
-                               success:(void(^)(MXKeyVerificationTransaction *transaction))success
+                               success:(void(^)(id<MXKeyVerificationTransaction> transaction))success
                                failure:(void(^)(NSError *error))failure __attribute__((deprecated("Start key verification with a request (requestVerificationByToDeviceWithUserId) instead")));
 
 /**
@@ -153,9 +153,9 @@ FOUNDATION_EXPORT NSString *const MXKeyVerificationManagerNotificationTransactio
  @param success a block called when the operation succeeds.
  @param failure a block called when the operation fails.
  */
-- (void)beginKeyVerificationFromRequest:(MXKeyVerificationRequest*)request
+- (void)beginKeyVerificationFromRequest:(id<MXKeyVerificationRequest>)request
                                  method:(NSString*)method
-                                success:(void(^)(MXKeyVerificationTransaction *transaction))success
+                                success:(void(^)(id<MXKeyVerificationTransaction> transaction))success
                                 failure:(void(^)(NSError *error))failure;
 
 /**
@@ -163,7 +163,7 @@ FOUNDATION_EXPORT NSString *const MXKeyVerificationManagerNotificationTransactio
 
  @param complete a block called with all transactions.
  */
-- (void)transactions:(void(^)(NSArray<MXKeyVerificationTransaction*> *transactions))complete;
+- (void)transactions:(void(^)(NSArray<id<MXKeyVerificationTransaction>> *transactions))complete;
 
 
 #pragma mark - Verification status

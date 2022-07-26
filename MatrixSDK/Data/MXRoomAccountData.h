@@ -22,6 +22,8 @@
 #import "MXEvent.h"
 #import "MXVirtualRoomInfo.h"
 
+MX_ASSUME_MISSING_NULLABILITY_BEGIN
+
 /**
  `MXRoomAccountData` represents private data that the user has defined for a room.
  */
@@ -80,3 +82,5 @@
 - (NSArray<NSString *> *)getTaggedEventsIds:(NSString*)tag;
 
 @end
+
+MX_ASSUME_MISSING_NULLABILITY_END

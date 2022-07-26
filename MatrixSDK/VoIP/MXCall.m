@@ -1635,6 +1635,9 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
                     case MXCallHangupReasonInviteTimeout:
                         _endReason = MXCallEndReasonMissed;
                         break;
+                    case MXCallHangupReasonUserBusy:
+                        _endReason = MXCallEndReasonBusy;
+                        break;
                 }
                 break;
             }

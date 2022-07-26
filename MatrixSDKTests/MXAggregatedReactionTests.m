@@ -649,12 +649,12 @@
         XCTAssertEqual(reactionCount.count, 1);
         if ([reactionCount.reaction isEqualToString: @"👍"])
         {
-            #warning Not implemented yet - https://github.com/vector-im/riot-ios/issues/2452
+            // TODO: Not implemented yet - https://github.com/vector-im/riot-ios/issues/2452
             // XCTAssertTrue(reactionCount.myUserHasReacted, @"We must know reaction made by our user");
         }
         else if ([reactionCount.reaction isEqualToString: @"🙂"])
         {
-            #warning Not implemented yet - https://github.com/vector-im/riot-ios/issues/2452
+            // TODO: Not implemented yet - https://github.com/vector-im/riot-ios/issues/2452
             // XCTAssertFalse(reactionCount.myUserHasReacted);
         }
         else

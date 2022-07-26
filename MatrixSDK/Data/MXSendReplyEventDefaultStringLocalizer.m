@@ -24,6 +24,7 @@
 @property (nonatomic, strong) NSString *senderSentAVoiceMessage;
 @property (nonatomic, strong) NSString *senderSentAFile;
 @property (nonatomic, strong) NSString *senderSentTheirLocation;
+@property (nonatomic, strong) NSString *senderSentTheirLiveLocation;
 @property (nonatomic, strong) NSString *messageToReplyToPrefix;
 
 @end
@@ -40,6 +41,7 @@
         _senderSentAVoiceMessage = @"sent a voice message.";
         _senderSentAFile = @"sent a file.";
         _senderSentTheirLocation = @"has shared their location.";
+        _senderSentTheirLiveLocation = @"Live location.";
         _messageToReplyToPrefix = @"In reply to";
     }
     return self;

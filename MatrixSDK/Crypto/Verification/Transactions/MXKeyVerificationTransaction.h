@@ -34,11 +34,10 @@ typedef NS_ENUM(NSInteger, MXKeyVerificationTransport) {
     MXKeyVerificationTransportDirectMessage,
 };
 
-
 /**
  An handler on an interactive device verification.
  */
-@interface MXKeyVerificationTransaction: NSObject
+@protocol MXKeyVerificationTransaction <NSObject>
 
 /**
  The transaction id.
@@ -110,6 +109,13 @@ typedef NS_ENUM(NSInteger, MXKeyVerificationTransport) {
 
 @property (nonatomic, nullable, readonly) NSString *dmRoomId;
 @property (nonatomic, nullable, readonly) NSString *dmEventId;
+
+@end
+
+/**
+ Default implementation of verification transaction used by the SDK
+ */
+@interface MXDefaultKeyVerificationTransaction: NSObject <MXKeyVerificationTransaction>
 
 @end
 
