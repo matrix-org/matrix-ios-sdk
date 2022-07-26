@@ -87,7 +87,8 @@ platform :ios do
       # Test result configuration
       result_bundle: true,
       output_directory: "./build/test",
-      open_report: !is_ci?
+      open_report: !is_ci?,
+      fail_build: false
     )
 
     slather(
