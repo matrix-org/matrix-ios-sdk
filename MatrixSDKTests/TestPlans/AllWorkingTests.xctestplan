@@ -60,6 +60,7 @@
         "MXMyUserTests\/testIdenticon",
         "MXOlmDeviceUnitTests",
         "MXPeekingRoomTests\/testPeekingOnNonWorldReadable",
+        "MXPollAggregatorTest\/testEditing()",
         "MXPushRuleUnitTests",
         "MXQRCodeDataUnitTests",
         "MXReplyEventParserUnitTests",
