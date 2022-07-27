@@ -69,14 +69,17 @@ jobs:
 
       # Store artifacts
       - uses: actions/upload-artifact@v2
+        if: always()
         with:
           name: report.html
           path: build/test/report.html
       - uses: actions/upload-artifact@v2
+        if: always()
         with:
           name: report.junit
           path: build/test/report.junit
       - uses: actions/upload-artifact@v2
+        if: always()
         with:
           name: MatrixSDK-macOS.xcresult
           path: build/test/MatrixSDK-macOS.xcresult/
