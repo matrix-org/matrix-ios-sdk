@@ -1,3 +1,24 @@
+## Changes in 0.23.13 (2022-07-26)
+
+🙌 Improvements
+
+- MXRoom: Support reply to beacon info event. ([#6423](https://github.com/vector-im/element-ios/issues/6423))
+- MXBeaconAggregations: Handle beacon info redaction. ([#6470](https://github.com/vector-im/element-ios/issues/6470))
+
+🐛 Bugfixes
+
+- Fix formatted_body content for unformatted events ([#6446](https://github.com/vector-im/element-ios/issues/6446))
+
+🧱 Build
+
+- Disable nightly tests for now as they're always timing out. ([#1523](https://github.com/matrix-org/matrix-ios-sdk/pull/1523))
+
+Others
+
+- Reduce project warnings ([#1527](https://github.com/matrix-org/matrix-ios-sdk/pull/1527))
+- Crypto: Convert verification request and transaction to protocols ([#1528](https://github.com/matrix-org/matrix-ios-sdk/pull/1528))
+
+
 ## Changes in 0.23.12 (2022-07-13)
 
 🐛 Bugfixes
