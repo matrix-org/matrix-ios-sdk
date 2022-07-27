@@ -36,7 +36,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
             ${{ runner.os }}-
-
       # Cache for Xcode env
       - uses: actions/cache@v2
         with:
@@ -50,7 +49,6 @@ jobs:
           key: ${{ runner.os }}-gems-${{ hashFiles('**/Gemfile.lock') }}
           restore-keys: |
             ${{ runner.os }}-gems-
-
       - name: Start synapse server
         uses: michaelkaye/setup-matrix-synapse@v1.0.3
         with:
@@ -62,21 +60,27 @@ jobs:
         run: |
           bundle config path vendor/bundle
           bundle install --jobs 4 --retry 3
-
       # Main step
       - name: Crypto tests
         run: bundle exec fastlane test testplan:CryptoTests
 
       # Store artifacts
       - uses: actions/upload-artifact@v2
+        if: always()
         with:
           name: report.html
           path: build/test/report.html
       - uses: actions/upload-artifact@v2
+        if: always()
         with:
           name: report.junit
           path: build/test/report.junit
       - uses: actions/upload-artifact@v2
+        if: always()
         with:
           name: MatrixSDK-macOS.xcresult
           path: build/test/MatrixSDK-macOS.xcresult/
+
+      # Upload coverage
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
