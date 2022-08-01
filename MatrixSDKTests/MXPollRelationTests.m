@@ -47,6 +47,8 @@
 {
     self.matrixSDKTestsData = nil;
     self.matrixSDKTestsE2EData = nil;
+    
+    [super tearDown];
 }
 
 - (void)testBobClosesPollWithOneAnswer
