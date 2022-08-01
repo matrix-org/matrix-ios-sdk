@@ -47,12 +47,17 @@ public struct MXRoomListDataSortOptions: Equatable {
     /// Related fetcher will be refreshed automatically when updated.
     public var unreadMessagesFirst: Bool
     
+    /// Flag to sort rooms alphabetically.
+    /// Related fetcher will be refreshed automatically when updated.
     public var alphabetical: Bool
     
     /// Initializer
     /// - Parameters:
     ///   - sentStatus: flag to sort by sent status
     ///   - lastEventDate: flag to sort by last event date
+    ///   - favoriteTag: Flag to sort by favorite tag order
+    ///   - suggested: Flag to sort by suggested room flag
+    ///   - alphabetical: Flag to sort rooms alphabetically
     ///   - missedNotificationsFirst: flag to sort by missed notification count
     ///   - unreadMessagesFirst: flag to sort by unread count
     public init(invitesFirst: Bool = true,

@@ -79,22 +79,13 @@ internal class MXRecentsRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
     // MARK: - Public
     
     func refresh() {
-        guard let events = session?.accountData.accountData["events"] as? [[AnyHashable: Any]] else {
-            MXLog.error("[MXRecentsRoomListDataFetcher] cannot retrieve events")
+        guard let breadcrumbs = session?.accountData?.accountData(forEventType: kMXAccountDataTypeBreadcrumbs) as? [AnyHashable: [String]] else {
+            MXLog.warning("[MXRecentsRoomListDataFetcher] cannot retrieve breadcrumbs")
             return
         }
         
-        var breadcrumbs: [AnyHashable: [String]]?
-        for event in events {
-            if let type = event["type"] as? String,
-                type == kMXAccountDataTypeBreadcrumbs,
-                let content = event["content"] as? [AnyHashable: [String]] {
-                breadcrumbs = content
-            }
-        }
-        
-        guard var recentRoomIds = breadcrumbs?[kMXAccountDataTypeRecentRoomsKey] else {
-            MXLog.error("[MXRecentsRoomListDataFetcher] cannot retrieve recent rooms")
+        guard var recentRoomIds = breadcrumbs[kMXAccountDataTypeRecentRoomsKey] else {
+            MXLog.warning("[MXRecentsRoomListDataFetcher] cannot retrieve recent rooms")
             return
         }
         
