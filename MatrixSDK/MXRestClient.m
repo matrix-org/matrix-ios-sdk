@@ -2470,6 +2470,11 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
                        @"third_party_signed":thirdPartySigned
                        };
     }
+    else
+    {
+        // A body is required even if empty
+        parameters = @{};
+    }
 
     // Characters in a room alias need to be escaped in the URL
     NSString *path = [NSString stringWithFormat:@"%@/join/%@",
