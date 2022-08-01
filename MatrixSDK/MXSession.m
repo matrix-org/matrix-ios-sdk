@@ -4470,16 +4470,7 @@ typedef void (^MXOnResumeDone)(void);
                                 success:(void (^)(void))success
                                 failure:(void (^)(NSError *error))failure
 {
-    NSArray<NSDictionary *> *events = self.accountData.accountData[@"events"];
-    
-    NSDictionary<NSString *, NSArray *> *breadcrumbs;
-    for (NSDictionary * event in events)
-    {
-        if ([event[@"type"] isEqualToString:kMXAccountDataTypeBreadcrumbs])
-        {
-            breadcrumbs = event[@"content"];
-        }
-    }
+    NSDictionary<NSString *, NSArray *> *breadcrumbs = [self.accountData accountDataForEventType:kMXAccountDataTypeBreadcrumbs];
     
     NSMutableArray<NSString *> *recentRoomIds = breadcrumbs[kMXAccountDataTypeRecentRoomsKey] ? [NSMutableArray arrayWithArray:breadcrumbs[kMXAccountDataTypeRecentRoomsKey]] : [NSMutableArray array];
     

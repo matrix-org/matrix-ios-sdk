@@ -1098,10 +1098,6 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     {
         result |= MXRoomSummaryDataTypesDirect;
     }
-    else
-    {
-        result |= MXRoomSummaryDataTypesNotDirect;
-    }
     if (self.roomType == MXRoomTypeSpace)
     {
         result |= MXRoomSummaryDataTypesSpace;
@@ -1113,10 +1109,6 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     if (self.hasAnyUnread)
     {
         result |= MXRoomSummaryDataTypesUnread;
-    }
-    else
-    {
-        result |= MXRoomSummaryDataTypesRead;
     }
     
     return result;
