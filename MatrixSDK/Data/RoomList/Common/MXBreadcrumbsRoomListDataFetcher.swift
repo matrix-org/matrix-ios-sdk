@@ -17,7 +17,7 @@
 import Foundation
 
 @objcMembers
-internal class MXRecentsRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
+internal class MXBreadcrumbsRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
     internal var fetchOptions: MXRoomListDataFetchOptions
     private weak var session: MXSession?
     private var recentsRooms: [String] = []
@@ -80,12 +80,12 @@ internal class MXRecentsRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
     
     func refresh() {
         guard let breadcrumbs = session?.accountData?.accountData(forEventType: kMXAccountDataTypeBreadcrumbs) as? [AnyHashable: [String]] else {
-            MXLog.warning("[MXRecentsRoomListDataFetcher] cannot retrieve breadcrumbs")
+            MXLog.warning("[MXBreadcrumbsRoomListDataFetcher] cannot retrieve breadcrumbs")
             return
         }
         
         guard var recentRoomIds = breadcrumbs[kMXAccountDataTypeRecentRoomsKey] else {
-            MXLog.warning("[MXRecentsRoomListDataFetcher] cannot retrieve recent rooms")
+            MXLog.warning("[MXBreadcrumbsRoomListDataFetcher] cannot retrieve recent rooms")
             return
         }
         

@@ -35,7 +35,7 @@ public class MXStoreRoomListDataManager: NSObject, MXRoomListDataManager {
                                                   spaceService: spaceService)
         }
         if options.filterOptions.onlyBreadcrumbs {
-            return MXRecentsRoomListDataFetcher(fetchOptions: options, session: session)
+            return MXBreadcrumbsRoomListDataFetcher(fetchOptions: options, session: session)
         }
         guard let store = session?.store else {
             fatalError("[MXStoreRoomListDataManager] Session has no store")
