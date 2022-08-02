@@ -47,11 +47,15 @@ public struct MXRoomListDataFilterOptions: Equatable {
     /// Flag to show only rooms that matches all the provided `dataTypes`. This has no effect when `onlySuggested` is `true`
     public let strictMatches: Bool
     
+    ///Flag to fetch and order rooms according room IDs stored in the `im.vector.setting.breadcrumbs` event within the user account data.
+    public let onlyBreadcrumbs: Bool
+
     /// Initializer
     /// - Parameters:
     ///   - dataTypes: data types to fetch. Pass `MXRoomListDataFilterOptions.emptyDataTypes` not to specify any.
     ///   - notDataTypes: data types not to fetch. Pass `MXRoomListDataFilterOptions.emptyDataTypes` not to specify any.
     ///   - onlySuggested: flag to filter only suggested rooms. Only `space` and `query` parameters are honored if true.
+    ///   - onlyBreadcrumbs: flag to fetch and order rooms according room IDs stored in the `im.vector.setting.breadcrumbs` event within the user account data.
     ///   - query: search query
     ///   - space: active space
     ///   - showAllRoomsInHomeSpace: flag to show all rooms in home space (when `space` is not provided)
@@ -60,6 +64,7 @@ public struct MXRoomListDataFilterOptions: Equatable {
     public init(dataTypes: MXRoomSummaryDataTypes = MXRoomListDataFilterOptions.emptyDataTypes,
                 notDataTypes: MXRoomSummaryDataTypes = [.hidden, .conferenceUser, .space],
                 onlySuggested: Bool = false,
+                onlyBreadcrumbs: Bool = false,
                 query: String? = nil,
                 space: MXSpace? = nil,
                 showAllRoomsInHomeSpace: Bool,
@@ -68,6 +73,7 @@ public struct MXRoomListDataFilterOptions: Equatable {
         self.dataTypes = dataTypes
         self.notDataTypes = notDataTypes
         self.onlySuggested = onlySuggested
+        self.onlyBreadcrumbs = onlyBreadcrumbs
         self.query = query
         self.space = space
         self.showAllRoomsInHomeSpace = showAllRoomsInHomeSpace

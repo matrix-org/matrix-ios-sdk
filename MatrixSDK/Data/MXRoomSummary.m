@@ -1106,6 +1106,10 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     {
         result |= MXRoomSummaryDataTypesConferenceUser;
     }
+    if (self.hasAnyUnread)
+    {
+        result |= MXRoomSummaryDataTypesUnread;
+    }
     
     return result;
 }
