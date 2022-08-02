@@ -40,12 +40,6 @@ class MXEventAnnotationUnitTests: XCTestCase {
         ]
         ]
 
-    override func setUp() {
-    }
-
-    override func tearDown() {
-    }
-
     func testModelFromJSON() {
         let event = MXEvent(fromJSON: eventJSON)
 

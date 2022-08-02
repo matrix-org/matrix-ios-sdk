@@ -24,6 +24,7 @@ class MXPollAggregatorTest: XCTestCase {
     private var pollAggregator: PollAggregator!
     
     override func setUp() {
+        super.setUp()
         matrixSDKTestsData = MatrixSDKTestsData()
         matrixSDKTestsE2EData = MatrixSDKTestsE2EData(matrixSDKTestsData: matrixSDKTestsData)
     }
@@ -31,6 +32,7 @@ class MXPollAggregatorTest: XCTestCase {
     override func tearDown() {
         matrixSDKTestsData = nil
         matrixSDKTestsE2EData = nil
+        super.tearDown()
     }
         
     func testAggregations() {

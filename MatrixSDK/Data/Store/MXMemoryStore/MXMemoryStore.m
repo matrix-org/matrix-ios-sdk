@@ -195,6 +195,11 @@
     return roomStore.partialAttributedTextMessage;
 }
 
+- (void)stateOfRoom:(NSString *)roomId success:(void (^)(NSArray<MXEvent *> * _Nonnull))success failure:(void (^)(NSError * _Nonnull))failure
+{
+    success(@[]);
+}
+
 - (void)loadReceiptsForRoom:(NSString *)roomId completion:(void (^)(void))completion
 {
     [self getOrCreateRoomReceiptsStore:roomId];

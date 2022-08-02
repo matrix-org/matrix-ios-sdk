@@ -42,9 +42,9 @@
 
 - (void)tearDown
 {
+    matrixSDKTestsData = nil;
     [super tearDown];
 
-    matrixSDKTestsData = nil;
 }
 
 // Create the following scenario with 3 rooms
