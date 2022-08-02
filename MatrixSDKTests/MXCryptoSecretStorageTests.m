@@ -66,6 +66,8 @@ UInt8 privateKeyBytes[] = {
 {
     matrixSDKTestsData = nil;
     matrixSDKTestsE2EData = nil;
+    
+    [super tearDown];
 }
 
 

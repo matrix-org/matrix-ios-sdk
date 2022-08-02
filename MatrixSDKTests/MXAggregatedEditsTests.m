@@ -57,6 +57,8 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
 {
     matrixSDKTestsData = nil;
     matrixSDKTestsE2EData = nil;
+    
+    [super tearDown];
 }
 
 // Create a room with an event with an edit it on it

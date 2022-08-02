@@ -45,6 +45,8 @@
 {
     matrixSDKTestsData = nil;
     matrixSDKTestsE2EData = nil;
+    
+    [super tearDown];
 }
 
 

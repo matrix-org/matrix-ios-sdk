@@ -49,11 +49,11 @@
 
 - (void)tearDown
 {
-    [super tearDown];
-
     [MXHTTPClient removeAllDelays];
     mxRestClient = nil;
     matrixSDKTestsData = nil;
+    
+    [super tearDown];
 }
 
 // Make sure MXTESTS_USER exists on the HS
