@@ -1416,6 +1416,10 @@ static Class DefaultAlgorithmClass;
     return [crypto.store inboundGroupSessionsToBackup:1].count > 0;
 }
 
+- (BOOL)canBeRefreshed
+{
+    return _state != MXKeyBackupStateUnknown && _state != MXKeyBackupStateCheckingBackUpOnHomeserver;
+}
 
 #pragma mark - Private methods -
 

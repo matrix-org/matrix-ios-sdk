@@ -370,6 +370,40 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
         success();
         return;
     }
+
+    if (!keyBackup.canBeRefreshed)
+    {
+        //  cannot refresh key backup now, wait for another state
+        MXWeakify(self);
+        __block id observer;
+        observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXKeyBackupDidStateChangeNotification
+                                                                     object:keyBackup
+                                                                      queue:[NSOperationQueue mainQueue]
+                                                                 usingBlock:^(NSNotification * _Nonnull notification) {
+            MXStrongifyAndReturnIfNil(self);
+
+            if (keyBackup.canBeRefreshed)
+            {
+                [[NSNotificationCenter defaultCenter] removeObserver:observer];
+                observer = nil;
+
+                [self createKeyBackupWithSuccess:success failure:failure];
+            }
+        }];
+
+        //  also add a timer to avoid infinite waiting
+        [NSTimer scheduledTimerWithTimeInterval:10.0 repeats:NO block:^(NSTimer * _Nonnull timer) {
+            if (observer)
+            {
+                [[NSNotificationCenter defaultCenter] removeObserver:observer];
+                observer = nil;
+            }
+            [self createKeyBackupWithSuccess:success failure:failure];
+            [timer invalidate];
+        }];
+
+        return;
+    }
     
     [keyBackup forceRefresh:^(BOOL usingLastVersion) {
         
