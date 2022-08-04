@@ -67,4 +67,14 @@
  */
 @property NSString *algorithm;
 
+/**
+ Flag indicating that this session data is untrusted.
+ */
+@property (getter=isUntrusted) BOOL untrusted;
+
+/**
+ Check the data fields before encryption, to see whether it contains required fields or not.
+ */
+- (BOOL)checkFieldsBeforeEncryption;
+
 @end
