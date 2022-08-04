@@ -50,9 +50,9 @@ typedef NSData* _Nullable (^MXKeyBackupPrivateKeyGetterBlock)(void);
                          keyGetterBlock:(MXKeyBackupPrivateKeyGetterBlock)keyGetterBlock;
 
 /// Prepare a private key and auth data for a given password for the algorithm. Returns a preparation info if successful, otherwise returns nil.
-/// @param password password to use
+/// @param password password to use. If not provided, a new one will be generated.
 /// @param error error instance to be set on errors
-+ (nullable MXKeyBackupPreparationInfo*)prepareWith:(NSString*)password error:(NSError *__autoreleasing  _Nullable *)error;
++ (nullable MXKeyBackupPreparationInfo*)prepareWith:(nullable NSString*)password error:(NSError *__autoreleasing  _Nullable *)error;
 
 /// Method to check a private key against receiver's internal auth data (the one given at initialization)
 /// @param privateKey private key to check

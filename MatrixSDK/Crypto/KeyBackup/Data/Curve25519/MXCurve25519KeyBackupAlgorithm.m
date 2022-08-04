@@ -74,17 +74,24 @@
     return self;
 }
 
-+ (MXKeyBackupPreparationInfo *)prepareWith:(NSString*)password error:(NSError *__autoreleasing  _Nullable *)error
++ (MXKeyBackupPreparationInfo *)prepareWith:(NSString *)password error:(NSError *__autoreleasing  _Nullable *)error
 {
     OLMPkDecryption *decryption = [OLMPkDecryption new];
-    NSString *salt;
-    NSUInteger iterations;
-    NSData *privateKey = [MXKeyBackupPassword generatePrivateKeyWithPassword:password salt:&salt iterations:&iterations error:error];
-
     MXCurve25519BackupAuthData *authData = [MXCurve25519BackupAuthData new];
-    authData.privateKeySalt = salt;
-    authData.privateKeyIterations = iterations;
-    authData.publicKey = [decryption setPrivateKey:privateKey error:error];
+    
+    if (!password)
+    {
+        authData.publicKey = [decryption generateKey:error];
+    }
+    else
+    {
+        NSString *salt;
+        NSUInteger iterations;
+        NSData *privateKey = [MXKeyBackupPassword generatePrivateKeyWithPassword:password salt:&salt iterations:&iterations error:error];
+        authData.privateKeySalt = salt;
+        authData.privateKeyIterations = iterations;
+        authData.publicKey = [decryption setPrivateKey:privateKey error:error];
+    }
 
     if (*error)
     {
@@ -101,11 +108,7 @@
 
 + (BOOL)keyMatches:(NSData *)privateKey withAuthData:(NSDictionary *)authData error:(NSError *__autoreleasing  _Nullable *)error
 {
-    // Built the PK decryption with it
-    OLMPkDecryption *decryption = [OLMPkDecryption new];
-    NSString *publicKey = [decryption setPrivateKey:privateKey error:error];
-
-    return [publicKey isEqualToString:authData[@"public_key"]];
+    return [[self.class publicKeyFrom:privateKey] isEqualToString:authData[@"public_key"]];
 }
 
 - (BOOL)isUntrusted
@@ -209,6 +212,17 @@
 }
 
 #pragma mark - Private
+
++ (NSString*)publicKeyFrom:(NSData*)privateKey
+{
+    if (privateKey)
+    {
+        // Built the PK decryption with it
+        OLMPkDecryption *decryption = [OLMPkDecryption new];
+        return [decryption setPrivateKey:privateKey error:nil];
+    }
+    return nil;
+}
 
 // Sanity checks on OLMPkMessage
 - (BOOL)checkOLMPkMessage:(OLMPkMessage*)message

@@ -119,7 +119,7 @@
         _keysClaimed = [aDecoder decodeObjectForKey:@"keysClaimed"];
         _sharedHistory = [[aDecoder decodeObjectForKey:@"sharedHistory_v2"] boolValue];
         //  if "untrusted" is not encoded, mark it as untrusted
-        _untrusted = [aDecoder decodeObjectForKey:@"untrusted"] ? [aDecoder decodeBoolForKey:@"untrusted"] : YES;
+        _untrusted = [aDecoder containsValueForKey:@"untrusted"] ? [aDecoder decodeBoolForKey:@"untrusted"] : YES;
     }
     return self;
 }
