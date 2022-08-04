@@ -14,15 +14,19 @@
  limitations under the License.
  */
 
-#import "MXMegolmBackupAuthData.h"
+#import "MXCurve25519BackupAuthData.h"
 
-@implementation MXMegolmBackupAuthData
+@implementation MXCurve25519BackupAuthData
+
+@synthesize privateKeySalt = _privateKeySalt;
+@synthesize privateKeyIterations = _privateKeyIterations;
+@synthesize signatures = _signatures;
 
 #pragma mark - MXJSONModel
 
 + (id)modelFromJSON:(NSDictionary *)JSONDictionary
 {
-    MXMegolmBackupAuthData *megolmBackupAuthData = [MXMegolmBackupAuthData new];
+    MXCurve25519BackupAuthData *megolmBackupAuthData = [MXCurve25519BackupAuthData new];
     if (megolmBackupAuthData)
     {
         MXJSONModelSetString(megolmBackupAuthData.publicKey, JSONDictionary[@"public_key"]);

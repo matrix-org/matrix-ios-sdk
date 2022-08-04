@@ -21,7 +21,6 @@
 #import "MXUsersDevicesMap.h"
 #import "MXKeyBackupVersion.h"
 #import "MXKeyBackupData.h"
-#import "MXMegolmBackupAuthData.h"
 #import "MXLoginTerms.h"
 #import "MXWellKnown.h"
 #import "MXCrossSigningInfo.h"

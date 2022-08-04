@@ -17,41 +17,19 @@
 #import <Foundation/Foundation.h>
 
 #import "MXJSONModel.h"
+#import "MXBaseKeyBackupAuthData.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
 /**
- Data model for MXKeyBackupVersion.authData in case of kMXCryptoMegolmBackupAlgorithm.
+ Data model for MXKeyBackupVersion.authData in case of kMXCryptoCurve25519KeyBackupAlgorithm.
  */
-@interface MXMegolmBackupAuthData : MXJSONModel
+@interface MXCurve25519BackupAuthData : MXJSONModel <MXBaseKeyBackupAuthData>
 
 /**
  The curve25519 public key used to encrypt the backups.
  */
 @property (nonatomic) NSString *publicKey;
-
-/**
- In case of a backup created from a password, the salt associated with the backup
- private key.
- */
-@property (nonatomic, nullable) NSString *privateKeySalt;
-
-/**
- In case of a backup created from a password, the number of key derivations.
- */
-@property (nonatomic) NSUInteger privateKeyIterations;
-
-/**
- Signatures of the public key.
- userId -> (deviceSignKeyId -> signature)
- */
-@property (nonatomic) NSDictionary<NSString*, NSDictionary*> *signatures;
-
-/**
- Same as the parent [MXJSONModel JSONDictionary] but return only
- data that must be signed.
- */
-@property (nonatomic, readonly) NSDictionary *signalableJSONDictionary;
 
 @end
 
