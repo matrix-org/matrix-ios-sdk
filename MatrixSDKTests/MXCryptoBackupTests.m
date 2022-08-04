@@ -67,7 +67,7 @@
 - (MXKeyBackupVersion*)fakeKeyBackupVersion
 {
     return [MXKeyBackupVersion modelFromJSON:@{
-                                        @"algorithm": kMXCryptoMegolmBackupAlgorithm,
+                                        @"algorithm": kMXCryptoCurve25519KeyBackupAlgorithm,
                                         @"auth_data": @{
                                                 @"public_key": @"abcdefg",
                                                 @"signatures": @{
@@ -382,7 +382,7 @@
         [aliceSession.crypto.backup prepareKeyBackupVersionWithPassword:nil success:^(MXMegolmBackupCreationInfo * _Nonnull keyBackupCreationInfo) {
 
             XCTAssertNotNil(keyBackupCreationInfo);
-            XCTAssertEqualObjects(keyBackupCreationInfo.algorithm, kMXCryptoMegolmBackupAlgorithm);
+            XCTAssertEqualObjects(keyBackupCreationInfo.algorithm, kMXCryptoCurve25519KeyBackupAlgorithm);
             XCTAssertNotNil(keyBackupCreationInfo.authData.publicKey);
             XCTAssertNotNil(keyBackupCreationInfo.authData.signatures);
             XCTAssertNotNil(keyBackupCreationInfo.recoveryKey);
@@ -409,7 +409,7 @@
         [aliceSession.crypto.backup prepareKeyBackupVersionWithPassword:nil success:^(MXMegolmBackupCreationInfo * _Nonnull keyBackupCreationInfo) {
             [aliceSession.crypto.backup createKeyBackupVersion:keyBackupCreationInfo success:^(MXKeyBackupVersion * _Nonnull keyBackupVersion) {
 
-                XCTAssertEqualObjects(keyBackupVersion.algorithm, kMXCryptoMegolmBackupAlgorithm);
+                XCTAssertEqualObjects(keyBackupVersion.algorithm, kMXCryptoCurve25519KeyBackupAlgorithm);
                 XCTAssertEqualObjects(keyBackupVersion.authData, keyBackupCreationInfo.authData.JSONDictionary);
                 XCTAssertNotNil(keyBackupVersion.version);
 
