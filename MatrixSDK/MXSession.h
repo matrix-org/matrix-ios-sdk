@@ -224,6 +224,8 @@ FOUNDATION_EXPORT NSString *const kMXSessionAccountDataDidChangeNotification;
  */
 FOUNDATION_EXPORT NSString *const kMXSessionAccountDataDidChangeIdentityServerNotification;
 
+FOUNDATION_EXPORT NSString *const kMXSessionAccountDataDidChangeBreadcrumbsNotification;
+
 /**
  Posted when MXSession data have been corrupted. The listener must reload the session data with a full server sync.
  
@@ -1482,6 +1484,9 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
                                           success:(void (^)(MXSession *session, NSString *baseURL, NSString *accessToken))success
                                           failure:(void (^)(NSError *error))failure;
 
+- (void)updateBreadcrumbsWithRoomWithId:(NSString *)roomId
+                                success:(void (^)(void))success
+                                failure:(void (^)(NSError *error))failure;
 
 #pragma mark - Homeserver information
 

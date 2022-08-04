@@ -51,6 +51,10 @@ extension MXRoomListDataSortable {
 //            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryProtocol.spaceChildInfo?.order, ascending: false))
 //        }
         
+        if sortOptions.alphabetical {
+            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryProtocol.displayname, ascending: true))
+        }
+        
         if sortOptions.invitesFirst {
             result.append(NSSortDescriptor(keyPath: \MXRoomSummaryProtocol.membership, ascending: true))
         }
