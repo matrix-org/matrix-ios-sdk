@@ -394,7 +394,7 @@
             
             // - Log Alice on a new device
             [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
-            [matrixSDKTestsData relogUserSessionWithNewDevice:self session:aliceSession withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *aliceSession2) {
+            [self->matrixSDKTestsData relogUserSessionWithNewDevice:self session:aliceSession withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *aliceSession2) {
                 [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
                 
                 [aliceSession2.crypto.crossSigning refreshStateWithSuccess:^(BOOL stateUpdated) {

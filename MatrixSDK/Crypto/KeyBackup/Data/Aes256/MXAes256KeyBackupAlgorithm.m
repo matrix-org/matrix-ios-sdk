@@ -83,9 +83,21 @@
 
 + (MXKeyBackupPreparationInfo *)prepareWith:(NSString*)password error:(NSError *__autoreleasing  _Nullable *)error
 {
-    NSString *salt;
-    NSUInteger iterations;
-    NSData *privateKey = [MXKeyBackupPassword generatePrivateKeyWithPassword:password salt:&salt iterations:&iterations error:error];
+    NSData *privateKey;
+    MXAes256BackupAuthData *authData = [MXAes256BackupAuthData new];
+
+    if (!password)
+    {
+        privateKey = [OLMUtility randomBytesOfLength:32];
+    }
+    else
+    {
+        NSString *salt;
+        NSUInteger iterations;
+        privateKey = [MXKeyBackupPassword generatePrivateKeyWithPassword:password salt:&salt iterations:&iterations error:error];
+        authData.privateKeySalt = salt;
+        authData.privateKeyIterations = iterations;
+    }
 
     if (*error)
     {
@@ -93,13 +105,9 @@
         return nil;
     }
 
-    MXAes256BackupAuthData *authData = [MXAes256BackupAuthData new];
-    authData.privateKeySalt = salt;
-    authData.privateKeyIterations = iterations;
-
-    MXEncryptedSecretContent *outSecret = [self.class calculateKeyCheck:privateKey iv:nil];
-    authData.iv = outSecret.iv;
-    authData.mac = outSecret.mac;
+    MXEncryptedSecretContent *secret = [self.class calculateKeyCheck:privateKey iv:nil];
+    authData.iv = secret.iv;
+    authData.mac = secret.mac;
 
     return [[MXKeyBackupPreparationInfo alloc] initWithPrivateKey:privateKey authData:authData];
 }
