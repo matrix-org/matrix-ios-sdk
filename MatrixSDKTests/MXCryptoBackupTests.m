@@ -26,6 +26,7 @@
 #import "MXOutboundSessionInfo.h"
 #import "MXCrossSigning_Private.h"
 #import "MXKeyBackupAlgorithm.h"
+#import "MXCurve25519BackupAuthData.h"
 
 // Do not bother with retain cycles warnings in tests
 #pragma clang diagnostic push

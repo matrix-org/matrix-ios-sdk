@@ -30,6 +30,7 @@
 #import "MXRawDataKey.h"
 #import "MXCrossSigning_Private.h"
 #import "MXSharedHistoryKeyService.h"
+#import "MXCurve25519BackupAuthData.h"
 
 @interface MXCurve25519KeyBackupAlgorithm ()
 
