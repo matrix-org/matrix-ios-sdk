@@ -1548,8 +1548,8 @@
 		EC383BB72541C518002FBBE6 /* MXBackgroundPushRulesManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC383BB52540E15E002FBBE6 /* MXBackgroundPushRulesManager.swift */; };
 		EC383BBF2542F1E3002FBBE6 /* MXBackgroundSyncServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC383BBD2542F141002FBBE6 /* MXBackgroundSyncServiceTests.swift */; };
 		EC383BC02542F1E4002FBBE6 /* MXBackgroundSyncServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC383BBD2542F141002FBBE6 /* MXBackgroundSyncServiceTests.swift */; };
-		EC403834289A672A0067D5B8 /* MXAes256BackupAuthData.h in Headers */ = {isa = PBXBuildFile; fileRef = EC403833289A672A0067D5B8 /* MXAes256BackupAuthData.h */; };
-		EC403835289A672A0067D5B8 /* MXAes256BackupAuthData.h in Headers */ = {isa = PBXBuildFile; fileRef = EC403833289A672A0067D5B8 /* MXAes256BackupAuthData.h */; };
+		EC403834289A672A0067D5B8 /* MXAes256BackupAuthData.h in Headers */ = {isa = PBXBuildFile; fileRef = EC403833289A672A0067D5B8 /* MXAes256BackupAuthData.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EC403835289A672A0067D5B8 /* MXAes256BackupAuthData.h in Headers */ = {isa = PBXBuildFile; fileRef = EC403833289A672A0067D5B8 /* MXAes256BackupAuthData.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		EC403837289A67440067D5B8 /* MXAes256BackupAuthData.m in Sources */ = {isa = PBXBuildFile; fileRef = EC403836289A67440067D5B8 /* MXAes256BackupAuthData.m */; };
 		EC403838289A67440067D5B8 /* MXAes256BackupAuthData.m in Sources */ = {isa = PBXBuildFile; fileRef = EC403836289A67440067D5B8 /* MXAes256BackupAuthData.m */; };
 		EC403844289A7F0F0067D5B8 /* MXCurve25519KeyBackupAlgorithm.h in Headers */ = {isa = PBXBuildFile; fileRef = EC403842289A7F0F0067D5B8 /* MXCurve25519KeyBackupAlgorithm.h */; };
@@ -1564,6 +1564,10 @@
 		EC403855289ACF5E0067D5B8 /* MXKeyBackupPreparationInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = EC403853289ACF5E0067D5B8 /* MXKeyBackupPreparationInfo.m */; };
 		EC403856289B263F0067D5B8 /* MXBaseKeyBackupAuthData.h in Headers */ = {isa = PBXBuildFile; fileRef = EC40384E289A906A0067D5B8 /* MXBaseKeyBackupAuthData.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		EC403857289B26400067D5B8 /* MXBaseKeyBackupAuthData.h in Headers */ = {isa = PBXBuildFile; fileRef = EC40384E289A906A0067D5B8 /* MXBaseKeyBackupAuthData.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EC403858289C38BA0067D5B8 /* MXKeyBackupAlgorithm.h in Headers */ = {isa = PBXBuildFile; fileRef = EC403841289A70FC0067D5B8 /* MXKeyBackupAlgorithm.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EC403859289C38BB0067D5B8 /* MXKeyBackupAlgorithm.h in Headers */ = {isa = PBXBuildFile; fileRef = EC403841289A70FC0067D5B8 /* MXKeyBackupAlgorithm.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EC40385A289C38FB0067D5B8 /* MXKeyBackupPreparationInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = EC403852289ACDBB0067D5B8 /* MXKeyBackupPreparationInfo.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EC40385B289C38FB0067D5B8 /* MXKeyBackupPreparationInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = EC403852289ACDBB0067D5B8 /* MXKeyBackupPreparationInfo.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		EC51019D26C41981007D6D88 /* MXSyncResponseUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC51019C26C41981007D6D88 /* MXSyncResponseUnitTests.swift */; };
 		EC51019E26C41981007D6D88 /* MXSyncResponseUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC51019C26C41981007D6D88 /* MXSyncResponseUnitTests.swift */; };
 		EC5C560A2798CEA00014CBE9 /* NSDictionary+MutableDeepCopy.h in Headers */ = {isa = PBXBuildFile; fileRef = EC5C56082798CEA00014CBE9 /* NSDictionary+MutableDeepCopy.h */; };
@@ -5253,7 +5257,9 @@
 				325380E8228DAD4A00ADDEFA /* MXAggregatedReactions.h in Headers */,
 				327E9AE72285A8C400A98BC1 /* MXAggregationPaginatedResponse.h in Headers */,
 				32CEEF4923B0A8170039BA98 /* MXCrossSigningTools.h in Headers */,
+				EC403858289C38BA0067D5B8 /* MXKeyBackupAlgorithm.h in Headers */,
 				EC8A53DA25B1BCC6004E0802 /* MXThirdPartyUsersResponse.h in Headers */,
+				EC40385A289C38FB0067D5B8 /* MXKeyBackupPreparationInfo.h in Headers */,
 				323E0C5B1A306D7A00A31D73 /* MXEvent.h in Headers */,
 				323F8773255460B5009E9E67 /* MXProfiler.h in Headers */,
 				327A5F4B239805F600ED6329 /* MXKeyVerificationCancel.h in Headers */,
@@ -5679,6 +5685,7 @@
 				B1DDC9D72418098200D208E3 /* MXIncomingSASTransaction_Private.h in Headers */,
 				B14EF2D22397E90400758AF0 /* MXReplyEventParts.h in Headers */,
 				B14EF2D32397E90400758AF0 /* MXRoomMembersCount.h in Headers */,
+				EC403859289C38BB0067D5B8 /* MXKeyBackupAlgorithm.h in Headers */,
 				32AF929024110ADD0008A0FD /* MXSecretShareManager_Private.h in Headers */,
 				B19A30C52404268600FB6F35 /* MXVerifyingAnotherUserQRCodeData.h in Headers */,
 				B14EF2D42397E90400758AF0 /* MatrixSDK.h in Headers */,
@@ -5754,6 +5761,7 @@
 				B14EF3032397E90400758AF0 /* MXEventsByTypesEnumeratorOnArray.h in Headers */,
 				EC60ED90265CFD3B00B39A4E /* MXRoomSync.h in Headers */,
 				B14EF3042397E90400758AF0 /* MXKeyVerificationTransaction.h in Headers */,
+				EC40385B289C38FB0067D5B8 /* MXKeyBackupPreparationInfo.h in Headers */,
 				B14EF3052397E90400758AF0 /* MXIdentityServerHashDetails.h in Headers */,
 				180F858527A2AF3000F4E5A5 /* MXWellKnownTileServerConfig.h in Headers */,
 				324AAC7D2399143400380A66 /* MXKeyVerificationAccept.h in Headers */,

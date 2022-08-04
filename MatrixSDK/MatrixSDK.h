@@ -73,6 +73,9 @@ FOUNDATION_EXPORT NSString *MatrixSDKVersion;
 #import "MXKeyVerificationRequestByDMJSONModel.h"
 #import "MXSASKeyVerificationStart.h"
 #import "MXQRCodeKeyVerificationStart.h"
+#import "MXKeyBackupAlgorithm.h"
+#import "MXCurve25519BackupAuthData.h"
+#import "MXAes256BackupAuthData.h"
 
 #import "MXAes.h"
 
