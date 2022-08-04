@@ -405,6 +405,11 @@ FOUNDATION_EXPORT NSString *const kMXKeyBackupDidStateChangeNotification;
  */
 @property (nonatomic, readonly) BOOL hasKeysToBackup;
 
+/**
+ Flag indicating the backup can be refreshed, by `forceRefresh:failure:` method.
+ */
+@property (nonatomic, readonly) BOOL canBeRefreshed;
+
 @end
 
 NS_ASSUME_NONNULL_END
