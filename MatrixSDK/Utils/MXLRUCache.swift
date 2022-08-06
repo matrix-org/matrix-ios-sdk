@@ -19,65 +19,65 @@ import Foundation
 @objcMembers
 public class MXLRUCache: NSObject {
 
-	private var cachedObjects: [LRUCacheItem] = []
-	private let capacity: UInt
+    private var cachedObjects: [LRUCacheItem] = []
+    private let capacity: UInt
 
-	private static let queue = DispatchQueue(label: "LRUCache")
+    private static let queue = DispatchQueue(label: "LRUCache")
 
 
-	public init(capacity: UInt) {
-		self.capacity = capacity
-		super.init()
-	}
+    public init(capacity: UInt) {
+        self.capacity = capacity
+        super.init()
+    }
 
-	public func get(_ key: String) -> AnyObject? {
-		Self.queue.sync {
-			guard
-				let item = cachedObjects.first(where: { $0.key == key })
-			else { return nil }
-			item.refCount += 1
-			sortCachedItems()
-			return item
-		}
-	}
+    public func get(_ key: String) -> AnyObject? {
+        Self.queue.sync {
+            guard
+                let item = cachedObjects.first(where: { $0.key == key })
+            else { return nil }
+            item.refCount += 1
+            sortCachedItems()
+            return item
+        }
+    }
 
-	public func put(_ key: String, object: AnyObject?) {
-		Self.queue.sync {
-			guard
-				cachedObjects.firstIndex(where: { $0.key == key }) == nil
-			else { return }
+    public func put(_ key: String, object: AnyObject?) {
+        Self.queue.sync {
+            guard
+                cachedObjects.firstIndex(where: { $0.key == key }) == nil
+            else { return }
 
-			let newItem = LRUCacheItem(object: object, key: key)
+            let newItem = LRUCacheItem(object: object, key: key)
 
-			if cachedObjects.count > capacity {
-				cachedObjects.removeLast()
-			}
+            if cachedObjects.count > capacity {
+                cachedObjects.removeLast()
+            }
 
-			cachedObjects.append(newItem)
-		}
-	}
+            cachedObjects.append(newItem)
+        }
+    }
 
-	public func clear() {
-		Self.queue.sync {
-			cachedObjects.removeAll()
-		}
-	}
+    public func clear() {
+        Self.queue.sync {
+            cachedObjects.removeAll()
+        }
+    }
 
-	private func sortCachedItems() {
-		cachedObjects.sort {
-			$0.refCount > $1.refCount
-		}
-	}
+    private func sortCachedItems() {
+        cachedObjects.sort {
+            $0.refCount > $1.refCount
+        }
+    }
 
-	private class LRUCacheItem: NSObject {
-		var refCount: UInt = 1
-		let object: AnyObject?
-		let key: String
+    private class LRUCacheItem: NSObject {
+        var refCount: UInt = 1
+        let object: AnyObject?
+        let key: String
 
-		init(refCount: UInt = 1, object: AnyObject?, key: String) {
-			self.refCount = refCount
-			self.object = object
-			self.key = key
-		}
-	}
+        init(refCount: UInt = 1, object: AnyObject?, key: String) {
+            self.refCount = refCount
+            self.object = object
+            self.key = key
+        }
+    }
 }
