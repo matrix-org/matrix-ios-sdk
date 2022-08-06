@@ -2410,7 +2410,7 @@
 		32FFB4ED217DC0E900C96002 /* MXKeyBackup_Private.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXKeyBackup_Private.h; sourceTree = "<group>"; };
 		32FFB4EE217E146A00C96002 /* MXRecoveryKey.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXRecoveryKey.h; sourceTree = "<group>"; };
 		32FFB4EF217E146A00C96002 /* MXRecoveryKey.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXRecoveryKey.m; sourceTree = "<group>"; };
-		33C2FCD6289DD3EA00C83E31 /* MXLRUCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXLRUCache.swift; sourceTree = "<group>"; };
+		33C2FCD6289DD3EA00C83E31 /* MXLRUCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXLRUCache.swift; sourceTree = "<group>"; usesTabs = 0; };
 		3A0AF06A2705A11400679D1A /* MXSpaceGraphData.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MXSpaceGraphData.swift; sourceTree = "<group>"; };
 		3A108A392580E9C2005EEBE9 /* MXKeyProvider.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXKeyProvider.h; sourceTree = "<group>"; };
 		3A108A7C25810C96005EEBE9 /* MXKeyData.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXKeyData.h; sourceTree = "<group>"; };
