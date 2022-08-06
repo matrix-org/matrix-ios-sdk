@@ -47,4 +47,4 @@ John Flanagan <john.flanagan at spok.com>
   * PR #465 SwiftMatrixSDK: Enum cleanup
  
 Michael Redig <hybrids-07-baggage at icloud.com>
-  * PR ### (refactor) project settings update
+  * PR #1543 (refactor) project settings update
