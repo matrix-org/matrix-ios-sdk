@@ -225,7 +225,7 @@ static Class DefaultAlgorithmClass;
     
     self->crypto.store.backupVersion = nil;
     [self->crypto.store deleteSecretWithSecretId:MXSecretId.keyBackup];
-   _keyBackupAlgorithm = nil;
+    _keyBackupAlgorithm = nil;
 
     // Reset backup markers
     [self->crypto.store resetBackupMarkers];
@@ -1112,13 +1112,6 @@ static Class DefaultAlgorithmClass;
         return keyBackupVersionTrust;
     }
 
-    NSDictionary *mySigs = authData.signatures[myUserId];
-    if (mySigs.count == 0)
-    {
-        MXLogDebug(@"[MXKeyBackup] trustForKeyBackupVersion: Ignoring key backup because it lacks any signatures from this user");
-        return keyBackupVersionTrust;
-    }
-
     NSData *privateKey = self.privateKeyFromCryptoStore;
     if (privateKey)
     {
@@ -1130,6 +1123,7 @@ static Class DefaultAlgorithmClass;
         }
     }
 
+    NSDictionary *mySigs = authData.signatures[myUserId];
     NSMutableArray<MXKeyBackupVersionTrustSignature*> *signatures = [NSMutableArray array];
     for (NSString *keyId in mySigs)
     {
