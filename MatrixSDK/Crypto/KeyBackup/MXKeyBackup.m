@@ -204,16 +204,6 @@ static Class DefaultAlgorithmClass;
         _keyBackupVersion = version;
         crypto.store.backupVersion = version.version;
         Class algorithmClass = AlgorithmClassesByName[version.algorithm];
-        if (algorithmClass == NULL)
-        {
-            MXLogError(@"[MXKeyBackup] enableKeyBackup: unknown algorithm: %@", version.algorithm);
-            error = [NSError errorWithDomain:MXKeyBackupErrorDomain
-                                        code:MXKeyBackupErrorUnknownAlgorithm
-                                    userInfo:@{
-                NSLocalizedDescriptionKey: [NSString stringWithFormat:@"Unknown algorithm (%@) to enable backup", version.algorithm]
-            }];
-            return error;
-        }
         //  store the desired backup algorithm
         _keyBackupAlgorithm = [[algorithmClass alloc] initWithCrypto:crypto authData:authData keyGetterBlock:^NSData * _Nullable{
             return self.privateKeyFromCryptoStore;
