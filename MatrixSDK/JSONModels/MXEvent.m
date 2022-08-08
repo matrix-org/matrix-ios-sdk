@@ -226,6 +226,11 @@ NSString *const kMXJoinRulesContentKeyRoomId = @"room_id";
      See `forwardingCurve25519KeyChain` property.
      */
     NSArray<NSString *> *forwardingCurve25519KeyChain;
+
+    /**
+     Untrusted flag for clear events.
+     */
+    BOOL untrusted;
 }
 @end
 
@@ -242,6 +247,7 @@ NSString *const kMXJoinRulesContentKeyRoomId = @"room_id";
     if (self)
     {
         _ageLocalTs = -1;
+        untrusted = NO;
     }
 
     return self;
@@ -1024,6 +1030,7 @@ NSString *const kMXJoinRulesContentKeyRoomId = @"room_id";
         _clearEvent->senderCurve25519Key = decryptionResult.senderCurve25519Key;
         _clearEvent->claimedEd25519Key = decryptionResult.claimedEd25519Key;
         _clearEvent->forwardingCurve25519KeyChain = decryptionResult.forwardingCurve25519KeyChain ? decryptionResult.forwardingCurve25519KeyChain : @[];
+        _clearEvent->untrusted = decryptionResult.isUntrusted;
     }
 
     // Notify only for events that are lately decrypted
@@ -1143,11 +1150,21 @@ NSString *const kMXJoinRulesContentKeyRoomId = @"room_id";
         decryptionResult.senderCurve25519Key = _clearEvent->senderCurve25519Key;
         decryptionResult.claimedEd25519Key = _clearEvent->claimedEd25519Key;
         decryptionResult.forwardingCurve25519KeyChain = _clearEvent->forwardingCurve25519KeyChain;
+        decryptionResult.untrusted = _clearEvent.isUntrusted;
     }
     
     decryptionResult.error = _decryptionError;
     
     return decryptionResult;
+}
+
+- (BOOL)isUntrusted
+{
+    if (self.isEncrypted && _clearEvent)
+    {
+        return _clearEvent.isUntrusted;
+    }
+    return untrusted;
 }
 
 #pragma mark - private

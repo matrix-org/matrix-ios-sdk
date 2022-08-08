@@ -50,4 +50,9 @@
  */
 @property (nonatomic) NSError *error;
 
+/**
+ Flag indicating the decryption was made with an untrusted session.
+ */
+@property (nonatomic, getter=isUntrusted) BOOL untrusted;
+
 @end
