@@ -228,7 +228,7 @@
         }
         else
         {
-            MXLogDebug(@"[MXCurve25519KeyBackupAlgorithm] decryptKeyBackupData: Failed to decrypt session from backup. Error: %@", error);
+            MXLogDebug(@"[MXAes256KeyBackupAlgorithm] decryptKeyBackupData: Failed to decrypt session from backup. Error: %@", error);
         }
     }
 
@@ -242,6 +242,27 @@
     return iv != nil && mac != nil;
 }
 
++ (id<MXBaseKeyBackupAuthData>)authDataFromJSON:(NSDictionary *)JSON error:(NSError *__autoreleasing  _Nullable *)error
+{
+    MXAes256BackupAuthData *authData = [MXAes256BackupAuthData modelFromJSON:JSON];
+    if (authData.iv && authData.mac)
+    {
+        return authData;
+    }
+    else
+    {
+        MXLogError(@"[MXAes256KeyBackupAlgorithm] authDataFromJSON: Auth data is missing required data");
+
+        *error = [NSError errorWithDomain:MXKeyBackupErrorDomain
+                                     code:MXKeyBackupErrorMissingAuthDataCode
+                                 userInfo:@{
+            NSLocalizedDescriptionKey: @"Auth data is missing required data"
+        }];
+
+        return nil;
+    }
+}
+
 #pragma mark - Private
 
 // Sanity checks on MXEncryptedSecretContent
@@ -249,17 +270,17 @@
 {
     if (!encryptedSecret.ciphertext)
     {
-        MXLogDebug(@"[MXCurve25519KeyBackupAlgorithm] checkEncryptedSecretContent: missing ciphertext");
+        MXLogDebug(@"[MXAes256KeyBackupAlgorithm] checkEncryptedSecretContent: missing ciphertext");
         return NO;
     }
     if (!encryptedSecret.mac)
     {
-        MXLogDebug(@"[MXCurve25519KeyBackupAlgorithm] checkEncryptedSecretContent: missing mac");
+        MXLogDebug(@"[MXAes256KeyBackupAlgorithm] checkEncryptedSecretContent: missing mac");
         return NO;
     }
     if (!encryptedSecret.iv)
     {
-        MXLogDebug(@"[MXCurve25519KeyBackupAlgorithm] checkEncryptedSecretContent: missing iv");
+        MXLogDebug(@"[MXAes256KeyBackupAlgorithm] checkEncryptedSecretContent: missing iv");
         return NO;
     }
 

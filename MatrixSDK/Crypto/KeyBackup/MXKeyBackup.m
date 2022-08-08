@@ -1565,58 +1565,21 @@ static Class DefaultAlgorithmClass;
  */
 - (nullable id<MXBaseKeyBackupAuthData>)megolmBackupAuthDataFromKeyBackupVersion:(MXKeyBackupVersion*)keyBackupVersion error:(NSError**)error
 {
-    if ([keyBackupVersion.algorithm isEqualToString:kMXCryptoCurve25519KeyBackupAlgorithm])
-    {
-        MXCurve25519BackupAuthData *authData = [MXCurve25519BackupAuthData modelFromJSON:keyBackupVersion.authData];
-        if (keyBackupVersion.algorithm && authData.publicKey && authData.signatures)
-        {
-            return authData;
-        }
-        else
-        {
-            MXLogError(@"[MXKeyBackup] megolmBackupAuthDataFromKeyBackupVersion: Key backup is missing required data");
-
-            *error = [NSError errorWithDomain:MXKeyBackupErrorDomain
-                                         code:MXKeyBackupErrorMissingAuthDataCode
-                                     userInfo:@{
-                NSLocalizedDescriptionKey: @"Key backup is missing required data"
-            }];
-
-            return nil;
-        }
-    }
-    else if ([keyBackupVersion.algorithm isEqualToString:kMXCryptoAes256KeyBackupAlgorithm])
-    {
-        MXAes256BackupAuthData *authData = [MXAes256BackupAuthData modelFromJSON:keyBackupVersion.authData];
-        if (keyBackupVersion.algorithm && authData.iv && authData.mac)
-        {
-            return authData;
-        }
-        else
-        {
-            MXLogError(@"[MXKeyBackup] megolmBackupAuthDataFromKeyBackupVersion: Key backup is missing required data");
-
-            *error = [NSError errorWithDomain:MXKeyBackupErrorDomain
-                                         code:MXKeyBackupErrorMissingAuthDataCode
-                                     userInfo:@{
-                NSLocalizedDescriptionKey: @"Key backup is missing required data"
-            }];
-
-            return nil;
-        }
-    }
-    else
+    Class<MXKeyBackupAlgorithm> algorithmClass = AlgorithmClassesByName[keyBackupVersion.algorithm];
+    if (algorithmClass == NULL)
     {
         MXLogError(@"[MXKeyBackup] megolmBackupAuthDataFromKeyBackupVersion: Key backup for unknown algorithm: %@", keyBackupVersion.algorithm);
 
         *error = [NSError errorWithDomain:MXKeyBackupErrorDomain
                                      code:MXKeyBackupErrorUnknownAlgorithm
                                  userInfo:@{
-            NSLocalizedDescriptionKey: @"Key backup for unknown algorithm"
+            NSLocalizedDescriptionKey: [NSString stringWithFormat:@"Unknown algorithm (%@) for the backup", keyBackupVersion.algorithm]
         }];
 
         return nil;
     }
+
+    return [algorithmClass authDataFromJSON:keyBackupVersion.authData error:error];
 }
 
 /**
