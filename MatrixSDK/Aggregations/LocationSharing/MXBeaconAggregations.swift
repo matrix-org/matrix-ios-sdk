@@ -257,6 +257,8 @@ public class MXBeaconAggregations: NSObject {
                 
                 existingBeaconInfoSummary.updateWithBeaconInfo(beaconInfo)
                 beaconInfoSummary = existingBeaconInfoSummary
+            } else {
+                MXLog.error("[MXBeaconAggregations] Fails to find beacon info summary associated to stopped beacon info event id: \(eventId)")
             }
             
         } else if let existingBeaconInfoSummary = self.getBeaconInfoSummary(withIdentifier: eventId, inRoomWithId: roomId) {
