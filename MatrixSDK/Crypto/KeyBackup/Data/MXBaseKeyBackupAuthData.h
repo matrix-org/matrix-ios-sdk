@@ -38,7 +38,7 @@ NS_ASSUME_NONNULL_BEGIN
  Signatures of the public key.
  userId -> (deviceSignKeyId -> signature)
  */
-@property (nonatomic) NSDictionary<NSString*, NSDictionary*> *signatures;
+@property (nonatomic, nullable) NSDictionary<NSString*, NSDictionary*> *signatures;
 
 /**
  Same as [MXJSONModel JSONDictionary].

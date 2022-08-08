@@ -64,20 +64,8 @@
 
 - (NSDictionary *)signalableJSONDictionary
 {
-    NSMutableDictionary *signalableJSONDictionary = [NSMutableDictionary dictionary];
-
-    signalableJSONDictionary[@"public_key"] = _publicKey;
-
-    if (_privateKeySalt)
-    {
-        signalableJSONDictionary[@"private_key_salt"] = _privateKeySalt;
-    }
-
-    if (_privateKeySalt)
-    {
-        signalableJSONDictionary[@"private_key_iterations"] = @(_privateKeyIterations);
-    }
-
+    NSMutableDictionary *signalableJSONDictionary = [NSMutableDictionary dictionaryWithDictionary:self.JSONDictionary];
+    [signalableJSONDictionary removeObjectForKey:@"signatures"];
     return signalableJSONDictionary;
 }
 

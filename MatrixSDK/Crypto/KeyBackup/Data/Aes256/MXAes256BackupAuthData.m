@@ -43,9 +43,15 @@
 {
     NSMutableDictionary *JSONDictionary = [NSMutableDictionary dictionary];
 
-    JSONDictionary[@"iv"] = _iv;
+    if (_iv)
+    {
+        JSONDictionary[@"iv"] = _iv;
+    }
 
-    JSONDictionary[@"mac"] = _mac;
+    if (_mac)
+    {
+        JSONDictionary[@"mac"] = _mac;
+    }
 
     if (_privateKeySalt)
     {
@@ -67,21 +73,8 @@
 
 - (NSDictionary *)signalableJSONDictionary
 {
-    NSMutableDictionary *signalableJSONDictionary = [NSMutableDictionary dictionary];
-
-    signalableJSONDictionary[@"iv"] = _iv;
-    signalableJSONDictionary[@"mac"] = _mac;
-
-    if (_privateKeySalt)
-    {
-        signalableJSONDictionary[@"private_key_salt"] = _privateKeySalt;
-    }
-
-    if (_privateKeySalt)
-    {
-        signalableJSONDictionary[@"private_key_iterations"] = @(_privateKeyIterations);
-    }
-
+    NSMutableDictionary *signalableJSONDictionary = [NSMutableDictionary dictionaryWithDictionary:self.JSONDictionary];
+    [signalableJSONDictionary removeObjectForKey:@"signatures"];
     return signalableJSONDictionary;
 }
 
