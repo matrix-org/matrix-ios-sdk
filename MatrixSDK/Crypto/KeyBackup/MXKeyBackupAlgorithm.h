@@ -79,6 +79,11 @@ typedef NSData* _Nullable (^MXKeyBackupPrivateKeyGetterBlock)(void);
 /// @param backupVersion key backup version to check against
 + (BOOL)checkBackupVersion:(MXKeyBackupVersion *)backupVersion;
 
+/// Generate auth data from a given dictionary. Returns nil if there is missing data in the dictionary.
+/// @param JSON Auth data dictionary object
+/// @param error error instance to be set on errors
++ (nullable id<MXBaseKeyBackupAuthData>)authDataFromJSON:(NSDictionary*)JSON error:(NSError**)error;
+
 @end
 
 NS_ASSUME_NONNULL_END

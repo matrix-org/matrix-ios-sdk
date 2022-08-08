@@ -211,6 +211,27 @@
     return backupVersion.authData[@"public_key"] != nil;
 }
 
++ (id<MXBaseKeyBackupAuthData>)authDataFromJSON:(NSDictionary *)JSON error:(NSError *__autoreleasing  _Nullable *)error
+{
+    MXCurve25519BackupAuthData *authData = [MXCurve25519BackupAuthData modelFromJSON:JSON];
+    if (authData.publicKey && authData.signatures)
+    {
+        return authData;
+    }
+    else
+    {
+        MXLogError(@"[MXCurve25519KeyBackupAlgorithm] authDataFromJSON: Auth data is missing required data");
+
+        *error = [NSError errorWithDomain:MXKeyBackupErrorDomain
+                                     code:MXKeyBackupErrorMissingAuthDataCode
+                                 userInfo:@{
+            NSLocalizedDescriptionKey: @"Auth data is missing required data"
+        }];
+
+        return nil;
+    }
+}
+
 #pragma mark - Private
 
 + (NSString*)publicKeyFrom:(NSData*)privateKey
