@@ -137,7 +137,7 @@
     }
 }
 
-- (BOOL)isUntrusted
++ (BOOL)isUntrusted
 {
     return NO;
 }
@@ -224,6 +224,7 @@
 
                 sessionData.sessionId = sessionId;
                 sessionData.roomId = roomId;
+                sessionData.untrusted |= self.class.isUntrusted;
             }
         }
         else

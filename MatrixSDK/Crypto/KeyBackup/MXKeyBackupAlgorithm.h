@@ -38,7 +38,7 @@ typedef NSData* _Nullable (^MXKeyBackupPrivateKeyGetterBlock)(void);
 @property (class, nonatomic, readonly) NSString *algorithName;
 
 /// Flag indicating the algorithm is untrusted or not.
-@property (nonatomic, readonly, getter=isUntrusted) BOOL untrusted;
+@property (class, nonatomic, readonly, getter=isUntrusted) BOOL untrusted;
 
 
 /// Initializer. Returns nil if the given auth data is invalid.

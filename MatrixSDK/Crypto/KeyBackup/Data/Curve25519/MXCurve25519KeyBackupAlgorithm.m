@@ -111,7 +111,7 @@
     return [[self.class publicKeyFrom:privateKey] isEqualToString:authData[@"public_key"]];
 }
 
-- (BOOL)isUntrusted
++ (BOOL)isUntrusted
 {
     return YES;
 }
@@ -195,6 +195,7 @@
 
                 sessionData.sessionId = sessionId;
                 sessionData.roomId = roomId;
+                sessionData.untrusted |= self.class.isUntrusted;
             }
         }
         else
