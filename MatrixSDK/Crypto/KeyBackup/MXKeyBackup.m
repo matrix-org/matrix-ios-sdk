@@ -1064,7 +1064,7 @@ static Class DefaultAlgorithmClass;
 
         NSData *privateKey = self.privateKeyFromCryptoStore;
         NSError *error;
-        if (error || ![self.keyBackupAlgorithm keyMatches:privateKey error:&error])
+        if (error || ![[self getOrCreateKeyBackupAlgorithmFor:keyBackupVersion privateKey:privateKey] keyMatches:privateKey error:&error])
         {
             MXLogDebug(@"[MXKeyBackup] restoreUsingPrivateKeyKeyBackup. Error: Invalid private key (%@) for %@", privateKey, keyBackupVersion);
             if (failure)
