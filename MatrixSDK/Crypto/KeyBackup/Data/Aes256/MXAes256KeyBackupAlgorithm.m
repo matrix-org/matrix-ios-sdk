@@ -245,7 +245,7 @@
 + (id<MXBaseKeyBackupAuthData>)authDataFromJSON:(NSDictionary *)JSON error:(NSError *__autoreleasing  _Nullable *)error
 {
     MXAes256BackupAuthData *authData = [MXAes256BackupAuthData modelFromJSON:JSON];
-    if (authData.iv && authData.mac)
+    if (authData.iv && authData.mac && authData.signatures)
     {
         return authData;
     }
