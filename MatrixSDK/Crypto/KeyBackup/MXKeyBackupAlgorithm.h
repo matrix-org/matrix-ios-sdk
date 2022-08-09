@@ -52,18 +52,22 @@ typedef NSData* _Nullable (^MXKeyBackupPrivateKeyGetterBlock)(void);
 /// Prepare a private key and auth data for a given password for the algorithm. Returns a preparation info if successful, otherwise returns nil.
 /// @param password password to use. If not provided, a new one will be generated.
 /// @param error error instance to be set on errors
-+ (nullable MXKeyBackupPreparationInfo*)prepareWith:(nullable NSString*)password error:(NSError *__autoreleasing  _Nullable *)error;
++ (nullable MXKeyBackupPreparationInfo*)prepareWith:(nullable NSString*)password
+                                              error:(NSError *__autoreleasing  _Nullable *)error;
 
 /// Method to check a private key against receiver's internal auth data (the one given at initialization)
 /// @param privateKey private key to check
 /// @param error error instance to be set on errors
-- (BOOL)keyMatches:(NSData*)privateKey error:(NSError *__autoreleasing  _Nullable *)error;
+- (BOOL)keyMatches:(NSData*)privateKey
+             error:(NSError *__autoreleasing  _Nullable *)error __attribute__((swift_error(nonnull_error)));
 
 /// Method to check a private key against a given auth data
 /// @param privateKey private key to check
 /// @param authData auth data to check against
 /// @param error error instance to be set on errors
-+ (BOOL)keyMatches:(NSData*)privateKey withAuthData:(NSDictionary*)authData error:(NSError *__autoreleasing  _Nullable *)error;
++ (BOOL)keyMatches:(NSData*)privateKey
+      withAuthData:(NSDictionary*)authData
+             error:(NSError *__autoreleasing  _Nullable *)error __attribute__((swift_error(nonnull_error)));
 
 /// Encrypt group session with the receiver algorithm.
 /// @param session session instance to encrypt.
@@ -73,7 +77,9 @@ typedef NSData* _Nullable (^MXKeyBackupPrivateKeyGetterBlock)(void);
 /// @param keyBackupData key backup data
 /// @param sessionId session id to use
 /// @param roomId room id to use
-- (nullable MXMegolmSessionData*)decryptKeyBackupData:(MXKeyBackupData*)keyBackupData forSession:(NSString*)sessionId inRoom:(NSString*)roomId;
+- (nullable MXMegolmSessionData*)decryptKeyBackupData:(MXKeyBackupData*)keyBackupData
+                                           forSession:(NSString*)sessionId
+                                               inRoom:(NSString*)roomId;
 
 /// Method to check the algorithm against a given key backup version
 /// @param backupVersion key backup version to check against
@@ -82,7 +88,8 @@ typedef NSData* _Nullable (^MXKeyBackupPrivateKeyGetterBlock)(void);
 /// Generate auth data from a given dictionary. Returns nil if there is missing data in the dictionary.
 /// @param JSON Auth data dictionary object
 /// @param error error instance to be set on errors
-+ (nullable id<MXBaseKeyBackupAuthData>)authDataFromJSON:(NSDictionary*)JSON error:(NSError**)error;
++ (nullable id<MXBaseKeyBackupAuthData>)authDataFromJSON:(NSDictionary*)JSON
+                                                   error:(NSError**)error;
 
 @end
 
