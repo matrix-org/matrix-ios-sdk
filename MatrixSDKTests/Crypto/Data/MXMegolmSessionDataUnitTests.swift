@@ -32,16 +32,20 @@ class MXMegolmSessionDataUnitTests: XCTestCase {
             "forwarding_curve25519_key_chain": ["H", "I"]
         ]
         
-        let data = MXMegolmSessionData(fromJSON: jsonDictionary)
+        guard let data = MXMegolmSessionData(fromJSON: jsonDictionary) else {
+            XCTFail("Failed to setup test conditions")
+            return
+        }
         
-        XCTAssertEqual(data?.senderKey, "A")
-        XCTAssertEqual(data?.senderClaimedKeys, ["B": "C"])
-        XCTAssertEqual(data?.roomId, "D")
-        XCTAssertEqual(data?.sessionId, "E")
-        XCTAssertEqual(data?.sessionKey, "F")
-        XCTAssertEqual(data?.sharedHistory, true)
-        XCTAssertEqual(data?.algorithm, "G")
-        XCTAssertEqual(data?.forwardingCurve25519KeyChain, ["H", "I"])
+        XCTAssertEqual(data.senderKey, "A")
+        XCTAssertEqual(data.senderClaimedKeys, ["B": "C"])
+        XCTAssertEqual(data.roomId, "D")
+        XCTAssertEqual(data.sessionId, "E")
+        XCTAssertEqual(data.sessionKey, "F")
+        XCTAssertEqual(data.sharedHistory, true)
+        XCTAssertEqual(data.algorithm, "G")
+        XCTAssertEqual(data.forwardingCurve25519KeyChain, ["H", "I"])
+        XCTAssertFalse(data.isUntrusted)
     }
     
     func testIgnoreSharedHistoryIfFlagDisabled() {
@@ -77,7 +81,8 @@ class MXMegolmSessionDataUnitTests: XCTestCase {
             "session_key": "F",
             "org.matrix.msc3061.shared_history": true,
             "algorithm": "G",
-            "forwarding_curve25519_key_chain": ["H", "I"]
+            "forwarding_curve25519_key_chain": ["H", "I"],
+            "untrusted": false
         ])
     }
 }
