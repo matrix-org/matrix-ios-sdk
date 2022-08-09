@@ -21,12 +21,14 @@ class MXThreadingServiceTests: XCTestCase {
     private var testData: MatrixSDKTestsData!
     
     override func setUp() {
+        super.setUp()
         testData = MatrixSDKTestsData()
         MXSDKOptions.sharedInstance().enableThreads = true
     }
 
     override func tearDown() {
         testData = nil
+        super.tearDown()
     }
     
     /// Test: Expect the threading service is initialized after creating a session

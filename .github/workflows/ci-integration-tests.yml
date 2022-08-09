@@ -1,4 +1,4 @@
-name: Crypto Tests CI
+name: Integration Tests CI
 
 on:
   # Triggers the workflow on any pull request and push to develop
@@ -10,19 +10,33 @@ on:
   workflow_dispatch:
 
 jobs:
-  crypto-tests:
-    name: Crypto Tests with Synapse
+  integration-tests:
+    name: Integration Tests
     runs-on: macos-11
 
     concurrency:
       # When running on develop, use the sha to allow all runs of this workflow to run concurrently.
       # Otherwise only allow a single run of this workflow on each branch, automatically cancelling older runs.
-      group: ${{ github.ref == 'refs/heads/develop' && format('crypto-develop-{0}', github.sha) || format('crypto-{0}', github.ref) }}
+      group: ${{ github.ref == 'refs/heads/develop' && format('tests-integration-develop-{0}', github.sha) || format('tests-integration-{0}', github.ref) }}
       cancel-in-progress: true
 
     steps:
       - uses: actions/checkout@v2
 
+      # Common cache
+      # Note: GH actions do not support yaml anchor yet. We need to duplicate this for every job
+      - uses: actions/cache@v2
+        with:
+          path: Pods
+          key: ${{ runner.os }}-pods-${{ hashFiles('**/Podfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pods-
+      - uses: actions/cache@v2
+        with:
+          path: vendor/bundle
+          key: ${{ runner.os }}-gems-${{ hashFiles('**/Gemfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-gems-
       # Cache for python env for Synapse
       - name: Set up Python 3.8
         uses: actions/setup-python@v2
@@ -36,19 +50,8 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
             ${{ runner.os }}-
-      # Cache for Xcode env
-      - uses: actions/cache@v2
-        with:
-          path: Pods
-          key: ${{ runner.os }}-pods-${{ hashFiles('**/Podfile.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-pods-
-      - uses: actions/cache@v2
-        with:
-          path: vendor/bundle
-          key: ${{ runner.os }}-gems-${{ hashFiles('**/Gemfile.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-gems-
+
+      # Set up a Synapse server
       - name: Start synapse server
         uses: michaelkaye/setup-matrix-synapse@v1.0.3
         with:
@@ -56,13 +59,15 @@ jobs:
           httpPort: 8080
           disableRateLimiting: true
 
+      # Common setup
+      # Note: GH actions do not support yaml anchor yet. We need to duplicate this for every job
       - name: Bundle install
         run: |
           bundle config path vendor/bundle
           bundle install --jobs 4 --retry 3
       # Main step
-      - name: Crypto tests
-        run: bundle exec fastlane test testplan:CryptoTests
+      - name: Integration tests
+        run: bundle exec fastlane test testplan:AllWorkingTests
 
       # Store artifacts
       - uses: actions/upload-artifact@v2

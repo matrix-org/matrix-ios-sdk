@@ -70,6 +70,8 @@
     {
         [[NSNotificationCenter defaultCenter] removeObserver:observer];
     }
+    
+    [super tearDown];
 }
 
 

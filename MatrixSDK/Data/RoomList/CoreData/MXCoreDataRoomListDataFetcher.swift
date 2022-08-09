@@ -252,6 +252,10 @@ extension MXCoreDataRoomListDataFetcher: MXRoomListDataSortable {
     func sortDescriptors(for sortOptions: MXRoomListDataSortOptions) -> [NSSortDescriptor] {
         var result: [NSSortDescriptor] = []
         
+        if sortOptions.alphabetical {
+            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryMO.s_displayName, ascending: true))
+        }
+        
         if sortOptions.invitesFirst {
             result.append(NSSortDescriptor(keyPath: \MXRoomSummaryMO.s_membershipInt, ascending: true))
         }

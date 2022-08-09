@@ -28,12 +28,14 @@ class MXBeaconAggregationsTests: XCTestCase {
     // MARK: - Setup
     
     override func setUp() {
+        super.setUp()
         testData = MatrixSDKTestsData()
         MXSDKOptions.sharedInstance().enableThreads = true
     }
 
     override func tearDown() {
         testData = nil
+        super.tearDown()
     }
     
     // MARK: - Tests

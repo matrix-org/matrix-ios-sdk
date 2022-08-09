@@ -87,7 +87,7 @@ public class MXSpaceNotificationCounter: NSObject {
                 room.roomId
             }
             
-            let spaceIds: [String] = self.session.spaceService.rootSpaceSummaries.compactMap { summary in
+            let spaceIds: [String] = self.session.spaceService.spaceSummaries.compactMap { summary in
                 summary.roomId
             }
             
