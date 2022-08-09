@@ -42,7 +42,7 @@
 
 @property (nonatomic, strong) MXAes256BackupAuthData *authData;
 
-@property (nonatomic, copy) NSData *privateKey;
+@property (nonatomic, copy) MXKeyBackupPrivateKeyGetterBlock keyGetterBlock;
 
 @end
 
@@ -62,21 +62,10 @@
             MXLogError(@"[MXAes256KeyBackupAlgorithm] init: auth data missing required information");
             return nil;
         }
-        NSData *privateKey = keyGetterBlock();
-        if (!privateKey)
-        {
-            MXLogError(@"[MXAes256KeyBackupAlgorithm] init: missing private key");
-            return nil;
-        }
-        if (![self.class keyMatches:privateKey withAuthData:authData.JSONDictionary error:nil])
-        {
-            MXLogError(@"[MXAes256KeyBackupAlgorithm] init: Private key does not match");
-            return nil;
-        }
         self.crypto = crypto;
         NSParameterAssert([authData isKindOfClass:MXAes256BackupAuthData.class]);
         self.authData = (MXAes256BackupAuthData *)authData;
-        self.privateKey = privateKey;
+        self.keyGetterBlock = keyGetterBlock;
     }
     return self;
 }
@@ -144,6 +133,12 @@
 
 - (MXKeyBackupData *)encryptGroupSession:(MXOlmInboundGroupSession *)session
 {
+    NSData *privateKey = self.privateKey;
+    if (!privateKey)
+    {
+        MXLogDebug(@"[MXAes256KeyBackupAlgorithm] encryptGroupSession: Error: No private key");
+        return nil;
+    }
     // Build the m.megolm_backup.v1.aes-hmac-sha2 data as defined at
     // https://github.com/uhoreg/matrix-doc/blob/symmetric-backups/proposals/3270-symmetric-megolm-backup.md#encryption
     MXMegolmSessionData *sessionData = session.exportSessionData;
@@ -170,7 +165,7 @@
     NSError *error;
     MXEncryptedSecretContent *encryptedSessionBackupData = [storage encryptSecret:secret
                                                                      withSecretId:session.session.sessionIdentifier
-                                                                       privateKey:_privateKey
+                                                                       privateKey:privateKey
                                                                                iv:nil
                                                                             error:&error];
 
@@ -199,6 +194,12 @@
 
 - (MXMegolmSessionData *)decryptKeyBackupData:(MXKeyBackupData *)keyBackupData forSession:(NSString *)sessionId inRoom:(NSString *)roomId
 {
+    NSData *privateKey = self.privateKey;
+    if (!privateKey)
+    {
+        MXLogDebug(@"[MXAes256KeyBackupAlgorithm] decryptKeyBackupData: Error: No private key");
+        return nil;
+    }
     MXMegolmSessionData *sessionData;
 
     MXEncryptedSecretContent *encryptedSecret = [MXEncryptedSecretContent new];
@@ -212,7 +213,7 @@
         MXSecretStorage *secretStorage = [MXSecretStorage new];
 
         NSError *error;
-        NSString *text = [secretStorage decryptSecretWithSecretId:sessionId secretContent:encryptedSecret withPrivateKey:_privateKey error:&error];
+        NSString *text = [secretStorage decryptSecretWithSecretId:sessionId secretContent:encryptedSecret withPrivateKey:privateKey error:&error];
 
         if (!error)
         {
@@ -266,6 +267,22 @@
 
 #pragma mark - Private
 
+- (NSData*)privateKey
+{
+    NSData *key = self.keyGetterBlock();
+    if (!key)
+    {
+        MXLogError(@"[MXAes256KeyBackupAlgorithm] init: missing private key");
+        return nil;
+    }
+    if (![self keyMatches:key error:nil])
+    {
+        MXLogError(@"[MXAes256KeyBackupAlgorithm] init: Private key does not match");
+        return nil;
+    }
+    return key;
+}
+
 // Sanity checks on MXEncryptedSecretContent
 - (BOOL)checkEncryptedSecretContent:(MXEncryptedSecretContent*)encryptedSecret
 {
@@ -294,7 +311,7 @@
 + (MXEncryptedSecretContent *)calculateKeyCheck:(NSData *)key iv:(NSString *)iv
 {
     MXSecretStorage *storage = [[MXSecretStorage alloc] init];
-    NSData *ivData = [MXBase64Tools dataFromBase64:iv];
+    NSData *ivData = iv ? [MXBase64Tools dataFromBase64:iv] : nil;
     if (ivData.length == 0)
     {
         ivData = nil;

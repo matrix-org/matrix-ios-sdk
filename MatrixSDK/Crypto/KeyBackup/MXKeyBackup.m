@@ -208,6 +208,7 @@ static Class DefaultAlgorithmClass;
         _keyBackupAlgorithm = [[algorithmClass alloc] initWithCrypto:crypto authData:authData keyGetterBlock:^NSData * _Nullable{
             return self.privateKeyFromCryptoStore;
         }];
+        MXLogDebug(@"[MXKeyBackup] Algorithm set to: %@", _keyBackupAlgorithm);
 
         self.state = MXKeyBackupStateReadyToBackUp;
         
