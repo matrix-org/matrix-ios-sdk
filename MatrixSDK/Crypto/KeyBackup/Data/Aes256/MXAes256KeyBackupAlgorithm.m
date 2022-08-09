@@ -15,24 +15,15 @@
 //
 
 #import "MXAes256KeyBackupAlgorithm.h"
-#import "MXKeyBackup_Private.h"
 
 #import "MXCrypto_Private.h"
 
 #import <OLMKit/OLMKit.h>
-#import "MXRecoveryKey.h"
 #import "MXKeyBackupPassword.h"
-#import "MXSession.h"
 #import "MXTools.h"
 #import "MXBase64Tools.h"
-#import "MXError.h"
-#import "MXKeyProvider.h"
-#import "MXRawDataKey.h"
-#import "MXCrossSigning_Private.h"
 #import "MXSharedHistoryKeyService.h"
 #import "MXAes256BackupAuthData.h"
-#import "MXAes.h"
-#import "MatrixSDKSwiftHeader.h"
 #import "MXSecretStorage_Private.h"
 #import "MXEncryptedSecretContent.h"
 

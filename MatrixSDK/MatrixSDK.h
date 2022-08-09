@@ -76,6 +76,9 @@ FOUNDATION_EXPORT NSString *MatrixSDKVersion;
 #import "MXKeyBackupAlgorithm.h"
 #import "MXCurve25519BackupAuthData.h"
 #import "MXAes256BackupAuthData.h"
+#import "MXCurve25519KeyBackupAlgorithm.h"
+#import "MXAes256KeyBackupAlgorithm.h"
+#import "MXKeyBackupPassword.h"
 
 #import "MXAes.h"
 
