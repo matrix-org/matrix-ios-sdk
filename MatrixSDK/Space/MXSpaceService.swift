@@ -90,6 +90,13 @@ public class MXSpaceService: NSObject {
     /// The instance of `MXSpaceNotificationCounter` that computes the number of unread messages for each space
     public let notificationCounter: MXSpaceNotificationCounter
     
+    /// List of `MXSpace` instances of the high level spaces.
+    public var rootSpaces: [MXSpace] {
+        return self.graph.rootSpaceIds.compactMap { spaceId in
+            self.getSpace(withId: spaceId)
+        }
+    }
+    
     /// List of `MXRoomSummary` of the high level spaces.
     public var rootSpaceSummaries: [MXRoomSummary] {
         return self.graph.rootSpaceIds.compactMap { spaceId in

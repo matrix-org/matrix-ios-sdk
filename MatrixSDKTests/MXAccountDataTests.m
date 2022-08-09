@@ -42,9 +42,9 @@
 
 - (void)tearDown
 {
-    [super tearDown];
-    
     matrixSDKTestsData = nil;
+    
+    [super tearDown];
 }
 
 - (void)testIgnoreUser

@@ -48,9 +48,9 @@
 
 - (void)tearDown
 {
-    [super tearDown];
-
     _matrixSDKTestsData = nil;
+    
+    [super tearDown];
 }
 
 - (void)testInit
