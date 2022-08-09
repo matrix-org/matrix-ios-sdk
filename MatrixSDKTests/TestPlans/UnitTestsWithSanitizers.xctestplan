@@ -57,6 +57,7 @@
         "MXFilterUnitTests",
         "MXHTTPAdditionalHeadersUnitTests",
         "MXJSONModelUnitTests",
+        "MXKeyBackupUnitTests",
         "MXKeyProviderUnitTests",
         "MXMediaScanStoreUnitTests",
         "MXMegolmDecryptionUnitTests",
