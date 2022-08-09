@@ -1,3 +1,17 @@
+## Changes in 0.23.14 (2022-08-09)
+
+🙌 Improvements
+
+- CI: Enable integration tests on GitHub actions ([#1537](https://github.com/matrix-org/matrix-ios-sdk/pull/1537))
+- App Layout: Added breadcrumbs data fetcher and updated room summary data type to reflect new needs ([#6407](https://github.com/vector-im/element-ios/issues/6407))
+- App Layout: added MXSpace.minimumPowerLevelForAddingRoom() and MXSpaceService.rootSpaces ([#6410](https://github.com/vector-im/element-ios/issues/6410))
+
+🐛 Bugfixes
+
+- MXRestClient: Send an empty dictionary when calling /join to be spec compliant. ([#6481](https://github.com/vector-im/element-ios/issues/6481))
+- App Layout: exclude room summaries without notifications from unread list ([#6511](https://github.com/vector-im/element-ios/issues/6511))
+
+
 ## Changes in 0.23.13 (2022-07-26)
 
 🙌 Improvements
