@@ -333,11 +333,20 @@ public class MXSpace: NSObject {
                 return
             }
             let userPowerLevel = powerLevels.powerLevelOfUser(withUserID: userId)
-            let minimumPowerLevel = powerLevels.events["m.space.child"] as? Int ?? powerLevels.stateDefault
+            let minimumPowerLevel = self.minimumPowerLevelForAddingRoom(with: powerLevels)
             let canAddRoom = userPowerLevel >= minimumPowerLevel
             
             completion(canAddRoom)
         }
+    }
+    
+    /// Returns the mimnimum power level required to add a room to this space
+    /// - Parameters:
+    ///   - powerLevels: power levels of the room related to the space
+    ///
+    /// - Returns: the mimnimum power level required to add a room to this space
+    public func minimumPowerLevelForAddingRoom(with powerLevels: MXRoomPowerLevels) -> Int {
+        return powerLevels.events["m.space.child"] as? Int ?? powerLevels.stateDefault
     }
     
     // MARK: - Private

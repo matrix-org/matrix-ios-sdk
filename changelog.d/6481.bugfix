@@ -1,1 +1,0 @@
-MXRestClient: Send an empty dictionary when calling /join to be spec compliant.
