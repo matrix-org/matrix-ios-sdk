@@ -35,7 +35,7 @@ typedef NSData* _Nullable (^MXKeyBackupPrivateKeyGetterBlock)(void);
 @protocol MXKeyBackupAlgorithm <NSObject>
 
 /// Name of the algorithm. Constants defined in `MXCryptoConstants`.
-@property (class, nonatomic, readonly) NSString *algorithName;
+@property (class, nonatomic, readonly) NSString *algorithmName;
 
 /// Flag indicating the algorithm is untrusted or not.
 @property (class, nonatomic, readonly, getter=isUntrusted) BOOL untrusted;

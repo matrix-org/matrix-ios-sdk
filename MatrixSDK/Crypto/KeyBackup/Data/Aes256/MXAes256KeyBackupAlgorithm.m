@@ -39,7 +39,7 @@
 
 @implementation MXAes256KeyBackupAlgorithm
 
-+ (NSString *)algorithName
++ (NSString *)algorithmName
 {
     return kMXCryptoAes256KeyBackupAlgorithm;
 }
