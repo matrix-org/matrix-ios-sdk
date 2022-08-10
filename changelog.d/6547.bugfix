@@ -1,0 +1,1 @@
+MXSpaceService: Fix a crash on Synapse 1.65 following changes to the /hierarchy API.
