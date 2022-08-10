@@ -1,3 +1,10 @@
+## Changes in 0.23.15 (2022-08-10)
+
+🐛 Bugfixes
+
+- MXSpaceService: Fix a crash on Synapse 1.65 following changes to the /hierarchy API. ([#6547](https://github.com/vector-im/element-ios/issues/6547))
+
+
 ## Changes in 0.23.14 (2022-08-09)
 
 🙌 Improvements
