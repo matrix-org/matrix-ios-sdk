@@ -376,12 +376,12 @@ public class MXSpaceService: NSObject {
                             spaceChildEventsPerChildRoomId[event.stateKey] = event.wireContent
 
                             var parentIds = parentIdsPerChildRoomId[event.stateKey] ?? Set()
-                            parentIds.insert(event.roomId)
+                            parentIds.insert(room.roomId)
                             parentIdsPerChildRoomId[event.stateKey] = parentIds
 
-                            var childrenIds = childrenIdsPerChildRoomId[event.roomId] ?? []
+                            var childrenIds = childrenIdsPerChildRoomId[room.roomId] ?? []
                             childrenIds.append(event.stateKey)
-                            childrenIdsPerChildRoomId[event.roomId] = childrenIds
+                            childrenIdsPerChildRoomId[room.roomId] = childrenIds
                         }
                     }
                     
