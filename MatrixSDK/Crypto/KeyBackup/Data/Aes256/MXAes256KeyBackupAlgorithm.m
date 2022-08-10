@@ -54,7 +54,6 @@
             return nil;
         }
         self.crypto = crypto;
-        NSParameterAssert([authData isKindOfClass:MXAes256BackupAuthData.class]);
         self.authData = (MXAes256BackupAuthData *)authData;
         self.keyGetterBlock = keyGetterBlock;
     }
@@ -263,12 +262,12 @@
     NSData *key = self.keyGetterBlock();
     if (!key)
     {
-        MXLogError(@"[MXAes256KeyBackupAlgorithm] init: missing private key");
+        MXLogError(@"[MXAes256KeyBackupAlgorithm] privateKey: missing private key");
         return nil;
     }
     if (![self keyMatches:key error:nil])
     {
-        MXLogError(@"[MXAes256KeyBackupAlgorithm] init: Private key does not match");
+        MXLogError(@"[MXAes256KeyBackupAlgorithm] privateKey: Private key does not match");
         return nil;
     }
     return key;

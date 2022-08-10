@@ -167,7 +167,7 @@ static Class DefaultAlgorithmClass;
             BOOL keyMatches = [algorithmClass keyMatches:privateKey withAuthData:keyBackupVersion.authData error:&error];
             if (error || !keyMatches)
             {
-                MXLogDebug(@"[MXKeyBackup] -> clean local private key (%@)", privateKey);
+                MXLogDebug(@"[MXKeyBackup] checkAndStartWithKeyBackupVersion: -> private key does not match: %@, will be removed", error);
                 [crypto.store deleteSecretWithSecretId:MXSecretId.keyBackup];
             }
         }
@@ -443,7 +443,7 @@ static Class DefaultAlgorithmClass;
     BOOL keyMatches = [_keyBackupAlgorithm keyMatches:privateKey error:&error];
     if (error || !keyMatches)
     {
-        MXLogDebug(@"[MXKeyBackup] restoreKeyBackupAutomatically. Error: Invalid private key (%@)", privateKey);
+        MXLogDebug(@"[MXKeyBackup] restoreKeyBackupAutomatically. Error: Private key does not match: %@", error);
         [crypto.store deleteSecretWithSecretId:MXSecretId.keyBackup];
         onComplete();
         return;
@@ -1057,7 +1057,7 @@ static Class DefaultAlgorithmClass;
         NSError *error;
         if (error || ![[self getOrCreateKeyBackupAlgorithmFor:keyBackupVersion privateKey:privateKey] keyMatches:privateKey error:&error])
         {
-            MXLogDebug(@"[MXKeyBackup] restoreUsingPrivateKeyKeyBackup. Error: Invalid private key (%@) for %@", privateKey, keyBackupVersion);
+            MXLogDebug(@"[MXKeyBackup] restoreUsingPrivateKeyKeyBackup. Error: Private key does not match: %@, for: %@", error, keyBackupVersion);
             if (failure)
             {
                 dispatch_async(dispatch_get_main_queue(), ^{

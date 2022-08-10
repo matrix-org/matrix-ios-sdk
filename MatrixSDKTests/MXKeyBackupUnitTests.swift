@@ -74,6 +74,7 @@ class MXKeyBackupUnitTests: XCTestCase {
     func testCurve25519PreparationWithNoPassword() throws {
         let preparationInfoWithNoPass = try MXCurve25519KeyBackupAlgorithm.prepare(with: nil)
         guard let authDataWithNoPass = preparationInfoWithNoPass.authData as? MXCurve25519BackupAuthData else {
+            XCTFail("Failed to setup test conditions")
             return
         }
         XCTAssertFalse(authDataWithNoPass.publicKey.isEmpty)
@@ -84,6 +85,7 @@ class MXKeyBackupUnitTests: XCTestCase {
     func testCurve25519PreparationWithPassword() throws {
         let preparationInfoWithPass = try MXCurve25519KeyBackupAlgorithm.prepare(with: "password")
         guard let authDataWithPass = preparationInfoWithPass.authData as? MXCurve25519BackupAuthData else {
+            XCTFail("Failed to setup test conditions")
             return
         }
         XCTAssertFalse(authDataWithPass.publicKey.isEmpty)
@@ -215,6 +217,7 @@ class MXKeyBackupUnitTests: XCTestCase {
     func testAes256PreparationWithNoPassword() throws {
         let preparationInfoWithNoPass = try MXAes256KeyBackupAlgorithm.prepare(with: nil)
         guard let authDataWithNoPass = preparationInfoWithNoPass.authData as? MXAes256BackupAuthData else {
+            XCTFail("Failed to setup test conditions")
             return
         }
         XCTAssertNotNil(authDataWithNoPass.iv)
@@ -226,6 +229,7 @@ class MXKeyBackupUnitTests: XCTestCase {
     func testAes256PreparationWithPassword() throws {
         let preparationInfoWithPass = try MXAes256KeyBackupAlgorithm.prepare(with: "password")
         guard let authDataWithPass = preparationInfoWithPass.authData as? MXAes256BackupAuthData else {
+            XCTFail("Failed to setup test conditions")
             return
         }
         XCTAssertNotNil(authDataWithPass.iv)
