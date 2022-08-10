@@ -607,6 +607,7 @@
 
         // - Pick a megolm key
         MXOlmInboundGroupSession *session = [aliceSession.crypto.store inboundGroupSessionsToBackup:1].firstObject;
+        XCTAssertFalse(session.isUntrusted);
         session.untrusted = self.isUntrusted;
 
         [aliceSession.crypto.backup prepareKeyBackupVersionWithPassword:nil algorithm:self.algorithm success:^(MXMegolmBackupCreationInfo * _Nonnull keyBackupCreationInfo) {
@@ -620,6 +621,7 @@
                 // - Check [MXKeyBackupAlgorithm decryptKeyBackupData] returns stg
                 MXMegolmSessionData *sessionData = [aliceSession.crypto.backup.keyBackupAlgorithm decryptKeyBackupData:keyBackupData forSession:session.session.sessionIdentifier inRoom:roomId];
                 XCTAssertNotNil(sessionData);
+                XCTAssertEqual(sessionData.isUntrusted, self.isUntrusted);
 
                 // - Compare the decrypted megolm key with the original one
                 XCTAssertEqualObjects(session.exportSessionData.JSONDictionary, sessionData.JSONDictionary);
