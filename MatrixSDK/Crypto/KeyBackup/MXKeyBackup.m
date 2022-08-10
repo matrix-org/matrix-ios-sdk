@@ -546,7 +546,7 @@ static Class DefaultAlgorithmClass;
         id<MXBaseKeyBackupAuthData> authData = preparationInfo.authData;
         
         MXMegolmBackupCreationInfo *keyBackupCreationInfo = [MXMegolmBackupCreationInfo new];
-        keyBackupCreationInfo.algorithm = [algorithmClass algorithName];
+        keyBackupCreationInfo.algorithm = [algorithmClass algorithmName];
         keyBackupCreationInfo.authData = authData;
         keyBackupCreationInfo.recoveryKey = [MXRecoveryKey encode:preparationInfo.privateKey];
         

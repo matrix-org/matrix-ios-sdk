@@ -23,7 +23,7 @@ class MXKeyBackupUnitTests: XCTestCase {
     // MARK: - Curve25519
 
     func testCurve25519AlgorithmClass() throws {
-        XCTAssertEqual(MXCurve25519KeyBackupAlgorithm.algorithName, kMXCryptoCurve25519KeyBackupAlgorithm)
+        XCTAssertEqual(MXCurve25519KeyBackupAlgorithm.algorithmName, kMXCryptoCurve25519KeyBackupAlgorithm)
         XCTAssertTrue(MXCurve25519KeyBackupAlgorithm.isUntrusted)
     }
 
@@ -157,7 +157,7 @@ class MXKeyBackupUnitTests: XCTestCase {
     // MARK: - Aes256
 
     func testAes256AlgorithmClass() throws {
-        XCTAssertEqual(MXAes256KeyBackupAlgorithm.algorithName, kMXCryptoAes256KeyBackupAlgorithm)
+        XCTAssertEqual(MXAes256KeyBackupAlgorithm.algorithmName, kMXCryptoAes256KeyBackupAlgorithm)
         XCTAssertFalse(MXAes256KeyBackupAlgorithm.isUntrusted)
     }
 

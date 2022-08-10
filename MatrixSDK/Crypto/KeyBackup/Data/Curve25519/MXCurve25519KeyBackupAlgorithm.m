@@ -42,7 +42,7 @@
 
 @implementation MXCurve25519KeyBackupAlgorithm
 
-+ (NSString *)algorithName
++ (NSString *)algorithmName
 {
     return kMXCryptoCurve25519KeyBackupAlgorithm;
 }
