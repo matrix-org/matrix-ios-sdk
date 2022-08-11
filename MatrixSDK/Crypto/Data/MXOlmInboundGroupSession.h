@@ -74,6 +74,11 @@
  */
 @property (nonatomic) BOOL sharedHistory;
 
+/**
+ Flag indicating this session is untrusted or not.
+ */
+@property (nonatomic, getter=isUntrusted) BOOL untrusted;
+
 
 #pragma mark - import/export
 

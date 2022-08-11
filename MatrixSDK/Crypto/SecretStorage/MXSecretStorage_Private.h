@@ -17,6 +17,7 @@
 #import "MXSecretStorage.h"
 
 @class MXSession;
+@class MXEncryptedSecretContent;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -28,6 +29,15 @@ NS_ASSUME_NONNULL_BEGIN
  @param mxSession the related 'MXSession' instance.
  */
 - (instancetype)initWithMatrixSession:(MXSession *)mxSession  processingQueue:(dispatch_queue_t)processingQueue;
+
+- (nullable MXEncryptedSecretContent *)encryptedZeroStringWithPrivateKey:(NSData*)privateKey iv:(nullable NSData*)iv error:(NSError**)error;
+
+- (nullable MXEncryptedSecretContent *)encryptSecret:(NSString*)unpaddedBase64Secret withSecretId:(nullable NSString*)secretId privateKey:(NSData*)privateKey iv:(nullable NSData*)iv error:(NSError**)error;
+
+- (nullable NSString *)decryptSecretWithSecretId:(NSString*)secretId
+                                   secretContent:(MXEncryptedSecretContent*)secretContent
+                                  withPrivateKey:(NSData*)privateKey
+                                           error:(NSError**)error;
 
 @end
 

@@ -14,10 +14,7 @@
  limitations under the License.
  */
 
-#import <XCTest/XCTest.h>
-
-#import "MatrixSDKTestsData.h"
-#import "MatrixSDKTestsE2EData.h"
+#import "MXBaseKeyBackupTests.h"
 
 #import "MXCrypto_Private.h"
 #import "MXCryptoStore.h"
@@ -25,28 +22,10 @@
 #import "MXKeybackupPassword.h"
 #import "MXOutboundSessionInfo.h"
 #import "MXCrossSigning_Private.h"
+#import "MXKeyBackupAlgorithm.h"
+#import "MXAes256BackupAuthData.h"
 
-@interface MXKeyBackup (Testing)
-
-- (OLMPkDecryption*)pkDecryptionFromRecoveryKey:(NSString*)recoveryKey error:(NSError **)error;
-- (MXKeyBackupData*)encryptGroupSession:(MXOlmInboundGroupSession*)session;
-- (MXMegolmSessionData*)decryptKeyBackupData:(MXKeyBackupData*)keyBackupData forSession:(NSString*)sessionId inRoom:(NSString*)roomId withPkDecryption:(OLMPkDecryption*)decryption;
-
-@end
-
-
-// Do not bother with retain cycles warnings in tests
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Warc-retain-cycles"
-
-@interface MXCryptoBackupTests : XCTestCase
-{
-    MatrixSDKTestsData *matrixSDKTestsData;
-    MatrixSDKTestsE2EData *matrixSDKTestsE2EData;
-}
-@end
-
-@implementation MXCryptoBackupTests
+@implementation MXBaseKeyBackupTests
 
 - (void)setUp
 {
@@ -64,21 +43,49 @@
     [super tearDown];
 }
 
-- (MXKeyBackupVersion*)fakeKeyBackupVersion
++ (XCTestSuite *)defaultTestSuite
 {
-    return [MXKeyBackupVersion modelFromJSON:@{
-                                        @"algorithm": kMXCryptoMegolmBackupAlgorithm,
-                                        @"auth_data": @{
-                                                @"public_key": @"abcdefg",
-                                                @"signatures": @{
-                                                        @"something": @{
-                                                                @"ed25519:something": @"hijklmnop"
-                                                                }
-                                                        }
-                                                }
-                                        }];
+    XCTestSuite *suite = [[XCTestSuite alloc] initWithName:NSStringFromClass(self)];
+
+    if ([NSStringFromClass(self.superclass) isEqualToString:NSStringFromClass(XCTestCase.class)])
+    {
+        NSLog(@"[MXBaseKeyBackupTests] This test case is not supposed to run, please run sub test cases.");
+        //  this is the base class, do not run tests on it
+        return suite;
+    }
+
+    for (NSInvocation *invocation in self.testInvocations)
+    {
+        XCTest *test = [[self alloc] initWithInvocation:invocation];
+        [suite addTest:test];
+    }
+
+    return suite;
 }
 
+- (NSString *)algorithm
+{
+    XCTFail(@"Method must be overridden");
+
+    return @"";
+}
+
+- (BOOL)isUntrusted
+{
+    XCTFail(@"Method must be overridden");
+
+    return YES;
+}
+
+- (MXKeyBackupVersion*)fakeKeyBackupVersion
+{
+    XCTFail(@"Method must be overridden");
+
+    return [MXKeyBackupVersion modelFromJSON:@{
+        @"algorithm": @"",
+        @"auth_data": @{}
+    }];
+}
 
 /**
  - Create a backup version on the server
@@ -103,7 +110,7 @@
                 XCTAssertEqualObjects(keyBackupVersion2.authData, keyBackupVersion.authData);
 
                 [expectation fulfill];
-                
+
             } failure:^(NSError *error) {
                 XCTFail(@"The request should not fail - NSError: %@", error);
                 [expectation fulfill];
@@ -134,8 +141,8 @@
             keyBackupData.forwardedCount = 2;
             keyBackupData.verified = YES;
             keyBackupData.sessionData = @{
-                                          @"key": @"value"
-                                          };
+                @"key": @"value"
+            };
 
             NSString *roomId = @"!aRoomId:matrix.org";
             NSString *sessionId = @"ASession";
@@ -187,8 +194,8 @@
             keyBackupData.forwardedCount = 2;
             keyBackupData.verified = YES;
             keyBackupData.sessionData = @{
-                                          @"key": @"value"
-                                          };
+                @"key": @"value"
+            };
 
             NSString *roomId = @"!aRoomId:matrix.org";
             NSString *sessionId = @"ASession";
@@ -228,10 +235,10 @@
 
 
 /**
-- From doE2ETestWithAliceAndBobInARoomWithCryptedMessages, we should have no backed up keys
-- Check backup keys after having marked one as backed up
-- Reset keys backup markers
-*/
+ - From doE2ETestWithAliceAndBobInARoomWithCryptedMessages, we should have no backed up keys
+ - Check backup keys after having marked one as backed up
+ - Reset keys backup markers
+ */
 - (void)testBackupStore
 {
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
@@ -357,7 +364,7 @@
         195, 154, 64, 158, 184, 148, 20, 85
     };
     NSData *privateKey = [NSData dataWithBytes:privateKeyBytes length:sizeof(privateKeyBytes)];
-    
+
     NSError *error;
     NSData *retrievedPrivateKey = [MXKeyBackupPassword retrievePrivateKeyWithPassword:password salt:salt iterations:iterations error:&error];
     XCTAssertNil(error);
@@ -366,34 +373,6 @@
     XCTAssertEqual(retrievedPrivateKey.length, [OLMPkDecryption privateKeyLength]);
 
     XCTAssertEqualObjects(retrievedPrivateKey, privateKey);
-}
-
-/**
- Check that `[MXKeyBackup prepareKeyBackupVersion` returns valid data
- */
-- (void)testPrepareKeyBackupVersion
-{
-    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
-
-        XCTAssertNotNil(aliceSession.crypto.backup);
-        XCTAssertFalse(aliceSession.crypto.backup.enabled);
-
-        // Check that `[MXKeyBackup prepareKeyBackupVersion` returns valid data
-        [aliceSession.crypto.backup prepareKeyBackupVersionWithPassword:nil success:^(MXMegolmBackupCreationInfo * _Nonnull keyBackupCreationInfo) {
-
-            XCTAssertNotNil(keyBackupCreationInfo);
-            XCTAssertEqualObjects(keyBackupCreationInfo.algorithm, kMXCryptoMegolmBackupAlgorithm);
-            XCTAssertNotNil(keyBackupCreationInfo.authData.publicKey);
-            XCTAssertNotNil(keyBackupCreationInfo.authData.signatures);
-            XCTAssertNotNil(keyBackupCreationInfo.recoveryKey);
-
-            [expectation fulfill];
-
-        } failure:^(NSError * _Nonnull error) {
-            XCTFail(@"The request should not fail - NSError: %@", error);
-            [expectation fulfill];
-        }];
-    }];
 }
 
 /**
@@ -406,11 +385,11 @@
         XCTAssertFalse(aliceSession.crypto.backup.enabled);
 
         // Check that `[MXKeyBackup createKeyBackupVersion` returns valid data
-        [aliceSession.crypto.backup prepareKeyBackupVersionWithPassword:nil success:^(MXMegolmBackupCreationInfo * _Nonnull keyBackupCreationInfo) {
+        [aliceSession.crypto.backup prepareKeyBackupVersionWithPassword:nil algorithm:self.algorithm success:^(MXMegolmBackupCreationInfo * _Nonnull keyBackupCreationInfo) {
             [aliceSession.crypto.backup createKeyBackupVersion:keyBackupCreationInfo success:^(MXKeyBackupVersion * _Nonnull keyBackupVersion) {
 
-                XCTAssertEqualObjects(keyBackupVersion.algorithm, kMXCryptoMegolmBackupAlgorithm);
-                XCTAssertEqualObjects(keyBackupVersion.authData, keyBackupCreationInfo.authData.JSONDictionary);
+                XCTAssertEqualObjects(keyBackupVersion.algorithm, self.algorithm);
+                XCTAssertTrue([keyBackupVersion.authData isEqualToDictionary:keyBackupCreationInfo.authData.JSONDictionary]);
                 XCTAssertNotNil(keyBackupVersion.version);
 
                 // Backup must be enable now
@@ -437,14 +416,14 @@
 {
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
 
-        [aliceSession.crypto.backup prepareKeyBackupVersionWithPassword:nil success:^(MXMegolmBackupCreationInfo * _Nonnull keyBackupCreationInfo) {
+        [aliceSession.crypto.backup prepareKeyBackupVersionWithPassword:nil algorithm:self.algorithm success:^(MXMegolmBackupCreationInfo * _Nonnull keyBackupCreationInfo) {
             [aliceSession.crypto.backup createKeyBackupVersion:keyBackupCreationInfo success:^(MXKeyBackupVersion * _Nonnull keyBackupVersion) {
 
                 // Check that `[MXKeyBackup createKeyBackupVersion` launches the backup
                 XCTAssert(aliceSession.crypto.backup.state ==  MXKeyBackupStateEnabling
                           || aliceSession.crypto.backup.state == MXKeyBackupStateWillBackUp);
 
-                 NSUInteger keys = [aliceSession.crypto.store inboundGroupSessionsCount:NO];
+                NSUInteger keys = [aliceSession.crypto.store inboundGroupSessionsCount:NO];
 
                 __block id observer;
                 observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXKeyBackupDidStateChangeNotification object:aliceSession.crypto.backup queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
@@ -482,7 +461,7 @@
     // - Create a backup version
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
 
-        [aliceSession.crypto.backup prepareKeyBackupVersionWithPassword:nil success:^(MXMegolmBackupCreationInfo * _Nonnull keyBackupCreationInfo) {
+        [aliceSession.crypto.backup prepareKeyBackupVersionWithPassword:nil algorithm:self.algorithm success:^(MXMegolmBackupCreationInfo * _Nonnull keyBackupCreationInfo) {
             [aliceSession.crypto.backup createKeyBackupVersion:keyBackupCreationInfo success:^(MXKeyBackupVersion * _Nonnull keyBackupVersion) {
 
                 // - Check the returned MXKeyBackupVersion is trusted
@@ -523,22 +502,22 @@
 {
     // - Alice and Bob have messages in a room
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
-        
+
         // - Alice has cross-signing enabled
         [aliceSession.crypto.crossSigning setupWithPassword:MXTESTS_ALICE_PWD success:^{
-            
+
             // - Alice creates a backup
-            [aliceSession.crypto.backup prepareKeyBackupVersionWithPassword:nil success:^(MXMegolmBackupCreationInfo *keyBackupCreationInfo) {
+            [aliceSession.crypto.backup prepareKeyBackupVersionWithPassword:nil algorithm:self.algorithm success:^(MXMegolmBackupCreationInfo *keyBackupCreationInfo) {
                 [aliceSession.crypto.backup createKeyBackupVersion:keyBackupCreationInfo success:^(MXKeyBackupVersion *keyBackupVersion) {
-                    
+
                     // - Check the returned MXKeyBackupVersion is trusted
                     [aliceSession.crypto.backup trustForKeyBackupVersion:keyBackupVersion onComplete:^(MXKeyBackupVersionTrust *keyBackupVersionTrust) {
-                        
+
                         // -> It must be trusted by 2 entities
                         XCTAssertNotNil(keyBackupVersionTrust);
                         XCTAssertTrue(keyBackupVersionTrust.usable);
                         XCTAssertEqual(keyBackupVersionTrust.signatures.count, 2);
-                        
+
                         [keyBackupVersionTrust.signatures enumerateObjectsUsingBlock:^(MXKeyBackupVersionTrustSignature *signature, NSUInteger idx, BOOL *stop) {
                             if (signature.keys) {
                                 // Check if valid MSK signature
@@ -551,10 +530,10 @@
                                 XCTAssertEqualObjects(signature.device.deviceId, aliceSession.matrixRestClient.credentials.deviceId);
                             }
                         }];
-                        
+
                         [expectation fulfill];
                     }];
-                    
+
                 } failure:^(NSError * _Nonnull error) {
                     XCTFail(@"The request should not fail - NSError: %@", error);
                     [expectation fulfill];
@@ -563,7 +542,7 @@
                 XCTFail(@"The request should not fail - NSError: %@", error);
                 [expectation fulfill];
             }];
-            
+
         } failure:^(NSError * _Nonnull error) {
             XCTFail(@"Cannot set up initial test conditions - error: %@", error);
             [expectation fulfill];
@@ -579,7 +558,7 @@
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
 
         // Check that `[MXKeyBackup backupAllGroupSessions]` returns valid data
-        [aliceSession.crypto.backup prepareKeyBackupVersionWithPassword:nil success:^(MXMegolmBackupCreationInfo * _Nonnull keyBackupCreationInfo) {
+        [aliceSession.crypto.backup prepareKeyBackupVersionWithPassword:nil algorithm:self.algorithm success:^(MXMegolmBackupCreationInfo * _Nonnull keyBackupCreationInfo) {
             [aliceSession.crypto.backup createKeyBackupVersion:keyBackupCreationInfo success:^(MXKeyBackupVersion * _Nonnull keyBackupVersion) {
 
                 NSUInteger keys = [aliceSession.crypto.store inboundGroupSessionsCount:NO];
@@ -628,22 +607,21 @@
 
         // - Pick a megolm key
         MXOlmInboundGroupSession *session = [aliceSession.crypto.store inboundGroupSessionsToBackup:1].firstObject;
+        XCTAssertFalse(session.isUntrusted);
+        session.untrusted = self.isUntrusted;
 
-        [aliceSession.crypto.backup prepareKeyBackupVersionWithPassword:nil success:^(MXMegolmBackupCreationInfo * _Nonnull keyBackupCreationInfo) {
+        [aliceSession.crypto.backup prepareKeyBackupVersionWithPassword:nil algorithm:self.algorithm success:^(MXMegolmBackupCreationInfo * _Nonnull keyBackupCreationInfo) {
             [aliceSession.crypto.backup createKeyBackupVersion:keyBackupCreationInfo success:^(MXKeyBackupVersion * _Nonnull keyBackupVersion) {
 
-                // - Check [MXKeyBackup encryptGroupSession] returns stg
-                MXKeyBackupData *keyBackupData = [aliceSession.crypto.backup encryptGroupSession:session];
+                // - Check [MXKeyBackupAlgorithm encryptGroupSession] returns stg
+                MXKeyBackupData *keyBackupData = [aliceSession.crypto.backup.keyBackupAlgorithm encryptGroupSession:session];
                 XCTAssertNotNil(keyBackupData);
                 XCTAssertNotNil(keyBackupData.sessionData);
 
-                // - Check [MXKeyBackup pkDecryptionFromRecoveryKey] is able to create a OLMPkDecryption
-                OLMPkDecryption *decryption = [aliceSession.crypto.backup pkDecryptionFromRecoveryKey:keyBackupCreationInfo.recoveryKey error:nil];
-                XCTAssertNotNil(decryption);
-
-                // - Check [MXKeyBackup decryptKeyBackupData] returns stg
-                MXMegolmSessionData *sessionData = [aliceSession.crypto.backup decryptKeyBackupData:keyBackupData forSession:session.session.sessionIdentifier inRoom:roomId withPkDecryption:decryption];
+                // - Check [MXKeyBackupAlgorithm decryptKeyBackupData] returns stg
+                MXMegolmSessionData *sessionData = [aliceSession.crypto.backup.keyBackupAlgorithm decryptKeyBackupData:keyBackupData forSession:session.session.sessionIdentifier inRoom:roomId];
                 XCTAssertNotNil(sessionData);
+                XCTAssertEqual(sessionData.isUntrusted, self.isUntrusted);
 
                 // - Compare the decrypted megolm key with the original one
                 XCTAssertEqualObjects(session.exportSessionData.JSONDictionary, sessionData.JSONDictionary);
@@ -671,15 +649,19 @@
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
 
         NSArray<MXOlmInboundGroupSession *> *aliceKeys = [aliceSession.crypto.store inboundGroupSessionsToBackup:100];
+        for (MXOlmInboundGroupSession *key in aliceKeys)
+        {
+            key.untrusted = self.isUntrusted;
+        }
 
         // - Do an e2e backup to the homeserver
-        [aliceSession.crypto.backup prepareKeyBackupVersionWithPassword:password success:^(MXMegolmBackupCreationInfo * _Nonnull keyBackupCreationInfo) {
+        [aliceSession.crypto.backup prepareKeyBackupVersionWithPassword:password algorithm:self.algorithm success:^(MXMegolmBackupCreationInfo * _Nonnull keyBackupCreationInfo) {
             [aliceSession.crypto.backup createKeyBackupVersion:keyBackupCreationInfo success:^(MXKeyBackupVersion * _Nonnull keyBackupVersion) {
                 [aliceSession.crypto.backup backupAllGroupSessions:^{
 
                     // - Log Alice on a new device
                     [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
-                    [matrixSDKTestsData relogUserSessionWithNewDevice:self session:aliceSession withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *aliceSession2) {
+                    [self->matrixSDKTestsData relogUserSessionWithNewDevice:self session:aliceSession withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *aliceSession2) {
                         [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
 
                         // Test check: aliceSession2 has no keys at login
@@ -742,18 +724,19 @@
         // - Restore the e2e backup with recovery key
         [aliceSession.crypto.backup restoreKeyBackup:aliceSession.crypto.backup.keyBackupVersion
                                      withRecoveryKey:keyBackupCreationInfo.recoveryKey
-                                                room:nil session:nil
+                                                room:nil
+                                             session:nil
                                              success:^(NSUInteger total, NSUInteger imported)
          {
-             // - Restore must be successful
-             [self checkRestoreSuccess:aliceKeys aliceSession:aliceSession total:total imported:imported];
+            // - Restore must be successful
+            [self checkRestoreSuccess:aliceKeys aliceSession:aliceSession total:total imported:imported];
 
-             [expectation fulfill];
+            [expectation fulfill];
 
-         } failure:^(NSError * _Nonnull error) {
-             XCTFail(@"The request should not fail - NSError: %@", error);
-             [expectation fulfill];
-         }];
+        } failure:^(NSError * _Nonnull error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
     }];
 }
 
@@ -775,19 +758,19 @@
                                                 room:nil session:nil
                                              success:^(NSUInteger total, NSUInteger imported)
          {
-             // - It must fail
-             XCTFail(@"It must fail");
+            // - It must fail
+            XCTFail(@"It must fail");
 
-             [expectation fulfill];
+            [expectation fulfill];
 
-         } failure:^(NSError * _Nonnull error) {
+        } failure:^(NSError * _Nonnull error) {
 
-             // - It must fail
-             XCTAssertEqualObjects(error.domain, MXKeyBackupErrorDomain);
-             XCTAssertEqual(error.code, MXKeyBackupErrorInvalidRecoveryKeyCode);
+            // - It must fail
+            XCTAssertEqualObjects(error.domain, MXKeyBackupErrorDomain);
+            XCTAssertEqual(error.code, MXKeyBackupErrorInvalidRecoveryKeyCode);
 
-             [expectation fulfill];
-         }];
+            [expectation fulfill];
+        }];
     }];
 }
 
@@ -811,15 +794,15 @@
                                                 room:nil session:nil
                                              success:^(NSUInteger total, NSUInteger imported)
          {
-             // - Restore must be successful
-             [self checkRestoreSuccess:aliceKeys aliceSession:aliceSession total:total imported:imported];
+            // - Restore must be successful
+            [self checkRestoreSuccess:aliceKeys aliceSession:aliceSession total:total imported:imported];
 
-             [expectation fulfill];
+            [expectation fulfill];
 
-         } failure:^(NSError * _Nonnull error) {
-             XCTFail(@"The request should not fail - NSError: %@", error);
-             [expectation fulfill];
-         }];
+        } failure:^(NSError * _Nonnull error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
     }];
 }
 
@@ -841,19 +824,19 @@
                                                 room:nil session:nil
                                              success:^(NSUInteger total, NSUInteger imported)
          {
-             // - It must fail
-             XCTFail(@"It must fail");
+            // - It must fail
+            XCTFail(@"It must fail");
 
-             [expectation fulfill];
+            [expectation fulfill];
 
-         } failure:^(NSError * _Nonnull error) {
+        } failure:^(NSError * _Nonnull error) {
 
-             // - It must fail
-             XCTAssertEqualObjects(error.domain, MXKeyBackupErrorDomain);
-             XCTAssertEqual(error.code, MXKeyBackupErrorInvalidRecoveryKeyCode);
+            // - It must fail
+            XCTAssertEqualObjects(error.domain, MXKeyBackupErrorDomain);
+            XCTAssertEqual(error.code, MXKeyBackupErrorInvalidRecoveryKeyCode);
 
-             [expectation fulfill];
-         }];
+            [expectation fulfill];
+        }];
     }];
 }
 
@@ -877,15 +860,15 @@
                                                 room:nil session:nil
                                              success:^(NSUInteger total, NSUInteger imported)
          {
-             // - Restore must be successful
-             [self checkRestoreSuccess:aliceKeys aliceSession:aliceSession total:total imported:imported];
+            // - Restore must be successful
+            [self checkRestoreSuccess:aliceKeys aliceSession:aliceSession total:total imported:imported];
 
-             [expectation fulfill];
+            [expectation fulfill];
 
-         } failure:^(NSError * _Nonnull error) {
-             XCTFail(@"The request should not fail - NSError: %@", error);
-             [expectation fulfill];
-         }];
+        } failure:^(NSError * _Nonnull error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
     }];
 }
 
@@ -907,19 +890,19 @@
                                                 room:nil session:nil
                                              success:^(NSUInteger total, NSUInteger imported)
          {
-             // - It must fail
-             XCTFail(@"Restoring with a password a backup created with only a recovery key must fail");
+            // - It must fail
+            XCTFail(@"Restoring with a password a backup created with only a recovery key must fail");
 
-             [expectation fulfill];
+            [expectation fulfill];
 
-         } failure:^(NSError * _Nonnull error) {
+        } failure:^(NSError * _Nonnull error) {
 
-             // - It must fail
-             XCTAssertEqualObjects(error.domain, MXKeyBackupErrorDomain);
-             XCTAssertEqual(error.code, MXKeyBackupErrorMissingPrivateKeySaltCode);
+            // - It must fail
+            XCTAssertEqualObjects(error.domain, MXKeyBackupErrorDomain);
+            XCTAssertEqual(error.code, MXKeyBackupErrorMissingPrivateKeySaltCode);
 
-             [expectation fulfill];
-         }];
+            [expectation fulfill];
+        }];
     }];
 }
 
@@ -937,14 +920,14 @@
 
         XCTAssertFalse(aliceSession.crypto.backup.enabled);
 
-        [aliceSession.crypto.backup prepareKeyBackupVersionWithPassword:nil success:^(MXMegolmBackupCreationInfo * _Nonnull keyBackupCreationInfo) {
+        [aliceSession.crypto.backup prepareKeyBackupVersionWithPassword:nil algorithm:self.algorithm success:^(MXMegolmBackupCreationInfo * _Nonnull keyBackupCreationInfo) {
             [aliceSession.crypto.backup createKeyBackupVersion:keyBackupCreationInfo success:^(MXKeyBackupVersion * _Nonnull keyBackupVersion) {
 
                 XCTAssertTrue(aliceSession.crypto.backup.enabled);
 
                 // - Restart alice session
                 MXSession *aliceSession2 = [[MXSession alloc] initWithMatrixRestClient:aliceSession.matrixRestClient];
-                [matrixSDKTestsData retain:aliceSession2];
+                [self->matrixSDKTestsData retain:aliceSession2];
                 [aliceSession close];
                 [aliceSession2 start:nil failure:^(NSError * _Nonnull error) {
                     XCTFail(@"The request should not fail - NSError: %@", error);
@@ -989,7 +972,7 @@
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
 
         // - Make alice back up her keys to her homeserver
-        [aliceSession.crypto.backup prepareKeyBackupVersionWithPassword:nil success:^(MXMegolmBackupCreationInfo * _Nonnull keyBackupCreationInfo) {
+        [aliceSession.crypto.backup prepareKeyBackupVersionWithPassword:nil algorithm:self.algorithm success:^(MXMegolmBackupCreationInfo * _Nonnull keyBackupCreationInfo) {
             [aliceSession.crypto.backup createKeyBackupVersion:keyBackupCreationInfo success:^(MXKeyBackupVersion * _Nonnull keyBackupVersion) {
 
                 XCTAssertTrue(aliceSession.crypto.backup.enabled);
@@ -1044,16 +1027,16 @@
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
 
         // - Do an e2e backup to the homeserver
-        [aliceSession.crypto.backup prepareKeyBackupVersionWithPassword:nil success:^(MXMegolmBackupCreationInfo * _Nonnull keyBackupCreationInfo) {
+        [aliceSession.crypto.backup prepareKeyBackupVersionWithPassword:nil algorithm:self.algorithm success:^(MXMegolmBackupCreationInfo * _Nonnull keyBackupCreationInfo) {
             [aliceSession.crypto.backup createKeyBackupVersion:keyBackupCreationInfo success:^(MXKeyBackupVersion * _Nonnull keyBackupVersion) {
                 [aliceSession.crypto.backup backupAllGroupSessions:^{
 
                     NSString *oldDeviceId = aliceSession.matrixRestClient.credentials.deviceId;
-                    MXKeyBackupVersion *oldKeyBackupVersion = aliceSession.crypto.backup.keyBackupVersion;
+                    MXKeyBackupVersion *oldKeyBackupVersion = keyBackupVersion;
 
                     // - Log Alice on a new device
                     [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
-                    [matrixSDKTestsData relogUserSessionWithNewDevice:self session:aliceSession withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *aliceSession2) {
+                    [self->matrixSDKTestsData relogUserSessionWithNewDevice:self session:aliceSession withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *aliceSession2) {
                         [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
 
                         // - Post a message to have a new megolm session
@@ -1146,7 +1129,7 @@
     [self createKeyBackupScenarioWithPassword:nil readyToTest:^(NSString *version, MXMegolmBackupCreationInfo *keyBackupCreationInfo, NSArray<MXOlmInboundGroupSession *> *aliceKeys, MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
 
         // - Check the SDK sent key share requests
-        [matrixSDKTestsE2EData outgoingRoomKeyRequestInSession:aliceSession complete:^(MXOutgoingRoomKeyRequest *outgoingRoomKeyRequest) {
+        [self->matrixSDKTestsE2EData outgoingRoomKeyRequestInSession:aliceSession complete:^(MXOutgoingRoomKeyRequest *outgoingRoomKeyRequest) {
 
             XCTAssertNotNil(outgoingRoomKeyRequest);
 
@@ -1156,26 +1139,26 @@
                                                     room:nil session:nil
                                                  success:^(NSUInteger total, NSUInteger imported)
              {
-                 // - Restore must be successful
-                 [self checkRestoreSuccess:aliceKeys aliceSession:aliceSession total:total imported:imported];
+                // - Restore must be successful
+                [self checkRestoreSuccess:aliceKeys aliceSession:aliceSession total:total imported:imported];
 
-                 // Wait to check that no notification happens
-                 dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 2 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+                // Wait to check that no notification happens
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 2 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
 
-                     // - There must be no more pending key share requests
-                     [matrixSDKTestsE2EData outgoingRoomKeyRequestInSession:aliceSession complete:^(MXOutgoingRoomKeyRequest *outgoingRoomKeyRequest) {
+                    // - There must be no more pending key share requests
+                    [self->matrixSDKTestsE2EData outgoingRoomKeyRequestInSession:aliceSession complete:^(MXOutgoingRoomKeyRequest *outgoingRoomKeyRequest) {
 
-                         XCTAssertNil(outgoingRoomKeyRequest);
+                        XCTAssertNil(outgoingRoomKeyRequest);
 
-                         [expectation fulfill];
-                     }];
+                        [expectation fulfill];
+                    }];
 
-                 });
+                });
 
-             } failure:^(NSError * _Nonnull error) {
-                 XCTFail(@"The request should not fail - NSError: %@", error);
-                 [expectation fulfill];
-             }];
+            } failure:^(NSError * _Nonnull error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
 
         }];
     }];
@@ -1435,18 +1418,18 @@
 - (void)testLocalPrivateKey
 {
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
-        
+
         // - Do an e2e backup to the homeserver
-        [aliceSession.crypto.backup prepareKeyBackupVersionWithPassword:nil success:^(MXMegolmBackupCreationInfo * _Nonnull keyBackupCreationInfo) {
+        [aliceSession.crypto.backup prepareKeyBackupVersionWithPassword:nil algorithm:self.algorithm success:^(MXMegolmBackupCreationInfo * _Nonnull keyBackupCreationInfo) {
             [aliceSession.crypto.backup createKeyBackupVersion:keyBackupCreationInfo success:^(MXKeyBackupVersion * _Nonnull keyBackupVersion) {
                 [aliceSession.crypto.backup backupAllGroupSessions:^{
-                    
+
                     // -> We must have the backup private key locally
                     XCTAssertTrue(aliceSession.crypto.backup.hasPrivateKeyInCryptoStore);
-                    
+
                     // - Restart the session
                     MXSession *aliceSession2 = [[MXSession alloc] initWithMatrixRestClient:aliceSession.matrixRestClient];
-                    [matrixSDKTestsData retain:aliceSession2];
+                    [self->matrixSDKTestsData retain:aliceSession2];
                     [aliceSession close];
                     [aliceSession2 start:^{
                         XCTAssertTrue(aliceSession2.crypto.backup.hasPrivateKeyInCryptoStore);
@@ -1454,36 +1437,36 @@
                         XCTFail(@"The request should not fail - NSError: %@", error);
                         [expectation fulfill];
                     }];
-                    
+
                     // -> The restarted alice session must still have the private key
                     __block id observer;
                     observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXKeyBackupDidStateChangeNotification object:aliceSession2.crypto.backup queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
-                        
+
                         if (observer && aliceSession2.crypto.backup.state == MXKeyBackupStateReadyToBackUp)
                         {
                             [[NSNotificationCenter defaultCenter] removeObserver:observer];
                             observer = nil;
-                            
+
                             XCTAssertTrue(aliceSession2.crypto.backup.hasPrivateKeyInCryptoStore);
-                            
+
                             // -> It must be able to restore the backup using this local key
                             [aliceSession2.crypto.backup restoreUsingPrivateKeyKeyBackup:aliceSession2.crypto.backup.keyBackupVersion room:nil session:nil success:^(NSUInteger total, NSUInteger imported) {
-                                
+
                                 XCTAssertGreaterThan(total, 0);
                                 [expectation fulfill];
-                                
+
                             } failure:^(NSError * _Nonnull error) {
                                 XCTFail(@"The request should not fail - NSError: %@", error);
                                 [expectation fulfill];
                             }];
                         }
                     }];
-                
+
                 } progress:nil failure:^(NSError * _Nonnull error) {
                     XCTFail(@"The request should not fail - NSError: %@", error);
                     [expectation fulfill];
                 }];
-                
+
             } failure:^(NSError * _Nonnull error) {
                 XCTFail(@"The request should not fail - NSError: %@", error);
                 [expectation fulfill];
@@ -1505,35 +1488,35 @@
 - (void)testCatchPrivateKeyOnRecoverWithPassword
 {
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
-        
+
         // - Do an e2e backup to the homeserver
         NSString *password = @"qwerty";
-        [aliceSession.crypto.backup prepareKeyBackupVersionWithPassword:password success:^(MXMegolmBackupCreationInfo * _Nonnull keyBackupCreationInfo) {
+        [aliceSession.crypto.backup prepareKeyBackupVersionWithPassword:password algorithm:self.algorithm success:^(MXMegolmBackupCreationInfo * _Nonnull keyBackupCreationInfo) {
             [aliceSession.crypto.backup createKeyBackupVersion:keyBackupCreationInfo success:^(MXKeyBackupVersion * _Nonnull keyBackupVersion) {
-            
+
                 NSString *backupSecret = [aliceSession.crypto.store secretWithSecretId:MXSecretId.keyBackup];
                 XCTAssertTrue(aliceSession.crypto.backup.hasPrivateKeyInCryptoStore);
-                
+
                 // - Erase local private key locally (that simulates usage of the backup from another device)
                 [aliceSession.crypto.store deleteSecretWithSecretId:MXSecretId.keyBackup];
                 XCTAssertFalse(aliceSession.crypto.backup.hasPrivateKeyInCryptoStore);
-                
+
                 // - Restore the backup with a password
                 [aliceSession.crypto.backup restoreKeyBackup:keyBackupVersion withPassword:password room:nil session:nil success:^(NSUInteger total, NSUInteger imported) {
-                    
+
                     // -> We should have now the private key locally
                     XCTAssertTrue(aliceSession.crypto.backup.hasPrivateKeyInCryptoStore);
-                    
+
                     NSString *backupSecret2 = [aliceSession.crypto.store secretWithSecretId:MXSecretId.keyBackup];
                     XCTAssertEqualObjects(backupSecret, backupSecret2);
-                    
+
                     [expectation fulfill];
-                    
+
                 } failure:^(NSError * _Nonnull error) {
                     XCTFail(@"The request should not fail - NSError: %@", error);
                     [expectation fulfill];
                 }];
-                
+
             } failure:^(NSError * _Nonnull error) {
                 XCTFail(@"The request should not fail - NSError: %@", error);
                 [expectation fulfill];
@@ -1556,40 +1539,40 @@
 - (void)testGossipKey
 {
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession1, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
-        
+
         // - Do an e2e backup to the homeserver
-        [aliceSession1.crypto.backup prepareKeyBackupVersionWithPassword:nil success:^(MXMegolmBackupCreationInfo * _Nonnull keyBackupCreationInfo) {
+        [aliceSession1.crypto.backup prepareKeyBackupVersionWithPassword:nil algorithm:self.algorithm success:^(MXMegolmBackupCreationInfo * _Nonnull keyBackupCreationInfo) {
             [aliceSession1.crypto.backup createKeyBackupVersion:keyBackupCreationInfo success:^(MXKeyBackupVersion * _Nonnull keyBackupVersion) {
                 [aliceSession1.crypto.backup backupAllGroupSessions:^{
-                    
-                    [matrixSDKTestsE2EData loginUserOnANewDevice:self credentials:aliceSession1.matrixRestClient.credentials withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *aliceSession2) {
-                        
+
+                    [self->matrixSDKTestsE2EData loginUserOnANewDevice:self credentials:aliceSession1.matrixRestClient.credentials withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *aliceSession2) {
+
                         // -> We must have the backup private key locally
                         XCTAssertFalse(aliceSession2.crypto.backup.hasPrivateKeyInCryptoStore);
-                        
+
                         NSString *aliceUserId = aliceSession1.matrixRestClient.credentials.userId;
                         NSString *aliceSession1DeviceId = aliceSession1.matrixRestClient.credentials.deviceId;
                         NSString *aliceSession2DeviceId = aliceSession2.matrixRestClient.credentials.deviceId;
-                        
+
                         // - Make each Alice device trust each other
                         // This simulates a self verification and trigger backup restore in background
                         [aliceSession1.crypto setDeviceVerification:MXDeviceVerified forDevice:aliceSession2DeviceId ofUser:aliceUserId success:^{
                             [aliceSession2.crypto setDeviceVerification:MXDeviceVerified forDevice:aliceSession1DeviceId ofUser:aliceUserId success:^{
-                                
+
                                 // Wait a bit to make background requests happen
                                 dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 3 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
-                                    
+
                                     // -> Alice2 should have the private backup key thanks to gossiping
                                     XCTAssertTrue(aliceSession2.crypto.backup.hasPrivateKeyInCryptoStore);
-                                    
+
                                     // -> Alice2 should have all her history decrypted
                                     NSUInteger inboundGroupSessionsCount = [aliceSession2.crypto.store inboundGroupSessionsCount:NO];
                                     XCTAssertGreaterThan(inboundGroupSessionsCount, 0);
                                     XCTAssertEqual(inboundGroupSessionsCount, [aliceSession1.crypto.store inboundGroupSessionsCount:NO]);
-                                    
+
                                     [expectation fulfill];
                                 });
-                                
+
                             } failure:^(NSError *error) {
                                 XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                                 [expectation fulfill];
@@ -1598,9 +1581,9 @@
                             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                             [expectation fulfill];
                         }];
-                        
+
                     }];
-            
+
                 } progress:nil failure:^(NSError * _Nonnull error) {
                     XCTFail(@"The request should not fail - NSError: %@", error);
                     [expectation fulfill];
@@ -1617,5 +1600,3 @@
 }
 
 @end
-
-#pragma clang diagnostic pop

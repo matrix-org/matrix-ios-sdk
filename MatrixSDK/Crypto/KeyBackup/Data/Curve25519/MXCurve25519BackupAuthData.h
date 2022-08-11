@@ -1,5 +1,5 @@
 /*
- Copyright 2018 New Vector Ltd
+ Copyright 2022 The Matrix.org Foundation C.I.C
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -16,30 +16,20 @@
 
 #import <Foundation/Foundation.h>
 
-@protocol MXBaseKeyBackupAuthData;
+#import "MXJSONModel.h"
+#import "MXBaseKeyBackupAuthData.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
 /**
- `MXMegolmBackupCreationInfo` represents data to create a megolm keys backup on
- the homeserver.
+ Data model for MXKeyBackupVersion.authData in case of kMXCryptoCurve25519KeyBackupAlgorithm.
  */
-@interface MXMegolmBackupCreationInfo : NSObject
+@interface MXCurve25519BackupAuthData : MXJSONModel <MXBaseKeyBackupAuthData>
 
 /**
- The algorithm used for storing backups.
+ The curve25519 public key used to encrypt the backups.
  */
-@property (nonatomic) NSString *algorithm;
-
-/**
- Algorthm-dependent authentication data.
- */
-@property (nonatomic) id<MXBaseKeyBackupAuthData> authData;
-
-/**
- The Base58 recovery key.
- */
-@property (nonatomic) NSString *recoveryKey;
+@property (nonatomic) NSString *publicKey;
 
 @end
 

@@ -671,6 +671,12 @@ extern NSString *const kMXEventIdentifierKey;
 @property (nonatomic, readonly) MXEvent *clearEvent;
 
 /**
+ Flag indicating the event was decrypted with an untrusted key.
+ If the event cannot be decrypted yet or the event not encrypted at all, this flag would be NO.
+ */
+@property (nonatomic, readonly, getter=isUntrusted) BOOL untrusted;
+
+/**
  The curve25519 key for the device that we think sent this event.
 
  For an Olm-encrypted event, this is inferred directly from the DH

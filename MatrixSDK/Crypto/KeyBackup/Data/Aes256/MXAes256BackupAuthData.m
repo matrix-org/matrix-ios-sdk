@@ -1,5 +1,5 @@
 /*
- Copyright 2018 New Vector Ltd
+ Copyright 2022 The Matrix.org Foundation C.I.C
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -14,18 +14,23 @@
  limitations under the License.
  */
 
-#import "MXMegolmBackupAuthData.h"
+#import "MXAes256BackupAuthData.h"
 
-@implementation MXMegolmBackupAuthData
+@implementation MXAes256BackupAuthData
+
+@synthesize privateKeySalt = _privateKeySalt;
+@synthesize privateKeyIterations = _privateKeyIterations;
+@synthesize signatures = _signatures;
 
 #pragma mark - MXJSONModel
 
 + (id)modelFromJSON:(NSDictionary *)JSONDictionary
 {
-    MXMegolmBackupAuthData *megolmBackupAuthData = [MXMegolmBackupAuthData new];
+    MXAes256BackupAuthData *megolmBackupAuthData = [MXAes256BackupAuthData new];
     if (megolmBackupAuthData)
     {
-        MXJSONModelSetString(megolmBackupAuthData.publicKey, JSONDictionary[@"public_key"]);
+        MXJSONModelSetString(megolmBackupAuthData.iv, JSONDictionary[@"iv"]);
+        MXJSONModelSetString(megolmBackupAuthData.mac, JSONDictionary[@"mac"]);
         MXJSONModelSetString(megolmBackupAuthData.privateKeySalt, JSONDictionary[@"private_key_salt"]);
         MXJSONModelSetUInteger(megolmBackupAuthData.privateKeyIterations, JSONDictionary[@"private_key_iterations"]);
         MXJSONModelSetDictionary(megolmBackupAuthData.signatures, JSONDictionary[@"signatures"]);
@@ -38,7 +43,15 @@
 {
     NSMutableDictionary *JSONDictionary = [NSMutableDictionary dictionary];
 
-    JSONDictionary[@"public_key"] = _publicKey;
+    if (_iv)
+    {
+        JSONDictionary[@"iv"] = _iv;
+    }
+
+    if (_mac)
+    {
+        JSONDictionary[@"mac"] = _mac;
+    }
 
     if (_privateKeySalt)
     {
@@ -60,20 +73,8 @@
 
 - (NSDictionary *)signalableJSONDictionary
 {
-    NSMutableDictionary *signalableJSONDictionary = [NSMutableDictionary dictionary];
-
-    signalableJSONDictionary[@"public_key"] = _publicKey;
-
-    if (_privateKeySalt)
-    {
-        signalableJSONDictionary[@"private_key_salt"] = _privateKeySalt;
-    }
-
-    if (_privateKeySalt)
-    {
-        signalableJSONDictionary[@"private_key_iterations"] = @(_privateKeyIterations);
-    }
-
+    NSMutableDictionary *signalableJSONDictionary = [NSMutableDictionary dictionaryWithDictionary:self.JSONDictionary];
+    [signalableJSONDictionary removeObjectForKey:@"signatures"];
     return signalableJSONDictionary;
 }
 
