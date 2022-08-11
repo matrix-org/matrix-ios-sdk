@@ -28,7 +28,8 @@
 
 #import "MXSDKOptions.h"
 
-#import "MXLRUCache.h"
+#import "MatrixSDKSwiftHeader.h"
+
 #import "MXTools.h"
 
 NSUInteger const kMXMediaCacheSDKVersion = 3;
