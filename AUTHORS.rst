@@ -46,3 +46,5 @@ John Flanagan <john.flanagan at spok.com>
   * PR #463 Fix compatibility with Swift 4.0 (issue #393)
   * PR #465 SwiftMatrixSDK: Enum cleanup
  
+Michael Redig <hybrids-07-baggage at icloud.com>
+  * PR #1543 (refactor) project settings update
