@@ -2632,7 +2632,7 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
                       [MXTools encodeURIComponent:userId]];
     
     NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
-    parameters[@"membership"] = @"kick";
+    parameters[@"membership"] = @"leave";
     
     if (reason)
     {
