@@ -99,13 +99,40 @@ class MXCryptoMachine {
 }
 
 @available(iOS 13.0.0, *)
+extension MXCryptoMachine: MXCryptoIdentity {
+    var userId: String {
+        return machine.userId()
+    }
+    
+    var deviceId: String {
+        return machine.deviceId()
+    }
+    
+    var deviceCurve25519Key: String? {
+        guard let key = machine.identityKeys()["curve25519"] else {
+            log.error("Cannot get device curve25519 key")
+            return nil
+        }
+        return key
+    }
+    
+    var deviceEd25519Key: String? {
+        guard let key = machine.identityKeys()["ed25519"] else {
+            log.error("Cannot get device ed25519 key")
+            return nil
+        }
+        return key
+    }
+}
+
+@available(iOS 13.0.0, *)
 extension MXCryptoMachine: MXCryptoSyncing {
     func handleSyncResponse(
         toDevice: MXToDeviceSyncResponse?,
         deviceLists: MXDeviceListResponse?,
         deviceOneTimeKeysCounts: [String: NSNumber],
         unusedFallbackKeys: [String]?
-    ) throws {
+    ) throws -> MXToDeviceSyncResponse {
         let events = toDevice?.jsonString() ?? "[]"
         let deviceChanges = DeviceLists(
             changed: deviceLists?.changed ?? [],
@@ -120,9 +147,13 @@ extension MXCryptoMachine: MXCryptoSyncing {
             unusedFallbackKeys: unusedFallbackKeys
         )
         
-        if let result = MXTools.deserialiseJSONString(result) as? [String: Any], !result.isEmpty {
-            log(error: "Result processing not implemented \(result)")
+        guard let json = MXTools.deserialiseJSONString(result) as? [AnyHashable: Any] else {
+            log.error("Result cannot be serialized", context: [
+                "result": result
+            ])
+            return MXToDeviceSyncResponse()
         }
+        return MXToDeviceSyncResponse(fromJSON: json)
     }
     
     func completeSync() async throws {
@@ -215,22 +246,6 @@ extension MXCryptoMachine: MXCryptoSyncing {
 
 @available(iOS 13.0.0, *)
 extension MXCryptoMachine: MXCryptoDevicesSource {
-    var deviceCurve25519Key: String? {
-        guard let key = machine.identityKeys()["curve25519"] else {
-            log.error("Cannot get device curve25519 key")
-            return nil
-        }
-        return key
-    }
-    
-    var deviceEd25519Key: String? {
-        guard let key = machine.identityKeys()["ed25519"] else {
-            log.error("Cannot get device ed25519 key")
-            return nil
-        }
-        return key
-    }
-    
     func devices(userId: String) -> [Device] {
         do {
             return try machine.getUserDevices(userId: userId, timeout: 0)
@@ -268,6 +283,12 @@ extension MXCryptoMachine: MXCryptoUserIdentitySource {
             log.error("Failed fetching user identity")
             return nil
         }
+    }
+    
+    func downloadKeys(users: [String]) async throws {
+        try await handleRequest(
+            .keysQuery(requestId: UUID().uuidString, users: users)
+        )
     }
 }
 
@@ -371,7 +392,15 @@ extension MXCryptoMachine: MXCryptoCrossSigning {
 }
 
 @available(iOS 13.0.0, *)
-extension MXCryptoMachine: MXCryptoVerification {
+extension MXCryptoMachine: MXCryptoVerificationRequesting {
+    func requestSelfVerification(methods: [String]) async throws -> VerificationRequest {
+        guard let result = try machine.requestSelfVerification(methods: methods) else {
+            throw Error.missingVerification
+        }
+        try await handleOutgoingVerificationRequest(result.request)
+        return result.verification
+    }
+    
     func requestVerification(userId: String, roomId: String, methods: [String]) async throws -> VerificationRequest {
         guard let content = try machine.verificationRequestContent(userId: userId, methods: methods) else {
             throw Error.missingVerificationContent
@@ -403,18 +432,47 @@ extension MXCryptoMachine: MXCryptoVerification {
         return machine.getVerificationRequest(userId: userId, flowId: flowId)
     }
     
+    func acceptVerificationRequest(userId: String, flowId: String, methods: [String]) async throws {
+        guard let request = machine.acceptVerificationRequest(userId: userId, flowId: flowId, methods: methods) else {
+            throw Error.missingVerificationRequest
+        }
+        try await handleOutgoingVerificationRequest(request)
+    }
+    
+    func cancelVerification(userId: String, flowId: String, cancelCode: String) async throws {
+        guard let request = machine.cancelVerification(userId: userId, flowId: flowId, cancelCode: cancelCode) else {
+            throw Error.cannotCancelVerification
+        }
+        try await handleOutgoingVerificationRequest(request)
+    }
+    
+    // MARK: - Private
+    
+    private func handleOutgoingVerificationRequest(_ request: OutgoingVerificationRequest) async throws {
+        switch request {
+        case .toDevice(_, let eventType, let body):
+            try await requests.sendToDevice(
+                request: .init(
+                    eventType: eventType,
+                    body: body
+                )
+            )
+        case .inRoom(_, let roomId, let eventType, let content):
+            let _ = try await sendRoomMessage(
+                roomId: roomId,
+                eventType: eventType,
+                content: content
+            )
+        }
+    }
+}
+
+@available(iOS 13.0.0, *)
+extension MXCryptoMachine: MXCryptoVerifying {
     func verification(userId: String, flowId: String) -> Verification? {
         return machine.getVerification(userId: userId, flowId: flowId)
     }
-
-    func beginSasVerification(userId: String, flowId: String) async throws -> Sas {
-        guard let result = try machine.startSasVerification(userId: userId, flowId: flowId) else {
-            throw Error.missingVerification
-        }
-        try await handleOutgoingVerificationRequest(result.request)
-        return result.sas
-    }
-
+    
     func confirmVerification(userId: String, flowId: String) async throws {
         let result = try machine.confirmVerification(userId: userId, flowId: flowId)
         guard let result = result else {
@@ -435,10 +493,21 @@ extension MXCryptoMachine: MXCryptoVerification {
             try await group.waitForAll()
         }
     }
+}
+
+@available(iOS 13.0.0, *)
+extension MXCryptoMachine: MXCryptoSASVerifying {
+    func startSasVerification(userId: String, flowId: String) async throws -> Sas {
+        guard let result = try machine.startSasVerification(userId: userId, flowId: flowId) else {
+            throw Error.missingVerification
+        }
+        try await handleOutgoingVerificationRequest(result.request)
+        return result.sas
+    }
     
-    func cancelVerification(userId: String, flowId: String, cancelCode: String) async throws {
-        guard let request = machine.cancelVerification(userId: userId, flowId: flowId, cancelCode: cancelCode) else {
-            throw Error.cannotCancelVerification
+    func acceptSasVerification(userId: String, flowId: String) async throws {
+        guard let request = machine.acceptSasVerification(userId: userId, flowId: flowId) else {
+            throw Error.missingVerification
         }
         try await handleOutgoingVerificationRequest(request)
     }
@@ -448,21 +517,6 @@ extension MXCryptoMachine: MXCryptoVerification {
             throw Error.missingEmojis
         }
         return indexes.map(Int.init)
-    }
-    
-    // MARK: - Private
-    
-    private func handleOutgoingVerificationRequest(_ request: OutgoingVerificationRequest) async throws {
-        guard case .inRoom(let requestId, let roomId, let eventType, let content) = request else {
-            assertionFailure("Not yet implemented")
-            return
-        }
-        
-        let _ = try await sendRoomMessage(
-            roomId: roomId,
-            eventType: eventType,
-            content: content
-        )
     }
 }
 

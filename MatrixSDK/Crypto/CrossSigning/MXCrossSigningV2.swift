@@ -33,8 +33,17 @@ class MXCrossSigningV2: MXCrossSigning {
     }
     
     override var state: MXCrossSigningState {
-        log.debug("Only partial implementation")
-        return hasAllPrivateKeys ? .canCrossSign : .notBootstrapped
+        if hasAllPrivateKeys {
+            return .canCrossSign
+        } else if let info = info {
+            if info.trustLevel.isVerified {
+                return .trustCrossSigning
+            } else {
+                return .crossSigningExists
+            }
+        } else {
+            return .notBootstrapped
+        }
     }
     
     override var canTrustCrossSigning: Bool {
@@ -46,16 +55,20 @@ class MXCrossSigningV2: MXCrossSigning {
     }
     
     override var hasAllPrivateKeys: Bool {
-        let status = machine.crossSigningStatus()
+        let status = crossSigning.crossSigningStatus()
         return status.hasMaster && status.hasSelfSigning && status.hasUserSigning
     }
     
-    private let machine: MXCryptoMachine
+    private let crossSigning: MXCryptoCrossSigning
+    private let infoSource: MXCrossSigningInfoSource
+    private var info: MXCrossSigningInfo?
     private let restClient: MXRestClient
+    
     private let log = MXNamedLog(name: "MXCrossSigningV2")
     
-    init(machine: MXCryptoMachine, restClient: MXRestClient) {
-        self.machine = machine
+    init(crossSigning: MXCryptoCrossSigning, restClient: MXRestClient) {
+        self.crossSigning = crossSigning
+        self.infoSource = MXCrossSigningInfoSource(source: crossSigning)
         self.restClient = restClient
     }
     
@@ -67,7 +80,7 @@ class MXCrossSigningV2: MXCrossSigning {
         Task {
             do {
                 let authParams = try await authParameters(password: password)
-                try await machine.bootstrapCrossSigning(authParams: authParams)
+                try await crossSigning.bootstrapCrossSigning(authParams: authParams)
                 await MainActor.run {
                     success()
                 }
@@ -87,7 +100,7 @@ class MXCrossSigningV2: MXCrossSigning {
     ) {
         Task {
             do {
-                try await machine.bootstrapCrossSigning(authParams: authParams)
+                try await crossSigning.bootstrapCrossSigning(authParams: authParams)
                 await MainActor.run {
                     success()
                 }
@@ -104,8 +117,21 @@ class MXCrossSigningV2: MXCrossSigning {
         success: ((Bool) -> Void)?,
         failure: ((Swift.Error) -> Void)? = nil
     ) {
-        log.debug("Not implemented")
-        success?(true)
+        Task {
+            do {
+                try await crossSigning.downloadKeys(users: [crossSigning.userId])
+                info = infoSource.crossSigningInfo(userId: crossSigning.userId)
+                
+                await MainActor.run {
+                    success?(true)
+                }
+            } catch {
+                log.error("Cannot refresh cross signing state", context: error)
+                await MainActor.run {
+                    failure?(error)
+                }
+            }
+        }
     }
 
     override func crossSignDevice(

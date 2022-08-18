@@ -86,12 +86,6 @@ FOUNDATION_EXPORT NSString *const MXKeyVerificationManagerNotificationTransactio
 #pragma mark - Requests
 
 /**
- The timeout for requests.
- Default is 5 min.
- */
-@property (nonatomic) NSTimeInterval requestTimeout;
-
-/**
  Make a key verification request by to_device events.
  
  @param userId the other user id.
@@ -179,14 +173,6 @@ FOUNDATION_EXPORT NSString *const MXKeyVerificationManagerNotificationTransactio
 - (nullable MXHTTPOperation *)keyVerificationFromKeyVerificationEvent:(MXEvent*)event
                                                               success:(void(^)(MXKeyVerification *keyVerification))success
                                                               failure:(void(^)(NSError *error))failure;
-
-/**
- Extract the verification identifier from an event.
-
- @param event an event in the verification process.
- @return the key verification id. Nil if the event is not a verification event.
- */
-- (nullable NSString *)keyVerificationIdFromDMEvent:(MXEvent*)event;
 
 /**
  Retrieve pending QR code transaction
