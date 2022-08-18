@@ -59,4 +59,17 @@ protocol MXCryptoCrossSigning {
     func bootstrapCrossSigning(authParams: [AnyHashable: Any]) async throws
 }
 
+@available(iOS 13.0.0, *)
+protocol MXCryptoVerification {
+    func requestVerification(userId: String, roomId: String, methods: [String]) async throws -> VerificationRequest
+    func verificationRequest(userId: String, flowId: String) -> VerificationRequest?
+    
+    func verification(userId: String, flowId: String) -> Verification?
+    func beginSasVerification(userId: String, flowId: String) async throws -> Sas
+    func confirmVerification(userId: String, flowId: String) async throws
+    func cancelVerification(userId: String, flowId: String, cancelCode: String) async throws
+    
+    func emojiIndexes(sas: Sas) throws -> [Int]
+}
+
 #endif

@@ -50,22 +50,17 @@ typedef enum : NSUInteger
  */
 @protocol MXSASTransaction <MXKeyVerificationTransaction>
 
-@property (nonatomic) MXSASTransactionState state;
-
-/**
- The Short Authentication Code bytes data.
- */
-@property (nonatomic, nullable) NSData *sasBytes;
-
-/**
- `self.sasBytes` represented by a three 4-digit numbers string.
- */
-@property (nonatomic, readonly, nullable) NSString *sasDecimal;
+@property (nonatomic, readonly) MXSASTransactionState state;
 
 /**
  `self.sasBytes` represented by a 7 emojis string.
  */
 @property (nonatomic, readonly, nullable) NSArray<MXEmojiRepresentation*> *sasEmoji;
+
+/**
+ `self.sasBytes` represented by a three 4-digit numbers string.
+ */
+@property (nonatomic, readonly, nullable) NSString *sasDecimal;
 
 /**
  To be called by the app when the user confirms that the SAS matches with the SAS
@@ -79,6 +74,14 @@ typedef enum : NSUInteger
  Default implementation of SAS transaction used by the SDK
  */
 @interface MXDefaultSASTransaction : MXDefaultKeyVerificationTransaction <MXSASTransaction>
+
++ (NSArray<MXEmojiRepresentation*> *)allEmojiRepresentations;
+
+/**
+ The Short Authentication Code bytes data.
+ */
+@property (nonatomic, nullable) NSData *sasBytes;
+
 @end
 
 NS_ASSUME_NONNULL_END

@@ -35,7 +35,7 @@ extern NSString *const MXCrossSigningInfoTrustLevelDidChangeNotification;
 
 #if DEBUG && TARGET_OS_IPHONE
 /**
- Initialize cross signing with MatrixSDKCrypto user identity 
+ Initialize cross signing with MatrixSDKCrypto user identity
  */
 - (instancetype)initWithUserIdentity:(MXCryptoUserIdentityWrapper *)userIdentity;
 #endif
