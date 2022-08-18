@@ -15,12 +15,40 @@
  */
 
 #import "MXCrossSigningInfo_Private.h"
+#import "MatrixSDKSwiftHeader.h"
 
 #pragma mark - Constants
 
 NSString *const MXCrossSigningInfoTrustLevelDidChangeNotification = @"MXCrossSigningInfoTrustLevelDidChangeNotification";
 
 @implementation MXCrossSigningInfo
+
+#if DEBUG && TARGET_OS_IPHONE
+- (instancetype)initWithUserIdentity:(MXCryptoUserIdentityWrapper *)userIdentity
+{
+    self = [self init];
+    if (self)
+    {
+        _userId = userIdentity.userId;
+        NSMutableDictionary *keys = [NSMutableDictionary dictionary];
+        if (userIdentity.masterKeys)
+        {
+            keys[MXCrossSigningKeyType.master] = userIdentity.masterKeys;
+        }
+        if (userIdentity.selfSignedKeys)
+        {
+            keys[MXCrossSigningKeyType.selfSigning] = userIdentity.selfSignedKeys;
+        }
+        if (userIdentity.userSignedKeys)
+        {
+            keys[MXCrossSigningKeyType.userSigning] = userIdentity.userSignedKeys;
+        }
+        _keys = keys.copy;
+        _trustLevel = userIdentity.trustLevel;
+    }
+    return self;
+}
+#endif
 
 - (MXCrossSigningKey *)masterKeys
 {

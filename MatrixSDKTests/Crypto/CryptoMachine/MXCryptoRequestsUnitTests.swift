@@ -17,7 +17,11 @@
 import Foundation
 @testable import MatrixSDK
 
-@available(iOS 13.0.0, macOS 10.15.0, *)
+#if DEBUG && os(iOS)
+
+import MatrixSDKCrypto
+
+@available(iOS 13.0.0, *)
 class MXCryptoRequestsUnitTests: XCTestCase {
     func test_canCreateToDeviceRequest() {
         let body: [String: [String: NSDictionary]] = [
@@ -81,4 +85,21 @@ class MXCryptoRequestsUnitTests: XCTestCase {
         let request = MXCryptoRequests.ClaimKeysRequest(oneTimeKeys: keys)
         XCTAssertEqual(request.devices.map as? [String: [String: String]], keys)
     }
+    
+    func test_uploadSignatureKeysRequest_canGetJsonKeys() throws {
+        let request = UploadSigningKeysRequest(
+            masterKey: MXTools.serialiseJSONObject(["key": "A"]),
+            selfSigningKey: MXTools.serialiseJSONObject(["key": "B"]),
+            userSigningKey: MXTools.serialiseJSONObject(["key": "C"])
+        )
+        
+        let keys = try request.jsonKeys()
+        
+        XCTAssertEqual(keys.count, 3)
+        XCTAssertEqual(keys["master_key"] as? [String: String], ["key": "A"])
+        XCTAssertEqual(keys["self_signing_key"] as? [String: String], ["key": "B"])
+        XCTAssertEqual(keys["user_signing_key"] as? [String: String], ["key": "C"])
+    }
 }
+
+#endif

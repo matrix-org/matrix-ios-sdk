@@ -194,3 +194,40 @@ private var logger: SwiftyBeaver.Type = {
         return "\(message) - \(details)"
     }
 }
+
+/// Convenience wrapper around `MXLog` which formats all logs as "[Name] function: <message>"
+struct MXNamedLog {
+    let name: String
+    
+    func debug(_ message: String, function: String = #function) {
+        MXLog.debug(formattedMessage(message, function: function))
+    }
+    
+    /// Logging errors requires a static message, all other details must be sent as additional parameters
+    func error(_ message: StaticString, error: Error? = nil, details: [String: Any]? = nil, function: String = #function) {
+        MXLog.error(
+            formattedMessage("\(message)", function: function),
+            details: formattedDetails(error, otherDetails: details)
+        )
+    }
+    
+    /// Logging failures requires a static message, all other details must be sent as additional parameters
+    func failure(_ message: StaticString, error: Error? = nil, details: [String: Any]? = nil, function: String = #function) {
+        MXLog.failure(
+            formattedMessage("\(message)", function: function),
+            details: formattedDetails(error, otherDetails: details)
+        )
+    }
+    
+    private func formattedMessage(_ message: String, function: String) -> String {
+        return "[\(name)] \(function): \(message)"
+    }
+    
+    private func formattedDetails(_ error: Error?, otherDetails: [String: Any]?) -> [String: Any]? {
+        var details = otherDetails ?? [:]
+        if let error = error {
+            details["error"] = error
+        }
+        return details.isEmpty ? nil : details
+    }
+}

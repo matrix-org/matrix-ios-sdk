@@ -16,6 +16,7 @@
  */
 
 #import "MXDeviceInfo_Private.h"
+#import "MatrixSDKSwiftHeader.h"
 
 #pragma mark - Constants
 
@@ -33,6 +34,23 @@ NSString *const MXDeviceInfoTrustLevelDidChangeNotification = @"MXDeviceInfoTrus
     }
     return self;
 }
+
+#if DEBUG && TARGET_OS_IPHONE
+- (instancetype)initWithDevice:(MXCryptoDeviceWrapper *)device
+{
+    self = [super init];
+    if (self)
+    {
+        _userId = device.userId;
+        _deviceId = device.deviceId;
+        _algorithms = device.algorithms;
+        _keys = device.keys;
+        _unsignedData = device.unsignedData;
+        _trustLevel = device.trustLevel;
+    }
+    return self;
+}
+#endif
 
 - (NSString *)fingerprint
 {

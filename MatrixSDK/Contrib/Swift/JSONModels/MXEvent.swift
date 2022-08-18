@@ -65,6 +65,8 @@ public enum MXEventType: Equatable, Hashable {
     case reaction
     case receipt
     case roomTombStone
+    case keyVerificationRequest
+    case keyVerificationReady
     case keyVerificationStart
     case keyVerificationAccept
     case keyVerificationKey
@@ -122,6 +124,8 @@ public enum MXEventType: Equatable, Hashable {
         case .reaction: return kMXEventTypeStringReaction
         case .receipt: return kMXEventTypeStringReceipt
         case .roomTombStone: return kMXEventTypeStringRoomTombStone
+        case .keyVerificationRequest: return kMXEventTypeStringKeyVerificationRequest
+        case .keyVerificationReady: return kMXEventTypeStringKeyVerificationReady
         case .keyVerificationStart: return kMXEventTypeStringKeyVerificationStart
         case .keyVerificationAccept: return kMXEventTypeStringKeyVerificationAccept
         case .keyVerificationKey: return kMXEventTypeStringKeyVerificationKey

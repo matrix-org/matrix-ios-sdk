@@ -53,8 +53,8 @@ class MXKeyBackupUnitTests: XCTestCase {
         XCTAssertEqual(authData.publicKey, publicKey)
         XCTAssertEqual(authData.privateKeySalt, privateKeySalt)
         XCTAssertEqual(authData.privateKeyIterations, privateKeyIterations)
-        XCTAssertTrue(NSDictionary(dictionary: signatures).isEqual(to: NSDictionary(dictionary: authDataSignatures)))
-        XCTAssertTrue(NSDictionary(dictionary: authData.jsonDictionary()).isEqual(to: NSDictionary(dictionary: json)))
+        XCTAssertTrue(NSDictionary(dictionary: signatures).isEqual(to: NSDictionary(dictionary: authDataSignatures) as! [AnyHashable : Any]))
+        XCTAssertTrue(NSDictionary(dictionary: authData.jsonDictionary()).isEqual(to: NSDictionary(dictionary: json) as! [AnyHashable : Any]))
         XCTAssertNil(authData.signalableJSONDictionary["signatures"])
     }
 
@@ -192,8 +192,8 @@ class MXKeyBackupUnitTests: XCTestCase {
         XCTAssertEqual(authData.mac, mac)
         XCTAssertEqual(authData.privateKeySalt, privateKeySalt)
         XCTAssertEqual(authData.privateKeyIterations, privateKeyIterations)
-        XCTAssertTrue(NSDictionary(dictionary: signatures).isEqual(to: NSDictionary(dictionary: authDataSignatures)))
-        XCTAssertTrue(NSDictionary(dictionary: authData.jsonDictionary()).isEqual(to: NSDictionary(dictionary: json)))
+        XCTAssertTrue(NSDictionary(dictionary: signatures).isEqual(to: NSDictionary(dictionary: authDataSignatures) as! [AnyHashable : Any]))
+        XCTAssertTrue(NSDictionary(dictionary: authData.jsonDictionary()).isEqual(to: NSDictionary(dictionary: json) as! [AnyHashable : Any]))
         XCTAssertNil(authData.signalableJSONDictionary["signatures"])
     }
 
