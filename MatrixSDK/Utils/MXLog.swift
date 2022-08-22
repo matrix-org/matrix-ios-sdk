@@ -155,6 +155,7 @@ private var logger: SwiftyBeaver.Type = {
                                sizeLimit: configuration.logFilesSizeLimit)
         
         guard configuration.logLevel != .none else {
+            logger.removeAllDestinations()
             return
         }
         

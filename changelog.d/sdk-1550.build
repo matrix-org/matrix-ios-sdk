@@ -1,0 +1,1 @@
+MXLog: Ensure MXLogLevel.none works if it is set after another log level has already been configured.
