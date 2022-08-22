@@ -23,21 +23,15 @@ In order to set this up::
 The best way to add the last release of the Matrix SDK to your application
 project is to add the MatrixSDK dependency to your Podfile::
 
-    # Obj-C
     pod 'MatrixSDK'
 
 If you want to use the develop version of the SDK, use instead:
 
-    # Obj-C
     pod 'MatrixSDK', :git => 'https://github.com/matrix-org/matrix-ios-sdk.git',
     :branch => 'develop'
 
 Options
 =======
-If you want also Swift support, add the following pod to your app Podfile::
-
-    pod 'MatrixSDK/SwiftSupport'
-
 If you want to enable VoIP using the http://webrtc.org VoIP stack, add the following pod to your app Podfile::
 
     pod 'MatrixSDK/JingleCallStack'
