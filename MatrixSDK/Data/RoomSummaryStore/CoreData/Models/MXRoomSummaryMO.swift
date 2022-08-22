@@ -117,7 +117,7 @@ public class MXRoomSummaryMO: NSManagedObject {
         do {
             try moc.obtainPermanentIDs(for: [membersCountModel])
         } catch {
-            MXLog.error("[MXRoomSummaryMO] update: couldn't obtain permanent id for membersCount: \(error)")
+            MXLog.error("[MXRoomSummaryMO] update: couldn't obtain permanent id for membersCount", context: error)
         }
         s_membersCount = membersCountModel
         
@@ -127,7 +127,7 @@ public class MXRoomSummaryMO: NSManagedObject {
             do {
                 try moc.obtainPermanentIDs(for: [trustModel])
             } catch {
-                MXLog.error("[MXRoomSummaryMO] update: couldn't obtain permanent id for trust: \(error)")
+                MXLog.error("[MXRoomSummaryMO] update: couldn't obtain permanent id for trust", context: error)
             }
             s_trust = trustModel
         } else {
@@ -143,7 +143,7 @@ public class MXRoomSummaryMO: NSManagedObject {
             do {
                 try moc.obtainPermanentIDs(for: [lastMessageModel])
             } catch {
-                MXLog.error("[MXRoomSummaryMO] update: couldn't obtain permanent id for lastMessage: \(error)")
+                MXLog.error("[MXRoomSummaryMO] update: couldn't obtain permanent id for lastMessage", context: error)
             }
             s_lastMessage = lastMessageModel
         } else {

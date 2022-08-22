@@ -80,7 +80,7 @@ public class MXBeaconInfoSummaryRealmStore: NSObject {
             return realm
         } catch {
         
-            MXLog.error("[MXBeaconInfoSummaryRealmStore] failed to create Realm store with error: \(error)")
+            MXLog.error("[MXBeaconInfoSummaryRealmStore] failed to create Realm store", context: error)
             return nil
         }
     }
@@ -132,7 +132,7 @@ public class MXBeaconInfoSummaryRealmStore: NSObject {
         do {
             try FileManager.default.createDirectory(at: realmFileFolderURL, withIntermediateDirectories: true, attributes: nil)
         } catch {
-            MXLog.error("[MXBeaconInfoSummaryRealmStore] Fail to create Realm folder \(realmFileFolderURL) with error: \(error)")
+            MXLog.error("[MXBeaconInfoSummaryRealmStore] Fail to create Realm folder", context: error)
             throw error
         }
         
@@ -182,7 +182,7 @@ extension MXBeaconInfoSummaryRealmStore: MXBeaconInfoSummaryStoreProtocol {
                 realm.addOrUpdate(realmBeaconInfoSummary)
             }
         } catch {
-            MXLog.error("[MXBeaconInfoSummaryRealmStore] addOrUpdateBeaconInfoSummary failed with error: \(error)")
+            MXLog.error("[MXBeaconInfoSummaryRealmStore] addOrUpdateBeaconInfoSummary failed", context: error)
         }
     }
     
@@ -289,7 +289,7 @@ extension MXBeaconInfoSummaryRealmStore: MXBeaconInfoSummaryStoreProtocol {
                 realm.deleteObjects(realmBeaconInfoSummaries)
             }
         } catch {
-            MXLog.error("[MXBeaconInfoSummaryRealmStore] deleteAllBeaconInfoSummaries failed with error: \(error)")
+            MXLog.error("[MXBeaconInfoSummaryRealmStore] deleteAllBeaconInfoSummaries failed", context: error)
         }
     }
     
@@ -305,7 +305,7 @@ extension MXBeaconInfoSummaryRealmStore: MXBeaconInfoSummaryStoreProtocol {
                 realm.deleteObjects(realmBeaconInfoSummaries)
             }
         } catch {
-            MXLog.error("[MXBeaconInfoSummaryRealmStore] deleteAllBeaconInfoSummaries failed with error: \(error)")
+            MXLog.error("[MXBeaconInfoSummaryRealmStore] deleteAllBeaconInfoSummaries failed", context: error)
         }
     }
     
@@ -320,7 +320,7 @@ extension MXBeaconInfoSummaryRealmStore: MXBeaconInfoSummaryStoreProtocol {
                 realm.deleteAllObjects()
             }
         } catch {
-            MXLog.error("[MXBeaconInfoSummaryRealmStore] Failed to delete all objects: \(error)")
+            MXLog.error("[MXBeaconInfoSummaryRealmStore] Failed to delete all objects", context: error)
         }
     }
 }

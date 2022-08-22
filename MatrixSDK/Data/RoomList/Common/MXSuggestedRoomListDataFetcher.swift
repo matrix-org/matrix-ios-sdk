@@ -206,7 +206,7 @@ internal class MXSuggestedRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
                     self.computeData(from: summary.childInfos)
                 }
             case .failure(let error):
-                MXLog.error("[MXSuggestedRoomListDataFetcher] fetchSpaceChildren failed: \(error)")
+                MXLog.error("[MXSuggestedRoomListDataFetcher] fetchSpaceChildren failed", context: error)
             }
         }
     }

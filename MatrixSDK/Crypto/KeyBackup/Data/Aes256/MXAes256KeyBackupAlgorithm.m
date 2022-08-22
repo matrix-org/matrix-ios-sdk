@@ -80,7 +80,9 @@
 
     if (*error)
     {
-        MXLogError(@"[MXAes256KeyBackupAlgorithm] prepare: error: %@", *error);
+        MXLogErrorDetails(@"[MXAes256KeyBackupAlgorithm] prepare", @{
+            @"error": *error ?: @"unknown"
+        });
         return nil;
     }
 

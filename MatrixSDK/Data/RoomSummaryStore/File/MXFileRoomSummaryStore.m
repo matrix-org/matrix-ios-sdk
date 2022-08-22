@@ -132,7 +132,11 @@ static NSString *const kMXFileRoomSummaryStoreFolder = @"MXFileRoomSummaryStore"
             }
             @catch(NSException *exception)
             {
-                MXLogError(@"[MXFileStore] Warning: room summary file for room %@ has been corrupted. Exception: %@", roomId, exception);
+                NSDictionary *details = @{
+                    @"room_id": roomId ?: @"unknown",
+                    @"exception": exception ?: @"unknown"
+                };
+                MXLogErrorDetails(@"[MXFileStore] Warning: room summary file for room has been corrupted", details);
             }
         }
     }

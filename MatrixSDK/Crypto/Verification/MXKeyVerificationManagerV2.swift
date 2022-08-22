@@ -100,7 +100,7 @@ class MXKeyVerificationManagerV2: MXKeyVerificationManager {
                     success(request)
                 }
             } catch {
-                log.error("Cannot request verification", error: error)
+                log.error("Cannot request verification", context: error)
                 await MainActor.run {
                     failure(error)
                 }
@@ -150,7 +150,7 @@ class MXKeyVerificationManagerV2: MXKeyVerificationManager {
                     success(transaction)
                 }
             } catch {
-                MXLog.error("[MXKeyVerificationRequestV2] error \(error)")
+                MXLog.error("[MXKeyVerificationRequestV2] error", context: error)
                 await MainActor.run {
                     failure(error)
                 }
@@ -199,7 +199,7 @@ class MXKeyVerificationManagerV2: MXKeyVerificationManager {
                 idx < emojis.count ? emojis[idx] : nil
             }
         } catch {
-            log.error("Cannot get emoji indices", error: error)
+            log.error("Cannot get emoji indices", context: error)
             return []
         }
     }
@@ -209,7 +209,7 @@ class MXKeyVerificationManagerV2: MXKeyVerificationManager {
             do {
                 try await verification.cancelVerification(userId: request.otherUser, flowId: request.requestId, cancelCode: code.value)
             } catch {
-                log.error("Cannot cancel request", error: error)
+                log.error("Cannot cancel request", context: error)
             }
         }
     }
@@ -219,7 +219,7 @@ class MXKeyVerificationManagerV2: MXKeyVerificationManager {
             do {
                 try await verification.confirmVerification(userId: transaction.otherUserId, flowId: transaction.transactionId)
             } catch {
-                log.error("Cannot confirm transaction", error: error)
+                log.error("Cannot confirm transaction", context: error)
             }
         }
     }
@@ -229,7 +229,7 @@ class MXKeyVerificationManagerV2: MXKeyVerificationManager {
             do {
                 try await verification.cancelVerification(userId: transaction.otherUserId, flowId: transaction.transactionId, cancelCode: code.value)
             } catch {
-                log.error("Cannot cancel request", error: error)
+                log.error("Cannot cancel request", context: error)
             }
         }
     }

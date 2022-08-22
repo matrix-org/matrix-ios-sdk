@@ -48,7 +48,7 @@ public extension MXCrypto {
             do {
                 return try MXCryptoV2(userId: userId, deviceId: deviceId, session: session, restClient: restClient)
             } catch {
-                log.failure("Error creating crypto V2", error: error)
+                log.failure("Error creating crypto V2", context: error)
                 return nil
             }
         #else
@@ -234,7 +234,7 @@ private class MXCryptoV2: MXCrypto {
                     success?(result, kMXEventTypeStringRoomEncrypted)
                 }
             } catch {
-                log.error("Error encrypting content", error: error)
+                log.error("Error encrypting content", context: error)
                 await MainActor.run {
                     failure?(error)
                 }
@@ -258,7 +258,7 @@ private class MXCryptoV2: MXCrypto {
             
             return result
         } catch {
-            log.error("Error decrypting event", error: error)
+            log.error("Error decrypting event", context: error)
             let result = MXEventDecryptionResult()
             result.error = error
             return result
@@ -294,7 +294,7 @@ private class MXCryptoV2: MXCrypto {
                     success?()
                 }
             } catch {
-                log.error("Error ensuring encryption", error: error)
+                log.error("Error ensuring encryption", context: error)
                 await MainActor.run {
                     failure?(error)
                 }
@@ -324,7 +324,7 @@ private class MXCryptoV2: MXCrypto {
                 unusedFallbackKeys: syncResponse.unusedFallbackKeys
             )
         } catch {
-            log.error("Cannot handle sync", error: error)
+            log.error("Cannot handle sync", context: error)
         }
     }
     
@@ -349,7 +349,7 @@ private class MXCryptoV2: MXCrypto {
             do {
                 try await machine.completeSync()
             } catch {
-                log.failure("Error processing outgoing requests", error: error)
+                log.failure("Error processing outgoing requests", context: error)
             }
         }
         keyVerification.updatePendingRequests()
@@ -480,7 +480,7 @@ private class MXCryptoV2: MXCrypto {
         do {
             try machine.deleteAllData()
         } catch {
-            log.failure("Cannot delete crypto store", error: error)
+            log.failure("Cannot delete crypto store", context: error)
         }
         onComplete?()
     }

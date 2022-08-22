@@ -72,7 +72,7 @@ internal class MXCoreDataRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
         do {
             return try store.mainManagedObjectContext.count(for: request)
         } catch let error {
-            MXLog.error("[MXCoreDataRoomListDataFetcher] failed to count rooms: \(error)")
+            MXLog.error("[MXCoreDataRoomListDataFetcher] failed to count rooms", context: error)
             return 0
         }
     }
@@ -108,7 +108,7 @@ internal class MXCoreDataRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
                                                    total: nil)
             }
         } catch let error {
-            MXLog.error("[MXCoreDataRoomListDataFetcher] failed to calculate total counts: \(error)")
+            MXLog.error("[MXCoreDataRoomListDataFetcher] failed to calculate total counts", context: error)
         }
         return result
     }
@@ -197,7 +197,7 @@ internal class MXCoreDataRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
             try fetchedResultsController.performFetch()
             computeData()
         } catch let error {
-            MXLog.error("[MXCoreDataRoomListDataFetcher] failed to perform fetch: \(error)")
+            MXLog.error("[MXCoreDataRoomListDataFetcher] failed to perform fetch", context: error)
         }
     }
     

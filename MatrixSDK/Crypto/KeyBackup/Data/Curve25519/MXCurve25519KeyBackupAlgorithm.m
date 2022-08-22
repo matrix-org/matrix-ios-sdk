@@ -88,7 +88,9 @@
 
     if (*error)
     {
-        MXLogError(@"[MXCurve25519KeyBackupAlgorithm] prepare: error: %@", *error);
+        MXLogErrorDetails(@"[MXCurve25519KeyBackupAlgorithm] prepare", @{
+            @"error": *error ?: @"unknown"
+        });
         return nil;
     }
     return [[MXKeyBackupPreparationInfo alloc] initWithPrivateKey:decryption.privateKey authData:authData];

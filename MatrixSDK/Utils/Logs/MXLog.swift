@@ -108,39 +108,65 @@ private var logger: SwiftyBeaver.Type = {
         logger.warning(message, file, function, line: line)
     }
     
-    public static func error(_ message: @autoclosure () -> Any,
-                             details: @autoclosure () -> [String: Any]? = nil,
-                             _ file: String = #file, _ function: String = #function, line: Int = #line, context: Any? = nil) {
-        logger.error(formattedMessage(message(), details: details()), file, function, line: line, context: context)
-        
-        #if !DEBUG
-        if let details = details() {
-            // Tracking errors via analytics as an experiment (provided user consent), but only if details explicitly specified
-            MXSDKOptions.sharedInstance().analyticsDelegate?.trackNonFatalIssue("\(message())", details: details)
-        }
-        #endif
+    /// Log error with additional details
+    ///
+    /// - Parameters:
+    ///     - message: Description of the error without any variables (this is to improve error aggregations by type)
+    ///     - context: Additional context-dependent details about the issue
+    public static func error(
+        _ message: StaticString,
+        _ file: String = #file,
+        _ function: String = #function,
+        line: Int = #line,
+        context: Any? = nil
+    ) {
+        logger.error(message, file, function, line: line, context: context)
     }
     
     @available(swift, obsoleted: 5.4)
-    @objc public static func logError(_ message: String, details: [String: Any]? = nil, file: String, function: String, line: Int) {
-        error(message, details: details, context: nil)
+    @objc public static func logError(
+        _ message: String,
+        file: String,
+        function: String,
+        line: Int,
+        context: Any? = nil
+    ) {
+        logger.error(message, file, function, line: line, context: context)
     }
     
-    public static func failure(_ message: @autoclosure () -> Any,
-                               details: @autoclosure () -> [String: Any]? = nil,
-                               _ file: String = #file, _ function: String = #function, line: Int = #line, context: Any? = nil) {
-        logger.error(formattedMessage(message(), details: details()), file, function, line: line, context: context)
-        
+    /// Log failure with additional details
+    ///
+    /// A failure is any type of programming error which should never occur in production. In `DEBUG` confuguration
+    /// any failure will raise `assertionFailure`
+    ///
+    /// - Parameters:
+    ///     - message: Description of the error without any variables (this is to improve error aggregations by type)
+    ///     - context: Additional context-dependent details about the issue
+    public static func failure(
+        _ message: StaticString,
+        _ file: String = #file,
+        _ function: String = #function,
+        line: Int = #line,
+        context: Any? = nil
+    ) {
+        logger.error(message, file, function, line: line, context: context)
         #if DEBUG
-        assertionFailure("\(message())")
-        #else
-        MXSDKOptions.sharedInstance().analyticsDelegate?.trackNonFatalIssue("\(message())", details: details())
+        assertionFailure("\(message)")
         #endif
     }
     
     @available(swift, obsoleted: 5.4)
-    @objc public static func logFailure(_ message: String, details: [String: Any]? = nil, file: String, function: String, line: Int) {
-        failure(message, details: details, file, function, line: line, context: nil)
+    @objc public static func logFailure(
+        _ message: String,
+        file: String,
+        function: String,
+        line: Int,
+        context: Any? = nil
+    ) {
+        logger.error(message, file, function, line: line, context: context)
+        #if DEBUG
+        assertionFailure("\(message)")
+        #endif
     }
     
     // MARK: - Private
@@ -159,10 +185,12 @@ private var logger: SwiftyBeaver.Type = {
             return
         }
         
+        logger.removeAllDestinations()
+        
         let consoleDestination = ConsoleDestination()
         consoleDestination.useNSLog = true
         consoleDestination.asynchronously = false
-        consoleDestination.format = "$C $M"
+        consoleDestination.format = "$C $M $X" // Format is `Color Message Context`, see https://docs.swiftybeaver.com/article/20-custom-format
         consoleDestination.levelColor.verbose = ""
         consoleDestination.levelColor.debug = ""
         consoleDestination.levelColor.info = ""
@@ -183,52 +211,39 @@ private var logger: SwiftyBeaver.Type = {
             case .none:
                 break
         }
-        
-        logger.removeAllDestinations()
         logger.addDestination(consoleDestination)
-    }
-    
-    fileprivate static func formattedMessage(_ message: Any, details: [String: Any]? = nil) -> String {
-        guard let details = details else {
-            return "\(message)"
-        }
-        return "\(message) - \(details)"
+        
+        let analytics = AnalyticsDestination()
+        logger.addDestination(analytics)
     }
 }
 
 /// Convenience wrapper around `MXLog` which formats all logs as "[Name] function: <message>"
+///
+/// Note: Ideallly the `format` of `ConsoleDestination` is set to track filename and function automatically
+/// (e.g. as `consoleDestination.format = "[$N] $F $C $M $X")`, but this would require the removal of all
+/// manually added filenames in logs.
 struct MXNamedLog {
     let name: String
     
-    func debug(_ message: String, function: String = #function) {
-        MXLog.debug(formattedMessage(message, function: function))
+    func debug(_ message: String, file: String = #file, function: String = #function, line: Int = #line) {
+        logger.debug(formattedMessage(message, function: function), file, function, line: line)
     }
     
     /// Logging errors requires a static message, all other details must be sent as additional parameters
-    func error(_ message: StaticString, error: Error? = nil, details: [String: Any]? = nil, function: String = #function) {
-        MXLog.error(
-            formattedMessage("\(message)", function: function),
-            details: formattedDetails(error, otherDetails: details)
-        )
+    func error(_ message: StaticString, context: Any? = nil, file: String = #file, function: String = #function, line: Int = #line) {
+        logger.error(formattedMessage(message, function: function), file, function, line: line, context: context)
     }
     
     /// Logging failures requires a static message, all other details must be sent as additional parameters
-    func failure(_ message: StaticString, error: Error? = nil, details: [String: Any]? = nil, function: String = #function) {
-        MXLog.failure(
-            formattedMessage("\(message)", function: function),
-            details: formattedDetails(error, otherDetails: details)
-        )
+    func failure(_ message: StaticString, context: Any? = nil, file: String = #file, function: String = #function, line: Int = #line) {
+        logger.error(formattedMessage(message, function: function), file, function, line: line, context: context)
+        #if DEBUG
+        assertionFailure("\(message)")
+        #endif
     }
     
-    private func formattedMessage(_ message: String, function: String) -> String {
+    private func formattedMessage(_ message: Any, function: String) -> String {
         return "[\(name)] \(function): \(message)"
-    }
-    
-    private func formattedDetails(_ error: Error?, otherDetails: [String: Any]?) -> [String: Any]? {
-        var details = otherDetails ?? [:]
-        if let error = error {
-            details["error"] = error
-        }
-        return details.isEmpty ? nil : details
     }
 }

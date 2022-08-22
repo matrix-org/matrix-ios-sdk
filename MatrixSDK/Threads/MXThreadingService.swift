@@ -338,7 +338,7 @@ public class MXThreadingService: NSObject {
                 case .success(let rootEvent):
                     thread.addEvent(rootEvent, direction: direction)
                 case .failure(let error):
-                    MXLog.error("[MXThreadingService] handleInThreadEvent: root event not found: \(error)")
+                    MXLog.error("[MXThreadingService] handleInThreadEvent: root event not found", context: error)
                 }
                 dispatchGroup.leave()
             }

@@ -111,7 +111,7 @@ public class MXCoreDataRoomSummaryStore: NSObject {
             do {
                 result = try moc.count(for: request)
             } catch {
-                MXLog.error("[MXCoreDataRoomSummaryStore] countRooms failed: \(error)")
+                MXLog.error("[MXCoreDataRoomSummaryStore] countRooms failed", context: error)
             }
         }
         return result
@@ -137,7 +137,7 @@ public class MXCoreDataRoomSummaryStore: NSObject {
                     result = dictionaries.compactMap({ $0[propertyName] as? String })
                 }
             } catch {
-                MXLog.error("[MXCoreDataRoomSummaryStore] fetchRoomIds failed: \(error)")
+                MXLog.error("[MXCoreDataRoomSummaryStore] fetchRoomIds failed", context: error)
             }
         }
         return result
@@ -156,7 +156,7 @@ public class MXCoreDataRoomSummaryStore: NSObject {
                     result = MXRoomSummary(summaryModel: model)
                 }
             } catch {
-                MXLog.error("[MXCoreDataRoomSummaryStore] fetchSummary failed: \(error)")
+                MXLog.error("[MXCoreDataRoomSummaryStore] fetchSummary failed", context: error)
             }
         }
         return result
@@ -172,7 +172,7 @@ public class MXCoreDataRoomSummaryStore: NSObject {
             let results = try moc.fetch(request)
             return results.first
         } catch {
-            MXLog.error("[MXCoreDataRoomSummaryStore] fetchSummary failed: \(error)")
+            MXLog.error("[MXCoreDataRoomSummaryStore] fetchSummary failed", context: error)
         }
         return nil
     }
@@ -189,7 +189,7 @@ public class MXCoreDataRoomSummaryStore: NSObject {
                 do {
                     try moc.obtainPermanentIDs(for: [model])
                 } catch {
-                    MXLog.error("[MXCoreDataRoomSummaryStore] saveSummary couldn't obtain permanent id: \(error)")
+                    MXLog.error("[MXCoreDataRoomSummaryStore] saveSummary couldn't obtain permanent id", context: error)
                 }
             }
             
@@ -231,7 +231,7 @@ public class MXCoreDataRoomSummaryStore: NSObject {
                 
                 self.saveIfNeeded(moc)
             } catch {
-                MXLog.error("[MXCoreDataRoomSummaryStore] deleteAllSummaries failed: \(error)")
+                MXLog.error("[MXCoreDataRoomSummaryStore] deleteAllSummaries failed", context: error)
             }
         }
     }
@@ -250,7 +250,7 @@ public class MXCoreDataRoomSummaryStore: NSObject {
                     completion(mapped)
                 }
             } catch {
-                MXLog.error("[MXCoreDataRoomSummaryStore] fetchRoomIds failed: \(error)")
+                MXLog.error("[MXCoreDataRoomSummaryStore] fetchRoomIds failed", context: error)
             }
         }
     }
@@ -267,7 +267,7 @@ public class MXCoreDataRoomSummaryStore: NSObject {
             saved = true
         } catch {
             moc.rollback()
-            MXLog.error("[MXCoreDataRoomSummaryStore] saveIfNeeded failed: \(error)")
+            MXLog.error("[MXCoreDataRoomSummaryStore] saveIfNeeded failed", context: error)
         }
 
         if saved {

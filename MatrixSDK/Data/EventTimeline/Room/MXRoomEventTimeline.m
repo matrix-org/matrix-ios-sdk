@@ -823,7 +823,9 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 
             self->httpOperation = nil;
 
-            MXLogError(@"[MXRoomEventTimeline] handleRedaction: failed to retrieve the redacted event: %@", error);
+            MXLogErrorDetails(@"[MXRoomEventTimeline] handleRedaction: failed to retrieve the redacted event", @{
+                @"error": error ?: @"unknown"
+            });
         }];
     }
 }

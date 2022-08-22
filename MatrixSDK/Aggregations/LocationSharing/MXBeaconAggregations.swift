@@ -165,7 +165,7 @@ public class MXBeaconAggregations: NSObject {
             
             room.redactEvent(relationEvent.eventId, reason: nil) { response in
                 if case .failure(let error) = response {
-                    MXLog.error("[MXBeaconAggregations] Failed to redact m.beacon event with error: \(error)")
+                    MXLog.error("[MXBeaconAggregations] Failed to redact m.beacon event", context: error)
                 }
             }
         }
@@ -182,7 +182,7 @@ public class MXBeaconAggregations: NSObject {
                 // Redact stopped beacon info
                 room.redactEvent(eventId, reason: nil) { response in
                     if case .failure(let error) = response {
-                        MXLog.error("[MXBeaconAggregations] Failed to redact stopped m.beacon_info event with error: \(error)")
+                        MXLog.error("[MXBeaconAggregations] Failed to redact stopped m.beacon_info event", context: error)
                     }
                 }
             }
@@ -258,7 +258,9 @@ public class MXBeaconAggregations: NSObject {
                 existingBeaconInfoSummary.updateWithBeaconInfo(beaconInfo)
                 beaconInfoSummary = existingBeaconInfoSummary
             } else {
-                MXLog.error("[MXBeaconAggregations] Fails to find beacon info summary associated to stopped beacon info event id: \(eventId)")
+                MXLog.error("[MXBeaconAggregations] Fails to find beacon info summary associated to stopped beacon info", context: [
+                    "event_id": eventId
+                ])
             }
             
         } else if let existingBeaconInfoSummary = self.getBeaconInfoSummary(withIdentifier: eventId, inRoomWithId: roomId) {

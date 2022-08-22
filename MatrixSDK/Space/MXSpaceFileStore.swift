@@ -61,7 +61,7 @@ class MXSpaceFileStore: MXSpaceStore {
                 }
                 try FileManager.default.moveItem(at: fileUrl, to: backupUrl)
             } catch {
-                MXLog.error("[MXSpaceFileStore] store: storeSpaceGraphData failed to move graph to backup: \(error)")
+                MXLog.error("[MXSpaceFileStore] store: storeSpaceGraphData failed to move graph to backup", context: error)
             }
         }
         
@@ -111,7 +111,7 @@ class MXSpaceFileStore: MXSpaceStore {
                 try FileManager.default.createDirectoryExcludedFromBackup(at: storeUrl)
                 self.storeUrl = storeUrl
             } catch {
-                MXLog.error("[MXSpaceStore] setUpStoragePaths was unable to create space storage folder: \(error)")
+                MXLog.error("[MXSpaceStore] setUpStoragePaths was unable to create space storage folder", context: error)
             }
         } else {
             self.storeUrl = storeUrl
