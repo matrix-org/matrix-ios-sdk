@@ -777,7 +777,8 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
         }
         else
         {
-            MXLogFailure(@"[MXKeyVerification] cancelTransaction: Cannot set cancellation reason on unknown transaction type: %@", NSStringFromClass([transaction class]))
+            NSString *message = [NSString stringWithFormat:@"[MXKeyVerification] cancelTransaction: Cannot set cancellation reason on unknown transaction type: %@", NSStringFromClass([transaction class])];
+            MXLogFailure(message)
         }
         
         if (success)

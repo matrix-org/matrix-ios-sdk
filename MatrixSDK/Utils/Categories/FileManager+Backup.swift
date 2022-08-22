@@ -66,7 +66,7 @@ public extension FileManager {
             do {
                 try excludeItemFromBackup(at: url)
             } catch {
-                MXLog.error("[FileManager+Backup]: Cannot exclude url from backup: \(error.localizedDescription)")
+                MXLog.error("[FileManager+Backup]: Cannot exclude url from backup", context: error)
             }
         }
     }
@@ -88,7 +88,7 @@ public extension FileManager {
         do {
             urls = try contentsOfDirectory(at: container, includingPropertiesForKeys: nil, options: [])
         } catch {
-            MXLog.error("[FileManager+Backup]: Cannot get contents of container: \(error.localizedDescription)")
+            MXLog.error("[FileManager+Backup]: Cannot get contents of container", context: error)
             return
         }
         
@@ -96,7 +96,7 @@ public extension FileManager {
             do {
                 try excludeItemFromBackup(at: url)
             } catch {
-                MXLog.error("[FileManager+Backup]: Cannot exclude url from backup: \(error.localizedDescription)")
+                MXLog.error("[FileManager+Backup]: Cannot exclude url from backup", context: error)
             }
         }
     }

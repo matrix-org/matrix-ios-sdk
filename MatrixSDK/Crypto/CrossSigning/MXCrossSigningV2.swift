@@ -72,7 +72,7 @@ class MXCrossSigningV2: MXCrossSigning {
                     success()
                 }
             } catch {
-                log.error("Cannot setup cross signing", error: error)
+                log.error("Cannot setup cross signing", context: error)
                 await MainActor.run {
                     failure(error)
                 }
@@ -92,7 +92,7 @@ class MXCrossSigningV2: MXCrossSigning {
                     success()
                 }
             } catch {
-                log.error("Cannot setup cross signing", error: error)
+                log.error("Cannot setup cross signing", context: error)
                 await MainActor.run {
                     failure(error)
                 }

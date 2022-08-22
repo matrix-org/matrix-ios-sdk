@@ -153,7 +153,8 @@ static Class DefaultAlgorithmClass;
             Class<MXKeyBackupAlgorithm> algorithmClass = AlgorithmClassesByName[keyBackupVersion.algorithm];
             if (algorithmClass == NULL)
             {
-                MXLogError(@"[MXKeyBackup] checkAndStartWithKeyBackupVersion: unknown algorithm: %@", keyBackupVersion.algorithm);
+                NSString *message = [NSString stringWithFormat:@"[MXKeyBackup] checkAndStartWithKeyBackupVersion: unknown algorithm: %@", keyBackupVersion.algorithm];
+                MXLogError(message);
                 return;
             }
             if (![algorithmClass checkBackupVersion:keyBackupVersion])
@@ -1419,7 +1420,8 @@ static Class DefaultAlgorithmClass;
     Class<MXKeyBackupAlgorithm> algorithmClass = AlgorithmClassesByName[keyBackupVersion.algorithm];
     if (algorithmClass == NULL)
     {
-        MXLogError(@"[MXKeyBackup] getOrCreateKeyBackupAlgorithmFor: unknown algorithm: %@", keyBackupVersion.algorithm);
+        NSString *message = [NSString stringWithFormat:@"[MXKeyBackup] getOrCreateKeyBackupAlgorithmFor: unknown algorithm: %@", keyBackupVersion.algorithm];
+        MXLogError(message);
         return nil;
     }
     if (![algorithmClass checkBackupVersion:keyBackupVersion])
@@ -1553,7 +1555,8 @@ static Class DefaultAlgorithmClass;
     Class<MXKeyBackupAlgorithm> algorithmClass = AlgorithmClassesByName[keyBackupVersion.algorithm];
     if (algorithmClass == NULL)
     {
-        MXLogError(@"[MXKeyBackup] megolmBackupAuthDataFromKeyBackupVersion: Key backup for unknown algorithm: %@", keyBackupVersion.algorithm);
+        NSString *message = [NSString stringWithFormat:@"[MXKeyBackup] megolmBackupAuthDataFromKeyBackupVersion: Key backup for unknown algorithm: %@", keyBackupVersion.algorithm];
+        MXLogError(message);
 
         *error = [NSError errorWithDomain:MXKeyBackupErrorDomain
                                      code:MXKeyBackupErrorUnknownAlgorithm

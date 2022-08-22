@@ -203,7 +203,10 @@ public class MXThreadEventTimeline: NSObject, MXEventTimeline {
             if eventFound {
                 success()
             } else if let paginationError = paginationError {
-                MXLog.error("[MXThreadEventTimeline][\(self.timelineId)] resetPaginationAroundInitialEvent failed: \(paginationError)")
+                MXLog.error("[MXThreadEventTimeline] resetPaginationAroundInitialEvent failed", context: [
+                    "error": paginationError,
+                    "timeline_id": self.timelineId
+                ])
                 failure(paginationError)
             } else {
                 failure(MXThreadEventTimelineError.initialEventNotFound)

@@ -122,31 +122,31 @@ class MXSpaceGraphData: NSObject, NSCoding {
     
     class func model(fromJSON dictionary: [AnyHashable : Any]!) -> MXSpaceGraphData? {
         guard let spaceIdsJson = dictionary[Constants.spaceRoomIdsKey] as? [String] else {
-            MXLog.error("[MXSpaceGraphData] model fromJSON aborted: missing \(Constants.spaceRoomIdsKey)")
+            MXLog.error("[MXSpaceGraphData] model fromJSON aborted: missing spaceRoomIdsKey")
             return nil
         }
         guard let parentIdsPerRoomIdJson = dictionary[Constants.parentIdsPerRoomIdKey] as? [String : [String]] else {
-            MXLog.error("[MXSpaceGraphData] model fromJSON aborted: missing \(Constants.parentIdsPerRoomIdKey)")
+            MXLog.error("[MXSpaceGraphData] model fromJSON aborted: missing parentIdsPerRoomIdKey")
             return nil
         }
         guard let ancestorsPerRoomIdJson = dictionary[Constants.ancestorsPerRoomIdKey] as? [String : [String]] else {
-            MXLog.error("[MXSpaceGraphData] model fromJSON aborted: missing \(Constants.ancestorsPerRoomIdKey)")
+            MXLog.error("[MXSpaceGraphData] model fromJSON aborted: missing ancestorsPerRoomIdKey")
             return nil
         }
         guard let descendantsPerRoomIdJson = dictionary[Constants.descendantsPerRoomIdKey] as? [String : [String]] else {
-            MXLog.error("[MXSpaceGraphData] model fromJSON aborted: missing \(Constants.descendantsPerRoomIdKey)")
+            MXLog.error("[MXSpaceGraphData] model fromJSON aborted: missing descendantsPerRoomIdKey")
             return nil
         }
         guard let rootSpaceIdsJson = dictionary[Constants.rootSpaceIdsKey] as? [String] else {
-            MXLog.error("[MXSpaceGraphData] model fromJSON aborted: missing \(Constants.rootSpaceIdsKey)")
+            MXLog.error("[MXSpaceGraphData] model fromJSON aborted: missing rootSpaceIdsKey")
             return nil
         }
         guard let orphanedRoomIdsJson = dictionary[Constants.orphanedRoomIdsKey] as? [String] else {
-            MXLog.error("[MXSpaceGraphData] model fromJSON aborted: missing \(Constants.orphanedRoomIdsKey)")
+            MXLog.error("[MXSpaceGraphData] model fromJSON aborted: missing orphanedRoomIdsKey")
             return nil
         }
         guard let orphanedDirectRoomIdsJson = dictionary[Constants.orphanedDirectRoomIdsKey] as? [String] else {
-            MXLog.error("[MXSpaceGraphData] model fromJSON aborted: missing \(Constants.orphanedDirectRoomIdsKey)")
+            MXLog.error("[MXSpaceGraphData] model fromJSON aborted: missing orphanedDirectRoomIdsKey")
             return nil
         }
 

@@ -32,18 +32,20 @@
     [MXLogObjcWrapper logWarning:[NSString stringWithFormat: message, ##__VA_ARGS__] file:@__FILE__ function:[NSString stringWithFormat:@"%s", __FUNCTION__] line:__LINE__]; \
 }
 
-#define MXLogError(message, ...) { \
-    [MXLogObjcWrapper logError:[NSString stringWithFormat: message, ##__VA_ARGS__] details:nil file:@__FILE__ function:[NSString stringWithFormat:@"%s", __FUNCTION__] line:__LINE__]; \
+#define MXLogError(message) { \
+    [MXLogObjcWrapper logError:message file:@__FILE__ function:[NSString stringWithFormat:@"%s", __FUNCTION__] line:__LINE__ context:nil]; \
 }
 
-#define MXLogErrorWithDetails(message, dictionary) { \
-    [MXLogObjcWrapper logError:message details:dictionary file:@__FILE__ function:[NSString stringWithFormat:@"%s", __FUNCTION__] line:__LINE__]; \
+#define MXLogErrorDetails(message, details) { \
+    [MXLogObjcWrapper logError:message file:@__FILE__ function:[NSString stringWithFormat:@"%s", __FUNCTION__] line:__LINE__ context:details]; \
 }
 
-#define MXLogFailure(message, ...) { \
-    [MXLogObjcWrapper logFailure:[NSString stringWithFormat: message, ##__VA_ARGS__] details:nil file:@__FILE__ function:[NSString stringWithFormat:@"%s", __FUNCTION__] line:__LINE__]; \
+#define MXLogFailure(message) { \
+    [MXLogObjcWrapper logFailure:message file:@__FILE__ function:[NSString stringWithFormat:@"%s", __FUNCTION__] line:__LINE__ context:nil]; \
 }
 
-#define MXLogFailureWithDetails(message, dictionary) { \
-    [MXLogObjcWrapper logFailure:message details:dictionary file:@__FILE__ function:[NSString stringWithFormat:@"%s", __FUNCTION__] line:__LINE__]; \
+#define MXLogFailureDetails(message, details) { \
+    [MXLogObjcWrapper logFailure:message file:@__FILE__ function:[NSString stringWithFormat:@"%s", __FUNCTION__] line:__LINE__ context:details]; \
 }
+
+// TODO: failure context

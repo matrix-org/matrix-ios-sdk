@@ -235,7 +235,7 @@ extension MXCryptoMachine: MXCryptoDevicesSource {
         do {
             return try machine.getUserDevices(userId: userId, timeout: 0)
         } catch {
-            log.error("Cannot fetch devices", error: error)
+            log.error("Cannot fetch devices", context: error)
             return []
         }
     }
@@ -244,7 +244,7 @@ extension MXCryptoMachine: MXCryptoDevicesSource {
         do {
             return try machine.getDevice(userId: userId, deviceId: deviceId, timeout: 0)
         } catch {
-            log.error("Cannot fetch device", error: error)
+            log.error("Cannot fetch device", context: error)
             return nil
         }
     }
@@ -256,7 +256,7 @@ extension MXCryptoMachine: MXCryptoUserIdentitySource {
         do {
             return try machine.isIdentityVerified(userId: userId)
         } catch {
-            log.error("Failed checking user verification status", error: error)
+            log.error("Failed checking user verification status", context: error)
             return false
         }
     }
@@ -473,7 +473,9 @@ extension MXCryptoMachine: Logger {
     }
     
     func log(error: String) {
-        MXLog.error("[MXCryptoMachine] \(error)")
+        MXLog.error("[MXCryptoMachine] Error", context: [
+            "error": error
+        ])
     }
 }
 

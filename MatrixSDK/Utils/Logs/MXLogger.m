@@ -222,7 +222,9 @@ static void handleUncaughtException(NSException *exception)
                     encoding:NSStringEncodingConversionAllowLossy
                        error:nil];
 
-    MXLogError(@"[MXLogger] handleUncaughtException:\n%@", description);
+    MXLogErrorDetails(@"[MXLogger] handleUncaughtException", @{
+        @"description": description ?: @"unknown"
+    });
 }
 
 // Signals emitted by the app are handled here

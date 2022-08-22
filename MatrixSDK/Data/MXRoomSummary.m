@@ -505,7 +505,9 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
                 MXEvent *editedEvent = [event editedEventFromReplacementEvent:replaceEvent];
                 [self handleEvent:editedEvent];
             } failure:^(NSError *error) {
-                MXLogError(@"[MXRoomSummary] registerEventEditsListener: event fetch failed: %@", error);
+                MXLogErrorDetails(@"[MXRoomSummary] registerEventEditsListener: event fetch failed", @{
+                    @"error": error ?: @"unknown"
+                });
             }];
         }
     }];
@@ -552,7 +554,9 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     // This should never happen
     if (_isEncrypted && !isEncrypted)
     {
-        MXLogError(@"[MXRoomSummary] setIsEncrypted: Attempt to reset isEncrypted for room %@. Ignote it. Call stack: %@", self.roomId, [NSThread callStackSymbols]);
+        MXLogErrorDetails(@"[MXRoomSummary] setIsEncrypted: Attempt to reset isEncrypted for room. Ignote it", @{
+            @"room_id": self.roomId ?: @"unknown"
+        });
         return;
     }
     

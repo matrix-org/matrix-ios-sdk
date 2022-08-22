@@ -551,7 +551,10 @@ public enum MXBackgroundSyncServiceError: Error {
                     case .success:
                         MXLog.debug("[MXBackgroundSyncService] handleSyncResponse: Joined room: \(roomId)")
                     case .failure(let error):
-                        MXLog.error("[MXBackgroundSyncService] handleSyncResponse: Failed to join room: \(roomId), error: \(error)")
+                        MXLog.error("[MXBackgroundSyncService] handleSyncResponse: Failed to join room", context: [
+                            "error": error,
+                            "room_id": roomId
+                        ])
                     }
                 }
             }
