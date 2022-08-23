@@ -993,7 +993,7 @@ static NSUInteger preloadOptions;
                         @"roomId": roomId ?: @"",
                         @"exception": exception
                     };
-//                    MXLogErrorWithDetails(@"[MXFileStore] Warning: loadReceipts file for room as been corrupted", logDetails);
+                    MXLogErrorDetails(@"[MXFileStore] Warning: loadReceipts file for room as been corrupted", logDetails);
                     
                     // We used to reset the store and force a full initial sync but this makes the app
                     // start very slowly.

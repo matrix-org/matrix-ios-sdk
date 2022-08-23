@@ -47,5 +47,3 @@
 #define MXLogFailureDetails(message, details) { \
     [MXLogObjcWrapper logFailure:message file:@__FILE__ function:[NSString stringWithFormat:@"%s", __FUNCTION__] line:__LINE__ context:details]; \
 }
-
-// TODO: failure context
