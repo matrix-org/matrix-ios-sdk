@@ -136,7 +136,7 @@ private var logger: SwiftyBeaver.Type = {
     
     /// Log failure with additional details
     ///
-    /// A failure is any type of programming error which should never occur in production. In `DEBUG` confuguration
+    /// A failure is any type of programming error which should never occur in production. In `DEBUG` configuration
     /// any failure will raise `assertionFailure`
     ///
     /// - Parameters:
@@ -213,14 +213,14 @@ private var logger: SwiftyBeaver.Type = {
         }
         logger.addDestination(consoleDestination)
         
-        let analytics = AnalyticsDestination()
+        let analytics = MXAnalyticsDestination()
         logger.addDestination(analytics)
     }
 }
 
 /// Convenience wrapper around `MXLog` which formats all logs as "[Name] function: <message>"
 ///
-/// Note: Ideallly the `format` of `ConsoleDestination` is set to track filename and function automatically
+/// Note: Ideally the `format` of `ConsoleDestination` is set to track filename and function automatically
 /// (e.g. as `consoleDestination.format = "[$N] $F $C $M $X")`, but this would require the removal of all
 /// manually added filenames in logs.
 struct MXNamedLog {

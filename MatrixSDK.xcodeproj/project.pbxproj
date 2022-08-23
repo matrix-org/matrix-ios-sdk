@@ -1836,8 +1836,8 @@
 		ED5C753F28B3E80300D24E85 /* MXLog.h in Headers */ = {isa = PBXBuildFile; fileRef = ED5C753628B3E80300D24E85 /* MXLog.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		ED5C754028B3E80300D24E85 /* MXLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED5C753728B3E80300D24E85 /* MXLog.swift */; };
 		ED5C754128B3E80300D24E85 /* MXLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED5C753728B3E80300D24E85 /* MXLog.swift */; };
-		ED5C754228B3E80300D24E85 /* AnalyticsDestination.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED5C753828B3E80300D24E85 /* AnalyticsDestination.swift */; };
-		ED5C754328B3E80300D24E85 /* AnalyticsDestination.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED5C753828B3E80300D24E85 /* AnalyticsDestination.swift */; };
+		ED5C754228B3E80300D24E85 /* MXAnalyticsDestination.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED5C753828B3E80300D24E85 /* MXAnalyticsDestination.swift */; };
+		ED5C754328B3E80300D24E85 /* MXAnalyticsDestination.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED5C753828B3E80300D24E85 /* MXAnalyticsDestination.swift */; };
 		ED5C754428B3E80300D24E85 /* MXLogObjcWrapper.m in Sources */ = {isa = PBXBuildFile; fileRef = ED5C753928B3E80300D24E85 /* MXLogObjcWrapper.m */; };
 		ED5C754528B3E80300D24E85 /* MXLogObjcWrapper.m in Sources */ = {isa = PBXBuildFile; fileRef = ED5C753928B3E80300D24E85 /* MXLogObjcWrapper.m */; };
 		ED5C754628B3E80300D24E85 /* MXLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = ED5C753A28B3E80300D24E85 /* MXLogger.m */; };
@@ -2928,7 +2928,7 @@
 		ED5C753528B3E80300D24E85 /* MXLogger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXLogger.h; sourceTree = "<group>"; };
 		ED5C753628B3E80300D24E85 /* MXLog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXLog.h; sourceTree = "<group>"; };
 		ED5C753728B3E80300D24E85 /* MXLog.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MXLog.swift; sourceTree = "<group>"; };
-		ED5C753828B3E80300D24E85 /* AnalyticsDestination.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AnalyticsDestination.swift; sourceTree = "<group>"; };
+		ED5C753828B3E80300D24E85 /* MXAnalyticsDestination.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MXAnalyticsDestination.swift; sourceTree = "<group>"; };
 		ED5C753928B3E80300D24E85 /* MXLogObjcWrapper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXLogObjcWrapper.m; sourceTree = "<group>"; };
 		ED5C753A28B3E80300D24E85 /* MXLogger.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXLogger.m; sourceTree = "<group>"; };
 		ED5C753B28B3E80300D24E85 /* MXLogObjcWrapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXLogObjcWrapper.h; sourceTree = "<group>"; };
@@ -5196,7 +5196,7 @@
 				ED5C753A28B3E80300D24E85 /* MXLogger.m */,
 				ED5C753628B3E80300D24E85 /* MXLog.h */,
 				ED5C753728B3E80300D24E85 /* MXLog.swift */,
-				ED5C753828B3E80300D24E85 /* AnalyticsDestination.swift */,
+				ED5C753828B3E80300D24E85 /* MXAnalyticsDestination.swift */,
 				ED5C753B28B3E80300D24E85 /* MXLogObjcWrapper.h */,
 				ED5C753928B3E80300D24E85 /* MXLogObjcWrapper.m */,
 			);
@@ -6701,7 +6701,7 @@
 				324DD2C7246E638B00377005 /* MXAesHmacSha2.m in Sources */,
 				3A0AF06B2705A11400679D1A /* MXSpaceGraphData.swift in Sources */,
 				321CFDEF225264C4004D31DF /* NSArray+MatrixSDK.m in Sources */,
-				ED5C754228B3E80300D24E85 /* AnalyticsDestination.swift in Sources */,
+				ED5C754228B3E80300D24E85 /* MXAnalyticsDestination.swift in Sources */,
 				918D30B7273951F400A16405 /* MXStoreService.swift in Sources */,
 				327A5F52239805F600ED6329 /* MXKeyVerificationStart.m in Sources */,
 				3294FD9D22F321B0007F1E60 /* MXServiceTermsRestClient.m in Sources */,
@@ -7298,7 +7298,7 @@
 				EC383BB425406894002FBBE6 /* MXSyncResponseFileStore.swift in Sources */,
 				B14EF2572397E90400758AF0 /* MXMegolmExportEncryption.m in Sources */,
 				3A0AF06C2705A11400679D1A /* MXSpaceGraphData.swift in Sources */,
-				ED5C754328B3E80300D24E85 /* AnalyticsDestination.swift in Sources */,
+				ED5C754328B3E80300D24E85 /* MXAnalyticsDestination.swift in Sources */,
 				918D30B8273951F400A16405 /* MXStoreService.swift in Sources */,
 				B14EF2582397E90400758AF0 /* MXFilterObject.m in Sources */,
 				EC60EDEB265CFF3100B39A4E /* MXRoomInviteState.m in Sources */,

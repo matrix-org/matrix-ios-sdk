@@ -1,5 +1,5 @@
 //
-//  AnalyticsDestination.swift
+//  MXAnalyticsDestination.swift
 //  MatrixSDK
 //
 //  Created by Element on 22/08/2022.
@@ -9,7 +9,7 @@ import Foundation
 import SwiftyBeaver
 
 /// SwiftyBeaver log destination that sends errors to analytics tracker
-class AnalyticsDestination: BaseDestination {
+class MXAnalyticsDestination: BaseDestination {
     override var asynchronously: Bool {
         get {
             return false
