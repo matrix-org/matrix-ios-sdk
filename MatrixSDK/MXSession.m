@@ -1369,7 +1369,9 @@ typedef void (^MXOnResumeDone)(void);
         {
             MXLogDebug(@"[MXSession] setPreventPauseCount: Actually pause the session");
             [self pause];
-        } else {
+        }
+        else
+        {
 #if TARGET_OS_IPHONE
             // Pause the session if app is already in the background/inactive but pause wasn't requested
             if (self.applicationStateService.applicationState != UIApplicationStateActive)
