@@ -1,3 +1,29 @@
+## Changes in 0.23.16 (2022-08-24)
+
+✨ Features
+
+- MXKeyBackup: Add support for symmetric key backups. ([#1542](https://github.com/matrix-org/matrix-ios-sdk/pull/1542))
+- CryptoSDK: Outgoing SAS User Verification Flow ([#6443](https://github.com/vector-im/element-ios/issues/6443))
+
+🙌 Improvements
+
+- App Layout: Increased store version to force clear cache ([#6616](https://github.com/vector-im/element-ios/issues/6616))
+
+🧱 Build
+
+- Xcode project(s) updated via Xcode recommended setting ([#1543](https://github.com/matrix-org/matrix-ios-sdk/pull/1543))
+- MXLog: Ensure MXLogLevel.none works if it is set after another log level has already been configured. ([#1550](https://github.com/matrix-org/matrix-ios-sdk/issues/1550))
+
+📄 Documentation
+
+- Update README for correct Swift usage. ([#1552](https://github.com/matrix-org/matrix-ios-sdk/issues/1552))
+
+Others
+
+- Crypto: User and device identity objects ([#1531](https://github.com/matrix-org/matrix-ios-sdk/pull/1531))
+- Analytics: Log all errors to analytics ([#1558](https://github.com/matrix-org/matrix-ios-sdk/pull/1558))
+
+
 ## Changes in 0.23.15 (2022-08-10)
 
 🐛 Bugfixes
