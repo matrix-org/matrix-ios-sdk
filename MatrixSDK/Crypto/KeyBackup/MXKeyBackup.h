@@ -20,7 +20,7 @@
 #import "MXMegolmBackupCreationInfo.h"
 #import "MXKeyBackupVersionTrust.h"
 
-@class OLMPkEncryption;
+@protocol MXKeyBackupAlgorithm;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -140,11 +140,13 @@ FOUNDATION_EXPORT NSString *const kMXKeyBackupDidStateChangeNotification;
 
  @param password an optional passphrase string that can be entered by the user
         when restoring the backup as an alternative to entering the recovery key.
+ @param algorithm desired algorithm to use. Will fail if provided an unknown algorithm.
 
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails
  */
 - (void)prepareKeyBackupVersionWithPassword:(nullable NSString *)password
+                                  algorithm:(nullable NSString *)algorithm
                                     success:(void (^)(MXMegolmBackupCreationInfo *keyBackupCreationInfo))success
                                     failure:(nullable void (^)(NSError *error))failure;
 
@@ -394,14 +396,19 @@ FOUNDATION_EXPORT NSString *const kMXKeyBackupDidStateChangeNotification;
 @property (nonatomic, readonly, nullable) MXKeyBackupVersion *keyBackupVersion;
 
 /**
- The backup key being used.
+ The backup algorithm being used. Nil if key backup not enabled yet.
  */
-@property (nonatomic, readonly, nullable) OLMPkEncryption *backupKey;
+@property (nonatomic, readonly, nullable) id<MXKeyBackupAlgorithm> keyBackupAlgorithm;
 
 /**
  Indicate if their are keys to backup.
  */
 @property (nonatomic, readonly) BOOL hasKeysToBackup;
+
+/**
+ Flag indicating the backup can be refreshed, by `forceRefresh:failure:` method.
+ */
+@property (nonatomic, readonly) BOOL canBeRefreshed;
 
 @end
 

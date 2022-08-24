@@ -458,6 +458,7 @@
     __block NSString *payloadString;
     __block NSDictionary *keysClaimed;
     __block NSArray<NSString *> *forwardingCurve25519KeyChain;
+    __block BOOL untrusted;
     
     MXDecryptionResult *result;
     
@@ -474,6 +475,7 @@
             payloadString = [session.session decryptMessage:body messageIndex:&messageIndex error:error];
             keysClaimed = session.keysClaimed;
             forwardingCurve25519KeyChain = session.forwardingCurve25519KeyChain;
+            untrusted = session.isUntrusted;
         }
         
     }];
@@ -513,6 +515,7 @@
         result.keysClaimed = keysClaimed;
         result.senderKey = senderKey;
         result.forwardingCurve25519KeyChain = forwardingCurve25519KeyChain;
+        result.untrusted = untrusted;
     }
 
     return result;

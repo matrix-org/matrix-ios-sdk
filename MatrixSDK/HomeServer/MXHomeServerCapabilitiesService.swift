@@ -71,7 +71,7 @@ public class MXHomeserverCapabilitiesService: NSObject {
             case .success(let capabilities):
                 self.capabilities = capabilities
             case .failure(let error):
-                MXLog.error("[MXHomeServerCapabilitiesService] update: failed due to error: \(error)")
+                MXLog.error("[MXHomeServerCapabilitiesService] update: failed", context: error)
             }
             
             self.currentRequest = nil

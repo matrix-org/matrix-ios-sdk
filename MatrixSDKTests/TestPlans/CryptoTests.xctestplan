@@ -29,12 +29,14 @@
   "testTargets" : [
     {
       "selectedTests" : [
+        "MXAes256KeyBackupTests",
         "MXCrossSigningTests",
         "MXCrossSigningVerificationTests",
         "MXCryptoKeyVerificationTests",
         "MXCryptoSecretStorageTests",
         "MXCryptoShareTests",
         "MXCryptoTests",
+        "MXCurve25519KeyBackupTests",
         "MXMegolmEncryptionTests"
       ],
       "target" : {

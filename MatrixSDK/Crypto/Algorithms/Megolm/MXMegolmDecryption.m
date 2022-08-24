@@ -116,6 +116,7 @@
         result.senderCurve25519Key = olmResult.senderKey;
         result.claimedEd25519Key = olmResult.keysClaimed[@"ed25519"];
         result.forwardingCurve25519KeyChain = olmResult.forwardingCurve25519KeyChain;
+        result.untrusted = olmResult.isUntrusted;
     }
     else
     {

@@ -255,7 +255,9 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
                     // If refreshDispatchGroup is unmatched(a request for a new access token is in-flight) wait.
                     dispatch_group_wait([MXRestClient refreshDispatchGroup], DISPATCH_TIME_FOREVER);
                     if(!weakself.completionQueue) {
-                        MXLogError(@"[MXRestClient] tokenProviderHandler: %@ Client closed, exit tokenProviderHandler early", logId);
+                        MXLogErrorDetails(@"[MXRestClient] tokenProviderHandler: Client closed, exit tokenProviderHandler early", @{
+                            @"log_id": logId ?: @"unknown"
+                        });
                         return;
                     }
                     MXLogDebug(@"[MXRestClient] tokenProviderHandler: %@ Wait finished", logId);
@@ -2632,7 +2634,7 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
                       [MXTools encodeURIComponent:userId]];
     
     NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
-    parameters[@"membership"] = @"kick";
+    parameters[@"membership"] = @"leave";
     
     if (reason)
     {

@@ -50,9 +50,12 @@ class MXSessionTracker {
     
     func printOpenMXSessions() {
         for (trackId, trackedMXSession) in trackedMXSessions {
-            MXLog.error("MXSession(\(trackId)) for user \(trackedMXSession.userDeviceId) is not closed. It was created from:")
+            MXLog.error("MXSession for user is not closed. It was created from:", context: [
+                "track_id": trackId,
+                "user_id": trackedMXSession.userDeviceId
+            ])
             trackedMXSession.callStack.forEach { call in
-                MXLog.error("    - \(call)")
+                MXLog.error("    -", context: call)
             }
         }
     }

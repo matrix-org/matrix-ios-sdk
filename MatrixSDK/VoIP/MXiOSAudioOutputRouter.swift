@@ -189,7 +189,7 @@ public class MXiOSAudioOutputRouter: NSObject {
             }
             currentRoute = route
         } catch {
-            MXLog.error("[MXiOSAudioOutputRouter] updateRoute: routing failed: \(error)")
+            MXLog.error("[MXiOSAudioOutputRouter] updateRoute: routing failed", context: error)
         }
     }
 

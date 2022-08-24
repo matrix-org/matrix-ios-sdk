@@ -29,7 +29,7 @@
 #import "MatrixSDKSwiftHeader.h"
 #import "MXFileRoomSummaryStore.h"
 
-static NSUInteger const kMXFileVersion = 80;
+static NSUInteger const kMXFileVersion = 81;
 
 static NSString *const kMXFileStoreFolder = @"MXFileStore";
 static NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
@@ -903,10 +903,10 @@ static NSUInteger preloadOptions;
                 @catch (NSException *exception)
                 {
                     NSDictionary *logDetails = @{
-                        @"roomId": roomId ?: @"",
-                        @"exception": exception
+                        @"roomId": roomId ?: @"unknown",
+                        @"exception": exception ?: @"unknown"
                     };
-                    MXLogErrorWithDetails(@"[MXFileStore] Warning: MXFileRoomStore file for room has been corrupted", logDetails);
+                    MXLogErrorDetails(@"[MXFileStore] Warning: MXFileRoomStore file for room has been corrupted", logDetails);
                     [self logFiles];
                     [self deleteAllData];
                 }
@@ -946,10 +946,10 @@ static NSUInteger preloadOptions;
                 @catch (NSException *exception)
                 {
                     NSDictionary *logDetails = @{
-                        @"roomId": roomId ?: @"",
-                        @"exception": exception
+                        @"roomId": roomId ?: @"unknown",
+                        @"exception": exception ?: @"unknown"
                     };
-                    MXLogErrorWithDetails(@"[MXFileStore] Warning: MXFileRoomOutgoingMessagesStore file for room as been corrupted", logDetails);
+                    MXLogErrorDetails(@"[MXFileStore] Warning: MXFileRoomOutgoingMessagesStore file for room as been corrupted", logDetails);
                     [self logFiles];
                     [self deleteAllData];
                 }
@@ -993,7 +993,7 @@ static NSUInteger preloadOptions;
                         @"roomId": roomId ?: @"",
                         @"exception": exception
                     };
-                    MXLogErrorWithDetails(@"[MXFileStore] Warning: loadReceipts file for room as been corrupted", logDetails);
+                    MXLogErrorDetails(@"[MXFileStore] Warning: loadReceipts file for room as been corrupted", logDetails);
                     
                     // We used to reset the store and force a full initial sync but this makes the app
                     // start very slowly.
@@ -2233,7 +2233,7 @@ static NSUInteger preloadOptions;
         NSData *data = [NSKeyedArchiver archivedDataWithRootObject:object requiringSecureCoding:NO error:&error];
         if (error)
         {
-            MXLogFailure(@"[MXFileStore] Failed archiving root object with error: '%@'", error.debugDescription);
+            MXLogFailureDetails(@"[MXFileStore] Failed archiving root object", error);
             return;
         }
         
@@ -2244,7 +2244,7 @@ static NSUInteger preloadOptions;
         }
         else
         {
-            MXLogFailure(@"[MXFileStore] Failed saving data with error: '%@'", error.debugDescription);
+            MXLogFailureDetails(@"[MXFileStore] Failed saving data", error);
         }
     }
     else
@@ -2279,7 +2279,7 @@ static NSUInteger preloadOptions;
         }
         else
         {
-            MXLogFailure(@"[MXFileStore] Failed loading object from class with error: '%@'", error.debugDescription);
+            MXLogFailureDetails(@"[MXFileStore] Failed loading object from class", error);
             return nil;
         }
     }
@@ -2311,7 +2311,7 @@ static NSUInteger preloadOptions;
         NSKeyedUnarchiver *unarchiver = [[NSKeyedUnarchiver alloc] initForReadingFromData:data error:&error];
         if (error && !unarchiver)
         {
-            MXLogFailure(@"[MXFileStore] Cannot create unarchiver with error: '%@'", error.debugDescription);
+            MXLogFailureDetails(@"[MXFileStore] Cannot create unarchiver", error);
             return nil;
         }
         unarchiver.requiresSecureCoding = NO;
@@ -2324,7 +2324,7 @@ static NSUInteger preloadOptions;
         }
         else
         {
-            MXLogFailure(@"[MXFileStore] Failed loading object from class with error: '%@'", error.debugDescription);
+            MXLogFailureDetails(@"[MXFileStore] Failed loading object from class", error);
             return nil;
         }
     }

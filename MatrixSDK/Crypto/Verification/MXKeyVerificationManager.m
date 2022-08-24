@@ -771,7 +771,15 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
     
     [self sendToOtherInTransaction:transaction eventType:kMXEventTypeStringKeyVerificationCancel content:cancel.JSONDictionary success:^{
         
-        transaction.reasonCancelCode = code;
+        if ([transaction isKindOfClass:[MXDefaultKeyVerificationTransaction class]])
+        {
+            ((MXDefaultKeyVerificationTransaction *)transaction).reasonCancelCode = code;
+        }
+        else
+        {
+            NSString *message = [NSString stringWithFormat:@"[MXKeyVerification] cancelTransaction: Cannot set cancellation reason on unknown transaction type: %@", NSStringFromClass([transaction class])];
+            MXLogFailure(message)
+        }
         
         if (success)
         {
@@ -1700,7 +1708,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
 - (nullable NSDate*)oldestRequestDate
 {
     NSDate *oldestRequestDate;
-    for (id<MXKeyVerificationRequest> request in pendingRequestsMap.allValues)
+    for (MXDefaultKeyVerificationRequest *request in pendingRequestsMap.allValues)
     {
         if (!oldestRequestDate
             || request.timestamp < oldestRequestDate.timeIntervalSince1970)
@@ -1711,7 +1719,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
     return oldestRequestDate;
 }
 
-- (BOOL)isRequestStillValid:(id<MXKeyVerificationRequest>)request
+- (BOOL)isRequestStillValid:(MXDefaultKeyVerificationRequest *)request
 {
     NSDate *requestDate = [NSDate dateWithTimeIntervalSince1970:(request.timestamp / 1000)];
     return (requestDate.timeIntervalSinceNow > -_requestTimeout);
@@ -1759,7 +1767,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
 - (void)checkRequestTimeoutsWithCompletion:(dispatch_block_t)completionBlock
 {
     dispatch_group_t group = dispatch_group_create();
-    for (id<MXKeyVerificationRequest> request in pendingRequestsMap.allValues)
+    for (MXDefaultKeyVerificationRequest *request in pendingRequestsMap.allValues)
     {
         if (![self isRequestStillValid:request])
         {
@@ -1859,7 +1867,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
 - (nullable NSDate*)oldestTransactionCreationDate
 {
     NSDate *oldestCreationDate;
-    for (id<MXKeyVerificationTransaction> transaction in transactions.allObjects)
+    for (MXDefaultKeyVerificationTransaction *transaction in transactions.allObjects)
     {
         if (!oldestCreationDate
             || transaction.creationDate.timeIntervalSince1970 < oldestCreationDate.timeIntervalSince1970)
@@ -1870,7 +1878,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
     return oldestCreationDate;
 }
 
-- (BOOL)isCreationDateValid:(id<MXKeyVerificationTransaction>)transaction
+- (BOOL)isCreationDateValid:(MXDefaultKeyVerificationTransaction *)transaction
 {
     return (transaction.creationDate.timeIntervalSinceNow > -MXTransactionTimeout);
 }
@@ -1934,7 +1942,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
 
 - (void)checkTransactionTimeouts
 {
-    for (id<MXKeyVerificationTransaction> transaction in transactions.allObjects)
+    for (MXDefaultKeyVerificationTransaction *transaction in transactions.allObjects)
     {
         if (![self isCreationDateValid:transaction])
         {

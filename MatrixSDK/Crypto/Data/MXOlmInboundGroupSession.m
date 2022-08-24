@@ -58,6 +58,7 @@
         sessionData.sessionKey = sessionKey;
         sessionData.algorithm = kMXCryptoMegolmAlgorithm;
         sessionData.sharedHistory = _sharedHistory;
+        sessionData.untrusted = _untrusted;
     }
     else
     {
@@ -99,6 +100,7 @@
         _keysClaimed = data.senderClaimedKeys;
         _roomId = data.roomId;
         _sharedHistory = data.sharedHistory;
+        _untrusted = data.isUntrusted;
     }
     return self;
 }
@@ -116,6 +118,8 @@
         _forwardingCurve25519KeyChain = [aDecoder decodeObjectForKey:@"forwardingCurve25519KeyChain"];
         _keysClaimed = [aDecoder decodeObjectForKey:@"keysClaimed"];
         _sharedHistory = [[aDecoder decodeObjectForKey:@"sharedHistory_v2"] boolValue];
+        //  if "untrusted" is not encoded, mark it as untrusted
+        _untrusted = [aDecoder containsValueForKey:@"untrusted"] ? [aDecoder decodeBoolForKey:@"untrusted"] : YES;
     }
     return self;
 }
@@ -128,6 +132,7 @@
     [aCoder encodeObject:_keysClaimed forKey:@"keysClaimed"];
     [aCoder encodeObject:_forwardingCurve25519KeyChain forKey:@"forwardingCurve25519KeyChain"];
     [aCoder encodeObject:@(_sharedHistory) forKey:@"sharedHistory_v2"];
+    [aCoder encodeBool:_untrusted forKey:@"untrusted"];
 }
 
 @end

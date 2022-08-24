@@ -222,7 +222,9 @@ internal class MXStoreRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
                 return
             }
             guard let summary = self.store.summary(ofRoom: roomId) else {
-                MXLog.error("[MXStoreRoomListDataManager] roomAdded: room with id: \(roomId) not found in the store")
+                MXLog.error("[MXStoreRoomListDataManager] roomAdded: room not found in the store", context: [
+                    "room_id": roomId
+                ])
                 return
             }
             self.roomSummaries[roomId] = summary

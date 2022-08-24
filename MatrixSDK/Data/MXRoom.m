@@ -2827,7 +2827,9 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
             [self.summary resetLastMessage:nil failure:nil commit:YES];
         }
     } failure:^(NSError *error) {
-        MXLogError(@"[MXRoom] removeAllOutgoingMessages: event fetch failed: %@", error);
+        MXLogErrorDetails(@"[MXRoom] removeAllOutgoingMessages: event fetch failed", @{
+            @"error": error ?: @"unknown"
+        });
     }];
 }
 
@@ -3646,7 +3648,9 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
     BOOL isEncryptedInStore = [crypto isRoomEncrypted:self.roomId];
     if (isEncryptedInStore && !self.summary.isEncrypted)
     {
-        MXLogError(@"[MXRoom] checkEncryptionState: summary.isEncrypted is wrong for room %@. Fix it.", self.roomId);
+        MXLogErrorDetails(@"[MXRoom] checkEncryptionState: summary.isEncrypted is wrong for room Fix it.", @{
+            @"room_id": self.roomId ?: @"unknown"
+        });
         self.summary.isEncrypted = YES;
         [self.summary save:YES];
     }

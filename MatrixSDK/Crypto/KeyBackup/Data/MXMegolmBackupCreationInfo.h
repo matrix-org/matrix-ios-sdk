@@ -16,7 +16,7 @@
 
 #import <Foundation/Foundation.h>
 
-#import "MXMegolmBackupAuthData.h"
+@protocol MXBaseKeyBackupAuthData;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -27,14 +27,14 @@ NS_ASSUME_NONNULL_BEGIN
 @interface MXMegolmBackupCreationInfo : NSObject
 
 /**
- The algorithm used for storing backups (kMXCryptoMegolmBackupAlgorithm).
+ The algorithm used for storing backups.
  */
 @property (nonatomic) NSString *algorithm;
 
 /**
- Authentication data.
+ Algorthm-dependent authentication data.
  */
-@property (nonatomic) MXMegolmBackupAuthData *authData;
+@property (nonatomic) id<MXBaseKeyBackupAuthData> authData;
 
 /**
  The Base58 recovery key.

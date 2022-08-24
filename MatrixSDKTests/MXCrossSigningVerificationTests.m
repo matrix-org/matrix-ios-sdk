@@ -662,9 +662,8 @@
                          XCTAssertNotNil(requestJSON);
                          
                          // - Alice accepts it and creates a QR code transaction
-                         
-                         // Wait a bit
-                         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+                         [self observeKeyVerificationRequestInSession:aliceSession block:^(id<MXKeyVerificationRequest>  _Nullable request) {
+
                              // - Alice accepts the incoming request
                              id<MXKeyVerificationRequest> requestFromAlicePOV = aliceSession.crypto.keyVerificationManager.pendingRequests.firstObject;
                              XCTAssertNotNil(requestFromAlicePOV);
@@ -683,7 +682,7 @@
                                  XCTFail(@"The request should not fail - NSError: %@", error);
                                  [expectation fulfill];
                              }];
-                         });
+                         }];
                      }
                  }];
                 

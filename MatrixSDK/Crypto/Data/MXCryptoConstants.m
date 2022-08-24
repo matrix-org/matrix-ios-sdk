@@ -17,10 +17,11 @@
 
 #import "MXCryptoConstants.h"
 
-NSString *const kMXCryptoOlmAlgorithm           = @"m.olm.v1.curve25519-aes-sha2";
-NSString *const kMXCryptoMegolmAlgorithm        = @"m.megolm.v1.aes-sha2";
-NSString *const kMXCryptoMegolmBackupAlgorithm  = @"m.megolm_backup.v1.curve25519-aes-sha2";
-NSString *const MXCryptoOlmPickleKeyDataType    = @"org.matrix.sdk.olm.pickle.key";
+NSString *const kMXCryptoOlmAlgorithm                   = @"m.olm.v1.curve25519-aes-sha2";
+NSString *const kMXCryptoMegolmAlgorithm                = @"m.megolm.v1.aes-sha2";
+NSString *const kMXCryptoCurve25519KeyBackupAlgorithm   = @"m.megolm_backup.v1.curve25519-aes-sha2";
+NSString *const kMXCryptoAes256KeyBackupAlgorithm       = @"org.matrix.msc3270.v1.aes-hmac-sha2";
+NSString *const MXCryptoOlmPickleKeyDataType            = @"org.matrix.sdk.olm.pickle.key";
 
 
 #pragma mark - Encrypting error

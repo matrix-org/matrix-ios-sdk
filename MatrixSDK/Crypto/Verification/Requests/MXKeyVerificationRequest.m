@@ -20,6 +20,7 @@
 
 #import "MXCrypto_Private.h"
 
+#warning File has not been annotated with nullability, see MX_ASSUME_MISSING_NULLABILITY_BEGIN
 
 #pragma mark - Constants
 NSString * const MXKeyVerificationRequestDidChangeNotification = @"MXKeyVerificationRequestDidChangeNotification";
