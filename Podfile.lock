@@ -30,11 +30,11 @@ PODS:
   - OHHTTPStubs/NSURLSession (9.1.0):
     - OHHTTPStubs/Core
   - OHHTTPStubs/OHPathHelpers (9.1.0)
-  - OLMKit (3.2.5):
-    - OLMKit/olmc (= 3.2.5)
-    - OLMKit/olmcpp (= 3.2.5)
-  - OLMKit/olmc (3.2.5)
-  - OLMKit/olmcpp (3.2.5)
+  - OLMKit (3.2.12):
+    - OLMKit/olmc (= 3.2.12)
+    - OLMKit/olmcpp (= 3.2.12)
+  - OLMKit/olmc (3.2.12)
+  - OLMKit/olmcpp (3.2.12)
   - Realm (10.27.0):
     - Realm/Headers (= 10.27.0)
   - Realm/Headers (10.27.0)
@@ -67,10 +67,10 @@ SPEC CHECKSUMS:
   libbase58: 7c040313537b8c44b6e2d15586af8e21f7354efd
   MatrixSDKCrypto: 4b9146d5ef484550341be056a164c6930038028e
   OHHTTPStubs: 90eac6d8f2c18317baeca36698523dc67c513831
-  OLMKit: 9fb4799c4a044dd2c06bda31ec31a12191ad30b5
+  OLMKit: da115f16582e47626616874e20f7bb92222c7a51
   Realm: 9ca328bd7e700cc19703799785e37f77d1a130f2
   SwiftyBeaver: 84069991dd5dca07d7069100985badaca7f0ce82
 
 PODFILE CHECKSUM: 8a21d32ad6a381e80ea32b6104daee39323c306c
 
-COCOAPODS: 1.11.3
+COCOAPODS: 1.11.2
