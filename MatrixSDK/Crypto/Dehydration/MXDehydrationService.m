@@ -74,7 +74,9 @@ NSString *const MXDehydrationServiceErrorDomain = @"org.matrix.sdk.dehydration.s
     
     if (error)
     {
-        MXLogError(@"[MXDehydrationService] dehydrateDevice: Account serialization failed: %@", error);
+        MXLogErrorDetails(@"[MXDehydrationService] dehydrateDevice: Account serialization failed", @{
+            @"error": error ?: @"unknown"
+        });
         [self stopProgress];
         failure(error);
         return;
@@ -114,7 +116,9 @@ NSString *const MXDehydrationServiceErrorDomain = @"org.matrix.sdk.dehydration.s
         }];
     } failure:^(NSError *error) {
         [self stopProgress];
-        MXLogError(@"[MXDehydrationService] dehydrateDevice: Failed pushing dehydrated device data: %@", error);
+        MXLogErrorDetails(@"[MXDehydrationService] dehydrateDevice: Failed pushing dehydrated device data", @{
+            @"error": error ?: @"unknown"
+        });
         failure(error);
     }];
 }
@@ -176,7 +180,9 @@ NSString *const MXDehydrationServiceErrorDomain = @"org.matrix.sdk.dehydration.s
                 });
             }];
         } failure:^(NSError *error) {
-            MXLogError(@"[MXDehydrationService] rehydrateDevice: Claiming dehydrated device failed with error: %@", error);
+            MXLogErrorDetails(@"[MXDehydrationService] rehydrateDevice: Claiming dehydrated device failed", @{
+                @"error": error ?: @"unknown"
+            });
             failure(error);
         }];
     } failure:^(NSError *error) {
@@ -193,7 +199,9 @@ NSString *const MXDehydrationServiceErrorDomain = @"org.matrix.sdk.dehydration.s
         }
         else
         {
-            MXLogError(@"[MXDehydrationService] rehydrateDevice: DehydratedDeviceId failed with error: %@", error);
+            MXLogErrorDetails(@"[MXDehydrationService] rehydrateDevice: DehydratedDeviceId failed", @{
+                @"error": error ?: @"unknown"
+            });
             failure(error);
         }
     }];
@@ -229,7 +237,9 @@ NSString *const MXDehydrationServiceErrorDomain = @"org.matrix.sdk.dehydration.s
         [self stopProgress];
         success(deviceInfo.deviceId);
     } failure:^(NSError *error) {
-        MXLogError(@"[MXDehydrationService] uploadDeviceInfo: failed uploading device keys: %@", error);
+        MXLogErrorDetails(@"[MXDehydrationService] uploadDeviceInfo: failed uploading device keys", @{
+            @"error": error ?: @"unknown"
+        });
         MXStrongifyAndReturnIfNil(self);
         [self stopProgress];
         failure(error);

@@ -129,7 +129,11 @@
                     [roomState handleStateEvents:events];
                     onComplete(roomState);
                 } failure:^(NSError *error) {
-                    MXLogError(@"[MXRoomState] loadRoomStateFromStore(%@): Failed to load any events from api with error %@", logId, error);
+                    NSDictionary *details = @{
+                        @"log_id": logId ?: @"unknown",
+                        @"error": error ?: @"unknown"
+                    };
+                    MXLogErrorDetails(@"[MXRoomState] loadRoomStateFromStore: Failed to load any events from api", details);
                     
                     onComplete(roomState);
                 }];

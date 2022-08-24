@@ -619,7 +619,9 @@
     MXRoom *room = [self.mxSession roomWithRoomId:roomId];
     if (!room)
     {
-        MXLogError(@"[MXAggregations] sendReaction Error: Unknown room: %@", roomId);
+        MXLogErrorDetails(@"[MXAggregations] sendReaction Error: Unknown room", @{
+            @"room_id": roomId ?: @"unknown"
+        });
         return nil;
     }
 
