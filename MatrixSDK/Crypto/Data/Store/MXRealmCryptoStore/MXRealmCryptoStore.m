@@ -889,7 +889,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
         else
         {
             MXLogErrorDetails(@"[MXRealmCryptoStore] performSessionOperationWithDevice. Error: olm session not found", @{
-                @"sessionId": sessionId
+                @"sessionId": sessionId ?: @"unknown"
             });
             block(nil);
         }
@@ -1008,7 +1008,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
             else
             {
                 MXLogErrorDetails(@"[MXRealmCryptoStore] performSessionOperationWithGroupSessionWithId. Error: Cannot build MXOlmInboundGroupSession for megolm session", @{
-                    @"sessionId": sessionId
+                    @"sessionId": sessionId ?: @"unknown"
                 });
                 block(nil);
             }
@@ -1016,7 +1016,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
         else
         {
             MXLogErrorDetails(@"[MXRealmCryptoStore] performSessionOperationWithGroupSessionWithId. Error: megolm session not found", @{
-                @"sessionId": sessionId
+                @"sessionId": sessionId ?: @"unknown"
             });
             block(nil);
         }

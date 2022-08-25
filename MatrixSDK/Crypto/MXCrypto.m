@@ -663,10 +663,10 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
         {
             NSDictionary *details = @{
                 @"event_id": event.eventId ?: @"unknown",
-                @"error": result.error ?: @"unknown",
-                @"event": event.JSONDictionary ?: @"unknown"
+                @"error": result.error ?: @"unknown"
             };
             MXLogErrorDetails(@"[MXCrypto] decryptEvent", details);
+            MXLogDebug(@"[MXCrypto] decryptEvent: Unable to decrypt event %@", event.JSONDictionary);
             
             if ([result.error.domain isEqualToString:MXDecryptingErrorDomain]
                 && result.error.code == MXDecryptingErrorBadEncryptedMessageCode)
