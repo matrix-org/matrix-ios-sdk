@@ -163,6 +163,7 @@ public extension MXSession {
         let parameters = MXRoomCreationParameters()
         parameters.name = name
         parameters.topic = topic
+        parameters.roomAlias = aliasLocalPart
         
         let stateEventBuilder = MXRoomInitialStateEventBuilder()
         
@@ -173,7 +174,6 @@ public extension MXSession {
             }
             parameters.preset = kMXRoomPresetPublicChat
             parameters.visibility = kMXRoomDirectoryVisibilityPublic
-            parameters.roomAlias = aliasLocalPart
             let guestAccessStateEvent = stateEventBuilder.buildGuestAccessEvent(withAccess: .canJoin)
             parameters.addOrUpdateInitialStateEvent(guestAccessStateEvent)
             let historyVisibilityStateEvent = stateEventBuilder.buildHistoryVisibilityEvent(withVisibility: .worldReadable)
