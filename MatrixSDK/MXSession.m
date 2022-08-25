@@ -195,6 +195,10 @@ typedef void (^MXOnResumeDone)(void);
  */
 @property (nonatomic) NSUInteger preventPauseCount;
 
+#if TARGET_OS_IPHONE
+@property (nonatomic, strong, readonly) MXUIKitApplicationStateService *applicationStateService;
+#endif
+
 @property (nonatomic, readwrite) MXScanManager *scanManager;
 
 /**
@@ -233,6 +237,9 @@ typedef void (^MXOnResumeDone)(void);
         _accountData = [[MXAccountData alloc] init];
         peekingRooms = [NSMutableArray array];
         _preventPauseCount = 0;
+#if TARGET_OS_IPHONE
+        _applicationStateService = [MXUIKitApplicationStateService new];
+#endif
         directRoomsOperationsQueue = [NSMutableArray array];
         publicisedGroupsByUserId = [[NSMutableDictionary alloc] init];
         nativeToVirtualRoomIds = [NSMutableDictionary dictionary];
@@ -1372,6 +1379,17 @@ typedef void (^MXOnResumeDone)(void);
         {
             MXLogDebug(@"[MXSession] setPreventPauseCount: Actually pause the session");
             [self pause];
+        }
+        else
+        {
+#if TARGET_OS_IPHONE
+            // Pause the session if app is already in the background/inactive but pause wasn't requested
+            if (self.applicationStateService.applicationState != UIApplicationStateActive)
+            {
+                MXLogDebug(@"[MXSession] setPreventPauseCount: Pause session on already backgrounded/inactive app");
+                [self pause];
+            }
+#endif
         }
     }
 }
