@@ -214,6 +214,14 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @property (nonatomic) BOOL enableCryptoV2;
 
+/**
+ Enable performance optimization where inbound group sessions are cached between decryption of events
+ rather than fetched from the store every time.
+ 
+ @remark The value is set randomly between YES / NO to perform a very basic A/B test
+ */
+@property (nonatomic) BOOL enableGroupSessionCache;
+
 #endif
 
 @end

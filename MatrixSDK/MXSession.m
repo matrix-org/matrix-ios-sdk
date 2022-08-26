@@ -1406,6 +1406,7 @@ typedef void (^MXOnResumeDone)(void);
     dispatch_group_t initialSyncDispatchGroup = dispatch_group_create();
     
     __block MXTaskProfile *syncTaskProfile;
+    __block StopDurationTracking stopDurationTracking;
     __block MXSyncResponse *syncResponse;
     __block BOOL useLiveResponse = YES;
 
@@ -1437,6 +1438,13 @@ typedef void (^MXOnResumeDone)(void);
             BOOL isInitialSync = !self.isEventStreamInitialised;
             MXTaskProfileName taskName = isInitialSync ? MXTaskProfileNameStartupInitialSync : MXTaskProfileNameStartupIncrementalSync;
             syncTaskProfile = [MXSDKOptions.sharedInstance.profiler startMeasuringTaskWithName:taskName];
+            if (isInitialSync) {
+                // Temporarily tracking performance both by `MXSDKOptions.sharedInstance.profiler` (manually measuring time)
+                // and `MXSDKOptions.sharedInstance.analyticsDelegate` (delegating to performance monitoring tool).
+                // This ambiguity will be resolved in the future
+                NSString *operation = MXSDKOptions.sharedInstance.enableGroupSessionCache ? @"initialSync.enableGroupSessionCache" : @"initialSync.diableGroupSessionCache";
+                stopDurationTracking = [MXSDKOptions.sharedInstance.analyticsDelegate startDurationTrackingForName:@"MXSession" operation:operation];
+            }
         }
         
         NSString * streamToken = self.store.eventStreamToken;
@@ -1479,6 +1487,9 @@ typedef void (^MXOnResumeDone)(void);
             syncTaskProfile.units = syncResponse.rooms.join.count;
             
             [MXSDKOptions.sharedInstance.profiler stopMeasuringTaskWithProfile:syncTaskProfile];
+            if (stopDurationTracking) {
+                stopDurationTracking();
+            }
         }
         
         BOOL isInitialSync = !self.isEventStreamInitialised;
