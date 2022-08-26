@@ -19,13 +19,6 @@
 #import "MXUsersDevicesMap.h"
 
 /**
- Key types.
- */
-FOUNDATION_EXPORT NSString *const kMXKeyCurve25519Type;
-FOUNDATION_EXPORT NSString *const kMXKeySignedCurve25519Type;
-FOUNDATION_EXPORT NSString *const kMXKeyEd25519Type;
-
-/**
  A `MXKey` instance stores a key data shared for Matrix cryptography.
  */
 @interface MXKey : MXJSONModel

@@ -169,7 +169,7 @@ class MXSASTransactionV2UnitTests: XCTestCase {
         
         let result = transaction.processUpdates()
         
-        XCTAssertEqual(result, VerificationUpdateResult.removed)
+        XCTAssertEqual(result, MXKeyVerificationUpdateResult.removed)
     }
     
     func test_processUpdated_noUpdatesIfRequestUnchanged() {
@@ -182,7 +182,7 @@ class MXSASTransactionV2UnitTests: XCTestCase {
         
         let result = transaction.processUpdates()
 
-        XCTAssertEqual(result, VerificationUpdateResult.noUpdates)
+        XCTAssertEqual(result, MXKeyVerificationUpdateResult.noUpdates)
     }
     
     func test_processUpdated_updatedIfRequestChanged() {
@@ -199,7 +199,7 @@ class MXSASTransactionV2UnitTests: XCTestCase {
         
         let result = transaction.processUpdates()
 
-        XCTAssertEqual(result, VerificationUpdateResult.updated)
+        XCTAssertEqual(result, MXKeyVerificationUpdateResult.updated)
         XCTAssertEqual(transaction.state, MXSASTransactionStateVerified)
     }
 }

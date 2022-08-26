@@ -109,7 +109,7 @@ extension MXCryptoMachine: MXCryptoIdentity {
     }
     
     var deviceCurve25519Key: String? {
-        guard let key = machine.identityKeys()["curve25519"] else {
+        guard let key = machine.identityKeys()[kMXKeyCurve25519Type] else {
             log.error("Cannot get device curve25519 key")
             return nil
         }
@@ -117,7 +117,7 @@ extension MXCryptoMachine: MXCryptoIdentity {
     }
     
     var deviceEd25519Key: String? {
-        guard let key = machine.identityKeys()["ed25519"] else {
+        guard let key = machine.identityKeys()[kMXKeyEd25519Type] else {
             log.error("Cannot get device ed25519 key")
             return nil
         }

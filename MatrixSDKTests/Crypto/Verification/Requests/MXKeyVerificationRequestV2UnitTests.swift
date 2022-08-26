@@ -172,7 +172,7 @@ class MXKeyVerificationRequestV2UnitTests: XCTestCase {
         
         let result = request.processUpdates()
         
-        XCTAssertEqual(result, VerificationUpdateResult.removed)
+        XCTAssertEqual(result, MXKeyVerificationUpdateResult.removed)
     }
     
     func test_processUpdated_noUpdatesIfRequestUnchanged() {
@@ -185,7 +185,7 @@ class MXKeyVerificationRequestV2UnitTests: XCTestCase {
         
         let result = request.processUpdates()
 
-        XCTAssertEqual(result, VerificationUpdateResult.noUpdates)
+        XCTAssertEqual(result, MXKeyVerificationUpdateResult.noUpdates)
     }
     
     func test_processUpdated_updatedIfRequestChanged() {
@@ -202,7 +202,7 @@ class MXKeyVerificationRequestV2UnitTests: XCTestCase {
         
         let result = request.processUpdates()
 
-        XCTAssertEqual(result, VerificationUpdateResult.updated)
+        XCTAssertEqual(result, MXKeyVerificationUpdateResult.updated)
         XCTAssertEqual(request.state, MXKeyVerificationRequestStateReady)
     }
     

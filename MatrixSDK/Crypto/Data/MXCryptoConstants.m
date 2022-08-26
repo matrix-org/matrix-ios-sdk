@@ -17,6 +17,10 @@
 
 #import "MXCryptoConstants.h"
 
+NSString *const kMXKeyCurve25519Type                    = @"curve25519";
+NSString *const kMXKeySignedCurve25519Type              = @"signed_curve25519";
+NSString *const kMXKeyEd25519Type                       = @"ed25519";
+
 NSString *const kMXCryptoOlmAlgorithm                   = @"m.olm.v1.curve25519-aes-sha2";
 NSString *const kMXCryptoMegolmAlgorithm                = @"m.megolm.v1.aes-sha2";
 NSString *const kMXCryptoCurve25519KeyBackupAlgorithm   = @"m.megolm_backup.v1.curve25519-aes-sha2";
