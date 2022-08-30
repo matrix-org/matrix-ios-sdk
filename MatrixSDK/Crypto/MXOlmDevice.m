@@ -544,17 +544,16 @@ NSInteger const kMXInboundGroupSessionCacheSize = 100;
     
     if (enableCache)
     {
-        __block MXOlmInboundGroupSession *session;
         @synchronized (self.inboundGroupSessionCache)
         {
-            session = (MXOlmInboundGroupSession *)[self.inboundGroupSessionCache get:sessionId];
+            MXOlmInboundGroupSession *session = (MXOlmInboundGroupSession *)[self.inboundGroupSessionCache get:sessionId];
             if (!session)
             {
                 session = [store inboundGroupSessionWithId:sessionId andSenderKey:senderKey];
                 [self.inboundGroupSessionCache put:sessionId object:session];
             }
+            block(session);
         }
-        block(session);
     }
     else
     {
