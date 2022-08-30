@@ -40,6 +40,7 @@
         "MXCredentialsUnitTests",
         "MXCrossSigningInfoSourceUnitTests",
         "MXCrossSigningInfoUnitTests",
+        "MXCrossSigningV2UnitTests",
         "MXCryptoRequestsUnitTests",
         "MXDeviceInfoSourceUnitTests",
         "MXDeviceInfoUnitTests",

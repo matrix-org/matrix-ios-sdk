@@ -28,6 +28,7 @@
 
 #import "MXKeyProvider.h"
 #import "MXRawDataKey.h"
+#import "MXCryptoConstants.h"
 
 @interface MXOlmDevice () <OLMKitPickleKeyDelegate>
 {
@@ -96,8 +97,8 @@
 
         inboundGroupSessionMessageIndexes = [NSMutableDictionary dictionary];
 
-        _deviceCurve25519Key = olmAccount.identityKeys[@"curve25519"];
-        _deviceEd25519Key = olmAccount.identityKeys[@"ed25519"];
+        _deviceCurve25519Key = olmAccount.identityKeys[kMXKeyCurve25519Type];
+        _deviceEd25519Key = olmAccount.identityKeys[kMXKeyEd25519Type];
     }
     return self;
 }

@@ -16,10 +16,6 @@
 
 #import "MXKey.h"
 
-NSString *const kMXKeyCurve25519Type = @"curve25519";
-NSString *const kMXKeySignedCurve25519Type = @"signed_curve25519";
-NSString *const kMXKeyEd25519Type = @"ed25519";
-
 @interface MXKey()
 
 /**
