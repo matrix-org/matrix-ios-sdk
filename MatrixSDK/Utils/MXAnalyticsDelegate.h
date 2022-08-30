@@ -21,7 +21,7 @@
 #import "MXTaskProfile.h"
 
 /**
- Callback function to cancel ongoing duration tracking
+ Callback function to stop ongoing duration tracking
  started by `[MXAnalyticsDelegate startDurationTracking]`
  */
 typedef void (^StopDurationTracking)(void);
@@ -53,7 +53,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)trackDuration:(NSInteger)milliseconds name:(MXTaskProfileName)name units:(NSUInteger)units;
 
 /**
- Start tracking the duration of a task and manually cancel when finished using the return handle
+ Start tracking the duration of a task and manually stop when finished using the return handle
  
  @note This method is similar to `trackDuration`, but instead of passing the measured duraction
        as a parameter, it relies on the implementation of `MXAnalyticsDelegate` to perform the

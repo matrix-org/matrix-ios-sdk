@@ -559,7 +559,10 @@ NSInteger const kMXInboundGroupSessionCacheSize = 100;
     {
         [store performSessionOperationWithGroupSessionWithId:sessionId senderKey:senderKey block:block];
     }
-    stopTracking();
+    if (stopTracking)
+    {
+        stopTracking();
+    }
 }
 
 - (void)resetReplayAttackCheckInTimeline:(NSString*)timeline
