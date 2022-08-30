@@ -28,6 +28,7 @@
 
 #import "MXKeyProvider.h"
 #import "MXRawDataKey.h"
+#import "MXCryptoConstants.h"
 
 NSInteger const kMXInboundGroupSessionCacheSize = 100;
 
@@ -100,9 +101,9 @@ NSInteger const kMXInboundGroupSessionCacheSize = 100;
 
         inboundGroupSessionMessageIndexes = [NSMutableDictionary dictionary];
 
-        _deviceCurve25519Key = olmAccount.identityKeys[@"curve25519"];
-        _deviceEd25519Key = olmAccount.identityKeys[@"ed25519"];
-        
+        _deviceCurve25519Key = olmAccount.identityKeys[kMXKeyCurve25519Type];
+        _deviceEd25519Key = olmAccount.identityKeys[kMXKeyEd25519Type];
+
         _inboundGroupSessionCache = [[MXLRUCache alloc] initWithCapacity:kMXInboundGroupSessionCacheSize];
     }
     return self;

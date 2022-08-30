@@ -79,6 +79,12 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
 
 @property (nonatomic, strong) MXQRCodeDataBuilder *qrCodeDataBuilder;
 
+/**
+ The timeout for requests.
+ Default is 5 min.
+ */
+@property (nonatomic) NSTimeInterval requestTimeout;
+
 @end
 
 @implementation MXKeyVerificationManager

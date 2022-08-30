@@ -156,6 +156,7 @@ FOUNDATION_EXPORT NSString *MatrixSDKVersion;
 #import "MXLoginSSOIdentityProviderBrand.h"
 
 //  Bridging to Swift
+#import "MXCryptoConstants.h"
 #import "MXCryptoStore.h"
 #import "MXRealmCryptoStore.h"
 #import "MXCryptoAlgorithms.h"
@@ -193,3 +194,4 @@ FOUNDATION_EXPORT NSString *MatrixSDKVersion;
 #import "MXBeaconInfo.h"
 #import "MXBeacon.h"
 #import "MXEventAssetType.h"
+

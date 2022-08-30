@@ -92,7 +92,7 @@ private class MXCryptoV2: MXCrypto {
     
     public override var backup: MXKeyBackup! {
         log.debug("Not implemented")
-        return nil
+        return MXKeyBackup()
     }
     
     public override var keyVerificationManager: MXKeyVerificationManager! {
@@ -151,7 +151,7 @@ private class MXCryptoV2: MXCrypto {
         )
         
         crossSign = MXCrossSigningV2(
-            machine: machine,
+            crossSigning: machine,
             restClient: restClient
         )
         
@@ -317,12 +317,13 @@ private class MXCryptoV2: MXCrypto {
         }
         
         do {
-            try machine.handleSyncResponse(
+            let toDevice = try machine.handleSyncResponse(
                 toDevice: syncResponse.toDevice,
                 deviceLists: syncResponse.deviceLists,
                 deviceOneTimeKeysCounts: syncResponse.deviceOneTimeKeysCount ?? [:],
                 unusedFallbackKeys: syncResponse.unusedFallbackKeys
             )
+            keyVerification.handleDeviceEvents(toDevice.events)
         } catch {
             log.error("Cannot handle sync", context: error)
         }
@@ -352,7 +353,6 @@ private class MXCryptoV2: MXCrypto {
                 log.failure("Error processing outgoing requests", context: error)
             }
         }
-        keyVerification.updatePendingRequests()
     }
     
     // MARK: - Trust level
@@ -436,11 +436,35 @@ private class MXCryptoV2: MXCrypto {
         success: ((MXUsersDevicesMap<MXDeviceInfo>?, [String: MXCrossSigningInfo]?) -> Void)!,
         failure: ((Swift.Error?) -> Void)!
     ) -> MXHTTPOperation! {
-        // Note: Download keys currently ignores the `forceDownload` flag and returns local data only
-        success?(
-            deviceInfoSource.devicesMap(userIds: userIds),
-            crossSigningInfoSource.crossSigningInfo(userIds: userIds)
-        )
+        guard let userIds = userIds else {
+            log.failure("Missing user ids")
+            return nil
+        }
+        
+        guard forceDownload else {
+            success?(
+                deviceInfoSource.devicesMap(userIds: userIds),
+                crossSigningInfoSource.crossSigningInfo(userIds: userIds)
+            )
+            return MXHTTPOperation()
+        }
+        
+        Task {
+            do {
+                try await machine.downloadKeys(users: userIds)
+                await MainActor.run {
+                    success?(
+                        deviceInfoSource.devicesMap(userIds: userIds),
+                        crossSigningInfoSource.crossSigningInfo(userIds: userIds)
+                    )
+                }
+            } catch {
+                await MainActor.run {
+                    failure?(error)
+                }
+            }
+        }
+        
         return MXHTTPOperation()
     }
     
