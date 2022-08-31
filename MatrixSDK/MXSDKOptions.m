@@ -62,6 +62,8 @@ static MXSDKOptions *sharedOnceInstance = nil;
         // The value is set randomly between YES / NO to perform a very basic A/B test
         // measured by `analytics` (if set and enabled)
         _enableGroupSessionCache = arc4random_uniform(2) == 1;
+
+        _enableSymmetricBackup = NO;
     }
     
     return self;

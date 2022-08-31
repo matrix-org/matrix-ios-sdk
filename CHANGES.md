@@ -1,3 +1,10 @@
+## Changes in 0.23.17 (2022-08-31)
+
+🙌 Improvements
+
+- KeyBackups: Add build flag for symmetric backup ([#1567](https://github.com/matrix-org/matrix-ios-sdk/pull/1567))
+
+
 ## Changes in 0.23.16 (2022-08-24)
 
 ✨ Features

@@ -224,6 +224,13 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @property (nonatomic) BOOL enableGroupSessionCache;
 
+/**
+ Enable symmetric room key backups
+ 
+ @remark NO by default
+ */
+@property (nonatomic) BOOL enableSymmetricBackup;
+
 @end
 
 NS_ASSUME_NONNULL_END
