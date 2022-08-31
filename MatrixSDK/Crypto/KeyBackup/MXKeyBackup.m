@@ -75,10 +75,19 @@ static Class DefaultAlgorithmClass;
 
 + (void)initialize
 {
-    AlgorithmClassesByName = @{
-        kMXCryptoCurve25519KeyBackupAlgorithm: MXCurve25519KeyBackupAlgorithm.class,
-        kMXCryptoAes256KeyBackupAlgorithm: MXAes256KeyBackupAlgorithm.class
-    };
+    if (MXSDKOptions.sharedInstance.enableSymmetricBackup)
+    {
+        AlgorithmClassesByName = @{
+            kMXCryptoCurve25519KeyBackupAlgorithm: MXCurve25519KeyBackupAlgorithm.class,
+            kMXCryptoAes256KeyBackupAlgorithm: MXAes256KeyBackupAlgorithm.class
+        };
+    }
+    else
+    {
+        AlgorithmClassesByName = @{
+            kMXCryptoCurve25519KeyBackupAlgorithm: MXCurve25519KeyBackupAlgorithm.class,
+        };
+    }
     DefaultAlgorithmClass = MXCurve25519KeyBackupAlgorithm.class;
 }
 

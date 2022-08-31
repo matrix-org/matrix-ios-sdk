@@ -58,6 +58,8 @@ static MXSDKOptions *sharedOnceInstance = nil;
         #if DEBUG
         _enableCryptoV2 = NO;
         #endif
+        
+        _enableSymmetricBackup = NO;
     }
     
     return self;
