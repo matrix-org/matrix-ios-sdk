@@ -29,6 +29,16 @@
 
 @implementation MXAes256KeyBackupTests
 
+- (void)setUp
+{
+    MXSDKOptions.sharedInstance.enableSymmetricBackup = YES;
+}
+
+- (void)tearDown
+{
+    MXSDKOptions.sharedInstance.enableSymmetricBackup = NO;
+}
+
 - (NSString *)algorithm
 {
     return kMXCryptoAes256KeyBackupAlgorithm;
