@@ -216,6 +216,14 @@ NS_ASSUME_NONNULL_BEGIN
 
 #endif
 
+/**
+ Enable performance optimization where inbound group sessions are cached between decryption of events
+ rather than fetched from the store every time.
+ 
+ @remark By default, the value is set randomly between YES / NO to perform a very basic A/B test
+ */
+@property (nonatomic) BOOL enableGroupSessionCache;
+
 @end
 
 NS_ASSUME_NONNULL_END

@@ -30,6 +30,8 @@
 #import "MXRawDataKey.h"
 #import "MXCryptoConstants.h"
 
+NSInteger const kMXInboundGroupSessionCacheSize = 100;
+
 @interface MXOlmDevice () <OLMKitPickleKeyDelegate>
 {
     // The OLMKit utility instance.
@@ -54,8 +56,10 @@
 // The store where crypto data is saved.
 @property (nonatomic, readonly) id<MXCryptoStore> store;
 
-@end
+// Cache to avoid refetching unchanged sessions from the crypto store
+@property (nonatomic, strong) MXLRUCache *inboundGroupSessionCache;
 
+@end
 
 @implementation MXOlmDevice
 @synthesize store;
@@ -99,6 +103,8 @@
 
         _deviceCurve25519Key = olmAccount.identityKeys[kMXKeyCurve25519Type];
         _deviceEd25519Key = olmAccount.identityKeys[kMXKeyEd25519Type];
+
+        _inboundGroupSessionCache = [[MXLRUCache alloc] initWithCapacity:kMXInboundGroupSessionCacheSize];
     }
     return self;
 }
@@ -395,7 +401,7 @@
         session.sharedHistory = sharedHistory;
     }
 
-    [store storeInboundGroupSessions:@[session]];
+    [self storeInboundGroupSessions:@[session]];
 
     return YES;
 }
@@ -442,7 +448,7 @@
         [sessions addObject:session];
     }
 
-    [store storeInboundGroupSessions:sessions];
+    [self storeInboundGroupSessions:sessions];
 
     return sessions;
 }
@@ -463,7 +469,7 @@
     
     MXDecryptionResult *result;
     
-    [store performSessionOperationWithGroupSessionWithId:sessionId senderKey:senderKey block:^(MXOlmInboundGroupSession *session) {
+    [self performGroupSessionOperationWithSessionId:sessionId senderKey:senderKey block:^(MXOlmInboundGroupSession *session) {
         
         *error = [self checkInboundGroupSession:session roomId:roomId];
         if (*error)
@@ -520,6 +526,43 @@
     }
 
     return result;
+}
+
+- (void)performGroupSessionOperationWithSessionId:(NSString*)sessionId senderKey:(NSString*)senderKey block:(void (^)(MXOlmInboundGroupSession *inboundGroupSession))block
+{
+    // Based on a feature flag megolm decryption will either fetch a group session from the store on every decryption,
+    // or (if the flag is enabled) it will use LRU cache to avoid refetching unchanged sessions.
+    //
+    // Additionally the duration of each variant is tracked in analytics (if configured and enabled by the user)
+    // to allow performance comparison
+    //
+    // LRU cache variant will eventually become the default implementation if proved stable.
+    
+    BOOL enableCache = MXSDKOptions.sharedInstance.enableGroupSessionCache;
+    NSString *operation = enableCache ? @"megolm.decrypt.cache" : @"megolm.decrypt.store";
+    StopDurationTracking stopTracking = [MXSDKOptions.sharedInstance.analyticsDelegate startDurationTrackingForName:@"MXOlmDevice" operation:operation];
+    
+    if (enableCache)
+    {
+        @synchronized (self.inboundGroupSessionCache)
+        {
+            MXOlmInboundGroupSession *session = (MXOlmInboundGroupSession *)[self.inboundGroupSessionCache get:sessionId];
+            if (!session)
+            {
+                session = [store inboundGroupSessionWithId:sessionId andSenderKey:senderKey];
+                [self.inboundGroupSessionCache put:sessionId object:session];
+            }
+            block(session);
+        }
+    }
+    else
+    {
+        [store performSessionOperationWithGroupSessionWithId:sessionId senderKey:senderKey block:block];
+    }
+    if (stopTracking)
+    {
+        stopTracking();
+    }
 }
 
 - (void)resetReplayAttackCheckInTimeline:(NSString*)timeline
@@ -621,6 +664,21 @@
     }
 
     return inboundGroupSessionKey;
+}
+
+- (void)storeInboundGroupSessions:(NSArray <MXOlmInboundGroupSession *>*)sessions
+{
+    [store storeInboundGroupSessions:sessions];
+    if (MXSDKOptions.sharedInstance.enableGroupSessionCache)
+    {
+        @synchronized (self.inboundGroupSessionCache)
+        {
+            for (MXOlmInboundGroupSession *session in sessions)
+            {
+                [self.inboundGroupSessionCache put:session.session.sessionIdentifier object:session];
+            }
+        }
+    }
 }
 
 
