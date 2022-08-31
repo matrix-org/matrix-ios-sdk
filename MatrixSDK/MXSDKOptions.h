@@ -216,6 +216,13 @@ NS_ASSUME_NONNULL_BEGIN
 
 #endif
 
+/**
+ Enable symmetric room key backups
+ 
+ @remark NO by default
+ */
+@property (nonatomic) BOOL enableSymmetricBackup;
+
 @end
 
 NS_ASSUME_NONNULL_END
