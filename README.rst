@@ -1,4 +1,13 @@
-.. image:: https://codecov.io/gh/matrix-org/matrix-ios-sdk/branch/develop/graph/badge.svg?token=2c9mzJoVpu:target: https://codecov.io/gh/matrix-org/matrix-ios-sdk
+.. image:: https://img.shields.io/cocoapods/v/MatrixSDK?style=flat-square 
+   :target: https://github.com/matrix-org/matrix-ios-sdk/releases
+.. image:: https://img.shields.io/cocoapods/p/MatrixSDK?style=flat-square
+   :target: README.rst
+.. image:: https://img.shields.io/github/workflow/status/matrix-org/matrix-ios-sdk/Lint%20CI/develop?style=flat-square 
+   :target: https://github.com/matrix-org/matrix-ios-sdk/actions?query=branch%3Adevelop
+.. image:: https://codecov.io/gh/matrix-org/matrix-ios-sdk/branch/develop/graph/badge.svg?token=2c9mzJoVpu 
+   :target: https://codecov.io/gh/matrix-org/matrix-ios-sdk
+.. image:: https://img.shields.io/badge/License-Apache%202.0-yellowgreen.svg?style=flat-square 
+   :target: https://opensource.org/licenses/Apache-2.0
 
 Matrix iOS SDK
 ==============
