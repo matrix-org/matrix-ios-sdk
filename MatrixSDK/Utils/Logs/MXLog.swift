@@ -19,12 +19,11 @@ import SwiftyBeaver
 
 /// Various MXLog configuration options. Used in conjunction with `MXLog.configure()`
 @objc public class MXLogConfiguration: NSObject {
-    
     /// the desired log level. `.verbose` by default.
-    @objc public var logLevel: MXLogLevel = MXLogLevel.verbose
+    @objc public var logLevel = MXLogLevel.verbose
     
     /// whether logs should be written directly to files. `false` by default.
-    @objc public var redirectLogsToFiles: Bool = false
+    @objc public var redirectLogsToFiles = false
     
     /// the maximum total space to use for log files in bytes. `100MB` by default.
     @objc public var logFilesSizeLimit: UInt = 100 * 1024 * 1024 // 100MB
@@ -33,7 +32,7 @@ import SwiftyBeaver
     @objc public var maxLogFilesCount: UInt = 50
     
     /// the subname for log files. Files will be named as 'console-[subLogName].log'. `nil` by default
-    @objc public var subLogName: String? = nil
+    @objc public var subLogName: String?
 }
 
 /// MXLog logging levels. Use .none to disable logging entirely.
@@ -48,7 +47,7 @@ import SwiftyBeaver
 
 private var logger: SwiftyBeaver.Type = {
     let logger = SwiftyBeaver.self
-    MXLog.configureLogger(logger, withConfiguration:MXLogConfiguration())
+    MXLog.configureLogger(logger, withConfiguration: MXLogConfiguration())
     return logger
 }()
 
@@ -58,18 +57,20 @@ private var logger: SwiftyBeaver.Type = {
  Please see `MXLog.h` for Objective-C options.
  */
 @objc public class MXLog: NSObject {
-    
     /// Method used to customize MXLog's behavior.
     /// Called automatically when first accessing the logger with the default values.
     /// Please see `MXLogConfiguration` for all available options.
     /// - Parameters:
     ///     - configuration: the `MXLogConfiguration` instance to use
-    @objc static public func configure(_ configuration: MXLogConfiguration) {
+    @objc public static func configure(_ configuration: MXLogConfiguration) {
         configureLogger(logger, withConfiguration: configuration)
     }
     
-    public static func verbose(_ message: @autoclosure () -> Any, _
-                                file: String = #file, _ function: String = #function, line: Int = #line, context: Any? = nil) {
+    public static func verbose(_ message: @autoclosure () -> Any,
+                               _ file: String = #file,
+                               _ function: String = #function,
+                               line: Int = #line,
+                               context: Any? = nil) {
         logger.verbose(message(), file, function, line: line, context: context)
     }
     
@@ -78,8 +79,11 @@ private var logger: SwiftyBeaver.Type = {
         logger.verbose(message, file, function, line: line)
     }
     
-    public static func debug(_ message: @autoclosure () -> Any, _
-                                file: String = #file, _ function: String = #function, line: Int = #line, context: Any? = nil) {
+    public static func debug(_ message: @autoclosure () -> Any,
+                             _ file: String = #file,
+                             _ function: String = #function,
+                             line: Int = #line,
+                             context: Any? = nil) {
         logger.debug(message(), file, function, line: line, context: context)
     }
     
@@ -88,8 +92,11 @@ private var logger: SwiftyBeaver.Type = {
         logger.debug(message, file, function, line: line)
     }
     
-    public static func info(_ message: @autoclosure () -> Any, _
-                                file: String = #file, _ function: String = #function, line: Int = #line, context: Any? = nil) {
+    public static func info(_ message: @autoclosure () -> Any,
+                            _ file: String = #file,
+                            _ function: String = #function,
+                            line: Int = #line,
+                            context: Any? = nil) {
         logger.info(message(), file, function, line: line, context: context)
     }
     
@@ -98,8 +105,11 @@ private var logger: SwiftyBeaver.Type = {
         logger.info(message, file, function, line: line)
     }
     
-    public static func warning(_ message: @autoclosure () -> Any, _
-                                file: String = #file, _ function: String = #function, line: Int = #line, context: Any? = nil) {
+    public static func warning(_ message: @autoclosure () -> Any,
+                               _ file: String = #file,
+                               _ function: String = #function,
+                               line: Int = #line,
+                               context: Any? = nil) {
         logger.warning(message(), file, function, line: line, context: context)
     }
     
@@ -113,24 +123,20 @@ private var logger: SwiftyBeaver.Type = {
     /// - Parameters:
     ///     - message: Description of the error without any variables (this is to improve error aggregations by type)
     ///     - context: Additional context-dependent details about the issue
-    public static func error(
-        _ message: StaticString,
-        _ file: String = #file,
-        _ function: String = #function,
-        line: Int = #line,
-        context: Any? = nil
-    ) {
+    public static func error(_ message: StaticString,
+                             _ file: String = #file,
+                             _ function: String = #function,
+                             line: Int = #line,
+                             context: Any? = nil) {
         logger.error(message, file, function, line: line, context: context)
     }
     
     @available(swift, obsoleted: 5.4)
-    @objc public static func logError(
-        _ message: String,
-        file: String,
-        function: String,
-        line: Int,
-        context: Any? = nil
-    ) {
+    @objc public static func logError(_ message: String,
+                                      file: String,
+                                      function: String,
+                                      line: Int,
+                                      context: Any? = nil) {
         logger.error(message, file, function, line: line, context: context)
     }
     
@@ -142,13 +148,11 @@ private var logger: SwiftyBeaver.Type = {
     /// - Parameters:
     ///     - message: Description of the error without any variables (this is to improve error aggregations by type)
     ///     - context: Additional context-dependent details about the issue
-    public static func failure(
-        _ message: StaticString,
-        _ file: String = #file,
-        _ function: String = #function,
-        line: Int = #line,
-        context: Any? = nil
-    ) {
+    public static func failure(_ message: StaticString,
+                               _ file: String = #file,
+                               _ function: String = #function,
+                               line: Int = #line,
+                               context: Any? = nil) {
         logger.error(message, file, function, line: line, context: context)
         #if DEBUG
         assertionFailure("\(message)")
@@ -156,13 +160,11 @@ private var logger: SwiftyBeaver.Type = {
     }
     
     @available(swift, obsoleted: 5.4)
-    @objc public static func logFailure(
-        _ message: String,
-        file: String,
-        function: String,
-        line: Int,
-        context: Any? = nil
-    ) {
+    @objc public static func logFailure(_ message: String,
+                                        file: String,
+                                        function: String,
+                                        line: Int,
+                                        context: Any? = nil) {
         logger.error(message, file, function, line: line, context: context)
         #if DEBUG
         assertionFailure("\(message)")
@@ -190,26 +192,26 @@ private var logger: SwiftyBeaver.Type = {
         let consoleDestination = ConsoleDestination()
         consoleDestination.useNSLog = true
         consoleDestination.asynchronously = false
-        consoleDestination.format = "$C $M $X" // Format is `Color Message Context`, see https://docs.swiftybeaver.com/article/20-custom-format
+        consoleDestination.format = "$C$M $X$c" // Format is `Color Message Context`, see https://docs.swiftybeaver.com/article/20-custom-format
         consoleDestination.levelColor.verbose = ""
         consoleDestination.levelColor.debug = ""
         consoleDestination.levelColor.info = ""
-        consoleDestination.levelColor.warning = "⚠️"
-        consoleDestination.levelColor.error = "🚨"
+        consoleDestination.levelColor.warning = "⚠️ "
+        consoleDestination.levelColor.error = "🚨 "
         
         switch configuration.logLevel {
-            case .verbose:
-                consoleDestination.minLevel = .verbose
-            case .debug:
-                consoleDestination.minLevel = .debug
-            case .info:
-                consoleDestination.minLevel = .info
-            case .warning:
-                consoleDestination.minLevel = .warning
-            case .error:
-                consoleDestination.minLevel = .error
-            case .none:
-                break
+        case .verbose:
+            consoleDestination.minLevel = .verbose
+        case .debug:
+            consoleDestination.minLevel = .debug
+        case .info:
+            consoleDestination.minLevel = .info
+        case .warning:
+            consoleDestination.minLevel = .warning
+        case .error:
+            consoleDestination.minLevel = .error
+        case .none:
+            break
         }
         logger.addDestination(consoleDestination)
         
@@ -244,6 +246,6 @@ struct MXNamedLog {
     }
     
     private func formattedMessage(_ message: Any, function: String) -> String {
-        return "[\(name)] \(function): \(message)"
+        "[\(name)] \(function): \(message)"
     }
 }
