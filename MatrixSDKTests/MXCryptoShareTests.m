@@ -141,8 +141,7 @@
  -> Key share requests must be pending
  -> Then, they must have been sent
  */
-// TODO: Test currently broken
-- (void)xtestKeyShareRequestFromNewDevice
+- (void)testKeyShareRequestFromNewDevice
 {
     //  - Have Alice and Bob in e2ee room with messages
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession1, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
@@ -269,8 +268,7 @@
  - Enable key share requests on Alice2
  -> Key share requests should have complete
  */
-// TODO: test currently broken
-- (void)xtestDisableKeyShareRequest
+- (void)testDisableKeyShareRequest
 {
     //  - Have Alice and Bob in e2ee room with messages
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession1, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
@@ -352,8 +350,7 @@
  -> key share requests on Alice2 are enabled again
  -> No m.room_key_request have been made
  */
-// TODO: Test currently broken
-- (void)xtestNoKeyShareRequestIfThereIsABackup
+- (void)testNoKeyShareRequestIfThereIsABackup
 {
     //  - Have Alice and Bob in e2ee room with messages
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession1, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {

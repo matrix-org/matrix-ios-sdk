@@ -3,7 +3,7 @@ name: Crypto Tests CI
 on:
   # Triggers the workflow on any pull request and push to develop
   push:
-    branches: [ develop ]
+    branches: [develop]
   pull_request:
 
   # Allows you to run this workflow manually from the Actions tab
@@ -80,6 +80,11 @@ jobs:
         with:
           name: MatrixSDK-macOS.xcresult
           path: build/test/MatrixSDK-macOS.xcresult/
+      - uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: MatrixSDK-MatrixSDK-macOS.log
+          path: build/test/MatrixSDK-MatrixSDK-macOS.log
 
       # Upload coverage
       - name: Upload coverage to Codecov

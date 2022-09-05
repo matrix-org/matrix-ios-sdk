@@ -236,8 +236,7 @@
     }];
 }
 
-// TODO: Test currently broken
-- (void)xtestMultipleDownloadKeys
+- (void)testMultipleDownloadKeys
 {
     [matrixSDKTestsE2EData doE2ETestWithBobAndAlice:self readyToTest:^(MXSession *bobSession, MXSession *aliceSession, XCTestExpectation *expectation) {
 
@@ -881,8 +880,7 @@
     }];
 }
 
-// TODO: Test currently broken
-- (void)xtestAliceAndBobInACryptedRoomBackPaginationFromHomeServer
+- (void)testAliceAndBobInACryptedRoomBackPaginationFromHomeServer
 {
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
 
@@ -1321,9 +1319,7 @@
 // Alice unblacklists the unverified devices in the current room
 // Alice sends a message #5
 // Check that the message can be decrypted by the Bob's device and the Sam's device
-
-// TODO: Test currently broken
-- (void)xtestBlackListUnverifiedDevices
+- (void)testBlackListUnverifiedDevices
 {
     NSArray *aliceMessages = @[
                                @"0",
@@ -2130,9 +2126,7 @@
 // -> No issue with the 2 first messages
 // -> The third event must fail to decrypt at first because Bob the olm session is wedged
 // -> This is automatically fixed after SDKs restarted the olm session
-
-// TODO: Test currently broken
-- (void)xtestOlmSessionUnwedging
+- (void)testOlmSessionUnwedging
 {
     // - Alice & Bob have messages in a room
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:NO aliceStore:[[MXFileStore alloc] init] bobStore:[[MXFileStore alloc] init] readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
