@@ -171,18 +171,6 @@
     return [roomStore enumeratorForMessagesWithTypeIn:types];
 }
 
-- (void)storePartialTextMessageForRoom:(NSString *)roomId partialTextMessage:(NSString *)partialTextMessage
-{
-    MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
-    roomStore.partialTextMessage = partialTextMessage;
-}
-
-- (NSString *)partialTextMessageOfRoom:(NSString *)roomId
-{
-    MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
-    return roomStore.partialTextMessage;
-}
-
 - (void)storePartialAttributedTextMessageForRoom:(NSString *)roomId partialAttributedTextMessage:(NSAttributedString *)partialAttributedTextMessage
 {
     MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
