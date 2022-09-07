@@ -37,7 +37,7 @@ typedef NS_ENUM(NSInteger, MXRecoveryServiceErrorCode)
 
 
 /**
- `MXRecoveryService` manages the backup of secrets/keys used by `MXCrypto``.
+ `MXRecoveryService` manages the backup of secrets/keys used by `MXCrypto`.
  
  It stores secrets stored locally (`MXCryptoStore`) on the homeserver SSSS (`MXSecretStorage`)
  and vice versa.

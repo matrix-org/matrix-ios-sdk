@@ -1,3 +1,39 @@
+## Changes in 0.23.18 (2022-09-07)
+
+✨ Features
+
+- MXKeyBackup: Add support for symmetric key backups. ([#1542](https://github.com/matrix-org/matrix-ios-sdk/pull/1542))
+- CryptoSDK: Outgoing SAS User Verification Flow ([#6443](https://github.com/vector-im/element-ios/issues/6443))
+- CryptoV2: Self-verification flow ([#6589](https://github.com/vector-im/element-ios/issues/6589))
+
+🙌 Improvements
+
+- Allow setting room alias regardless of join rule ([#1559](https://github.com/matrix-org/matrix-ios-sdk/pull/1559))
+- Crypto: Cache inbound group sessions when decrypting ([#1566](https://github.com/matrix-org/matrix-ios-sdk/pull/1566))
+- Crypto: Create lazy in-memory room encryptors ([#1570](https://github.com/matrix-org/matrix-ios-sdk/pull/1570))
+- App Layout: Increased store version to force clear cache ([#6616](https://github.com/vector-im/element-ios/issues/6616))
+
+🐛 Bugfixes
+
+- Fix incoming calls sometimes ringing after being answered on another client ([#6614](https://github.com/vector-im/element-ios/issues/6614))
+
+🧱 Build
+
+- Xcode project(s) updated via Xcode recommended setting ([#1543](https://github.com/matrix-org/matrix-ios-sdk/pull/1543))
+- MXLog: Ensure MXLogLevel.none works if it is set after another log level has already been configured. ([#1550](https://github.com/matrix-org/matrix-ios-sdk/issues/1550))
+
+📄 Documentation
+
+- README: Update the badge header ([#1569](https://github.com/matrix-org/matrix-ios-sdk/pull/1569))
+- Update README for correct Swift usage. ([#1552](https://github.com/matrix-org/matrix-ios-sdk/issues/1552))
+
+Others
+
+- Crypto: User and device identity objects ([#1531](https://github.com/matrix-org/matrix-ios-sdk/pull/1531))
+- Analytics: Log all errors to analytics ([#1558](https://github.com/matrix-org/matrix-ios-sdk/pull/1558))
+- Improve MXLog file formatting and fix log message format ([#1564](https://github.com/matrix-org/matrix-ios-sdk/pull/1564))
+
+
 ## Changes in 0.23.17 (2022-08-31)
 
 🙌 Improvements

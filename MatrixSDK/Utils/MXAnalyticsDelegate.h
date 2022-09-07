@@ -20,6 +20,12 @@
 #import "MXCallHangupEventContent.h"
 #import "MXTaskProfile.h"
 
+/**
+ Callback function to stop ongoing duration tracking
+ started by `[MXAnalyticsDelegate startDurationTracking]`
+ */
+typedef void (^StopDurationTracking)(void);
+
 NS_ASSUME_NONNULL_BEGIN
 
 /**
@@ -45,6 +51,21 @@ NS_ASSUME_NONNULL_BEGIN
  @param units the number of items the were completed during the task
  */
 - (void)trackDuration:(NSInteger)milliseconds name:(MXTaskProfileName)name units:(NSUInteger)units;
+
+/**
+ Start tracking the duration of a task and manually stop when finished using the return handle
+ 
+ @note This method is similar to `trackDuration`, but instead of passing the measured duraction
+       as a parameter, it relies on the implementation of `MXAnalyticsDelegate` to perform the
+       measurements.
+ 
+ @param name Name of the entity being measured (e.g. `RoomsViewController` or `Crypto`)
+ @param operation Short code identifying the type of operation measured (e.g. `viewDidLoad` or `decrypt`)
+
+ 
+ @return Handle that can be used to stop the performance tracking
+ */
+- (StopDurationTracking)startDurationTrackingForName:(NSString *)name operation:(NSString *)operation;
 
 /**
  Report that a call has started.

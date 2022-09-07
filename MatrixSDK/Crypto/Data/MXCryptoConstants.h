@@ -19,6 +19,13 @@
 #import <Foundation/Foundation.h>
 
 /**
+ Key types
+ */
+FOUNDATION_EXPORT NSString *const kMXKeyCurve25519Type;
+FOUNDATION_EXPORT NSString *const kMXKeySignedCurve25519Type;
+FOUNDATION_EXPORT NSString *const kMXKeyEd25519Type;
+
+/**
  Matrix algorithm tag for olm.
  */
 FOUNDATION_EXPORT NSString *const kMXCryptoOlmAlgorithm;
