@@ -50,6 +50,7 @@
         "MXCredentialsUnitTests",
         "MXCrossSigningInfoSourceUnitTests",
         "MXCrossSigningInfoUnitTests",
+        "MXCrossSigningV2UnitTests",
         "MXCryptoRequestsUnitTests",
         "MXDeviceInfoSourceUnitTests",
         "MXDeviceInfoUnitTests",
@@ -82,7 +83,7 @@
         "MXThreadEventTimelineUnitTests",
         "MXThreadingServiceUnitTests",
         "MXToolsUnitTests",
-        "MXTrustLevelSourceUnitTests",
+        "MXTrustLevelSourceUnitTests"
       ],
       "target" : {
         "containerPath" : "container:MatrixSDK.xcodeproj",

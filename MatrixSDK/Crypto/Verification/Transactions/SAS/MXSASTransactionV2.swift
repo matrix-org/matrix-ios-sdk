@@ -21,10 +21,8 @@ import Foundation
 import MatrixSDKCrypto
 
 /// SAS transaction originating from `MatrixSDKCrypto`
+@available(iOS 13.0.0, *)
 class MXSASTransactionV2: NSObject, MXSASTransaction {
-    typealias GetEmojisAction = (Sas) -> [MXEmojiRepresentation]
-    typealias ConfirmMatchAction = (MXSASTransaction) -> Void
-    typealias CancelAction = (MXSASTransaction, MXTransactionCancelCode) -> Void
     
     var state: MXSASTransactionState {
         // State as enum will be moved to MatrixSDKCrypto in the future
@@ -44,7 +42,16 @@ class MXSASTransactionV2: NSObject, MXSASTransaction {
     }
     
     var sasEmoji: [MXEmojiRepresentation]? {
-        return getEmojisAction(sas)
+        do {
+            let indices = try handler.emojiIndexes(sas: sas)
+            let emojis = MXDefaultSASTransaction.allEmojiRepresentations()
+            return indices.compactMap { idx in
+                idx < emojis.count ? emojis[idx] : nil
+            }
+        } catch {
+            log.error("Cannot get emoji indices", context: error)
+            return nil
+        }
     }
     
     var sasDecimal: String? {
@@ -56,10 +63,7 @@ class MXSASTransactionV2: NSObject, MXSASTransaction {
         return sas.flowId
     }
     
-    var transport: MXKeyVerificationTransport {
-        log.debug("Not fully implemented")
-        return .directMessage
-    }
+    let transport: MXKeyVerificationTransport
     
     var isIncoming: Bool {
         return !sas.weStarted
@@ -96,43 +100,72 @@ class MXSASTransactionV2: NSObject, MXSASTransaction {
     }
     
     private var sas: Sas
-    private let getEmojisAction: GetEmojisAction
-    private let confirmMatchAction: ConfirmMatchAction
-    private let cancelAction: CancelAction
-    
+    private let handler: MXCryptoSASVerifying
+
     private let log = MXNamedLog(name: "MXSASTransactionV2")
     
-    init(
-        sas: Sas,
-        getEmojisAction: @escaping GetEmojisAction,
-        confirmMatchAction: @escaping ConfirmMatchAction,
-        cancelAction: @escaping CancelAction
-    ) {
+    init(sas: Sas, transport: MXKeyVerificationTransport, handler: MXCryptoSASVerifying) {
         self.sas = sas
-        self.getEmojisAction = getEmojisAction
-        self.confirmMatchAction = confirmMatchAction
-        self.cancelAction = cancelAction
+        self.transport = transport
+        self.handler = handler
     }
     
-    func update(sas: Sas) {
+    func processUpdates() -> MXKeyVerificationUpdateResult {
+        guard
+            let verification = handler.verification(userId: otherUserId, flowId: transactionId),
+            case .sasV1(let sas) = verification
+        else {
+            return .removed
+        }
+        
         guard self.sas != sas else {
-            return
+            return .noUpdates
         }
         self.sas = sas
-        NotificationCenter.default.post(name: .MXKeyVerificationTransactionDidChange, object: self)
+        return .updated
+    }
+    
+    func accept() {
+        Task {
+            do {
+                try await handler.acceptSasVerification(userId: otherUserId, flowId: transactionId)
+            } catch {
+                log.error("Cannot accept transaction", context: error)
+            }
+        }
     }
     
     func confirmSASMatch() {
-        confirmMatchAction(self)
+        Task {
+            do {
+                try await handler.confirmVerification(userId: otherUserId, flowId: transactionId)
+            } catch {
+                log.error("Cannot confirm transaction", context: error)
+            }
+        }
     }
     
     func cancel(with code: MXTransactionCancelCode) {
-        cancelAction(self, code)
+        cancel(with: code) {
+            // No-op
+        } failure: { [weak self] in
+            self?.log.error("Cannot cancel transaction", context: $0)
+        }
     }
     
     func cancel(with code: MXTransactionCancelCode, success: @escaping () -> Void, failure: @escaping (Error) -> Void) {
-        cancelAction(self, code)
-        success()
+        Task {
+            do {
+                try await handler.cancelVerification(userId: otherUserId, flowId: transactionId, cancelCode: code.value)
+                await MainActor.run {
+                    success()
+                }
+            } catch {
+                await MainActor.run {
+                    failure(error)
+                }
+            }
+        }
     }
 }
 

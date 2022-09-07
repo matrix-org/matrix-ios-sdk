@@ -21,9 +21,8 @@ import Foundation
 import MatrixSDKCrypto
 
 /// Verification request originating from `MatrixSDKCrypto`
+@available(iOS 13.0.0, *)
 class MXKeyVerificationRequestV2: NSObject, MXKeyVerificationRequest {
-    typealias CancelAction = (MXKeyVerificationRequest, MXTransactionCancelCode) -> Void
-    
     var state: MXKeyVerificationRequestState {
         // State as enum will be moved to MatrixSDKCrypto in the future
         // to avoid the mapping of booleans into state
@@ -50,24 +49,18 @@ class MXKeyVerificationRequestV2: NSObject, MXKeyVerificationRequest {
     }
     
     var isFromMyUser: Bool {
-        return request.weStarted
+        return otherUser == handler.userId
     }
     
     var isFromMyDevice: Bool {
-        // Not exposed on the underlying request,
-        // assuming that if request is from us, it is from our devide
-        log.debug("Not fully implemented")
-        return isFromMyUser
+        return request.weStarted
     }
     
     var requestId: String {
         return request.flowId
     }
     
-    var transport: MXKeyVerificationTransport {
-        log.debug("Not fully implemented")
-        return .directMessage
-    }
+    let transport: MXKeyVerificationTransport
     
     var otherUser: String {
         return request.otherUserId
@@ -78,7 +71,7 @@ class MXKeyVerificationRequestV2: NSObject, MXKeyVerificationRequest {
     }
     
     var methods: [String] {
-        return (isFromMyUser ? myMethods : otherMethods) ?? []
+        return (isFromMyDevice ? myMethods : otherMethods) ?? []
     }
     
     var myMethods: [String]? {
@@ -90,21 +83,26 @@ class MXKeyVerificationRequestV2: NSObject, MXKeyVerificationRequest {
     }
     
     private var request: VerificationRequest
-    private let cancelAction: CancelAction
+    private let handler: MXCryptoVerificationRequesting
     
     private let log = MXNamedLog(name: "MXKeyVerificationRequestV2")
     
-    init(request: VerificationRequest, cancelAction: @escaping CancelAction) {
+    init(request: VerificationRequest, transport: MXKeyVerificationTransport, handler: MXCryptoVerificationRequesting) {
         self.request = request
-        self.cancelAction = cancelAction
+        self.transport = transport
+        self.handler = handler
     }
     
-    func update(request: VerificationRequest) {
+    func processUpdates() -> MXKeyVerificationUpdateResult {
+        guard let request = handler.verificationRequest(userId: otherUser, flowId: requestId) else {
+            return .removed
+        }
+        
         guard self.request != request else {
-            return
+            return .noUpdates
         }
         self.request = request
-        NotificationCenter.default.post(name: .MXKeyVerificationRequestDidChange, object: self)
+        return .updated
     }
     
     func accept(
@@ -112,7 +110,22 @@ class MXKeyVerificationRequestV2: NSObject, MXKeyVerificationRequest {
         success: @escaping () -> Void,
         failure: @escaping (Error) -> Void
     ) {
-        log.debug("Not implemented")
+        Task {
+            do {
+                try await handler.acceptVerificationRequest(
+                    userId: otherUser,
+                    flowId: requestId,
+                    methods: methods
+                )
+                await MainActor.run {
+                    success()
+                }
+            } catch {
+                await MainActor.run {
+                    failure(error)
+                }
+            }
+        }
     }
     
     func cancel(
@@ -120,8 +133,22 @@ class MXKeyVerificationRequestV2: NSObject, MXKeyVerificationRequest {
         success: (() -> Void)?,
         failure: ((Error) -> Void)? = nil
     ) {
-        cancelAction(self, code)
-        success?()
+        Task {
+            do {
+                try await handler.cancelVerification(
+                    userId: otherUser,
+                    flowId: requestId,
+                    cancelCode: code.value
+                )
+                await MainActor.run {
+                    success?()
+                }
+            } catch {
+                await MainActor.run {
+                    failure?(error)
+                }
+            }
+        }
     }
 }
 

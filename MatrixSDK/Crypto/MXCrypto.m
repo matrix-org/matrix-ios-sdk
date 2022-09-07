@@ -663,7 +663,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
         {
             NSDictionary *details = @{
                 @"event_id": event.eventId ?: @"unknown",
-                @"error": result.error ?: @"unknown",
+                @"error": result.error ?: @"unknown"
             };
             MXLogErrorDetails(@"[MXCrypto] decryptEvent", details);
             MXLogDebug(@"[MXCrypto] decryptEvent: Unable to decrypt event %@", event.JSONDictionary);
@@ -2527,9 +2527,39 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 {
     if (![algorithm isEqualToString:kMXCryptoMegolmAlgorithm])
     {
+        MXLogErrorDetails(@"[MXCrypto] getRoomEncryptor: algorithm is not supported", @{
+            @"algorithm": algorithm ?: @"unknown"
+        });
         return nil;
     }
-    return roomEncryptors[roomId];
+
+    id<MXEncrypting> alg = roomEncryptors[roomId];
+    if (alg)
+    {
+        return alg;
+    }
+    
+    NSString *existingAlgorithm = [self.store algorithmForRoom:roomId];
+    if ([algorithm isEqualToString:existingAlgorithm])
+    {
+        MXLogErrorDetails(@"[MXCrypto] getRoomEncryptor: algorithm does not match the room", @{
+            @"algorithm": algorithm ?: @"unknown"
+        });
+        return nil;
+    }
+    
+    Class algClass = [[MXCryptoAlgorithms sharedAlgorithms] encryptorClassForAlgorithm:algorithm];
+    if (!algClass)
+    {
+        MXLogErrorDetails(@"[MXCrypto] getRoomEncryptor: cannot get encryptor for algorithm", @{
+            @"algorithm": algorithm ?: @"unknown"
+        });
+        return nil;
+    }
+    
+    alg = [[algClass alloc] initWithCrypto:self andRoom:roomId];
+    roomEncryptors[roomId] = alg;
+    return alg;
 }
 
 - (NSDictionary*)signObject:(NSDictionary*)object

@@ -24,31 +24,11 @@ import MatrixSDKCrypto
 
 @available(iOS 13.0.0, *)
 class MXDeviceInfoSourceUnitTests: XCTestCase {
-    class SourceStub: MXCryptoDevicesSource {
-        var deviceCurve25519Key: String? {
-            return nil
-        }
-        
-        var deviceEd25519Key: String? {
-            return nil
-        }
-        
-        var devices = [String: [String: Device]]()
-        
-        func device(userId: String, deviceId: String) -> Device? {
-            return devices[userId]?[deviceId]
-        }
-        
-        func devices(userId: String) -> [Device] {
-            return devices[userId]?.map { $0.value } ?? []
-        }
-    }
-    
-    var cryptoSource: SourceStub!
+    var cryptoSource: DevicesSourceStub!
     var source: MXDeviceInfoSource!
     
     override func setUp() {
-        cryptoSource = SourceStub()
+        cryptoSource = DevicesSourceStub()
         source = MXDeviceInfoSource(source: cryptoSource)
     }
     

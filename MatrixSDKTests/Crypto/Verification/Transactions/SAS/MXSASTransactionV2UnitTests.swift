@@ -22,7 +22,23 @@ import XCTest
 import MatrixSDKCrypto
 @testable import MatrixSDK
 
+@available(iOS 13.0.0, *)
 class MXSASTransactionV2UnitTests: XCTestCase {
+    var verification: CryptoVerificationStub!
+    override func setUp() {
+        verification = CryptoVerificationStub()
+    }
+    
+    func makeTransaction(for sas: Sas = .stub()) -> MXSASTransactionV2 {
+        .init(
+            sas: sas,
+            transport: .directMessage,
+            handler: verification
+        )
+    }
+    
+    // MARK: - Test Properties
+    
     func test_usesCorrectProperties() {
         let stub = Sas.stub(
             otherUserId: "Bob",
@@ -33,12 +49,7 @@ class MXSASTransactionV2UnitTests: XCTestCase {
             supportsEmoji: true
         )
         
-        let transaction = MXSASTransactionV2(
-            sas: stub,
-            getEmojisAction: { _ in [] },
-            confirmMatchAction: { _ in },
-            cancelAction: { _, _ in }
-        )
+        let transaction = makeTransaction(for: stub)
         
         XCTAssertEqual(transaction.transactionId, "123")
         XCTAssertEqual(transaction.transport, MXKeyVerificationTransport.directMessage)
@@ -47,6 +58,22 @@ class MXSASTransactionV2UnitTests: XCTestCase {
         XCTAssertEqual(transaction.otherDeviceId, "Device2")
         XCTAssertEqual(transaction.dmRoomId, "ABC")
         XCTAssertEqual(transaction.dmEventId, "123")
+    }
+    
+    func test_sasEmoji() {
+        // Index-to-emoji mapping specified in
+        // https://spec.matrix.org/v1.3/client-server-api/#sas-method-emoji
+        verification.stubbedEmojis = [
+            "123": [1, 3, 10, 20]
+        ]
+        let expectedEmojis = ["🐱", "🐎", "🐧", "🌙"]
+        
+        let transaction = makeTransaction(for: .stub(
+            flowId: "123"
+        ))
+        
+        let emoji = transaction.sasEmoji?.map { $0.emoji }
+        XCTAssertEqual(emoji, expectedEmojis)
     }
     
     func test_state() {
@@ -98,12 +125,23 @@ class MXSASTransactionV2UnitTests: XCTestCase {
         for (stub, state) in testCases {
             let transaction = MXSASTransactionV2(
                 sas: stub,
-                getEmojisAction: { _ in [] },
-                confirmMatchAction: { _ in },
-                cancelAction: { _, _ in }
+                transport: .directMessage,
+                handler: verification
             )
             XCTAssertEqual(transaction.state, state)
         }
+    }
+    
+    func test_isIncomingIfWeStarted() {
+        let transaction1 = makeTransaction(for: .stub(
+            weStarted: true
+        ))
+        XCTAssertFalse(transaction1.isIncoming)
+        
+        let transaction2 = makeTransaction(for: .stub(
+            weStarted: true
+        ))
+        XCTAssertFalse(transaction2.isIncoming)
     }
 
     func test_reasonCancelCode() {
@@ -115,65 +153,54 @@ class MXSASTransactionV2UnitTests: XCTestCase {
 
         let transaction = MXSASTransactionV2(
             sas: .stub(cancelInfo: cancelInfo),
-            getEmojisAction: { _ in [] },
-            confirmMatchAction: { _ in },
-            cancelAction: { _, _ in }
+            transport: .directMessage,
+            handler: verification
         )
 
         XCTAssertEqual(transaction.reasonCancelCode?.value, "123")
         XCTAssertEqual(transaction.reasonCancelCode?.humanReadable, "Changed mind")
     }
-
-    func test_update_postsNotification_ifChanged() {
-        let exp = expectation(description: "exp")
-        let transaction = MXSASTransactionV2(
-            sas: .stub(isDone: false),
-            getEmojisAction: { _ in [] },
-            confirmMatchAction: { _ in },
-            cancelAction: { _, _ in }
-        )
-        NotificationCenter.default.addObserver(forName: .MXKeyVerificationTransactionDidChange, object: transaction, queue: OperationQueue.main) { notif in
-            XCTAssertEqual(transaction.state, MXSASTransactionStateVerified)
-            exp.fulfill()
-        }
-
-        transaction.update(sas: .stub(isDone: true))
-
-        waitForExpectations(timeout: 1)
+    
+    // MARK: - Test Updates
+    
+    func test_processUpdated_removedIfNoMatchingRequest() {
+        verification.stubbedTransactions = [:]
+        let transaction = makeTransaction()
+        
+        let result = transaction.processUpdates()
+        
+        XCTAssertEqual(result, MXKeyVerificationUpdateResult.removed)
     }
     
-    func test_sasEmoji_picksCorrectEmoji() {
-        let emoji = [
-            MXEmojiRepresentation(emoji: "A", andName: "A"),
-            MXEmojiRepresentation(emoji: "B", andName: "B"),
-            MXEmojiRepresentation(emoji: "C", andName: "C"),
-        ]
-        
-        let transaction = MXSASTransactionV2(
-            sas: .stub(),
-            getEmojisAction: { _ in emoji },
-            confirmMatchAction: { _ in },
-            cancelAction: { _, _ in }
+    func test_processUpdated_noUpdatesIfRequestUnchanged() {
+        let stub = Sas.stub(
+            flowId: "ABC",
+            isDone: false
         )
+        verification.stubbedTransactions = [stub.flowId: .sasV1(sas: stub)]
+        let transaction = makeTransaction(for: stub)
         
-        XCTAssertEqual(transaction.sasEmoji, emoji)
+        let result = transaction.processUpdates()
+
+        XCTAssertEqual(result, MXKeyVerificationUpdateResult.noUpdates)
     }
     
-    func test_confirmSASMatch() {
-        let exp = expectation(description: "exp")
-        let transaction = MXSASTransactionV2(
-            sas: .stub(),
-            getEmojisAction: { _ in [] },
-            confirmMatchAction: { _ in
-                XCTAssertTrue(true)
-                exp.fulfill()
-            },
-            cancelAction: { _, _ in }
+    func test_processUpdated_updatedIfRequestChanged() {
+        let stub = Sas.stub(
+            flowId: "ABC",
+            isDone: false
         )
+        verification.stubbedTransactions = [stub.flowId: .sasV1(sas: stub)]
+        let transaction = makeTransaction(for: stub)
+        verification.stubbedTransactions = [stub.flowId: .sasV1(sas: .stub(
+            flowId: "ABC",
+            isDone: true
+        ))]
         
-        transaction.confirmSASMatch()
-        
-        waitForExpectations(timeout: 1)
+        let result = transaction.processUpdates()
+
+        XCTAssertEqual(result, MXKeyVerificationUpdateResult.updated)
+        XCTAssertEqual(transaction.state, MXSASTransactionStateVerified)
     }
 }
 

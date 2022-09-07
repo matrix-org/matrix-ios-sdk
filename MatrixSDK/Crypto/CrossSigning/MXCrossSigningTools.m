@@ -18,6 +18,7 @@
 
 #import "MXCryptoTools.h"
 #import "MXKey.h"
+#import "MXCryptoConstants.h"
 
 
 #pragma mark - Constants
