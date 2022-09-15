@@ -22,13 +22,13 @@ Pod::Spec.new do |s|
   s.requires_arc  = true
   s.swift_versions = ['5.1', '5.2']
   
-  s.ios.deployment_target = "11.0"
-  s.osx.deployment_target = "10.12"
+  s.ios.deployment_target = "13.0"
+  s.osx.deployment_target = "10.15"
   
   s.default_subspec = 'Core'
   s.subspec 'Core' do |ss|
-      ss.ios.deployment_target = "11.0"
-      ss.osx.deployment_target = "10.12"
+      ss.ios.deployment_target = "13.0"
+      ss.osx.deployment_target = "10.15"
       
       ss.source_files = "MatrixSDK", "MatrixSDK/**/*.{h,m}", "MatrixSDK/**/*.{swift}"
       ss.osx.exclude_files = "MatrixSDK/VoIP/MXiOSAudioOutputRoute*.swift"
@@ -49,7 +49,7 @@ Pod::Spec.new do |s|
   end
 
   s.subspec 'JingleCallStack' do |ss|
-    ss.ios.deployment_target = "12.0"
+    ss.ios.deployment_target = "13.0"
     
     ss.source_files  = "MatrixSDKExtensions/VoIP/Jingle/**/*.{h,m}"
     

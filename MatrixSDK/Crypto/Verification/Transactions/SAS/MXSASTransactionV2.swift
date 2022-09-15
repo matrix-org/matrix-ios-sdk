@@ -21,7 +21,6 @@ import Foundation
 import MatrixSDKCrypto
 
 /// SAS transaction originating from `MatrixSDKCrypto`
-@available(iOS 13.0.0, *)
 class MXSASTransactionV2: NSObject, MXSASTransaction {
     
     var state: MXSASTransactionState {

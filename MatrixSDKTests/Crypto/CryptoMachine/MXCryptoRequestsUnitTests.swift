@@ -21,7 +21,6 @@ import Foundation
 
 import MatrixSDKCrypto
 
-@available(iOS 13.0.0, *)
 class MXCryptoRequestsUnitTests: XCTestCase {
     func test_canCreateToDeviceRequest() {
         let body: [String: [String: NSDictionary]] = [

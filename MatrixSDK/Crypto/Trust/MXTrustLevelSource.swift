@@ -20,7 +20,6 @@ import Foundation
 
 /// Convenience struct which transforms `MatrixSDKCrypto` trust levels
 /// into `MatrixSDK` `MXUserTrustLevel`, `MXDeviceTrustLevel` and `MXUsersTrustLevelSummary` formats.
-@available(iOS 13.0.0, *)
 struct MXTrustLevelSource {
     private let userIdentitySource: MXCryptoUserIdentitySource
     private let devicesSource: MXCryptoDevicesSource

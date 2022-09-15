@@ -39,7 +39,6 @@ public extension MXRoom {
     /**
      The current list of members of the room using async API.
      */
-    @available(iOS 13.0.0, macOS 10.15.0, *)
     func members() async throws -> MXRoomMembers? {
         try await performCallbackRequest {
             members(completion: $0)

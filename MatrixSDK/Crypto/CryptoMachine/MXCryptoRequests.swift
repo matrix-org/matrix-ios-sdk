@@ -22,7 +22,6 @@ import MatrixSDKCrypto
 
 /// Convenience class to delegate network requests originating in Rust crypto module
 /// to the native REST API client
-@available(iOS 13.0.0, *)
 struct MXCryptoRequests {
     private let restClient: MXRestClient
     init(restClient: MXRestClient) {
@@ -109,7 +108,6 @@ struct MXCryptoRequests {
 }
 
 /// Convenience structs mapping Rust requests to data for native REST API requests
-@available(iOS 13.0.0, *)
 extension MXCryptoRequests {
     enum Error: Swift.Error {
         case cannotCreateRequest
@@ -178,7 +176,6 @@ extension MXCryptoRequests {
     }
 }
 
-@available(iOS 13.0.0, *)
 extension UploadSigningKeysRequest {
     func jsonKeys() throws -> [AnyHashable: Any] {
         guard
@@ -197,7 +194,6 @@ extension UploadSigningKeysRequest {
     }
 }
 
-@available(iOS 13.0.0, *)
 extension SignatureUploadRequest {
     func jsonSignature() throws -> [AnyHashable: Any] {
         guard let signatures = MXTools.deserialiseJSONString(body) as? [AnyHashable: Any] else {

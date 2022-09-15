@@ -27,7 +27,6 @@ typealias GetRoomAction = (String) -> MXRoom?
 /// Two main responsibilities of the `MXCryptoMachine` are:
 /// - mapping to and from raw strings passed into the Rust machine
 /// - performing network requests and marking them as completed on behalf of the Rust machine
-@available(iOS 13.0.0, *)
 class MXCryptoMachine {
     actor RoomQueues {
         private var queues = [String: MXTaskQueue]()
@@ -98,7 +97,6 @@ class MXCryptoMachine {
     }
 }
 
-@available(iOS 13.0.0, *)
 extension MXCryptoMachine: MXCryptoIdentity {
     var userId: String {
         return machine.userId()
@@ -125,7 +123,6 @@ extension MXCryptoMachine: MXCryptoIdentity {
     }
 }
 
-@available(iOS 13.0.0, *)
 extension MXCryptoMachine: MXCryptoSyncing {
     func handleSyncResponse(
         toDevice: MXToDeviceSyncResponse?,
@@ -244,7 +241,6 @@ extension MXCryptoMachine: MXCryptoSyncing {
     }
 }
 
-@available(iOS 13.0.0, *)
 extension MXCryptoMachine: MXCryptoDevicesSource {
     func devices(userId: String) -> [Device] {
         do {
@@ -265,7 +261,6 @@ extension MXCryptoMachine: MXCryptoDevicesSource {
     }
 }
 
-@available(iOS 13.0.0, *)
 extension MXCryptoMachine: MXCryptoUserIdentitySource {
     func isUserVerified(userId: String) -> Bool {
         do {
@@ -292,7 +287,6 @@ extension MXCryptoMachine: MXCryptoUserIdentitySource {
     }
 }
 
-@available(iOS 13.0.0, *)
 extension MXCryptoMachine: MXCryptoEventEncrypting {
     func shareRoomKeysIfNecessary(roomId: String, users: [String]) async throws {
         try await sessionsQueue.sync { [weak self] in
@@ -376,7 +370,6 @@ extension MXCryptoMachine: MXCryptoEventEncrypting {
     }
 }
 
-@available(iOS 13.0.0, *)
 extension MXCryptoMachine: MXCryptoCrossSigning {
     func crossSigningStatus() -> CrossSigningStatus {
         return machine.crossSigningStatus()
@@ -391,7 +384,6 @@ extension MXCryptoMachine: MXCryptoCrossSigning {
     }
 }
 
-@available(iOS 13.0.0, *)
 extension MXCryptoMachine: MXCryptoVerificationRequesting {
     func requestSelfVerification(methods: [String]) async throws -> VerificationRequest {
         guard let result = try machine.requestSelfVerification(methods: methods) else {
@@ -467,7 +459,6 @@ extension MXCryptoMachine: MXCryptoVerificationRequesting {
     }
 }
 
-@available(iOS 13.0.0, *)
 extension MXCryptoMachine: MXCryptoVerifying {
     func verification(userId: String, flowId: String) -> Verification? {
         return machine.getVerification(userId: userId, flowId: flowId)
@@ -495,7 +486,6 @@ extension MXCryptoMachine: MXCryptoVerifying {
     }
 }
 
-@available(iOS 13.0.0, *)
 extension MXCryptoMachine: MXCryptoSASVerifying {
     func startSasVerification(userId: String, flowId: String) async throws -> Sas {
         guard let result = try machine.startSasVerification(userId: userId, flowId: flowId) else {
@@ -520,7 +510,6 @@ extension MXCryptoMachine: MXCryptoSASVerifying {
     }
 }
 
-@available(iOS 13.0.0, *)
 extension MXCryptoMachine: Logger {
     func log(logLine: String) {
         MXLog.debug("[MXCryptoMachine] \(logLine)")
