@@ -5026,7 +5026,9 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
         return nil;
     }
 
-    return [self sendBackup:keyBackupData.JSONDictionary path:path success:success failure:failure];
+    return [self sendBackup:keyBackupData.JSONDictionary path:path success:^(NSDictionary *JSONResponse) {
+        success();
+    } failure:failure];
 }
 
 - (MXHTTPOperation*)sendRoomKeysBackup:(MXRoomKeysBackupData*)roomKeysBackupData
@@ -5043,12 +5045,14 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
         return nil;
     }
 
-    return [self sendBackup:roomKeysBackupData.JSONDictionary path:path success:success failure:failure];
+    return [self sendBackup:roomKeysBackupData.JSONDictionary path:path success:^(NSDictionary *JSONResponse) {
+        success();
+    } failure:failure];
 }
 
 - (MXHTTPOperation*)sendKeysBackup:(MXKeysBackupData*)keysBackupData
                            version:(NSString*)version
-                           success:(void (^)(void))success
+                           success:(void (^)(NSDictionary *JSONResponse))success
                            failure:(void (^)(NSError *error))failure
 {
     NSString *path = [self keyBackupPath:nil session:nil version:version];
@@ -5064,7 +5068,7 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
 
 - (MXHTTPOperation*)sendBackup:(NSDictionary*)backupData
                           path:(NSString*)path
-                       success:(void (^)(void))success
+                       success:(void (^)(NSDictionary *JSONResponse))success
                        failure:(void (^)(NSError *error))failure
 {
     MXWeakify(self);
@@ -5078,7 +5082,7 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
                                      {
                                          [self dispatchProcessing:nil
                                                     andCompletion:^{
-                                                        success();
+                                                        success(JSONResponse);
                                                     }];
                                      }
                                  } failure:^(NSError *error) {

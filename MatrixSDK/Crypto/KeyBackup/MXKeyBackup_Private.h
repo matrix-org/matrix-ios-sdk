@@ -15,6 +15,8 @@
  */
 
 #import "MXKeyBackup.h"
+#import "MXKeyBackupEngine.h"
+#import "MXSecretShareManager.h"
 
 @class MXCrypto;
 
@@ -28,9 +30,15 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Constructor.
 
- @param crypto the related 'MXCrypto'.
+ @param engine backup engine that stores and manages keys
+ @param restClient rest client to perform http requests
+ @param secretShareManager manages of secrets hsaring
+ @param queue dispatch queue to perform all operations on
  */
-- (instancetype)initWithCrypto:(MXCrypto *)crypto;
+- (instancetype)initWithEngine:(id<MXKeyBackupEngine>)engine
+                    restClient:(MXRestClient *)restClient
+            secretShareManager:(MXSecretShareManager *)secretShareManager
+                         queue:(dispatch_queue_t)queue;
 
 /**
  Check the server for an active key backup.

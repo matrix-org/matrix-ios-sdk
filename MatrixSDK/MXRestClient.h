@@ -2554,7 +2554,7 @@ Note: Clients should consider avoiding this endpoint for URLs posted in encrypte
  */
 - (MXHTTPOperation*)sendKeysBackup:(MXKeysBackupData*)keysBackupData
                            version:(NSString*)version
-                           success:(void (^)(void))success
+                           success:(void (^)(NSDictionary *JSONResponse))success
                            failure:(void (^)(NSError *error))failure;
 
 /**
