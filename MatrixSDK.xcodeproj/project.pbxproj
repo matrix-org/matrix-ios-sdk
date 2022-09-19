@@ -715,6 +715,8 @@
 		66AC9D26278CE627002E9B8F /* MXRefreshTokenData.m in Sources */ = {isa = PBXBuildFile; fileRef = 66AC9D22278CE626002E9B8F /* MXRefreshTokenData.m */; };
 		71DE22E01BC7C51200284153 /* MXReceiptData.m in Sources */ = {isa = PBXBuildFile; fileRef = 71DE22DC1BC7C51200284153 /* MXReceiptData.m */; };
 		71DE22E11BC7C51200284153 /* MXReceiptData.h in Headers */ = {isa = PBXBuildFile; fileRef = 71DE22DD1BC7C51200284153 /* MXReceiptData.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		8834E1F028D8B35500C3F353 /* MXHTTPClientExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8834E1EF28D8B35500C3F353 /* MXHTTPClientExtensions.swift */; };
+		8834E1F128D8B35500C3F353 /* MXHTTPClientExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8834E1EF28D8B35500C3F353 /* MXHTTPClientExtensions.swift */; };
 		8EC511042568216B00EC4E5B /* MXTaggedEventInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = 8EC511022568216B00EC4E5B /* MXTaggedEventInfo.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8EC511052568216B00EC4E5B /* MXTaggedEventInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = 8EC511022568216B00EC4E5B /* MXTaggedEventInfo.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8EC511062568216B00EC4E5B /* MXTaggedEventInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = 8EC511032568216B00EC4E5B /* MXTaggedEventInfo.m */; };
@@ -2520,6 +2522,7 @@
 		71DE22DC1BC7C51200284153 /* MXReceiptData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXReceiptData.m; sourceTree = "<group>"; };
 		71DE22DD1BC7C51200284153 /* MXReceiptData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXReceiptData.h; sourceTree = "<group>"; };
 		74B6BABAFA35199D61B18B6F /* Pods-MatrixSDKTests-iOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MatrixSDKTests-iOS.debug.xcconfig"; path = "Target Support Files/Pods-MatrixSDKTests-iOS/Pods-MatrixSDKTests-iOS.debug.xcconfig"; sourceTree = "<group>"; };
+		8834E1EF28D8B35500C3F353 /* MXHTTPClientExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXHTTPClientExtensions.swift; sourceTree = "<group>"; };
 		8EC511022568216B00EC4E5B /* MXTaggedEventInfo.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXTaggedEventInfo.h; sourceTree = "<group>"; };
 		8EC511032568216B00EC4E5B /* MXTaggedEventInfo.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXTaggedEventInfo.m; sourceTree = "<group>"; };
 		8EC51108256822B400EC4E5B /* MXTaggedEvents.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXTaggedEvents.h; sourceTree = "<group>"; };
@@ -3209,6 +3212,7 @@
 				322DB456212EB8E600F4EFE9 /* MXHTTPClient_Private.h */,
 				320DFDD719DD99B60068622A /* MXHTTPClient.h */,
 				320DFDD819DD99B60068622A /* MXHTTPClient.m */,
+				8834E1EF28D8B35500C3F353 /* MXHTTPClientExtensions.swift */,
 				32CAB1091A925B41008C5BB9 /* MXHTTPOperation.h */,
 				32CAB10A1A925B41008C5BB9 /* MXHTTPOperation.m */,
 				F03EF5021DF01596009DF592 /* MXLRUCache.h */,
@@ -6563,6 +6567,7 @@
 				324AAC72239913AD00380A66 /* MXKeyVerificationRequestByDMJSONModel.m in Sources */,
 				C6B40F521F2A35BE00C42C72 /* MXRoomState.swift in Sources */,
 				B19A30C62404268600FB6F35 /* MXQRCodeDataBuilder.m in Sources */,
+				8834E1F028D8B35500C3F353 /* MXHTTPClientExtensions.swift in Sources */,
 				324676EC25C15F4600EA855B /* MXMemory.swift in Sources */,
 				32549AF723F2E2790002576B /* MXKeyVerificationReady.m in Sources */,
 				B11BD45522CB583E0064D8B0 /* MXReplyEventBodyParts.m in Sources */,
@@ -7162,6 +7167,7 @@
 				B14EF2182397E90400758AF0 /* MXEmojiRepresentation.m in Sources */,
 				EC8A53E525B1BCC6004E0802 /* MXThirdPartyUsersResponse.m in Sources */,
 				B14EF2192397E90400758AF0 /* MXEventEditsListener.m in Sources */,
+				8834E1F128D8B35500C3F353 /* MXHTTPClientExtensions.swift in Sources */,
 				32CEEF4C23B0A8170039BA98 /* MXCrossSigningTools.m in Sources */,
 				B14EF21A2397E90400758AF0 /* MXSession.swift in Sources */,
 				B14EF21B2397E90400758AF0 /* MXError.m in Sources */,

@@ -21,7 +21,8 @@ abstract_target 'MatrixSDK' do
         platform :ios, '11.0'
         
         pod 'MatrixSDKCrypto', "0.1.0", :configurations => ['DEBUG']
-        
+        pod 'DeviceKit', '~> 4.7.0'
+
         target 'MatrixSDKTests-iOS' do
             inherit! :search_paths
             pod 'OHHTTPStubs', '~> 9.1.0'

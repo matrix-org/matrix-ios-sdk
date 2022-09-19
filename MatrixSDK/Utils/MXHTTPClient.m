@@ -26,6 +26,8 @@
 #import "MXHTTPClient_Private.h"
 #import "MXCredentials.h"
 
+#import "MatrixSDKSwiftHeader.h"
+
 #import <AFNetworking/AFNetworking.h>
 
 #pragma mark - Constants definitions
@@ -648,6 +650,27 @@ static NSUInteger requestCount = 0;
     else
     {
         httpManager.requestSerializer = [AFHTTPRequestSerializer serializer];
+    }
+
+    // Overwrite user agent to include concrete device model (code copied from AlamoFire)
+    NSString *userAgent = nil;
+#if TARGET_OS_IOS
+    userAgent = [NSString stringWithFormat:@"%@/%@ (%@; iOS %@; Scale/%0.2f)", [[NSBundle mainBundle] infoDictionary][(__bridge NSString *)kCFBundleExecutableKey] ?: [[NSBundle mainBundle] infoDictionary][(__bridge NSString *)kCFBundleIdentifierKey], [[NSBundle mainBundle] infoDictionary][@"CFBundleShortVersionString"] ?: [[NSBundle mainBundle] infoDictionary][(__bridge NSString *)kCFBundleVersionKey], [self getModelNameForUserAgent], [[UIDevice currentDevice] systemVersion], [[UIScreen mainScreen] scale]];
+#elif TARGET_OS_TV
+    userAgent = [NSString stringWithFormat:@"%@/%@ (%@; tvOS %@; Scale/%0.2f)", [[NSBundle mainBundle] infoDictionary][(__bridge NSString *)kCFBundleExecutableKey] ?: [[NSBundle mainBundle] infoDictionary][(__bridge NSString *)kCFBundleIdentifierKey], [[NSBundle mainBundle] infoDictionary][@"CFBundleShortVersionString"] ?: [[NSBundle mainBundle] infoDictionary][(__bridge NSString *)kCFBundleVersionKey], [self getModelNameForUserAgent], [[UIDevice currentDevice] systemVersion], [[UIScreen mainScreen] scale]];
+#elif TARGET_OS_WATCH
+    userAgent = [NSString stringWithFormat:@"%@/%@ (%@; watchOS %@; Scale/%0.2f)", [[NSBundle mainBundle] infoDictionary][(__bridge NSString *)kCFBundleExecutableKey] ?: [[NSBundle mainBundle] infoDictionary][(__bridge NSString *)kCFBundleIdentifierKey], [[NSBundle mainBundle] infoDictionary][@"CFBundleShortVersionString"] ?: [[NSBundle mainBundle] infoDictionary][(__bridge NSString *)kCFBundleVersionKey], [self getModelNameForUserAgent], [[WKInterfaceDevice currentDevice] systemVersion], [[WKInterfaceDevice currentDevice] screenScale]];
+#elif defined(__MAC_OS_X_VERSION_MIN_REQUIRED)
+    userAgent = [NSString stringWithFormat:@"%@/%@ (Mac OS X %@)", [[NSBundle mainBundle] infoDictionary][(__bridge NSString *)kCFBundleExecutableKey] ?: [[NSBundle mainBundle] infoDictionary][(__bridge NSString *)kCFBundleIdentifierKey], [[NSBundle mainBundle] infoDictionary][@"CFBundleShortVersionString"] ?: [[NSBundle mainBundle] infoDictionary][(__bridge NSString *)kCFBundleVersionKey], [[NSProcessInfo processInfo] operatingSystemVersionString]];
+#endif
+    if (userAgent) {
+        if (![userAgent canBeConvertedToEncoding:NSASCIIStringEncoding]) {
+            NSMutableString *mutableUserAgent = [userAgent mutableCopy];
+            if (CFStringTransform((__bridge CFMutableStringRef)(mutableUserAgent), NULL, (__bridge CFStringRef)@"Any-Latin; Latin-ASCII; [:^ASCII:] Remove", false)) {
+                userAgent = mutableUserAgent;
+            }
+        }
+        [httpManager.requestSerializer setValue:userAgent forHTTPHeaderField:@"User-Agent"];
     }
     
     //  Include default HTTP headers again

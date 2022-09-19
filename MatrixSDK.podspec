@@ -46,6 +46,7 @@ Pod::Spec.new do |s|
       ss.dependency 'Realm', '10.27.0'
       ss.dependency 'libbase58', '~> 0.1.4'
       ss.ios.dependency 'MatrixSDK/CryptoSDK'
+      ss.ios.dependency 'DeviceKit', '~> 4.7.0'
   end
 
   s.subspec 'JingleCallStack' do |ss|
