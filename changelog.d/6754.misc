@@ -1,0 +1,1 @@
+Avoid main thread assertion if we can't get the application
