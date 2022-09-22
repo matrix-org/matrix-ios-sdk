@@ -28,35 +28,9 @@ NS_ASSUME_NONNULL_BEGIN
 @interface MXKeyBackup ()
 
 /**
- Constructor.
-
- @param engine backup engine that stores and manages keys
- @param restClient rest client to perform http requests
- @param secretShareManager manages of secrets sharing
- @param queue dispatch queue to perform all operations on
- */
-- (instancetype)initWithEngine:(id<MXKeyBackupEngine>)engine
-                    restClient:(MXRestClient *)restClient
-            secretShareManager:(MXSecretShareManager *)secretShareManager
-                         queue:(dispatch_queue_t)queue;
-
-/**
- Check the server for an active key backup.
-
- If one is present and has a valid signature from one of the user's verified
- devices, start backing up to it.
- */
-- (void)checkAndStartKeyBackup;
-
-/**
  * Reset all local key backup data.
  */
 - (void)resetKeyBackupData;
-
-/**
- Do a backup if there are new keys.
- */
-- (void)maybeSendKeyBackup;
 
 - (void)requestPrivateKeys:(void (^)(void))onComplete;
 
