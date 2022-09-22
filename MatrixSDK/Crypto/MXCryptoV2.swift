@@ -28,9 +28,6 @@ public extension MXCrypto {
         let log = MXNamedLog(name: "MXCryptoV2")
         
         #if os(iOS)
-            guard #available(iOS 13.0.0, *) else {
-                return nil
-            }
             guard MXSDKOptions.sharedInstance().enableCryptoV2 else {
                 return nil
             }
@@ -71,7 +68,6 @@ import MatrixSDKCrypto
 ///
 /// Another benefit of using a subclass and overriding every method with new implementation is that existing integration tests
 /// for crypto-related functionality can still run (and eventually pass) without any changes.
-@available(iOS 13.0.0, *)
 private class MXCryptoV2: MXCrypto {
     enum Error: Swift.Error {
         case missingRoom

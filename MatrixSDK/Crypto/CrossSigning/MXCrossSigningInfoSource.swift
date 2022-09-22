@@ -20,7 +20,6 @@ import Foundation
 
 /// Convenience struct which transforms `MatrixSDKCrypto` cross signing info formats
 /// into `MatrixSDK` `MXCrossSigningInfo` formats.
-@available(iOS 13.0.0, *)
 struct MXCrossSigningInfoSource {
     private let source: MXCryptoUserIdentitySource
     

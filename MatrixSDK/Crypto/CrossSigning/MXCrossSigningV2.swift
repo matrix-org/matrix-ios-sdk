@@ -21,7 +21,6 @@ import Foundation
 /// A work-in-progress subclass of `MXCrossSigning` instantiated and used by `MXCryptoV2`.
 ///
 /// Note: `MXCrossSigning` will be defined as a protocol in the future to avoid subclasses.
-@available(iOS 13.0.0, *)
 class MXCrossSigningV2: MXCrossSigning {
     enum Error: Swift.Error {
         case missingAuthSession

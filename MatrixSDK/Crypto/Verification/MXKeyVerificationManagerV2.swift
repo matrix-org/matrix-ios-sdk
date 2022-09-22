@@ -22,10 +22,8 @@ enum MXKeyVerificationUpdateResult {
     case removed
 }
 
-@available(iOS 13.0.0, *)
 typealias MXCryptoVerification = MXCryptoVerificationRequesting & MXCryptoSASVerifying
 
-@available(iOS 13.0.0, *)
 class MXKeyVerificationManagerV2: MXKeyVerificationManager {
     enum Error: Swift.Error {
         case notSupported

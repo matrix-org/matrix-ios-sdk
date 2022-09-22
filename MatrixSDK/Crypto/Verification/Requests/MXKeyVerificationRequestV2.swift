@@ -21,7 +21,6 @@ import Foundation
 import MatrixSDKCrypto
 
 /// Verification request originating from `MatrixSDKCrypto`
-@available(iOS 13.0.0, *)
 class MXKeyVerificationRequestV2: NSObject, MXKeyVerificationRequest {
     var state: MXKeyVerificationRequestState {
         // State as enum will be moved to MatrixSDKCrypto in the future

@@ -20,7 +20,6 @@ import Foundation
 
 /// Convenience struct which transforms `MatrixSDKCrypto` device formats
 /// into `MatrixSDK` `MXDeviceInfo` formats.
-@available(iOS 13.0.0, *)
 struct MXDeviceInfoSource {
     private let source: MXCryptoDevicesSource
     
