@@ -52,6 +52,7 @@ NSString *const kMXAccountDataTypeUserWidgets = @"m.widgets";
 NSString *const kMXAccountDataTypeIdentityServer = @"m.identity_server";
 NSString *const kMXAccountDataTypeAcceptedTerms = @"m.accepted_terms";
 NSString *const kMXAccountDataTypeBreadcrumbs = @"im.vector.setting.breadcrumbs";
+NSString *const kMXAccountDataTypeClientInformation = @"io.element.matrix_client_information";
 
 /**
  Account data keys
