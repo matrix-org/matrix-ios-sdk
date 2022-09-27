@@ -194,4 +194,4 @@ FOUNDATION_EXPORT NSString *MatrixSDKVersion;
 #import "MXBeaconInfo.h"
 #import "MXBeacon.h"
 #import "MXEventAssetType.h"
-
+#import "MXDevice.h"

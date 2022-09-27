@@ -52,6 +52,7 @@
 @class MXDeviceListResponse;
 @class MXSpaceChildrenRequestParameters;
 @class MXCapabilities;
+@class MXDevice;
 
 #pragma mark - Constants definitions
 /**
