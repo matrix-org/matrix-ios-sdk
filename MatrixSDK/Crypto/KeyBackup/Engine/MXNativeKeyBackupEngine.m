@@ -23,6 +23,7 @@
 #import "OLMInboundGroupSession.h"
 #import "MatrixSDKSwiftHeader.h"
 #import "MXRecoveryKey.h"
+#import "MXKeyBackupData.h"
 
 /**
  Maximum number of keys to send at a time to the homeserver.
@@ -82,17 +83,19 @@ static Class DefaultAlgorithmClass;
     return self.crypto.store.backupVersion;
 }
 
-- (BOOL)enableBackupWithVersion:(MXKeyBackupVersion *)version error:(NSError **)error
+- (BOOL)enableBackupWithKeyBackupVersion:(MXKeyBackupVersion *)keyBackupVersion error:(NSError **)error
 {
-    id<MXBaseKeyBackupAuthData> authData = [self megolmBackupAuthDataFromKeyBackupVersion:version error:error];
+    [self validateKeyBackupVersion:keyBackupVersion];
+    
+    id<MXBaseKeyBackupAuthData> authData = [self authDataFromKeyBackupVersion:keyBackupVersion error:error];
     if (!authData)
     {
         return NO;
     }
     
-    self.keyBackupVersion = version;
-    self.crypto.store.backupVersion = version.version;
-    Class algorithmClass = AlgorithmClassesByName[version.algorithm];
+    self.keyBackupVersion = keyBackupVersion;
+    self.crypto.store.backupVersion = keyBackupVersion.version;
+    Class algorithmClass = AlgorithmClassesByName[keyBackupVersion.algorithm];
     //  store the desired backup algorithm
     self.keyBackupAlgorithm = [[algorithmClass alloc] initWithCrypto:self.crypto authData:authData keyGetterBlock:^NSData * _Nullable{
         return self.privateKey;
@@ -114,7 +117,7 @@ static Class DefaultAlgorithmClass;
 
 #pragma mark - Private / Recovery key management
 
-- (nullable NSData*)privateKey
+- (nullable NSData *)privateKey
 {
     NSString *privateKeyBase64 = [self.crypto.store secretWithSecretId:MXSecretId.keyBackup];
     if (!privateKeyBase64)
@@ -126,47 +129,55 @@ static Class DefaultAlgorithmClass;
     return [MXBase64Tools dataFromBase64:privateKeyBase64];
 }
 
-- (void)savePrivateKey:(NSString *)privateKey
+- (void)savePrivateKey:(NSData *)privateKey version:(NSString *)version
 {
-    [self.crypto.store storeSecret:privateKey withSecretId:MXSecretId.keyBackup];
+    NSString *privateKeyBase64 = [MXBase64Tools unpaddedBase64FromData:privateKey];
+    [self.crypto.store storeSecret:privateKeyBase64 withSecretId:MXSecretId.keyBackup];
 }
 
-- (void)saveRecoveryKey:(NSString *)recoveryKey
+- (BOOL)hasValidPrivateKey
 {
-    NSError *error;
-    OLMPkDecryption *decryption = [self pkDecryptionFromRecoveryKey:recoveryKey error:&error];
-    if (!decryption)
+    NSData *privateKey = self.privateKey;
+    if (!privateKey)
     {
-        MXLogDebug(@"[MXNativeKeyBackupEngine] saveRecoveryKey: Cannot create OLMPkDecryption. Error: %@", error);
-        return;
+        MXLogDebug(@"[MXNativeKeyBackupEngine] hasValidPrivateKey: No private key");
+        return NO;
     }
     
-    NSString *privateKeyBase64 = [MXBase64Tools unpaddedBase64FromData:decryption.privateKey];
-    [self savePrivateKey:privateKeyBase64];
+    NSError *error;
+    BOOL keyMatches = [self.keyBackupAlgorithm keyMatches:privateKey error:&error];
+    if (!keyMatches)
+    {
+        MXLogDebug(@"[MXNativeKeyBackupEngine] hasValidPrivateKey: Error: Private key does not match: %@", error);
+        [self.crypto.store deleteSecretWithSecretId:MXSecretId.keyBackup];
+        return NO;
+    }
+    return YES;
 }
 
-- (void)deletePrivateKey
+- (BOOL)hasValidPrivateKeyForKeyBackupVersion:(MXKeyBackupVersion *)keyBackupVersion
 {
-    [self.crypto.store deleteSecretWithSecretId:MXSecretId.keyBackup];
-}
-
-- (BOOL)isValidPrivateKey:(NSData *)privateKey
-                    error:(NSError **)error
-{
-    return [self.keyBackupAlgorithm keyMatches:privateKey error:error];
-}
-
-- (BOOL)isValidPrivateKey:(NSData *)privateKey
-      forKeyBackupVersion:(MXKeyBackupVersion *)keyBackupVersion
-                    error:(NSError **)error
-{
+    NSData *privateKey = self.privateKey;
+    if (!privateKey)
+    {
+        MXLogDebug(@"[MXNativeKeyBackupEngine] hasValidPrivateKeyForKeyBackupVersion: No private key");
+        return NO;
+    }
+    
+    NSError *error;
     id<MXKeyBackupAlgorithm> algorithm = [self getOrCreateKeyBackupAlgorithmFor:keyBackupVersion privateKey:privateKey];
-    return [algorithm keyMatches:privateKey error:error];
+    BOOL keyMatches = [algorithm keyMatches:privateKey error:&error];
+    if (!keyMatches)
+    {
+        MXLogDebug(@"[MXNativeKeyBackupEngine] hasValidPrivateKeyForKeyBackupVersion: Error: Private key does not match: %@", error);
+        return NO;
+    }
+    return YES;
 }
 
-- (BOOL)isValidRecoveryKey:(NSString*)recoveryKey
-       forKeyBackupVersion:(MXKeyBackupVersion*)keyBackupVersion
-                     error:(NSError **)error
+- (NSData *)validPrivateKeyForRecoveryKey:(NSString *)recoveryKey
+                      forKeyBackupVersion:(MXKeyBackupVersion *)keyBackupVersion
+                                    error:(NSError **)error
 {
     NSData *privateKey = [MXRecoveryKey decode:recoveryKey error:error];
 
@@ -180,7 +191,7 @@ static Class DefaultAlgorithmClass;
                                  userInfo:@{
             NSLocalizedDescriptionKey: @"Invalid recovery key or password"
         }];
-        return NO;
+        return nil;
     }
 
     Class<MXKeyBackupAlgorithm> algorithm = AlgorithmClassesByName[keyBackupVersion.algorithm];
@@ -193,7 +204,7 @@ static Class DefaultAlgorithmClass;
                                  userInfo:@{
             NSLocalizedDescriptionKey: [NSString stringWithFormat:@"Unknown algorithm (%@)", keyBackupVersion.algorithm]
         }];
-        return NO;
+        return nil;
     }
     BOOL result = [algorithm keyMatches:privateKey withAuthData:keyBackupVersion.authData error:error];
 
@@ -208,44 +219,15 @@ static Class DefaultAlgorithmClass;
         }];
     }
 
-    return result;
+    return privateKey;
 }
 
-- (void)validateKeyBackupVersion:(MXKeyBackupVersion *)keyBackupVersion
-{
-    // Check private keys
-    if (self.privateKey)
-    {
-        Class<MXKeyBackupAlgorithm> algorithmClass = AlgorithmClassesByName[keyBackupVersion.algorithm];
-        if (algorithmClass == NULL)
-        {
-            NSString *message = [NSString stringWithFormat:@"[MXNativeKeyBackupEngine] validateKeyBackupVersion: unknown algorithm: %@", keyBackupVersion.algorithm];
-            MXLogError(message);
-            return;
-        }
-        if (![algorithmClass checkBackupVersion:keyBackupVersion])
-        {
-            MXLogError(@"[MXNativeKeyBackupEngine] validateKeyBackupVersion: invalid backup data returned");
-            return;
-        }
-
-        NSData *privateKey = self.privateKey;
-        NSError *error;
-        BOOL keyMatches = [algorithmClass keyMatches:privateKey withAuthData:keyBackupVersion.authData error:&error];
-        if (error || !keyMatches)
-        {
-            MXLogDebug(@"[MXNativeKeyBackupEngine] validateKeyBackupVersion: -> private key does not match: %@, will be removed", error);
-            [self.crypto.store deleteSecretWithSecretId:MXSecretId.keyBackup];
-        }
-    }
-}
-
-- (nullable NSString*)recoveryKeyFromPassword:(NSString*)password
-                           inKeyBackupVersion:(MXKeyBackupVersion*)keyBackupVersion
+- (nullable NSString*)recoveryKeyFromPassword:(NSString *)password
+                           inKeyBackupVersion:(MXKeyBackupVersion *)keyBackupVersion
                                         error:(NSError **)error
 {
     // Extract MXBaseKeyBackupAuthData
-    id<MXBaseKeyBackupAuthData> authData = [self megolmBackupAuthDataFromKeyBackupVersion:keyBackupVersion error:error];
+    id<MXBaseKeyBackupAuthData> authData = [self authDataFromKeyBackupVersion:keyBackupVersion error:error];
     if (*error)
     {
         return nil;
@@ -360,14 +342,14 @@ static Class DefaultAlgorithmClass;
     }];
 }
 
-- (MXKeyBackupVersionTrust *)trustForKeyBackupVersionFromCryptoQueue:(MXKeyBackupVersion *)keyBackupVersion
+- (MXKeyBackupVersionTrust *)trustForKeyBackupVersion:(MXKeyBackupVersion *)keyBackupVersion
 {
     NSString *myUserId = self.crypto.matrixRestClient.credentials.userId;
 
     MXKeyBackupVersionTrust *keyBackupVersionTrust = [MXKeyBackupVersionTrust new];
 
     NSError *error;
-    id<MXBaseKeyBackupAuthData> authData = [self megolmBackupAuthDataFromKeyBackupVersion:keyBackupVersion error:&error];
+    id<MXBaseKeyBackupAuthData> authData = [self authDataFromKeyBackupVersion:keyBackupVersion error:&error];
     if (error)
     {
         MXLogDebug(@"[MXNativeKeyBackupEngine] trustForKeyBackupVersion: Key backup is absent or missing required data");
@@ -452,7 +434,8 @@ static Class DefaultAlgorithmClass;
     return keyBackupVersionTrust;
 }
 
-- (nullable id<MXBaseKeyBackupAuthData>)megolmBackupAuthDataFromKeyBackupVersion:(MXKeyBackupVersion*)keyBackupVersion error:(NSError**)error
+- (nullable id<MXBaseKeyBackupAuthData>)authDataFromKeyBackupVersion:(MXKeyBackupVersion *)keyBackupVersion
+                                                               error:(NSError **)error
 {
     Class<MXKeyBackupAlgorithm> algorithmClass = AlgorithmClassesByName[keyBackupVersion.algorithm];
     if (algorithmClass == NULL)
@@ -494,12 +477,17 @@ static Class DefaultAlgorithmClass;
     return progress;
 }
 
-- (MXKeyBackupPayload *)roomKeysBackupPayload
+- (void)backupKeysWithSuccess:(void (^)(void))success
+                      failure:(void (^)(NSError *))failure
 {
     if (!self.keyBackupAlgorithm)
     {
         MXLogDebug(@"[MXNativeKeyBackupEngine] roomKeysBackupPayload: No known backup algorithm");
-        return nil;
+        NSError *error = [NSError errorWithDomain:MXKeyBackupErrorDomain
+                                             code:MXKeyBackupErrorUnknownAlgorithm
+                                         userInfo:nil];
+        failure(error);
+        return;
     }
     
     // Get a chunk of keys to backup
@@ -546,35 +534,65 @@ static Class DefaultAlgorithmClass;
     MXKeysBackupData *keysBackupData = [MXKeysBackupData new];
     keysBackupData.rooms = rooms;
     
+    // Make the request
     MXWeakify(self);
-    return [[MXKeyBackupPayload alloc] initWithBackupData:keysBackupData
-                                                             completion:^(NSDictionary *JSONResponse) {
+    [self.crypto.matrixRestClient sendKeysBackup:keysBackupData version:self.keyBackupVersion.version success:^(NSDictionary *JSONResponse){
         MXStrongifyAndReturnIfNil(self);
         [self.crypto.store markBackupDoneForInboundGroupSessions:sessions];
-    }];
+        success();
+    } failure:failure];
 }
 
-- (MXMegolmSessionData *)decryptKeyBackupData:(MXKeyBackupData *)keyBackupData
-                             keyBackupVersion:(MXKeyBackupVersion *)keyBackupVersion
-                                   privateKey:(NSData *)privateKey
-                                   forSession:(NSString *)sessionId
-                                       inRoom:(NSString *)roomId
+- (void)importKeysWithKeysBackupData:(MXKeysBackupData *)keysBackupData
+                          privateKey:(NSData *)privateKey
+                    keyBackupVersion:(MXKeyBackupVersion *)keyBackupVersion
+                             success:(void (^)(NSUInteger, NSUInteger))success
+                             failure:(void (^)(NSError *))failure
 {
     id<MXKeyBackupAlgorithm> algorithm = [self getOrCreateKeyBackupAlgorithmFor:keyBackupVersion privateKey:privateKey];
-    return [algorithm decryptKeyBackupData:keyBackupData forSession:sessionId inRoom:roomId];
-}
-
-- (void)importMegolmSessionDatas:(NSArray<MXMegolmSessionData *> *)keys
-                          backUp:(BOOL)backUp
-                         success:(void (^)(NSUInteger, NSUInteger))success
-                         failure:(void (^)(NSError * _Nonnull))failure
-{
-    [self.crypto importMegolmSessionDatas:keys backUp:backUp success:success failure:failure];
+    
+    NSMutableArray<MXMegolmSessionData*> *sessionDatas = [NSMutableArray array];
+    
+    // Restore that data
+    NSUInteger sessionsFromHSCount = 0;
+    for (NSString *roomId in keysBackupData.rooms)
+    {
+        for (NSString *sessionId in keysBackupData.rooms[roomId].sessions)
+        {
+            sessionsFromHSCount++;
+            MXKeyBackupData *keyBackupData = keysBackupData.rooms[roomId].sessions[sessionId];
+            MXMegolmSessionData *sessionData = [algorithm decryptKeyBackupData:keyBackupData forSession:sessionId inRoom:roomId];
+            
+            if (sessionData)
+            {
+                [sessionDatas addObject:sessionData];
+            }
+        }
+    }
+    
+    MXLogDebug(@"[MXNativeKeyBackupEngine] importKeysWithKeysBackupData: Decrypted %@ keys out of %@ from the backup store on the homeserver", @(sessionDatas.count), @(sessionsFromHSCount));
+    
+    // Do not trigger a backup for them if they come from the backup version we are using
+    BOOL backUp = ![keyBackupVersion.version isEqualToString:self.keyBackupVersion.version];
+    if (backUp)
+    {
+        MXLogDebug(@"[MXNativeKeyBackupEngine] importKeysWithKeysBackupData: Those keys will be backed up to backup version: %@", self.keyBackupVersion.version);
+    }
+    
+    // Import them into the crypto store
+    [self.crypto importMegolmSessionDatas:sessionDatas backUp:backUp success:success failure:^(NSError *error) {
+        if (failure)
+        {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                failure(error);
+            });
+        }
+    }];
 }
 
 #pragma mark - Private methods -
 
-- (id<MXKeyBackupAlgorithm>)getOrCreateKeyBackupAlgorithmFor:(MXKeyBackupVersion*)keyBackupVersion privateKey:(NSData*)privateKey
+- (id<MXKeyBackupAlgorithm>)getOrCreateKeyBackupAlgorithmFor:(MXKeyBackupVersion *)keyBackupVersion privateKey:(NSData *)privateKey
 {
     if (self.enabled
         && [self.keyBackupVersion.JSONDictionary isEqualToDictionary:keyBackupVersion.JSONDictionary]
@@ -595,7 +613,7 @@ static Class DefaultAlgorithmClass;
         return nil;
     }
     NSError *error;
-    id<MXBaseKeyBackupAuthData> authData = [self megolmBackupAuthDataFromKeyBackupVersion:keyBackupVersion error:&error];
+    id<MXBaseKeyBackupAuthData> authData = [self authDataFromKeyBackupVersion:keyBackupVersion error:&error];
     if (error)
     {
         MXLogError(@"[MXNativeKeyBackupEngine] getOrCreateKeyBackupAlgorithmFor: invalid auth data");
@@ -606,20 +624,33 @@ static Class DefaultAlgorithmClass;
     }];
 }
 
-- (OLMPkDecryption*)pkDecryptionFromRecoveryKey:(NSString*)recoveryKey error:(NSError **)error
+- (void)validateKeyBackupVersion:(MXKeyBackupVersion *)keyBackupVersion
 {
-    // Extract the private key
-    NSData *privateKey = [MXRecoveryKey decode:recoveryKey error:error];
-
-    // Built the PK decryption with it
-    OLMPkDecryption *decryption;
-    if (privateKey)
+    // Check private keys
+    if (self.privateKey)
     {
-        decryption = [OLMPkDecryption new];
-        [decryption setPrivateKey:privateKey error:error];
-    }
+        Class<MXKeyBackupAlgorithm> algorithmClass = AlgorithmClassesByName[keyBackupVersion.algorithm];
+        if (algorithmClass == NULL)
+        {
+            NSString *message = [NSString stringWithFormat:@"[MXNativeKeyBackupEngine] validateKeyBackupVersion: unknown algorithm: %@", keyBackupVersion.algorithm];
+            MXLogError(message);
+            return;
+        }
+        if (![algorithmClass checkBackupVersion:keyBackupVersion])
+        {
+            MXLogError(@"[MXNativeKeyBackupEngine] validateKeyBackupVersion: invalid backup data returned");
+            return;
+        }
 
-    return decryption;
+        NSData *privateKey = self.privateKey;
+        NSError *error;
+        BOOL keyMatches = [algorithmClass keyMatches:privateKey withAuthData:keyBackupVersion.authData error:&error];
+        if (error || !keyMatches)
+        {
+            MXLogDebug(@"[MXNativeKeyBackupEngine] validateKeyBackupVersion: -> private key does not match: %@, will be removed", error);
+            [self.crypto.store deleteSecretWithSecretId:MXSecretId.keyBackup];
+        }
+    }
 }
 
 @end

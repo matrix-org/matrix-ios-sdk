@@ -21,6 +21,7 @@
 #import "MXMegolmBackupCreationInfo.h"
 #import "MXKeyBackupVersionTrust.h"
 #import "MXKeyBackupAlgorithm.h"
+#import "MXKeyBackupData.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -34,20 +35,20 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark - Enable / Disable engine
 
 /**
- Is the engine enabled to backup room keys
+ Is the engine enabled to backup keys
  */
 @property (nonatomic, readonly) BOOL enabled;
 
 /**
  Current version of the backup
  */
-@property (nonatomic, readonly) NSString *version;
+@property (nullable, nonatomic, readonly) NSString *version;
 
 /**
  Enable a new backup version that will replace any previous version
  */
-- (BOOL)enableBackupWithVersion:(MXKeyBackupVersion *)version
-                          error:(NSError **)error;
+- (BOOL)enableBackupWithKeyBackupVersion:(MXKeyBackupVersion *)keyBackupVersion
+                                   error:(NSError **)error;
 /**
  Disable the current backup and reset any backup-related state
  */
@@ -63,39 +64,25 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Save a new private key
  */
-- (void)savePrivateKey:(NSString *)privateKey;
+- (void)savePrivateKey:(NSData *)privateKey version:(NSString *)version;
 
 /**
- Save a new private key using a recovery key
+ Check to see if the store contains a valid private key
  */
-- (void)saveRecoveryKey:(NSString *)recoveryKey;
+- (BOOL)hasValidPrivateKey;
 
 /**
- Delete the currently stored private key
+ Check to see if the store contains a valid private key that matches a specific backup version
  */
-- (void)deletePrivateKey;
+- (BOOL)hasValidPrivateKeyForKeyBackupVersion:(MXKeyBackupVersion *)keyBackupVersion;
 
 /**
- Check if a private key matches current key backup version
+ Create valid private key from a recovery key for a specific backup version
  */
-- (BOOL)isValidPrivateKey:(NSData *)privateKey
-                    error:(NSError **)error;
+- (nullable NSData *)validPrivateKeyForRecoveryKey:(NSString *)recoveryKey
+                               forKeyBackupVersion:(MXKeyBackupVersion *)keyBackupVersion
+                                             error:(NSError **)error;
 
-/**
- Check if a private key matches key backup version
- */
-- (BOOL)isValidPrivateKey:(NSData *)privateKey
-      forKeyBackupVersion:(MXKeyBackupVersion *)keyBackupVersion
-                    error:(NSError **)error;
-
-/**
- Check if a recovery key matches key backup authentication data
- */
-- (BOOL)isValidRecoveryKey:(NSString *)recoveryKey
-       forKeyBackupVersion:(MXKeyBackupVersion *)keyBackupVersion
-                     error:(NSError **)error;
-
-- (void)validateKeyBackupVersion:(MXKeyBackupVersion *)keyBackupVersion;
 
 /**
  Compute the recovery key from a password and key backup auth data
@@ -109,21 +96,21 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Prepare a new backup version to be uploaded to the server
  */
-- (void)prepareKeyBackupVersionWithPassword:(NSString *)password
-                                  algorithm:(NSString *)algorithm
+- (void)prepareKeyBackupVersionWithPassword:(nullable NSString *)password
+                                  algorithm:(nullable NSString *)algorithm
                                     success:(void (^)(MXMegolmBackupCreationInfo *))success
                                     failure:(void (^)(NSError *))failure;
 
 /**
  Get the current trust level of the backup version
  */
-- (MXKeyBackupVersionTrust *)trustForKeyBackupVersionFromCryptoQueue:(MXKeyBackupVersion *)keyBackupVersion;
+- (MXKeyBackupVersionTrust *)trustForKeyBackupVersion:(MXKeyBackupVersion *)keyBackupVersion;
 
 /**
  Extract authentication data from a backup
  */
-- (nullable id<MXBaseKeyBackupAuthData>)megolmBackupAuthDataFromKeyBackupVersion:(MXKeyBackupVersion *)keyBackupVersion
-                                                                           error:(NSError **)error;
+- (nullable id<MXBaseKeyBackupAuthData>)authDataFromKeyBackupVersion:(MXKeyBackupVersion *)keyBackupVersion
+                                                               error:(NSError **)error;
 
 /**
  Sign an object with backup signing key
@@ -143,26 +130,19 @@ NS_ASSUME_NONNULL_BEGIN
 - (NSProgress *)backupProgress;
 
 /**
- Payload of room keys to be backed up to the server
+ Backup keys to the server
  */
-- (nullable MXKeyBackupPayload *)roomKeysBackupPayload;
+- (void)backupKeysWithSuccess:(void (^)(void))success
+                      failure:(void (^)(NSError *error))failure;
 
 /**
- Decrypt backup data using private key
+ Import encypted backup keys
  */
-- (nullable MXMegolmSessionData *)decryptKeyBackupData:(MXKeyBackupData *)keyBackupData
-                                      keyBackupVersion:(MXKeyBackupVersion *)keyBackupVersion
-                                            privateKey:(NSData *)privateKey
-                                            forSession:(NSString *)sessionId
-                                                inRoom:(NSString *)roomId;
-
-/**
- Import decrypted room keys
- */
-- (void)importMegolmSessionDatas:(NSArray<MXMegolmSessionData*>*)keys
-                          backUp:(BOOL)backUp
-                         success:(void (^)(NSUInteger total, NSUInteger imported))success
-                         failure:(void (^)(NSError *error))failure;
+- (void)importKeysWithKeysBackupData:(MXKeysBackupData *)keysBackupData
+                          privateKey:(NSData*)privateKey
+                    keyBackupVersion:(MXKeyBackupVersion *)keyBackupVersion
+                             success:(void (^)(NSUInteger totalKeys, NSUInteger importedKeys))success
+                             failure:(void (^)(NSError *error))failure;
 
 @end
 

@@ -78,7 +78,7 @@ static NSString *const kMXCryptoOneTimeKeyClaimCompleteNotificationErrorKey     
 NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 
-@interface MXCrypto ()
+@interface MXCrypto () <MXRecoveryServiceDelegate>
 {
     // MXEncrypting instance for each room.
     NSMutableDictionary<NSString*, id<MXEncrypting>> *roomEncryptors;
@@ -2049,8 +2049,6 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 
         _crossSigning = [[MXCrossSigning alloc] initWithCrypto:self];
         
-        _recoveryService = [[MXRecoveryService alloc] initWithCrypto:self];
-        
         if ([MXSDKOptions sharedInstance].enableKeyBackupWhenStartingMXCrypto)
         {
             id<MXKeyBackupEngine> engine = [[MXNativeKeyBackupEngine alloc] initWithCrypto:self];
@@ -2059,6 +2057,14 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
                                        secretShareManager:_secretShareManager
                                                     queue:_cryptoQueue];
         }
+        
+        MXRecoveryServiceDependencies *dependencies = [[MXRecoveryServiceDependencies alloc] initWithCredentials:_mxSession.matrixRestClient.credentials
+                                                                                                          backup:_backup
+                                                                                                   secretStorage:_secretStorage
+                                                                                                     secretStore:_store
+                                                                                                    crossSigning:_crossSigning
+                                                                                                     cryptoQueue:_cryptoQueue];
+        _recoveryService = [[MXRecoveryService alloc] initWithDependencies:dependencies delegate:self];
         
         cryptoMigration = [[MXCryptoMigration alloc] initWithCrypto:self];
         

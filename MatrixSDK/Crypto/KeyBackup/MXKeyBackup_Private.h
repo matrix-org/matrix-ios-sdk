@@ -32,7 +32,7 @@ NS_ASSUME_NONNULL_BEGIN
 
  @param engine backup engine that stores and manages keys
  @param restClient rest client to perform http requests
- @param secretShareManager manages of secrets hsaring
+ @param secretShareManager manages of secrets sharing
  @param queue dispatch queue to perform all operations on
  */
 - (instancetype)initWithEngine:(id<MXKeyBackupEngine>)engine

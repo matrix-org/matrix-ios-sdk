@@ -58,6 +58,11 @@ typedef enum : NSUInteger
  */
 + (nullable NSData *)decode:(NSString*)recoveryKey error:(NSError * _Nullable *)error;
 
+/**
+ Check to see whether the recovery key is valid, i.e. can be used to create a private key
+ */
++ (BOOL)isValidRecoveryKey:(NSString*)recoveryKey;
+
 @end
 
 NS_ASSUME_NONNULL_END
