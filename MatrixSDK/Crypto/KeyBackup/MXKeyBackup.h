@@ -396,11 +396,6 @@ FOUNDATION_EXPORT NSString *const kMXKeyBackupDidStateChangeNotification;
 @property (nonatomic, readonly, nullable) MXKeyBackupVersion *keyBackupVersion;
 
 /**
- The backup algorithm being used. Nil if key backup not enabled yet.
- */
-@property (nonatomic, readonly, nullable) id<MXKeyBackupAlgorithm> keyBackupAlgorithm;
-
-/**
  Indicate if their are keys to backup.
  */
 @property (nonatomic, readonly) BOOL hasKeysToBackup;

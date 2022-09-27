@@ -53,6 +53,8 @@
 
 #import "MatrixSDKSwiftHeader.h"
 #import "MXSharedHistoryKeyService.h"
+#import "MXNativeKeyBackupEngine.h"
+
 /**
  The store to use for crypto.
  */
@@ -2032,11 +2034,6 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 
         oneTimeKeyCount = -1;
 
-        if ([MXSDKOptions sharedInstance].enableKeyBackupWhenStartingMXCrypto)
-        {
-            _backup = [[MXKeyBackup alloc] initWithCrypto:self];
-        }
-
         outgoingRoomKeyRequestManager = [[MXOutgoingRoomKeyRequestManager alloc]
                                          initWithMatrixRestClient:_matrixRestClient
                                          deviceId:_myDevice.deviceId
@@ -2053,6 +2050,15 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
         _crossSigning = [[MXCrossSigning alloc] initWithCrypto:self];
         
         _recoveryService = [[MXRecoveryService alloc] initWithCrypto:self];
+        
+        if ([MXSDKOptions sharedInstance].enableKeyBackupWhenStartingMXCrypto)
+        {
+            id<MXKeyBackupEngine> engine = [[MXNativeKeyBackupEngine alloc] initWithCrypto:self];
+            _backup = [[MXKeyBackup alloc] initWithEngine:engine
+                                               restClient:_matrixRestClient
+                                       secretShareManager:_secretShareManager
+                                                    queue:_cryptoQueue];
+        }
         
         cryptoMigration = [[MXCryptoMigration alloc] initWithCrypto:self];
         

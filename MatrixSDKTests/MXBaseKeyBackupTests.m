@@ -24,6 +24,7 @@
 #import "MXCrossSigning_Private.h"
 #import "MXKeyBackupAlgorithm.h"
 #import "MXAes256BackupAuthData.h"
+#import "MXNativeKeyBackupEngine.h"
 
 @implementation MXBaseKeyBackupTests
 
@@ -612,14 +613,23 @@
 
         [aliceSession.crypto.backup prepareKeyBackupVersionWithPassword:nil algorithm:self.algorithm success:^(MXMegolmBackupCreationInfo * _Nonnull keyBackupCreationInfo) {
             [aliceSession.crypto.backup createKeyBackupVersion:keyBackupCreationInfo success:^(MXKeyBackupVersion * _Nonnull keyBackupVersion) {
-
+                
+                // This test relies on internal implementation detail (keyBackupAlgorithm class) only available with crypto v1.
+                // When run as V2 this test should fail until a better test is written
+                id<MXKeyBackupEngine> engine = [aliceSession.crypto.backup valueForKey:@"engine"];
+                if (!engine || ![engine isKindOfClass:[MXNativeKeyBackupEngine class]]) {
+                    XCTFail(@"Cannot verify test");
+                    [expectation fulfill];
+                }
+                id<MXKeyBackupAlgorithm> keyBackupAlgorithm = ((MXNativeKeyBackupEngine *)engine).keyBackupAlgorithm;
+                
                 // - Check [MXKeyBackupAlgorithm encryptGroupSession] returns stg
-                MXKeyBackupData *keyBackupData = [aliceSession.crypto.backup.keyBackupAlgorithm encryptGroupSession:session];
+                MXKeyBackupData *keyBackupData = [keyBackupAlgorithm encryptGroupSession:session];
                 XCTAssertNotNil(keyBackupData);
                 XCTAssertNotNil(keyBackupData.sessionData);
 
                 // - Check [MXKeyBackupAlgorithm decryptKeyBackupData] returns stg
-                MXMegolmSessionData *sessionData = [aliceSession.crypto.backup.keyBackupAlgorithm decryptKeyBackupData:keyBackupData forSession:session.session.sessionIdentifier inRoom:roomId];
+                MXMegolmSessionData *sessionData = [keyBackupAlgorithm decryptKeyBackupData:keyBackupData forSession:session.session.sessionIdentifier inRoom:roomId];
                 XCTAssertNotNil(sessionData);
                 XCTAssertEqual(sessionData.isUntrusted, self.isUntrusted);
 
