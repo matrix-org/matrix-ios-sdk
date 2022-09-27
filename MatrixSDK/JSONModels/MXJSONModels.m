@@ -1259,50 +1259,6 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
 
 @end
 
-#pragma mark - Device Management
-
-@implementation MXDevice
-
-+ (id)modelFromJSON:(NSDictionary *)JSONDictionary
-{
-    MXDevice *device = [[MXDevice alloc] init];
-    if (device)
-    {
-        MXJSONModelSetString(device.deviceId, JSONDictionary[@"device_id"]);
-        MXJSONModelSetString(device.displayName, JSONDictionary[@"display_name"]);
-        MXJSONModelSetString(device.lastSeenIp, JSONDictionary[@"last_seen_ip"]);
-        MXJSONModelSetUInt64(device.lastSeenTs, JSONDictionary[@"last_seen_ts"]);
-    }
-    
-    return device;
-}
-
-- (instancetype)initWithCoder:(NSCoder *)aDecoder
-{
-    self = [super init];
-    if (self)
-    {
-        _deviceId = [aDecoder decodeObjectForKey:@"device_id"];
-        _displayName = [aDecoder decodeObjectForKey:@"display_name"];
-        _lastSeenIp = [aDecoder decodeObjectForKey:@"last_seen_ip"];
-        _lastSeenTs = [((NSNumber*)[aDecoder decodeObjectForKey:@"last_seen_ts"]) unsignedLongLongValue];
-    }
-    return self;
-}
-
-- (void)encodeWithCoder:(NSCoder *)aCoder
-{
-    [aCoder encodeObject:_deviceId forKey:@"device_id"];
-    if (_displayName)
-    {
-        [aCoder encodeObject:_displayName forKey:@"display_name"];
-    }
-    [aCoder encodeObject:_lastSeenIp forKey:@"last_seen_ip"];
-    [aCoder encodeObject:@(_lastSeenTs) forKey:@"last_seen_ts"];
-}
-
-@end
-
 #pragma mark - Groups (Communities)
 
 @implementation MXGroupProfile
