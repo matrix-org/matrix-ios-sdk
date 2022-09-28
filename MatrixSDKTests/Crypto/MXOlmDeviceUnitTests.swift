@@ -71,7 +71,8 @@ class MXOlmDeviceUnitTests: XCTestCase {
             forwardingCurve25519KeyChain: [],
             keysClaimed: [:],
             exportFormat: false,
-            sharedHistory: sharedHistory
+            sharedHistory: sharedHistory,
+            untrusted: false
         )
     }
     

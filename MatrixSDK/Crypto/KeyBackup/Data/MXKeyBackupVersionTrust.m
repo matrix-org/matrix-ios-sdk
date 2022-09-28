@@ -25,7 +25,6 @@
     {
         _usable = NO;
         _signatures = [NSArray new];
-        _trustedLocally = NO;
     }
     return self;
 }

@@ -356,17 +356,6 @@ static Class DefaultAlgorithmClass;
         return keyBackupVersionTrust;
     }
 
-    NSData *privateKey = self.privateKey;
-    if (privateKey)
-    {
-        id<MXKeyBackupAlgorithm> algorithm = [self getOrCreateKeyBackupAlgorithmFor:keyBackupVersion privateKey:privateKey];
-        if ([algorithm keyMatches:privateKey error:nil])
-        {
-            MXLogDebug(@"[MXNativeKeyBackupEngine] trustForKeyBackupVersionFromCryptoQueue: Backup is trusted locally");
-            keyBackupVersionTrust.trustedLocally = YES;
-        }
-    }
-
     NSDictionary *mySigs = authData.signatures[myUserId];
     NSMutableArray<MXKeyBackupVersionTrustSignature*> *signatures = [NSMutableArray array];
     for (NSString *keyId in mySigs)
@@ -429,7 +418,6 @@ static Class DefaultAlgorithmClass;
             keyBackupVersionTrust.usable = YES;
         }
     }
-    keyBackupVersionTrust.usable = keyBackupVersionTrust.usable || keyBackupVersionTrust.isTrustedLocally;
 
     return keyBackupVersionTrust;
 }

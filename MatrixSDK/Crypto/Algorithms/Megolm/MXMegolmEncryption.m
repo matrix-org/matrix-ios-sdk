@@ -340,6 +340,7 @@
                                                }
                                 exportFormat:NO
                                sharedHistory:sharedHistory
+                                   untrusted:NO
      ];
 
     [crypto.backup maybeSendKeyBackup];

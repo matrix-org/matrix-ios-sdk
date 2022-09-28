@@ -26,6 +26,7 @@
 #import "MXTools.h"
 #import "MatrixSDKSwiftHeader.h"
 #import "MXSharedHistoryKeyService.h"
+#import "MXForwardedRoomKeyEventContent.h"
 
 @interface MXMegolmDecryption ()
 {
@@ -41,6 +42,10 @@
         NSMutableDictionary<NSString* /* timelineId */,
             NSMutableDictionary<NSString* /* eventId */, MXEvent*>*>*> *pendingEvents;
 }
+
+// Factory to create room key info
+@property (nonatomic, strong) MXRoomKeyInfoFactory *roomKeyInfoFactory;
+
 @end
 
 @implementation MXMegolmDecryption
@@ -59,6 +64,7 @@
     {
         crypto = theCrypto;
         olmDevice = theCrypto.olmDevice;
+        _roomKeyInfoFactory = [[MXRoomKeyInfoFactory alloc] initWithMyUserId:crypto.mxSession.credentials.userId store:crypto.store];
         pendingEvents = [NSMutableDictionary dictionary];
     }
     return self;
@@ -191,98 +197,59 @@
 
 - (void)onRoomKeyEvent:(MXEvent *)event
 {
-    NSDictionary *content = event.content;
-    NSString *roomId, *sessionId, *sessionKey;
-
-    MXJSONModelSetString(roomId, content[@"room_id"]);
-    MXJSONModelSetString(sessionId, content[@"session_id"]);
-    MXJSONModelSetString(sessionKey, content[@"session_key"]);
-
-    if (!roomId || !sessionId || !sessionKey)
+    MXRoomKeyResult *key = [self.roomKeyInfoFactory roomKeyFor:event];
+    if (!key)
     {
-        MXLogDebug(@"[MXMegolmDecryption] onRoomKeyEvent: ERROR: Key event is missing fields");
+        MXLogError(@"[MXMegolmDecryption] onRoomKeyEvent: Cannot create megolm key from event");
         return;
     }
-
-    NSString *senderKey = event.senderKey;
-    if (!senderKey)
-    {
-        MXLogDebug(@"[MXMegolmDecryption] onRoomKeyEvent: ERROR: Key event has no sender key (not encrypted?)");
-        return;
+    
+    switch (key.type) {
+        case MXRoomKeyTypeSafe:
+            MXLogDebug(@"[MXMegolmDecryption] onRoomKeyEvent: Adding key for megolm session %@|%@ from %@ event", key.info.senderKey, key.info.sessionId, event.type);
+            [self onRoomKey:key];
+            break;
+        case MXRoomKeyTypeUnsafe:
+            MXLogWarning(@"[MXMegolmDecryption] onRoomKeyEvent: Ignoring unsafe key");
+            break;
+        case MXRoomKeyTypeUnrequested:
+            [crypto handleUnrequestedRoomKeyInfo:key.info senderId:event.sender senderKey:event.senderKey];
+            break;
+        default:
+            MXLogFailureDetails(@"[MXMegolmDecryption] onRoomKeyEvent: Unknown key type", @{
+                @"key_type": @(key.type)
+            });
+            break;
     }
+}
 
-    NSArray<NSString*> *forwardingKeyChain;
-    BOOL exportFormat = NO;
-    NSDictionary *keysClaimed;
-    BOOL sharedHistory = NO;
-    if (content[kMXSharedHistoryKeyName] != nil)
-    {
-        MXJSONModelSetBoolean(sharedHistory, content[kMXSharedHistoryKeyName]);
-    }
-
-    if (event.eventType == MXEventTypeRoomForwardedKey)
-    {
-        exportFormat = YES;
-        MXJSONModelSetArray(forwardingKeyChain, content[@"forwarding_curve25519_key_chain"]);
-        if (!forwardingKeyChain)
-        {
-            forwardingKeyChain = @[];
-        }
-
-        // copy content before we modify it
-        NSMutableArray *forwardingKeyChain2 = [NSMutableArray arrayWithArray:forwardingKeyChain];
-        [forwardingKeyChain2 addObject:senderKey];
-        forwardingKeyChain = forwardingKeyChain2;
-
-        MXJSONModelSetString(senderKey, content[@"sender_key"]);
-        if (!senderKey)
-        {
-            MXLogDebug(@"[MXMegolmDecryption] onRoomKeyEvent: ERROR: forwarded_room_key event is missing sender_key field");
-            return;
-        }
-
-        NSString *ed25519Key;
-        MXJSONModelSetString(ed25519Key, content[@"sender_claimed_ed25519_key"]);
-        if (!ed25519Key)
-        {
-            MXLogDebug(@"[MXMegolmDecryption] onRoomKeyEvent: ERROR: forwarded_room_key_event is missing sender_claimed_ed25519_key field");
-            return;
-        }
-
-        keysClaimed = @{
-                        @"ed25519": ed25519Key
-                        };
-    }
-    else
-    {
-        keysClaimed = event.keysClaimed;
-    }
-
-    MXLogDebug(@"[MXMegolmDecryption] onRoomKeyEvent: Adding key for megolm session %@|%@ from %@ event", senderKey, sessionId, event.type);
-
-    [olmDevice addInboundGroupSession:sessionId
-                           sessionKey:sessionKey
-                               roomId:roomId
-                            senderKey:senderKey
-         forwardingCurve25519KeyChain:forwardingKeyChain
-                          keysClaimed:keysClaimed
-                         exportFormat:exportFormat
-                        sharedHistory:sharedHistory];
+- (void)onRoomKey:(MXRoomKeyResult *)key
+{
+    MXRoomKeyInfo *keyInfo = key.info;
+    [olmDevice addInboundGroupSession:keyInfo.sessionId
+                           sessionKey:keyInfo.sessionKey
+                               roomId:keyInfo.roomId
+                            senderKey:keyInfo.senderKey
+         forwardingCurve25519KeyChain:keyInfo.forwardingKeyChain
+                          keysClaimed:keyInfo.keysClaimed
+                         exportFormat:keyInfo.exportFormat
+                        sharedHistory:keyInfo.sharedHistory
+                            untrusted:key.type != MXRoomKeyTypeSafe];
 
     [crypto.backup maybeSendKeyBackup];
 
     MXWeakify(self);
-    [self retryDecryption:senderKey sessionId:content[@"session_id"] complete:^(BOOL allDecrypted) {
+    [self retryDecryption:keyInfo.senderKey sessionId:keyInfo.sessionId complete:^(BOOL allDecrypted) {
         MXStrongifyAndReturnIfNil(self);
 
         if (allDecrypted)
         {
             // cancel any outstanding room key requests for this session
             [self->crypto cancelRoomKeyRequest:@{
-                                                 @"algorithm": content[@"algorithm"],
-                                                 @"room_id": content[@"room_id"],
-                                                 @"session_id": content[@"session_id"],
-                                                 @"sender_key": senderKey
+                                                 @"algorithm": keyInfo.algorithm,
+                                                 @"room_id": keyInfo.roomId,
+                                                 @"session_id": keyInfo.sessionId,
+                                                 @"sender_key": keyInfo.senderKey
                                                  }];
         }
     }];
