@@ -82,7 +82,7 @@
  
  - Alice has a secret on her 1st device
  - Alice logs in on a new device
- - Alice trusts the new device
+ - Alice trusts the new device and vice versa
  - Alice requests the secret from the new device
  -> She gets the secret
  */
@@ -101,8 +101,9 @@
             
             MXCredentials *newAlice = newAliceSession.matrixRestClient.credentials;
             
-            // - Alice trusts the new device
+            // - Alice trusts the new device and vice versa
             [aliceSession.crypto setDeviceVerification:MXDeviceVerified forDevice:newAlice.deviceId ofUser:newAlice.userId success:nil failure:nil];
+            [newAliceSession.crypto setDeviceVerification:MXDeviceVerified forDevice:aliceSession.myDeviceId ofUser:aliceSession.myUserId success:nil failure:nil];
             
             // - Alice requests the secret from the new device
             [newAliceSession.crypto.secretShareManager requestSecret:secretId toDeviceIds:nil success:^(NSString * _Nonnull requestId) {

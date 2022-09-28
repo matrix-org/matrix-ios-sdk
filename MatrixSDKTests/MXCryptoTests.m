@@ -31,6 +31,7 @@
 #import "MXSendReplyEventDefaultStringLocalizer.h"
 #import "MXOutboundSessionInfo.h"
 #import <OLMKit/OLMKit.h>
+#import "MXLRUCache.h"
 
 #import "MXKey.h"
 
@@ -2081,6 +2082,8 @@
 
                 id<MXCryptoStore> bobCryptoStore = (id<MXCryptoStore>)[bobSession.crypto.olmDevice valueForKey:@"store"];
                 [bobCryptoStore removeInboundGroupSessionWithId:sessionId andSenderKey:toDeviceEvent.senderKey];
+                MXLRUCache *cache = [bobSession.crypto.olmDevice valueForKey:@"inboundGroupSessionCache"];
+                [cache clear];
 
                 // So that we cannot decrypt it anymore right now
                 [event setClearData:nil];

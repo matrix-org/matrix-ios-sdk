@@ -241,7 +241,8 @@ Determine if an incoming messages is a prekey message matching an existing sessi
   forwardingCurve25519KeyChain:(NSArray<NSString *> *)forwardingCurve25519KeyChain
                    keysClaimed:(NSDictionary<NSString*, NSString*>*)keysClaimed
                   exportFormat:(BOOL)exportFormat
-                 sharedHistory:(BOOL)sharedHistory;
+                 sharedHistory:(BOOL)sharedHistory
+                     untrusted:(BOOL)untrusted;
 
 /**
  Add previously-exported inbound group sessions to the session store.

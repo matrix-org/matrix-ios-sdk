@@ -76,7 +76,7 @@ static NSString *const kMXCryptoOneTimeKeyClaimCompleteNotificationErrorKey     
 NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 
-@interface MXCrypto ()
+@interface MXCrypto () <MXUnrequestedForwardedRoomKeyManagerDelegate>
 {
     // MXEncrypting instance for each room.
     NSMutableDictionary<NSString*, id<MXEncrypting>> *roomEncryptors;
@@ -106,6 +106,9 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 
     // The manager for incoming room key requests
     MXIncomingRoomKeyRequestManager *incomingRoomKeyRequestManager;
+    
+    // The manager for unrequested m.forwarded_room_keys
+    MXUnrequestedForwardedRoomKeyManager *unrequestedForwardedRoomKeyManager;
     
     // The date of the last time we forced establishment
     // of a new session for each user:device.
@@ -433,6 +436,9 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
         self.uploadFallbackKeyOperation = nil;
 
         [self->outgoingRoomKeyRequestManager close];
+        self->outgoingRoomKeyRequestManager = nil;
+        
+        [self->unrequestedForwardedRoomKeyManager close];
         self->outgoingRoomKeyRequestManager = nil;
 
         if (deleteStore)
@@ -983,6 +989,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
         {
             [self maybeUploadOneTimeKeys:nil failure:nil];
             [self->incomingRoomKeyRequestManager processReceivedRoomKeyRequests];
+            [self->unrequestedForwardedRoomKeyManager processUnrequestedKeys];
         }
     });
 
@@ -2044,6 +2051,9 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
                                          cryptoStore:_store];
 
         incomingRoomKeyRequestManager = [[MXIncomingRoomKeyRequestManager alloc] initWithCrypto:self];
+        
+        unrequestedForwardedRoomKeyManager = [[MXUnrequestedForwardedRoomKeyManager alloc] init];
+        unrequestedForwardedRoomKeyManager.delegate = self;
 
         _keyVerificationManager = [[MXKeyVerificationManager alloc] initWithCrypto:self];
         
@@ -2583,6 +2593,11 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
     [outgoingRoomKeyRequestManager cancelRoomKeyRequest:requestBody];
 }
 
+- (void)handleUnrequestedRoomKeyInfo:(MXRoomKeyInfo *)keyInfo senderId:(NSString *)senderId senderKey:(NSString *)senderKey
+{
+    [unrequestedForwardedRoomKeyManager addPendingKeyWithKeyInfo:keyInfo senderId:senderId senderKey:senderKey];
+}
+
 - (NSDictionary*)buildMegolmKeyForwardingMessage:(NSString*)roomId senderKey:(NSString*)senderKey sessionId:(NSString*)sessionId  chainIndex:(NSNumber*)chainIndex
 {
     NSDictionary *key = [self.olmDevice getInboundGroupSessionKey:roomId senderKey:senderKey sessionId:sessionId chainIndex:chainIndex];
@@ -2802,16 +2817,16 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
  */
 - (void)onRoomMembership:(MXEvent*)event roomState:(MXRoomState*)roomState
 {
-    id<MXEncrypting> alg = roomEncryptors[event.roomId];
-    if (!alg)
-    {
-        // No encrypting in this room
-        return;
-    }
-
     // Check whether we have to track the devices for this user.
     BOOL shouldTrack = NO;
     NSString *userId = event.stateKey;
+    
+    MXRoomMemberEventContent *content = [MXRoomMemberEventContent modelFromJSON:event.content];
+    if ([userId isEqualToString:self.mxSession.credentials.userId] && [content.membership isEqualToString:kMXMembershipStringInvite])
+    {
+        [unrequestedForwardedRoomKeyManager onRoomInviteWithRoomId:event.roomId senderId:event.sender];
+    }
+    
     MXRoomMember *member = [roomState.members memberWithUserId:userId];
     if (member)
     {
@@ -3262,6 +3277,25 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
             @"error": error ?: @"unknown"
         });
     }];
+}
+
+#pragma mark - MXUnrequestedForwardedRoomKeyManagerDelegate
+
+- (void)downloadDeviceKeysWithUserId:(NSString *)userId completion:(void (^)(MXUsersDevicesMap<MXDeviceInfo *> *))completion
+{
+    [self downloadKeys:@[userId] forceDownload:YES success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
+        completion(usersDevicesInfoMap);
+    } failure:^(NSError *error) {
+        MXLogError(@"[MXCrypto]: Failed downloading keys for key forward manager");
+        completion([[MXUsersDevicesMap alloc] init]);
+    }];
+}
+
+- (void)acceptRoomKeyWithKeyInfo:(MXRoomKeyInfo *)keyInfo
+{
+    id<MXDecrypting> decryptor = [self getRoomDecryptor:keyInfo.roomId algorithm:keyInfo.algorithm];
+    MXRoomKeyResult *key = [[MXRoomKeyResult alloc] initWithType:MXRoomKeyTypeUnsafe info:keyInfo];
+    [decryptor onRoomKey:key];
 }
 
 #endif
