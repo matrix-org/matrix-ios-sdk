@@ -37,7 +37,8 @@ typedef NS_ENUM(NSInteger, MXRecoveryServiceErrorCode)
 };
 
 @protocol MXRecoveryServiceDelegate <NSObject>
-- (void)setUserVerification:(BOOL)verificationStatus forUser:(NSString*)userId
+- (void)setUserVerification:(BOOL)verificationStatus
+                    forUser:(NSString*)userId
                     success:(void (^)(void))success
                     failure:(void (^)(NSError *error))failure;
 @end

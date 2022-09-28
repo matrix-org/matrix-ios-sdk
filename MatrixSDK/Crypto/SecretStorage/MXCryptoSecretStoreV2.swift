@@ -20,17 +20,18 @@ import Foundation
 /// backup secrets are stored internally in the Crypto machine
 /// and others have to be managed manually.
 class MXCryptoSecretStoreV2: NSObject, MXCryptoSecretStore {
-    
     private let backup: MXKeyBackup
     private let backupEngine: MXKeyBackupEngine
+    private let crossSigning: MXCryptoCrossSigning
     private let log = MXNamedLog(name: "MXCryptoSecretStoreV2")
     
-    init(backup: MXKeyBackup, backupEngine: MXKeyBackupEngine) {
+    init(backup: MXKeyBackup, backupEngine: MXKeyBackupEngine, crossSigning: MXCryptoCrossSigning) {
         self.backup = backup
         self.backupEngine = backupEngine
+        self.crossSigning = crossSigning
     }
     
-    func storeSecret(_ secret: String!, withSecretId secretId: String!) {
+    func storeSecret(_ secret: String, withSecretId secretId: String) {
         guard let version = backup.keyBackupVersion?.version else {
             log.error("No key backup version available")
             return
@@ -44,19 +45,26 @@ class MXCryptoSecretStoreV2: NSObject, MXCryptoSecretStore {
         }
     }
     
-    func secret(withSecretId secretId: String!) -> String! {
-        if secretId == MXSecretId.keyBackup.takeUnretainedValue() as String {
+    func secret(withSecretId secretId: String) -> String? {
+        switch secretId as NSString {
+        case MXSecretId.crossSigningMaster.takeUnretainedValue():
+            return crossSigning.exportCrossSigningKeys()?.masterKey
+        case MXSecretId.crossSigningSelfSigning.takeUnretainedValue():
+            return crossSigning.exportCrossSigningKeys()?.selfSigningKey
+        case MXSecretId.crossSigningUserSigning.takeUnretainedValue():
+            return crossSigning.exportCrossSigningKeys()?.userSigningKey
+        case MXSecretId.keyBackup.takeUnretainedValue():
             guard let privateKey = backupEngine.privateKey() else {
                 return nil
             }
             return MXBase64Tools.base64(from: privateKey)
-        } else {
+        default:
             log.error("Not implemented")
             return nil
         }
     }
     
-    func deleteSecret(withSecretId secretId: String!) {
+    func deleteSecret(withSecretId secretId: String) {
         log.error("Not implemented")
     }
 }

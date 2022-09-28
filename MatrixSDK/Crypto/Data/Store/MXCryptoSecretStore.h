@@ -17,6 +17,8 @@
 #ifndef MXCryptoSecretStore_h
 #define MXCryptoSecretStore_h
 
+NS_ASSUME_NONNULL_BEGIN
+
 /**
  The `MXCryptoSecretStore` protocol defines an interface that must be implemented in order to store
  local secrets in the context of SSSS.
@@ -29,7 +31,7 @@
  @param secret the secret.
  @param secretId the id of the secret.
  */
-- (void)storeSecret:(NSString*)secret withSecretId:(NSString*)secretId;
+- (void)storeSecret:(NSString *)secret withSecretId:(NSString *)secretId;
 
 /**
  Retrieve a secret.
@@ -37,7 +39,7 @@
  @param secretId the id of the secret.
  @return the secret. Nil if the secret does not exist.
  */
-- (NSString*)secretWithSecretId:(NSString*)secretId;
+- (nullable NSString *)secretWithSecretId:(NSString *)secretId;
 
 
 /**
@@ -45,8 +47,10 @@
  
  @param secretId the id of the secret.
  */
-- (void)deleteSecretWithSecretId:(NSString*)secretId;
+- (void)deleteSecretWithSecretId:(NSString *)secretId;
 
 @end
+
+NS_ASSUME_NONNULL_END
 
 #endif /* MXCryptoSecretStore_h */

@@ -71,6 +71,7 @@ import MatrixSDKCrypto
 private class MXCryptoV2: MXCrypto {
     enum Error: Swift.Error {
         case missingRoom
+        case missingDevice
     }
     
     public override var deviceCurve25519Key: String! {
@@ -184,7 +185,8 @@ private class MXCryptoV2: MXCrypto {
                 secretStorage: secretsStorage,
                 secretStore: MXCryptoSecretStoreV2(
                     backup: keyBackup,
-                    backupEngine: backupEngine
+                    backupEngine: backupEngine,
+                    crossSigning: machine
                 ),
                 crossSigning: crossSign,
                 cryptoQueue: cryptoQueue
@@ -437,7 +439,57 @@ private class MXCryptoV2: MXCrypto {
             })
     }
     
-    // MARK: - Users, devices and verification
+    public override func setUserVerification(
+        _ verificationStatus: Bool,
+        forUser userId: String!,
+        success: (() -> Void)!,
+        failure: ((Swift.Error?) -> Void)!
+    ) {
+        log.failure("Crypto V2 does not support manual user verification")
+    }
+    
+    public override func setDeviceVerification(
+        _ verificationStatus: MXDeviceVerification,
+        forDevice deviceId: String!,
+        ofUser userId: String!,
+        success: (() -> Void)!,
+        failure: ((Swift.Error?) -> Void)!
+    ) {
+        guard let userId = userId, let deviceId = deviceId else {
+            log.failure("Missing user/device")
+            failure(Error.missingDevice)
+            return
+        }
+        
+        log.debug("Setting device verification status manually")
+        
+        switch verificationStatus {
+        case .unverified, .blocked, .unknown:
+            log.error("Not implemented")
+        case .verified:
+            Task {
+                do {
+                    try await machine.manuallyVerifyDevice(userId: userId, deviceId: deviceId)
+                    log.debug("Successfully marked device as verified")
+                    await MainActor.run {                        
+                        success?()
+                    }
+                } catch {
+                    log.error("Failed marking device as verified", context: error)
+                    await MainActor.run {
+                        failure?(error)
+                    }
+                }
+            }
+        @unknown default:
+            log.failure("Unknown verification status", context: [
+                "status": verificationStatus
+            ])
+            failure?(nil)
+        }
+    }
+    
+    // MARK: - Users and devices
     
     public override func eventDeviceInfo(_ event: MXEvent!) -> MXDeviceInfo! {
         guard
@@ -450,15 +502,7 @@ private class MXCryptoV2: MXCrypto {
         return device(withDeviceId: deviceId, ofUser: userId)
     }
     
-    public override func setDeviceVerification(_ verificationStatus: MXDeviceVerification, forDevice deviceId: String!, ofUser userId: String!, success: (() -> Void)!, failure: ((Swift.Error?) -> Void)!) {
-        log.debug("Not implemented")
-    }
-    
     public override func setDevicesKnown(_ devices: MXUsersDevicesMap<MXDeviceInfo>!, complete: (() -> Void)!) {
-        log.debug("Not implemented")
-    }
-    
-    public override func setUserVerification(_ verificationStatus: Bool, forUser userId: String!, success: (() -> Void)!, failure: ((Swift.Error?) -> Void)!) {
         log.debug("Not implemented")
     }
     

@@ -60,6 +60,10 @@ class UserIdentitySourceStub: CryptoIdentityStub, MXCryptoUserIdentitySource {
     func downloadKeys(users: [String]) async throws {
         
     }
+    
+    func manuallyVerifyDevice(userId: String, deviceId: String) async throws {
+        
+    }
 }
 
 class CryptoCrossSigningStub: CryptoIdentityStub, MXCryptoCrossSigning {
@@ -75,6 +79,10 @@ class CryptoCrossSigningStub: CryptoIdentityStub, MXCryptoCrossSigning {
     func bootstrapCrossSigning(authParams: [AnyHashable : Any]) async throws {
     }
     
+    func exportCrossSigningKeys() -> CrossSigningKeyExport? {
+        return nil
+    }
+    
     var stubbedIdentities = [String: UserIdentity]()
     func userIdentity(userId: String) -> UserIdentity? {
         stubbedIdentities[userId]
@@ -86,6 +94,10 @@ class CryptoCrossSigningStub: CryptoIdentityStub, MXCryptoCrossSigning {
     }
     
     func downloadKeys(users: [String]) async throws {
+    }
+    
+    func manuallyVerifyDevice(userId: String, deviceId: String) async throws {
+        
     }
 }
 
