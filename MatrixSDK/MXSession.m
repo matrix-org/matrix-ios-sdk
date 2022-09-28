@@ -1964,16 +1964,25 @@ typedef void (^MXOnResumeDone)(void);
 
 - (void)handleToDeviceEvents:(NSArray<MXEvent *> *)events  onComplete:(void (^)(void))onComplete
 {
-    if (events.count == 0)
+    NSMutableArray *supportedEvents = [NSMutableArray arrayWithCapacity:events.count];
+    for (MXEvent *event in events)
+    {
+        if ([MXTools isSupportedToDeviceEvent:event])
+        {
+            [supportedEvents addObject:event];
+        }
+    }
+
+    if (supportedEvents.count == 0)
     {
         onComplete();
         return;
     }
     
-    [self decryptEvents:events inTimeline:nil onComplete:^(NSArray<MXEvent *> *failedEvents) {
+    [self decryptEvents:supportedEvents inTimeline:nil onComplete:^(NSArray<MXEvent *> *failedEvents) {
         dispatch_group_t dispatchGroup = dispatch_group_create();
         
-        for (MXEvent *event in events)
+        for (MXEvent *event in supportedEvents)
         {
             if (!event.decryptionError)
             {

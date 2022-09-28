@@ -33,6 +33,8 @@
 
 #import "MXCrypto.h"
 
+@class MXRoomKeyInfo;
+
 /**
  The `MXCrypto_Private` extension exposes internal operations.
  
@@ -223,6 +225,15 @@
 
 // Create a message to forward a megolm session
 - (NSDictionary*)buildMegolmKeyForwardingMessage:(NSString*)roomId senderKey:(NSString*)senderKey sessionId:(NSString*)sessionId chainIndex:(NSNumber*)chainIndex;
+
+/**
+ Handle forwarded room key that was not requested by this device
+ 
+ @param keyInfo details about the key
+ @param senderId userId of the person who sent us the key
+ @param senderKey identity of the person who sent us the room key
+ */
+- (void)handleUnrequestedRoomKeyInfo:(MXRoomKeyInfo *)keyInfo senderId:(NSString *)senderId senderKey:(NSString *)senderKey;
 
 @end
 

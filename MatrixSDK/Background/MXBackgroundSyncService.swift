@@ -564,6 +564,12 @@ public enum MXBackgroundSyncServiceError: Error {
     }
     
     private func handleToDeviceEvent(_ event: MXEvent) {
+        //   only handle supported events
+        guard MXTools.isSupportedToDeviceEvent(event) else {
+            MXLog.debug("[MXBackgroundSyncService] handleToDeviceEvent: ignore unsupported event")
+            return
+        }
+        
         if event.isEncrypted {
             do {
                 try decryptEvent(event)
@@ -573,61 +579,35 @@ public enum MXBackgroundSyncServiceError: Error {
             }
         }
         
-        guard let content = event.content else {
-            MXLog.debug("[MXBackgroundSyncService] handleToDeviceEvent: ERROR: incomplete event content: \(String(describing: event.jsonDictionary()))")
+        guard let userId = credentials.userId else {
+            MXLog.error("[MXBackgroundSyncService] handleToDeviceEvent: Cannot get userId")
             return
         }
         
-        guard let roomId = content["room_id"] as? String,
-            let sessionId = content["session_id"] as? String,
-            let sessionKey = content["session_key"] as? String,
-            var senderKey = event.senderKey else {
-            MXLog.debug("[MXBackgroundSyncService] handleToDeviceEvent: ERROR: incomplete event: \(String(describing: event.jsonDictionary()))")
+        let factory = MXRoomKeyInfoFactory(myUserId: userId, store: cryptoStore)
+        guard let key = factory.roomKey(for: event) else {
+            MXLog.error("[MXBackgroundSyncService] handleToDeviceEvent: Cannot create megolm key from event")
             return
         }
         
-        var forwardingKeyChain: [String] = []
-        var exportFormat: Bool = false
-        var keysClaimed: [String: String] = [:]
-        
-        switch event.eventType {
-        case .roomKey:
-            keysClaimed = event.keysClaimed as! [String: String]
-        case .roomForwardedKey:
-            exportFormat = true
-            
-            if let array = content["forwarding_curve25519_key_chain"] as? [String] {
-                forwardingKeyChain = array
-            }
-            forwardingKeyChain.append(senderKey)
-            
-            if let senderKeyInContent = content["sender_key"] as? String {
-                senderKey = senderKeyInContent
-            } else {
-                return
-            }
-            
-            guard let ed25519Key = event.content["sender_claimed_ed25519_key"] as? String else {
-                return
-            }
-            
-            keysClaimed = [
-                "ed25519": ed25519Key
-            ]
-        default:
-            MXLog.debug("[MXBackgroundSyncService] handleToDeviceEvent: ERROR: Not supported type: \(event.eventType)")
-            return
+        switch key.type {
+        case .safe:
+            olmDevice.addInboundGroupSession(
+                key.info.sessionId,
+                sessionKey: key.info.sessionKey,
+                roomId: key.info.roomId,
+                senderKey: key.info.senderKey,
+                forwardingCurve25519KeyChain: key.info.forwardingKeyChain,
+                keysClaimed: key.info.keysClaimed,
+                exportFormat: key.info.exportFormat,
+                sharedHistory: key.info.sharedHistory,
+                untrusted: key.type != .safe
+            )
+        case .unsafe:
+            MXLog.warning("[MXBackgroundSyncService] handleToDeviceEvent: Ignoring unsafe keys")
+        case .unrequested:
+            MXLog.warning("[MXBackgroundSyncService] handleToDeviceEvent: Ignoring unrequested keys")
         }
-        
-        let sharedHistory = (content[kMXSharedHistoryKeyName] as? Bool) ?? false
-        olmDevice.addInboundGroupSession(sessionId,
-                                         sessionKey: sessionKey,
-                                         roomId: roomId,
-                                         senderKey: senderKey,
-                                         forwardingCurve25519KeyChain: forwardingKeyChain,
-                                         keysClaimed: keysClaimed,
-                                         exportFormat: exportFormat,
-                                         sharedHistory: sharedHistory)
     }
     
     private func updateBackgroundServiceStoresIfNeeded() {

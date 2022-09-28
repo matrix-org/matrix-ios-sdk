@@ -44,4 +44,33 @@ public extension MXTools {
         }
         return urlString
     }
+
+    @objc
+    /// Checks whether a given to-device event is supported or not.
+    /// - Parameter event: Event to be checked
+    /// - Returns: `true` if the event is supported, otherwise `false`
+    static func isSupportedToDeviceEvent(_ event: MXEvent) -> Bool {
+        if event.isEncrypted {
+            // only support OLM encrypted events
+            let algorithm = event.wireContent["algorithm"] as? String
+            guard algorithm == kMXCryptoOlmAlgorithm else {
+                MXLog.debug("[MXTools] isSupportedToDeviceEvent: not supported event encrypted with other than OLM algorithm: \(String(describing: algorithm))")
+                return false
+            }
+        } else {
+            // define unsupported plain event types
+            let unsupportedPlainEvents = Set([
+                MXEventType.roomKey.identifier,
+                MXEventType.roomForwardedKey.identifier,
+                MXEventType.secretSend.identifier
+            ])
+            // make sure that the event type is supported
+            if unsupportedPlainEvents.contains(event.type) {
+                MXLog.debug("[MXTools] isSupportedToDeviceEvent: not supported plain event with type: \(String(describing: event.type))")
+                return false
+            }
+        }
+
+        return true
+    }
 }
