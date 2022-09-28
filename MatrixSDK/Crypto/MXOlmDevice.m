@@ -351,7 +351,8 @@ NSInteger const kMXInboundGroupSessionCacheSize = 100;
   forwardingCurve25519KeyChain:(NSArray<NSString *> *)forwardingCurve25519KeyChain
                    keysClaimed:(NSDictionary<NSString*, NSString*>*)keysClaimed
                   exportFormat:(BOOL)exportFormat
-                 sharedHistory:(BOOL)sharedHistory;
+                 sharedHistory:(BOOL)sharedHistory
+                     untrusted:(BOOL)untrusted
 {
     MXOlmInboundGroupSession *session;
     if (exportFormat)
@@ -372,13 +373,29 @@ NSInteger const kMXInboundGroupSessionCacheSize = 100;
     if (existingSession)
     {
         // If we already have this session, consider updating it
-        MXLogDebug(@"[MXOlmDevice] addInboundGroupSession: Update for megolm session %@|%@", senderKey, sessionId);
+        MXLogDebug(@"[MXOlmDevice] addInboundGroupSession: Considering updates for megolm session %@|%@", senderKey, sessionId);
 
-        // If our existing session is better, we keep it
-        if (existingSession.session.firstKnownIndex <= session.session.firstKnownIndex)
+        BOOL isExistingSessionBetter = existingSession.session.firstKnownIndex <= session.session.firstKnownIndex;
+        if (isExistingSessionBetter)
         {
-            MXLogDebug(@"[MXOlmDevice] addInboundGroupSession: Skip it. The index of the incoming session is higher (%@ vs %@)", @(session.session.firstKnownIndex), @(existingSession.session.firstKnownIndex));
-            return NO;
+            BOOL isNewSessionSafer = existingSession.isUntrusted && !session.isUntrusted;
+            if (!isNewSessionSafer)
+            {
+                MXLogDebug(@"[MXOlmDevice] addInboundGroupSession: Skip it. The index of the incoming session is higher (%@ vs %@)", @(session.session.firstKnownIndex), @(existingSession.session.firstKnownIndex));
+                return NO;
+            }
+            
+            if ([self connectsSession1:existingSession session2:session])
+            {
+                MXLogDebug(@"[MXOlmDevice] addInboundGroupSession: Skipping new session, and upgrading the safety of existing session");
+                [self upgradeSafetyForSession:existingSession];
+                return NO;
+            }
+            else
+            {
+                MXLogWarning(@"[MXOlmDevice] addInboundGroupSession: Recieved a safer but disconnected key, which will override the existing unsafe key");
+                existingSession = nil;
+            }
         }
     }
 
@@ -394,6 +411,7 @@ NSInteger const kMXInboundGroupSessionCacheSize = 100;
     session.roomId = roomId;
     session.keysClaimed = keysClaimed;
     session.forwardingCurve25519KeyChain = forwardingCurve25519KeyChain;
+    session.untrusted = untrusted;
     
     // If we already have a session stored, the sharedHistory flag will not be overwritten
     if (!existingSession && MXSDKOptions.sharedInstance.enableRoomSharedHistoryOnInvite)
@@ -404,6 +422,30 @@ NSInteger const kMXInboundGroupSessionCacheSize = 100;
     [self storeInboundGroupSessions:@[session]];
 
     return YES;
+}
+
+- (void)upgradeSafetyForSession:(MXOlmInboundGroupSession *)session
+{
+    [self.store performSessionOperationWithGroupSessionWithId:session.session.sessionIdentifier senderKey:session.senderKey block:^(MXOlmInboundGroupSession *inboundGroupSession) {
+        inboundGroupSession.untrusted = NO;
+    }];
+    if (MXSDKOptions.sharedInstance.enableGroupSessionCache)
+    {
+        @synchronized (self.inboundGroupSessionCache)
+        {
+            session.untrusted = NO;
+            [self.inboundGroupSessionCache put:session.session.sessionIdentifier object:session];
+        }
+    }
+}
+
+- (BOOL)connectsSession1:(MXOlmInboundGroupSession *)session1 session2:(MXOlmInboundGroupSession *)session2
+{
+    // `connects` function will be moved to libolm in the future to avoid having to export the session
+    NSUInteger lowestCommonIndex = MAX(session1.session.firstKnownIndex, session2.session.firstKnownIndex);
+    MXMegolmSessionData *export1 = [session1 exportSessionDataAtMessageIndex:lowestCommonIndex];
+    MXMegolmSessionData *export2 = [session2 exportSessionDataAtMessageIndex:lowestCommonIndex];
+    return [export1.sessionKey isEqualToString:export2.sessionKey];
 }
 
 - (NSArray<MXOlmInboundGroupSession *>*)importInboundGroupSessions:(NSArray<MXMegolmSessionData *>*)inboundGroupSessionsData;

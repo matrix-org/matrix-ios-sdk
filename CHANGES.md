@@ -1,3 +1,10 @@
+## Changes in 0.23.19 (2022-09-28)
+
+🐛 Bugfixes
+
+- CVE-2022-39255: Olm/Megolm protocol confusion ([Security advisory](https://github.com/matrix-org/matrix-ios-sdk/security/advisories/GHSA-hw6g-j8v6-9hcm))
+- CVE-2022-39257: Impersonation via forwarded Megolm sessions ([Security advisory](https://github.com/matrix-org/matrix-ios-sdk/security/advisories/GHSA-qxr3-5jmq-xcf4))
+
 ## Changes in 0.23.18 (2022-09-07)
 
 ✨ Features

@@ -35,7 +35,8 @@ class MXMegolmDecryptionUnitTests: XCTestCase {
             forwardingCurve25519KeyChain: [String]!,
             keysClaimed: [String : String]!,
             exportFormat: Bool,
-            sharedHistory: Bool
+            sharedHistory: Bool,
+            untrusted: Bool
         ) -> Bool {
             sessions.append(
                 .init(sharedHistory: sharedHistory)
@@ -137,7 +138,9 @@ class MXMegolmDecryptionUnitTests: XCTestCase {
         session.historyVisibility = kMXRoomHistoryVisibilityWorldReadable
         
         for (eventValue, expectedValue) in eventToExpectation {
-            let event = makeRoomKeyEvent(sharedHistory: eventValue)
+            let event = MXEvent.roomKeyFixture(
+                sharedHistory: eventValue
+            )
             device.sessions = []
             
             decryption.onRoomKeyEvent(event)
@@ -212,30 +215,5 @@ class MXMegolmDecryptionUnitTests: XCTestCase {
             let hasSharedHistory = decryption.hasSharedHistory(forRoomId: roomId1, sessionId: sessionId1, senderKey: senderKey)
             XCTAssertEqual(hasSharedHistory, expectedValue)
         }
-    }
-    
-    // MARK: - Helpers
-    
-    /// Create a room key event with some random but valid data that can be used to create a new inbound session.
-    private func makeRoomKeyEvent(sharedHistory: Bool? = nil) -> MXEvent? {
-        let event = MXEvent(fromJSON: [
-            "sender_key": senderKey,
-        ])
-        
-        var content: [String: Any] = [
-            "room_id": roomId1,
-            "session_id": sessionId1,
-            "session_key": "123",
-            "algorithm": "456",
-        ]
-        if let sharedHistory = sharedHistory {
-            content["org.matrix.msc3061.shared_history"] = sharedHistory
-        }
-        
-        let result = MXEventDecryptionResult()
-        result.senderCurve25519Key = "XYZ"
-        result.clearEvent = ["content": content]
-        event?.setClearData(result)
-        return event
     }
 }
