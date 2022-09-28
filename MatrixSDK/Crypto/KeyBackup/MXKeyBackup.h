@@ -224,14 +224,6 @@ FOUNDATION_EXPORT NSString *const kMXKeyBackupDidStateChangeNotification;
 #pragma mark - Backup restoring
 
 /**
- Check if a key is a valid recovery key.
-
- @param recoveryKey the string to valid.
- @return YES if valid
- */
-+ (BOOL)isValidRecoveryKey:(NSString*)recoveryKey;
-
-/**
  Restore a backup with a recovery key from a given backup version stored on the homeserver.
 
  @param keyBackupVersion the backup version to restore from.
