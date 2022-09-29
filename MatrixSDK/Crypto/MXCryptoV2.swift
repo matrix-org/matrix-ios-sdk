@@ -219,7 +219,7 @@ private class MXCryptoV2: MXCrypto {
         failure: ((Swift.Error?) -> Void)!
     ) {
         onComplete?()
-        machine.onKeysUpload { [weak self] in
+        machine.onInitialKeysUpload { [weak self] in
             guard let self = self else { return }
             
             self.crossSign.refreshState(success: nil)

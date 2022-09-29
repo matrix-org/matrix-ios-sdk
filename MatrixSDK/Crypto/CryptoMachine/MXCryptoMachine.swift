@@ -60,8 +60,8 @@ class MXCryptoMachine {
     private let syncQueue = MXTaskQueue()
     private var roomQueues = RoomQueues()
     
-    private var hasUploadedKeys = false
-    private var keysUploadCallback: (() -> Void)?
+    private var hasUploadedInitialKeys = false
+    private var initialKeysUploadCallback: (() -> Void)?
     
     private let log = MXNamedLog(name: "MXCryptoMachine")
 
@@ -79,13 +79,13 @@ class MXCryptoMachine {
         setLogger(logger: self)
     }
     
-    func onKeysUpload(callback: @escaping () -> Void) {
+    func onInitialKeysUpload(callback: @escaping () -> Void) {
         log.debug("->")
         
-        if hasUploadedKeys {
+        if hasUploadedInitialKeys {
             callback()
         } else {
-            keysUploadCallback = callback
+            initialKeysUploadCallback = callback
         }
     }
     
@@ -189,7 +189,7 @@ extension MXCryptoMachine: MXCryptoSyncing {
                 request: .init(body: body, deviceId: machine.deviceId())
             )
             try markRequestAsSent(requestId: requestId, requestType: .keysUpload, response: response.jsonString())
-            broadcastKeysUploadIfNecessary()
+            broadcastInitialKeysUploadIfNecessary()
             
         case .keysQuery(let requestId, let users):
             let response = try await requests.queryKeys(users: users)
@@ -259,13 +259,13 @@ extension MXCryptoMachine: MXCryptoSyncing {
         )
     }
     
-    private func broadcastKeysUploadIfNecessary() {
-        guard !hasUploadedKeys else {
+    private func broadcastInitialKeysUploadIfNecessary() {
+        guard !hasUploadedInitialKeys else {
             return
         }
-        hasUploadedKeys = true
-        keysUploadCallback?()
-        keysUploadCallback = nil
+        hasUploadedInitialKeys = true
+        initialKeysUploadCallback?()
+        initialKeysUploadCallback = nil
     }
 }
 
