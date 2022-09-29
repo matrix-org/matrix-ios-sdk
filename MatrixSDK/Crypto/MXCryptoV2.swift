@@ -87,8 +87,7 @@ private class MXCryptoV2: MXCrypto {
     }
     
     public override var backup: MXKeyBackup! {
-        log.debug("Not implemented")
-        return MXKeyBackup()
+        return keyBackup
     }
     
     public override var keyVerificationManager: MXKeyVerificationManager! {
@@ -96,18 +95,15 @@ private class MXCryptoV2: MXCrypto {
     }
     
     public override var recoveryService: MXRecoveryService! {
-        log.debug("Not implemented")
-        return MXRecoveryService()
+        return recovery
     }
     
     public override var secretStorage: MXSecretStorage! {
-        log.debug("Not implemented")
-        return MXSecretStorage()
+        return secretsStorage
     }
     
     public override var secretShareManager: MXSecretShareManager! {
-        log.debug("Not implemented")
-        return MXSecretShareManager()
+        return secretsManager
     }
     
     public override var crossSigning: MXCrossSigning! {
@@ -115,20 +111,27 @@ private class MXCryptoV2: MXCrypto {
     }
     
     private let userId: String
+    private let cryptoQueue: DispatchQueue
+    
     private weak var session: MXSession?
     
     private let machine: MXCryptoMachine
     private let deviceInfoSource: MXDeviceInfoSource
     private let crossSigningInfoSource: MXCrossSigningInfoSource
     private let trustLevelSource: MXTrustLevelSource
-    
     private let crossSign: MXCrossSigningV2
     private let keyVerification: MXKeyVerificationManagerV2
+    private let secretsStorage: MXSecretStorage
+    private let secretsManager: MXSecretShareManager
+    private let backupEngine: MXCryptoKeyBackupEngine
+    private let keyBackup: MXKeyBackup
+    private var recovery: MXRecoveryService
     
     private let log = MXNamedLog(name: "MXCryptoV2")
     
     public init(userId: String, deviceId: String, session: MXSession, restClient: MXRestClient) throws {
         self.userId = userId
+        self.cryptoQueue = DispatchQueue(label: "MXCryptoV2-\(userId)")
         self.session = session
         
         machine = try MXCryptoMachine(
@@ -139,6 +142,7 @@ private class MXCryptoV2: MXCrypto {
                 session?.room(withRoomId: roomId)
             }
         )
+        
         deviceInfoSource = MXDeviceInfoSource(source: machine)
         crossSigningInfoSource = MXCrossSigningInfoSource(source: machine)
         trustLevelSource = MXTrustLevelSource(
@@ -160,6 +164,32 @@ private class MXCryptoV2: MXCrypto {
                 }
                 return roomId
             }
+        )
+        
+        secretsManager = MXSecretShareManager()
+        secretsStorage = MXSecretStorage(matrixSession: session, processingQueue: cryptoQueue)
+        
+        backupEngine = MXCryptoKeyBackupEngine(backup: machine)
+        keyBackup = MXKeyBackup(
+            engine: backupEngine,
+            restClient: restClient,
+            secretShareManager: secretsManager,
+            queue: cryptoQueue
+        )
+        
+        recovery = MXRecoveryService(
+            dependencies: .init(
+                credentials: restClient.credentials,
+                backup: keyBackup,
+                secretStorage: secretsStorage,
+                secretStore: MXCryptoSecretStoreV2(
+                    backup: keyBackup,
+                    backupEngine: backupEngine
+                ),
+                crossSigning: crossSign,
+                cryptoQueue: cryptoQueue
+            ),
+            delegate: keyVerification
         )
         
         super.init()
@@ -184,9 +214,17 @@ private class MXCryptoV2: MXCrypto {
     
     // MARK: - Start / close
     
-    public override func start(_ onComplete: (() -> Void)!, failure: ((Swift.Error?) -> Void)!) {
+    public override func start(
+        _ onComplete: (() -> Void)!,
+        failure: ((Swift.Error?) -> Void)!
+    ) {
         onComplete?()
-        log.debug("Not implemented")
+        machine.onInitialKeysUpload { [weak self] in
+            guard let self = self else { return }
+            
+            self.crossSign.refreshState(success: nil)
+            self.keyBackup.checkAndStart()
+        }
     }
     
     public override func close(_ deleteStore: Bool) {
@@ -301,7 +339,14 @@ private class MXCryptoV2: MXCrypto {
     }
     
     public override func discardOutboundGroupSessionForRoom(withRoomId roomId: String!, onComplete: (() -> Void)!) {
-        log.debug("Not implemented")
+        guard let roomId = roomId else {
+            log.failure("Missing room id")
+            return
+        }
+        
+        log.debug("Discarding room key")
+        machine.discardRoomKey(roomId: roomId)
+        onComplete?()
     }
     
     // MARK: - Sync
@@ -320,6 +365,7 @@ private class MXCryptoV2: MXCrypto {
                 unusedFallbackKeys: syncResponse.unusedFallbackKeys
             )
             keyVerification.handleDeviceEvents(toDevice.events)
+            backup.maybeSend()
         } catch {
             log.error("Cannot handle sync", context: error)
         }

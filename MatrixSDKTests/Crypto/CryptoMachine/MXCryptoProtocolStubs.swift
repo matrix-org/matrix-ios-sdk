@@ -19,7 +19,7 @@ import Foundation
 
 #if DEBUG && os(iOS)
 
-import MatrixSDKCrypto
+@testable import MatrixSDKCrypto
 
 class CryptoIdentityStub: MXCryptoIdentity {
     var userId: String = "Alice"
@@ -141,6 +141,46 @@ extension CryptoVerificationStub: MXCryptoSASVerifying {
     
     func emojiIndexes(sas: Sas) throws -> [Int] {
         stubbedEmojis[sas.flowId] ?? []
+    }
+}
+
+class CryptoBackupStub: MXCryptoBackup {
+    var isBackupEnabled: Bool = false
+    var backupKeys: BackupKeys?
+    var roomKeyCounts: RoomKeyCounts?
+    
+    var versionSpy: String?
+    var backupKeySpy: MegolmV1BackupKey?
+    var recoveryKeySpy: BackupRecoveryKey?
+    var roomKeysSpy: [MXMegolmSessionData]?
+    
+    func enableBackup(key: MegolmV1BackupKey, version: String) throws {
+        versionSpy = version
+        backupKeySpy = key
+    }
+    
+    func disableBackup() {
+    }
+    
+    func saveRecoveryKey(key: BackupRecoveryKey, version: String?) throws {
+        recoveryKeySpy = key
+    }
+    
+    func verifyBackup(version: MXKeyBackupVersion) -> Bool {
+        return true
+    }
+    
+    var stubbedSignature = [String : [String : String]]()
+    func sign(object: [AnyHashable : Any]) throws -> [String : [String : String]] {
+        return stubbedSignature
+    }
+    
+    func backupRoomKeys() async throws {
+    }
+    
+    func importDecryptedKeys(roomKeys: [MXMegolmSessionData], progressListener: ProgressListener) throws -> KeysImportResult {
+        roomKeysSpy = roomKeys
+        return KeysImportResult(imported: Int64(roomKeys.count), total: Int64(roomKeys.count), keys: [:])
     }
 }
 

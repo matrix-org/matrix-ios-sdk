@@ -19,8 +19,9 @@
 #import "MXRestClient.h"
 #import "MXMegolmBackupCreationInfo.h"
 #import "MXKeyBackupVersionTrust.h"
+#import "MXSecretShareManager.h"
 
-@protocol MXKeyBackupAlgorithm;
+@protocol MXKeyBackupAlgorithm, MXKeyBackupEngine;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -112,6 +113,19 @@ FOUNDATION_EXPORT NSString *const kMXKeyBackupDidStateChangeNotification;
  to the user's homeserver.
  */
 @interface MXKeyBackup : NSObject
+
+/**
+ Constructor.
+
+ @param engine backup engine that stores and manages keys
+ @param restClient rest client to perform http requests
+ @param secretShareManager manages of secrets sharing
+ @param queue dispatch queue to perform all operations on
+ */
+- (instancetype)initWithEngine:(id<MXKeyBackupEngine>)engine
+                    restClient:(MXRestClient *)restClient
+            secretShareManager:(MXSecretShareManager *)secretShareManager
+                         queue:(dispatch_queue_t)queue;
 
 #pragma mark - Backup management
 
@@ -396,6 +410,19 @@ FOUNDATION_EXPORT NSString *const kMXKeyBackupDidStateChangeNotification;
  Flag indicating the backup can be refreshed, by `forceRefresh:failure:` method.
  */
 @property (nonatomic, readonly) BOOL canBeRefreshed;
+
+/**
+ Check the server for an active key backup.
+
+ If one is present and has a valid signature from one of the user's verified
+ devices, start backing up to it.
+ */
+- (void)checkAndStartKeyBackup;
+
+/**
+ Do a backup if there are new keys.
+ */
+- (void)maybeSendKeyBackup;
 
 @end
 

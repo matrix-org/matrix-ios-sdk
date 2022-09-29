@@ -105,6 +105,20 @@ struct MXCryptoRequests {
             )
         }
     }
+    
+    func backupKeys(request: KeysBackupRequest) async throws -> [AnyHashable: Any] {
+        return try await performCallbackRequest { continuation in
+            restClient.sendKeysBackup(
+                request.keysBackupData,
+                version: request.version,
+                success: {
+                    continuation(.success($0 ?? [:]))
+                }, failure: {
+                    continuation(.failure($0 ?? Error.unknownError))
+                }
+            )
+        }
+    }
 }
 
 /// Convenience structs mapping Rust requests to data for native REST API requests
@@ -172,6 +186,22 @@ extension MXCryptoRequests {
             self.room = room
             self.eventType = eventType
             self.content = json
+        }
+    }
+    
+    struct KeysBackupRequest {
+        let version: String
+        let keysBackupData: MXKeysBackupData
+        
+        init(version: String, rooms: String) throws {
+            self.version = version
+            guard
+                let json = MXTools.deserialiseJSONString(rooms),
+                let data = MXKeysBackupData(fromJSON: ["rooms": json])
+            else {
+                throw Error.cannotCreateRequest
+            }
+            self.keysBackupData = data
         }
     }
 }

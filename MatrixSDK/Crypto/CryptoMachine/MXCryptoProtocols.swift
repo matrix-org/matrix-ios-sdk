@@ -60,6 +60,7 @@ protocol MXCryptoEventEncrypting: MXCryptoIdentity {
     func shareRoomKeysIfNecessary(roomId: String, users: [String]) async throws
     func encrypt(_ content: [AnyHashable: Any], roomId: String, eventType: String, users: [String]) async throws -> [String: Any]
     func decryptEvent(_ event: MXEvent) throws -> MXEventDecryptionResult
+    func discardRoomKey(roomId: String)
 }
 
 /// Cross-signing functionality
@@ -89,6 +90,23 @@ protocol MXCryptoSASVerifying: MXCryptoVerifying {
     func startSasVerification(userId: String, flowId: String) async throws -> Sas
     func acceptSasVerification(userId: String, flowId: String) async throws
     func emojiIndexes(sas: Sas) throws -> [Int]
+}
+
+/// Room keys backup functionality
+protocol MXCryptoBackup {
+    var isBackupEnabled: Bool { get }
+    var backupKeys: BackupKeys? { get }
+    var roomKeyCounts: RoomKeyCounts? { get }
+    
+    func enableBackup(key: MegolmV1BackupKey, version: String) throws
+    func disableBackup()
+    func saveRecoveryKey(key: BackupRecoveryKey, version: String?) throws
+    
+    func verifyBackup(version: MXKeyBackupVersion) -> Bool
+    func sign(object: [AnyHashable: Any]) throws -> [String: [String: String]]
+    
+    func backupRoomKeys() async throws
+    func importDecryptedKeys(roomKeys: [MXMegolmSessionData], progressListener: ProgressListener) throws -> KeysImportResult
 }
 
 #endif
