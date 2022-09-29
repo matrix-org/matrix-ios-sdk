@@ -71,7 +71,6 @@ import MatrixSDKCrypto
 private class MXCryptoV2: MXCrypto {
     enum Error: Swift.Error {
         case missingRoom
-        case missingDevice
     }
     
     public override var deviceCurve25519Key: String! {
@@ -445,7 +444,33 @@ private class MXCryptoV2: MXCrypto {
         success: (() -> Void)!,
         failure: ((Swift.Error?) -> Void)!
     ) {
-        log.failure("Crypto V2 does not support manual user verification")
+        guard let userId = userId else {
+            log.failure("Missing user")
+            failure?(nil)
+            return
+        }
+        guard verificationStatus else {
+            log.error("Unsetting trust not implemented")
+            failure?(nil)
+            return
+        }
+        
+        log.debug("Setting user verification status manually")
+        
+        Task {
+            do {
+                try await machine.manuallyVerifyUser(userId: userId)
+                log.debug("Successfully marked user as verified")
+                await MainActor.run {
+                    success?()
+                }
+            } catch {
+                log.error("Failed marking user as verified", context: error)
+                await MainActor.run {
+                    failure?(error)
+                }
+            }
+        }
     }
     
     public override func setDeviceVerification(
@@ -457,7 +482,7 @@ private class MXCryptoV2: MXCrypto {
     ) {
         guard let userId = userId, let deviceId = deviceId else {
             log.failure("Missing user/device")
-            failure(Error.missingDevice)
+            failure?(nil)
             return
         }
         

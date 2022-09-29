@@ -524,6 +524,11 @@ extension MXCryptoMachine: MXCryptoVerificationRequesting {
         try await handleOutgoingVerificationRequest(request)
     }
     
+    func manuallyVerifyUser(userId: String) async throws {
+        let request = try machine.verifyIdentity(userId: userId)
+        try await requests.uploadSignatures(request: request)
+    }
+    
     func manuallyVerifyDevice(userId: String, deviceId: String) async throws {
         let request = try machine.verifyDevice(userId: userId, deviceId: deviceId)
         try await requests.uploadSignatures(request: request)

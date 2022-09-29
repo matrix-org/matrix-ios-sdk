@@ -58,11 +58,12 @@ class UserIdentitySourceStub: CryptoIdentityStub, MXCryptoUserIdentitySource {
     }
     
     func downloadKeys(users: [String]) async throws {
-        
+    }
+    
+    func manuallyVerifyUser(userId: String) async throws {
     }
     
     func manuallyVerifyDevice(userId: String, deviceId: String) async throws {
-        
     }
 }
 
@@ -96,8 +97,10 @@ class CryptoCrossSigningStub: CryptoIdentityStub, MXCryptoCrossSigning {
     func downloadKeys(users: [String]) async throws {
     }
     
+    func manuallyVerifyUser(userId: String) async throws {
+    }
+    
     func manuallyVerifyDevice(userId: String, deviceId: String) async throws {
-        
     }
 }
 
