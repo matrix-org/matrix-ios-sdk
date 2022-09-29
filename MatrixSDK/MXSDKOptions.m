@@ -61,6 +61,7 @@ static MXSDKOptions *sharedOnceInstance = nil;
         
         _enableGroupSessionCache = YES;
         _enableSymmetricBackup = NO;
+        _enableNewClientInformationFeature = NO;
     }
     
     return self;

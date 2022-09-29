@@ -4563,6 +4563,11 @@ typedef void (^MXOnResumeDone)(void);
 
 - (void)refreshClientInformationIfNeeded
 {
+    if (!MXSDKOptions.sharedInstance.enableNewClientInformationFeature)
+    {
+        [self removeClientInformationIfNeeded];
+        return;
+    }
     NSString *bundleDisplayName = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleDisplayName"];
     NSString *name = [NSString stringWithFormat:@"%@ iOS", bundleDisplayName];
     NSString *version = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleShortVersionString"];
@@ -4586,6 +4591,25 @@ typedef void (^MXOnResumeDone)(void);
         } failure:^(NSError *error) {
             MXLogDebug(@"[MXSession] refreshClientInformationIfNeeded: update failed: %@", error);
         }];
+    }
+}
+
+- (void)removeClientInformationIfNeeded
+{
+    NSString *type = [NSString stringWithFormat:@"%@.%@", kMXAccountDataTypeClientInformation, self.myDeviceId];
+    NSDictionary *currentInfo = [self.accountData accountDataForEventType:type];
+    if (currentInfo.count)
+    {
+        //  remove current account data regarding client information
+        [self setAccountData:@{} forType:type success:^{
+            MXLogDebug(@"[MXSession] removeClientInformationIfNeeded: removed successfully");
+        } failure:^(NSError *error) {
+            MXLogDebug(@"[MXSession] removeClientInformationIfNeeded: remove failed: %@", error);
+        }];
+    }
+    else
+    {
+        MXLogDebug(@"[MXSession] refreshClientInformationIfNeeded: no need to remove");
     }
 }
 
