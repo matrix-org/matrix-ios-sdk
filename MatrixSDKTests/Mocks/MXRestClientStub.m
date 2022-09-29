@@ -25,4 +25,22 @@
     return [[MXHTTPOperation alloc] init];
 }
 
+- (MXHTTPOperation *)setAccountData:(NSDictionary *)data forType:(NSString *)type success:(void (^)(void))success failure:(void (^)(NSError *))failure
+{
+    if (success)
+    {
+        success();
+    }
+    return [[MXHTTPOperation alloc] init];
+}
+
+- (MXHTTPOperation *)syncFromToken:(NSString *)token serverTimeout:(NSUInteger)serverTimeout clientTimeout:(NSUInteger)clientTimeout setPresence:(NSString *)setPresence filter:(NSString *)filterId success:(void (^)(MXSyncResponse *))success failure:(void (^)(NSError *))failure
+{
+    if (success)
+    {
+        success(nil);
+    }
+    return [[MXHTTPOperation alloc] init];
+}
+
 @end

@@ -215,6 +215,8 @@ typedef void (^MXOnResumeDone)(void);
 
 @property (nonatomic, readonly) MXStoreService *storeService;
 
+@property (nonatomic, readwrite) MXClientInformationService *clientInformationService;
+
 @end
 
 @implementation MXSession
@@ -254,6 +256,7 @@ typedef void (^MXOnResumeDone)(void);
         _eventStreamService = [[MXEventStreamService alloc] init];
         _preferredSyncPresence = MXPresenceOnline;
         _locationService = [[MXLocationService alloc] initWithSession:self];
+        _clientInformationService = [[MXClientInformationService alloc] initWithSession:self];
         
         [self setIdentityServer:mxRestClient.identityServer andAccessToken:mxRestClient.credentials.identityServerAccessToken];
         
@@ -1138,7 +1141,7 @@ typedef void (^MXOnResumeDone)(void);
             [self serverSyncWithServerTimeout:0 success:nil failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:self.preferredSyncPresenceString];
         }
 
-        [self refreshClientInformationIfNeeded];
+        [self.clientInformationService refresh];
     }
 
     for (MXPeekingRoom *peekingRoom in peekingRooms)
@@ -4559,58 +4562,6 @@ typedef void (^MXOnResumeDone)(void);
             failure(error);
         }
     }];
-}
-
-- (void)refreshClientInformationIfNeeded
-{
-    if (!MXSDKOptions.sharedInstance.enableNewClientInformationFeature)
-    {
-        [self removeClientInformationIfNeeded];
-        return;
-    }
-    NSString *bundleDisplayName = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleDisplayName"];
-    NSString *name = [NSString stringWithFormat:@"%@ iOS", bundleDisplayName];
-    NSString *version = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleShortVersionString"];
-    NSDictionary *updatedInfo = @{
-        @"name": name,
-        @"version": version
-    };
-    NSString *type = [NSString stringWithFormat:@"%@.%@", kMXAccountDataTypeClientInformation, self.myDeviceId];
-
-    NSDictionary *currentInfo = [self.accountData accountDataForEventType:type];
-
-    if ([updatedInfo isEqualToDictionary:currentInfo])
-    {
-        MXLogDebug(@"[MXSession] refreshClientInformationIfNeeded: no need to update");
-    }
-    else
-    {
-        //  there is change, update the event
-        [self setAccountData:updatedInfo forType:type success:^{
-            MXLogDebug(@"[MXSession] refreshClientInformationIfNeeded: updated successfully");
-        } failure:^(NSError *error) {
-            MXLogDebug(@"[MXSession] refreshClientInformationIfNeeded: update failed: %@", error);
-        }];
-    }
-}
-
-- (void)removeClientInformationIfNeeded
-{
-    NSString *type = [NSString stringWithFormat:@"%@.%@", kMXAccountDataTypeClientInformation, self.myDeviceId];
-    NSDictionary *currentInfo = [self.accountData accountDataForEventType:type];
-    if (currentInfo.count)
-    {
-        //  remove current account data regarding client information
-        [self setAccountData:@{} forType:type success:^{
-            MXLogDebug(@"[MXSession] removeClientInformationIfNeeded: removed successfully");
-        } failure:^(NSError *error) {
-            MXLogDebug(@"[MXSession] removeClientInformationIfNeeded: remove failed: %@", error);
-        }];
-    }
-    else
-    {
-        MXLogDebug(@"[MXSession] refreshClientInformationIfNeeded: no need to remove");
-    }
 }
 
 #pragma mark - Homeserver information
