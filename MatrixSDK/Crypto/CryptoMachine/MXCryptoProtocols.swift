@@ -56,10 +56,11 @@ protocol MXCryptoUserIdentitySource: MXCryptoIdentity {
 }
 
 /// Event encryption and decryption
-protocol MXCryptoEventEncrypting: MXCryptoIdentity {
+protocol MXCryptoRoomEventEncrypting: MXCryptoIdentity {
     func shareRoomKeysIfNecessary(roomId: String, users: [String]) async throws
-    func encrypt(_ content: [AnyHashable: Any], roomId: String, eventType: String, users: [String]) async throws -> [String: Any]
-    func decryptEvent(_ event: MXEvent) throws -> MXEventDecryptionResult
+    func encryptRoomEvent(content: [AnyHashable: Any], roomId: String, eventType: String, users: [String]) async throws -> [String: Any]
+    func decryptRoomEvent(_ event: MXEvent) -> MXEventDecryptionResult
+    func requestRoomKey(event: MXEvent) async throws
     func discardRoomKey(roomId: String)
 }
 

@@ -315,7 +315,7 @@ extension MXCryptoMachine: MXCryptoUserIdentitySource {
     }
 }
 
-extension MXCryptoMachine: MXCryptoEventEncrypting {
+extension MXCryptoMachine: MXCryptoRoomEventEncrypting {
     func shareRoomKeysIfNecessary(roomId: String, users: [String]) async throws {
         try await sessionsQueue.sync { [weak self] in
             try await self?.updateTrackedUsers(users: users)
@@ -328,7 +328,12 @@ extension MXCryptoMachine: MXCryptoEventEncrypting {
         }
     }
     
-    func encrypt(_ content: [AnyHashable: Any], roomId: String, eventType: String, users: [String]) async throws -> [String: Any] {
+    func encryptRoomEvent(
+        content: [AnyHashable : Any],
+        roomId: String,
+        eventType: String,
+        users: [String]
+    ) async throws -> [String : Any] {
         guard let content = MXTools.serialiseJSONObject(content) else {
             throw Error.cannotSerialize
         }
@@ -338,13 +343,54 @@ extension MXCryptoMachine: MXCryptoEventEncrypting {
         return MXTools.deserialiseJSONString(event) as? [String: Any] ?? [:]
     }
     
-    func decryptEvent(_ event: MXEvent) throws -> MXEventDecryptionResult {
-        guard let roomId = event.roomId, let event = event.jsonString() else {
+    func decryptRoomEvent(_ event: MXEvent) -> MXEventDecryptionResult {
+        guard let roomId = event.roomId, let eventString = event.jsonString() else {
+            log.failure("Invalid event")
+            
+            let result = MXEventDecryptionResult()
+            result.error = Error.invalidEvent
+            return result
+        }
+        
+        do {
+            let decryptedEvent = try machine.decryptRoomEvent(event: eventString, roomId: roomId)
+            let result = try MXEventDecryptionResult(event: decryptedEvent)
+            log.debug("Successfully decrypted event")
+            return result
+            
+        // `Megolm` error does not currently expose the type of "missing keys" error, so have to match against
+        // hardcoded non-localized error message. Will be changed in future PR
+        } catch DecryptionError.Megolm(message: "decryption failed because the room key is missing") {
+            let result = MXEventDecryptionResult()
+            result.error = NSError(
+                domain: MXDecryptingErrorDomain,
+                code: Int(MXDecryptingErrorUnknownInboundSessionIdCode.rawValue),
+                userInfo: [
+                    NSLocalizedDescriptionKey: MXDecryptingErrorUnknownInboundSessionIdReason
+                ]
+            )
+            log.error("Failed decrypting due to missing key")
+            return result
+        } catch {
+            let result = MXEventDecryptionResult()
+            result.error = error
+            log.error("Failed decrypting", context: error)
+            return result
+        }
+    }
+    
+    func requestRoomKey(event: MXEvent) async throws {
+        guard let roomId = event.roomId, let eventString = event.jsonString() else {
             throw Error.invalidEvent
         }
         
-        let result = try machine.decryptRoomEvent(event: event, roomId: roomId)
-        return try MXEventDecryptionResult(event: result)
+        log.debug("->")
+        let result = try machine.requestRoomKey(event: eventString, roomId: roomId)
+        if let cancellation = result.cancellation {
+            try await handleRequest(cancellation)
+        }
+        try await handleRequest(result.keyRequest)
+                
     }
     
     func discardRoomKey(roomId: String) {

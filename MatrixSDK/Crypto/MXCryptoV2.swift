@@ -257,8 +257,8 @@ private class MXCryptoV2: MXCrypto {
         Task {
             do {
                 let users = try await getRoomUserIds(for: room)
-                let result = try await machine.encrypt(
-                    content,
+                let result = try await machine.encryptRoomEvent(
+                    content: content,
                     roomId: roomId,
                     eventType: eventType,
                     users: users
@@ -283,20 +283,14 @@ private class MXCryptoV2: MXCrypto {
     ) -> MXEventDecryptionResult! {
         guard let event = event else {
             log.failure("Missing event")
-            return nil
+            return MXEventDecryptionResult()
         }
-        do {
-            let result = try machine.decryptEvent(event)
-            let type = result.clearEvent["type"] ?? ""
-            log.debug("Decrypted event of type `\(type)`")
-            
-            return result
-        } catch {
-            log.error("Error decrypting event", context: error)
-            let result = MXEventDecryptionResult()
-            result.error = error
-            return result
+        guard event.isEncrypted && event.content?["algorithm"] as? String == kMXCryptoMegolmAlgorithm else {
+            log.debug("Ignoring non-room event")
+            return MXEventDecryptionResult()
         }
+        
+        return machine.decryptRoomEvent(event)
     }
     
     public override func decryptEvents(
@@ -611,7 +605,24 @@ private class MXCryptoV2: MXCrypto {
     }
     
     public override func reRequestRoomKey(for event: MXEvent!) {
-        log.debug("Not implemented")
+        guard let event = event else {
+            log.failure("Missing event")
+            return
+        }
+        
+        Task {
+            log.debug("->")
+            do {
+                try await machine.requestRoomKey(event: event)
+                await MainActor.run {
+                    let result = decryptEvent(event, inTimeline: nil)
+                    event.setClearData(result)
+                    log.debug("Recieved room keys and re-decrypted event")
+                }
+            } catch {
+                log.error("Failed requesting room key", context: error)
+            }
+        }
     }
     
     public override var warnOnUnknowDevices: Bool {
