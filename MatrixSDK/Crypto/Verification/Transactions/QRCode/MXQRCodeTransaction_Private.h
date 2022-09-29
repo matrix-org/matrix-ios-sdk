@@ -33,7 +33,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (nullable instancetype)initWithOtherDevice:(MXDeviceInfo*)otherDevice
                                   qrCodeData:(nullable MXQRCodeData*)qrCodeData
-                                  andManager:(MXKeyVerificationManager *)manager;
+                                  andManager:(MXLegacyKeyVerificationManager *)manager;
 
 - (void)handleStart:(MXQRCodeKeyVerificationStart*)startContent;
 

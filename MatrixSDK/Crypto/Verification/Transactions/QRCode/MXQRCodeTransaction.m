@@ -50,7 +50,7 @@ NSString * const MXKeyVerificationMethodReciprocate = @"m.reciprocate.v1";
 
 - (nullable instancetype)initWithOtherDevice:(MXDeviceInfo*)otherDevice
                                   qrCodeData:(nullable MXQRCodeData*)qrCodeData
-                                  andManager:(MXKeyVerificationManager *)manager
+                                  andManager:(MXLegacyKeyVerificationManager *)manager
 {
     self = [super initWithOtherDevice:otherDevice andManager:manager];
     if (self)

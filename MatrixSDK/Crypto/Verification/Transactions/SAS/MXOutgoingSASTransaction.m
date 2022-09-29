@@ -29,6 +29,11 @@
 
 @implementation MXOutgoingSASTransaction
 
+- (void)accept
+{
+    MXLogFailure(@"[MXKeyVerification] Cannot accept outgoing transaction");
+}
+
 - (void)start;
 {
     MXLogDebug(@"[MXKeyVerification][MXOutgoingSASTransaction] start");
@@ -77,7 +82,7 @@
 
 #pragma mark - SDK-Private methods -
 
-- (instancetype)initWithOtherDevice:(MXDeviceInfo *)otherDevice andManager:(MXKeyVerificationManager *)manager
+- (instancetype)initWithOtherDevice:(MXDeviceInfo *)otherDevice andManager:(MXLegacyKeyVerificationManager *)manager
 {
     self = [super initWithOtherDevice:otherDevice andManager:manager];
     if (self)

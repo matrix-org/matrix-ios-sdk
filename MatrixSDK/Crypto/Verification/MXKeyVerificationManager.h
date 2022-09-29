@@ -76,12 +76,11 @@ FOUNDATION_EXPORT NSString *const MXKeyVerificationManagerNotificationTransactio
 
 
 /**
- The `MXKeyVerificationManager` class instance manages interactive key
+ The `MXKeyVerificationManager` protocol specifies interactive key
  verifications according to MSC1267 (Interactive key verification):
  https://github.com/matrix-org/matrix-doc/issues/1267.
  */
-@interface MXKeyVerificationManager : NSObject
-
+@protocol MXKeyVerificationManager <NSObject>
 
 #pragma mark - Requests
 
@@ -195,6 +194,10 @@ FOUNDATION_EXPORT NSString *const MXKeyVerificationManagerNotificationTransactio
                              acceptedDeviceId:(NSString*)acceptedDeviceId
                                       success:(void(^)(void))success
                                       failure:(void(^)(NSError *error))failure;
+
+@end
+
+@interface MXLegacyKeyVerificationManager : NSObject <MXKeyVerificationManager>
 
 @end
 

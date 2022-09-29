@@ -47,8 +47,12 @@ class MXKeyVerificationRequestV2: NSObject, MXKeyVerificationRequest {
         )
     }
     
+    var myUserId: String {
+        return handler.userId
+    }
+    
     var isFromMyUser: Bool {
-        return otherUser == handler.userId
+        return otherUser == myUserId
     }
     
     var isFromMyDevice: Bool {
@@ -60,6 +64,10 @@ class MXKeyVerificationRequestV2: NSObject, MXKeyVerificationRequest {
     }
     
     let transport: MXKeyVerificationTransport
+    
+    var roomId: String? {
+        return request.roomId
+    }
     
     var otherUser: String {
         return request.otherUserId

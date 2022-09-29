@@ -25,14 +25,15 @@
 #pragma mark - Constants
 NSString * const MXKeyVerificationRequestDidChangeNotification = @"MXKeyVerificationRequestDidChangeNotification";
 
-@interface MXDefaultKeyVerificationRequest()
+@interface MXLegacyKeyVerificationRequest()
 
 @property (nonatomic, readwrite) MXKeyVerificationRequestState state;
 
 @end
 
-@implementation MXDefaultKeyVerificationRequest
+@implementation MXLegacyKeyVerificationRequest
 
+@synthesize roomId = _roomId;
 @synthesize event = _event;
 @synthesize fromDevice = _fromDevice;
 @synthesize methods = _methods;
@@ -45,12 +46,13 @@ NSString * const MXKeyVerificationRequestDidChangeNotification = @"MXKeyVerifica
 
 #pragma mark - SDK-Private methods -
 
-- (instancetype)initWithEvent:(MXEvent*)event andManager:(MXKeyVerificationManager*)manager
+- (instancetype)initWithEvent:(MXEvent*)event andManager:(MXLegacyKeyVerificationManager*)manager
 {
     self = [super init];
     if (self)
     {
         _event = event;
+        _roomId = event.roomId;
         _state = MXKeyVerificationRequestStatePending;
         _manager = manager;
     }
@@ -231,6 +233,10 @@ NSString * const MXKeyVerificationRequestDidChangeNotification = @"MXKeyVerifica
     return _acceptedData.methods;
 }
 
+- (NSString *)myUserId
+{
+    return self.manager.crypto.mxSession.credentials.userId;
+}
 
 // Shortcuts of methods according to the point of view
 - (NSArray<NSString *> *)myMethods

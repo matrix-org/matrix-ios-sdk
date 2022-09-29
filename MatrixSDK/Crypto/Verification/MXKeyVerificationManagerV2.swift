@@ -24,7 +24,7 @@ enum MXKeyVerificationUpdateResult {
 
 typealias MXCryptoVerification = MXCryptoVerificationRequesting & MXCryptoSASVerifying
 
-class MXKeyVerificationManagerV2: MXKeyVerificationManager {
+class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
     enum Error: Swift.Error {
         case notSupported
     }
@@ -89,7 +89,7 @@ class MXKeyVerificationManagerV2: MXKeyVerificationManager {
         updatePendingVerification()
     }
     
-    override func requestVerificationByToDevice(
+    func requestVerificationByToDevice(
         withUserId userId: String,
         deviceIds: [String]?,
         methods: [String],
@@ -121,7 +121,7 @@ class MXKeyVerificationManagerV2: MXKeyVerificationManager {
         }
     }
     
-    override func requestVerificationByDM(
+    func requestVerificationByDM(
         withUserId userId: String,
         roomId: String?,
         fallbackText: String,
@@ -153,7 +153,7 @@ class MXKeyVerificationManagerV2: MXKeyVerificationManager {
         }
     }
     
-    override func beginKeyVerification(
+    func beginKeyVerification(
         withUserId userId: String,
         andDeviceId deviceId: String,
         method: String,
@@ -161,10 +161,10 @@ class MXKeyVerificationManagerV2: MXKeyVerificationManager {
         failure: @escaping (Swift.Error) -> Void
     ) {
         log.debug("Not implemented")
-        success(MXDefaultKeyVerificationTransaction())
+        success(MXLegacyKeyVerificationTransaction())
     }
     
-    override func beginKeyVerification(
+    func beginKeyVerification(
         from request: MXKeyVerificationRequest,
         method: String,
         success: @escaping (MXKeyVerificationTransaction) -> Void,
@@ -189,15 +189,15 @@ class MXKeyVerificationManagerV2: MXKeyVerificationManager {
         }
     }
     
-    override var pendingRequests: [MXKeyVerificationRequest] {
+    var pendingRequests: [MXKeyVerificationRequest] {
         return Array(activeRequests.values)
     }
     
-    override func transactions(_ complete: @escaping ([MXKeyVerificationTransaction]) -> Void) {
+    func transactions(_ complete: @escaping ([MXKeyVerificationTransaction]) -> Void) {
         complete(Array(activeTransactions.values))
     }
     
-    override func keyVerification(
+    func keyVerification(
         fromKeyVerificationEvent event: MXEvent,
         success: @escaping (MXKeyVerification) -> Void,
         failure: @escaping (Swift.Error) -> Void
@@ -207,16 +207,16 @@ class MXKeyVerificationManagerV2: MXKeyVerificationManager {
         return MXHTTPOperation()
     }
 
-    override func qrCodeTransaction(withTransactionId transactionId: String) -> MXQRCodeTransaction? {
+    func qrCodeTransaction(withTransactionId transactionId: String) -> MXQRCodeTransaction? {
         log.debug("Not implemented")
         return nil
     }
     
-    override func removeQRCodeTransaction(withTransactionId transactionId: String) {
+    func removeQRCodeTransaction(withTransactionId transactionId: String) {
         log.debug("Not implemented")
     }
     
-    override func notifyOthersOfAcceptance(withTransactionId transactionId: String, acceptedUserId: String, acceptedDeviceId: String, success: @escaping () -> Void, failure: @escaping (Swift.Error) -> Void) {
+    func notifyOthersOfAcceptance(withTransactionId transactionId: String, acceptedUserId: String, acceptedDeviceId: String, success: @escaping () -> Void, failure: @escaping (Swift.Error) -> Void) {
         log.debug("Not implemented")
         success()
     }

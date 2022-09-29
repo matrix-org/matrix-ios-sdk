@@ -28,7 +28,7 @@
 #import "MXSASTransaction.h"
 
 @interface MXKeyVerificationStatusResolver ()
-@property (nonatomic, weak) MXKeyVerificationManager *manager;
+@property (nonatomic, weak) MXLegacyKeyVerificationManager *manager;
 @property (nonatomic) MXSession *mxSession;
 @end
 
@@ -37,7 +37,7 @@
 
 #pragma mark - Setup
 
-- (instancetype)initWithManager:(MXKeyVerificationManager*)manager matrixSession:(MXSession*)matrixSession;
+- (instancetype)initWithManager:(MXLegacyKeyVerificationManager*)manager matrixSession:(MXSession*)matrixSession;
 
 {
     self = [super init];

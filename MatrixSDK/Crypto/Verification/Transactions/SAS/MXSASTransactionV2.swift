@@ -43,7 +43,7 @@ class MXSASTransactionV2: NSObject, MXSASTransaction {
     var sasEmoji: [MXEmojiRepresentation]? {
         do {
             let indices = try handler.emojiIndexes(sas: sas)
-            let emojis = MXDefaultSASTransaction.allEmojiRepresentations()
+            let emojis = MXLegacySASTransaction.allEmojiRepresentations()
             return indices.compactMap { idx in
                 idx < emojis.count ? emojis[idx] : nil
             }
