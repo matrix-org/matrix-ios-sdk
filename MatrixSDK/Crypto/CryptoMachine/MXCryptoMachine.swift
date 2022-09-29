@@ -313,6 +313,16 @@ extension MXCryptoMachine: MXCryptoUserIdentitySource {
             .keysQuery(requestId: UUID().uuidString, users: users)
         )
     }
+    
+    func manuallyVerifyUser(userId: String) async throws {
+        let request = try machine.verifyIdentity(userId: userId)
+        try await requests.uploadSignatures(request: request)
+    }
+    
+    func manuallyVerifyDevice(userId: String, deviceId: String) async throws {
+        let request = try machine.verifyDevice(userId: userId, deviceId: deviceId)
+        try await requests.uploadSignatures(request: request)
+    }
 }
 
 extension MXCryptoMachine: MXCryptoRoomEventEncrypting {
@@ -355,7 +365,7 @@ extension MXCryptoMachine: MXCryptoRoomEventEncrypting {
         do {
             let decryptedEvent = try machine.decryptRoomEvent(event: eventString, roomId: roomId)
             let result = try MXEventDecryptionResult(event: decryptedEvent)
-            log.debug("Successfully decrypted event")
+            log.debug("Successfully decrypted event `\(result.clearEvent["type"] ?? "unknown")`")
             return result
             
         // `Megolm` error does not currently expose the type of "missing keys" error, so have to match against
@@ -506,6 +516,10 @@ extension MXCryptoMachine: MXCryptoVerificationRequesting {
         return request
     }
     
+    func verificationRequests(userId: String) -> [VerificationRequest] {
+        return machine.getVerificationRequests(userId: userId)
+    }
+    
     func verificationRequest(userId: String, flowId: String) -> VerificationRequest? {
         return machine.getVerificationRequest(userId: userId, flowId: flowId)
     }
@@ -522,16 +536,6 @@ extension MXCryptoMachine: MXCryptoVerificationRequesting {
             throw Error.cannotCancelVerification
         }
         try await handleOutgoingVerificationRequest(request)
-    }
-    
-    func manuallyVerifyUser(userId: String) async throws {
-        let request = try machine.verifyIdentity(userId: userId)
-        try await requests.uploadSignatures(request: request)
-    }
-    
-    func manuallyVerifyDevice(userId: String, deviceId: String) async throws {
-        let request = try machine.verifyDevice(userId: userId, deviceId: deviceId)
-        try await requests.uploadSignatures(request: request)
     }
     
     // MARK: - Private
@@ -585,6 +589,14 @@ extension MXCryptoMachine: MXCryptoVerifying {
 extension MXCryptoMachine: MXCryptoSASVerifying {
     func startSasVerification(userId: String, flowId: String) async throws -> Sas {
         guard let result = try machine.startSasVerification(userId: userId, flowId: flowId) else {
+            throw Error.missingVerification
+        }
+        try await handleOutgoingVerificationRequest(result.request)
+        return result.sas
+    }
+    
+    func startSasVerification(userId: String, deviceId: String) async throws -> Sas {
+        guard let result = try machine.startSasWithDevice(userId: userId, deviceId: deviceId) else {
             throw Error.missingVerification
         }
         try await handleOutgoingVerificationRequest(result.request)

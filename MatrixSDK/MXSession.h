@@ -977,6 +977,14 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 - (MXRoom *)directJoinedRoomWithUserId:(NSString*)userId;
 
 /**
+ Return the first joined direct chat listed in account data for this user,
+ or it will create one if no room exists yet.
+ */
+- (MXHTTPOperation *)getOrCreateDirectJoinedRoomWithUserId:(NSString*)userId
+                                                   success:(void (^)(MXRoom *))success
+                                                   failure:(void (^)(NSError *error))failure;
+
+/**
  Get the direct user id of a room.
 
  @param roomId the id of the room.

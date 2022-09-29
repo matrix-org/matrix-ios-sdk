@@ -22,71 +22,74 @@ enum MXKeyVerificationUpdateResult {
     case removed
 }
 
-typealias MXCryptoVerification = MXCryptoVerificationRequesting & MXCryptoSASVerifying
+typealias MXCryptoVerificationHandler = MXCryptoVerificationRequesting & MXCryptoSASVerifying
 
 class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
     enum Error: Swift.Error {
-        case notSupported
+        case methodNotSupported
+        case unknownFlowId
+        case missingRoom
     }
     
-    typealias GetOrCreateDMRoomId = (_ userId: String) async throws -> String
+    // A set of room events we have to monitor manually to synchronize CryptoMachine
+    // and verification UI, optionally triggering global notifications.
+    private static let dmEventTypes: Set<MXEventType> = [
+        .roomMessage, // Verification request in DM is wrapped inside `m.room.message`
+        .keyVerificationReady,
+        .keyVerificationStart,
+        .keyVerificationAccept,
+        .keyVerificationKey,
+        .keyVerificationMac,
+        .keyVerificationCancel,
+        .keyVerificationDone,
+    ]
     
-    private let verification: MXCryptoVerification
-    private let getOrCreateDMRoomId: GetOrCreateDMRoomId
+    // A set of to-device events we have to monitor manually to synchronize CryptoMachine
+    // and verification UI, optionally triggering global notifications.
+    private static let toDeviceEventTypes: Set<String> = [
+        kMXMessageTypeKeyVerificationRequest,
+        kMXEventTypeStringKeyVerificationStart
+    ]
+    
+    private weak var session: MXSession?
+    private var observer: Any?
+    
+    private let handler: MXCryptoVerificationHandler
     
     // We need to keep track of request / transaction objects by reference
     // because various flows / screens subscribe to updates via global notifications
     // posted through them
     private var activeRequests: [String: MXKeyVerificationRequestV2]
     private var activeTransactions: [String: MXSASTransactionV2]
+    private let resolver: MXKeyVerificationStateResolver
     
     private let log = MXNamedLog(name: "MXKeyVerificationManagerV2")
     
-    init(verification: MXCryptoVerification, getOrCreateDMRoomId: @escaping GetOrCreateDMRoomId) {
-        self.verification = verification
-        self.getOrCreateDMRoomId = getOrCreateDMRoomId
-        
+    init(
+        session: MXSession,
+        handler: MXCryptoVerificationHandler
+    ) {
+        self.session = session
+        self.handler = handler
         self.activeRequests = [:]
         self.activeTransactions = [:]
+        self.resolver = MXKeyVerificationStateResolver(myUserId: session.myUserId, aggregations: session.aggregations)
         
         super.init()
+        
+        listenToRoomEvents(in: session)
     }
     
-    func handleDeviceEvents(_ events: [MXEvent]) {
-        // We only have to manually handle request and start events,
-        // because they require creation of new objects observed by the UI.
-        // The other events (e.g. cancellation) are handled automatically
-        // by `MXCryptoVerification`
-        let eventTypes: Set<String> = [
-            kMXMessageTypeKeyVerificationRequest,
-            kMXEventTypeStringKeyVerificationStart
-        ]
-        
-        for event in events {
-            guard eventTypes.contains(event.type) else {
-                continue
-            }
-            
-            guard
-                let userId = event.sender,
-                let flowId = event.content["transaction_id"] as? String
-            else {
-                log.error("Missing userId or flowId in event")
-                continue
-            }
-            
-            log.debug("Processing incoming verification event")
-            switch event.type {
-            case kMXMessageTypeKeyVerificationRequest:
-                incomingVerificationRequest(userId: userId, flowId: flowId)
-            case kMXEventTypeStringKeyVerificationStart:
-                incomingVerificationStart(userId: userId, flowId: flowId)
-            default:
-                log.failure("Event type should not be handled by key verification", context: event.type)
-            }
-        }
-        
-        updatePendingVerification()
+    deinit {
+        session?.removeListener(observer)
+    }
+    
+    var pendingRequests: [MXKeyVerificationRequest] {
+        return Array(activeRequests.values)
+    }
+    
+    func transactions(_ complete: @escaping ([MXKeyVerificationTransaction]) -> Void) {
+        complete(Array(activeTransactions.values))
     }
     
     func requestVerificationByToDevice(
@@ -96,25 +99,24 @@ class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
         success: @escaping (MXKeyVerificationRequest) -> Void,
         failure: @escaping (Swift.Error) -> Void
     ) {
-        guard userId == verification.userId else {
+        log.debug("->")
+        
+        guard userId == session?.myUserId else {
             log.failure("To-device verification with other users is not supported")
-            failure(Error.notSupported)
+            failure(Error.methodNotSupported)
             return
         }
         
-        log.debug("Requesting verification by to-device")
         Task {
             do {
-                let req = try await verification.requestSelfVerification(methods: methods)
-                
-                let request = addRequest(for: req, transport: .toDevice)
+                let request = try await requestSelfVerification(methods: methods)
                 await MainActor.run {
                     log.debug("Request successfully sent")
                     success(request)
                 }
             } catch {
-                log.error("Cannot request verification", context: error)
                 await MainActor.run {
+                    log.error("Cannot request verification", context: error)
                     failure(error)
                 }
             }
@@ -129,24 +131,22 @@ class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
         success: @escaping (MXKeyVerificationRequest) -> Void,
         failure: @escaping (Swift.Error) -> Void
     ) {
-        log.debug("Requesting verification by DM")
+        log.debug("->")
         Task {
             do {
-                let roomId = try await getOrCreateDMRoomId(userId)
-                let req = try await verification.requestVerification(
+                let roomId = try await getOrCreateDMRoomId(userId: userId)
+                let request = try await requestVerification(
                     userId: userId,
                     roomId: roomId,
                     methods: methods
                 )
-                
-                let request = addRequest(for: req, transport: .directMessage)
                 await MainActor.run {
                     log.debug("Request successfully sent")
                     success(request)
                 }
             } catch {
-                log.error("Cannot request verification", context: error)
                 await MainActor.run {
+                    log.error("Cannot request verification", context: error)
                     failure(error)
                 }
             }
@@ -160,8 +160,22 @@ class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
         success: @escaping (MXKeyVerificationTransaction) -> Void,
         failure: @escaping (Swift.Error) -> Void
     ) {
-        log.debug("Not implemented")
-        success(MXLegacyKeyVerificationTransaction())
+        log.debug("Starting \(method) verification flow")
+        
+        Task {
+            do {
+                let transaction = try await startSasVerification(userId: userId, deviceId: deviceId)
+                await MainActor.run {
+                    log.debug("Created verification transaction")
+                    success(transaction)
+                }
+            } catch {
+                await MainActor.run {
+                    log.error("Failed creating verification transaction", context: error)
+                    failure(error)
+                }
+            }
+        }
     }
     
     func beginKeyVerification(
@@ -171,40 +185,62 @@ class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
         failure: @escaping (Swift.Error) -> Void
     ) {
         log.debug("Starting \(method) verification flow")
+        
         Task {
             do {
-                let sas = try await verification.startSasVerification(userId: request.otherUser, flowId: request.requestId)
-                let transaction = addSasTransaction(for: sas, transport: request.transport)
-                
+                let transaction = try await startSasVerification(userId: request.otherUser, flowId: request.requestId, transport: request.transport)
                 await MainActor.run {
                     log.debug("Created verification transaction")
                     success(transaction)
                 }
             } catch {
-                log.error("Failed creating verification transaction", context: error)
                 await MainActor.run {
+                    log.error("Failed creating verification transaction", context: error)
                     failure(error)
                 }
             }
         }
     }
     
-    var pendingRequests: [MXKeyVerificationRequest] {
-        return Array(activeRequests.values)
-    }
-    
-    func transactions(_ complete: @escaping ([MXKeyVerificationTransaction]) -> Void) {
-        complete(Array(activeTransactions.values))
-    }
-    
     func keyVerification(
         fromKeyVerificationEvent event: MXEvent,
+        roomId: String,
         success: @escaping (MXKeyVerification) -> Void,
         failure: @escaping (Swift.Error) -> Void
     ) -> MXHTTPOperation? {
-        log.debug("Not implemented")
-        success(MXKeyVerification())
-        return MXHTTPOperation()
+        guard let flowId = event.relatesTo?.eventId ?? event.eventId else {
+            log.failure("Unknown flow id")
+            failure(Error.unknownFlowId)
+            return nil
+        }
+
+        if let request = activeRequests[flowId] {
+            log.debug("Using active request")
+            let result = MXKeyVerification()
+            result.request = request
+            success(result)
+
+        } else {
+            log.debug("Computing archived request")
+
+            Task {
+                do {
+                    // If we do not have active verification anymore (managed by CryptoMachine), it means
+                    // we have completed or cancelled request, where the state can be computed from
+                    // aggregate events.
+                    let result = MXKeyVerification()
+                    result.state = try await resolver.verificationState(flowId: flowId, roomId: roomId)
+                    await MainActor.run {
+                        success(result)
+                    }
+                } catch {
+                    await MainActor.run {
+                        failure(error)
+                    }
+                }
+            }
+        }
+        return nil
     }
 
     func qrCodeTransaction(withTransactionId transactionId: String) -> MXQRCodeTransaction? {
@@ -216,43 +252,73 @@ class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
         log.debug("Not implemented")
     }
     
-    func notifyOthersOfAcceptance(withTransactionId transactionId: String, acceptedUserId: String, acceptedDeviceId: String, success: @escaping () -> Void, failure: @escaping (Swift.Error) -> Void) {
-        log.debug("Not implemented")
-        success()
+    // MARK: - Events
+    
+    func handleDeviceEvents(_ events: [MXEvent]) {
+        for event in events {
+            guard Self.toDeviceEventTypes.contains(event.type) else {
+                continue
+            }
+            handleDeviceEvent(event)
+        }
+        updatePendingVerification()
     }
     
-    // MARK: - Private
+    private func listenToRoomEvents(in session: MXSession) {
+        observer = session.listenToEvents(Array(Self.dmEventTypes)) { [weak self] event, direction, customObject in
+            if direction == .forwards {
+                self?.handleRoomEvent(event)
+            }
+        }
+    }
     
-    private func incomingVerificationRequest(userId: String, flowId: String) {
-        guard let request = verification.verificationRequest(userId: userId, flowId: flowId) else {
-            log.error("Verification request is not known", context: [
-                "flow_id": flowId
-            ])
+    private func handleDeviceEvent(_ event: MXEvent) {
+        guard
+            let userId = event.sender,
+            let flowId = event.content["transaction_id"] as? String
+        else {
+            log.error("Missing userId or flowId in event")
             return
         }
         
-        _ = addRequest(for: request, transport: .toDevice, notify: true)
-    }
-    
-    private func incomingVerificationStart(userId: String, flowId: String) {
-        guard let verif = verification.verification(userId: userId, flowId: flowId) else {
-            log.error("Verification is not known", context: [
-                "flow_id": flowId
-            ])
-            return
-        }
+        log.debug("->")
         
-        switch verif {
-        case .sasV1(let sas):
-            let transaction = addSasTransaction(for: sas, transport: .toDevice)
-            transaction.accept()
+        switch event.type {
+        case kMXMessageTypeKeyVerificationRequest:
+            handleIncomingRequest(userId: userId, flowId: flowId, transport: .toDevice)
             
-        case .qrCodeV1:
-            assertionFailure("Not implemented")
+        case kMXEventTypeStringKeyVerificationStart:
+            handleIncomingVerification(userId: userId, flowId: flowId, transport: .toDevice)
+            
+        default:
+            log.failure("Event type should not be handled by key verification", context: event.type)
         }
     }
     
-    private func updatePendingVerification() {
+    private func handleRoomEvent(_ event: MXEvent) {
+        log.debug("->")
+        
+        if event.type == kMXEventTypeStringRoomMessage && event.content?[kMXMessageTypeKey] as? String == kMXMessageTypeKeyVerificationRequest {
+            handleIncomingRequest(userId: event.sender, flowId: event.eventId, transport: .directMessage)
+            
+        } else if event.type == kMXEventTypeStringKeyVerificationStart, let flowId = event.relatesTo.eventId {
+            handleIncomingVerification(userId: event.sender, flowId: flowId, transport: .directMessage)
+            
+        } else if Self.dmEventTypes.contains(where: { $0.identifier == event.type }) {
+            updatePendingVerification()
+            
+        } else if event.type != kMXEventTypeStringRoomMessage {
+            log.failure("Event type should not be handled by key verification", context: event.type)
+        }
+    }
+    
+    // MARK: - Update
+    
+    func updatePendingVerification() {
+        if !activeRequests.isEmpty {
+            log.debug("Processing \(activeRequests.count) pending requests")
+        }
+
         for request in activeRequests.values {
             switch request.processUpdates() {
             case .noUpdates:
@@ -263,7 +329,11 @@ class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
                 activeRequests[request.requestId] = nil
             }
         }
-        
+
+        if !activeTransactions.isEmpty {
+            log.debug("Processing \(activeTransactions.count) pending transactions")
+        }
+
         for transaction in activeTransactions.values {
             switch transaction.processUpdates() {
             case .noUpdates:
@@ -276,19 +346,57 @@ class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
         }
     }
     
+    // MARK: - Verification requests
+    
+    private func requestVerification(userId: String, roomId: String, methods: [String]) async throws -> MXKeyVerificationRequest {
+        log.debug("->")
+        
+        let request = try await handler.requestVerification(
+            userId: userId,
+            roomId: roomId,
+            methods: methods
+        )
+        return addRequest(for: request, transport: .directMessage)
+    }
+    
+    private func requestSelfVerification(methods: [String]) async throws -> MXKeyVerificationRequest {
+        log.debug("->")
+        
+        let request = try await handler.requestSelfVerification(methods: methods)
+        return addRequest(for: request, transport: .directMessage)
+    }
+    
+    private func handleIncomingRequest(userId: String, flowId: String, transport: MXKeyVerificationTransport) {
+        log.debug(flowId)
+        
+        guard activeRequests[flowId] == nil else {
+            log.debug("Request already known, ignoring")
+            return
+        }
+        
+        guard let req = handler.verificationRequest(userId: userId, flowId: flowId) else {
+            log.error("Verification request is not known", context: [
+                "flow_id": flowId
+            ])
+            return
+        }
+
+        log.debug("Tracking new verification request")
+        
+        _ = addRequest(for: req, transport: transport, notify: true)
+    }
+    
     private func addRequest(
         for request: VerificationRequest,
         transport: MXKeyVerificationTransport,
         notify: Bool = false
     ) -> MXKeyVerificationRequestV2 {
-        
         let request = MXKeyVerificationRequestV2(
             request: request,
             transport: transport,
-            handler: verification
+            handler: handler
         )
         activeRequests[request.requestId] = request
-        
         if notify {
             NotificationCenter.default.post(
                 name: .MXKeyVerificationManagerNewRequest,
@@ -301,10 +409,71 @@ class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
         return request
     }
     
-    private func addSasTransaction(for sas: Sas, transport: MXKeyVerificationTransport) -> MXSASTransactionV2 {
-        let transaction = MXSASTransactionV2(sas: sas, transport: transport, handler: verification)
+    // MARK: - Verification transactions
+    
+    private func startSasVerification(userId: String, flowId: String, transport: MXKeyVerificationTransport) async throws -> MXKeyVerificationTransaction {
+        log.debug("->")
+        let sas = try await handler.startSasVerification(userId: userId, flowId: flowId)
+        return addSasTransaction(for: sas, transport: transport)
+    }
+    
+    private func startSasVerification(userId: String, deviceId: String) async throws -> MXKeyVerificationTransaction {
+        log.debug("->")
+        let sas = try await handler.startSasVerification(userId: userId, deviceId: deviceId)
+        return addSasTransaction(for: sas, transport: .toDevice)
+    }
+    
+    private func handleIncomingVerification(userId: String, flowId: String, transport: MXKeyVerificationTransport) {
+        log.debug(flowId)
+        
+        guard activeTransactions[flowId] == nil else {
+            log.debug("Transaction already known, ignoring")
+            return
+        }
+        
+        guard let verification = handler.verification(userId: userId, flowId: flowId) else {
+            log.error("Verification is not known", context: [
+                "flow_id": flowId
+            ])
+            return
+        }
+
+        log.debug("Tracking new verification transaction")
+        switch verification {
+        case .sasV1(let sas):
+            let transaction = addSasTransaction(for: sas, transport: transport)
+            transaction.accept()
+        case .qrCodeV1:
+            log.failure("Not implemented")
+        }
+    }
+    
+    private func addSasTransaction(
+        for sas: Sas,
+        transport: MXKeyVerificationTransport
+    ) -> MXSASTransactionV2 {
+        let transaction = MXSASTransactionV2(
+            sas: sas,
+            transport: transport,
+            handler: handler
+        )
         activeTransactions[transaction.transactionId] = transaction
         return transaction
+    }
+    
+    // MARK: - Helpers
+    
+    private func getOrCreateDMRoomId(userId: String) async throws -> String {
+        guard let session = session else {
+            log.error("Session not available")
+            throw MXSession.Error.missingRoom
+        }
+        let room = try await session.getOrCreateDirectJoinedRoom(with: userId)
+        guard let roomId = room.roomId else {
+            log.failure("Missing room id")
+            throw MXSession.Error.missingRoom
+        }
+        return roomId
     }
 }
 

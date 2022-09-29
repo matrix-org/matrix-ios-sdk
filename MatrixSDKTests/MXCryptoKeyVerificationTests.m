@@ -1190,7 +1190,7 @@
         {
             // Then, test MXKeyVerification
             MXEvent *event = [aliceSession.store eventWithEventId:requestFromAlicePOV.requestId inRoom:roomId];
-            [aliceSession.crypto.keyVerificationManager keyVerificationFromKeyVerificationEvent:event success:^(MXKeyVerification * _Nonnull verificationFromAlicePOV) {
+            [aliceSession.crypto.keyVerificationManager keyVerificationFromKeyVerificationEvent:event roomId:roomId success:^(MXKeyVerification * _Nonnull verificationFromAlicePOV) {
                 
                 XCTAssertEqual(verificationFromAlicePOV.state, MXKeyVerificationStateVerified);
                 
@@ -1284,7 +1284,7 @@
             if (cancelCancel.count == 2)
             {
                 // Then, test MXKeyVerification
-                [aliceSession.crypto.keyVerificationManager keyVerificationFromKeyVerificationEvent:event success:^(MXKeyVerification * _Nonnull verificationFromAlicePOV) {
+                [aliceSession.crypto.keyVerificationManager keyVerificationFromKeyVerificationEvent:event roomId:roomId success:^(MXKeyVerification * _Nonnull verificationFromAlicePOV) {
 
                     XCTAssertEqual(verificationFromAlicePOV.state, MXKeyVerificationStateRequestCancelledByMe);
 

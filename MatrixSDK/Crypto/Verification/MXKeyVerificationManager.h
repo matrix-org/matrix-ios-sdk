@@ -170,6 +170,7 @@ FOUNDATION_EXPORT NSString *const MXKeyVerificationManagerNotificationTransactio
  @return an HTTP operation or nil if the response is synchronous.
  */
 - (nullable MXHTTPOperation *)keyVerificationFromKeyVerificationEvent:(MXEvent*)event
+                                                               roomId:(NSString *)roomId
                                                               success:(void(^)(MXKeyVerification *keyVerification))success
                                                               failure:(void(^)(NSError *error))failure;
 
@@ -188,16 +189,15 @@ FOUNDATION_EXPORT NSString *const MXKeyVerificationManagerNotificationTransactio
  */
 - (void)removeQRCodeTransactionWithTransactionId:(NSString*)transactionId;
 
+@end
+
+@interface MXLegacyKeyVerificationManager : NSObject <MXKeyVerificationManager>
 
 - (void)notifyOthersOfAcceptanceWithTransactionId:(NSString*)transactionId
                                acceptedUserId:(NSString*)acceptedUserId
                              acceptedDeviceId:(NSString*)acceptedDeviceId
                                       success:(void(^)(void))success
                                       failure:(void(^)(NSError *error))failure;
-
-@end
-
-@interface MXLegacyKeyVerificationManager : NSObject <MXKeyVerificationManager>
 
 @end
 
