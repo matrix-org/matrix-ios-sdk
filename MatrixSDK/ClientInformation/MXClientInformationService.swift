@@ -41,7 +41,7 @@ public class MXClientInformationService: NSObject {
         let type = accountDataType(for: session)
         let currentInfo = session.accountData.accountData(forEventType: type)
 
-        guard !NSDictionary(dictionary: updatedInfo).isEqual(to: currentInfo) else {
+        guard !NSDictionary(dictionary: updatedInfo).isEqual(to: currentInfo ?? [:]) else {
             MXLog.debug("[MXClientInformationService] refresh: no need to update")
             return
         }
