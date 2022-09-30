@@ -43,13 +43,34 @@ class MXClientInformationServiceUnitTests: XCTestCase {
         // must be set after updateData
         let updatedInfo1 = session.accountData.accountData(forEventType: type)
         XCTAssertNotNil(updatedInfo1)
+        XCTAssertFalse(updatedInfo1!.isEmpty)
 
-        // try updating again
+        session.close()
+    }
+
+    func testRedundantUpdateData() {
+        MXSDKOptions.sharedInstance().enableNewClientInformationFeature = true
+
+        let mockDeviceId = "some_device_id"
+        let credentials = MXCredentials(homeServer: "", userId: "@userid:example.com", accessToken: "")
+        credentials.deviceId = mockDeviceId
+        guard let session = MockSession(matrixRestClient: MXRestClientStub(credentials: credentials)) else {
+            XCTFail("Failed to setup test conditions")
+            return
+        }
+
+        let service = MXClientInformationService(withSession: session)
+
+        let type = service.accountDataType(for: session)
+        let newClientInfo = service.createClientInformation()
+
+        // set account data internally
+        session.accountData.update(withType: type, data: newClientInfo)
+
+        // make a redundant update
         service.updateData()
 
-        // must not be changed
-        let updatedInfo2 = session.accountData.accountData(forEventType: type)
-        XCTAssertTrue(NSDictionary(dictionary: updatedInfo1!).isEqual(to: updatedInfo2))
+        XCTAssertFalse(session.isSetAccountDataCalled)
 
         session.close()
     }
@@ -161,5 +182,21 @@ class MXClientInformationServiceUnitTests: XCTestCase {
         XCTAssertEqual(service.accountDataType(for:session), "\(kMXAccountDataTypeClientInformation).\(mockDeviceId)")
 
         session.close()
+    }
+}
+
+private class MockSession: MXSession {
+
+    var isSetAccountDataCalled = false
+
+    override func setAccountData(_ data: [AnyHashable : Any]!,
+                                 forType type: String!,
+                                 success: (() -> Void)!,
+                                 failure: ((Error?) -> Void)!) -> MXHTTPOperation! {
+        isSetAccountDataCalled = true
+        return super.setAccountData(data,
+                                    forType: type,
+                                    success: success,
+                                    failure: failure)
     }
 }
