@@ -1141,7 +1141,7 @@ typedef void (^MXOnResumeDone)(void);
             [self serverSyncWithServerTimeout:0 success:nil failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:self.preferredSyncPresenceString];
         }
 
-        [self.clientInformationService refresh];
+        [self.clientInformationService updateData];
     }
 
     for (MXPeekingRoom *peekingRoom in peekingRooms)

@@ -15,53 +15,97 @@
 //
 
 import XCTest
-import MatrixSDK
+@testable import MatrixSDK
 
 class MXClientInformationServiceUnitTests: XCTestCase {
 
-    func testRefresh() {
+    func testUpdateData() {
         MXSDKOptions.sharedInstance().enableNewClientInformationFeature = true
 
         let mockDeviceId = "some_device_id"
         let credentials = MXCredentials(homeServer: "", userId: "@userid:example.com", accessToken: "")
         credentials.deviceId = mockDeviceId
-        guard let session = MockSession(matrixRestClient: MXRestClientStub(credentials: credentials)) else {
+        guard let session = MXSession(matrixRestClient: MXRestClientStub(credentials: credentials)) else {
             XCTFail("Failed to setup test conditions")
             return
         }
-        let type = "\(kMXAccountDataTypeClientInformation).\(mockDeviceId)"
+
+        let service = MXClientInformationService(withSession: session)
+
+        let type = service.accountDataType(for: session)
 
         // no client info before
         let clientInfo = session.accountData.accountData(forEventType: type)
         XCTAssertNil(clientInfo)
 
-        session.resume {
+        service.updateData()
 
-        }
+        // must be set after updateData
+        let updatedInfo1 = session.accountData.accountData(forEventType: type)
+        XCTAssertNotNil(updatedInfo1)
 
-        // now must be set
-        let updatedInfo = session.accountData.accountData(forEventType: type)
-        XCTAssertNotNil(updatedInfo)
+        // try updating again
+        service.updateData()
+
+        // must not be changed
+        let updatedInfo2 = session.accountData.accountData(forEventType: type)
+        XCTAssertTrue(NSDictionary(dictionary: updatedInfo1!).isEqual(to: updatedInfo2))
 
         session.close()
     }
 
-    func testRemove() {
+    func testRemoveData() {
+        let mockDeviceId = "some_device_id"
+        let credentials = MXCredentials(homeServer: "", userId: "@userid:example.com", accessToken: "")
+        credentials.deviceId = mockDeviceId
+        guard let session = MXSession(matrixRestClient: MXRestClientStub(credentials: credentials)) else {
+            XCTFail("Failed to setup test conditions")
+            return
+        }
+
+        let service = MXClientInformationService(withSession: session)
+
+        let type = service.accountDataType(for: session)
+
+        session.setAccountData(["some_key": "some_value"], forType: type) {
+
+        } failure: { _ in
+            XCTFail("Failed to setup test conditions")
+        }
+
+        service.removeDataIfNeeded(on: session)
+
+        // must be empty after removeDataIfNeeded
+        let updatedInfo = session.accountData.accountData(forEventType: type)
+        XCTAssert(updatedInfo?.isEmpty ?? true)
+
+        // remove data again when empty
+        service.removeDataIfNeeded(on: session)
+
+        // must be still empty
+        let updatedInfo2 = session.accountData.accountData(forEventType: type)
+        XCTAssert(updatedInfo2?.isEmpty ?? true)
+
+        session.close()
+    }
+
+    func testRemoveDataByDisablingFeature() {
         //  enable the feature
         MXSDKOptions.sharedInstance().enableNewClientInformationFeature = true
 
         let mockDeviceId = "some_device_id"
         let credentials = MXCredentials(homeServer: "", userId: "@userid:example.com", accessToken: "")
         credentials.deviceId = mockDeviceId
-        guard let session = MockSession(matrixRestClient: MXRestClientStub(credentials: credentials)) else {
+        guard let session = MXSession(matrixRestClient: MXRestClientStub(credentials: credentials)) else {
             XCTFail("Failed to setup test conditions")
             return
         }
-        let type = "\(kMXAccountDataTypeClientInformation).\(mockDeviceId)"
 
-        session.resume {
+        let service = MXClientInformationService(withSession: session)
 
-        }
+        let type = service.accountDataType(for: session)
+
+        service.updateData()
 
         let clientInfo = session.accountData.accountData(forEventType: type)
         XCTAssertNotNil(clientInfo)
@@ -69,23 +113,53 @@ class MXClientInformationServiceUnitTests: XCTestCase {
         //  disable the feature
         MXSDKOptions.sharedInstance().enableNewClientInformationFeature = false
 
-        session.resume {
+        service.updateData()
 
-        }
-
+        // must be empty after updateData
         let updatedInfo = session.accountData.accountData(forEventType: type)
         XCTAssert(updatedInfo?.isEmpty ?? true)
 
         session.close()
     }
-}
 
-fileprivate class MockSession: MXSession {
-    override var isResumable: Bool {
-        true
+    func testClientInformation() {
+        //  enable the feature
+        MXSDKOptions.sharedInstance().enableNewClientInformationFeature = true
+
+        let mockDeviceId = "some_device_id"
+        let credentials = MXCredentials(homeServer: "", userId: "@userid:example.com", accessToken: "")
+        credentials.deviceId = mockDeviceId
+        guard let session = MXSession(matrixRestClient: MXRestClientStub(credentials: credentials)) else {
+            XCTFail("Failed to setup test conditions")
+            return
+        }
+
+        let service = MXClientInformationService(withSession: session)
+        let clientInfo = service.createClientInformation()
+
+        XCTAssertNotNil(clientInfo?["name"])
+        XCTAssertNotNil(clientInfo?["version"])
+        XCTAssertNil(clientInfo?["url"])
+
+        session.close()
     }
 
-    override func handleBackgroundSyncCacheIfRequired(completion: (() -> Void)!) {
-        completion?()
+    func testAccountDataType() {
+        //  enable the feature
+        MXSDKOptions.sharedInstance().enableNewClientInformationFeature = true
+
+        let mockDeviceId = "some_device_id"
+        let credentials = MXCredentials(homeServer: "", userId: "@userid:example.com", accessToken: "")
+        credentials.deviceId = mockDeviceId
+        guard let session = MXSession(matrixRestClient: MXRestClientStub(credentials: credentials)) else {
+            XCTFail("Failed to setup test conditions")
+            return
+        }
+
+        let service = MXClientInformationService(withSession: session)
+
+        XCTAssertEqual(service.accountDataType(for:session), "\(kMXAccountDataTypeClientInformation).\(mockDeviceId)")
+
+        session.close()
     }
 }

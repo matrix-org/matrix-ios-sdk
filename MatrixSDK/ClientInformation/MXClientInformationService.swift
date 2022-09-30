@@ -25,24 +25,18 @@ public class MXClientInformationService: NSObject {
         self.session = session
     }
 
-    public func refresh() {
-        guard MXSDKOptions.sharedInstance().enableNewClientInformationFeature else {
-            return removeDataIfNeeded()
-        }
-
+    public func updateData() {
         guard let session = session else {
             return
         }
 
-        guard let bundleDisplayName = Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") ?? Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String,
-              let appVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String else {
-            return
+        guard MXSDKOptions.sharedInstance().enableNewClientInformationFeature else {
+            return removeDataIfNeeded(on: session)
         }
 
-        let updatedInfo: [AnyHashable: String] = [
-            "name": "\(bundleDisplayName) iOS",
-            "version": appVersion
-        ]
+        guard let updatedInfo = createClientInformation() else {
+            return
+        }
 
         let type = accountDataType(for: session)
         let currentInfo = session.accountData.accountData(forEventType: type)
@@ -59,11 +53,7 @@ public class MXClientInformationService: NSObject {
         }
     }
 
-    private func removeDataIfNeeded() {
-        guard let session = session else {
-            return
-        }
-
+    internal func removeDataIfNeeded(on session: MXSession) {
         let type = accountDataType(for: session)
 
         guard let currentInfo = session.accountData.accountData(forEventType: type),
@@ -78,10 +68,22 @@ public class MXClientInformationService: NSObject {
         } failure: { error in
             MXLog.debug("[MXClientInformationService] removeDataIfNeeded: remove failed: \(String(describing: error))")
         }
-
     }
 
-    private func accountDataType(for session: MXSession) -> String {
+    internal func createClientInformation() -> [AnyHashable: String]? {
+        guard let name = Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName")
+                ?? Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String,
+              let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String else {
+            return nil
+        }
+
+        return [
+            "name": "\(name) iOS",
+            "version": version
+        ]
+    }
+
+    internal func accountDataType(for session: MXSession) -> String {
         guard let deviceId = session.myDeviceId else {
             fatalError("[MXClientInformationService] No device id")
         }
