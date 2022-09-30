@@ -20,9 +20,12 @@ import Foundation
 public class MXClientInformationService: NSObject {
 
     private weak var session: MXSession?
+    private let bundle: Bundle
 
-    public init(withSession session: MXSession) {
+    public init(withSession session: MXSession,
+                bundle: Bundle) {
         self.session = session
+        self.bundle = bundle
     }
 
     public func updateData() {
@@ -53,7 +56,7 @@ public class MXClientInformationService: NSObject {
         }
     }
 
-    internal func removeDataIfNeeded(on session: MXSession) {
+    private func removeDataIfNeeded(on session: MXSession) {
         let type = accountDataType(for: session)
 
         guard let currentInfo = session.accountData.accountData(forEventType: type),
@@ -70,10 +73,10 @@ public class MXClientInformationService: NSObject {
         }
     }
 
-    internal func createClientInformation() -> [AnyHashable: String]? {
-        guard let name = Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName")
-                ?? Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String,
-              let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String else {
+    private func createClientInformation() -> [AnyHashable: String]? {
+        guard let name = bundle.object(forInfoDictionaryKey: "CFBundleDisplayName")
+                ?? bundle.object(forInfoDictionaryKey: "CFBundleName") as? String,
+              let version = bundle.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String else {
             return nil
         }
 
@@ -83,7 +86,7 @@ public class MXClientInformationService: NSObject {
         ]
     }
 
-    internal func accountDataType(for session: MXSession) -> String {
+    private func accountDataType(for session: MXSession) -> String {
         guard let deviceId = session.myDeviceId else {
             fatalError("[MXClientInformationService] No device id")
         }
