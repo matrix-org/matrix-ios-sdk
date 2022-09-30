@@ -36,6 +36,7 @@
         "MXAuthenticationSessionUnitTests",
         "MXBackgroundTaskUnitTests",
         "MXBeaconInfoUnitTests",
+        "MXClientInformationServiceUnitTests",
         "MXCoreDataRoomListDataManagerUnitTests",
         "MXCredentialsUnitTests",
         "MXCrossSigningInfoSourceUnitTests",

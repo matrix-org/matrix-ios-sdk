@@ -231,6 +231,13 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @property (nonatomic) BOOL enableSymmetricBackup;
 
+/**
+ Enable new client information feature. (https://github.com/vector-im/element-meta/pull/656)
+
+ @remark NO by default
+ */
+@property (nonatomic) BOOL enableNewClientInformationFeature;
+
 @end
 
 NS_ASSUME_NONNULL_END
