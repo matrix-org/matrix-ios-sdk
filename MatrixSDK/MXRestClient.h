@@ -289,7 +289,7 @@ NS_REFINED_FOR_SWIFT;
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)supportedMatrixVersions:(void (^)(MXMatrixVersions *matrixVersions))success
-                                    failure:(void (^)(NSError *error))failure;
+                                    failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Get the wellknwon data of the homeserver.
