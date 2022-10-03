@@ -56,6 +56,18 @@ public enum MXLoginFlowType: Equatable, Hashable {
 public enum MXPusherKind: Equatable, Hashable {
     case http, none, custom(String)
     
+    public static func from(value: String?) -> MXPusherKind {
+        guard let value = value else {
+            return .none
+        }
+
+        if value == "http" {
+            return .http
+        }
+        
+        return .custom(value)
+    }
+    
     public var objectValue: NSObject {
         switch self {
         case .http: return "http" as NSString

@@ -1536,6 +1536,33 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
                                  success:(void (^)(void))success
                                  failure:(void (^)(NSError *))failure
 {
+    return [self setPusherWithPushkey:pushkey
+                                 kind:kind
+                                appId:appId
+                       appDisplayName:appDisplayName
+                    deviceDisplayName:deviceDisplayName
+                           profileTag:profileTag
+                                 lang:lang
+                                 data:data
+                               append:append
+                              enabled:YES
+                              success:success
+                              failure:failure];
+}
+
+- (MXHTTPOperation*)setPusherWithPushkey:(NSString *)pushkey
+                                    kind:(NSObject *)kind
+                                   appId:(NSString *)appId
+                          appDisplayName:(NSString *)appDisplayName
+                       deviceDisplayName:(NSString *)deviceDisplayName
+                              profileTag:(NSString *)profileTag
+                                    lang:(NSString *)lang
+                                    data:(NSDictionary *)data
+                                  append:(BOOL)append
+                                 enabled:(BOOL)enabled
+                                 success:(void (^)(void))success
+                                 failure:(void (^)(NSError *))failure
+{
     // sanity check
     if (!pushkey || !kind || !appDisplayName || !deviceDisplayName || !profileTag || !lang || !data)
     {
@@ -1558,6 +1585,7 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
                                  @"profile_tag": profileTag,
                                  @"lang": lang,
                                  @"data": data,
+                                 kMXPusherEnabledKey: @(enabled),
                                  @"append":[NSNumber numberWithBool:append]
                                  };
 
@@ -1591,7 +1619,7 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
                                          [self dispatchProcessing:^{
                                              MXJSONModelSetMXJSONModelArray(pushers, MXPusher, JSONResponse[@"pushers"]);
                                          } andCompletion:^{
-                                             success(pushers);
+                                             success(pushers ?: @[]);
                                          }];
                                      }
                                  }
@@ -3200,7 +3228,7 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
                             success:(void (^)(MXPublicRoom *room))success
                             failure:(void (^)(NSError *error))failure
 {
-    NSMutableString *path = [NSMutableString stringWithFormat:@"%@/im.nheko.summary/rooms/%@/summary", kMXAPIPrefixPathUnstable, roomIdOrAlias];
+    NSMutableString *path = [NSMutableString stringWithFormat:@"%@/im.nheko.summary/rooms/%@/summary", kMXAPIPrefixPathUnstable, [MXTools encodeURIComponent:roomIdOrAlias]];
     for (int i = 0; i < via.count; i++) {
         [path appendFormat:@"%@via=%@", i == 0 ? @"?" : @"&", via[i]];
     }
