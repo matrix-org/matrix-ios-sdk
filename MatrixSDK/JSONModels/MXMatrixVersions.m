@@ -42,8 +42,8 @@ static NSString* const kJSONKeyUnstableFeatures = @"unstable_features";
 
 //  Unstable features
 static NSString* const kJSONKeyMSC3440 = @"org.matrix.msc3440.stable";
-static NSString* const kJSONKeyMSC3881 = @"org.matrix.msc3881";
-static NSString* const kJSONKeyMSC3881Stable = @"org.matrix.msc3881.stable";
+static NSString* const kJSONKeyMSC3881Unstable = @"org.matrix.msc3881";
+static NSString* const kJSONKeyMSC3881 = @"org.matrix.msc3881.stable";
 
 @interface MXMatrixVersions ()
 
@@ -119,7 +119,7 @@ static NSString* const kJSONKeyMSC3881Stable = @"org.matrix.msc3881.stable";
 
 - (BOOL)supportsRemotelyTogglingPushNotifications
 {
-    return [self serverSupportsFeature:kJSONKeyMSC3881] || [self serverSupportsFeature:kJSONKeyMSC3881Stable];
+    return [self serverSupportsFeature:kJSONKeyMSC3881] || [self serverSupportsFeature:kJSONKeyMSC3881Unstable];
 }
 
 #pragma mark - Private
