@@ -16,6 +16,8 @@
 
 import Foundation
 
+#if DEBUG && os(iOS)
+
 /// Secret store compatible with Rust-based Crypto V2, where
 /// backup secrets are stored internally in the Crypto machine
 /// and others have to be managed manually.
@@ -68,3 +70,5 @@ class MXCryptoSecretStoreV2: NSObject, MXCryptoSecretStore {
         log.error("Not implemented")
     }
 }
+
+#endif
