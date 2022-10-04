@@ -687,6 +687,8 @@
 		3A858DE327529183006322C1 /* MXRoomCapabilityType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A858DE027517C0E006322C1 /* MXRoomCapabilityType.swift */; };
 		3A858DE8275511A4006322C1 /* MXRoomAliasAvailabilityCheckerResultTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A858DE7275511A4006322C1 /* MXRoomAliasAvailabilityCheckerResultTests.swift */; };
 		3A858DE9275511A4006322C1 /* MXRoomAliasAvailabilityCheckerResultTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A858DE7275511A4006322C1 /* MXRoomAliasAvailabilityCheckerResultTests.swift */; };
+		3A9E2B4328EB3960000DB2A7 /* MXMatrixVersionsUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A9E2B4228EB3960000DB2A7 /* MXMatrixVersionsUnitTests.swift */; };
+		3A9E2B4428EB3960000DB2A7 /* MXMatrixVersionsUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A9E2B4228EB3960000DB2A7 /* MXMatrixVersionsUnitTests.swift */; };
 		3AB5EBB4270B332B0058703A /* MXSpaceStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AB5EBB3270B332B0058703A /* MXSpaceStore.swift */; };
 		3AB5EBB5270B332B0058703A /* MXSpaceStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AB5EBB3270B332B0058703A /* MXSpaceStore.swift */; };
 		3AB5EBB7270ED1C00058703A /* MXSpaceFileStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AB5EBB6270ED1C00058703A /* MXSpaceFileStore.swift */; };
@@ -2562,6 +2564,7 @@
 		3A858DDB275120D1006322C1 /* MXHomeserverCapabilitiesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXHomeserverCapabilitiesTests.swift; sourceTree = "<group>"; };
 		3A858DE027517C0E006322C1 /* MXRoomCapabilityType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXRoomCapabilityType.swift; sourceTree = "<group>"; };
 		3A858DE7275511A4006322C1 /* MXRoomAliasAvailabilityCheckerResultTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXRoomAliasAvailabilityCheckerResultTests.swift; sourceTree = "<group>"; };
+		3A9E2B4228EB3960000DB2A7 /* MXMatrixVersionsUnitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXMatrixVersionsUnitTests.swift; sourceTree = "<group>"; };
 		3AB5EBB3270B332B0058703A /* MXSpaceStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXSpaceStore.swift; sourceTree = "<group>"; };
 		3AB5EBB6270ED1C00058703A /* MXSpaceFileStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXSpaceFileStore.swift; sourceTree = "<group>"; };
 		3AC135D72640335100EE1E74 /* MXDehydrationService.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXDehydrationService.h; sourceTree = "<group>"; };
@@ -4290,6 +4293,7 @@
 				B135067327EB201E00BD3276 /* MXLocationServiceTests.swift */,
 				B1EE98D328048ACF00AB63F0 /* MXGeoURIComponentsUnitTests.swift */,
 				B1F04B152811EFF700103EBE /* MXBeaconAggregationsTests.swift */,
+				3A9E2B4228EB3960000DB2A7 /* MXMatrixVersionsUnitTests.swift */,
 			);
 			path = MatrixSDKTests;
 			sourceTree = "<group>";
@@ -7113,6 +7117,7 @@
 				EDB4209527DF822B0036AF39 /* MXEventsByTypesEnumeratorOnArrayTests.swift in Sources */,
 				EC40385D28A16EDA0067D5B8 /* MXAes256KeyBackupTests.m in Sources */,
 				ED6DAC0728C77E1100ECDCB6 /* MXForwardedRoomKeyEventContentUnitTests.swift in Sources */,
+				3A9E2B4328EB3960000DB2A7 /* MXMatrixVersionsUnitTests.swift in Sources */,
 				3265CB3B1A151C3800E24B2F /* MXRoomStateTests.m in Sources */,
 				ED8F1D302885AB0300F897E7 /* MXTrustLevelSourceUnitTests.swift in Sources */,
 				B135066927EA100000BD3276 /* MXBeaconInfoUnitTests.swift in Sources */,
@@ -7735,6 +7740,7 @@
 				EDB4209627DF822B0036AF39 /* MXEventsByTypesEnumeratorOnArrayTests.swift in Sources */,
 				EC40385E28A16EDA0067D5B8 /* MXAes256KeyBackupTests.m in Sources */,
 				ED6DAC0828C77E1100ECDCB6 /* MXForwardedRoomKeyEventContentUnitTests.swift in Sources */,
+				3A9E2B4428EB3960000DB2A7 /* MXMatrixVersionsUnitTests.swift in Sources */,
 				32B477AA2638186000EA5800 /* MXHTTPAdditionalHeadersUnitTests.m in Sources */,
 				B135066A27EA100100BD3276 /* MXBeaconInfoUnitTests.swift in Sources */,
 				EC0B944727206D0B00B4D440 /* MXCoreDataRoomListDataManagerUnitTests.swift in Sources */,
