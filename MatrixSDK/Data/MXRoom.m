@@ -1594,16 +1594,16 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
         [extensibleAudioContent setObject:scaledSamples forKey:kMXMessageContentKeyExtensibleAudioWaveform];
     }
     
-    NSMutableDictionary *additionalVoiceMessagesContent = @{kMXMessageContentKeyVoiceMessageMSC3245 : @{},
+    NSMutableDictionary *extensibleVoiceMessageContent = @{kMXMessageContentKeyVoiceMessageMSC3245 : @{},
                                                             kMXMessageContentKeyExtensibleAudioMSC1767: extensibleAudioContent}.mutableCopy;
     
     if (additionalContentParams.count) {
-        [additionalVoiceMessagesContent addEntriesFromDictionary:additionalContentParams];
+        [extensibleVoiceMessageContent addEntriesFromDictionary:additionalContentParams];
     }
     
     return [self _sendFile:fileLocalURL
                    msgType:kMXMessageTypeAudio
-           additionalTypes:additionalVoiceMessagesContent
+           additionalTypes:extensibleVoiceMessageContent
                   mimeType:(mimeType ?: @"audio/ogg")
                   threadId:threadId
                  localEcho:localEcho
