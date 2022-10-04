@@ -25,6 +25,7 @@ extension Device {
         userId: String = "Alice",
         deviceId: String = "Device1",
         displayName: String = "Alice's iPhone",
+        isBlocked: Bool = false,
         locallyTrusted: Bool = true,
         crossSigningTrusted: Bool = true
     ) -> Device {
@@ -40,7 +41,7 @@ extension Device {
                 "curve25519"
             ],
             displayName: displayName,
-            isBlocked: false,
+            isBlocked: isBlocked,
             locallyTrusted: locallyTrusted,
             crossSigningTrusted: crossSigningTrusted
         )

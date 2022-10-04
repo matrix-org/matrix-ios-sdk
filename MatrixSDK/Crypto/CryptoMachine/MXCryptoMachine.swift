@@ -464,6 +464,10 @@ extension MXCryptoMachine: MXCryptoCrossSigning {
             requests.uploadSignatures(request: result.signatureRequest)
         ]
     }
+    
+    func exportCrossSigningKeys() -> CrossSigningKeyExport? {
+        machine.exportCrossSigningKeys()
+    }
 }
 
 extension MXCryptoMachine: MXCryptoVerificationRequesting {
@@ -518,6 +522,16 @@ extension MXCryptoMachine: MXCryptoVerificationRequesting {
             throw Error.cannotCancelVerification
         }
         try await handleOutgoingVerificationRequest(request)
+    }
+    
+    func manuallyVerifyUser(userId: String) async throws {
+        let request = try machine.verifyIdentity(userId: userId)
+        try await requests.uploadSignatures(request: request)
+    }
+    
+    func manuallyVerifyDevice(userId: String, deviceId: String) async throws {
+        let request = try machine.verifyDevice(userId: userId, deviceId: deviceId)
+        try await requests.uploadSignatures(request: request)
     }
     
     // MARK: - Private

@@ -53,6 +53,8 @@ protocol MXCryptoUserIdentitySource: MXCryptoIdentity {
     func userIdentity(userId: String) -> UserIdentity?
     func isUserVerified(userId: String) -> Bool
     func downloadKeys(users: [String]) async throws
+    func manuallyVerifyUser(userId: String) async throws
+    func manuallyVerifyDevice(userId: String, deviceId: String) async throws
 }
 
 /// Event encryption and decryption
@@ -68,6 +70,7 @@ protocol MXCryptoRoomEventEncrypting: MXCryptoIdentity {
 protocol MXCryptoCrossSigning: MXCryptoUserIdentitySource {
     func crossSigningStatus() -> CrossSigningStatus
     func bootstrapCrossSigning(authParams: [AnyHashable: Any]) async throws
+    func exportCrossSigningKeys() -> CrossSigningKeyExport?
 }
 
 /// Lifecycle of verification request

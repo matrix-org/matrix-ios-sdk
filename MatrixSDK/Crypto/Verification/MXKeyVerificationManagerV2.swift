@@ -75,6 +75,7 @@ class MXKeyVerificationManagerV2: MXKeyVerificationManager {
                 continue
             }
             
+            log.debug("Processing incoming verification event")
             switch event.type {
             case kMXMessageTypeKeyVerificationRequest:
                 incomingVerificationRequest(userId: userId, flowId: flowId)
@@ -101,12 +102,14 @@ class MXKeyVerificationManagerV2: MXKeyVerificationManager {
             return
         }
         
+        log.debug("Requesting verification by to-device")
         Task {
             do {
                 let req = try await verification.requestSelfVerification(methods: methods)
                 
                 let request = addRequest(for: req, transport: .toDevice)
                 await MainActor.run {
+                    log.debug("Request successfully sent")
                     success(request)
                 }
             } catch {
@@ -126,6 +129,7 @@ class MXKeyVerificationManagerV2: MXKeyVerificationManager {
         success: @escaping (MXKeyVerificationRequest) -> Void,
         failure: @escaping (Swift.Error) -> Void
     ) {
+        log.debug("Requesting verification by DM")
         Task {
             do {
                 let roomId = try await getOrCreateDMRoomId(userId)
@@ -137,6 +141,7 @@ class MXKeyVerificationManagerV2: MXKeyVerificationManager {
                 
                 let request = addRequest(for: req, transport: .directMessage)
                 await MainActor.run {
+                    log.debug("Request successfully sent")
                     success(request)
                 }
             } catch {
@@ -165,16 +170,18 @@ class MXKeyVerificationManagerV2: MXKeyVerificationManager {
         success: @escaping (MXKeyVerificationTransaction) -> Void,
         failure: @escaping (Swift.Error) -> Void
     ) {
+        log.debug("Starting \(method) verification flow")
         Task {
             do {
                 let sas = try await verification.startSasVerification(userId: request.otherUser, flowId: request.requestId)
                 let transaction = addSasTransaction(for: sas, transport: request.transport)
                 
                 await MainActor.run {
+                    log.debug("Created verification transaction")
                     success(transaction)
                 }
             } catch {
-                MXLog.error("[MXKeyVerificationRequestV2] error", context: error)
+                log.error("Failed creating verification transaction", context: error)
                 await MainActor.run {
                     failure(error)
                 }
@@ -216,7 +223,7 @@ class MXKeyVerificationManagerV2: MXKeyVerificationManager {
     
     // MARK: - Private
     
-    func incomingVerificationRequest(userId: String, flowId: String) {
+    private func incomingVerificationRequest(userId: String, flowId: String) {
         guard let request = verification.verificationRequest(userId: userId, flowId: flowId) else {
             log.error("Verification request is not known", context: [
                 "flow_id": flowId
@@ -227,7 +234,7 @@ class MXKeyVerificationManagerV2: MXKeyVerificationManager {
         _ = addRequest(for: request, transport: .toDevice, notify: true)
     }
     
-    func incomingVerificationStart(userId: String, flowId: String) {
+    private func incomingVerificationStart(userId: String, flowId: String) {
         guard let verif = verification.verification(userId: userId, flowId: flowId) else {
             log.error("Verification is not known", context: [
                 "flow_id": flowId
@@ -245,7 +252,7 @@ class MXKeyVerificationManagerV2: MXKeyVerificationManager {
         }
     }
     
-    func updatePendingVerification() {
+    private func updatePendingVerification() {
         for request in activeRequests.values {
             switch request.processUpdates() {
             case .noUpdates:
