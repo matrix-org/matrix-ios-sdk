@@ -346,7 +346,7 @@ public extension MXRoom {
      
      - parameters:
          - localURL: the local filesystem path of the file to send.
-         - additionalContentParams: (optional) the additional paremeters to the content.
+         - additionalContentParams: (optional) the additional parameters to the content.
          - mimeType: (optional) the mime type of the file. Defaults to `audio/ogg`.
          - duration: the length of the voice message in milliseconds
          - samples: an array of floating point values normalized to [0, 1]

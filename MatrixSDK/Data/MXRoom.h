@@ -591,7 +591,7 @@ FOUNDATION_EXPORT NSInteger const kMXRoomInvalidInviteSenderErrorCode;
  Send a voice message to the room.
  
  @param fileLocalURL the local filesystem path of the file to send.
- @param additionalContentParams (optional) the additional paremeters to the content.
+ @param additionalContentParams (optional) the additional parameters to the content.
  @param mimeType (optional) the mime type of the file. Defaults to `audio/ogg`
  @param duration the length of the voice message in milliseconds
  @param samples an array of floating point values normalized to [0, 1], boxed within NSNumbers
