@@ -346,6 +346,7 @@ public extension MXRoom {
      
      - parameters:
          - localURL: the local filesystem path of the file to send.
+         - additionalContentParams: (optional) the additional paremeters to the content.
          - mimeType: (optional) the mime type of the file. Defaults to `audio/ogg`.
          - duration: the length of the voice message in milliseconds
          - samples: an array of floating point values normalized to [0, 1]
@@ -368,9 +369,9 @@ public extension MXRoom {
      - returns: a `MXHTTPOperation` instance.
      */
     
-    @nonobjc @discardableResult func sendVoiceMessage(localURL: URL, mimeType: String?, duration: UInt, samples: [Float]?, threadId: String? = nil, localEcho: inout MXEvent?, completion: @escaping (_ response: MXResponse<String?>) -> Void) -> MXHTTPOperation {
+    @nonobjc @discardableResult func sendVoiceMessage(localURL: URL, additionalContentParams: [String : Any]?, mimeType: String?, duration: UInt, samples: [Float]?, threadId: String? = nil, localEcho: inout MXEvent?, completion: @escaping (_ response: MXResponse<String?>) -> Void) -> MXHTTPOperation {
         let boxedSamples = samples?.compactMap { NSNumber(value: $0) }
-        return __sendVoiceMessage(localURL, mimeType: mimeType, duration: duration, samples: boxedSamples, threadId: threadId, localEcho: &localEcho, success: currySuccess(completion), failure: curryFailure(completion), keepActualFilename: false)
+        return __sendVoiceMessage(localURL, additionalContentParams: additionalContentParams, mimeType: mimeType, duration: duration, samples: boxedSamples, threadId: threadId, localEcho: &localEcho, success: currySuccess(completion), failure: curryFailure(completion), keepActualFilename: false)
     }
     
     /**
