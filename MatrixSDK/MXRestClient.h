@@ -85,6 +85,8 @@ FOUNDATION_EXPORT NSString *const kMXAccountDataTypeClientInformation;
 FOUNDATION_EXPORT NSString *const kMXAccountDataKeyIgnoredUser;
 FOUNDATION_EXPORT NSString *const kMXAccountDataKeyIdentityServer;
 FOUNDATION_EXPORT NSString *const kMXAccountDataTypeRecentRoomsKey;
+FOUNDATION_EXPORT NSString *const kMXAccountDataLocalNotificationKeyPrefix;
+FOUNDATION_EXPORT NSString *const kMXAccountDataIsSilencedKey;
 
 
 /**

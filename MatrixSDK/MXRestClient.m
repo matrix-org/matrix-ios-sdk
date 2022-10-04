@@ -61,6 +61,8 @@ NSString *const kMXAccountDataKeyIgnoredUser = @"ignored_users";
 NSString *const kMXAccountDataKeyIdentityServer = @"base_url";
 NSString *const kMXAccountDataTypeAcceptedTermsKey = @"accepted";
 NSString *const kMXAccountDataTypeRecentRoomsKey = @"recent_rooms";
+NSString *const kMXAccountDataLocalNotificationKeyPrefix = @"org.matrix.msc3890.local_notification_settings.";
+NSString *const kMXAccountDataIsSilencedKey = @"is_silenced";
 
 /**
  Types of third party media.
