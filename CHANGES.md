@@ -1,3 +1,27 @@
+## Changes in 0.24.0 (2022-10-04)
+
+🙌 Improvements
+
+- Upgrade minimum iOS and OSX deployment target to 13.0 and 10.15 respectively ([#1574](https://github.com/matrix-org/matrix-ios-sdk/pull/1574))
+- Crypto: Enable group session cache by default ([#1575](https://github.com/matrix-org/matrix-ios-sdk/pull/1575))
+- Crypto: Extract key backup engine ([#1578](https://github.com/matrix-org/matrix-ios-sdk/pull/1578))
+- MXSession: Set client information data if needed on resume. ([#1582](https://github.com/matrix-org/matrix-ios-sdk/pull/1582))
+- MXDevice: Move to dedicated file and implement MSC-3852. ([#1583](https://github.com/matrix-org/matrix-ios-sdk/pull/1583))
+- Add `enableNewClientInformationFeature` sdk option, disabled by default (PSG-799). ([#1588](https://github.com/matrix-org/matrix-ios-sdk/pull/1588))
+- Remove MXRoom's partialTextMessage support ([#6670](https://github.com/vector-im/element-ios/issues/6670))
+- CryptoV2: Key backups ([#6769](https://github.com/vector-im/element-ios/issues/6769))
+- CryptoV2: Key gossiping ([#6773](https://github.com/vector-im/element-ios/issues/6773))
+- User sessions: Add support for MSC3881 ([#6787](https://github.com/vector-im/element-ios/issues/6787))
+
+🧱 Build
+
+- Disable codecov/patch. ([#1579](https://github.com/matrix-org/matrix-ios-sdk/pull/1579))
+
+Others
+
+- Avoid main thread assertion if we can't get the application ([#6754](https://github.com/vector-im/element-ios/issues/6754))
+
+
 ## Changes in 0.23.19 (2022-09-28)
 
 🐛 Bugfixes
