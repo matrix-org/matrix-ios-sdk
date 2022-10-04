@@ -18,7 +18,6 @@ import Foundation
 import XCTest
 @testable import MatrixSDK
 
-@available(iOS 13.0.0, macOS 10.15.0, *)
 class MXTaskQueueUnitTests: XCTestCase {
     /// Dummy error that can be thrown by a task
     enum Error: Swift.Error {

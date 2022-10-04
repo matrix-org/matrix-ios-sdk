@@ -22,7 +22,6 @@ import XCTest
 import MatrixSDKCrypto
 @testable import MatrixSDK
 
-@available(iOS 13.0.0, *)
 class MXSASTransactionV2UnitTests: XCTestCase {
     var verification: CryptoVerificationStub!
     override func setUp() {

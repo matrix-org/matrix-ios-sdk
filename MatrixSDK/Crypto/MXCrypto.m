@@ -53,6 +53,8 @@
 
 #import "MatrixSDKSwiftHeader.h"
 #import "MXSharedHistoryKeyService.h"
+#import "MXNativeKeyBackupEngine.h"
+
 /**
  The store to use for crypto.
  */
@@ -76,7 +78,7 @@ static NSString *const kMXCryptoOneTimeKeyClaimCompleteNotificationErrorKey     
 NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 
-@interface MXCrypto () <MXUnrequestedForwardedRoomKeyManagerDelegate>
+@interface MXCrypto () <MXRecoveryServiceDelegate, MXUnrequestedForwardedRoomKeyManagerDelegate>
 {
     // MXEncrypting instance for each room.
     NSMutableDictionary<NSString*, id<MXEncrypting>> *roomEncryptors;
@@ -2039,11 +2041,6 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 
         oneTimeKeyCount = -1;
 
-        if ([MXSDKOptions sharedInstance].enableKeyBackupWhenStartingMXCrypto)
-        {
-            _backup = [[MXKeyBackup alloc] initWithCrypto:self];
-        }
-
         outgoingRoomKeyRequestManager = [[MXOutgoingRoomKeyRequestManager alloc]
                                          initWithMatrixRestClient:_matrixRestClient
                                          deviceId:_myDevice.deviceId
@@ -2062,7 +2059,22 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 
         _crossSigning = [[MXCrossSigning alloc] initWithCrypto:self];
         
-        _recoveryService = [[MXRecoveryService alloc] initWithCrypto:self];
+        if ([MXSDKOptions sharedInstance].enableKeyBackupWhenStartingMXCrypto)
+        {
+            id<MXKeyBackupEngine> engine = [[MXNativeKeyBackupEngine alloc] initWithCrypto:self];
+            _backup = [[MXKeyBackup alloc] initWithEngine:engine
+                                               restClient:_matrixRestClient
+                                       secretShareManager:_secretShareManager
+                                                    queue:_cryptoQueue];
+        }
+        
+        MXRecoveryServiceDependencies *dependencies = [[MXRecoveryServiceDependencies alloc] initWithCredentials:_mxSession.matrixRestClient.credentials
+                                                                                                          backup:_backup
+                                                                                                   secretStorage:_secretStorage
+                                                                                                     secretStore:_store
+                                                                                                    crossSigning:_crossSigning
+                                                                                                     cryptoQueue:_cryptoQueue];
+        _recoveryService = [[MXRecoveryService alloc] initWithDependencies:dependencies delegate:self];
         
         cryptoMigration = [[MXCryptoMigration alloc] initWithCrypto:self];
         

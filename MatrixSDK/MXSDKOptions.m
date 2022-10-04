@@ -59,11 +59,9 @@ static MXSDKOptions *sharedOnceInstance = nil;
         _enableCryptoV2 = NO;
         #endif
         
-        // The value is set randomly between YES / NO to perform a very basic A/B test
-        // measured by `analytics` (if set and enabled)
-        _enableGroupSessionCache = arc4random_uniform(2) == 1;
-
+        _enableGroupSessionCache = YES;
         _enableSymmetricBackup = NO;
+        _enableNewClientInformationFeature = NO;
     }
     
     return self;

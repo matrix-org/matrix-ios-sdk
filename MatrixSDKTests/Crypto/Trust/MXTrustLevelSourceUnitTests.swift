@@ -22,7 +22,6 @@ import XCTest
 
 import MatrixSDKCrypto
 
-@available(iOS 13.0.0, *)
 class MXTrustLevelSourceUnitTests: XCTestCase {
     var userIdentitySource: UserIdentitySourceStub!
     var devicesSource: DevicesSourceStub!

@@ -22,10 +22,8 @@ enum MXKeyVerificationUpdateResult {
     case removed
 }
 
-@available(iOS 13.0.0, *)
 typealias MXCryptoVerification = MXCryptoVerificationRequesting & MXCryptoSASVerifying
 
-@available(iOS 13.0.0, *)
 class MXKeyVerificationManagerV2: MXKeyVerificationManager {
     enum Error: Swift.Error {
         case notSupported
@@ -300,6 +298,12 @@ class MXKeyVerificationManagerV2: MXKeyVerificationManager {
         let transaction = MXSASTransactionV2(sas: sas, transport: transport, handler: verification)
         activeTransactions[transaction.transactionId] = transaction
         return transaction
+    }
+}
+
+extension MXKeyVerificationManagerV2: MXRecoveryServiceDelegate {
+    func setUserVerification(_ isTrusted: Bool, forUser: String, success: () -> Void, failure: (Swift.Error) -> Void) {
+        log.error("Not implemented")
     }
 }
 

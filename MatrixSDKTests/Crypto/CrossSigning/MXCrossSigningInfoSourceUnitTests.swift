@@ -22,7 +22,6 @@ import XCTest
 
 import MatrixSDKCrypto
 
-@available(iOS 13.0.0, *)
 class MXCrossSigningInfoSourceUnitTests: XCTestCase {
     var cryptoSource: UserIdentitySourceStub!
     var source: MXCrossSigningInfoSource!

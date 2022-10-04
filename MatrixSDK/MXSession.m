@@ -215,6 +215,8 @@ typedef void (^MXOnResumeDone)(void);
 
 @property (nonatomic, readonly) MXStoreService *storeService;
 
+@property (nonatomic, readwrite) MXClientInformationService *clientInformationService;
+
 @end
 
 @implementation MXSession
@@ -254,6 +256,8 @@ typedef void (^MXOnResumeDone)(void);
         _eventStreamService = [[MXEventStreamService alloc] init];
         _preferredSyncPresence = MXPresenceOnline;
         _locationService = [[MXLocationService alloc] initWithSession:self];
+        _clientInformationService = [[MXClientInformationService alloc] initWithSession:self
+                                                                                 bundle:NSBundle.mainBundle];
         
         [self setIdentityServer:mxRestClient.identityServer andAccessToken:mxRestClient.credentials.identityServerAccessToken];
         
@@ -1137,6 +1141,8 @@ typedef void (^MXOnResumeDone)(void);
             // Relaunch live events stream (long polling)
             [self serverSyncWithServerTimeout:0 success:nil failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:self.preferredSyncPresenceString];
         }
+
+        [self.clientInformationService updateData];
     }
 
     for (MXPeekingRoom *peekingRoom in peekingRooms)
