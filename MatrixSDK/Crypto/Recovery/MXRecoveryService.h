@@ -21,6 +21,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+@class MXRecoveryServiceDependencies;
 
 #pragma mark - Constants
 
@@ -34,6 +35,12 @@ typedef NS_ENUM(NSInteger, MXRecoveryServiceErrorCode)
     MXRecoveryServiceBadRecoveryKeyErrorCode,
     MXRecoveryServiceBadRecoveryKeyFormatErrorCode,
 };
+
+@protocol MXRecoveryServiceDelegate <NSObject>
+- (void)setUserVerification:(BOOL)verificationStatus forUser:(NSString*)userId
+                    success:(void (^)(void))success
+                    failure:(void (^)(NSError *error))failure;
+@end
 
 
 /**
@@ -55,6 +62,9 @@ typedef NS_ENUM(NSInteger, MXRecoveryServiceErrorCode)
     - Key backup key
  */
 @property (nonatomic, copy) NSArray<NSString*> *supportedSecrets;
+
+- (instancetype)initWithDependencies:(MXRecoveryServiceDependencies *)dependencies
+                            delegate:(id<MXRecoveryServiceDelegate>)delegate;
 
 
 #pragma mark - Recovery setup

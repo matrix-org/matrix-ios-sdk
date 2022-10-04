@@ -19,7 +19,7 @@ import Foundation
 
 #if DEBUG && os(iOS)
 
-import MatrixSDKCrypto
+@testable import MatrixSDKCrypto
 
 class CryptoIdentityStub: MXCryptoIdentity {
     var userId: String = "Alice"
@@ -46,7 +46,6 @@ class DevicesSourceStub: CryptoIdentityStub, MXCryptoDevicesSource {
     }
 }
 
-@available(iOS 13.0.0, *)
 class UserIdentitySourceStub: CryptoIdentityStub, MXCryptoUserIdentitySource {
     var identities = [String: UserIdentity]()
     func userIdentity(userId: String) -> UserIdentity? {
@@ -63,7 +62,6 @@ class UserIdentitySourceStub: CryptoIdentityStub, MXCryptoUserIdentitySource {
     }
 }
 
-@available(iOS 13.0.0, *)
 class CryptoCrossSigningStub: CryptoIdentityStub, MXCryptoCrossSigning {
     var stubbedStatus = CrossSigningStatus(
         hasMaster: false,
@@ -91,7 +89,6 @@ class CryptoCrossSigningStub: CryptoIdentityStub, MXCryptoCrossSigning {
     }
 }
 
-@available(iOS 13.0.0, *)
 class CryptoVerificationStub: CryptoIdentityStub {
     var stubbedRequests = [String: VerificationRequest]()
     var stubbedTransactions = [String: Verification]()
@@ -99,7 +96,6 @@ class CryptoVerificationStub: CryptoIdentityStub {
     var stubbedEmojis = [String: [Int]]()
 }
 
-@available(iOS 13.0.0, *)
 extension CryptoVerificationStub: MXCryptoVerificationRequesting {
     func requestSelfVerification(methods: [String]) async throws -> VerificationRequest {
         .stub()
@@ -126,7 +122,6 @@ extension CryptoVerificationStub: MXCryptoVerificationRequesting {
     }
 }
 
-@available(iOS 13.0.0, *)
 extension CryptoVerificationStub: MXCryptoVerifying {
     func verification(userId: String, flowId: String) -> Verification? {
         return stubbedTransactions[flowId]
@@ -136,7 +131,6 @@ extension CryptoVerificationStub: MXCryptoVerifying {
     }
 }
 
-@available(iOS 13.0.0, *)
 extension CryptoVerificationStub: MXCryptoSASVerifying {
     func startSasVerification(userId: String, flowId: String) async throws -> Sas {
         .stub()
@@ -147,6 +141,46 @@ extension CryptoVerificationStub: MXCryptoSASVerifying {
     
     func emojiIndexes(sas: Sas) throws -> [Int] {
         stubbedEmojis[sas.flowId] ?? []
+    }
+}
+
+class CryptoBackupStub: MXCryptoBackup {
+    var isBackupEnabled: Bool = false
+    var backupKeys: BackupKeys?
+    var roomKeyCounts: RoomKeyCounts?
+    
+    var versionSpy: String?
+    var backupKeySpy: MegolmV1BackupKey?
+    var recoveryKeySpy: BackupRecoveryKey?
+    var roomKeysSpy: [MXMegolmSessionData]?
+    
+    func enableBackup(key: MegolmV1BackupKey, version: String) throws {
+        versionSpy = version
+        backupKeySpy = key
+    }
+    
+    func disableBackup() {
+    }
+    
+    func saveRecoveryKey(key: BackupRecoveryKey, version: String?) throws {
+        recoveryKeySpy = key
+    }
+    
+    func verifyBackup(version: MXKeyBackupVersion) -> Bool {
+        return true
+    }
+    
+    var stubbedSignature = [String : [String : String]]()
+    func sign(object: [AnyHashable : Any]) throws -> [String : [String : String]] {
+        return stubbedSignature
+    }
+    
+    func backupRoomKeys() async throws {
+    }
+    
+    func importDecryptedKeys(roomKeys: [MXMegolmSessionData], progressListener: ProgressListener) throws -> KeysImportResult {
+        roomKeysSpy = roomKeys
+        return KeysImportResult(imported: Int64(roomKeys.count), total: Int64(roomKeys.count), keys: [:])
     }
 }
 

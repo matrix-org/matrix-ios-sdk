@@ -376,13 +376,15 @@ public extension MXRestClient {
         - profileTag: The profile tag for this device. Identifies this device in push rules.
         - lang: The user's preferred language for push, eg. 'en' or 'en-US'
         - data: Dictionary of data as required by your push gateway (generally the notification URI and aps-environment for APNS).
+        - append: If `true`, the homeserver should add another pusher with the given pushkey and App ID in addition to any others with different user IDs.
+        - enabled: Whether the pusher should actively create push notifications
         - completion: A block object called when the operation succeeds.
         - response: indicates whether the request succeeded or not.
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func setPusher(pushKey: String, kind: MXPusherKind, appId: String, appDisplayName: String, deviceDisplayName: String, profileTag: String, lang: String, data: [String: Any], append: Bool, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
-        return __setPusherWithPushkey(pushKey, kind: kind.objectValue, appId: appId, appDisplayName: appDisplayName, deviceDisplayName: deviceDisplayName, profileTag: profileTag, lang: lang, data: data, append: append, success: currySuccess(completion), failure: curryFailure(completion))
+    @nonobjc @discardableResult func setPusher(pushKey: String, kind: MXPusherKind, appId: String, appDisplayName: String, deviceDisplayName: String, profileTag: String, lang: String, data: [String: Any], append: Bool, enabled: Bool = true, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
+        return __setPusherWithPushkey(pushKey, kind: kind.objectValue, appId: appId, appDisplayName: appDisplayName, deviceDisplayName: deviceDisplayName, profileTag: profileTag, lang: lang, data: data, append: append, enabled: enabled, success: currySuccess(completion), failure: curryFailure(completion))
     }
     // TODO: setPusherWithPushKey - futher refinement
     /*
@@ -392,7 +394,18 @@ public extension MXRestClient {
      Something like "MXPusherDescriptor"?
      */
     
-    
+    /**
+     Gets all currently active pushers for the authenticated user.
+     
+     - parameters:
+        - response: indicates whether the request succeeded or not.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func pushers(completion: @escaping (_ response: MXResponse<[MXPusher]>) -> Void) -> MXHTTPOperation {
+        return __pushers(currySuccess(completion), failure: curryFailure(completion))
+    }
+
     /**
      Get all push notifications rules.
      

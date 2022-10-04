@@ -52,6 +52,7 @@
 @class MXDeviceListResponse;
 @class MXSpaceChildrenRequestParameters;
 @class MXCapabilities;
+@class MXDevice;
 
 #pragma mark - Constants definitions
 /**
@@ -76,6 +77,7 @@ FOUNDATION_EXPORT NSString *const kMXAccountDataTypeIdentityServer;
 FOUNDATION_EXPORT NSString *const kMXAccountDataTypeAcceptedTerms;
 FOUNDATION_EXPORT NSString *const kMXAccountDataTypeBreadcrumbs;
 FOUNDATION_EXPORT NSString *const kMXAccountDataTypeAcceptedTermsKey;
+FOUNDATION_EXPORT NSString *const kMXAccountDataTypeClientInformation;
 
 /**
  Account data keys
@@ -729,6 +731,7 @@ NS_REFINED_FOR_SWIFT;
  @param profileTag The profile tag for this device. Identifies this device in push rules.
  @param lang The user's preferred language for push, eg. 'en' or 'en-US'
  @param data Dictionary of data as required by your push gateway (generally the notification URI and aps-environment for APNS).
+ @param append If true, the homeserver should add another pusher with the given pushkey and App ID in addition to any others with different user IDs.
  @param success A block object called when the operation succeeds. It provides credentials to use to create a MXRestClient.
  @param failure A block object called when the operation fails.
 
@@ -746,6 +749,36 @@ NS_REFINED_FOR_SWIFT;
                                  success:(void (^)(void))success
                                  failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
+/**
+ Update the pusher for this device on the Home Server.
+
+ @param pushkey The pushkey for this pusher. This should be the APNS token formatted as required for your push gateway (base64 is the recommended formatting).
+ @param kind The kind of pusher your push gateway requires. Generally 'http', or an NSNull to disable the pusher.
+ @param appId The app ID of this application as required by your push gateway.
+ @param appDisplayName A human readable display name for this app.
+ @param deviceDisplayName A human readable display name for this device.
+ @param profileTag The profile tag for this device. Identifies this device in push rules.
+ @param lang The user's preferred language for push, eg. 'en' or 'en-US'
+ @param data Dictionary of data as required by your push gateway (generally the notification URI and aps-environment for APNS).
+ @param append If true, the homeserver should add another pusher with the given pushkey and App ID in addition to any others with different user IDs.
+ @param enabled Whether the pusher should actively create push notifications
+ @param success A block object called when the operation succeeds. It provides credentials to use to create a MXRestClient.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)setPusherWithPushkey:(NSString *)pushkey
+                                    kind:(NSObject *)kind
+                                   appId:(NSString *)appId
+                          appDisplayName:(NSString *)appDisplayName
+                       deviceDisplayName:(NSString *)deviceDisplayName
+                              profileTag:(NSString *)profileTag
+                                    lang:(NSString *)lang
+                                    data:(NSDictionary *)data
+                                  append:(BOOL)append
+                                 enabled:(BOOL)enabled
+                                 success:(void (^)(void))success
+                                 failure:(void (^)(NSError *))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Gets all currently active pushers for the authenticated user.
@@ -756,7 +789,7 @@ NS_REFINED_FOR_SWIFT;
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)pushers:(void (^)(NSArray<MXPusher *> *pushers))success
-                    failure:(void (^)(NSError *))failure;
+                    failure:(void (^)(NSError *))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Get all push notifications rules.
@@ -2554,7 +2587,7 @@ Note: Clients should consider avoiding this endpoint for URLs posted in encrypte
  */
 - (MXHTTPOperation*)sendKeysBackup:(MXKeysBackupData*)keysBackupData
                            version:(NSString*)version
-                           success:(void (^)(void))success
+                           success:(void (^)(NSDictionary *JSONResponse))success
                            failure:(void (^)(NSError *error))failure;
 
 /**

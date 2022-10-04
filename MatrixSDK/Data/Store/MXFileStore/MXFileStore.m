@@ -440,16 +440,6 @@ static NSUInteger preloadOptions;
     }
 }
 
-- (void)storePartialTextMessageForRoom:(NSString *)roomId partialTextMessage:(NSString *)partialTextMessage
-{
-    [super storePartialTextMessageForRoom:roomId partialTextMessage:partialTextMessage];
-    
-    if (NSNotFound == [roomsToCommitForMessages indexOfObject:roomId])
-    {
-        [roomsToCommitForMessages addObject:roomId];
-    }
-}
-
 - (void)storePartialAttributedTextMessageForRoom:(NSString *)roomId partialAttributedTextMessage:(NSAttributedString *)partialAttributedTextMessage
 {
     [super storePartialAttributedTextMessageForRoom:roomId partialAttributedTextMessage:partialAttributedTextMessage];
@@ -2227,29 +2217,22 @@ static NSUInteger preloadOptions;
  */
 - (void)saveObject:(id)object toFile:(NSString *)file
 {
-    if (@available(iOS 11.0, *))
+    NSError *error;
+    NSData *data = [NSKeyedArchiver archivedDataWithRootObject:object requiringSecureCoding:NO error:&error];
+    if (error)
     {
-        NSError *error;
-        NSData *data = [NSKeyedArchiver archivedDataWithRootObject:object requiringSecureCoding:NO error:&error];
-        if (error)
-        {
-            MXLogFailureDetails(@"[MXFileStore] Failed archiving root object", error);
-            return;
-        }
-        
-        BOOL success = [data writeToFile:file options:0 error:&error];
-        if (success)
-        {
-            MXLogDebug(@"[MXFileStore] Saved data successfully");
-        }
-        else
-        {
-            MXLogFailureDetails(@"[MXFileStore] Failed saving data", error);
-        }
+        MXLogFailureDetails(@"[MXFileStore] Failed archiving root object", error);
+        return;
+    }
+    
+    BOOL success = [data writeToFile:file options:0 error:&error];
+    if (success)
+    {
+        MXLogDebug(@"[MXFileStore] Saved data successfully");
     }
     else
     {
-        [NSKeyedArchiver archiveRootObject:object toFile:file];
+        MXLogFailureDetails(@"[MXFileStore] Failed saving data", error);
     }
 }
 
@@ -2262,30 +2245,23 @@ static NSUInteger preloadOptions;
  */
 - (id)loadObjectOfClasses:(NSSet<Class> *)classes fromFile:(NSString *)file
 {
-    if (@available(iOS 11.0, *))
+    NSError *error;
+    NSData *data = [NSData dataWithContentsOfFile:file];
+    if (!data)
     {
-        NSError *error;
-        NSData *data = [NSData dataWithContentsOfFile:file];
-        if (!data)
-        {
-            MXLogDebug(@"[MXFileStore] No data to load at file %@", file);
-            return nil;
-        }
-        
-        id object = [NSKeyedUnarchiver unarchivedObjectOfClasses:classes fromData:data error:&error];
-        if (object && !error)
-        {
-            return object;
-        }
-        else
-        {
-            MXLogFailureDetails(@"[MXFileStore] Failed loading object from class", error);
-            return nil;
-        }
+        MXLogDebug(@"[MXFileStore] No data to load at file %@", file);
+        return nil;
+    }
+    
+    id object = [NSKeyedUnarchiver unarchivedObjectOfClasses:classes fromData:data error:&error];
+    if (object && !error)
+    {
+        return object;
     }
     else
     {
-        return [NSKeyedUnarchiver unarchiveObjectWithFile:file];
+        MXLogFailureDetails(@"[MXFileStore] Failed loading object from class", error);
+        return nil;
     }
 }
 
@@ -2299,38 +2275,31 @@ static NSUInteger preloadOptions;
  */
 - (id)loadRootObjectWithoutSecureCodingFromFile:(NSString *)file
 {
-    if (@available(iOS 11.0, *))
+    NSError *error;
+    NSData *data = [NSData dataWithContentsOfFile:file];
+    if (!data)
     {
-        NSError *error;
-        NSData *data = [NSData dataWithContentsOfFile:file];
-        if (!data)
-        {
-            MXLogDebug(@"[MXFileStore] No data to load at file %@", file);
-            return nil;
-        }
-        NSKeyedUnarchiver *unarchiver = [[NSKeyedUnarchiver alloc] initForReadingFromData:data error:&error];
-        if (error && !unarchiver)
-        {
-            MXLogFailureDetails(@"[MXFileStore] Cannot create unarchiver", error);
-            return nil;
-        }
-        unarchiver.requiresSecureCoding = NO;
-        
-        // Seems to be an implementation detaul
-        id object = [unarchiver decodeTopLevelObjectForKey:NSKeyedArchiveRootObjectKey error:&error];
-        if (object && !error)
-        {
-            return object;
-        }
-        else
-        {
-            MXLogFailureDetails(@"[MXFileStore] Failed loading object from class", error);
-            return nil;
-        }
+        MXLogDebug(@"[MXFileStore] No data to load at file %@", file);
+        return nil;
+    }
+    NSKeyedUnarchiver *unarchiver = [[NSKeyedUnarchiver alloc] initForReadingFromData:data error:&error];
+    if (error && !unarchiver)
+    {
+        MXLogFailureDetails(@"[MXFileStore] Cannot create unarchiver", error);
+        return nil;
+    }
+    unarchiver.requiresSecureCoding = NO;
+    
+    // Seems to be an implementation detaul
+    id object = [unarchiver decodeTopLevelObjectForKey:NSKeyedArchiveRootObjectKey error:&error];
+    if (object && !error)
+    {
+        return object;
     }
     else
     {
-        return [NSKeyedUnarchiver unarchiveObjectWithFile:file];
+        MXLogFailureDetails(@"[MXFileStore] Failed loading object from class", error);
+        return nil;
     }
 }
 

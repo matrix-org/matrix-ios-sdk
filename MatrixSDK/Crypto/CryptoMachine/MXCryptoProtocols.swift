@@ -23,7 +23,6 @@ import MatrixSDKCrypto
 /// A set of protocols defining the functionality in `MatrixSDKCrypto` and separating them into logical units
 
 /// Cryptographic identity of the currently signed-in user
-@available(iOS 13.0.0, *)
 protocol MXCryptoIdentity {
     var userId: String { get }
     var deviceId: String { get }
@@ -32,7 +31,6 @@ protocol MXCryptoIdentity {
 }
 
 /// Handler for cryptographic events in the sync loop
-@available(iOS 13.0.0, *)
 protocol MXCryptoSyncing: MXCryptoIdentity {
     func handleSyncResponse(
         toDevice: MXToDeviceSyncResponse?,
@@ -45,14 +43,12 @@ protocol MXCryptoSyncing: MXCryptoIdentity {
 }
 
 /// Source of user devices and their cryptographic trust status
-@available(iOS 13.0.0, *)
 protocol MXCryptoDevicesSource: MXCryptoIdentity {
     func device(userId: String, deviceId: String) -> Device?
     func devices(userId: String) -> [Device]
 }
 
 /// Source of user identities and their cryptographic trust status
-@available(iOS 13.0.0, *)
 protocol MXCryptoUserIdentitySource: MXCryptoIdentity {
     func userIdentity(userId: String) -> UserIdentity?
     func isUserVerified(userId: String) -> Bool
@@ -60,22 +56,21 @@ protocol MXCryptoUserIdentitySource: MXCryptoIdentity {
 }
 
 /// Event encryption and decryption
-@available(iOS 13.0.0, *)
-protocol MXCryptoEventEncrypting: MXCryptoIdentity {
+protocol MXCryptoRoomEventEncrypting: MXCryptoIdentity {
     func shareRoomKeysIfNecessary(roomId: String, users: [String]) async throws
-    func encrypt(_ content: [AnyHashable: Any], roomId: String, eventType: String, users: [String]) async throws -> [String: Any]
-    func decryptEvent(_ event: MXEvent) throws -> MXEventDecryptionResult
+    func encryptRoomEvent(content: [AnyHashable: Any], roomId: String, eventType: String, users: [String]) async throws -> [String: Any]
+    func decryptRoomEvent(_ event: MXEvent) -> MXEventDecryptionResult
+    func requestRoomKey(event: MXEvent) async throws
+    func discardRoomKey(roomId: String)
 }
 
 /// Cross-signing functionality
-@available(iOS 13.0.0, *)
 protocol MXCryptoCrossSigning: MXCryptoUserIdentitySource {
     func crossSigningStatus() -> CrossSigningStatus
     func bootstrapCrossSigning(authParams: [AnyHashable: Any]) async throws
 }
 
 /// Lifecycle of verification request
-@available(iOS 13.0.0, *)
 protocol MXCryptoVerificationRequesting: MXCryptoIdentity {
     func requestSelfVerification(methods: [String]) async throws -> VerificationRequest
     func requestVerification(userId: String, roomId: String, methods: [String]) async throws -> VerificationRequest
@@ -85,7 +80,6 @@ protocol MXCryptoVerificationRequesting: MXCryptoIdentity {
 }
 
 /// Lifecycle of verification transaction
-@available(iOS 13.0.0, *)
 protocol MXCryptoVerifying: MXCryptoIdentity {
     func verification(userId: String, flowId: String) -> Verification?
     func confirmVerification(userId: String, flowId: String) async throws
@@ -93,11 +87,27 @@ protocol MXCryptoVerifying: MXCryptoIdentity {
 }
 
 /// Lifecycle of SAS-specific verification transaction
-@available(iOS 13.0.0, *)
 protocol MXCryptoSASVerifying: MXCryptoVerifying {
     func startSasVerification(userId: String, flowId: String) async throws -> Sas
     func acceptSasVerification(userId: String, flowId: String) async throws
     func emojiIndexes(sas: Sas) throws -> [Int]
+}
+
+/// Room keys backup functionality
+protocol MXCryptoBackup {
+    var isBackupEnabled: Bool { get }
+    var backupKeys: BackupKeys? { get }
+    var roomKeyCounts: RoomKeyCounts? { get }
+    
+    func enableBackup(key: MegolmV1BackupKey, version: String) throws
+    func disableBackup()
+    func saveRecoveryKey(key: BackupRecoveryKey, version: String?) throws
+    
+    func verifyBackup(version: MXKeyBackupVersion) -> Bool
+    func sign(object: [AnyHashable: Any]) throws -> [String: [String: String]]
+    
+    func backupRoomKeys() async throws
+    func importDecryptedKeys(roomKeys: [MXMegolmSessionData], progressListener: ProgressListener) throws -> KeysImportResult
 }
 
 #endif

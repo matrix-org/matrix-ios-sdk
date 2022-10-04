@@ -22,7 +22,6 @@ import XCTest
 import MatrixSDKCrypto
 @testable import MatrixSDK
 
-@available(iOS 13.0.0, *)
 class MXKeyVerificationRequestV2UnitTests: XCTestCase {
     enum Error: Swift.Error, Equatable {
         case dummy

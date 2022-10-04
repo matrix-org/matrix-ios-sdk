@@ -40,9 +40,6 @@
     NSMutableDictionary *lastMessages;
 
     // key: roomId, value: the text message the user typed
-    NSMutableDictionary *partialTextMessages;
-
-    // key: roomId, value: the text message the user typed
     NSMutableDictionary *partialAttributedTextMessages;
 
     NSString *eventStreamToken;
@@ -74,7 +71,6 @@
         hasReachedHomeServerPaginations = [NSMutableDictionary dictionary];
         hasLoadedAllRoomMembersForRooms = [NSMutableDictionary dictionary];
         lastMessages = [NSMutableDictionary dictionary];
-        partialTextMessages = [NSMutableDictionary dictionary];
         partialAttributedTextMessages = [NSMutableDictionary dictionary];
         users = [NSMutableDictionary dictionary];
         groups = [NSMutableDictionary dictionary];
@@ -168,10 +164,6 @@
     {
         [lastMessages removeObjectForKey:roomId];
     }
-    if (partialTextMessages[roomId])
-    {
-        [partialTextMessages removeObjectForKey:roomId];
-    }
     if (partialAttributedTextMessages[roomId])
     {
         [partialAttributedTextMessages removeObjectForKey:roomId];
@@ -187,7 +179,6 @@
     [hasReachedHomeServerPaginations removeAllObjects];
     [hasLoadedAllRoomMembersForRooms removeAllObjects];
     [lastMessages removeAllObjects];
-    [partialTextMessages removeAllObjects];
     [partialAttributedTextMessages removeAllObjects];
     [roomSummaryStore removeAllSummaries];
 }
@@ -381,23 +372,6 @@
     success(nil);
 }
 
-- (void)storePartialTextMessageForRoom:(NSString *)roomId partialTextMessage:(NSString *)partialTextMessage
-{
-    if (partialTextMessage)
-    {
-        partialTextMessages[roomId] = partialTextMessage;
-    }
-    else
-    {
-        [partialTextMessages removeObjectForKey:roomId];
-    }
-}
-
-- (NSString *)partialTextMessageOfRoom:(NSString *)roomId
-{
-    return partialTextMessages[roomId];
-}
-
 - (void)storePartialAttributedTextMessageForRoom:(NSString *)roomId partialAttributedTextMessage:(NSAttributedString *)partialAttributedTextMessage
 {
     if (partialAttributedTextMessage)
@@ -497,7 +471,6 @@
     [highlightCounts removeAllObjects];
     [hasReachedHomeServerPaginations removeAllObjects];
     [lastMessages removeAllObjects];
-    [partialTextMessages removeAllObjects];
     [partialAttributedTextMessages removeAllObjects];
     [users removeAllObjects];
     [groups removeAllObjects];

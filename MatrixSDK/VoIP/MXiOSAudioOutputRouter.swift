@@ -18,7 +18,6 @@ import Foundation
 import AVFoundation
 
 /// Audio output router class
-@available(iOS 10.0, *)
 @objcMembers
 public class MXiOSAudioOutputRouter: NSObject {
     
