@@ -1555,6 +1555,28 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
                              failure:(void (^)(NSError *error))failure
                   keepActualFilename:(BOOL)keepActualName
 {
+    return [self sendVoiceMessage:fileLocalURL
+          additionalContentParams:nil
+                         mimeType:mimeType
+                         duration:duration
+                          samples:samples
+                         threadId:threadId
+                        localEcho:localEcho
+                          success:success
+                          failure:failure keepActualFilename:keepActualName];
+}
+
+- (MXHTTPOperation*)sendVoiceMessage:(NSURL*)fileLocalURL
+             additionalContentParams:(NSDictionary *)additionalContentParams
+                            mimeType:(NSString*)mimeType
+                            duration:(NSUInteger)duration
+                             samples:(NSArray<NSNumber *> *)samples
+                            threadId:(NSString*)threadId
+                           localEcho:(MXEvent**)localEcho
+                             success:(void (^)(NSString *eventId))success
+                             failure:(void (^)(NSError *error))failure
+                  keepActualFilename:(BOOL)keepActualName
+{
     NSMutableDictionary *extensibleAudioContent = @{kMXMessageContentKeyExtensibleAudioDuration : @(duration)}.mutableCopy;
  
     static NSUInteger scaledWaveformSampleCeiling = 1024;
@@ -1572,10 +1594,16 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
         [extensibleAudioContent setObject:scaledSamples forKey:kMXMessageContentKeyExtensibleAudioWaveform];
     }
     
+    NSMutableDictionary *extensibleVoiceMessageContent = @{kMXMessageContentKeyVoiceMessageMSC3245 : @{},
+                                                            kMXMessageContentKeyExtensibleAudioMSC1767: extensibleAudioContent}.mutableCopy;
+    
+    if (additionalContentParams.count) {
+        [extensibleVoiceMessageContent addEntriesFromDictionary:additionalContentParams];
+    }
+    
     return [self _sendFile:fileLocalURL
                    msgType:kMXMessageTypeAudio
-           additionalTypes:@{kMXMessageContentKeyVoiceMessageMSC3245 : @{},
-                             kMXMessageContentKeyExtensibleAudioMSC1767: extensibleAudioContent}
+           additionalTypes:extensibleVoiceMessageContent
                   mimeType:(mimeType ?: @"audio/ogg")
                   threadId:threadId
                  localEcho:localEcho
