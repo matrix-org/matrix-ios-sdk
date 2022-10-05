@@ -1097,6 +1097,7 @@ typedef void (^MXOnResumeDone)(void);
         // Cancel the current request managing the event stream
         [eventStreamRequest cancel];
         eventStreamRequest = nil;
+        MXLogDebug(@"[MXSession] pause: did cancel and remove eventStreamRequest");
 
         for (MXPeekingRoom *peekingRoom in peekingRooms)
         {
@@ -1203,6 +1204,7 @@ typedef void (^MXOnResumeDone)(void);
         MXLogDebug(@"[MXSession] Reconnect starts");
         [eventStreamRequest cancel];
         eventStreamRequest = nil;
+        MXLogDebug(@"[MXSession] reconnect: did cancel and remove eventStreamRequest");
         
         // retrieve the available data asap
         // disable the long poll to get the available data asap
@@ -1223,6 +1225,7 @@ typedef void (^MXOnResumeDone)(void);
     // Cancel the current server request (if any)
     [eventStreamRequest cancel];
     eventStreamRequest = nil;
+    MXLogDebug(@"[MXSession] close: did cancel and remove eventStreamRequest");
 
     // Flush pending direct room operations
     [directRoomsOperationsQueue removeAllObjects];
@@ -1480,6 +1483,7 @@ typedef void (^MXOnResumeDone)(void);
         } failure:^(NSError *error) {
             [self handleServerSyncError:error forRequestWithServerTimeout:serverTimeout success:success failure:failure];
         }];
+        MXLogDebug(@"[MXSession] serverSyncWithServerTimeout: did create eventStreamRequest");
     }
     
     dispatch_group_notify(initialSyncDispatchGroup, dispatch_get_main_queue(), ^{
@@ -1557,7 +1561,7 @@ typedef void (^MXOnResumeDone)(void);
                     if (self.state == MXSessionStateBackgroundSyncInProgress)
                     {
                         // Check that none required the session to keep running
-                        if (self.preventPauseCount)
+                        if (self.preventPauseCount > 0)
                         {
                             // Delay the pause by calling the reliable `pause` method.
                             [self pause];
@@ -1565,7 +1569,9 @@ typedef void (^MXOnResumeDone)(void);
                         else
                         {
                             MXLogDebug(@"[MXSession] go to paused ");
+                            [self->eventStreamRequest cancel];
                             self->eventStreamRequest = nil;
+                            MXLogDebug(@"[MXSession] serverSyncWithServerTimeout onBackgroundSyncDone: did cancel and remove eventStreamRequest");
                             [self setState:MXSessionStatePaused];
                             return;
                         }
@@ -1650,7 +1656,7 @@ typedef void (^MXOnResumeDone)(void);
         if (self.state == MXSessionStateBackgroundSyncInProgress)
         {
             // Check that none required the session to keep running
-            if (self.preventPauseCount)
+            if (self.preventPauseCount > 0)
             {
                 // Delay the pause by calling the reliable `pause` method.
                 [self pause];
@@ -1658,7 +1664,9 @@ typedef void (^MXOnResumeDone)(void);
             else
             {
                 MXLogDebug(@"[MXSession] go to paused ");
+                [self->eventStreamRequest cancel];
                 self->eventStreamRequest = nil;
+                MXLogDebug(@"[MXSession] onBackgroundSyncFail: did cancel and remove eventStreamRequest");
                 [self setState:MXSessionStatePaused];
                 return;
             }
@@ -1672,6 +1680,9 @@ typedef void (^MXOnResumeDone)(void);
     // Check whether the caller wants to handle error himself
     if (failure)
     {
+        MXLogErrorDetails(@"[MXSession] handleServerSyncError: sync fail is handled by caller, resetting eventStreamRequest might not be handled", @{
+            @"error": error ?: @"unknown"
+        });
         failure(error);
     }
     else
@@ -1695,6 +1706,7 @@ typedef void (^MXOnResumeDone)(void);
             // The reconnection attempt failed on timeout: there is no data to retrieve from server
             [self->eventStreamRequest cancel];
             self->eventStreamRequest = nil;
+            MXLogDebug(@"[MXSession] handleServerSyncError onBackgroundSyncTimeout: did cancel and remove eventStreamRequest");
 
             // Notify the reconnection attempt has been done.
             [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDidSyncNotification
