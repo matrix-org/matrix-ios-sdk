@@ -757,7 +757,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
                     if (alg)
                     {
                         // Check we have everything to encrypt events
-                        MXHTTPOperation *operation2 = [alg ensureSessionForUsers:userIds success:^(NSObject *sessionInfo) {
+                        MXHTTPOperation *operation2 = [alg ensureSessionForUsers:userIds forceDistributeToUnverified:NO success:^(NSObject *sessionInfo) {
 
                             if (success)
                             {
