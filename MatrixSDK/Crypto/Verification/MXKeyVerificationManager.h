@@ -180,7 +180,7 @@ FOUNDATION_EXPORT NSString *const MXKeyVerificationManagerNotificationTransactio
  @param transactionId The transaction id of the associated verification request event.
  @return MXQRCodeTransaction instance if a transaction exist or nil.
  */
-- (nullable MXQRCodeTransaction*)qrCodeTransactionWithTransactionId:(NSString*)transactionId;
+- (nullable id<MXQRCodeTransaction>)qrCodeTransactionWithTransactionId:(NSString*)transactionId;
 
 /**
  Remove pending QR code transaction.

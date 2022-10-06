@@ -369,7 +369,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
 
 - (void)createQRCodeTransactionFromRequest:(id<MXKeyVerificationRequest>)request
                                 qrCodeData:(nullable MXQRCodeData*)qrCodeData
-                                   success:(void(^)(MXQRCodeTransaction *transaction))success
+                                   success:(void(^)(MXLegacyQRCodeTransaction *transaction))success
                                    failure:(void(^)(NSError *error))failure
 {
     MXLogDebug(@"[MXKeyVerification] createQRCodeTransactionFromRequest: event: %@", request.requestId);
@@ -431,7 +431,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
                                 transactionId:(nullable NSString*)transactionId
                                      dmRoomId:(nullable NSString*)dmRoomId
                                     dmEventId:(nullable NSString*)dmEventId
-                                      success:(void(^)(MXQRCodeTransaction *transaction))success
+                                      success:(void(^)(MXLegacyQRCodeTransaction *transaction))success
                                       failure:(void(^)(NSError *error))failure
 {
     MXLogDebug(@"[MXKeyVerification] createQRCodeTransaction: device: %@:%@ roomId: %@", userId, deviceId, dmRoomId);
@@ -439,7 +439,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
     // Make sure we have other device keys
     [self loadDeviceWithDeviceId:deviceId andUserId:userId success:^(MXDeviceInfo *otherDevice) {
         
-        MXQRCodeTransaction *transaction = [[MXQRCodeTransaction alloc] initWithOtherDevice:otherDevice qrCodeData:qrCodeData andManager:self];
+        MXLegacyQRCodeTransaction *transaction = [[MXLegacyQRCodeTransaction alloc] initWithOtherDevice:otherDevice qrCodeData:qrCodeData andManager:self];
         
         
         if (transactionId)
@@ -484,7 +484,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
 
 - (void)removeQRCodeTransactionWithTransactionId:(NSString*)transactionId
 {
-    MXQRCodeTransaction *qrCodeTransaction = [self qrCodeTransactionWithTransactionId:transactionId];
+    MXLegacyQRCodeTransaction *qrCodeTransaction = [self qrCodeTransactionWithTransactionId:transactionId];
     
     if (qrCodeTransaction)
     {
@@ -1059,9 +1059,9 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
         
         id<MXKeyVerificationTransaction> existingTransaction = [self transactionWithUser:event.sender andDevice:keyVerificationStart.fromDevice];
         
-        if ([existingTransaction isKindOfClass:MXQRCodeTransaction.class])
+        if ([existingTransaction isKindOfClass:MXLegacyQRCodeTransaction.class])
         {
-            MXQRCodeTransaction *existingQRCodeTransaction = (MXQRCodeTransaction*)existingTransaction;
+            MXLegacyQRCodeTransaction *existingQRCodeTransaction = (MXLegacyQRCodeTransaction*)existingTransaction;
             
             if (existingQRCodeTransaction.state == MXQRCodeTransactionStateUnknown)
             {
@@ -1204,7 +1204,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
     
     if (doneEvent)
     {
-        MXQRCodeTransaction *qrCodeTransaction = [self qrCodeTransactionWithTransactionId:doneEvent.transactionId];
+        MXLegacyQRCodeTransaction *qrCodeTransaction = [self qrCodeTransactionWithTransactionId:doneEvent.transactionId];
         if (qrCodeTransaction)
         {
             [qrCodeTransaction handleDone:doneEvent];
@@ -1274,7 +1274,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
         return;
     }
     
-    MXQRCodeTransaction *qrCodeTransaction = [self qrCodeTransactionWithTransactionId:requestId];
+    MXLegacyQRCodeTransaction *qrCodeTransaction = [self qrCodeTransactionWithTransactionId:requestId];
     
     // Verify existing transaction
     if (!qrCodeTransaction)
@@ -1818,15 +1818,15 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
     return sasTransaction;
 }
 
-- (MXQRCodeTransaction*)qrCodeTransactionWithTransactionId:(NSString*)transactionId
+- (id<MXQRCodeTransaction>)qrCodeTransactionWithTransactionId:(NSString*)transactionId
 {
-    MXQRCodeTransaction *qrCodeTransaction;
+    MXLegacyQRCodeTransaction *qrCodeTransaction;
     
     id<MXKeyVerificationTransaction> transaction = [self transactionWithTransactionId:transactionId];
     
-    if ([transaction isKindOfClass:MXQRCodeTransaction.class])
+    if ([transaction isKindOfClass:MXLegacyQRCodeTransaction.class])
     {
-        qrCodeTransaction = (MXQRCodeTransaction *)transaction;
+        qrCodeTransaction = (MXLegacyQRCodeTransaction *)transaction;
     }
     
     return qrCodeTransaction;

@@ -36,7 +36,7 @@ NSString * const MXKeyVerificationMethodQRCodeScan  = @"m.qr_code.scan.v1";
 
 NSString * const MXKeyVerificationMethodReciprocate = @"m.reciprocate.v1";
 
-@interface MXQRCodeTransaction()
+@interface MXLegacyQRCodeTransaction()
 
 @property (nonatomic, strong) MXQRCodeDataCoder *qrCodeDataCoder;
 @property (nonatomic, strong) MXQRCodeData *scannedOtherQRCodeData;
@@ -44,7 +44,7 @@ NSString * const MXKeyVerificationMethodReciprocate = @"m.reciprocate.v1";
 @end
 
 
-@implementation MXQRCodeTransaction
+@implementation MXLegacyQRCodeTransaction
 
 #pragma mark - Setup
 
