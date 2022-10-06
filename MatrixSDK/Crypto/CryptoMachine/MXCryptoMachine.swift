@@ -618,6 +618,31 @@ extension MXCryptoMachine: MXCryptoSASVerifying {
     }
 }
 
+extension MXCryptoMachine: MXCryptoQRCodeVerifying {
+    func startQrVerification(userId: String, flowId: String) throws -> QrCode {
+        guard let result = try machine.startQrVerification(userId: userId, flowId: flowId) else {
+            throw Error.missingVerification
+        }
+        return result
+    }
+    
+    func scanQrCode(userId: String, flowId: String, data: Data) async throws -> QrCode {
+        let string = MXBase64Tools.base64(from: data)
+        guard let result = machine.scanQrCode(userId: userId, flowId: flowId, data: string) else {
+            throw Error.missingVerification
+        }
+        try await handleOutgoingVerificationRequest(result.request)
+        return result.qr
+    }
+    
+    func generateQrCode(userId: String, flowId: String) throws -> Data {
+        guard let string = machine.generateQrCode(userId: userId, flowId: flowId) else {
+            throw Error.missingVerification
+        }
+        return MXBase64Tools.data(fromBase64: string)
+    }
+}
+
 extension MXCryptoMachine: MXCryptoBackup {
     var isBackupEnabled: Bool {
         return machine.backupEnabled()

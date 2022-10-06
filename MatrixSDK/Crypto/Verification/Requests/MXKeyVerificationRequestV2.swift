@@ -112,7 +112,7 @@ class MXKeyVerificationRequestV2: NSObject, MXKeyVerificationRequest {
             return .noUpdates
         }
         
-        log.debug("Request was updated")
+        log.debug("Request was updated \(request)")
         self.request = request
         return .updated
     }
