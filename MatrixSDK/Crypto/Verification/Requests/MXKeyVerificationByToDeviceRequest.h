@@ -19,14 +19,14 @@
 #import "MXKeyVerificationRequest.h"
 #import "MXKeyVerificationRequestByToDeviceJSONModel.h"
 
-@class MXKeyVerificationManager;
+@class MXLegacyKeyVerificationManager;
 
 NS_ASSUME_NONNULL_BEGIN
 
 /**
  An handler on an interactive request for verification by to_device events.
  */
-@interface MXKeyVerificationByToDeviceRequest : MXDefaultKeyVerificationRequest
+@interface MXKeyVerificationByToDeviceRequest : MXLegacyKeyVerificationRequest
 
 @property (nonatomic, readonly) MXKeyVerificationRequestByToDeviceJSONModel *request;
 
@@ -36,7 +36,7 @@ NS_ASSUME_NONNULL_BEGIN
 // The requested recipient device ids. Note that `otherDevice` is the device id that accepts the request first. Only filled when request is sent bu current user otherwise this array should be empty.
 @property (nonatomic, readonly) NSArray<NSString*> *requestedOtherDeviceIds;
 
-- (instancetype)initWithEvent:(MXEvent*)event andManager:(MXKeyVerificationManager*)manager to:(NSString*)toUserId requestedOtherDeviceIds:(NSArray<NSString*>*)otherDeviceIds;
+- (instancetype)initWithEvent:(MXEvent*)event andManager:(MXLegacyKeyVerificationManager*)manager to:(NSString*)toUserId requestedOtherDeviceIds:(NSArray<NSString*>*)otherDeviceIds;
 
 @end
 

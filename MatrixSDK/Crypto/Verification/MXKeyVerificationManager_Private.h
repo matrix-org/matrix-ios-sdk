@@ -26,7 +26,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  The `MXKeyBackup_Private` extension exposes internal operations.
  */
-@interface MXKeyVerificationManager ()
+@interface MXLegacyKeyVerificationManager ()
 
 /**
  The Matrix crypto.

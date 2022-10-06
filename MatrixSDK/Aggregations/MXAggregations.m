@@ -28,7 +28,6 @@
 #import "MXAggregatedEditsUpdater.h"
 #import "MXAggregatedReferencesUpdater.h"
 #import "MXEventEditsListener.h"
-#import "MXAggregationPaginatedResponse_Private.h"
 
 #import "MatrixSDKSwiftHeader.h"
 

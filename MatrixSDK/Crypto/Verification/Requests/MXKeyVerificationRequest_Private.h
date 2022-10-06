@@ -21,17 +21,17 @@
 
 MX_ASSUME_MISSING_NULLABILITY_BEGIN
 
-@class MXKeyVerificationManager, MXHTTPOperation;
+@class MXLegacyKeyVerificationManager, MXHTTPOperation;
 
 
 /**
  The `MXKeyVerificationRequest` extension exposes internal operations.
  */
-@interface MXDefaultKeyVerificationRequest ()
+@interface MXLegacyKeyVerificationRequest ()
 
-@property (nonatomic, readonly, weak) MXKeyVerificationManager *manager;
+@property (nonatomic, readonly, weak) MXLegacyKeyVerificationManager *manager;
 
-- (instancetype)initWithEvent:(MXEvent*)event andManager:(MXKeyVerificationManager*)manager;
+- (instancetype)initWithEvent:(MXEvent*)event andManager:(MXLegacyKeyVerificationManager*)manager;
 
 @property (nonatomic, nullable) MXTransactionCancelCode *reasonCancelCode;
 @property (nonatomic) BOOL isFromMyUser;

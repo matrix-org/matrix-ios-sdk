@@ -46,7 +46,7 @@ NSArray<NSString*> *kKnownShortCodes;
 static NSArray<MXEmojiRepresentation*> *kSasEmojis;
 
 
-@implementation MXDefaultSASTransaction
+@implementation MXLegacySASTransaction
 
 @synthesize state = _state;
 @synthesize sasBytes = _sasBytes;
@@ -56,7 +56,7 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
     NSString *sasDecimal;
     if (_sasBytes && [self.accepted.shortAuthenticationString containsObject:MXKeyVerificationSASModeDecimal])
     {
-        sasDecimal = [[MXDefaultSASTransaction decimalRepresentationForSas:_sasBytes] componentsJoinedByString:@" "];
+        sasDecimal = [[MXLegacySASTransaction decimalRepresentationForSas:_sasBytes] componentsJoinedByString:@" "];
     }
 
     return sasDecimal;
@@ -67,7 +67,7 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
     NSArray *sasEmoji;
     if (_sasBytes && [self.accepted.shortAuthenticationString containsObject:MXKeyVerificationSASModeEmoji])
     {
-        sasEmoji = [MXDefaultSASTransaction emojiRepresentationForSas:_sasBytes];
+        sasEmoji = [MXLegacySASTransaction emojiRepresentationForSas:_sasBytes];
     }
 
     return sasEmoji;
@@ -129,7 +129,7 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
     });
 }
 
-- (instancetype)initWithOtherDevice:(MXDeviceInfo*)otherDevice andManager:(MXKeyVerificationManager*)manager
+- (instancetype)initWithOtherDevice:(MXDeviceInfo*)otherDevice andManager:(MXLegacyKeyVerificationManager*)manager
 {
     self = [super initWithOtherDevice:otherDevice andManager:manager];
     if (self)

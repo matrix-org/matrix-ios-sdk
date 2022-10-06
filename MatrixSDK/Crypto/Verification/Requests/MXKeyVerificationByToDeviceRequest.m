@@ -30,7 +30,7 @@
 
 @implementation MXKeyVerificationByToDeviceRequest
 
-- (instancetype)initWithEvent:(MXEvent*)event andManager:(MXKeyVerificationManager*)manager to:(nonnull NSString *)toUserId requestedOtherDeviceIds:(nonnull NSArray<NSString *> *)requestedOtherDeviceIds
+- (instancetype)initWithEvent:(MXEvent*)event andManager:(MXLegacyKeyVerificationManager*)manager to:(nonnull NSString *)toUserId requestedOtherDeviceIds:(nonnull NSArray<NSString *> *)requestedOtherDeviceIds
 {
     // Check verification by DM request format
     MXKeyVerificationRequestByToDeviceJSONModel *request;

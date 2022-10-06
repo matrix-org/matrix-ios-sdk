@@ -57,19 +57,19 @@ NSTimeInterval const MXRequestDefaultTimeout = 5 * 60.0;
 static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTypes;
 
 
-@interface MXKeyVerificationManager ()
+@interface MXLegacyKeyVerificationManager ()
 {
     // The queue to run background tasks
     dispatch_queue_t cryptoQueue;
 
     // All running transactions
-    MXUsersDevicesMap<MXDefaultKeyVerificationTransaction *> *transactions;
+    MXUsersDevicesMap<MXLegacyKeyVerificationTransaction *> *transactions;
     // Timer to cancel transactions
     NSTimer *transactionTimeoutTimer;
 
     // All pending requests
     // Request id -> request
-    NSMutableDictionary<NSString*, MXDefaultKeyVerificationRequest*> *pendingRequestsMap;
+    NSMutableDictionary<NSString*, MXLegacyKeyVerificationRequest*> *pendingRequestsMap;
 
     // Timer to cancel requests
     NSTimer *requestTimeoutTimer;
@@ -87,7 +87,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
 
 @end
 
-@implementation MXKeyVerificationManager
+@implementation MXLegacyKeyVerificationManager
 
 #pragma mark - Public methods -
 
@@ -193,30 +193,14 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
     }
     else
     {
-        // Use an existing direct room if any
-        MXRoom *room = [self.crypto.mxSession directJoinedRoomWithUserId:userId];
-        if (room)
-        {
-            [self requestVerificationByDMWithUserId2:userId roomId:room.roomId fallbackText:fallbackText methods:methods success:success failure:failure];
-        }
-        else
-        {
-            // Create a new DM with E2E by default if possible
-            [self.crypto.mxSession canEnableE2EByDefaultInNewRoomWithUsers:@[userId] success:^(BOOL canEnableE2E) {
-                MXRoomCreationParameters *roomCreationParameters = [MXRoomCreationParameters parametersForDirectRoomWithUser:userId];
-                
-                if (canEnableE2E)
-                {
-                    roomCreationParameters.initialStateEvents = @[
-                                                                  [MXRoomCreationParameters initialStateEventForEncryptionWithAlgorithm:kMXCryptoMegolmAlgorithm
-                                                                   ]];
-                }
-
-                [self.crypto.mxSession createRoomWithParameters:roomCreationParameters success:^(MXRoom *room) {
-                    [self requestVerificationByDMWithUserId2:userId roomId:room.roomId fallbackText:fallbackText methods:methods success:success failure:failure];
-                } failure:failure];
-            } failure:failure];
-        }
+        [self.crypto.mxSession getOrCreateDirectJoinedRoomWithUserId:userId success:^(MXRoom *room) {
+            [self requestVerificationByDMWithUserId2:userId
+                                              roomId:room.roomId
+                                        fallbackText:fallbackText
+                                             methods:methods
+                                             success:success
+                                             failure:failure];
+        } failure:failure];
     }
 }
 
@@ -241,7 +225,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
         MXRoom *room = [self.crypto.mxSession roomWithRoomId:roomId];
         MXEvent *event = [room fakeRoomMessageEventWithEventId:eventId andContent:request.JSONDictionary threadId:nil];
         
-        MXDefaultKeyVerificationRequest *request = [self verificationRequestInDMEvent:event];
+        MXLegacyKeyVerificationRequest *request = [self verificationRequestInDMEvent:event];
         [request updateState:MXKeyVerificationRequestStatePending notifiy:YES];
         [self addPendingRequest:request notify:NO];
         
@@ -525,6 +509,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
 #pragma mark Verification status
 
 - (nullable MXHTTPOperation *)keyVerificationFromKeyVerificationEvent:(MXEvent*)event
+                                                               roomId:(NSString *)roomId
                                                               success:(void(^)(MXKeyVerification *keyVerification))success
                                                               failure:(void(^)(NSError *error))failure
 {
@@ -582,7 +567,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
 - (nullable MXKeyVerification *)pendingKeyVerificationWithKeyVerificationId:(NSString*)keyVerificationId
 {
     id<MXKeyVerificationTransaction> transaction = [self transactionWithTransactionId:keyVerificationId];
-    MXDefaultKeyVerificationRequest *request = [self pendingRequestWithRequestId:keyVerificationId];
+    MXLegacyKeyVerificationRequest *request = [self pendingRequestWithRequestId:keyVerificationId];
     
     return [self->statusResolver keyVerificationFromRequest:request andTransaction:transaction];
 }
@@ -777,9 +762,9 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
     
     [self sendToOtherInTransaction:transaction eventType:kMXEventTypeStringKeyVerificationCancel content:cancel.JSONDictionary success:^{
         
-        if ([transaction isKindOfClass:[MXDefaultKeyVerificationTransaction class]])
+        if ([transaction isKindOfClass:[MXLegacyKeyVerificationTransaction class]])
         {
-            ((MXDefaultKeyVerificationTransaction *)transaction).reasonCancelCode = code;
+            ((MXLegacyKeyVerificationTransaction *)transaction).reasonCancelCode = code;
         }
         else
         {
@@ -946,7 +931,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
     }
     
     NSString *requestId = keyVerificationReady.transactionId;
-    MXDefaultKeyVerificationRequest *request = [self pendingRequestWithRequestId:requestId];
+    MXLegacyKeyVerificationRequest *request = [self pendingRequestWithRequestId:requestId];
     
     if (request)
     {
@@ -982,7 +967,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
 
     if (cancelContent)
     {
-        MXDefaultKeyVerificationTransaction *transaction = [self transactionWithTransactionId:cancelContent.transactionId];
+        MXLegacyKeyVerificationTransaction *transaction = [self transactionWithTransactionId:cancelContent.transactionId];
         if (transaction)
         {
             [transaction handleCancel:cancelContent];
@@ -990,7 +975,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
         }
 
         NSString *requestId = cancelContent.transactionId;
-        MXDefaultKeyVerificationRequest *request = [self pendingRequestWithRequestId:requestId];
+        MXLegacyKeyVerificationRequest *request = [self pendingRequestWithRequestId:requestId];
         if (request)
         {
             [request handleCancel:cancelContent];
@@ -1040,7 +1025,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
     }
     
     NSString *requestId = keyVerificationStart.transactionId;
-    MXDefaultKeyVerificationRequest *request = [self pendingRequestWithRequestId:requestId];
+    MXLegacyKeyVerificationRequest *request = [self pendingRequestWithRequestId:requestId];
     if (request)
     {
         // We have a start response. The request is complete
@@ -1146,7 +1131,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
 
     if (acceptContent)
     {
-        MXDefaultSASTransaction *transaction = [self sasTransactionWithTransactionId:acceptContent.transactionId];
+        MXLegacySASTransaction *transaction = [self sasTransactionWithTransactionId:acceptContent.transactionId];
         if (transaction)
         {
             [transaction handleAccept:acceptContent];
@@ -1171,7 +1156,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
 
     if (keyContent)
     {
-        MXDefaultSASTransaction *transaction = [self sasTransactionWithTransactionId:keyContent.transactionId];
+        MXLegacySASTransaction *transaction = [self sasTransactionWithTransactionId:keyContent.transactionId];
         if (transaction)
         {
             [transaction handleKey:keyContent];
@@ -1196,7 +1181,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
 
     if (macContent)
     {
-        MXDefaultSASTransaction *transaction = [self sasTransactionWithTransactionId:macContent.transactionId];
+        MXLegacySASTransaction *transaction = [self sasTransactionWithTransactionId:macContent.transactionId];
         if (transaction)
         {
             [transaction handleMac:macContent];
@@ -1265,7 +1250,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
     }
     
     NSString *requestId = keyVerificationStart.transactionId;
-    MXDefaultKeyVerificationRequest *request = [self pendingRequestWithRequestId:requestId];
+    MXLegacyKeyVerificationRequest *request = [self pendingRequestWithRequestId:requestId];
     if (request)
     {
         // We have a start response. The request is complete
@@ -1543,7 +1528,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
                                      andSupportedMethods:(NSArray<NSString*>*)supportedMethods
                                               completion:(void (^)(NSArray<NSString*>* readyMethods, MXQRCodeData *qrCodeData))completion;
 {
-    MXDefaultKeyVerificationRequest *keyVerificationRequest = [self pendingRequestWithRequestId:transactionId];
+    MXLegacyKeyVerificationRequest *keyVerificationRequest = [self pendingRequestWithRequestId:transactionId];
     
     if (!keyVerificationRequest)
     {
@@ -1675,7 +1660,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
     return request;
 }
 
-- (nullable MXDefaultKeyVerificationRequest*)pendingRequestWithRequestId:(NSString*)requestId
+- (nullable MXLegacyKeyVerificationRequest*)pendingRequestWithRequestId:(NSString*)requestId
 {
     return pendingRequestsMap[requestId];
 }
@@ -1714,7 +1699,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
 - (nullable NSDate*)oldestRequestDate
 {
     NSDate *oldestRequestDate;
-    for (MXDefaultKeyVerificationRequest *request in pendingRequestsMap.allValues)
+    for (MXLegacyKeyVerificationRequest *request in pendingRequestsMap.allValues)
     {
         if (!oldestRequestDate
             || request.timestamp < oldestRequestDate.timeIntervalSince1970)
@@ -1725,7 +1710,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
     return oldestRequestDate;
 }
 
-- (BOOL)isRequestStillValid:(MXDefaultKeyVerificationRequest *)request
+- (BOOL)isRequestStillValid:(MXLegacyKeyVerificationRequest *)request
 {
     NSDate *requestDate = [NSDate dateWithTimeIntervalSince1970:(request.timestamp / 1000)];
     return (requestDate.timeIntervalSinceNow > -_requestTimeout);
@@ -1773,7 +1758,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
 - (void)checkRequestTimeoutsWithCompletion:(dispatch_block_t)completionBlock
 {
     dispatch_group_t group = dispatch_group_create();
-    for (MXDefaultKeyVerificationRequest *request in pendingRequestsMap.allValues)
+    for (MXLegacyKeyVerificationRequest *request in pendingRequestsMap.allValues)
     {
         if (![self isRequestStillValid:request])
         {
@@ -1804,10 +1789,10 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
     return [transactions objectsForUser:userId];
 }
 
-- (MXDefaultKeyVerificationTransaction *)transactionWithTransactionId:(NSString*)transactionId
+- (MXLegacyKeyVerificationTransaction *)transactionWithTransactionId:(NSString*)transactionId
 {
-    MXDefaultKeyVerificationTransaction *transaction;
-    for (MXDefaultKeyVerificationTransaction *t in transactions.allObjects)
+    MXLegacyKeyVerificationTransaction *transaction;
+    for (MXLegacyKeyVerificationTransaction *t in transactions.allObjects)
     {
         if ([t.transactionId isEqualToString:transactionId])
         {
@@ -1819,15 +1804,15 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
     return transaction;
 }
 
-- (MXDefaultSASTransaction *)sasTransactionWithTransactionId:(NSString*)transactionId
+- (MXLegacySASTransaction *)sasTransactionWithTransactionId:(NSString*)transactionId
 {
-    MXDefaultSASTransaction *sasTransaction;
+    MXLegacySASTransaction *sasTransaction;
     
-    MXDefaultKeyVerificationTransaction *transaction = [self transactionWithTransactionId:transactionId];
+    MXLegacyKeyVerificationTransaction *transaction = [self transactionWithTransactionId:transactionId];
     
-    if ([transaction isKindOfClass:[MXDefaultSASTransaction class]])
+    if ([transaction isKindOfClass:[MXLegacySASTransaction class]])
     {
-        sasTransaction = (MXDefaultSASTransaction *)transaction;
+        sasTransaction = (MXLegacySASTransaction *)transaction;
     }
     
     return sasTransaction;
@@ -1873,7 +1858,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
 - (nullable NSDate*)oldestTransactionCreationDate
 {
     NSDate *oldestCreationDate;
-    for (MXDefaultKeyVerificationTransaction *transaction in transactions.allObjects)
+    for (MXLegacyKeyVerificationTransaction *transaction in transactions.allObjects)
     {
         if (!oldestCreationDate
             || transaction.creationDate.timeIntervalSince1970 < oldestCreationDate.timeIntervalSince1970)
@@ -1884,7 +1869,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
     return oldestCreationDate;
 }
 
-- (BOOL)isCreationDateValid:(MXDefaultKeyVerificationTransaction *)transaction
+- (BOOL)isCreationDateValid:(MXLegacyKeyVerificationTransaction *)transaction
 {
     return (transaction.creationDate.timeIntervalSinceNow > -MXTransactionTimeout);
 }
@@ -1948,7 +1933,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
 
 - (void)checkTransactionTimeouts
 {
-    for (MXDefaultKeyVerificationTransaction *transaction in transactions.allObjects)
+    for (MXLegacyKeyVerificationTransaction *transaction in transactions.allObjects)
     {
         if (![self isCreationDateValid:transaction])
         {

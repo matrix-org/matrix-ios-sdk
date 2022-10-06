@@ -2052,7 +2052,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
         unrequestedForwardedRoomKeyManager = [[MXUnrequestedForwardedRoomKeyManager alloc] init];
         unrequestedForwardedRoomKeyManager.delegate = self;
 
-        _keyVerificationManager = [[MXKeyVerificationManager alloc] initWithCrypto:self];
+        _keyVerificationManager = [[MXLegacyKeyVerificationManager alloc] initWithCrypto:self];
         
         _secretStorage = [[MXSecretStorage alloc] initWithMatrixSession:_mxSession processingQueue:_cryptoQueue];
         _secretShareManager = [[MXSecretShareManager alloc] initWithCrypto:self];

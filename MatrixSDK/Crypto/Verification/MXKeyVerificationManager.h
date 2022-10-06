@@ -76,12 +76,11 @@ FOUNDATION_EXPORT NSString *const MXKeyVerificationManagerNotificationTransactio
 
 
 /**
- The `MXKeyVerificationManager` class instance manages interactive key
+ The `MXKeyVerificationManager` protocol specifies interactive key
  verifications according to MSC1267 (Interactive key verification):
  https://github.com/matrix-org/matrix-doc/issues/1267.
  */
-@interface MXKeyVerificationManager : NSObject
-
+@protocol MXKeyVerificationManager <NSObject>
 
 #pragma mark - Requests
 
@@ -171,6 +170,7 @@ FOUNDATION_EXPORT NSString *const MXKeyVerificationManagerNotificationTransactio
  @return an HTTP operation or nil if the response is synchronous.
  */
 - (nullable MXHTTPOperation *)keyVerificationFromKeyVerificationEvent:(MXEvent*)event
+                                                               roomId:(NSString *)roomId
                                                               success:(void(^)(MXKeyVerification *keyVerification))success
                                                               failure:(void(^)(NSError *error))failure;
 
@@ -189,6 +189,9 @@ FOUNDATION_EXPORT NSString *const MXKeyVerificationManagerNotificationTransactio
  */
 - (void)removeQRCodeTransactionWithTransactionId:(NSString*)transactionId;
 
+@end
+
+@interface MXLegacyKeyVerificationManager : NSObject <MXKeyVerificationManager>
 
 - (void)notifyOthersOfAcceptanceWithTransactionId:(NSString*)transactionId
                                acceptedUserId:(NSString*)acceptedUserId

@@ -113,11 +113,15 @@ class CryptoVerificationStub: CryptoIdentityStub {
 
 extension CryptoVerificationStub: MXCryptoVerificationRequesting {
     func requestSelfVerification(methods: [String]) async throws -> VerificationRequest {
-        .stub()
+        .stub(ourMethods: methods)
     }
     
     func requestVerification(userId: String, roomId: String, methods: [String]) async throws -> VerificationRequest {
-        .stub()
+        .stub(otherUserId: userId, roomId: roomId, ourMethods: methods)
+    }
+    
+    func verificationRequests(userId: String) -> [VerificationRequest] {
+        return stubbedRequests.values.map { $0 }
     }
     
     func verificationRequest(userId: String, flowId: String) -> VerificationRequest? {
@@ -148,7 +152,11 @@ extension CryptoVerificationStub: MXCryptoVerifying {
 
 extension CryptoVerificationStub: MXCryptoSASVerifying {
     func startSasVerification(userId: String, flowId: String) async throws -> Sas {
-        .stub()
+        .stub(otherUserId: userId, flowId: flowId)
+    }
+    
+    func startSasVerification(userId: String, deviceId: String) async throws -> Sas {
+        .stub(otherUserId: userId, otherDeviceId: deviceId)
     }
     
     func acceptSasVerification(userId: String, flowId: String) async throws {

@@ -32,7 +32,7 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Warc-retain-cycles"
 
-@interface MXKeyVerificationManager (Testing)
+@interface MXLegacyKeyVerificationManager (Testing)
 
 - (id<MXKeyVerificationTransaction>)transactionWithTransactionId:(NSString*)transactionId;
 - (MXQRCodeTransaction*)qrCodeTransactionWithTransactionId:(NSString*)transactionId;
@@ -282,8 +282,8 @@
                             XCTAssertTrue(aliceFromAlice2POV.trustLevel.isLocallyVerified);
                             
                             // -> Transaction must not be listed anymore
-                            XCTAssertNil([aliceSession1.crypto.keyVerificationManager transactionWithTransactionId:sasTransactionFromAlicePOV.transactionId]);
-                            XCTAssertNil([aliceSession2.crypto.keyVerificationManager transactionWithTransactionId:transactionFromAlice2POV.transactionId]);
+                            XCTAssertNil([(MXLegacyKeyVerificationManager *)aliceSession1.crypto.keyVerificationManager transactionWithTransactionId:sasTransactionFromAlicePOV.transactionId]);
+                            XCTAssertNil([(MXLegacyKeyVerificationManager *)aliceSession2.crypto.keyVerificationManager transactionWithTransactionId:transactionFromAlice2POV.transactionId]);
                             
                             [expectation fulfill];
                         }
@@ -488,8 +488,8 @@
                             XCTAssertTrue(aliceFromBobPOV.trustLevel.isLocallyVerified);
                             
                             // -> Transaction must not be listed anymore
-                            XCTAssertNil([aliceSession.crypto.keyVerificationManager transactionWithTransactionId:sasTransactionFromAlicePOV.transactionId]);
-                            XCTAssertNil([bobSession.crypto.keyVerificationManager transactionWithTransactionId:transactionFromBobPOV.transactionId]);
+                            XCTAssertNil([(MXLegacyKeyVerificationManager *)aliceSession.crypto.keyVerificationManager transactionWithTransactionId:sasTransactionFromAlicePOV.transactionId]);
+                            XCTAssertNil([(MXLegacyKeyVerificationManager *)bobSession.crypto.keyVerificationManager transactionWithTransactionId:transactionFromBobPOV.transactionId]);
                         }
                     };
                     
@@ -570,7 +570,7 @@
                     {
                         // Then, test MXKeyVerification
                         MXEvent *event = [aliceSession.store eventWithEventId:requestId inRoom:roomId];
-                        [aliceSession.crypto.keyVerificationManager keyVerificationFromKeyVerificationEvent:event success:^(MXKeyVerification * _Nonnull verificationFromAlicePOV) {
+                        [aliceSession.crypto.keyVerificationManager keyVerificationFromKeyVerificationEvent:event roomId:roomId success:^(MXKeyVerification * _Nonnull verificationFromAlicePOV) {
                             
                             XCTAssertEqual(verificationFromAlicePOV.state, MXKeyVerificationStateVerified);
                             
@@ -714,8 +714,8 @@
                             XCTAssertTrue(aliceFromBobPOV.trustLevel.isLocallyVerified);
                             
                             // -> Transaction must not be listed anymore
-                            XCTAssertNil([aliceSession.crypto.keyVerificationManager transactionWithTransactionId:qrCodeTransactionFromAlicePOV.transactionId]);
-                            XCTAssertNil([bobSession.crypto.keyVerificationManager transactionWithTransactionId:qrCodeTransactionFromBobPOV.transactionId]);
+                            XCTAssertNil([(MXLegacyKeyVerificationManager *)aliceSession.crypto.keyVerificationManager transactionWithTransactionId:qrCodeTransactionFromAlicePOV.transactionId]);
+                            XCTAssertNil([(MXLegacyKeyVerificationManager *)bobSession.crypto.keyVerificationManager transactionWithTransactionId:qrCodeTransactionFromBobPOV.transactionId]);
                         }
                     };
                     
@@ -789,7 +789,7 @@
                     {
                         // Then, to test MXKeyVerification
                         MXEvent *event = [aliceSession.store eventWithEventId:requestId inRoom:roomId];
-                        [aliceSession.crypto.keyVerificationManager keyVerificationFromKeyVerificationEvent:event success:^(MXKeyVerification * _Nonnull verificationFromAlicePOV) {
+                        [aliceSession.crypto.keyVerificationManager keyVerificationFromKeyVerificationEvent:event roomId:roomId success:^(MXKeyVerification * _Nonnull verificationFromAlicePOV) {
 
                             XCTAssertEqual(verificationFromAlicePOV.state, MXKeyVerificationStateVerified);
 

@@ -78,6 +78,7 @@ Accept an incoming key verification request.
 @property (nonatomic, readonly, nullable) MXTransactionCancelCode *reasonCancelCode;
 
 // Is it a request made by our user?
+@property (nonatomic, readonly) NSString *myUserId;
 @property (nonatomic, readonly) BOOL isFromMyUser;
 @property (nonatomic, readonly) BOOL isFromMyDevice;
 
@@ -85,6 +86,7 @@ Accept an incoming key verification request.
 @property (nonatomic, readonly) NSString *requestId;
 @property (nonatomic, readonly) MXKeyVerificationTransport transport;
 @property (nonatomic, readonly) NSArray<NSString*> *methods;
+@property (nullable, nonatomic, readonly) NSString *roomId;
 
 // The other party
 @property (nonatomic, readonly) NSString *otherUser;
@@ -99,7 +101,7 @@ Accept an incoming key verification request.
 /**
  Default implementation of verification request used by the SDK
  */
-@interface MXDefaultKeyVerificationRequest : NSObject <MXKeyVerificationRequest>
+@interface MXLegacyKeyVerificationRequest : NSObject <MXKeyVerificationRequest>
 
 // Original data for this request
 @property (nonatomic, readonly) MXEvent *event;

@@ -156,14 +156,8 @@ private class MXCryptoV2: MXCrypto {
         )
         
         keyVerification = MXKeyVerificationManagerV2(
-            verification: machine,
-            getOrCreateDMRoomId: { [weak session] userId in
-                // Note: assuming that DM already exists, fail otherwise. Will be updated in future PR
-                guard let roomId = session?.directJoinedRoom(withUserId: userId)?.roomId else {
-                    throw Error.missingRoom
-                }
-                return roomId
-            }
+            session: session,
+            handler: machine
         )
         
         secretsManager = MXSecretShareManager()

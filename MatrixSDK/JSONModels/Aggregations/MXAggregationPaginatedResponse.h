@@ -29,6 +29,10 @@ NS_ASSUME_NONNULL_BEGIN
 // TODO: Make it non null when homeservers support it
 @property (nonatomic, readonly, nullable) MXEvent *originalEvent;
 
+- (instancetype)initWithOriginalEvent:(MXEvent*)originalEvent
+                                chunk:(NSArray<MXEvent*> *)chunk
+                            nextBatch:(nullable NSString *)nextBatch;
+
 @end
 
 NS_ASSUME_NONNULL_END
