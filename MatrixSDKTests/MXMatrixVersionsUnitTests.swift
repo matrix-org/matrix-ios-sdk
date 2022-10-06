@@ -41,7 +41,8 @@ class MXMatrixVersionsUnitTests: XCTestCase {
             "org.matrix.label_based_filtering": true,
             "org.matrix.msc3026.busy_presence": true,
             "org.matrix.msc2285.stable": true,
-            "org.matrix.msc3881.stable": true
+            "org.matrix.msc3881.stable": true,
+            "org.matrix.msc3882": true
         ],
         "versions": [
            "r0.0.1",
@@ -74,7 +75,8 @@ class MXMatrixVersionsUnitTests: XCTestCase {
             "org.matrix.label_based_filtering": false,
             "org.matrix.msc3026.busy_presence": false,
             "org.matrix.msc2285.stable": false,
-            "org.matrix.msc3881.stable": false
+            "org.matrix.msc3881.stable": false,
+            "org.matrix.msc3882": false,
         ],
         "versions": [
            "r0.0.1",
@@ -150,6 +152,7 @@ class MXMatrixVersionsUnitTests: XCTestCase {
         XCTAssertFalse(versions.supportsThreads, "versions shouldn't support threads")
         XCTAssertFalse(versions.doesServerSupportSeparateAddAndBind, "versions shouldn't support separate Add And Bind")
         XCTAssertFalse(versions.supportsRemotelyTogglingPushNotifications, "versions shouldn't support remotely toggling push notifications")
+        XCTAssertFalse(versions.supportsQRLogin, "versions shouldn't support QR login")
     }
     
     func testFullSupportVersions() throws {
@@ -168,6 +171,7 @@ class MXMatrixVersionsUnitTests: XCTestCase {
         XCTAssertTrue(versions.supportsThreads, "versions should support threads")
         XCTAssertTrue(versions.doesServerSupportSeparateAddAndBind, "versions should support separate Add And Bind")
         XCTAssertTrue(versions.supportsRemotelyTogglingPushNotifications, "versions should support remotely toggling push notifications")
+        XCTAssertTrue(versions.supportsQRLogin, "versions should support QR login")
     }
     
     func testNoSupportVersions() throws {
@@ -186,5 +190,6 @@ class MXMatrixVersionsUnitTests: XCTestCase {
         XCTAssertFalse(versions.supportsThreads, "versions shouldn't support threads")
         XCTAssertFalse(versions.doesServerSupportSeparateAddAndBind, "versions shouldn't support separate Add And Bind")
         XCTAssertFalse(versions.supportsRemotelyTogglingPushNotifications, "versions shouldn't support remotely toggling push notifications")
+        XCTAssertFalse(versions.supportsQRLogin, "versions shouldn't support QR login")
     }
 }
