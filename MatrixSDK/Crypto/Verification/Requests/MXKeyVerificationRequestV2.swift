@@ -95,6 +95,8 @@ class MXKeyVerificationRequestV2: NSObject, MXKeyVerificationRequest {
     private let log = MXNamedLog(name: "MXKeyVerificationRequestV2")
     
     init(request: VerificationRequest, transport: MXKeyVerificationTransport, handler: MXCryptoVerificationRequesting) {
+        log.debug("Creating new request")
+        
         self.request = request
         self.transport = transport
         self.handler = handler
@@ -102,12 +104,15 @@ class MXKeyVerificationRequestV2: NSObject, MXKeyVerificationRequest {
     
     func processUpdates() -> MXKeyVerificationUpdateResult {
         guard let request = handler.verificationRequest(userId: otherUser, flowId: requestId) else {
+            log.debug("Request was removed")
             return .removed
         }
         
         guard self.request != request else {
             return .noUpdates
         }
+        
+        log.debug("Request was updated")
         self.request = request
         return .updated
     }
@@ -125,10 +130,12 @@ class MXKeyVerificationRequestV2: NSObject, MXKeyVerificationRequest {
                     methods: methods
                 )
                 await MainActor.run {
+                    log.debug("Accepted request")
                     success()
                 }
             } catch {
                 await MainActor.run {
+                    log.error("Failed accepting request", context: error)
                     failure(error)
                 }
             }
@@ -148,10 +155,12 @@ class MXKeyVerificationRequestV2: NSObject, MXKeyVerificationRequest {
                     cancelCode: code.value
                 )
                 await MainActor.run {
+                    log.debug("Cancelled request")
                     success?()
                 }
             } catch {
                 await MainActor.run {
+                    log.error("Failed cancelling request", context: error)
                     failure?(error)
                 }
             }

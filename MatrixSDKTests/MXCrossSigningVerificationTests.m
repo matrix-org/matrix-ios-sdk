@@ -570,7 +570,7 @@
                     {
                         // Then, test MXKeyVerification
                         MXEvent *event = [aliceSession.store eventWithEventId:requestId inRoom:roomId];
-                        [aliceSession.crypto.keyVerificationManager keyVerificationFromKeyVerificationEvent:event success:^(MXKeyVerification * _Nonnull verificationFromAlicePOV) {
+                        [aliceSession.crypto.keyVerificationManager keyVerificationFromKeyVerificationEvent:event roomId:roomId success:^(MXKeyVerification * _Nonnull verificationFromAlicePOV) {
                             
                             XCTAssertEqual(verificationFromAlicePOV.state, MXKeyVerificationStateVerified);
                             
@@ -789,7 +789,7 @@
                     {
                         // Then, to test MXKeyVerification
                         MXEvent *event = [aliceSession.store eventWithEventId:requestId inRoom:roomId];
-                        [aliceSession.crypto.keyVerificationManager keyVerificationFromKeyVerificationEvent:event success:^(MXKeyVerification * _Nonnull verificationFromAlicePOV) {
+                        [aliceSession.crypto.keyVerificationManager keyVerificationFromKeyVerificationEvent:event roomId:roomId success:^(MXKeyVerification * _Nonnull verificationFromAlicePOV) {
 
                             XCTAssertEqual(verificationFromAlicePOV.state, MXKeyVerificationStateVerified);
 

@@ -193,30 +193,14 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
     }
     else
     {
-        // Use an existing direct room if any
-        MXRoom *room = [self.crypto.mxSession directJoinedRoomWithUserId:userId];
-        if (room)
-        {
-            [self requestVerificationByDMWithUserId2:userId roomId:room.roomId fallbackText:fallbackText methods:methods success:success failure:failure];
-        }
-        else
-        {
-            // Create a new DM with E2E by default if possible
-            [self.crypto.mxSession canEnableE2EByDefaultInNewRoomWithUsers:@[userId] success:^(BOOL canEnableE2E) {
-                MXRoomCreationParameters *roomCreationParameters = [MXRoomCreationParameters parametersForDirectRoomWithUser:userId];
-                
-                if (canEnableE2E)
-                {
-                    roomCreationParameters.initialStateEvents = @[
-                                                                  [MXRoomCreationParameters initialStateEventForEncryptionWithAlgorithm:kMXCryptoMegolmAlgorithm
-                                                                   ]];
-                }
-
-                [self.crypto.mxSession createRoomWithParameters:roomCreationParameters success:^(MXRoom *room) {
-                    [self requestVerificationByDMWithUserId2:userId roomId:room.roomId fallbackText:fallbackText methods:methods success:success failure:failure];
-                } failure:failure];
-            } failure:failure];
-        }
+        [self.crypto.mxSession getOrCreateDirectJoinedRoomWithUserId:userId success:^(MXRoom *room) {
+            [self requestVerificationByDMWithUserId2:userId
+                                              roomId:room.roomId
+                                        fallbackText:fallbackText
+                                             methods:methods
+                                             success:success
+                                             failure:failure];
+        } failure:failure];
     }
 }
 
@@ -525,6 +509,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
 #pragma mark Verification status
 
 - (nullable MXHTTPOperation *)keyVerificationFromKeyVerificationEvent:(MXEvent*)event
+                                                               roomId:(NSString *)roomId
                                                               success:(void(^)(MXKeyVerification *keyVerification))success
                                                               failure:(void(^)(NSError *error))failure
 {

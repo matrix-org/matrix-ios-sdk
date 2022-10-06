@@ -228,6 +228,11 @@
     // No impact for olm
 }
 
+- (void)onRoomKey:(MXRoomKeyResult *)key
+{
+    // No impact for olm
+}
+
 - (void)didImportRoomKey:(MXOlmInboundGroupSession *)session
 {
     // No impact for olm
