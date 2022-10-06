@@ -16,7 +16,7 @@
 
 import Foundation
 
-#if DEBUG && os(iOS)
+#if DEBUG
 
 /// Convenience struct which transforms `MatrixSDKCrypto` cross signing info formats
 /// into `MatrixSDK` `MXCrossSigningInfo` formats.

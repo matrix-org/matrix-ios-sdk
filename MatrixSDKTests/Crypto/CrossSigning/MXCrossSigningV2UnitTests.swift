@@ -18,7 +18,7 @@ import Foundation
 import XCTest
 @testable import MatrixSDK
 
-#if os(iOS)
+#if DEBUG
 
 import MatrixSDKCrypto
 

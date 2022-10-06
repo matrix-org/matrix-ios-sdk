@@ -16,7 +16,7 @@
 
 import Foundation
 
-#if DEBUG && os(iOS)
+#if DEBUG
 
 import MatrixSDKCrypto
 
@@ -693,7 +693,7 @@ extension MXCryptoMachine: MXCryptoBackup {
         guard let json = MXTools.serialiseJSONObject(jsonKeys) else {
             throw Error.cannotSerialize
         }
-        return try machine.importDecryptedKeys(keys: json, progressListener: progressListener)
+        return try machine.importDecryptedRoomKeys(keys: json, progressListener: progressListener)
     }
 }
 
