@@ -906,6 +906,30 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
     return loginFallback;
 }
 
+- (MXHTTPOperation*)generateLoginTokenWithSuccess:(void (^)(MXLoginToken *))success
+                                          failure:(void (^)(NSError *error))failure
+{
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"POST"
+                                    path:[NSString stringWithFormat:@"%@/login/token", apiPathPrefix]
+                              parameters:@{}
+                                 success:^(NSDictionary *JSONResponse) {
+        MXStrongifyAndReturnIfNil(self);
+        
+        if (success)
+        {
+            __block MXLoginToken *loginToken;
+            [self dispatchProcessing:^{
+                MXJSONModelSetMXJSONModel(loginToken, MXLoginToken, JSONResponse);
+            } andCompletion:^{
+                success(loginToken);
+            }];
+        }
+    } failure:^(NSError *error) {
+        [self dispatchFailure:error inBlock:failure];
+    }];
+}
+
 
 #pragma mark - password update operation
 

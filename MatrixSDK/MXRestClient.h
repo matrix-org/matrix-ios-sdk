@@ -504,6 +504,17 @@ NS_REFINED_FOR_SWIFT;
 - (NSString*)loginFallback NS_REFINED_FOR_SWIFT;
 
 /**
+ Generates a new login token
+ @param success A block object called when the operation succeeds. It provides the raw JSON response
+ from the server.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)generateLoginTokenWithSuccess:(void (^)(MXLoginToken *loginToken))success
+                                          failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
+/**
  Reset the account password.
 
  @param parameters a set of parameters containing a threepid credentials and the new password.

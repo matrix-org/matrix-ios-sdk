@@ -266,6 +266,9 @@ public extension MXRestClient {
         return URL(string: fallbackString)!
     }
 
+    @nonobjc func generateLoginToken(withCompletion completion: @escaping (_ response: MXResponse<MXLoginToken>) -> Void) -> MXHTTPOperation {
+        return __generateLoginToken(success: currySuccess(completion), failure: curryFailure(completion))
+    }
     
     /**
      Reset the account password.
