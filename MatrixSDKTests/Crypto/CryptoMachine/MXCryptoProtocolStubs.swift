@@ -109,10 +109,14 @@ class CryptoVerificationStub: CryptoIdentityStub {
     var stubbedTransactions = [String: Verification]()
     var stubbedErrors = [String: Error]()
     var stubbedEmojis = [String: [Int]]()
+    var stubbedDecimals = [String: [Int]]()
     var stubbedQRData = Data()
 }
 
 extension CryptoVerificationStub: MXCryptoVerificationRequesting {
+    func receiveUnencryptedVerificationEvent(event: MXEvent, roomId: String) {
+    }
+    
     func requestSelfVerification(methods: [String]) async throws -> VerificationRequest {
         .stub(ourMethods: methods)
     }
@@ -165,6 +169,10 @@ extension CryptoVerificationStub: MXCryptoSASVerifying {
     
     func emojiIndexes(sas: Sas) throws -> [Int] {
         stubbedEmojis[sas.flowId] ?? []
+    }
+    
+    func sasDecimals(sas: Sas) throws -> [Int] {
+        return stubbedDecimals[sas.flowId] ?? []
     }
 }
 

@@ -54,8 +54,13 @@ class MXSASTransactionV2: NSObject, MXSASTransaction {
     }
     
     var sasDecimal: String? {
-        log.debug("Not implemented")
-        return nil
+        do {
+            let decimals = try handler.sasDecimals(sas: sas)
+            return decimals.map(String.init).joined(separator: " ")
+        } catch {
+            log.error("Cannot get sas indices", context: error)
+            return nil
+        }
     }
     
     var transactionId: String {
@@ -173,7 +178,7 @@ extension MXSASTransactionV2: MXKeyVerificationTransactionV2 {
             return .noUpdates
         }
         
-        log.debug("Transaction was updated \(sas)")
+        log.debug("Transaction was updated - \(sas)")
         self.sas = sas
         return .updated
     }
