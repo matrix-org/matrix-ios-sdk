@@ -49,6 +49,7 @@ class MXCryptoMachine {
         case missingVerificationRequest
         case missingVerification
         case missingEmojis
+        case missingDecimals
         case cannotCancelVerification
     }
     
@@ -481,6 +482,18 @@ extension MXCryptoMachine: MXCryptoCrossSigning {
 }
 
 extension MXCryptoMachine: MXCryptoVerificationRequesting {
+    func receiveUnencryptedVerificationEvent(event: MXEvent, roomId: String) {
+        guard let string = event.jsonString() else {
+            log.failure("Invalid event")
+            return
+        }
+        do {
+            try machine.receiveUnencryptedVerificationEvent(event: string, roomId: roomId)
+        } catch {
+            log.error("Error receiving unencrypted event", context: error)
+        }
+    }
+    
     func requestSelfVerification(methods: [String]) async throws -> VerificationRequest {
         guard let result = try machine.requestSelfVerification(methods: methods) else {
             throw Error.missingVerification
@@ -615,6 +628,13 @@ extension MXCryptoMachine: MXCryptoSASVerifying {
             throw Error.missingEmojis
         }
         return indexes.map(Int.init)
+    }
+    
+    func sasDecimals(sas: Sas) throws -> [Int] {
+        guard let decimals = machine.getDecimals(userId: sas.otherUserId, flowId: sas.flowId) else {
+            throw Error.missingDecimals
+        }
+        return decimals.map(Int.init)
     }
 }
 

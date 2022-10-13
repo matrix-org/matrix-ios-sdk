@@ -165,7 +165,7 @@ class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
         failure: @escaping (Swift.Error) -> Void
     ) {
         log.debug("Starting \(method) verification flow")
-        
+
         Task {
             do {
                 let transaction = try await startSasVerification(userId: userId, deviceId: deviceId)
@@ -220,8 +220,15 @@ class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
 
         if let request = activeRequests[flowId] {
             log.debug("Using active request")
+            
             let result = MXKeyVerification()
             result.request = request
+            success(result)
+        } else if let request = handler.verificationRequest(userId: event.sender, flowId: flowId) {
+            log.debug("Adding pending request")
+            
+            let result = MXKeyVerification()
+            result.request = addRequest(for: request, transport: .directMessage)
             success(result)
 
         } else {
@@ -335,6 +342,10 @@ class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
     
     private func handleRoomEvent(_ event: MXEvent) {
         log.debug("->")
+        
+        if !event.isEncrypted, let roomId = event.roomId {
+            handler.receiveUnencryptedVerificationEvent(event: event, roomId: roomId)
+        }
         
         if event.type == kMXEventTypeStringRoomMessage && event.content?[kMXMessageTypeKey] as? String == kMXMessageTypeKeyVerificationRequest {
             handleIncomingRequest(userId: event.sender, flowId: event.eventId, transport: .directMessage)

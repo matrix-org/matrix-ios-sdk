@@ -75,6 +75,7 @@ protocol MXCryptoCrossSigning: MXCryptoUserIdentitySource {
 
 /// Lifecycle of verification request
 protocol MXCryptoVerificationRequesting: MXCryptoIdentity {
+    func receiveUnencryptedVerificationEvent(event: MXEvent, roomId: String)
     func requestSelfVerification(methods: [String]) async throws -> VerificationRequest
     func requestVerification(userId: String, roomId: String, methods: [String]) async throws -> VerificationRequest
     func verificationRequests(userId: String) -> [VerificationRequest]
@@ -96,6 +97,7 @@ protocol MXCryptoSASVerifying: MXCryptoVerifying {
     func startSasVerification(userId: String, deviceId: String) async throws -> Sas
     func acceptSasVerification(userId: String, flowId: String) async throws
     func emojiIndexes(sas: Sas) throws -> [Int]
+    func sasDecimals(sas: Sas) throws -> [Int]
 }
 
 /// Lifecycle of QR code-specific verification transaction

@@ -168,7 +168,7 @@ extension MXQRCodeTransactionV2: MXKeyVerificationTransactionV2 {
             return .noUpdates
         }
         
-        log.debug("Transaction was updated \(qrCode)")
+        log.debug("Transaction was updated - \(qrCode)")
         self.qrCode = qrCode
         return .updated
     }

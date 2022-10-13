@@ -29,11 +29,6 @@
 
 @implementation MXOutgoingSASTransaction
 
-- (void)accept
-{
-    MXLogFailure(@"[MXKeyVerification] Cannot accept outgoing transaction");
-}
-
 - (void)start;
 {
     MXLogDebug(@"[MXKeyVerification][MXOutgoingSASTransaction] start");

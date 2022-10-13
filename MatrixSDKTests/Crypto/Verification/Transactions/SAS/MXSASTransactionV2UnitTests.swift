@@ -75,6 +75,19 @@ class MXSASTransactionV2UnitTests: XCTestCase {
         XCTAssertEqual(emoji, expectedEmojis)
     }
     
+    func test_sasDecimals() {
+        verification.stubbedDecimals = [
+            "123": [1, 3, 10, 20]
+        ]
+        
+        let transaction = makeTransaction(for: .stub(
+            flowId: "123"
+        ))
+        
+        let decimals = transaction.sasDecimal
+        XCTAssertEqual(decimals, "1 3 10 20")
+    }
+    
     func test_state() {
         let testCases: [(Sas, MXSASTransactionState)] = [
             (.stub(

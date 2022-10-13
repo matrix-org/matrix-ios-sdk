@@ -51,6 +51,11 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
 @synthesize state = _state;
 @synthesize sasBytes = _sasBytes;
 
+- (void)accept
+{
+    MXLogFailure(@"[MXKeyVerification] Cannot accept outgoing transaction");
+}
+
 - (NSString *)sasDecimal
 {
     NSString *sasDecimal;
