@@ -27,35 +27,31 @@ public extension MXCrypto {
     @objc static func createCryptoV2IfAvailable(session: MXSession!) -> MXCrypto? {
         let log = MXNamedLog(name: "MXCryptoV2")
         
-        #if os(iOS)
-            guard MXSDKOptions.sharedInstance().enableCryptoV2 else {
-                return nil
-            }
-            
-            guard
-                let session = session,
-                let restClient = session.matrixRestClient,
-                let userId = restClient.credentials?.userId,
-                let deviceId = restClient.credentials?.deviceId
-            else {
-                log.failure("Cannot create crypto V2, missing properties")
-                return nil
-            }
-            
-            do {
-                return try MXCryptoV2(userId: userId, deviceId: deviceId, session: session, restClient: restClient)
-            } catch {
-                log.failure("Error creating crypto V2", context: error)
-                return nil
-            }
-        #else
+        guard MXSDKOptions.sharedInstance().enableCryptoV2 else {
             return nil
-        #endif
+        }
+        
+        guard
+            let session = session,
+            let restClient = session.matrixRestClient,
+            let userId = restClient.credentials?.userId,
+            let deviceId = restClient.credentials?.deviceId
+        else {
+            log.failure("Cannot create crypto V2, missing properties")
+            return nil
+        }
+        
+        do {
+            return try MXCryptoV2(userId: userId, deviceId: deviceId, session: session, restClient: restClient)
+        } catch {
+            log.failure("Error creating crypto V2", context: error)
+            return nil
+        }
     }
 }
 #endif
 
-#if DEBUG && os(iOS)
+#if DEBUG
 
 import MatrixSDKCrypto
 

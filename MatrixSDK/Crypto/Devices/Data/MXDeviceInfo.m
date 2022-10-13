@@ -35,7 +35,7 @@ NSString *const MXDeviceInfoTrustLevelDidChangeNotification = @"MXDeviceInfoTrus
     return self;
 }
 
-#if DEBUG && TARGET_OS_IPHONE
+#if DEBUG
 - (instancetype)initWithDevice:(MXCryptoDeviceWrapper *)device
 {
     self = [super init];

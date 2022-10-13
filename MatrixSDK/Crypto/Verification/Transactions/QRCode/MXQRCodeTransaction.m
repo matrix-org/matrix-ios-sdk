@@ -92,21 +92,6 @@ NSString * const MXKeyVerificationMethodReciprocate = @"m.reciprocate.v1";
     }
 }
 
-- (void)userHasScannedOtherQrCodeRawData:(NSData*)otherQRCodeRawData
-{
-    MXQRCodeData *otherQRCodeData = [self.qrCodeDataCoder decode:otherQRCodeRawData];
-    
-    if (otherQRCodeData)
-    {
-        [self userHasScannedOtherQrCodeData:otherQRCodeData];
-    }
-    else
-    {
-        MXLogDebug(@"[MXKeyVerification][MXQRCodeTransaction] userHasScannedOtherQrCodeRawData: Invalid QR code data: %@", otherQRCodeRawData);
-        [self cancelWithCancelCode:MXTransactionCancelCode.qrCodeInvalid];
-    }
-}
-
 - (void)userHasScannedOtherQrCodeData:(MXQRCodeData*)otherQRCodeData
 {
     BOOL isOtherQRCodeDataKeysValid = [self.manager isOtherQRCodeDataKeysValid:otherQRCodeData otherUserId:self.otherUserId otherDevice:self.otherDevice];

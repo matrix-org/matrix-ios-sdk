@@ -16,7 +16,7 @@
 
 import Foundation
 
-#if DEBUG && os(iOS)
+#if DEBUG
 
 /// A work-in-progress subclass of `MXCrossSigning` instantiated and used by `MXCryptoV2`.
 ///

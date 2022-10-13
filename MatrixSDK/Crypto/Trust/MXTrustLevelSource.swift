@@ -16,7 +16,7 @@
 
 import Foundation
 
-#if DEBUG && os(iOS)
+#if DEBUG
 
 /// Convenience struct which transforms `MatrixSDKCrypto` trust levels
 /// into `MatrixSDK` `MXUserTrustLevel`, `MXDeviceTrustLevel` and `MXUsersTrustLevelSummary` formats.

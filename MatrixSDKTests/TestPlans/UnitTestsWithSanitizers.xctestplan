@@ -79,6 +79,7 @@
         "MXOlmInboundGroupSessionUnitTests",
         "MXPushRuleUnitTests",
         "MXQRCodeDataUnitTests",
+        "MXQRCodeTransactionV2UnitTests",
         "MXReplyEventParserUnitTests",
         "MXResponseUnitTests",
         "MXRoomKeyEventContentUnitTests",

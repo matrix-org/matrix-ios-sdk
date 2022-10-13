@@ -50,11 +50,6 @@ typedef NS_ENUM(NSInteger, MXQRCodeTransactionState) {
 /**
  Start the key verification process.
  */
-- (void)userHasScannedOtherQrCodeRawData:(NSData*)otherQRCodeRawData;
-
-/**
- Start the key verification process.
- */
 - (void)userHasScannedOtherQrCodeData:(MXQRCodeData*)otherQRCodeData;
 
 /**

@@ -16,7 +16,7 @@
 
 import Foundation
 
-#if DEBUG && os(iOS)
+#if DEBUG
 
 import MatrixSDKCrypto
 
@@ -96,6 +96,13 @@ protocol MXCryptoSASVerifying: MXCryptoVerifying {
     func startSasVerification(userId: String, deviceId: String) async throws -> Sas
     func acceptSasVerification(userId: String, flowId: String) async throws
     func emojiIndexes(sas: Sas) throws -> [Int]
+}
+
+/// Lifecycle of QR code-specific verification transaction
+protocol MXCryptoQRCodeVerifying: MXCryptoVerifying {
+    func startQrVerification(userId: String, flowId: String) throws -> QrCode
+    func scanQrCode(userId: String, flowId: String, data: Data) async throws -> QrCode
+    func generateQrCode(userId: String, flowId: String) throws -> Data
 }
 
 /// Room keys backup functionality

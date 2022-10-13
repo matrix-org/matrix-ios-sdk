@@ -16,7 +16,7 @@
 
 import Foundation
 
-#if DEBUG && os(iOS)
+#if DEBUG
 
 import MatrixSDKCrypto
 
@@ -111,24 +111,6 @@ class MXSASTransactionV2: NSObject, MXSASTransaction {
         self.handler = handler
     }
     
-    func processUpdates() -> MXKeyVerificationUpdateResult {
-        guard
-            let verification = handler.verification(userId: otherUserId, flowId: transactionId),
-            case .sasV1(let sas) = verification
-        else {
-            log.debug("Transaction was removed")
-            return .removed
-        }
-        
-        guard self.sas != sas else {
-            return .noUpdates
-        }
-        
-        log.debug("Transaction was updated")
-        self.sas = sas
-        return .updated
-    }
-    
     func accept() {
         Task {
             do {
@@ -174,6 +156,26 @@ class MXSASTransactionV2: NSObject, MXSASTransaction {
                 }
             }
         }
+    }
+}
+
+extension MXSASTransactionV2: MXKeyVerificationTransactionV2 {
+    func processUpdates() -> MXKeyVerificationUpdateResult {
+        guard
+            let verification = handler.verification(userId: otherUserId, flowId: transactionId),
+            case .sasV1(let sas) = verification
+        else {
+            log.debug("Transaction was removed")
+            return .removed
+        }
+        
+        guard self.sas != sas else {
+            return .noUpdates
+        }
+        
+        log.debug("Transaction was updated \(sas)")
+        self.sas = sas
+        return .updated
     }
 }
 

@@ -16,7 +16,7 @@
 
 import Foundation
 
-#if DEBUG && os(iOS)
+#if DEBUG
 
 /// Secret store compatible with Rust-based Crypto V2, where
 /// backup secrets are stored internally in the Crypto machine

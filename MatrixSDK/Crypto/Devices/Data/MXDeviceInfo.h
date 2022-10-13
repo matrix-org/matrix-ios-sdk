@@ -34,7 +34,7 @@ extern NSString *const MXDeviceInfoTrustLevelDidChangeNotification;
 
 - (instancetype)initWithDeviceId:(NSString *)deviceId;
 
-#if DEBUG && TARGET_OS_IPHONE
+#if DEBUG
 /**
  Initialize device info with MatrixSDKCrypto device
  */
