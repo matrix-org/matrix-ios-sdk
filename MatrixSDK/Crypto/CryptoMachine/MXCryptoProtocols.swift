@@ -98,6 +98,13 @@ protocol MXCryptoSASVerifying: MXCryptoVerifying {
     func emojiIndexes(sas: Sas) throws -> [Int]
 }
 
+/// Lifecycle of QR code-specific verification transaction
+protocol MXCryptoQRCodeVerifying: MXCryptoVerifying {
+    func startQrVerification(userId: String, flowId: String) throws -> QrCode
+    func scanQrCode(userId: String, flowId: String, data: Data) async throws -> QrCode
+    func generateQrCode(userId: String, flowId: String) throws -> Data
+}
+
 /// Room keys backup functionality
 protocol MXCryptoBackup {
     var isBackupEnabled: Bool { get }
