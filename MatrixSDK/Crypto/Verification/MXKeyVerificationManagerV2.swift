@@ -7,7 +7,7 @@
 
 import Foundation
 
-#if DEBUG && os(iOS)
+#if DEBUG
 
 import MatrixSDKCrypto
 
@@ -22,7 +22,11 @@ enum MXKeyVerificationUpdateResult {
     case removed
 }
 
-typealias MXCryptoVerificationHandler = MXCryptoVerificationRequesting & MXCryptoSASVerifying
+protocol MXKeyVerificationTransactionV2: MXKeyVerificationTransaction {
+    func processUpdates() -> MXKeyVerificationUpdateResult
+}
+
+typealias MXCryptoVerificationHandler = MXCryptoVerificationRequesting & MXCryptoSASVerifying & MXCryptoQRCodeVerifying
 
 class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
     enum Error: Swift.Error {
@@ -60,7 +64,7 @@ class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
     // because various flows / screens subscribe to updates via global notifications
     // posted through them
     private var activeRequests: [String: MXKeyVerificationRequestV2]
-    private var activeTransactions: [String: MXSASTransactionV2]
+    private var activeTransactions: [String: MXKeyVerificationTransactionV2]
     private let resolver: MXKeyVerificationStateResolver
     
     private let log = MXNamedLog(name: "MXKeyVerificationManagerV2")
@@ -244,12 +248,46 @@ class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
     }
 
     func qrCodeTransaction(withTransactionId transactionId: String) -> MXQRCodeTransaction? {
-        log.debug("Not implemented")
-        return nil
+        if let transaction = activeTransactions[transactionId] as? MXQRCodeTransaction {
+            return transaction
+        }
+        
+        guard let request = activeRequests[transactionId] else {
+            log.error("There is no pending verification request")
+            return nil
+        }
+        
+        do {
+            log.debug("Starting new QR verification")
+            let qr = try handler.startQrVerification(userId: request.otherUser, flowId: transactionId)
+            return addQrTransaction(for: qr, transport: request.transport)
+        } catch {
+            // We may not be able to start QR verification flow (the other device cannot scan our code)
+            // but we might be able to scan theirs, so creating an empty placeholder transaction for this case.
+            log.debug("Adding placeholder QR verification")
+            let qr = QrCode(
+                otherUserId: request.otherUser,
+                otherDeviceId: request.otherDevice ?? "",
+                flowId: request.requestId,
+                roomId: request.roomId,
+                weStarted: request.isFromMyDevice,
+                otherSideScanned: false,
+                hasBeenConfirmed: false,
+                reciprocated: false,
+                isDone: false,
+                isCancelled: false,
+                cancelInfo: nil
+            )
+            return addQrTransaction(for: qr, transport: request.transport)
+        }
     }
     
     func removeQRCodeTransaction(withTransactionId transactionId: String) {
-        log.debug("Not implemented")
+        guard activeTransactions[transactionId] is MXQRCodeTransaction else {
+            return
+        }
+        log.debug("Removed QR verification")
+        activeTransactions[transactionId] = nil
     }
     
     // MARK: - Events
@@ -266,7 +304,7 @@ class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
     
     private func listenToRoomEvents(in session: MXSession) {
         observer = session.listenToEvents(Array(Self.dmEventTypes)) { [weak self] event, direction, customObject in
-            if direction == .forwards {
+            if direction == .forwards && event.sender != session.myUserId {
                 self?.handleRoomEvent(event)
             }
         }
@@ -326,6 +364,7 @@ class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
             case .updated:
                 NotificationCenter.default.post(name: .MXKeyVerificationRequestDidChange, object: request)
             case .removed:
+                NotificationCenter.default.post(name: .MXKeyVerificationRequestDidChange, object: request)
                 activeRequests[request.requestId] = nil
             }
         }
@@ -341,6 +380,7 @@ class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
             case .updated:
                 NotificationCenter.default.post(name: .MXKeyVerificationTransactionDidChange, object: transaction)
             case .removed:
+                NotificationCenter.default.post(name: .MXKeyVerificationTransactionDidChange, object: transaction)
                 activeTransactions[transaction.transactionId] = nil
             }
         }
@@ -426,25 +466,28 @@ class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
     private func handleIncomingVerification(userId: String, flowId: String, transport: MXKeyVerificationTransport) {
         log.debug(flowId)
         
-        guard activeTransactions[flowId] == nil else {
-            log.debug("Transaction already known, ignoring")
-            return
-        }
-        
         guard let verification = handler.verification(userId: userId, flowId: flowId) else {
-            log.error("Verification is not known", context: [
+            log.failure("Verification is not known", context: [
                 "flow_id": flowId
             ])
             return
         }
 
-        log.debug("Tracking new verification transaction")
         switch verification {
         case .sasV1(let sas):
+            log.debug("Tracking new SAS verification transaction")
             let transaction = addSasTransaction(for: sas, transport: transport)
             transaction.accept()
-        case .qrCodeV1:
-            log.failure("Not implemented")
+        case .qrCodeV1(let qrCode):
+            if activeTransactions[flowId] is MXQRCodeTransaction {
+                // This flow may happen if we have previously started a QR verification, but so has the other side,
+                // and we scanned their code which now takes over the verification flow
+                log.debug("Updating existing QR verification transaction")
+                updatePendingVerification()
+            } else {
+                log.debug("Tracking new QR verification transaction")
+                _ = addQrTransaction(for: qrCode, transport: transport)
+            }
         }
     }
     
@@ -454,6 +497,19 @@ class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
     ) -> MXSASTransactionV2 {
         let transaction = MXSASTransactionV2(
             sas: sas,
+            transport: transport,
+            handler: handler
+        )
+        activeTransactions[transaction.transactionId] = transaction
+        return transaction
+    }
+    
+    private func addQrTransaction(
+        for qrCode: QrCode,
+        transport: MXKeyVerificationTransport
+    ) -> MXQRCodeTransactionV2 {
+        let transaction = MXQRCodeTransactionV2(
+            qrCode: qrCode,
             transport: transport,
             handler: handler
         )

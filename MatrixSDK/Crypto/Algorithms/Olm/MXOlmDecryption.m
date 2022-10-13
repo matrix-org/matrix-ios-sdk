@@ -266,6 +266,14 @@
     NSArray<NSString *> *sessionIds = [olmDevice sessionIdsForDevice:theirDeviceIdentityKey];
     
     NSString *messageBody = message[kMXMessageBodyKey];
+    if (![message[@"type"] isKindOfClass:NSNumber.class])
+    {
+        MXLogFailureDetails(@"[MXOlmDecryption] decryptMessage: Invalid type of message", @{
+            @"type": message[@"type"] ?: @"unknown"
+        })
+        return nil;
+    }
+    
     NSUInteger messageType = [((NSNumber*)message[@"type"]) unsignedIntegerValue];
     
     // Try each session in turn

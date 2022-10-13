@@ -340,9 +340,9 @@
     
     if (transaction)
     {
-        if ([transaction isKindOfClass:MXQRCodeTransaction.class])
+        if ([transaction isKindOfClass:MXLegacyQRCodeTransaction.class])
         {
-            MXQRCodeTransaction *qrCodeTransaction = (MXQRCodeTransaction*)transaction;
+            MXLegacyQRCodeTransaction *qrCodeTransaction = (MXLegacyQRCodeTransaction*)transaction;
             
             switch (qrCodeTransaction.state) {
                 case MXQRCodeTransactionStateUnknown:

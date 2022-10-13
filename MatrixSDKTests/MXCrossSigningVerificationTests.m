@@ -35,7 +35,7 @@
 @interface MXLegacyKeyVerificationManager (Testing)
 
 - (id<MXKeyVerificationTransaction>)transactionWithTransactionId:(NSString*)transactionId;
-- (MXQRCodeTransaction*)qrCodeTransactionWithTransactionId:(NSString*)transactionId;
+- (MXLegacyQRCodeTransaction*)qrCodeTransactionWithTransactionId:(NSString*)transactionId;
 
 @end
 
@@ -91,14 +91,14 @@
     [observers addObject:observer];
 }
 
-- (void)observeNewQRCodeTransactionInSession:(MXSession*)session block:(void (^)(MXQRCodeTransaction * _Nullable transaction))block
+- (void)observeNewQRCodeTransactionInSession:(MXSession*)session block:(void (^)(MXLegacyQRCodeTransaction * _Nullable transaction))block
 {
     id observer = [[NSNotificationCenter defaultCenter] addObserverForName:MXKeyVerificationManagerNewTransactionNotification object:session.crypto.keyVerificationManager queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
         
         id<MXKeyVerificationTransaction>transaction = notif.userInfo[MXKeyVerificationManagerNotificationTransactionKey];
-        if ([transaction isKindOfClass:MXQRCodeTransaction.class])
+        if ([transaction isKindOfClass:MXLegacyQRCodeTransaction.class])
         {
-            block((MXQRCodeTransaction*)transaction);
+            block((MXLegacyQRCodeTransaction*)transaction);
         }
         else
         {
@@ -646,7 +646,7 @@
                      [expectation fulfill];
                  }];
                 
-                __block MXQRCodeTransaction *qrCodeTransactionFromAlicePOV;
+                __block MXLegacyQRCodeTransaction *qrCodeTransactionFromAlicePOV;
                 
                 // Alice gets the request in the timeline
                 [aliceSession listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage]
@@ -687,7 +687,7 @@
                  }];
                 
                 
-                [self observeNewQRCodeTransactionInSession:bobSession block:^(MXQRCodeTransaction * _Nullable qrCodeTransactionFromBobPOV) {
+                [self observeNewQRCodeTransactionInSession:bobSession block:^(MXLegacyQRCodeTransaction * _Nullable qrCodeTransactionFromBobPOV) {
                     
                     // Final checks
                     void (^checkBothDeviceVerified)(void) = ^ void ()
@@ -829,7 +829,7 @@
                     {
                         case MXKeyVerificationRequestStateReady:
                         {
-                            MXQRCodeTransaction *qrCodeTransactionFromBobPOV = [bobSession.crypto.keyVerificationManager qrCodeTransactionWithTransactionId:request.requestId];
+                            MXLegacyQRCodeTransaction *qrCodeTransactionFromBobPOV = [bobSession.crypto.keyVerificationManager qrCodeTransactionWithTransactionId:request.requestId];
                             XCTAssertNotNil(qrCodeTransactionFromBobPOV);
                             XCTAssertNil(qrCodeTransactionFromBobPOV.qrCodeData); // Bob cannot show QR code
                             

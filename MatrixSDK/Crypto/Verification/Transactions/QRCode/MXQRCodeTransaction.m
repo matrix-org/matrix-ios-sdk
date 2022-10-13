@@ -36,7 +36,7 @@ NSString * const MXKeyVerificationMethodQRCodeScan  = @"m.qr_code.scan.v1";
 
 NSString * const MXKeyVerificationMethodReciprocate = @"m.reciprocate.v1";
 
-@interface MXQRCodeTransaction()
+@interface MXLegacyQRCodeTransaction()
 
 @property (nonatomic, strong) MXQRCodeDataCoder *qrCodeDataCoder;
 @property (nonatomic, strong) MXQRCodeData *scannedOtherQRCodeData;
@@ -44,7 +44,7 @@ NSString * const MXKeyVerificationMethodReciprocate = @"m.reciprocate.v1";
 @end
 
 
-@implementation MXQRCodeTransaction
+@implementation MXLegacyQRCodeTransaction
 
 #pragma mark - Setup
 
@@ -89,21 +89,6 @@ NSString * const MXKeyVerificationMethodReciprocate = @"m.reciprocate.v1";
     else
     {
         [self trustOtherWithMyQRCodeData];
-    }
-}
-
-- (void)userHasScannedOtherQrCodeRawData:(NSData*)otherQRCodeRawData
-{
-    MXQRCodeData *otherQRCodeData = [self.qrCodeDataCoder decode:otherQRCodeRawData];
-    
-    if (otherQRCodeData)
-    {
-        [self userHasScannedOtherQrCodeData:otherQRCodeData];
-    }
-    else
-    {
-        MXLogDebug(@"[MXKeyVerification][MXQRCodeTransaction] userHasScannedOtherQrCodeRawData: Invalid QR code data: %@", otherQRCodeRawData);
-        [self cancelWithCancelCode:MXTransactionCancelCode.qrCodeInvalid];
     }
 }
 

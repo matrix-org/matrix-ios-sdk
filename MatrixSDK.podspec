@@ -45,7 +45,7 @@ Pod::Spec.new do |s|
       ss.dependency 'OLMKit', '~> 3.2.5'
       ss.dependency 'Realm', '10.27.0'
       ss.dependency 'libbase58', '~> 0.1.4'
-      ss.ios.dependency 'MatrixSDK/CryptoSDK'
+      ss.dependency 'MatrixSDK/CryptoSDK'
   end
 
   s.subspec 'JingleCallStack' do |ss|
@@ -64,10 +64,9 @@ Pod::Spec.new do |s|
     ss.ios.dependency 'JitsiMeetSDK', '5.0.2'
   end
   
-  # Experimental / NOT production-ready Rust-based crypto library, iOS-only
+  # Experimental / NOT production-ready Rust-based crypto library
   s.subspec 'CryptoSDK' do |ss|
-    ss.platform = :ios
-    ss.dependency 'MatrixSDKCrypto', '0.1.0', :configurations => ["DEBUG"]
+    ss.dependency 'MatrixSDKCrypto', '0.1.2', :configurations => ["DEBUG"]
   end
 
 end

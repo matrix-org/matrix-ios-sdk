@@ -16,7 +16,7 @@
 
 import Foundation
 
-#if DEBUG && os(iOS)
+#if DEBUG
 
 /// Convenience struct which transforms `MatrixSDKCrypto` device formats
 /// into `MatrixSDK` `MXDeviceInfo` formats.

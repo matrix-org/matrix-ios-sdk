@@ -106,7 +106,7 @@ NSString * const MXKeyVerificationRequestDidChangeNotification = @"MXKeyVerifica
             
             if (qrCodeData)
             {
-                [self.manager createQRCodeTransactionFromRequest:self qrCodeData:qrCodeData success:^(MXQRCodeTransaction * _Nonnull transaction) {
+                [self.manager createQRCodeTransactionFromRequest:self qrCodeData:qrCodeData success:^(MXLegacyQRCodeTransaction * _Nonnull transaction) {
                     [self updateState:MXKeyVerificationRequestStateReady notifiy:YES];
                     dispatch_async(dispatch_get_main_queue(), ^{
                         success();
@@ -194,7 +194,7 @@ NSString * const MXKeyVerificationRequestDidChangeNotification = @"MXKeyVerifica
     
     if ([readyContent.methods containsObject:MXKeyVerificationMethodReciprocate])
     {
-        [self.manager createQRCodeTransactionFromRequest:self qrCodeData:qrCodeData success:^(MXQRCodeTransaction * _Nonnull transaction) {
+        [self.manager createQRCodeTransactionFromRequest:self qrCodeData:qrCodeData success:^(MXLegacyQRCodeTransaction * _Nonnull transaction) {
             
             [self updateState:MXKeyVerificationRequestStateReady notifiy:YES];
             

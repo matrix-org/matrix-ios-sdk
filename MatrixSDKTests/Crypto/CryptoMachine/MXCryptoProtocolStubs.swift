@@ -17,7 +17,7 @@
 import Foundation
 @testable import MatrixSDK
 
-#if DEBUG && os(iOS)
+#if DEBUG
 
 @testable import MatrixSDKCrypto
 
@@ -109,6 +109,7 @@ class CryptoVerificationStub: CryptoIdentityStub {
     var stubbedTransactions = [String: Verification]()
     var stubbedErrors = [String: Error]()
     var stubbedEmojis = [String: [Int]]()
+    var stubbedQRData = Data()
 }
 
 extension CryptoVerificationStub: MXCryptoVerificationRequesting {
@@ -164,6 +165,20 @@ extension CryptoVerificationStub: MXCryptoSASVerifying {
     
     func emojiIndexes(sas: Sas) throws -> [Int] {
         stubbedEmojis[sas.flowId] ?? []
+    }
+}
+
+extension CryptoVerificationStub: MXCryptoQRCodeVerifying {
+    func startQrVerification(userId: String, flowId: String) throws -> QrCode {
+        return .stub()
+    }
+    
+    func scanQrCode(userId: String, flowId: String, data: Data) async throws -> QrCode {
+        return .stub()
+    }
+    
+    func generateQrCode(userId: String, flowId: String) throws -> Data {
+        return stubbedQRData
     }
 }
 
