@@ -84,6 +84,9 @@ class CryptoCrossSigningStub: CryptoIdentityStub, MXCryptoCrossSigning {
         return nil
     }
     
+    func importCrossSigningKeys(export: CrossSigningKeyExport) {
+    }
+    
     var stubbedIdentities = [String: UserIdentity]()
     func userIdentity(userId: String) -> UserIdentity? {
         stubbedIdentities[userId]
@@ -227,6 +230,14 @@ class CryptoBackupStub: MXCryptoBackup {
     func importDecryptedKeys(roomKeys: [MXMegolmSessionData], progressListener: ProgressListener) throws -> KeysImportResult {
         roomKeysSpy = roomKeys
         return KeysImportResult(imported: Int64(roomKeys.count), total: Int64(roomKeys.count), keys: [:])
+    }
+    
+    func exportRoomKeys(passphrase: String) throws -> Data {
+        return Data()
+    }
+    
+    func importRoomKeys(_ data: Data, passphrase: String, progressListener: ProgressListener) throws -> KeysImportResult {
+        return KeysImportResult(imported: 0, total: 0, keys: [:])
     }
 }
 

@@ -1500,41 +1500,6 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 
 #pragma mark - import/export
 
-- (void)exportRoomKeys:(void (^)(NSArray<NSDictionary *> *))success failure:(void (^)(NSError *))failure
-{
-#ifdef MX_CRYPTO
-    MXWeakify(self);
-    dispatch_async(cargoQueue, ^{
-        MXStrongifyAndReturnIfNil(self);
-
-        NSDate *startDate = [NSDate date];
-
-        NSMutableArray *keys = [NSMutableArray array];
-
-        for (MXOlmInboundGroupSession *session in [self.store inboundGroupSessions])
-        {
-            MXMegolmSessionData *sessionData = [session exportSessionData];
-            if (sessionData)
-            {
-                [keys addObject:sessionData.JSONDictionary];
-            }
-        }
-
-        MXLogDebug(@"[MXCrypto] exportRoomKeys: Exported %tu keys in %.0fms", keys.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
-
-        dispatch_async(dispatch_get_main_queue(), ^{
-
-            if (success)
-            {
-                success(keys);
-            }
-
-        });
-
-    });
-#endif
-}
-
 - (void)exportRoomKeysWithPassword:(NSString *)password success:(void (^)(NSData *))success failure:(void (^)(NSError *))failure
 {
 #ifdef MX_CRYPTO

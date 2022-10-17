@@ -337,6 +337,16 @@ class MXCryptoKeyBackupEngine: NSObject, MXKeyBackupEngine {
         return data
     }
     
+    // MARK: - Manual export / import
+    
+    func exportRoomKeys(passphrase: String) throws -> Data {
+        return try backup.exportRoomKeys(passphrase: passphrase)
+    }
+    
+    func importRoomKeys(_ data: Data, passphrase: String) throws -> KeysImportResult {
+        return try backup.importRoomKeys(data, passphrase: passphrase, progressListener: self)
+    }
+    
     // MARK: - Private
     
     func publicKey(for keyBackupVersion: MXKeyBackupVersion) -> String? {
@@ -350,7 +360,7 @@ class MXCryptoKeyBackupEngine: NSObject, MXKeyBackupEngine {
 
 extension MXCryptoKeyBackupEngine: ProgressListener {
     func onProgress(progress: Int32, total: Int32) {
-        log.debug("Backup progress \(progress) of \(total) total")
+        log.debug("Backup / export progress \(progress) of \(total) total")
     }
 }
 

@@ -39,6 +39,7 @@ class MXCryptoMachine {
     }
     
     private static let storeFolder = "MXCryptoStore"
+    private static let kdfRounds: Int32 = 500_000
     
     enum Error: Swift.Error {
         case invalidStorage
@@ -51,6 +52,8 @@ class MXCryptoMachine {
         case missingEmojis
         case missingDecimals
         case cannotCancelVerification
+        case cannotExportKeys
+        case cannotImportKeys
     }
     
     private let machine: OlmMachine
@@ -479,6 +482,14 @@ extension MXCryptoMachine: MXCryptoCrossSigning {
     func exportCrossSigningKeys() -> CrossSigningKeyExport? {
         machine.exportCrossSigningKeys()
     }
+    
+    func importCrossSigningKeys(export: CrossSigningKeyExport) {
+        do {
+            try machine.importCrossSigningKeys(export: export)
+        } catch {
+            log.error("Failed importing cross signing keys", context: error)
+        }
+    }
 }
 
 extension MXCryptoMachine: MXCryptoVerificationRequesting {
@@ -739,6 +750,21 @@ extension MXCryptoMachine: MXCryptoBackup {
             throw Error.cannotSerialize
         }
         return try machine.importDecryptedRoomKeys(keys: json, progressListener: progressListener)
+    }
+    
+    func exportRoomKeys(passphrase: String) throws -> Data {
+        let string = try machine.exportRoomKeys(passphrase: passphrase, rounds: Self.kdfRounds)
+        guard let data = string.data(using: .utf8) else {
+            throw Error.cannotExportKeys
+        }
+        return data
+    }
+    
+    func importRoomKeys(_ data: Data, passphrase: String, progressListener: ProgressListener) throws -> KeysImportResult {
+        guard let string = String(data: data, encoding: .utf8) else {
+            throw Error.cannotImportKeys
+        }
+        return try machine.importRoomKeys(keys: string, passphrase: passphrase, progressListener: progressListener)
     }
 }
 

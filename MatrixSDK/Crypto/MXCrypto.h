@@ -452,17 +452,6 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
 #pragma mark - import/export
 
 /**
- Get a list containing all of the room keys.
-
- This should be encrypted before returning it to the user.
-
- @param success A block object called when the operation succeeds with the list of session export objects.
- @param failure A block object called when the operation fails.
- */
-- (void)exportRoomKeys:(void (^)(NSArray<NSDictionary*> *keys))success
-               failure:(void (^)(NSError *error))failure;
-
-/**
  Get all room keys under an encrypted form.
  
  @password the passphrase used to encrypt keys.
@@ -472,17 +461,6 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
 - (void)exportRoomKeysWithPassword:(NSString*)password
                            success:(void (^)(NSData *keyFile))success
                            failure:(void (^)(NSError *error))failure;
-
-/**
- Import a list of room keys previously exported by exportRoomKeys.
-
- @param success A block object called when the operation succeeds.
-                It provides the number of found keys and the number of successfully imported keys.
- @param failure A block object called when the operation fails.
- */
-- (void)importRoomKeys:(NSArray<NSDictionary*>*)keys
-               success:(void (^)(NSUInteger total, NSUInteger imported))success
-               failure:(void (^)(NSError *error))failure;
 
 /**
  Import an encrypted room keys file.
