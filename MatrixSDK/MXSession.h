@@ -603,6 +603,11 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
  */
 - (void)resume:(void (^)(void))resumeDone;
 
+/**
+Update client information without waiting for sync to happen.
+ */
+- (void)updateClientInformation;
+
 typedef void (^MXOnBackgroundSyncDone)(void);
 typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 
