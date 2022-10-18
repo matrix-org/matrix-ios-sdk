@@ -20,34 +20,32 @@ import Foundation
 
 import MatrixSDKCrypto
 
-extension VerificationRequest {
+extension QrCode {
     static func stub(
         otherUserId: String = "Bob",
         otherDeviceId: String = "Device2",
         flowId: String = "123",
         roomId: String = "ABC",
         weStarted: Bool = true,
-        isReady: Bool = false,
-        isPassive: Bool = false,
+        otherSideScanned: Bool = false,
+        hasBeenConfirmed: Bool = false,
+        reciprocated: Bool = false,
         isDone: Bool = false,
         isCancelled: Bool = false,
-        cancelInfo: CancelInfo? = nil,
-        theirMethods: [String] = ["sas"],
-        ourMethods: [String] = ["sas"]
-    ) -> VerificationRequest {
+        cancelInfo: CancelInfo? = nil
+    ) -> QrCode {
         return .init(
             otherUserId: otherUserId,
             otherDeviceId: otherDeviceId,
             flowId: flowId,
             roomId: roomId,
             weStarted: weStarted,
-            isReady: isReady,
-            isPassive: isPassive,
+            otherSideScanned: otherSideScanned,
+            hasBeenConfirmed: hasBeenConfirmed,
+            reciprocated: reciprocated,
             isDone: isDone,
             isCancelled: isCancelled,
-            cancelInfo: cancelInfo,
-            theirMethods: theirMethods,
-            ourMethods: ourMethods
+            cancelInfo: cancelInfo
         )
     }
 }

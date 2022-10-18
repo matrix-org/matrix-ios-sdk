@@ -100,7 +100,7 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
 /**
  The device verification manager.
  */
-@property (nonatomic, readonly) MXKeyVerificationManager *keyVerificationManager;
+@property (nonatomic, readonly) id<MXKeyVerificationManager> keyVerificationManager;
 
 /**
  Service to manage backup of private keys on the homeserver.

@@ -603,6 +603,11 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
  */
 - (void)resume:(void (^)(void))resumeDone;
 
+/**
+Update client information without waiting for sync to happen.
+ */
+- (void)updateClientInformation;
+
 typedef void (^MXOnBackgroundSyncDone)(void);
 typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 
@@ -975,6 +980,14 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  @return the MXRoom instance (nil if no room exists yet).
  */
 - (MXRoom *)directJoinedRoomWithUserId:(NSString*)userId;
+
+/**
+ Return the first joined direct chat listed in account data for this user,
+ or it will create one if no room exists yet.
+ */
+- (MXHTTPOperation *)getOrCreateDirectJoinedRoomWithUserId:(NSString*)userId
+                                                   success:(void (^)(MXRoom *))success
+                                                   failure:(void (^)(NSError *error))failure;
 
 /**
  Get the direct user id of a room.

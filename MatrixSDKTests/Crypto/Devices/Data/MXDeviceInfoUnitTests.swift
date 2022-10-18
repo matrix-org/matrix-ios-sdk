@@ -18,7 +18,7 @@ import Foundation
 import XCTest
 @testable import MatrixSDK
 
-#if DEBUG && os(iOS)
+#if DEBUG
 
 import MatrixSDKCrypto
 
@@ -74,6 +74,16 @@ class MXDeviceInfoUnitTests: XCTestCase {
             info3?.trustLevel,
             MXDeviceTrustLevel(
                 localVerificationStatus: .unknown,
+                crossSigningVerified: false
+            )
+        )
+        
+        let device4 = Device.stub(isBlocked: true, locallyTrusted: true, crossSigningTrusted: false)
+        let info4 = MXDeviceInfo(device: .init(device: device4))
+        XCTAssertEqual(
+            info4?.trustLevel,
+            MXDeviceTrustLevel(
+                localVerificationStatus: .blocked,
                 crossSigningVerified: false
             )
         )

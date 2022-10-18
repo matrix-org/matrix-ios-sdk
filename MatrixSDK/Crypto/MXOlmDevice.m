@@ -429,13 +429,10 @@ NSInteger const kMXInboundGroupSessionCacheSize = 100;
     [self.store performSessionOperationWithGroupSessionWithId:session.session.sessionIdentifier senderKey:session.senderKey block:^(MXOlmInboundGroupSession *inboundGroupSession) {
         inboundGroupSession.untrusted = NO;
     }];
-    if (MXSDKOptions.sharedInstance.enableGroupSessionCache)
+    @synchronized (self.inboundGroupSessionCache)
     {
-        @synchronized (self.inboundGroupSessionCache)
-        {
-            session.untrusted = NO;
-            [self.inboundGroupSessionCache put:session.session.sessionIdentifier object:session];
-        }
+        session.untrusted = NO;
+        [self.inboundGroupSessionCache put:session.session.sessionIdentifier object:session];
     }
 }
 
@@ -572,34 +569,16 @@ NSInteger const kMXInboundGroupSessionCacheSize = 100;
 
 - (void)performGroupSessionOperationWithSessionId:(NSString*)sessionId senderKey:(NSString*)senderKey block:(void (^)(MXOlmInboundGroupSession *inboundGroupSession))block
 {
-    // Based on a feature flag megolm decryption will either fetch a group session from the store on every decryption,
-    // or (if the flag is enabled) it will use LRU cache to avoid refetching unchanged sessions.
-    //
-    // Additionally the duration of each variant is tracked in analytics (if configured and enabled by the user)
-    // to allow performance comparison
-    //
-    // LRU cache variant will eventually become the default implementation if proved stable.
-    
-    BOOL enableCache = MXSDKOptions.sharedInstance.enableGroupSessionCache;
-    NSString *operation = enableCache ? @"megolm.decrypt.cache" : @"megolm.decrypt.store";
-    StopDurationTracking stopTracking = [MXSDKOptions.sharedInstance.analyticsDelegate startDurationTrackingForName:@"MXOlmDevice" operation:operation];
-    
-    if (enableCache)
+    StopDurationTracking stopTracking = [MXSDKOptions.sharedInstance.analyticsDelegate startDurationTrackingForName:@"MXOlmDevice" operation:@"megolm.decrypt.cache"];
+    @synchronized (self.inboundGroupSessionCache)
     {
-        @synchronized (self.inboundGroupSessionCache)
+        MXOlmInboundGroupSession *session = (MXOlmInboundGroupSession *)[self.inboundGroupSessionCache get:sessionId];
+        if (!session)
         {
-            MXOlmInboundGroupSession *session = (MXOlmInboundGroupSession *)[self.inboundGroupSessionCache get:sessionId];
-            if (!session)
-            {
-                session = [store inboundGroupSessionWithId:sessionId andSenderKey:senderKey];
-                [self.inboundGroupSessionCache put:sessionId object:session];
-            }
-            block(session);
+            session = [store inboundGroupSessionWithId:sessionId andSenderKey:senderKey];
+            [self.inboundGroupSessionCache put:sessionId object:session];
         }
-    }
-    else
-    {
-        [store performSessionOperationWithGroupSessionWithId:sessionId senderKey:senderKey block:block];
+        block(session);
     }
     if (stopTracking)
     {
@@ -711,14 +690,11 @@ NSInteger const kMXInboundGroupSessionCacheSize = 100;
 - (void)storeInboundGroupSessions:(NSArray <MXOlmInboundGroupSession *>*)sessions
 {
     [store storeInboundGroupSessions:sessions];
-    if (MXSDKOptions.sharedInstance.enableGroupSessionCache)
+    @synchronized (self.inboundGroupSessionCache)
     {
-        @synchronized (self.inboundGroupSessionCache)
+        for (MXOlmInboundGroupSession *session in sessions)
         {
-            for (MXOlmInboundGroupSession *session in sessions)
-            {
-                [self.inboundGroupSessionCache put:session.session.sessionIdentifier object:session];
-            }
+            [self.inboundGroupSessionCache put:session.session.sessionIdentifier object:session];
         }
     }
 }

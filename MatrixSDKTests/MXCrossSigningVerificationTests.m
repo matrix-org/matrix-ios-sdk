@@ -32,10 +32,10 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Warc-retain-cycles"
 
-@interface MXKeyVerificationManager (Testing)
+@interface MXLegacyKeyVerificationManager (Testing)
 
 - (id<MXKeyVerificationTransaction>)transactionWithTransactionId:(NSString*)transactionId;
-- (MXQRCodeTransaction*)qrCodeTransactionWithTransactionId:(NSString*)transactionId;
+- (MXLegacyQRCodeTransaction*)qrCodeTransactionWithTransactionId:(NSString*)transactionId;
 
 @end
 
@@ -91,14 +91,14 @@
     [observers addObject:observer];
 }
 
-- (void)observeNewQRCodeTransactionInSession:(MXSession*)session block:(void (^)(MXQRCodeTransaction * _Nullable transaction))block
+- (void)observeNewQRCodeTransactionInSession:(MXSession*)session block:(void (^)(MXLegacyQRCodeTransaction * _Nullable transaction))block
 {
     id observer = [[NSNotificationCenter defaultCenter] addObserverForName:MXKeyVerificationManagerNewTransactionNotification object:session.crypto.keyVerificationManager queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
         
         id<MXKeyVerificationTransaction>transaction = notif.userInfo[MXKeyVerificationManagerNotificationTransactionKey];
-        if ([transaction isKindOfClass:MXQRCodeTransaction.class])
+        if ([transaction isKindOfClass:MXLegacyQRCodeTransaction.class])
         {
-            block((MXQRCodeTransaction*)transaction);
+            block((MXLegacyQRCodeTransaction*)transaction);
         }
         else
         {
@@ -282,8 +282,8 @@
                             XCTAssertTrue(aliceFromAlice2POV.trustLevel.isLocallyVerified);
                             
                             // -> Transaction must not be listed anymore
-                            XCTAssertNil([aliceSession1.crypto.keyVerificationManager transactionWithTransactionId:sasTransactionFromAlicePOV.transactionId]);
-                            XCTAssertNil([aliceSession2.crypto.keyVerificationManager transactionWithTransactionId:transactionFromAlice2POV.transactionId]);
+                            XCTAssertNil([(MXLegacyKeyVerificationManager *)aliceSession1.crypto.keyVerificationManager transactionWithTransactionId:sasTransactionFromAlicePOV.transactionId]);
+                            XCTAssertNil([(MXLegacyKeyVerificationManager *)aliceSession2.crypto.keyVerificationManager transactionWithTransactionId:transactionFromAlice2POV.transactionId]);
                             
                             [expectation fulfill];
                         }
@@ -488,8 +488,8 @@
                             XCTAssertTrue(aliceFromBobPOV.trustLevel.isLocallyVerified);
                             
                             // -> Transaction must not be listed anymore
-                            XCTAssertNil([aliceSession.crypto.keyVerificationManager transactionWithTransactionId:sasTransactionFromAlicePOV.transactionId]);
-                            XCTAssertNil([bobSession.crypto.keyVerificationManager transactionWithTransactionId:transactionFromBobPOV.transactionId]);
+                            XCTAssertNil([(MXLegacyKeyVerificationManager *)aliceSession.crypto.keyVerificationManager transactionWithTransactionId:sasTransactionFromAlicePOV.transactionId]);
+                            XCTAssertNil([(MXLegacyKeyVerificationManager *)bobSession.crypto.keyVerificationManager transactionWithTransactionId:transactionFromBobPOV.transactionId]);
                         }
                     };
                     
@@ -570,7 +570,7 @@
                     {
                         // Then, test MXKeyVerification
                         MXEvent *event = [aliceSession.store eventWithEventId:requestId inRoom:roomId];
-                        [aliceSession.crypto.keyVerificationManager keyVerificationFromKeyVerificationEvent:event success:^(MXKeyVerification * _Nonnull verificationFromAlicePOV) {
+                        [aliceSession.crypto.keyVerificationManager keyVerificationFromKeyVerificationEvent:event roomId:roomId success:^(MXKeyVerification * _Nonnull verificationFromAlicePOV) {
                             
                             XCTAssertEqual(verificationFromAlicePOV.state, MXKeyVerificationStateVerified);
                             
@@ -646,7 +646,7 @@
                      [expectation fulfill];
                  }];
                 
-                __block MXQRCodeTransaction *qrCodeTransactionFromAlicePOV;
+                __block MXLegacyQRCodeTransaction *qrCodeTransactionFromAlicePOV;
                 
                 // Alice gets the request in the timeline
                 [aliceSession listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage]
@@ -687,7 +687,7 @@
                  }];
                 
                 
-                [self observeNewQRCodeTransactionInSession:bobSession block:^(MXQRCodeTransaction * _Nullable qrCodeTransactionFromBobPOV) {
+                [self observeNewQRCodeTransactionInSession:bobSession block:^(MXLegacyQRCodeTransaction * _Nullable qrCodeTransactionFromBobPOV) {
                     
                     // Final checks
                     void (^checkBothDeviceVerified)(void) = ^ void ()
@@ -714,8 +714,8 @@
                             XCTAssertTrue(aliceFromBobPOV.trustLevel.isLocallyVerified);
                             
                             // -> Transaction must not be listed anymore
-                            XCTAssertNil([aliceSession.crypto.keyVerificationManager transactionWithTransactionId:qrCodeTransactionFromAlicePOV.transactionId]);
-                            XCTAssertNil([bobSession.crypto.keyVerificationManager transactionWithTransactionId:qrCodeTransactionFromBobPOV.transactionId]);
+                            XCTAssertNil([(MXLegacyKeyVerificationManager *)aliceSession.crypto.keyVerificationManager transactionWithTransactionId:qrCodeTransactionFromAlicePOV.transactionId]);
+                            XCTAssertNil([(MXLegacyKeyVerificationManager *)bobSession.crypto.keyVerificationManager transactionWithTransactionId:qrCodeTransactionFromBobPOV.transactionId]);
                         }
                     };
                     
@@ -789,7 +789,7 @@
                     {
                         // Then, to test MXKeyVerification
                         MXEvent *event = [aliceSession.store eventWithEventId:requestId inRoom:roomId];
-                        [aliceSession.crypto.keyVerificationManager keyVerificationFromKeyVerificationEvent:event success:^(MXKeyVerification * _Nonnull verificationFromAlicePOV) {
+                        [aliceSession.crypto.keyVerificationManager keyVerificationFromKeyVerificationEvent:event roomId:roomId success:^(MXKeyVerification * _Nonnull verificationFromAlicePOV) {
 
                             XCTAssertEqual(verificationFromAlicePOV.state, MXKeyVerificationStateVerified);
 
@@ -829,7 +829,7 @@
                     {
                         case MXKeyVerificationRequestStateReady:
                         {
-                            MXQRCodeTransaction *qrCodeTransactionFromBobPOV = [bobSession.crypto.keyVerificationManager qrCodeTransactionWithTransactionId:request.requestId];
+                            MXLegacyQRCodeTransaction *qrCodeTransactionFromBobPOV = [bobSession.crypto.keyVerificationManager qrCodeTransactionWithTransactionId:request.requestId];
                             XCTAssertNotNil(qrCodeTransactionFromBobPOV);
                             XCTAssertNil(qrCodeTransactionFromBobPOV.qrCodeData); // Bob cannot show QR code
                             

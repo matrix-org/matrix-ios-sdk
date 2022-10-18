@@ -205,6 +205,48 @@
 }
 
 
+// Test the capability to read or write `m.local_notification_settings.<device-id>`
+// events in account data.
+- (void)testReadWriteLocalNotificationSettings
+{
+    [matrixSDKTestsData doMXSessionTestWithBob:self readyToTest:^(MXSession *mxSession, XCTestExpectation *expectation) {
+        XCTAssertNotNil(mxSession.accountData, @"account data shouldn't be nil.");
+        XCTAssertNil([mxSession.accountData localNotificationSettingsForDeviceWithId:mxSession.myDeviceId], @"account local notification settings should be nil.");
+        
+        NSDictionary *localNotificationSettings = @{
+            kMXAccountDataIsSilencedKey: @(YES)
+        };
+        
+        [mxSession setAccountData:localNotificationSettings forType:[MXAccountData localNotificationSettingsKeyForDeviceWithId:mxSession.myDeviceId] success:^{
+            NSDictionary *localNotificationSettings = [mxSession.accountData localNotificationSettingsForDeviceWithId:mxSession.myDeviceId];
+            XCTAssertNotNil(localNotificationSettings, @"account local notification settings shouldn't be nil.");
+            NSNumber *isSilenced = localNotificationSettings[kMXAccountDataIsSilencedKey];
+            XCTAssertNotNil(isSilenced, @"account local notification is_silenced settings shouldn't be nil.");
+            XCTAssertTrue(isSilenced.boolValue, @"is_silenced settings should be set to true.");
+            
+            localNotificationSettings = @{
+                kMXAccountDataIsSilencedKey: @(NO)
+            };
+            
+            [mxSession setAccountData:localNotificationSettings forType:[MXAccountData localNotificationSettingsKeyForDeviceWithId:mxSession.myDeviceId] success:^{
+                NSDictionary *localNotificationSettings = [mxSession.accountData localNotificationSettingsForDeviceWithId:mxSession.myDeviceId];
+                XCTAssertNotNil(localNotificationSettings, @"account local notification settings shouldn't be nil.");
+                NSNumber *isSilenced = localNotificationSettings[kMXAccountDataIsSilencedKey];
+                XCTAssertNotNil(isSilenced, @"account local notification is_silenced settings shouldn't be nil.");
+                XCTAssertFalse(isSilenced.boolValue, @"is_silenced settings should be set to false.");
+                [expectation fulfill];
+            } failure:^(NSError *error) {
+                XCTFail(@"MXSession setAccountData failed due to error %@", error);
+                [expectation fulfill];
+            }];
+        } failure:^(NSError *error) {
+            XCTFail(@"MXSession setAccountData failed due to error %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+
 @end
 
 #pragma clang diagnostic pop
