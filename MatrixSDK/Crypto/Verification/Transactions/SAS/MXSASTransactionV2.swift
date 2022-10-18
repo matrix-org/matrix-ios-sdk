@@ -16,7 +16,7 @@
 
 import Foundation
 
-#if DEBUG && os(iOS)
+#if DEBUG
 
 import MatrixSDKCrypto
 
@@ -43,7 +43,7 @@ class MXSASTransactionV2: NSObject, MXSASTransaction {
     var sasEmoji: [MXEmojiRepresentation]? {
         do {
             let indices = try handler.emojiIndexes(sas: sas)
-            let emojis = MXDefaultSASTransaction.allEmojiRepresentations()
+            let emojis = MXLegacySASTransaction.allEmojiRepresentations()
             return indices.compactMap { idx in
                 idx < emojis.count ? emojis[idx] : nil
             }
@@ -54,8 +54,13 @@ class MXSASTransactionV2: NSObject, MXSASTransaction {
     }
     
     var sasDecimal: String? {
-        log.debug("Not implemented")
-        return nil
+        do {
+            let decimals = try handler.sasDecimals(sas: sas)
+            return decimals.map(String.init).joined(separator: " ")
+        } catch {
+            log.error("Cannot get sas indices", context: error)
+            return nil
+        }
     }
     
     var transactionId: String {
@@ -104,30 +109,18 @@ class MXSASTransactionV2: NSObject, MXSASTransaction {
     private let log = MXNamedLog(name: "MXSASTransactionV2")
     
     init(sas: Sas, transport: MXKeyVerificationTransport, handler: MXCryptoSASVerifying) {
+        log.debug("Creating new transaction")
+        
         self.sas = sas
         self.transport = transport
         self.handler = handler
-    }
-    
-    func processUpdates() -> MXKeyVerificationUpdateResult {
-        guard
-            let verification = handler.verification(userId: otherUserId, flowId: transactionId),
-            case .sasV1(let sas) = verification
-        else {
-            return .removed
-        }
-        
-        guard self.sas != sas else {
-            return .noUpdates
-        }
-        self.sas = sas
-        return .updated
     }
     
     func accept() {
         Task {
             do {
                 try await handler.acceptSasVerification(userId: otherUserId, flowId: transactionId)
+                log.debug("Accepted transaction")
             } catch {
                 log.error("Cannot accept transaction", context: error)
             }
@@ -138,6 +131,7 @@ class MXSASTransactionV2: NSObject, MXSASTransaction {
         Task {
             do {
                 try await handler.confirmVerification(userId: otherUserId, flowId: transactionId)
+                log.debug("Confirmed transaction match")
             } catch {
                 log.error("Cannot confirm transaction", context: error)
             }
@@ -157,14 +151,36 @@ class MXSASTransactionV2: NSObject, MXSASTransaction {
             do {
                 try await handler.cancelVerification(userId: otherUserId, flowId: transactionId, cancelCode: code.value)
                 await MainActor.run {
+                    log.debug("Cancelled transaction")
                     success()
                 }
             } catch {
                 await MainActor.run {
+                    log.error("Failed cancelling transaction", context: error)
                     failure(error)
                 }
             }
         }
+    }
+}
+
+extension MXSASTransactionV2: MXKeyVerificationTransactionV2 {
+    func processUpdates() -> MXKeyVerificationUpdateResult {
+        guard
+            let verification = handler.verification(userId: otherUserId, flowId: transactionId),
+            case .sasV1(let sas) = verification
+        else {
+            log.debug("Transaction was removed")
+            return .removed
+        }
+        
+        guard self.sas != sas else {
+            return .noUpdates
+        }
+        
+        log.debug("Transaction was updated - \(sas)")
+        self.sas = sas
+        return .updated
     }
 }
 

@@ -23,7 +23,7 @@ NSString *const MXCrossSigningInfoTrustLevelDidChangeNotification = @"MXCrossSig
 
 @implementation MXCrossSigningInfo
 
-#if DEBUG && TARGET_OS_IPHONE
+#if DEBUG
 - (instancetype)initWithUserIdentity:(MXCryptoUserIdentityWrapper *)userIdentity
 {
     self = [self init];

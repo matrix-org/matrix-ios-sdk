@@ -68,12 +68,17 @@ typedef enum : NSUInteger
  */
 - (void)confirmSASMatch;
 
+/**
+ Accept the device verification request.
+ */
+- (void)accept;
+
 @end
 
 /**
  Default implementation of SAS transaction used by the SDK
  */
-@interface MXDefaultSASTransaction : MXDefaultKeyVerificationTransaction <MXSASTransaction>
+@interface MXLegacySASTransaction : MXLegacyKeyVerificationTransaction <MXSASTransaction>
 
 + (NSArray<MXEmojiRepresentation*> *)allEmojiRepresentations;
 

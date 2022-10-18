@@ -67,7 +67,9 @@
         "MXJSONModelUnitTests",
         "MXKeyBackupUnitTests",
         "MXKeyProviderUnitTests",
+        "MXKeyVerificationManagerV2UnitTests",
         "MXKeyVerificationRequestV2UnitTests",
+        "MXKeyVerificationStateResolverUnitTests",
         "MXMediaScanStoreUnitTests",
         "MXMegolmDecryptionUnitTests",
         "MXMegolmExportEncryptionUnitTests",
@@ -77,6 +79,7 @@
         "MXOlmInboundGroupSessionUnitTests",
         "MXPushRuleUnitTests",
         "MXQRCodeDataUnitTests",
+        "MXQRCodeTransactionV2UnitTests",
         "MXReplyEventParserUnitTests",
         "MXResponseUnitTests",
         "MXRoomKeyEventContentUnitTests",
@@ -91,7 +94,7 @@
         "MXThreadingServiceUnitTests",
         "MXToolsUnitTests",
         "MXTrustLevelSourceUnitTests",
-        "MXUnrequestedForwardedRoomKeyManagerUnitTests",
+        "MXUnrequestedForwardedRoomKeyManagerUnitTests"
       ],
       "target" : {
         "containerPath" : "container:MatrixSDK.xcodeproj",

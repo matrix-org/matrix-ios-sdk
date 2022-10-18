@@ -16,7 +16,7 @@
 
 import Foundation
 
-#if DEBUG && os(iOS)
+#if DEBUG
 
 import MatrixSDKCrypto
 
@@ -49,6 +49,7 @@ class MXCryptoMachine {
         case missingVerificationRequest
         case missingVerification
         case missingEmojis
+        case missingDecimals
         case cannotCancelVerification
     }
     
@@ -313,6 +314,16 @@ extension MXCryptoMachine: MXCryptoUserIdentitySource {
             .keysQuery(requestId: UUID().uuidString, users: users)
         )
     }
+    
+    func manuallyVerifyUser(userId: String) async throws {
+        let request = try machine.verifyIdentity(userId: userId)
+        try await requests.uploadSignatures(request: request)
+    }
+    
+    func manuallyVerifyDevice(userId: String, deviceId: String) async throws {
+        let request = try machine.verifyDevice(userId: userId, deviceId: deviceId)
+        try await requests.uploadSignatures(request: request)
+    }
 }
 
 extension MXCryptoMachine: MXCryptoRoomEventEncrypting {
@@ -355,7 +366,7 @@ extension MXCryptoMachine: MXCryptoRoomEventEncrypting {
         do {
             let decryptedEvent = try machine.decryptRoomEvent(event: eventString, roomId: roomId)
             let result = try MXEventDecryptionResult(event: decryptedEvent)
-            log.debug("Successfully decrypted event")
+            log.debug("Successfully decrypted event `\(result.clearEvent["type"] ?? "unknown")`")
             return result
             
         // `Megolm` error does not currently expose the type of "missing keys" error, so have to match against
@@ -464,9 +475,25 @@ extension MXCryptoMachine: MXCryptoCrossSigning {
             requests.uploadSignatures(request: result.signatureRequest)
         ]
     }
+    
+    func exportCrossSigningKeys() -> CrossSigningKeyExport? {
+        machine.exportCrossSigningKeys()
+    }
 }
 
 extension MXCryptoMachine: MXCryptoVerificationRequesting {
+    func receiveUnencryptedVerificationEvent(event: MXEvent, roomId: String) {
+        guard let string = event.jsonString() else {
+            log.failure("Invalid event")
+            return
+        }
+        do {
+            try machine.receiveUnencryptedVerificationEvent(event: string, roomId: roomId)
+        } catch {
+            log.error("Error receiving unencrypted event", context: error)
+        }
+    }
+    
     func requestSelfVerification(methods: [String]) async throws -> VerificationRequest {
         guard let result = try machine.requestSelfVerification(methods: methods) else {
             throw Error.missingVerification
@@ -500,6 +527,10 @@ extension MXCryptoMachine: MXCryptoVerificationRequesting {
             throw Error.missingVerificationRequest
         }
         return request
+    }
+    
+    func verificationRequests(userId: String) -> [VerificationRequest] {
+        return machine.getVerificationRequests(userId: userId)
     }
     
     func verificationRequest(userId: String, flowId: String) -> VerificationRequest? {
@@ -577,6 +608,14 @@ extension MXCryptoMachine: MXCryptoSASVerifying {
         return result.sas
     }
     
+    func startSasVerification(userId: String, deviceId: String) async throws -> Sas {
+        guard let result = try machine.startSasWithDevice(userId: userId, deviceId: deviceId) else {
+            throw Error.missingVerification
+        }
+        try await handleOutgoingVerificationRequest(result.request)
+        return result.sas
+    }
+    
     func acceptSasVerification(userId: String, flowId: String) async throws {
         guard let request = machine.acceptSasVerification(userId: userId, flowId: flowId) else {
             throw Error.missingVerification
@@ -589,6 +628,38 @@ extension MXCryptoMachine: MXCryptoSASVerifying {
             throw Error.missingEmojis
         }
         return indexes.map(Int.init)
+    }
+    
+    func sasDecimals(sas: Sas) throws -> [Int] {
+        guard let decimals = machine.getDecimals(userId: sas.otherUserId, flowId: sas.flowId) else {
+            throw Error.missingDecimals
+        }
+        return decimals.map(Int.init)
+    }
+}
+
+extension MXCryptoMachine: MXCryptoQRCodeVerifying {
+    func startQrVerification(userId: String, flowId: String) throws -> QrCode {
+        guard let result = try machine.startQrVerification(userId: userId, flowId: flowId) else {
+            throw Error.missingVerification
+        }
+        return result
+    }
+    
+    func scanQrCode(userId: String, flowId: String, data: Data) async throws -> QrCode {
+        let string = MXBase64Tools.base64(from: data)
+        guard let result = machine.scanQrCode(userId: userId, flowId: flowId, data: string) else {
+            throw Error.missingVerification
+        }
+        try await handleOutgoingVerificationRequest(result.request)
+        return result.qr
+    }
+    
+    func generateQrCode(userId: String, flowId: String) throws -> Data {
+        guard let string = machine.generateQrCode(userId: userId, flowId: flowId) else {
+            throw Error.missingVerification
+        }
+        return MXBase64Tools.data(fromBase64: string)
     }
 }
 
@@ -667,7 +738,7 @@ extension MXCryptoMachine: MXCryptoBackup {
         guard let json = MXTools.serialiseJSONObject(jsonKeys) else {
             throw Error.cannotSerialize
         }
-        return try machine.importDecryptedKeys(keys: json, progressListener: progressListener)
+        return try machine.importDecryptedRoomKeys(keys: json, progressListener: progressListener)
     }
 }
 

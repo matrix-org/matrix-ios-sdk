@@ -22,15 +22,15 @@ import XCTest
 import MatrixSDKCrypto
 @testable import MatrixSDK
 
-class MXSASTransactionV2UnitTests: XCTestCase {
+class MXQRCodeTransactionV2UnitTests: XCTestCase {
     var verification: CryptoVerificationStub!
     override func setUp() {
         verification = CryptoVerificationStub()
     }
     
-    func makeTransaction(for sas: Sas = .stub()) -> MXSASTransactionV2 {
+    func makeTransaction(for qrCode: QrCode = .stub()) -> MXQRCodeTransactionV2 {
         .init(
-            sas: sas,
+            qrCode: qrCode,
             transport: .directMessage,
             handler: verification
         )
@@ -39,13 +39,12 @@ class MXSASTransactionV2UnitTests: XCTestCase {
     // MARK: - Test Properties
     
     func test_usesCorrectProperties() {
-        let stub = Sas.stub(
+        let stub = QrCode.stub(
             otherUserId: "Bob",
             otherDeviceId: "Device2",
             flowId: "123",
             roomId: "ABC",
-            weStarted: true,
-            supportsEmoji: true
+            weStarted: true
         )
         
         let transaction = makeTransaction(for: stub)
@@ -59,97 +58,74 @@ class MXSASTransactionV2UnitTests: XCTestCase {
         XCTAssertEqual(transaction.dmEventId, "123")
     }
     
-    func test_sasEmoji() {
-        // Index-to-emoji mapping specified in
-        // https://spec.matrix.org/v1.3/client-server-api/#sas-method-emoji
-        verification.stubbedEmojis = [
-            "123": [1, 3, 10, 20]
-        ]
-        let expectedEmojis = ["🐱", "🐎", "🐧", "🌙"]
-        
-        let transaction = makeTransaction(for: .stub(
-            flowId: "123"
-        ))
-        
-        let emoji = transaction.sasEmoji?.map { $0.emoji }
-        XCTAssertEqual(emoji, expectedEmojis)
-    }
-    
-    func test_sasDecimals() {
-        verification.stubbedDecimals = [
-            "123": [1, 3, 10, 20]
-        ]
-        
-        let transaction = makeTransaction(for: .stub(
-            flowId: "123"
-        ))
-        
-        let decimals = transaction.sasDecimal
-        XCTAssertEqual(decimals, "1 3 10 20")
-    }
-    
     func test_state() {
-        let testCases: [(Sas, MXSASTransactionState)] = [
+        let testCases: [(QrCode, MXQRCodeTransactionState)] = [
             (.stub(
-                hasBeenAccepted: false,
-                canBePresented: false,
-                haveWeConfirmed: false,
+                weStarted: false,
+                otherSideScanned: false,
+                hasBeenConfirmed: false,
+                reciprocated: false,
                 isDone: false,
                 isCancelled: false
-            ), MXSASTransactionStateUnknown),
+            ), .unknown),
             (.stub(
-                hasBeenAccepted: false,
-                canBePresented: false,
-                haveWeConfirmed: false,
+                weStarted: false,
+                otherSideScanned: false,
+                hasBeenConfirmed: false,
+                reciprocated: false,
                 isDone: true,
                 isCancelled: false
-            ), MXSASTransactionStateVerified),
+            ), .verified),
             (.stub(
-                hasBeenAccepted: false,
-                canBePresented: false,
-                haveWeConfirmed: false,
+                weStarted: false,
+                otherSideScanned: false,
+                hasBeenConfirmed: false,
+                reciprocated: false,
                 isDone: false,
                 isCancelled: true
-            ), MXSASTransactionStateCancelled),
+            ), .cancelled),
             (.stub(
-                hasBeenAccepted: false,
-                canBePresented: true,
-                haveWeConfirmed: false,
+                weStarted: false,
+                otherSideScanned: true,
+                hasBeenConfirmed: false,
+                reciprocated: false,
                 isDone: false,
                 isCancelled: false
-            ), MXSASTransactionStateShowSAS),
+            ), .qrScannedByOther),
             (.stub(
-                hasBeenAccepted: true,
-                canBePresented: false,
-                haveWeConfirmed: false,
+                weStarted: false,
+                otherSideScanned: false,
+                hasBeenConfirmed: true,
+                reciprocated: false,
                 isDone: false,
                 isCancelled: false
-            ), MXSASTransactionStateIncomingShowAccept),
+            ), .qrScannedByOther),
             (.stub(
-                hasBeenAccepted: false,
-                canBePresented: false,
-                haveWeConfirmed: true,
+                weStarted: true,
+                otherSideScanned: false,
+                hasBeenConfirmed: false,
+                reciprocated: false,
                 isDone: false,
                 isCancelled: false
-            ), MXSASTransactionStateOutgoingWaitForPartnerToAccept),
+            ), .waitingOtherConfirm),
         ]
 
         for (stub, state) in testCases {
-            let transaction = MXSASTransactionV2(
-                sas: stub,
+            let transaction = MXQRCodeTransactionV2(
+                qrCode: stub,
                 transport: .directMessage,
                 handler: verification
             )
             XCTAssertEqual(transaction.state, state)
         }
     }
-    
+
     func test_isIncomingIfWeStarted() {
         let transaction1 = makeTransaction(for: .stub(
             weStarted: true
         ))
         XCTAssertFalse(transaction1.isIncoming)
-        
+
         let transaction2 = makeTransaction(for: .stub(
             weStarted: true
         ))
@@ -163,8 +139,8 @@ class MXSASTransactionV2UnitTests: XCTestCase {
             cancelledByUs: true
         )
 
-        let transaction = MXSASTransactionV2(
-            sas: .stub(cancelInfo: cancelInfo),
+        let transaction = MXQRCodeTransactionV2(
+            qrCode: .stub(cancelInfo: cancelInfo),
             transport: .directMessage,
             handler: verification
         )
@@ -172,47 +148,47 @@ class MXSASTransactionV2UnitTests: XCTestCase {
         XCTAssertEqual(transaction.reasonCancelCode?.value, "123")
         XCTAssertEqual(transaction.reasonCancelCode?.humanReadable, "Changed mind")
     }
-    
+
     // MARK: - Test Updates
-    
+
     func test_processUpdated_removedIfNoMatchingRequest() {
         verification.stubbedTransactions = [:]
         let transaction = makeTransaction()
-        
+
         let result = transaction.processUpdates()
-        
+
         XCTAssertEqual(result, MXKeyVerificationUpdateResult.removed)
     }
-    
+
     func test_processUpdated_noUpdatesIfRequestUnchanged() {
-        let stub = Sas.stub(
+        let stub = QrCode.stub(
             flowId: "ABC",
             isDone: false
         )
-        verification.stubbedTransactions = [stub.flowId: .sasV1(sas: stub)]
+        verification.stubbedTransactions = [stub.flowId: .qrCodeV1(qrcode: stub)]
         let transaction = makeTransaction(for: stub)
-        
+
         let result = transaction.processUpdates()
 
         XCTAssertEqual(result, MXKeyVerificationUpdateResult.noUpdates)
     }
-    
+
     func test_processUpdated_updatedIfRequestChanged() {
-        let stub = Sas.stub(
+        let stub = QrCode.stub(
             flowId: "ABC",
             isDone: false
         )
-        verification.stubbedTransactions = [stub.flowId: .sasV1(sas: stub)]
+        verification.stubbedTransactions = [stub.flowId: .qrCodeV1(qrcode: stub)]
         let transaction = makeTransaction(for: stub)
-        verification.stubbedTransactions = [stub.flowId: .sasV1(sas: .stub(
+        verification.stubbedTransactions = [stub.flowId: .qrCodeV1(qrcode: .stub(
             flowId: "ABC",
             isDone: true
         ))]
-        
+
         let result = transaction.processUpdates()
 
         XCTAssertEqual(result, MXKeyVerificationUpdateResult.updated)
-        XCTAssertEqual(transaction.state, MXSASTransactionStateVerified)
+        XCTAssertEqual(transaction.state, .verified)
     }
 }
 

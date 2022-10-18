@@ -266,6 +266,9 @@ public extension MXRestClient {
         return URL(string: fallbackString)!
     }
 
+    @nonobjc func generateLoginToken(withCompletion completion: @escaping (_ response: MXResponse<MXLoginToken>) -> Void) -> MXHTTPOperation {
+        return __generateLoginToken(success: currySuccess(completion), failure: curryFailure(completion))
+    }
     
     /**
      Reset the account password.
@@ -1972,5 +1975,14 @@ public extension MXRestClient {
         }
         return __relations(forEvent: eventId, inRoom: roomId, relationType: relationType, eventType: eventType, from: from, direction: direction, limit: _limit, success: currySuccess(completion), failure: curryFailure(completion))
     }
-    
+
+    // MARK: - Versions
+
+    /// Get the supported versions of the homeserver
+    /// - Parameters:
+    ///   - completion: A closure called when the operation completes.
+    /// - Returns: a `MXHTTPOperation` instance.
+    @nonobjc @discardableResult func supportedMatrixVersions(completion: @escaping (_ response: MXResponse<MXMatrixVersions>) -> Void) -> MXHTTPOperation {
+        return __supportedMatrixVersions(currySuccess(completion), failure: curryFailure(completion))
+    }
 }

@@ -16,7 +16,7 @@
 
 import Foundation
 
-#if DEBUG && os(iOS)
+#if DEBUG
 
 import MatrixSDKCrypto
 
@@ -53,6 +53,8 @@ protocol MXCryptoUserIdentitySource: MXCryptoIdentity {
     func userIdentity(userId: String) -> UserIdentity?
     func isUserVerified(userId: String) -> Bool
     func downloadKeys(users: [String]) async throws
+    func manuallyVerifyUser(userId: String) async throws
+    func manuallyVerifyDevice(userId: String, deviceId: String) async throws
 }
 
 /// Event encryption and decryption
@@ -68,12 +70,15 @@ protocol MXCryptoRoomEventEncrypting: MXCryptoIdentity {
 protocol MXCryptoCrossSigning: MXCryptoUserIdentitySource {
     func crossSigningStatus() -> CrossSigningStatus
     func bootstrapCrossSigning(authParams: [AnyHashable: Any]) async throws
+    func exportCrossSigningKeys() -> CrossSigningKeyExport?
 }
 
 /// Lifecycle of verification request
 protocol MXCryptoVerificationRequesting: MXCryptoIdentity {
+    func receiveUnencryptedVerificationEvent(event: MXEvent, roomId: String)
     func requestSelfVerification(methods: [String]) async throws -> VerificationRequest
     func requestVerification(userId: String, roomId: String, methods: [String]) async throws -> VerificationRequest
+    func verificationRequests(userId: String) -> [VerificationRequest]
     func verificationRequest(userId: String, flowId: String) -> VerificationRequest?
     func acceptVerificationRequest(userId: String, flowId: String, methods: [String]) async throws
     func cancelVerification(userId: String, flowId: String, cancelCode: String) async throws
@@ -89,8 +94,17 @@ protocol MXCryptoVerifying: MXCryptoIdentity {
 /// Lifecycle of SAS-specific verification transaction
 protocol MXCryptoSASVerifying: MXCryptoVerifying {
     func startSasVerification(userId: String, flowId: String) async throws -> Sas
+    func startSasVerification(userId: String, deviceId: String) async throws -> Sas
     func acceptSasVerification(userId: String, flowId: String) async throws
     func emojiIndexes(sas: Sas) throws -> [Int]
+    func sasDecimals(sas: Sas) throws -> [Int]
+}
+
+/// Lifecycle of QR code-specific verification transaction
+protocol MXCryptoQRCodeVerifying: MXCryptoVerifying {
+    func startQrVerification(userId: String, flowId: String) throws -> QrCode
+    func scanQrCode(userId: String, flowId: String, data: Data) async throws -> QrCode
+    func generateQrCode(userId: String, flowId: String) throws -> Data
 }
 
 /// Room keys backup functionality

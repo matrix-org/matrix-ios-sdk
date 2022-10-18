@@ -26,7 +26,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  The `MXKeyBackup_Private` extension exposes internal operations.
  */
-@interface MXKeyVerificationManager ()
+@interface MXLegacyKeyVerificationManager ()
 
 /**
  The Matrix crypto.
@@ -88,12 +88,12 @@ NS_ASSUME_NONNULL_BEGIN
                                 transactionId:(nullable NSString*)transactionId
                                      dmRoomId:(nullable NSString*)dmRoomId
                                     dmEventId:(nullable NSString*)dmEventId
-                                      success:(void(^)(MXQRCodeTransaction *transaction))success
+                                      success:(void(^)(MXLegacyQRCodeTransaction *transaction))success
                                       failure:(void(^)(NSError *error))failure;
 
 - (void)createQRCodeTransactionFromRequest:(id<MXKeyVerificationRequest>)request
                                 qrCodeData:(nullable MXQRCodeData*)qrCodeData
-                                   success:(void(^)(MXQRCodeTransaction *transaction))success
+                                   success:(void(^)(MXLegacyQRCodeTransaction *transaction))success
                                    failure:(void(^)(NSError *error))failure;
 
 - (BOOL)isOtherQRCodeDataKeysValid:(MXQRCodeData*)otherQRCodeData otherUserId:(NSString*)otherUserId otherDevice:(MXDeviceInfo*)otherDevice;

@@ -217,14 +217,6 @@ NS_ASSUME_NONNULL_BEGIN
 #endif
 
 /**
- Enable performance optimization where inbound group sessions are cached between decryption of events
- rather than fetched from the store every time.
- 
- @remark YES by default
- */
-@property (nonatomic) BOOL enableGroupSessionCache;
-
-/**
  Enable symmetric room key backups
  
  @remark NO by default

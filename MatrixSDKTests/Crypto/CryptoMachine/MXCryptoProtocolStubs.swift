@@ -17,7 +17,7 @@
 import Foundation
 @testable import MatrixSDK
 
-#if DEBUG && os(iOS)
+#if DEBUG
 
 @testable import MatrixSDKCrypto
 
@@ -58,7 +58,12 @@ class UserIdentitySourceStub: CryptoIdentityStub, MXCryptoUserIdentitySource {
     }
     
     func downloadKeys(users: [String]) async throws {
-        
+    }
+    
+    func manuallyVerifyUser(userId: String) async throws {
+    }
+    
+    func manuallyVerifyDevice(userId: String, deviceId: String) async throws {
     }
 }
 
@@ -75,6 +80,10 @@ class CryptoCrossSigningStub: CryptoIdentityStub, MXCryptoCrossSigning {
     func bootstrapCrossSigning(authParams: [AnyHashable : Any]) async throws {
     }
     
+    func exportCrossSigningKeys() -> CrossSigningKeyExport? {
+        return nil
+    }
+    
     var stubbedIdentities = [String: UserIdentity]()
     func userIdentity(userId: String) -> UserIdentity? {
         stubbedIdentities[userId]
@@ -87,6 +96,12 @@ class CryptoCrossSigningStub: CryptoIdentityStub, MXCryptoCrossSigning {
     
     func downloadKeys(users: [String]) async throws {
     }
+    
+    func manuallyVerifyUser(userId: String) async throws {
+    }
+    
+    func manuallyVerifyDevice(userId: String, deviceId: String) async throws {
+    }
 }
 
 class CryptoVerificationStub: CryptoIdentityStub {
@@ -94,15 +109,24 @@ class CryptoVerificationStub: CryptoIdentityStub {
     var stubbedTransactions = [String: Verification]()
     var stubbedErrors = [String: Error]()
     var stubbedEmojis = [String: [Int]]()
+    var stubbedDecimals = [String: [Int]]()
+    var stubbedQRData = Data()
 }
 
 extension CryptoVerificationStub: MXCryptoVerificationRequesting {
+    func receiveUnencryptedVerificationEvent(event: MXEvent, roomId: String) {
+    }
+    
     func requestSelfVerification(methods: [String]) async throws -> VerificationRequest {
-        .stub()
+        .stub(ourMethods: methods)
     }
     
     func requestVerification(userId: String, roomId: String, methods: [String]) async throws -> VerificationRequest {
-        .stub()
+        .stub(otherUserId: userId, roomId: roomId, ourMethods: methods)
+    }
+    
+    func verificationRequests(userId: String) -> [VerificationRequest] {
+        return stubbedRequests.values.map { $0 }
     }
     
     func verificationRequest(userId: String, flowId: String) -> VerificationRequest? {
@@ -133,7 +157,11 @@ extension CryptoVerificationStub: MXCryptoVerifying {
 
 extension CryptoVerificationStub: MXCryptoSASVerifying {
     func startSasVerification(userId: String, flowId: String) async throws -> Sas {
-        .stub()
+        .stub(otherUserId: userId, flowId: flowId)
+    }
+    
+    func startSasVerification(userId: String, deviceId: String) async throws -> Sas {
+        .stub(otherUserId: userId, otherDeviceId: deviceId)
     }
     
     func acceptSasVerification(userId: String, flowId: String) async throws {
@@ -141,6 +169,24 @@ extension CryptoVerificationStub: MXCryptoSASVerifying {
     
     func emojiIndexes(sas: Sas) throws -> [Int] {
         stubbedEmojis[sas.flowId] ?? []
+    }
+    
+    func sasDecimals(sas: Sas) throws -> [Int] {
+        return stubbedDecimals[sas.flowId] ?? []
+    }
+}
+
+extension CryptoVerificationStub: MXCryptoQRCodeVerifying {
+    func startQrVerification(userId: String, flowId: String) throws -> QrCode {
+        return .stub()
+    }
+    
+    func scanQrCode(userId: String, flowId: String, data: Data) async throws -> QrCode {
+        return .stub()
+    }
+    
+    func generateQrCode(userId: String, flowId: String) throws -> Data {
+        return stubbedQRData
     }
 }
 

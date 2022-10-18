@@ -73,4 +73,7 @@
  */
 @property (nonatomic, readonly) NSDictionary<NSString *, id> *accountData;
 
++ (nonnull NSString *)localNotificationSettingsKeyForDeviceWithId:(nonnull NSString*)deviceId;
+- (nullable NSDictionary <NSString *, id>*)localNotificationSettingsForDeviceWithId:(nonnull NSString*)deviceId;
+
 @end

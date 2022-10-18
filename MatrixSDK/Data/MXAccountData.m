@@ -18,6 +18,7 @@
 #import "MXAccountData.h"
 
 #import "MXJSONModel.h"
+#import "MXRestClient.h"
 
 @interface MXAccountData ()
 {
@@ -88,6 +89,25 @@
                             }];
     }
     return @{@"events": events};
+}
+
++ (NSString *)localNotificationSettingsKeyForDeviceWithId:(NSString*)deviceId
+{
+    return [kMXAccountDataLocalNotificationKeyPrefix stringByAppendingString:deviceId];
+}
+
+- (NSDictionary <NSString *, id>*)localNotificationSettingsForDeviceWithId:(NSString*)deviceId
+{
+    if (!deviceId)
+    {
+        return nil;
+    }
+    
+    
+    NSString *deviceNotificationKey = [MXAccountData localNotificationSettingsKeyForDeviceWithId:deviceId];
+    NSDictionary <NSString *, id>*deviceNotificationSettings;
+    MXJSONModelSetDictionary(deviceNotificationSettings, accountDataDict[deviceNotificationKey]);
+    return deviceNotificationSettings;
 }
 
 @end

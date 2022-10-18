@@ -85,6 +85,8 @@ FOUNDATION_EXPORT NSString *const kMXAccountDataTypeClientInformation;
 FOUNDATION_EXPORT NSString *const kMXAccountDataKeyIgnoredUser;
 FOUNDATION_EXPORT NSString *const kMXAccountDataKeyIdentityServer;
 FOUNDATION_EXPORT NSString *const kMXAccountDataTypeRecentRoomsKey;
+FOUNDATION_EXPORT NSString *const kMXAccountDataLocalNotificationKeyPrefix;
+FOUNDATION_EXPORT NSString *const kMXAccountDataIsSilencedKey;
 
 
 /**
@@ -287,7 +289,7 @@ NS_REFINED_FOR_SWIFT;
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)supportedMatrixVersions:(void (^)(MXMatrixVersions *matrixVersions))success
-                                    failure:(void (^)(NSError *error))failure;
+                                    failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Get the wellknwon data of the homeserver.
@@ -500,6 +502,17 @@ NS_REFINED_FOR_SWIFT;
  @return the fallback page URL.
  */
 - (NSString*)loginFallback NS_REFINED_FOR_SWIFT;
+
+/**
+ Generates a new login token
+ @param success A block object called when the operation succeeds. It provides the raw JSON response
+ from the server.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)generateLoginTokenWithSuccess:(void (^)(MXLoginToken *loginToken))success
+                                          failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Reset the account password.

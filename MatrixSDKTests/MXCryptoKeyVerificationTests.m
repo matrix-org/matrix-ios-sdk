@@ -31,7 +31,7 @@
 #pragma clang diagnostic ignored "-Warc-retain-cycles"
 #pragma clang diagnostic ignored "-Wdeprecated"
 
-@interface MXKeyVerificationManager (Testing)
+@interface MXLegacyKeyVerificationManager (Testing)
 
 - (id<MXKeyVerificationTransaction>)transactionWithTransactionId:(NSString*)transactionId;
 
@@ -299,8 +299,8 @@
                 XCTAssertEqual(aliceDeviceFromBobPOV.trustLevel.localVerificationStatus, MXDeviceVerified);
                 
                 // -> Transaction must not be listed anymore
-                XCTAssertNil([aliceSession.crypto.keyVerificationManager transactionWithTransactionId:sasTransactionFromAlicePOV.transactionId]);
-                XCTAssertNil([bobSession.crypto.keyVerificationManager transactionWithTransactionId:transactionFromBobPOV.transactionId]);
+                XCTAssertNil([(MXLegacyKeyVerificationManager *)aliceSession.crypto.keyVerificationManager transactionWithTransactionId:sasTransactionFromAlicePOV.transactionId]);
+                XCTAssertNil([(MXLegacyKeyVerificationManager *)bobSession.crypto.keyVerificationManager transactionWithTransactionId:transactionFromBobPOV.transactionId]);
                 
                 [expectation fulfill];
             }
@@ -454,6 +454,12 @@
                                                                                             success:^(id<MXKeyVerificationRequest> requestFromAliceDevice1POV)
                  {
                      // -> The other device list should have been computed well
+                     if (MXSDKOptions.sharedInstance.enableCryptoV2)
+                     {
+                        XCTFail(@"This test uses `MXKeyVerificationByToDeviceRequest` which is only compatible with Crypto V1. Replace assertions to make it compatible with V2 as well");
+                        [expectation fulfill];
+                        return;
+                     }
                      MXKeyVerificationByToDeviceRequest *toDeviceRequestFromAliceDevice1POV = (MXKeyVerificationByToDeviceRequest*)requestFromAliceDevice1POV;
                      XCTAssertNotNil(toDeviceRequestFromAliceDevice1POV.requestedOtherDeviceIds);
                      NSSet *expectedRequestedDevices = [NSSet setWithArray:@[aliceSession2DeviceId, aliceSession3DeviceId]];
@@ -598,8 +604,8 @@
                         XCTAssertEqual(aliceDeviceFromBobPOV.trustLevel.localVerificationStatus, MXDeviceVerified);
 
                         // -> Transaction must not be listed anymore
-                        XCTAssertNil([aliceSession.crypto.keyVerificationManager transactionWithTransactionId:transactionFromAlicePOV.transactionId]);
-                        XCTAssertNil([bobSession.crypto.keyVerificationManager transactionWithTransactionId:transactionFromBobPOV.transactionId]);
+                        XCTAssertNil([(MXLegacyKeyVerificationManager *)aliceSession.crypto.keyVerificationManager transactionWithTransactionId:transactionFromAlicePOV.transactionId]);
+                        XCTAssertNil([(MXLegacyKeyVerificationManager *)bobSession.crypto.keyVerificationManager transactionWithTransactionId:transactionFromBobPOV.transactionId]);
 
                         [expectation fulfill];
                     }
@@ -1102,8 +1108,8 @@
                 XCTAssertEqual(aliceDeviceFromBobPOV.trustLevel.localVerificationStatus, MXDeviceVerified);
                 
                 // -> Transaction must not be listed anymore
-                XCTAssertNil([aliceSession.crypto.keyVerificationManager transactionWithTransactionId:sasTransactionFromAlicePOV.transactionId]);
-                XCTAssertNil([bobSession.crypto.keyVerificationManager transactionWithTransactionId:transactionFromBobPOV.transactionId]);
+                XCTAssertNil([(MXLegacyKeyVerificationManager *)aliceSession.crypto.keyVerificationManager transactionWithTransactionId:sasTransactionFromAlicePOV.transactionId]);
+                XCTAssertNil([(MXLegacyKeyVerificationManager *)bobSession.crypto.keyVerificationManager transactionWithTransactionId:transactionFromBobPOV.transactionId]);
             }
         };
         
@@ -1184,7 +1190,7 @@
         {
             // Then, test MXKeyVerification
             MXEvent *event = [aliceSession.store eventWithEventId:requestFromAlicePOV.requestId inRoom:roomId];
-            [aliceSession.crypto.keyVerificationManager keyVerificationFromKeyVerificationEvent:event success:^(MXKeyVerification * _Nonnull verificationFromAlicePOV) {
+            [aliceSession.crypto.keyVerificationManager keyVerificationFromKeyVerificationEvent:event roomId:roomId success:^(MXKeyVerification * _Nonnull verificationFromAlicePOV) {
                 
                 XCTAssertEqual(verificationFromAlicePOV.state, MXKeyVerificationStateVerified);
                 
@@ -1278,7 +1284,7 @@
             if (cancelCancel.count == 2)
             {
                 // Then, test MXKeyVerification
-                [aliceSession.crypto.keyVerificationManager keyVerificationFromKeyVerificationEvent:event success:^(MXKeyVerification * _Nonnull verificationFromAlicePOV) {
+                [aliceSession.crypto.keyVerificationManager keyVerificationFromKeyVerificationEvent:event roomId:roomId success:^(MXKeyVerification * _Nonnull verificationFromAlicePOV) {
 
                     XCTAssertEqual(verificationFromAlicePOV.state, MXKeyVerificationStateRequestCancelledByMe);
 
