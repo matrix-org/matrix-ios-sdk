@@ -33,6 +33,7 @@ class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
         case methodNotSupported
         case unknownFlowId
         case missingRoom
+        case missingDeviceId
     }
     
     // A set of room events we have to monitor manually to synchronize CryptoMachine
@@ -105,15 +106,9 @@ class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
     ) {
         log.debug("->")
         
-        guard userId == session?.myUserId else {
-            log.failure("To-device verification with other users is not supported")
-            failure(Error.methodNotSupported)
-            return
-        }
-        
         Task {
             do {
-                let request = try await requestSelfVerification(methods: methods)
+                let request = try await requestVerificationByToDevice(withUserId: userId, deviceIds: deviceIds, methods: methods)
                 await MainActor.run {
                     log.debug("Request successfully sent")
                     success(request)
@@ -151,31 +146,6 @@ class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
             } catch {
                 await MainActor.run {
                     log.error("Cannot request verification", context: error)
-                    failure(error)
-                }
-            }
-        }
-    }
-    
-    func beginKeyVerification(
-        withUserId userId: String,
-        andDeviceId deviceId: String,
-        method: String,
-        success: @escaping (MXKeyVerificationTransaction) -> Void,
-        failure: @escaping (Swift.Error) -> Void
-    ) {
-        log.debug("Starting \(method) verification flow")
-
-        Task {
-            do {
-                let transaction = try await startSasVerification(userId: userId, deviceId: deviceId)
-                await MainActor.run {
-                    log.debug("Created verification transaction")
-                    success(transaction)
-                }
-            } catch {
-                await MainActor.run {
-                    log.error("Failed creating verification transaction", context: error)
                     failure(error)
                 }
             }
@@ -399,6 +369,25 @@ class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
     
     // MARK: - Verification requests
     
+    func requestVerificationByToDevice(
+        withUserId userId: String,
+        deviceIds: [String]?,
+        methods: [String]
+    ) async throws -> MXKeyVerificationRequest {
+        if userId == session?.myUserId {
+            log.debug("Self-verification")
+            return try await requestSelfVerification(methods: methods)
+        } else if let deviceId = deviceIds?.first {
+            log.debug("Direct verification of another device")
+            if let count = deviceIds?.count, count > 1 {
+                log.error("Verifying more than one device at once is not supported")
+            }
+            return try await requestVerification(userId: userId, deviceId: deviceId, methods: methods)
+        } else {
+            throw Error.missingDeviceId
+        }
+    }
+    
     private func requestVerification(userId: String, roomId: String, methods: [String]) async throws -> MXKeyVerificationRequest {
         log.debug("->")
         
@@ -408,6 +397,17 @@ class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
             methods: methods
         )
         return addRequest(for: request, transport: .directMessage)
+    }
+    
+    private func requestVerification(userId: String, deviceId: String, methods: [String]) async throws -> MXKeyVerificationRequest {
+        log.debug("->")
+        
+        let request = try await handler.requestVerification(
+            userId: userId,
+            deviceId: deviceId,
+            methods: methods
+        )
+        return addRequest(for: request, transport: .toDevice)
     }
     
     private func requestSelfVerification(methods: [String]) async throws -> MXKeyVerificationRequest {
@@ -468,17 +468,11 @@ class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
         return addSasTransaction(for: sas, transport: transport)
     }
     
-    private func startSasVerification(userId: String, deviceId: String) async throws -> MXKeyVerificationTransaction {
-        log.debug("->")
-        let sas = try await handler.startSasVerification(userId: userId, deviceId: deviceId)
-        return addSasTransaction(for: sas, transport: .toDevice)
-    }
-    
     private func handleIncomingVerification(userId: String, flowId: String, transport: MXKeyVerificationTransport) {
         log.debug(flowId)
         
         guard let verification = handler.verification(userId: userId, flowId: flowId) else {
-            log.failure("Verification is not known", context: [
+            log.error("Verification is not known", context: [
                 "flow_id": flowId
             ])
             return

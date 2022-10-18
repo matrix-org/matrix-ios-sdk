@@ -94,13 +94,6 @@ class MXSASTransactionV2UnitTests: XCTestCase {
                 hasBeenAccepted: false,
                 canBePresented: false,
                 haveWeConfirmed: false,
-                isDone: false,
-                isCancelled: false
-            ), MXSASTransactionStateUnknown),
-            (.stub(
-                hasBeenAccepted: false,
-                canBePresented: false,
-                haveWeConfirmed: false,
                 isDone: true,
                 isCancelled: false
             ), MXSASTransactionStateVerified),
@@ -113,25 +106,35 @@ class MXSASTransactionV2UnitTests: XCTestCase {
             ), MXSASTransactionStateCancelled),
             (.stub(
                 hasBeenAccepted: false,
+                canBePresented: false,
+                haveWeConfirmed: false,
+                isDone: false,
+                isCancelled: true,
+                cancelInfo: .init(cancelCode: "", reason: "", cancelledByUs: true)
+            ), MXSASTransactionStateCancelledByMe),
+            (.stub(
+                hasBeenAccepted: false,
                 canBePresented: true,
                 haveWeConfirmed: false,
                 isDone: false,
                 isCancelled: false
             ), MXSASTransactionStateShowSAS),
             (.stub(
-                hasBeenAccepted: true,
+                weStarted: true,
+                hasBeenAccepted: false,
+                canBePresented: false,
+                haveWeConfirmed: false,
+                isDone: false,
+                isCancelled: false
+            ), MXSASTransactionStateOutgoingWaitForPartnerToAccept),
+            (.stub(
+                weStarted: false,
+                hasBeenAccepted: false,
                 canBePresented: false,
                 haveWeConfirmed: false,
                 isDone: false,
                 isCancelled: false
             ), MXSASTransactionStateIncomingShowAccept),
-            (.stub(
-                hasBeenAccepted: false,
-                canBePresented: false,
-                haveWeConfirmed: true,
-                isDone: false,
-                isCancelled: false
-            ), MXSASTransactionStateOutgoingWaitForPartnerToAccept),
         ]
 
         for (stub, state) in testCases {

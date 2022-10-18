@@ -123,6 +123,8 @@ private class MXCryptoV2: MXCrypto {
     private let keyBackup: MXKeyBackup
     private var recovery: MXRecoveryService
     
+    private var undecryptableEvents = [String: MXEvent]()
+    
     private let log = MXNamedLog(name: "MXCryptoV2")
     
     public init(userId: String, deviceId: String, session: MXSession, restClient: MXRestClient) throws {
@@ -281,7 +283,11 @@ private class MXCryptoV2: MXCrypto {
             return MXEventDecryptionResult()
         }
         
-        return machine.decryptRoomEvent(event)
+        let result = machine.decryptRoomEvent(event)
+        if result.clearEvent == nil {
+            undecryptableEvents[event.eventId] = event
+        }
+        return result
     }
     
     public override func decryptEvents(
@@ -332,6 +338,15 @@ private class MXCryptoV2: MXCrypto {
         log.debug("Discarding room key")
         machine.discardRoomKey(roomId: roomId)
         onComplete?()
+    }
+    
+    private func retryDecryptEvent(event: MXEvent) -> Bool {
+        guard let result = decryptEvent(event, inTimeline: nil) else {
+            log.error("Cannot get decryption result")
+            return false
+        }
+        event.setClearData(result)
+        return result.clearEvent != nil
     }
     
     // MARK: - Sync
@@ -476,17 +491,19 @@ private class MXCryptoV2: MXCrypto {
             return
         }
         
-        log.debug("Setting device verification status manually")
+        log.debug("Setting device verification status manually to \(verificationStatus)")
         
-        switch verificationStatus {
-        case .unverified, .blocked, .unknown:
-            log.error("Not implemented")
+        let localTrust = verificationStatus.localTrust
+        switch localTrust {
         case .verified:
+            // If we want to set verified status, we will manually verify the device,
+            // including uploading relevant signatures
+            
             Task {
                 do {
                     try await machine.manuallyVerifyDevice(userId: userId, deviceId: deviceId)
                     log.debug("Successfully marked device as verified")
-                    await MainActor.run {                        
+                    await MainActor.run {
                         success?()
                     }
                 } catch {
@@ -496,11 +513,18 @@ private class MXCryptoV2: MXCrypto {
                     }
                 }
             }
-        @unknown default:
-            log.failure("Unknown verification status", context: [
-                "status": verificationStatus
-            ])
-            failure?(nil)
+            
+        case .blackListed, .ignored, .unset:
+            // In other cases we will only set local trust level
+            
+            do {
+                try machine.setLocalTrust(userId: userId, deviceId: deviceId, trust: localTrust)
+                log.debug("Successfully set local trust to \(localTrust)")
+                success?()
+            } catch {
+                log.error("Failed setting local trust", context: error)
+                failure?(error)
+            }
         }
     }
     
@@ -613,13 +637,21 @@ private class MXCryptoV2: MXCrypto {
         success: ((Data?) -> Void)!,
         failure: ((Swift.Error?) -> Void)!
     ) {
-        do {
-            let data = try backupEngine.exportRoomKeys(passphrase: password)
-            log.debug("Exported room keys")
-            success(data)
-        } catch {
-            log.error("Failed exporting room keys", context: error)
-            failure(error)
+        Task.detached { [weak self] in
+            guard let self = self else { return }
+            
+            do {
+                let data = try self.backupEngine.exportRoomKeys(passphrase: password)
+                await MainActor.run {
+                    self.log.debug("Exported room keys")
+                    success(data)
+                }
+            } catch {
+                await MainActor.run {
+                    self.log.error("Failed exporting room keys", context: error)
+                    failure(error)
+                }
+            }
         }
     }
     
@@ -635,13 +667,28 @@ private class MXCryptoV2: MXCrypto {
             return
         }
         
-        do {
-            let result = try backupEngine.importRoomKeys(data, passphrase: password)
-            log.debug("Imported room keys")
-            success(UInt(result.total), UInt(result.imported))
-        } catch {
-            log.error("Failed importing room keys", context: error)
-            failure(error)
+        Task.detached { [weak self] in
+            guard let self = self else { return }
+            
+            do {
+                let result = try self.backupEngine.importRoomKeys(data, passphrase: password)
+                
+                await MainActor.run {
+                    for (eventId, event) in self.undecryptableEvents {
+                        if self.retryDecryptEvent(event: event) {
+                            self.undecryptableEvents[eventId] = nil
+                        }
+                    }
+                    
+                    self.log.debug("Imported room keys")
+                    success(UInt(result.total), UInt(result.imported))
+                }
+            } catch {
+                await MainActor.run {
+                    self.log.error("Failed importing room keys", context: error)
+                    failure(error)
+                }
+            }
         }
     }
     
@@ -731,9 +778,12 @@ private class MXCryptoV2: MXCrypto {
     }
     
     public override func isRoomEncrypted(_ roomId: String!) -> Bool {
-        log.debug("Not implemented")
-        // All rooms encrypted by default for now
-        return true
+        guard let roomId = roomId, let summary = session?.room(withRoomId: roomId)?.summary else {
+            log.error("Missing room")
+            return false
+        }
+        // State of room encryption will be moved to MatrixSDKCrypto
+        return summary.isEncrypted
     }
     
     public override func isRoomSharingHistory(_ roomId: String!) -> Bool {
@@ -751,6 +801,24 @@ private class MXCryptoV2: MXCrypto {
         return try await room.members()?.members
             .compactMap(\.userId)
             .filter { $0 != userId } ?? []
+    }
+}
+
+private extension MXDeviceVerification {
+    var localTrust: LocalTrust {
+        switch self {
+        case .unverified:
+            return .unset
+        case .verified:
+            return .verified
+        case .blocked:
+            return .blackListed
+        case .unknown:
+            return .unset
+        @unknown default:
+            MXNamedLog(name: "MXDeviceVerification").failure("Unknown device verification", context: self)
+            return .unset
+        }
     }
 }
 
