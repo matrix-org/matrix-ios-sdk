@@ -25,6 +25,7 @@
 #import "MXFileStore.h"
 #import "MXNoStore.h"
 #import "MXTools.h"
+#import "MatrixSDKTestsSwiftHeader.h"
 
 @interface MatrixSDKTestsE2EData ()
 
@@ -432,11 +433,11 @@
 
 - (void)outgoingRoomKeyRequestInSession:(MXSession*)session complete:(void (^)(MXOutgoingRoomKeyRequest*))complete
 {
-    dispatch_async(session.crypto.cryptoQueue, ^{
-        MXOutgoingRoomKeyRequest *outgoingRoomKeyRequest = [session.crypto.store outgoingRoomKeyRequestWithState:MXRoomKeyRequestStateUnsent];
+    dispatch_async(session.legacyCrypto.cryptoQueue, ^{
+        MXOutgoingRoomKeyRequest *outgoingRoomKeyRequest = [session.legacyCrypto.store outgoingRoomKeyRequestWithState:MXRoomKeyRequestStateUnsent];
         if (!outgoingRoomKeyRequest)
         {
-            outgoingRoomKeyRequest = [session.crypto.store outgoingRoomKeyRequestWithState:MXRoomKeyRequestStateSent];
+            outgoingRoomKeyRequest = [session.legacyCrypto.store outgoingRoomKeyRequestWithState:MXRoomKeyRequestStateSent];
         }
 
         dispatch_async(dispatch_get_main_queue(), ^{

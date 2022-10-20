@@ -66,7 +66,7 @@ FOUNDATION_EXPORT NSString *const kMXCryptoRoomKeyRequestCancellationNotificatio
 extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
 
 /**
- A `MXCrypto` class instance manages the end-to-end crypto for a MXSession instance.
+ A `MXCrypto` implementation manages the end-to-end crypto for a MXSession instance.
  
  Messages posted by the user are automatically redirected to MXCrypto in order to be encrypted
  before sending.
@@ -75,7 +75,7 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
  MXCrypto maintains all necessary keys and their sharing with other devices required for the crypto.
  Specially, it tracks all room membership changes events in order to do keys updates.
  */
-@interface MXCrypto : NSObject
+@protocol MXCrypto <NSObject>
 
 /**
  Curve25519 key for the account.
@@ -120,7 +120,7 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
 /**
  The cross-signing manager.
  */
-@property (nonatomic, readonly) MXCrossSigning *crossSigning;
+@property (nonatomic, readonly) id<MXCrossSigning> crossSigning;
 
 /**
  Create a new crypto instance and data for the given user.
@@ -128,7 +128,7 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
  @param mxSession the session on which to enable crypto.
  @return the fresh crypto instance.
  */
-+ (MXCrypto *)createCryptoWithMatrixSession:(MXSession*)mxSession;
++ (id<MXCrypto>)createCryptoWithMatrixSession:(MXSession*)mxSession;
 
 /**
  Check if the user has previously enabled crypto.
@@ -136,7 +136,7 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
 
  @param complete a block called in any case when the operation completes.
  */
-+ (void)checkCryptoWithMatrixSession:(MXSession*)mxSession complete:(void (^)(MXCrypto *crypto))complete;
++ (void)checkCryptoWithMatrixSession:(MXSession*)mxSession complete:(void (^)(id<MXCrypto> crypto))complete;
 
 /**
  Stores the exportedOlmDevice related to the credentials into the store.
@@ -609,4 +609,6 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
 
 @end
 
+@interface MXLegacyCrypto : NSObject <MXCrypto>
 
+@end

@@ -32,12 +32,14 @@ NSString *const MXCrossSigningNotificationDeviceIdsKey = @"deviceIds";
 NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
 
 
-@interface MXCrossSigning ()
-
+@interface MXLegacyCrossSigning ()
+@property (nonatomic, nullable, strong) MXCrossSigningInfo *myUserCrossSigningKeys;
 @end
 
 
-@implementation MXCrossSigning
+@implementation MXLegacyCrossSigning
+
+@synthesize state = _state;
 
 - (BOOL)canCrossSign
 {
@@ -472,7 +474,7 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
 
 #pragma mark - SDK-Private methods -
 
-- (instancetype)initWithCrypto:(MXCrypto *)crypto;
+- (instancetype)initWithCrypto:(MXLegacyCrypto *)crypto;
 {
     self = [super init];
     if (self)

@@ -43,7 +43,7 @@
 
 
 #pragma mark - MXDecrypting
-- (instancetype)initWithCrypto:(MXCrypto *)crypto
+- (instancetype)initWithCrypto:(MXLegacyCrypto *)crypto
 {
     self = [super init];
     if (self)

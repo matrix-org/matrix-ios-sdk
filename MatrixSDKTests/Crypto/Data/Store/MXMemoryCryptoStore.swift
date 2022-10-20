@@ -403,15 +403,15 @@ public class MXMemoryCryptoStore: NSObject, MXCryptoStore {
 
     // MARK: - Secrets
 
-    public func storeSecret(_ secret: String!, withSecretId secretId: String!) {
+    public func storeSecret(_ secret: String, withSecretId secretId: String) {
         secrets[secretId] = secret
     }
 
-    public func secret(withSecretId secretId: String!) -> String! {
+    public func secret(withSecretId secretId: String) -> String? {
         secrets[secretId]
     }
 
-    public func deleteSecret(withSecretId secretId: String!) {
+    public func deleteSecret(withSecretId secretId: String) {
         secrets.removeValue(forKey: secretId)
     }
 

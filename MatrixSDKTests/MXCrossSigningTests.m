@@ -26,6 +26,7 @@
 
 #import "MXFileStore.h"
 #import "MXNoStore.h"
+#import "MatrixSDKTestsSwiftHeader.h"
 
 
 // Do not bother with retain cycles warnings in tests
@@ -33,7 +34,7 @@
 #pragma clang diagnostic ignored "-Warc-retain-cycles"
 
 // Pen test
-@interface MXCrossSigning ()
+@interface MXLegacyCrossSigning ()
 - (MXCrossSigningInfo*)createKeys:(NSDictionary<NSString*, NSData*> * _Nonnull * _Nullable)outPrivateKeys;
 @end
 
@@ -634,11 +635,11 @@
 
         // - Create Alice's cross-signing keys
         NSDictionary<NSString*, NSData*> *privateKeys;
-        MXCrossSigningInfo *keys = [aliceSession.crypto.crossSigning createKeys:&privateKeys];
+        MXCrossSigningInfo *keys = [aliceSession.legacyCrypto.legacyCrossSigning createKeys:&privateKeys];
 
         // - Store their keys and retrieve them
-        [aliceSession.crypto.store storeCrossSigningKeys:keys];
-        MXCrossSigningInfo *storedKeys = [aliceSession.crypto.store crossSigningKeysForUser:aliceUserId];
+        [aliceSession.legacyCrypto.store storeCrossSigningKeys:keys];
+        MXCrossSigningInfo *storedKeys = [aliceSession.legacyCrypto.store crossSigningKeysForUser:aliceUserId];
         XCTAssertNotNil(storedKeys);
 
         XCTAssertEqualObjects(storedKeys.userId, keys.userId);
@@ -650,8 +651,8 @@
 
         // - Update keys test
         [keys updateTrustLevel:[MXUserTrustLevel trustLevelWithCrossSigningVerified:YES locallyVerified:NO]];
-        [aliceSession.crypto.store storeCrossSigningKeys:keys];
-        storedKeys = [aliceSession.crypto.store crossSigningKeysForUser:aliceUserId];
+        [aliceSession.legacyCrypto.store storeCrossSigningKeys:keys];
+        storedKeys = [aliceSession.legacyCrypto.store crossSigningKeysForUser:aliceUserId];
         XCTAssertTrue(storedKeys.trustLevel.isVerified);
 
         [expectation fulfill];

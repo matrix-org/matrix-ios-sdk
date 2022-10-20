@@ -26,7 +26,7 @@
 
 @interface MXDeviceList ()
 {
-    __weak MXCrypto *crypto;
+    __weak MXLegacyCrypto *crypto;
 
     // Users we are tracking device status for.
     // userId -> MXDeviceTrackingStatus*
@@ -57,7 +57,7 @@
 
 @implementation MXDeviceList
 
-- (id)initWithCrypto:(MXCrypto *)theCrypto
+- (id)initWithCrypto:(MXLegacyCrypto *)theCrypto
 {
     self = [super init];
     if (self)

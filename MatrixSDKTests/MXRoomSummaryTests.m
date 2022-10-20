@@ -31,6 +31,7 @@
 #import "MXTools.h"
 #import "MXKeyProvider.h"
 #import "MXAesKeyData.h"
+#import "MatrixSDKTestsSwiftHeader.h"
 
 
 // Do not bother with retain cycles warnings in tests
@@ -1368,7 +1369,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
                     XCTAssert(toDeviceEvent);
                     NSString *sessionId = toDeviceEvent.content[@"session_id"];
                     
-                    id<MXCryptoStore> bobCryptoStore = (id<MXCryptoStore>)[bobSession.crypto.olmDevice valueForKey:@"store"];
+                    id<MXCryptoStore> bobCryptoStore = (id<MXCryptoStore>)[bobSession.legacyCrypto.olmDevice valueForKey:@"store"];
                     [bobCryptoStore removeInboundGroupSessionWithId:sessionId andSenderKey:toDeviceEvent.senderKey];
                     
                     // So that we cannot decrypt it anymore right now

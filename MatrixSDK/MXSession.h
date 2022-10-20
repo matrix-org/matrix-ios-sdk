@@ -469,7 +469,7 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
  The module that manages E2E encryption.
  Nil if the feature is not enabled ('cryptoEnabled' property).
  */
-@property (nonatomic, readonly) MXCrypto *crypto;
+@property (nonatomic, readonly) id<MXCrypto> crypto;
 
 /**
  Antivirus scanner used to scan medias.

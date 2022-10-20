@@ -25,6 +25,7 @@
 
 #import "MXKeyVerificationRequestByDMJSONModel.h"
 #import "MXKeyVerificationByToDeviceRequest.h"
+#import "MatrixSDKTestsSwiftHeader.h"
 
 // Do not bother with retain cycles warnings in tests
 #pragma clang diagnostic push
@@ -292,8 +293,8 @@
                 && transactionFromBobPOV.state == MXSASTransactionStateVerified)
             {
                 // -> Devices must be really verified
-                MXDeviceInfo *bobDeviceFromAlicePOV = [aliceSession.crypto.store deviceWithDeviceId:bob.deviceId forUser:bob.userId];
-                MXDeviceInfo *aliceDeviceFromBobPOV = [bobSession.crypto.store deviceWithDeviceId:alice.deviceId forUser:alice.userId];
+                MXDeviceInfo *bobDeviceFromAlicePOV = [aliceSession.legacyCrypto.store deviceWithDeviceId:bob.deviceId forUser:bob.userId];
+                MXDeviceInfo *aliceDeviceFromBobPOV = [bobSession.legacyCrypto.store deviceWithDeviceId:alice.deviceId forUser:alice.userId];
                 
                 XCTAssertEqual(bobDeviceFromAlicePOV.trustLevel.localVerificationStatus, MXDeviceVerified);
                 XCTAssertEqual(aliceDeviceFromBobPOV.trustLevel.localVerificationStatus, MXDeviceVerified);
@@ -746,8 +747,8 @@
                 && transactionFromBobPOV.state == MXSASTransactionStateVerified)
             {
                 // -> Devices must be really verified
-                MXDeviceInfo *bobDeviceFromAlicePOV = [aliceSession.crypto.store deviceWithDeviceId:bob.deviceId forUser:bob.userId];
-                MXDeviceInfo *aliceDeviceFromBobPOV = [bobSession.crypto.store deviceWithDeviceId:alice.deviceId forUser:alice.userId];
+                MXDeviceInfo *bobDeviceFromAlicePOV = [aliceSession.legacyCrypto.store deviceWithDeviceId:bob.deviceId forUser:bob.userId];
+                MXDeviceInfo *aliceDeviceFromBobPOV = [bobSession.legacyCrypto.store deviceWithDeviceId:alice.deviceId forUser:alice.userId];
                 
                 XCTAssertEqual(bobDeviceFromAlicePOV.trustLevel.localVerificationStatus, MXDeviceVerified);
                 XCTAssertEqual(aliceDeviceFromBobPOV.trustLevel.localVerificationStatus, MXDeviceVerified);

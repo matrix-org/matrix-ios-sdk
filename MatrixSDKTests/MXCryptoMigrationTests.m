@@ -21,6 +21,7 @@
 #import "MatrixSDKTestsData.h"
 #import "MatrixSDKTestsE2EData.h"
 #import "MXCrypto_Private.h"
+#import "MatrixSDKTestsSwiftHeader.h"
 
 
 @interface MXCryptoMigration ()
@@ -102,7 +103,7 @@
             [bobCryptoMigration migrateToCryptoVersion2:^{
                 
                 // -> Bob must have 50 OTKs available again
-                [bobSession.crypto publishedOneTimeKeysCount:^(NSUInteger publishedKeyCount) {
+                [bobSession.legacyCrypto publishedOneTimeKeysCount:^(NSUInteger publishedKeyCount) {
                     
                     XCTAssertEqual(publishedKeyCount, 50);
                     

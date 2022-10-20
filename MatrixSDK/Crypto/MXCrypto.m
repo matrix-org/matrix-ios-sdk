@@ -78,7 +78,7 @@ static NSString *const kMXCryptoOneTimeKeyClaimCompleteNotificationErrorKey     
 NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 
-@interface MXCrypto () <MXRecoveryServiceDelegate, MXUnrequestedForwardedRoomKeyManagerDelegate>
+@interface MXLegacyCrypto () <MXRecoveryServiceDelegate, MXUnrequestedForwardedRoomKeyManagerDelegate>
 {
     // MXEncrypting instance for each room.
     NSMutableDictionary<NSString*, id<MXEncrypting>> *roomEncryptors;
@@ -141,28 +141,36 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 
 #endif
 
+@implementation MXLegacyCrypto
 
-@implementation MXCrypto
+@synthesize backup = _backup;
+@synthesize crossSigning = _crossSigning;
+@synthesize enableOutgoingKeyRequestsOnceSelfVerificationDone = _enableOutgoingKeyRequestsOnceSelfVerificationDone;
+@synthesize keyVerificationManager = _keyVerificationManager;
+@synthesize recoveryService = _recoveryService;
+@synthesize secretShareManager = _secretShareManager;
+@synthesize secretStorage = _secretStorage;
+@synthesize warnOnUnknowDevices = _warnOnUnknowDevices;
 
-+ (MXCrypto *)createCryptoWithMatrixSession:(MXSession *)mxSession
++ (id<MXCrypto>)createCryptoWithMatrixSession:(MXSession *)mxSession
 {
-    __block MXCrypto *crypto;
+    __block id<MXCrypto> crypto;
 
 #ifdef MX_CRYPTO
     
     #if DEBUG
-    MXCrypto *cryptoV2 = [self createCryptoV2IfAvailableWithSession:mxSession];
+    id<MXCrypto> cryptoV2 = [self createCryptoV2IfAvailableWithSession:mxSession];
     if (cryptoV2) {
         return cryptoV2;
     }
     #endif
     
-    dispatch_queue_t cryptoQueue = [MXCrypto dispatchQueueForUser:mxSession.matrixRestClient.credentials.userId];
+    dispatch_queue_t cryptoQueue = [MXLegacyCrypto dispatchQueueForUser:mxSession.matrixRestClient.credentials.userId];
     dispatch_sync(cryptoQueue, ^{
 
         MXCryptoStoreClass *cryptoStore = [MXCryptoStoreClass createStoreWithCredentials:mxSession.matrixRestClient.credentials];
         cryptoStore.cryptoVersion = MXCryptoVersionLast;
-        crypto = [[MXCrypto alloc] initWithMatrixSession:mxSession cryptoQueue:cryptoQueue andStore:cryptoStore];
+        crypto = [[MXLegacyCrypto alloc] initWithMatrixSession:mxSession cryptoQueue:cryptoQueue andStore:cryptoStore];
 
     });
 #endif
@@ -170,12 +178,12 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
     return crypto;
 }
 
-+ (void)checkCryptoWithMatrixSession:(MXSession*)mxSession complete:(void (^)(MXCrypto *crypto))complete
++ (void)checkCryptoWithMatrixSession:(MXSession*)mxSession complete:(void (^)(id<MXCrypto> crypto))complete
 {
 #ifdef MX_CRYPTO
     
     #if DEBUG
-    MXCrypto *cryptoV2 = [self createCryptoV2IfAvailableWithSession:mxSession];
+    id<MXCrypto> cryptoV2 = [self createCryptoV2IfAvailableWithSession:mxSession];
     if (cryptoV2) {
         complete(cryptoV2);
         return;
@@ -184,7 +192,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 
     MXLogDebug(@"[MXCrypto] checkCryptoWithMatrixSession for %@", mxSession.matrixRestClient.credentials.userId);
 
-    dispatch_queue_t cryptoQueue = [MXCrypto dispatchQueueForUser:mxSession.matrixRestClient.credentials.userId];
+    dispatch_queue_t cryptoQueue = [MXLegacyCrypto dispatchQueueForUser:mxSession.matrixRestClient.credentials.userId];
     dispatch_async(cryptoQueue, ^{
 
         //  clear the read-only store
@@ -201,7 +209,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 
                 MXLogDebug(@"[MXCrypto] checkCryptoWithMatrixSession: Crypto store opened");
 
-                MXCrypto *crypto = [[MXCrypto alloc] initWithMatrixSession:mxSession cryptoQueue:cryptoQueue andStore:cryptoStore];
+                id<MXCrypto> crypto = [[MXLegacyCrypto alloc] initWithMatrixSession:mxSession cryptoQueue:cryptoQueue andStore:cryptoStore];
 
                 dispatch_async(dispatch_get_main_queue(), ^{
                     complete(crypto);
@@ -225,7 +233,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
             // Create it
             MXCryptoStoreClass *cryptoStore = [MXCryptoStoreClass createStoreWithCredentials:mxSession.matrixRestClient.credentials];
             cryptoStore.cryptoVersion = MXCryptoVersionLast;
-            MXCrypto *crypto = [[MXCrypto alloc] initWithMatrixSession:mxSession cryptoQueue:cryptoQueue andStore:cryptoStore];
+            id<MXCrypto> crypto = [[MXLegacyCrypto alloc] initWithMatrixSession:mxSession cryptoQueue:cryptoQueue andStore:cryptoStore];
 
             dispatch_async(dispatch_get_main_queue(), ^{
                 complete(crypto);
@@ -251,7 +259,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
                           complete:(void (^)(BOOL success))complete;
 {
 #ifdef MX_CRYPTO
-    dispatch_queue_t cryptoQueue = [MXCrypto dispatchQueueForUser:credentials.userId];
+    dispatch_queue_t cryptoQueue = [MXLegacyCrypto dispatchQueueForUser:credentials.userId];
     dispatch_async(cryptoQueue, ^{
         if ([MXCryptoStoreClass hasDataForCredentials:credentials])
         {
@@ -1483,7 +1491,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
     if (!self.crossSigning.canCrossSign)
     {
         MXLogDebug(@"[MXCrypto] requestAllPrivateKeys: Request cross-signing private keys");
-        [self.crossSigning requestPrivateKeys];
+        [(MXLegacyCrossSigning *)self.crossSigning requestPrivateKeys];
     }
 }
 
@@ -1956,7 +1964,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
         _warnOnUnknowDevices = YES;
         _enableOutgoingKeyRequestsOnceSelfVerificationDone = YES;
 
-        decryptionQueue = [MXCrypto dispatchQueueForUser:_mxSession.matrixRestClient.credentials.userId];
+        decryptionQueue = [MXLegacyCrypto dispatchQueueForUser:_mxSession.matrixRestClient.credentials.userId];
         
         cargoQueue = dispatch_queue_create([NSString stringWithFormat:@"MXCrypto-Cargo-%@", _mxSession.myDeviceId].UTF8String, DISPATCH_QUEUE_SERIAL);
         
@@ -2009,7 +2017,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
         outgoingRoomKeyRequestManager = [[MXOutgoingRoomKeyRequestManager alloc]
                                          initWithMatrixRestClient:_matrixRestClient
                                          deviceId:_myDevice.deviceId
-                                         cryptoQueue:[MXCrypto dispatchQueueForUser:_myDevice.userId]
+                                         cryptoQueue:[MXLegacyCrypto dispatchQueueForUser:_myDevice.userId]
                                          cryptoStore:_store];
 
         incomingRoomKeyRequestManager = [[MXIncomingRoomKeyRequestManager alloc] initWithCrypto:self];
@@ -2022,7 +2030,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
         _secretStorage = [[MXSecretStorage alloc] initWithMatrixSession:_mxSession processingQueue:_cryptoQueue];
         _secretShareManager = [[MXSecretShareManager alloc] initWithCrypto:self];
 
-        _crossSigning = [[MXCrossSigning alloc] initWithCrypto:self];
+        _crossSigning = [[MXLegacyCrossSigning alloc] initWithCrypto:self];
         
         if ([MXSDKOptions sharedInstance].enableKeyBackupWhenStartingMXCrypto)
         {

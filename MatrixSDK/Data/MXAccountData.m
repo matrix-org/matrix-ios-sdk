@@ -20,6 +20,8 @@
 #import "MXJSONModel.h"
 #import "MXRestClient.h"
 
+#warning File has not been annotated with nullability, see MX_ASSUME_MISSING_NULLABILITY_BEGIN
+
 @interface MXAccountData ()
 {
     /**
