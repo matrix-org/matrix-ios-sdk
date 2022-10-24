@@ -1735,8 +1735,8 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func sendReadReceipt(toRoom roomId: String, forEvent eventId: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
-        return __sendReadReceipt(roomId, eventId: eventId, success: currySuccess(completion), failure: curryFailure(completion))
+    @nonobjc @discardableResult func sendReadReceipt(toRoom roomId: String, forEvent eventId: String, threadId: String?, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
+        return __sendReadReceipt(roomId, eventId: eventId, threadId: threadId, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
     

@@ -1291,10 +1291,12 @@ Remove a tag applied on an event of the room
  Returns the read receipts list for an event, excluding the read receipt from the current user.
 
  @param eventId The event Id.
+ @param threadId The thread Id. Use `kMXEventTimelineMain` for the main timeline.
  @param sort YES to sort them from the latest to the oldest.
  @param completion Completion block containing the receipts for an event in a dedicated room.
  */
 - (void)getEventReceipts:(nonnull NSString*)eventId
+                threadId:(nullable NSString*)threadId
                   sorted:(BOOL)sort
               completion:(nonnull void (^)(NSArray<MXReceiptData*> * _Nonnull))completion;
 
@@ -1309,7 +1311,7 @@ Remove a tag applied on an event of the room
  @param ts the receipt timestamp in ms since Epoch.
  @return YES if the receipt data is valid and has been stored.
  */
-- (BOOL)storeLocalReceipt:(NSString*)receiptType eventId:(NSString*)eventId userId:(NSString*)userId ts:(uint64_t)ts;
+- (BOOL)storeLocalReceipt:(NSString*)receiptType eventId:(NSString*)eventId threadId:(nullable NSString*)threadId userId:(NSString*)userId ts:(uint64_t)ts;
 
 
 #pragma mark - Read marker handling
