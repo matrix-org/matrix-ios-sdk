@@ -38,12 +38,37 @@ class MXCryptoSecretStoreV2: NSObject, MXCryptoSecretStore {
             log.error("No key backup version available")
             return
         }
-
-        if secretId == MXSecretId.keyBackup.takeUnretainedValue() as String {
+        
+        switch secretId as NSString {
+        case MXSecretId.crossSigningMaster.takeUnretainedValue():
+            crossSigning.importCrossSigningKeys(
+                export: .init(
+                    masterKey: secret,
+                    selfSigningKey: nil,
+                    userSigningKey: nil
+                )
+            )
+        case MXSecretId.crossSigningSelfSigning.takeUnretainedValue():
+            crossSigning.importCrossSigningKeys(
+                export: .init(
+                    masterKey: nil,
+                    selfSigningKey: secret,
+                    userSigningKey: nil
+                )
+            )
+        case MXSecretId.crossSigningUserSigning.takeUnretainedValue():
+            crossSigning.importCrossSigningKeys(
+                export: .init(
+                    masterKey: nil,
+                    selfSigningKey: nil,
+                    userSigningKey: secret
+                )
+            )
+        case MXSecretId.keyBackup.takeUnretainedValue():
             let privateKey = MXBase64Tools.data(fromBase64: secret)
             backupEngine.savePrivateKey(privateKey, version: version)
-        } else {
-            log.error("Not implemented")
+        default:
+            log.error("Unsupported type of secret", context: secretId)
         }
     }
     
@@ -61,7 +86,7 @@ class MXCryptoSecretStoreV2: NSObject, MXCryptoSecretStore {
             }
             return MXBase64Tools.base64(from: privateKey)
         default:
-            log.error("Not implemented")
+            log.error("Unsupported type of secret", context: secretId)
             return nil
         }
     }

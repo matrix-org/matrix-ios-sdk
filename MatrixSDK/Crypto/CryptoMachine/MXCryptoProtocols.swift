@@ -71,6 +71,7 @@ protocol MXCryptoCrossSigning: MXCryptoUserIdentitySource {
     func crossSigningStatus() -> CrossSigningStatus
     func bootstrapCrossSigning(authParams: [AnyHashable: Any]) async throws
     func exportCrossSigningKeys() -> CrossSigningKeyExport?
+    func importCrossSigningKeys(export: CrossSigningKeyExport)
 }
 
 /// Lifecycle of verification request
@@ -122,6 +123,9 @@ protocol MXCryptoBackup {
     
     func backupRoomKeys() async throws
     func importDecryptedKeys(roomKeys: [MXMegolmSessionData], progressListener: ProgressListener) throws -> KeysImportResult
+    
+    func exportRoomKeys(passphrase: String) throws -> Data
+    func importRoomKeys(_ data: Data, passphrase: String, progressListener: ProgressListener) throws -> KeysImportResult
 }
 
 #endif

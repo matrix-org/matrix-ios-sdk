@@ -608,20 +608,41 @@ private class MXCryptoV2: MXCrypto {
         log.debug("Not implemented")
     }
     
-    public override func exportRoomKeys(_ success: (([[AnyHashable : Any]]?) -> Void)!, failure: ((Swift.Error?) -> Void)!) {
-        log.debug("Not implemented")
+    public override func exportRoomKeys(
+        withPassword password: String!,
+        success: ((Data?) -> Void)!,
+        failure: ((Swift.Error?) -> Void)!
+    ) {
+        do {
+            let data = try backupEngine.exportRoomKeys(passphrase: password)
+            log.debug("Exported room keys")
+            success(data)
+        } catch {
+            log.error("Failed exporting room keys", context: error)
+            failure(error)
+        }
     }
     
-    public override func exportRoomKeys(withPassword password: String!, success: ((Data?) -> Void)!, failure: ((Swift.Error?) -> Void)!) {
-        log.debug("Not implemented")
-    }
-    
-    public override func importRoomKeys(_ keys: [[AnyHashable : Any]]!, success: ((UInt, UInt) -> Void)!, failure: ((Swift.Error?) -> Void)!) {
-        log.debug("Not implemented")
-    }
-    
-    public override func importRoomKeys(_ keyFile: Data!, withPassword password: String!, success: ((UInt, UInt) -> Void)!, failure: ((Swift.Error?) -> Void)!) {
-        log.debug("Not implemented")
+    public override func importRoomKeys(
+        _ keyFile: Data!,
+        withPassword password: String!,
+        success: ((UInt, UInt) -> Void)!,
+        failure: ((Swift.Error?) -> Void)!
+    ) {
+        guard let data = keyFile, let password = password else {
+            log.failure("Missing keys or password")
+            failure(nil)
+            return
+        }
+        
+        do {
+            let result = try backupEngine.importRoomKeys(data, passphrase: password)
+            log.debug("Imported room keys")
+            success(UInt(result.total), UInt(result.imported))
+        } catch {
+            log.error("Failed importing room keys", context: error)
+            failure(error)
+        }
     }
     
     public override func pendingKeyRequests(_ onComplete: ((MXUsersDevicesMap<NSArray>?) -> Void)!) {
