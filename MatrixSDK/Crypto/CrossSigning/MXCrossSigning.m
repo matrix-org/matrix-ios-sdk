@@ -345,7 +345,7 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
         BOOL isSecretValid = NO;
         if (self.myUserCrossSigningKeys.masterKeys.keys)
         {
-            isSecretValid = [self isSecretValid:secret forPublicKeys:self.myUserCrossSigningKeys.masterKeys.keys];
+            isSecretValid = [self.crossSigningTools isSecretValid:secret forPublicKeys:self.myUserCrossSigningKeys.masterKeys.keys];
         }
         else
         {
@@ -386,7 +386,7 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
         BOOL isSecretValid = NO;
         if (self.myUserCrossSigningKeys.userSignedKeys.keys)
         {
-            isSecretValid = [self isSecretValid:secret forPublicKeys:self.myUserCrossSigningKeys.userSignedKeys.keys];
+            isSecretValid = [self.crossSigningTools isSecretValid:secret forPublicKeys:self.myUserCrossSigningKeys.userSignedKeys.keys];
         }
         else
         {
@@ -427,7 +427,7 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
         BOOL isSecretValid = NO;
         if (self.myUserCrossSigningKeys.selfSignedKeys.keys)
         {
-            isSecretValid = [self isSecretValid:secret forPublicKeys:self.myUserCrossSigningKeys.selfSignedKeys.keys];
+            isSecretValid = [self.crossSigningTools isSecretValid:secret forPublicKeys:self.myUserCrossSigningKeys.selfSignedKeys.keys];
         }
         else
         {
@@ -634,13 +634,6 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
     } failure:^(NSError * _Nonnull error) {
     }];
 }
-
-- (BOOL)isSecretValid:(NSString*)secret forPublicKeys:(NSString*)keys
-{
-    return (nil != [self pkSigningFromBase64PrivateKey:secret
-                                 withExpectedPublicKey:keys]);
-}
-
 
 #pragma mark - Private methods -
 
@@ -981,10 +974,10 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
         if (_myUserCrossSigningKeys.userSignedKeys
             && _myUserCrossSigningKeys.selfSignedKeys)
         {
-            OLMPkSigning *uskPkSigning = [self pkSigningFromBase64PrivateKey:uskPrivateKeyBase64
-                                                       withExpectedPublicKey:_myUserCrossSigningKeys.userSignedKeys.keys];
-            OLMPkSigning *sskPkSigning = [self pkSigningFromBase64PrivateKey:sskPrivateKeyBase64
-                                                       withExpectedPublicKey:_myUserCrossSigningKeys.selfSignedKeys.keys];
+            OLMPkSigning *uskPkSigning = [self.crossSigningTools pkSigningFromBase64PrivateKey:uskPrivateKeyBase64
+                                                                         withExpectedPublicKey:_myUserCrossSigningKeys.userSignedKeys.keys];
+            OLMPkSigning *sskPkSigning = [self.crossSigningTools pkSigningFromBase64PrivateKey:sskPrivateKeyBase64
+                                                                         withExpectedPublicKey:_myUserCrossSigningKeys.selfSignedKeys.keys];
             
             if (uskPkSigning && sskPkSigning)
             {
@@ -1020,7 +1013,7 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
         NSString *privateKeyBase64 = [self.crypto.store secretWithSecretId:secretId];
         if (privateKeyBase64)
         {
-            OLMPkSigning *pkSigning = [self pkSigningFromBase64PrivateKey:privateKeyBase64 withExpectedPublicKey:expectedPublicKey];
+            OLMPkSigning *pkSigning = [self.crossSigningTools pkSigningFromBase64PrivateKey:privateKeyBase64 withExpectedPublicKey:expectedPublicKey];
             if (!pkSigning)
             {
                 MXLogDebug(@"[MXCrossSigning] getCrossSigningKeyWithKeyType failed to get PK signing");
@@ -1073,39 +1066,6 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
     }
     
     return secretId;
-}
-
-- (nullable OLMPkSigning*)pkSigningFromBase64PrivateKey:(NSString*)base64PrivateKey withExpectedPublicKey:(NSString*)expectedPublicKey
-{
-    OLMPkSigning *pkSigning;
-    
-    NSData *privateKey = [MXBase64Tools dataFromBase64:base64PrivateKey];
-    if (privateKey)
-    {
-        pkSigning = [self pkSigningFromPrivateKey:privateKey withExpectedPublicKey:expectedPublicKey];
-    }
-    
-    return pkSigning;
-}
-
-- (nullable OLMPkSigning*)pkSigningFromPrivateKey:(NSData*)privateKey withExpectedPublicKey:(NSString*)expectedPublicKey
-{
-    NSError *error;
-    OLMPkSigning *pkSigning = [[OLMPkSigning alloc] init];
-    NSString *gotPublicKey = [pkSigning doInitWithSeed:privateKey error:&error];
-    if (error)
-    {
-        MXLogDebug(@"[MXCrossSigning] pkSigningFromPrivateKey failed to build PK signing. Error: %@", error);
-        return nil;
-    }
-    
-    if (![gotPublicKey isEqualToString:expectedPublicKey])
-    {
-        MXLogDebug(@"[MXCrossSigning] pkSigningFromPrivateKey failed. Keys do not match: %@ vs %@", gotPublicKey, expectedPublicKey);
-        return nil;
-    }
-    
-    return pkSigning;
 }
 
 @end

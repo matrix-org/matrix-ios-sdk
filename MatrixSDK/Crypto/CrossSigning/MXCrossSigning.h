@@ -159,6 +159,14 @@ typedef NS_ENUM(NSInteger, MXCrossSigningErrorCode)
                    success:(void (^)(void))success
                    failure:(void (^)(NSError *error))failure;
 
+@end
+
+@interface MXLegacyCrossSigning : NSObject <MXCrossSigning>
+
+/**
+ The Matrix crypto.
+ */
+@property (nonatomic, readonly, weak) MXLegacyCrypto *crypto;
 
 /**
  Request private keys for cross-signing from other devices.
@@ -173,20 +181,6 @@ typedef NS_ENUM(NSInteger, MXCrossSigningErrorCode)
                               success:(void (^)(void))success
                 onPrivateKeysReceived:(void (^)(void))onPrivateKeysReceived
                               failure:(void (^)(NSError *error))failure;
-
-/**
- Does the given secret, interpreted as a private key, match given public cross-signing key
- */
-- (BOOL)isSecretValid:(NSString*)secret forPublicKeys:(NSString*)keys;
-
-@end
-
-@interface MXLegacyCrossSigning : NSObject <MXCrossSigning>
-
-/**
- The Matrix crypto.
- */
-@property (nonatomic, readonly, weak) MXLegacyCrypto *crypto;
 
 @end
 
