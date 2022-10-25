@@ -497,7 +497,7 @@
                                 XCTAssertEqual(newAliceSession.crypto.crossSigning.state, MXCrossSigningStateTrustCrossSigning);
 
                                 // - The 2nd device requests cross-signing keys from the 1st one
-                                [newAliceSession.crypto.crossSigning requestPrivateKeysToDeviceIds:nil success:^{
+                                [newAliceSession.legacyCrypto.legacyCrossSigning requestPrivateKeysToDeviceIds:nil success:^{
                                 } onPrivateKeysReceived:^{
 
                                     // -> The 2nd device should be able to cross-sign now

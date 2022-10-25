@@ -88,11 +88,6 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
 @property (nonatomic, readonly) NSString *deviceEd25519Key;
 
 /**
- The olm library version.
- */
-@property (nonatomic, readonly) NSString *olmVersion;
-
-/**
  The key backup manager.
  */
 @property (nonatomic, readonly) MXKeyBackup *backup;
@@ -610,5 +605,10 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
 @end
 
 @interface MXLegacyCrypto : NSObject <MXCrypto>
+
+/**
+ The olm library version.
+ */
+@property (nonatomic, readonly) NSString *olmVersion;
 
 @end

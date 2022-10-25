@@ -56,7 +56,7 @@ import MatrixSDKCrypto
 
 /// A work-in-progress implementation of `MXCrypto` which uses [matrix-rust-sdk](https://github.com/matrix-org/matrix-rust-sdk/tree/main/crates/matrix-sdk-crypto)
 /// under the hood.
-private class MXCryptoV2: NSObject, MXCrypto {
+private class MXCryptoV2: NSObject, MXCrypto, MXRecoveryServiceDelegate {
     enum Error: Swift.Error {
         case missingRoom
     }
@@ -69,33 +69,8 @@ private class MXCryptoV2: NSObject, MXCrypto {
         return machine.deviceEd25519Key
     }
     
-    public var olmVersion: String! {
-        log.debug("Not implemented")
-        return nil
-    }
-    
-    public var backup: MXKeyBackup! {
-        return keyBackup
-    }
-    
     public var keyVerificationManager: MXKeyVerificationManager! {
         return keyVerification
-    }
-    
-    public var recoveryService: MXRecoveryService! {
-        return recovery
-    }
-    
-    public var secretStorage: MXSecretStorage! {
-        return secretsStorage
-    }
-    
-    public var secretShareManager: MXSecretShareManager! {
-        return secretsManager
-    }
-    
-    public var crossSigning: MXCrossSigning! {
-        return crossSign
     }
     
     private let userId: String
@@ -107,13 +82,13 @@ private class MXCryptoV2: NSObject, MXCrypto {
     private let deviceInfoSource: MXDeviceInfoSource
     private let crossSigningInfoSource: MXCrossSigningInfoSource
     private let trustLevelSource: MXTrustLevelSource
-    private let crossSign: MXCrossSigningV2
+    let crossSigning: MXCrossSigning
     private let keyVerification: MXKeyVerificationManagerV2
-    private let secretsStorage: MXSecretStorage
-    private let secretsManager: MXSecretShareManager
+    let secretStorage: MXSecretStorage
+    let secretShareManager: MXSecretShareManager
     private let backupEngine: MXCryptoKeyBackupEngine
-    private let keyBackup: MXKeyBackup
-    private var recovery: MXRecoveryService
+    let backup: MXKeyBackup
+    private(set) var recoveryService: MXRecoveryService!
     
     private var undecryptableEvents = [String: MXEvent]()
     
@@ -140,7 +115,7 @@ private class MXCryptoV2: NSObject, MXCrypto {
             devicesSource: machine
         )
         
-        crossSign = MXCrossSigningV2(
+        crossSigning = MXCrossSigningV2(
             crossSigning: machine,
             restClient: restClient
         )
@@ -150,34 +125,34 @@ private class MXCryptoV2: NSObject, MXCrypto {
             handler: machine
         )
         
-        secretsManager = MXSecretShareManager()
-        secretsStorage = MXSecretStorage(matrixSession: session, processingQueue: cryptoQueue)
+        secretShareManager = MXSecretShareManager()
+        secretStorage = MXSecretStorage(matrixSession: session, processingQueue: cryptoQueue)
         
         backupEngine = MXCryptoKeyBackupEngine(backup: machine)
-        keyBackup = MXKeyBackup(
+        backup = MXKeyBackup(
             engine: backupEngine,
             restClient: restClient,
-            secretShareManager: secretsManager,
+            secretShareManager: secretShareManager,
             queue: cryptoQueue
         )
         
-        recovery = MXRecoveryService(
+        super.init()
+        
+        recoveryService = MXRecoveryService(
             dependencies: .init(
                 credentials: restClient.credentials,
-                backup: keyBackup,
-                secretStorage: secretsStorage,
+                backup: backup,
+                secretStorage: secretStorage,
                 secretStore: MXCryptoSecretStoreV2(
-                    backup: keyBackup,
+                    backup: backup,
                     backupEngine: backupEngine,
                     crossSigning: machine
                 ),
-                crossSigning: crossSign,
+                crossSigning: crossSigning,
                 cryptoQueue: cryptoQueue
             ),
-            delegate: keyVerification
+            delegate: self
         )
-        
-        super.init()
     }
     
     // MARK: - Factories
@@ -207,8 +182,8 @@ private class MXCryptoV2: NSObject, MXCrypto {
         machine.onInitialKeysUpload { [weak self] in
             guard let self = self else { return }
             
-            self.crossSign.refreshState(success: nil)
-            self.keyBackup.checkAndStart()
+            self.crossSigning.refreshState(success: nil)
+            self.backup.checkAndStart()
         }
     }
     

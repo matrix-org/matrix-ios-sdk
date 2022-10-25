@@ -538,10 +538,4 @@ class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
     }
 }
 
-extension MXKeyVerificationManagerV2: MXRecoveryServiceDelegate {
-    func setUserVerification(_ isTrusted: Bool, forUser: String, success: () -> Void, failure: (Swift.Error) -> Void) {
-        log.error("Not implemented")
-    }
-}
-
 #endif
