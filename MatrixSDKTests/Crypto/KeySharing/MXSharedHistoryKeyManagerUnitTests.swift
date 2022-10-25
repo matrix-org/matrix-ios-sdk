@@ -19,7 +19,7 @@ import XCTest
 @testable import MatrixSDK
 
 class MXSharedHistoryKeyManagerUnitTests: XCTestCase {
-    class CryptoStub: MXCrypto {
+    class CryptoStub: MXLegacyCrypto {
         var devices = MXUsersDevicesMap<MXDeviceInfo>()
         
         override func downloadKeys(_ userIds: [String]!, forceDownload: Bool, success: ((MXUsersDevicesMap<MXDeviceInfo>?, [String : MXCrossSigningInfo]?) -> Void)!, failure: ((Error?) -> Void)!) -> MXHTTPOperation! {

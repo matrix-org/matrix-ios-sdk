@@ -29,7 +29,7 @@
 
 @interface MXAes256KeyBackupAlgorithm ()
 
-@property (nonatomic, strong) MXCrypto *crypto;
+@property (nonatomic, strong) MXLegacyCrypto *crypto;
 
 @property (nonatomic, strong) MXAes256BackupAuthData *authData;
 
@@ -44,7 +44,7 @@
     return kMXCryptoAes256KeyBackupAlgorithm;
 }
 
-- (instancetype)initWithCrypto:(MXCrypto *)crypto authData:(id<MXBaseKeyBackupAuthData>)authData keyGetterBlock:(nonnull MXKeyBackupPrivateKeyGetterBlock)keyGetterBlock
+- (instancetype)initWithCrypto:(MXLegacyCrypto *)crypto authData:(id<MXBaseKeyBackupAuthData>)authData keyGetterBlock:(nonnull MXKeyBackupPrivateKeyGetterBlock)keyGetterBlock
 {
     if (self = [super init])
     {

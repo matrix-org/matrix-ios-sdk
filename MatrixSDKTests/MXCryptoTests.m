@@ -32,6 +32,7 @@
 #import "MXOutboundSessionInfo.h"
 #import <OLMKit/OLMKit.h>
 #import "MXLRUCache.h"
+#import "MatrixSDKTestsSwiftHeader.h"
 
 #import "MXKey.h"
 
@@ -86,7 +87,7 @@
     XCTAssertNotNil(event.wireContent[@"ciphertext"]);
     XCTAssertNotNil(event.wireContent[@"session_id"]);
     XCTAssertNotNil(event.wireContent[@"sender_key"]);
-    XCTAssertEqualObjects(event.wireContent[@"device_id"], senderSession.crypto.store.deviceId);
+    XCTAssertEqualObjects(event.wireContent[@"device_id"], senderSession.legacyCrypto.store.deviceId);
 
     // Check decrypted data
     XCTAssert(event.eventId);
@@ -110,17 +111,17 @@
 
         XCTAssertNil(mxSession.crypto, @"Crypto is disabled by default");
 
-        XCTAssertFalse([mxSession.crypto.store.class hasDataForCredentials:mxSession.matrixRestClient.credentials]);
+        XCTAssertFalse([mxSession.legacyCrypto.store.class hasDataForCredentials:mxSession.matrixRestClient.credentials]);
 
         [mxSession enableCrypto:YES success:^{
 
             XCTAssert(mxSession.crypto);
-            XCTAssert([mxSession.crypto.store.class hasDataForCredentials:mxSession.matrixRestClient.credentials]);
+            XCTAssert([mxSession.legacyCrypto.store.class hasDataForCredentials:mxSession.matrixRestClient.credentials]);
 
             [mxSession enableCrypto:NO success:^{
 
                 XCTAssertNil(mxSession.crypto);
-                XCTAssertFalse([mxSession.crypto.store.class hasDataForCredentials:mxSession.matrixRestClient.credentials], @"Crypto data must have been trashed");
+                XCTAssertFalse([mxSession.legacyCrypto.store.class hasDataForCredentials:mxSession.matrixRestClient.credentials], @"Crypto data must have been trashed");
 
                 [expectation fulfill];
 
@@ -145,12 +146,12 @@
         [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
 
         XCTAssert(mxSession.crypto);
-        XCTAssert([mxSession.crypto.store.class hasDataForCredentials:mxSession.matrixRestClient.credentials]);
+        XCTAssert([mxSession.legacyCrypto.store.class hasDataForCredentials:mxSession.matrixRestClient.credentials]);
 
         [mxSession enableCrypto:NO success:^{
 
             XCTAssertNil(mxSession.crypto);
-            XCTAssertFalse([mxSession.crypto.store.class hasDataForCredentials:mxSession.matrixRestClient.credentials], @"Crypto data must have been trashed");
+            XCTAssertFalse([mxSession.legacyCrypto.store.class hasDataForCredentials:mxSession.matrixRestClient.credentials], @"Crypto data must have been trashed");
 
             [expectation fulfill];
 
@@ -170,7 +171,7 @@
 
         [mxSession enableCrypto:YES success:^{
 
-            XCTAssertGreaterThan(mxSession.crypto.store.deviceId.length, 0, "If the hs did not provide a device id, the crypto module must create one");
+            XCTAssertGreaterThan(mxSession.legacyCrypto.store.deviceId.length, 0, "If the hs did not provide a device id, the crypto module must create one");
             [expectation fulfill];
 
         } failure:^(NSError *error) {
@@ -193,10 +194,10 @@
 
             XCTAssert(mxSession2.crypto);
 
-            NSString *deviceCurve25519Key = mxSession2.crypto.olmDevice.deviceCurve25519Key;
-            NSString *deviceEd25519Key = mxSession2.crypto.olmDevice.deviceEd25519Key;
+            NSString *deviceCurve25519Key = mxSession2.legacyCrypto.olmDevice.deviceCurve25519Key;
+            NSString *deviceEd25519Key = mxSession2.legacyCrypto.olmDevice.deviceEd25519Key;
 
-            NSArray<MXDeviceInfo *> *myUserDevices = [mxSession2.crypto.deviceList storedDevicesForUser:mxSession.myUserId];
+            NSArray<MXDeviceInfo *> *myUserDevices = [mxSession2.legacyCrypto.deviceList storedDevicesForUser:mxSession.myUserId];
             XCTAssertEqual(myUserDevices.count, 1);
 
             MXRestClient *bobRestClient = mxSession2.matrixRestClient;
@@ -213,10 +214,10 @@
 
                 XCTAssert(mxSession2.crypto, @"MXSession must recall that it has crypto engaged");
 
-                XCTAssertEqualObjects(deviceCurve25519Key, mxSession2.crypto.olmDevice.deviceCurve25519Key);
-                XCTAssertEqualObjects(deviceEd25519Key, mxSession2.crypto.olmDevice.deviceEd25519Key);
+                XCTAssertEqualObjects(deviceCurve25519Key, mxSession2.legacyCrypto.olmDevice.deviceCurve25519Key);
+                XCTAssertEqualObjects(deviceEd25519Key, mxSession2.legacyCrypto.olmDevice.deviceEd25519Key);
 
-                NSArray<MXDeviceInfo *> *myUserDevices2 = [mxSession2.crypto.deviceList storedDevicesForUser:mxSession2.myUser.userId];
+                NSArray<MXDeviceInfo *> *myUserDevices2 = [mxSession2.legacyCrypto.deviceList storedDevicesForUser:mxSession2.myUser.userId];
                 XCTAssertEqual(myUserDevices2.count, 1);
 
                 XCTAssertEqualObjects(myUserDevices[0].deviceId, myUserDevices2[0].deviceId);
@@ -246,12 +247,12 @@
 
             if (++count == 2)
             {
-                MXHTTPOperation *operation = [aliceSession.crypto.deviceList downloadKeys:@[bobSession.myUser.userId] forceDownload:NO success:nil failure:nil];
+                MXHTTPOperation *operation = [aliceSession.legacyCrypto.deviceList downloadKeys:@[bobSession.myUser.userId] forceDownload:NO success:nil failure:nil];
 
                 XCTAssertNil(operation, "@Alice shouldn't do another /query when the user devices are in the store");
 
                 // Check deviceTrackingStatus in store
-                NSDictionary<NSString*, NSNumber*> *deviceTrackingStatus = [aliceSession.crypto.store deviceTrackingStatus];
+                NSDictionary<NSString*, NSNumber*> *deviceTrackingStatus = [aliceSession.legacyCrypto.store deviceTrackingStatus];
                 MXDeviceTrackingStatus bobTrackingStatus = MXDeviceTrackingStatusFromNSNumber(deviceTrackingStatus[bobSession.myUser.userId]);
                 XCTAssertEqual(bobTrackingStatus, MXDeviceTrackingStatusUpToDate);
 
@@ -259,7 +260,7 @@
             }
         };
 
-        MXHTTPOperation *operation1 = [aliceSession.crypto.deviceList downloadKeys:@[bobSession.myUser.userId] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
+        MXHTTPOperation *operation1 = [aliceSession.legacyCrypto.deviceList downloadKeys:@[bobSession.myUser.userId] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
 
             onSuccess();
 
@@ -272,13 +273,13 @@
         XCTAssert([operation1 isKindOfClass:MXDeviceListOperation.class], @"Returned object must be indeed a MXDeviceListOperation object");
 
         // Check deviceTrackingStatus in store
-        NSDictionary<NSString*, NSNumber*> *deviceTrackingStatus = [aliceSession.crypto.store deviceTrackingStatus];
+        NSDictionary<NSString*, NSNumber*> *deviceTrackingStatus = [aliceSession.legacyCrypto.store deviceTrackingStatus];
         MXDeviceTrackingStatus bobTrackingStatus = MXDeviceTrackingStatusFromNSNumber(deviceTrackingStatus[bobSession.myUser.userId]);
         XCTAssertEqual(bobTrackingStatus, MXDeviceTrackingStatusDownloadInProgress);
         
 
         // A parallel operation
-        MXHTTPOperation *operation2 = [aliceSession.crypto.deviceList downloadKeys:@[bobSession.myUser.userId] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
+        MXHTTPOperation *operation2 = [aliceSession.legacyCrypto.deviceList downloadKeys:@[bobSession.myUser.userId] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
 
             onSuccess();
 
@@ -305,13 +306,13 @@
     // No device = non-e2e-capable device
 
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:self cryptedBob:NO warnOnUnknowDevices:NO readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
-        [aliceSession.crypto.deviceList downloadKeys:@[bobSession.myUser.userId] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
+        [aliceSession.legacyCrypto.deviceList downloadKeys:@[bobSession.myUser.userId] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
 
             NSArray *bobDevices = [usersDevicesInfoMap deviceIdsForUser:bobSession.myUser.userId];
             XCTAssertNotNil(bobDevices, @"[MXCrypto downloadKeys] should return @[] for Bob to distinguish him from an unknown user");
             XCTAssertEqual(0, bobDevices.count);
 
-            MXHTTPOperation *operation = [aliceSession.crypto.deviceList downloadKeys:@[bobSession.myUser.userId] forceDownload:NO success:nil failure:^(NSError *error) {
+            MXHTTPOperation *operation = [aliceSession.legacyCrypto.deviceList downloadKeys:@[bobSession.myUser.userId] forceDownload:NO success:nil failure:^(NSError *error) {
                 XCTFail(@"The request should not fail - NSError: %@", error);
                 [expectation fulfill];
             }];
@@ -332,7 +333,7 @@
     [matrixSDKTestsE2EData doE2ETestWithBobAndAlice:self readyToTest:^(MXSession *bobSession, MXSession *aliceSession, XCTestExpectation *expectation) {
         // Try to get info from a user on matrix.org.
         // The local hs we use for tests is not federated and is not able to talk with matrix.org
-        [aliceSession.crypto.deviceList downloadKeys:@[bobSession.myUser.userId, @"@auser:matrix.org"] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
+        [aliceSession.legacyCrypto.deviceList downloadKeys:@[bobSession.myUser.userId, @"@auser:matrix.org"] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
 
             // We can get info only for Bob
             XCTAssertEqual(1, usersDevicesInfoMap.map.count);
@@ -404,8 +405,8 @@
 
                 // mxSession.crypto.store is a private member
                 // and should be used only from the cryptoQueue. Particularly for this test
-                dispatch_async(mxSession.crypto.cryptoQueue, ^{
-                    XCTAssertEqualObjects(kMXCryptoMegolmAlgorithm, [mxSession.crypto.store algorithmForRoom:room.roomId]);
+                dispatch_async(mxSession.legacyCrypto.cryptoQueue, ^{
+                    XCTAssertEqualObjects(kMXCryptoMegolmAlgorithm, [mxSession.legacyCrypto.store algorithmForRoom:room.roomId]);
 
                     [expectation fulfill];
                 });
@@ -461,7 +462,7 @@
                                          readyToTest:^(MXSession *session, NSString *roomId, XCTestExpectation *expectation)
      {
         // Prepare room and event to be sent
-        MXCrypto *crypto = session.crypto;
+        MXLegacyCrypto *crypto = session.legacyCrypto;
         MXRoom *room = [session roomWithRoomId:roomId];
         NSString *message = @"Hello myself!";
         NSDictionary *content = @{
@@ -1856,14 +1857,14 @@
         [aliceSession.crypto downloadKeys:@[bobSession.myUserId] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
         
             // - Move to the crypto thread (this is an internal technical test)
-            dispatch_async(aliceSession.crypto.cryptoQueue, ^{
+            dispatch_async(aliceSession.legacyCrypto.cryptoQueue, ^{
                 
                 MXHTTPOperation *operation;
                 __block NSString *olmSessionId;
                 
                 
                 // - Create a first olm session
-                operation = [aliceSession.crypto ensureOlmSessionsForUsers:@[bobSession.myUserId] success:^(MXUsersDevicesMap<MXOlmSessionResult *> *results) {
+                operation = [aliceSession.legacyCrypto ensureOlmSessionsForUsers:@[bobSession.myUserId] success:^(MXUsersDevicesMap<MXOlmSessionResult *> *results) {
  
                     // -> It must succeed
                     olmSessionId = [results objectForDevice:bobSession.myDeviceId forUser:bobSession.myUserId].sessionId;
@@ -1878,7 +1879,7 @@
                 
                 
                 // - Create a second olm session in parallel
-                operation = [aliceSession.crypto ensureOlmSessionsForUsers:@[bobSession.myUserId] success:^(MXUsersDevicesMap<MXOlmSessionResult *> *results) {
+                operation = [aliceSession.legacyCrypto ensureOlmSessionsForUsers:@[bobSession.myUserId] success:^(MXUsersDevicesMap<MXOlmSessionResult *> *results) {
                     
                     // -> It must succeed using the same olm session
                     NSString *olmSessionId2 = [results objectForDevice:bobSession.myDeviceId forUser:bobSession.myUserId].sessionId;
@@ -2023,7 +2024,7 @@
                 // From Bob pov, that mimics Alice resharing her keys but with an advanced outbound group session.
                 XCTAssert(toDeviceEvent);
                 
-                MXOlmOutboundGroupSession *session = [aliceSession.crypto.olmDevice outboundGroupSessionForRoomWithRoomId:roomId];
+                MXOlmOutboundGroupSession *session = [aliceSession.legacyCrypto.olmDevice outboundGroupSessionForRoomWithRoomId:roomId];
                 XCTAssertNotNil(session);
                 
                 MXOutboundSessionInfo *sessionInfo = [[MXOutboundSessionInfo alloc] initWithSession: session];
@@ -2081,9 +2082,9 @@
                 XCTAssert(toDeviceEvent);
                 NSString *sessionId = toDeviceEvent.content[@"session_id"];
 
-                id<MXCryptoStore> bobCryptoStore = (id<MXCryptoStore>)[bobSession.crypto.olmDevice valueForKey:@"store"];
+                id<MXCryptoStore> bobCryptoStore = (id<MXCryptoStore>)[bobSession.legacyCrypto.olmDevice valueForKey:@"store"];
                 [bobCryptoStore removeInboundGroupSessionWithId:sessionId andSenderKey:toDeviceEvent.senderKey];
-                MXLRUCache *cache = [bobSession.crypto.olmDevice valueForKey:@"inboundGroupSessionCache"];
+                MXLRUCache *cache = [bobSession.legacyCrypto.olmDevice valueForKey:@"inboundGroupSessionCache"];
                 [cache clear];
 
                 // So that we cannot decrypt it anymore right now
@@ -2145,7 +2146,7 @@
             //  - Store the olm session between A&B devices
             // Let us pickle our session with bob here so we can later unpickle it
             // and wedge our session.
-            MXOlmSession *olmSession = [aliceSession.crypto.store sessionsWithDevice:bobSession.crypto.deviceCurve25519Key].firstObject;
+            MXOlmSession *olmSession = [aliceSession.legacyCrypto.store sessionsWithDevice:bobSession.crypto.deviceCurve25519Key].firstObject;
             
             // Relaunch Alice
             // This forces her to use a new megolm session for sending message "11"
@@ -2173,7 +2174,7 @@
                                 aliceSession2.crypto.warnOnUnknowDevices = NO;
                                 
                                 // Let us wedge the session now. Set crypto state like after the first message
-                                [aliceSession2.crypto.store storeSession:olmSession forDevice:bobSession.crypto.deviceCurve25519Key];
+                                [aliceSession2.legacyCrypto.store storeSession:olmSession forDevice:bobSession.crypto.deviceCurve25519Key];
                                 
                                 // - Alice sends a 3rd message with a 3rd megolm session but a wedged olm session
                                 MXRoom *roomFromAlicePOV2 = [aliceSession2 roomWithRoomId:roomId];
@@ -2511,7 +2512,7 @@
 
                             MXRoom *roomFromNewBobPOV = [newBobSession roomWithRoomId:roomFromAlicePOV.roomId];
 
-                            NSDictionary<NSString*, MXDeviceInfo*> *bobDevices = [aliceSession.crypto.store devicesForUser:newBobSession.myUser.userId];
+                            NSDictionary<NSString*, MXDeviceInfo*> *bobDevices = [aliceSession.legacyCrypto.store devicesForUser:newBobSession.myUser.userId];
                             XCTAssertEqual(bobDevices.count, 0, @"Alice should not have needed Bob's keys at this time");
 
                             // Turn the crypto ON in the room
@@ -2524,7 +2525,7 @@
 
                                         XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomFromNewBobPOV.roomId clearMessage:encryptedMessageFromAlice senderSession:aliceSession]);
 
-                                        NSDictionary<NSString*, MXDeviceInfo*> *bobDevices = [aliceSession.crypto.store devicesForUser:newBobSession.myUser.userId];
+                                        NSDictionary<NSString*, MXDeviceInfo*> *bobDevices = [aliceSession.legacyCrypto.store devicesForUser:newBobSession.myUser.userId];
                                         XCTAssertEqual(bobDevices.count, 1, @"Alice must now know Bob's device keys");
 
                                         [expectation fulfill];
@@ -2701,7 +2702,7 @@
             // Clear bob crypto data
             [bobSession enableCrypto:NO success:^{
 
-                XCTAssertFalse([bobSession.crypto.store.class hasDataForCredentials:bobSession.matrixRestClient.credentials], @"Bob's keys should have been deleted");
+                XCTAssertFalse([bobSession.legacyCrypto.store.class hasDataForCredentials:bobSession.matrixRestClient.credentials], @"Bob's keys should have been deleted");
 
                 [bobSession enableCrypto:YES success:^{
 
@@ -2965,7 +2966,7 @@
                     {
 
                         //  - 2- one device got updated in the room
-                        [aliceSession.crypto.deviceList invalidateUserDeviceList:aliceSession.myUser.userId];
+                        [aliceSession.legacyCrypto.deviceList invalidateUserDeviceList:aliceSession.myUser.userId];
 
                         // Delay the new message request so that the downloadKeys request from invalidateUserDeviceList can complete
                         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0.5 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
@@ -3044,7 +3045,7 @@
 {
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
         
-        MXOlmOutboundGroupSession *outboundSession = [aliceSession.crypto.store outboundGroupSessionWithRoomId:roomId];
+        MXOlmOutboundGroupSession *outboundSession = [aliceSession.legacyCrypto.store outboundGroupSessionWithRoomId:roomId];
         XCTAssertNotNil(outboundSession);
         
         NSString *sessionKey = outboundSession.session.sessionKey;
@@ -3055,7 +3056,7 @@
         
         [aliceSession close];
         [aliceSession2 start:^{
-            MXOlmOutboundGroupSession *outboundSession = [aliceSession2.crypto.store outboundGroupSessionWithRoomId:roomId];
+            MXOlmOutboundGroupSession *outboundSession = [aliceSession2.legacyCrypto.store outboundGroupSessionWithRoomId:roomId];
             XCTAssertNotNil(outboundSession);
             NSString *sessionKey2 = outboundSession.session.sessionKey;
             XCTAssertEqualObjects(sessionKey, sessionKey2);
@@ -3078,12 +3079,12 @@
 - (void)xtestDiscardAndRestoreOlmOutboundKey
 {
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
-        MXOlmOutboundGroupSession *outboundSession = [aliceSession.crypto.store outboundGroupSessionWithRoomId:roomId];
+        MXOlmOutboundGroupSession *outboundSession = [aliceSession.legacyCrypto.store outboundGroupSessionWithRoomId:roomId];
         XCTAssertNotNil(outboundSession);
         
         NSString *sessionKey = outboundSession.session.sessionKey;
         
-        [aliceSession.crypto.olmDevice discardOutboundGroupSessionForRoomWithRoomId:roomId];
+        [aliceSession.legacyCrypto.olmDevice discardOutboundGroupSessionForRoomWithRoomId:roomId];
 
         // - Restart the session
         MXSession *aliceSession2 = [[MXSession alloc] initWithMatrixRestClient:aliceSession.matrixRestClient];
@@ -3091,10 +3092,10 @@
         
         [aliceSession close];
         [aliceSession2 start:^{
-            MXOlmOutboundGroupSession *outboundSession = [aliceSession2.crypto.store outboundGroupSessionWithRoomId:roomId];
+            MXOlmOutboundGroupSession *outboundSession = [aliceSession2.legacyCrypto.store outboundGroupSessionWithRoomId:roomId];
             XCTAssertNil(outboundSession);
-            XCTAssertNotNil([aliceSession2.crypto.olmDevice createOutboundGroupSessionForRoomWithRoomId:roomId]);
-            outboundSession = [aliceSession2.crypto.store outboundGroupSessionWithRoomId:roomId];
+            XCTAssertNotNil([aliceSession2.legacyCrypto.olmDevice createOutboundGroupSessionForRoomWithRoomId:roomId]);
+            outboundSession = [aliceSession2.legacyCrypto.store outboundGroupSessionWithRoomId:roomId];
             XCTAssertNotNil(outboundSession);
             NSString *sessionKey2 = outboundSession.session.sessionKey;
             XCTAssertNotEqualObjects(sessionKey, sessionKey2, @"%@ == %@", sessionKey, sessionKey2);
@@ -3114,9 +3115,9 @@
     [matrixSDKTestsData doMXSessionTestWithBob:self readyToTest:^(MXSession *mxSession, XCTestExpectation *expectation) {
         [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
         
-        [mxSession.crypto.olmDevice generateFallbackKey];
+        [mxSession.legacyCrypto.olmDevice generateFallbackKey];
         
-        NSDictionary *fallbackKeyDictionary = mxSession.crypto.olmDevice.fallbackKey;
+        NSDictionary *fallbackKeyDictionary = mxSession.legacyCrypto.olmDevice.fallbackKey;
         NSMutableDictionary *fallbackKeyJson = [NSMutableDictionary dictionary];
         
         for (NSString *keyId in fallbackKeyDictionary[kMXKeyCurve25519Type])
@@ -3125,7 +3126,7 @@
             NSMutableDictionary *signedKey = [NSMutableDictionary dictionary];
             signedKey[@"key"] = fallbackKeyDictionary[kMXKeyCurve25519Type][keyId];
             signedKey[@"fallback"] = @(YES);
-            signedKey[@"signatures"] = [mxSession.crypto signObject:signedKey];
+            signedKey[@"signatures"] = [mxSession.legacyCrypto signObject:signedKey];
             
             fallbackKeyJson[[NSString stringWithFormat:@"%@:%@", kMXKeySignedCurve25519Type, keyId]] = signedKey;
         }
@@ -3144,7 +3145,7 @@
                                                                  ofUser:mxSession.myUserId];
         
         NSError *error;
-        BOOL result = [mxSession.crypto.olmDevice verifySignature:deviceInfo.fingerprint JSON:fallbackKey.signalableJSONDictionary signature:signature error:&error];
+        BOOL result = [mxSession.legacyCrypto.olmDevice verifySignature:deviceInfo.fingerprint JSON:fallbackKey.signalableJSONDictionary signature:signature error:&error];
         
         XCTAssertNil(error);
         XCTAssertTrue(result);

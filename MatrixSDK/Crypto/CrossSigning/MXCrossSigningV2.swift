@@ -18,49 +18,41 @@ import Foundation
 
 #if DEBUG
 
-/// A work-in-progress subclass of `MXCrossSigning` instantiated and used by `MXCryptoV2`.
-///
-/// Note: `MXCrossSigning` will be defined as a protocol in the future to avoid subclasses.
-class MXCrossSigningV2: MXCrossSigning {
+/// An implementation of `MXCrossSigning` compatible with `MXCryptoV2` and `MatrixSDKCrypto`
+class MXCrossSigningV2: NSObject, MXCrossSigning {
     enum Error: Swift.Error {
         case missingAuthSession
     }
     
-    override var crypto: MXCrypto? {
-        assertionFailure("Crypto module should not be accessed directly")
-        return nil
-    }
-    
-    override var state: MXCrossSigningState {
-        if hasAllPrivateKeys {
-            return .canCrossSign
-        } else if let info = info {
-            if info.trustLevel.isVerified {
-                return .trustCrossSigning
-            } else {
-                return .crossSigningExists
-            }
-        } else {
+    var state: MXCrossSigningState {
+        guard let info = myUserCrossSigningKeys else {
             return .notBootstrapped
+        }
+    
+        if info.trustLevel.isVerified {
+            return hasAllPrivateKeys ? .canCrossSign : .trustCrossSigning
+        } else {
+            return .crossSigningExists
         }
     }
     
-    override var canTrustCrossSigning: Bool {
+    private(set) var myUserCrossSigningKeys: MXCrossSigningInfo?
+    
+    var canTrustCrossSigning: Bool {
         return state.rawValue >= MXCrossSigningState.trustCrossSigning.rawValue
     }
     
-    override var canCrossSign: Bool {
+    var canCrossSign: Bool {
         return state.rawValue >= MXCrossSigningState.canCrossSign.rawValue
     }
     
-    override var hasAllPrivateKeys: Bool {
+    var hasAllPrivateKeys: Bool {
         let status = crossSigning.crossSigningStatus()
         return status.hasMaster && status.hasSelfSigning && status.hasUserSigning
     }
     
     private let crossSigning: MXCryptoCrossSigning
     private let infoSource: MXCrossSigningInfoSource
-    private var info: MXCrossSigningInfo?
     private let restClient: MXRestClient
     
     private let log = MXNamedLog(name: "MXCrossSigningV2")
@@ -71,15 +63,19 @@ class MXCrossSigningV2: MXCrossSigning {
         self.restClient = restClient
     }
     
-    override func setup(
+    func setup(
         withPassword password: String,
         success: @escaping () -> Void,
         failure: @escaping (Swift.Error) -> Void
     ) {
+        log.debug("->")
+        
         Task {
             do {
                 let authParams = try await authParameters(password: password)
                 try await crossSigning.bootstrapCrossSigning(authParams: authParams)
+                
+                log.debug("Completed cross signing setup")
                 await MainActor.run {
                     success()
                 }
@@ -92,14 +88,18 @@ class MXCrossSigningV2: MXCrossSigning {
         }
     }
     
-    override func setup(
+    func setup(
         withAuthParams authParams: [AnyHashable: Any],
         success: @escaping () -> Void,
         failure: @escaping (Swift.Error) -> Void
     ) {
+        log.debug("->")
+        
         Task {
             do {
                 try await crossSigning.bootstrapCrossSigning(authParams: authParams)
+                
+                log.debug("Completed cross signing setup")
                 await MainActor.run {
                     success()
                 }
@@ -112,15 +112,18 @@ class MXCrossSigningV2: MXCrossSigning {
         }
     }
     
-    override func refreshState(
+    func refreshState(
         success: ((Bool) -> Void)?,
         failure: ((Swift.Error) -> Void)? = nil
     ) {
+        log.debug("->")
+        
         Task {
             do {
                 try await crossSigning.downloadKeys(users: [crossSigning.userId])
-                info = infoSource.crossSigningInfo(userId: crossSigning.userId)
+                myUserCrossSigningKeys = infoSource.crossSigningInfo(userId: crossSigning.userId)
                 
+                log.debug("Cross signing state refreshed")
                 await MainActor.run {
                     success?(true)
                 }
@@ -133,32 +136,52 @@ class MXCrossSigningV2: MXCrossSigning {
         }
     }
 
-    override func crossSignDevice(
+    func crossSignDevice(
         withDeviceId deviceId: String,
         success: @escaping () -> Void,
         failure: @escaping (Swift.Error) -> Void
     ) {
-        log.debug("Not implemented")
-        success()
+        log.debug("->")
+        
+        Task {
+            do {
+                try await crossSigning.manuallyVerifyDevice(userId: crossSigning.userId, deviceId: deviceId)
+                
+                log.debug("Successfully cross-signed a device")
+                await MainActor.run {
+                    success()
+                }
+            } catch {
+                log.error("Failed cross-signing a device", context: error)
+                await MainActor.run {
+                    failure(error)
+                }
+            }
+        }
     }
 
-    override func signUser(
+    func signUser(
         withUserId userId: String,
         success: @escaping () -> Void,
         failure: @escaping (Swift.Error) -> Void
     ) {
-        log.debug("Not implemented")
-        success()
-    }
-
-    override func requestPrivateKeys(
-        toDeviceIds deviceIds: [String]?,
-        success: @escaping () -> Void,
-        onPrivateKeysReceived: @escaping () -> Void,
-        failure: @escaping (Swift.Error) -> Void
-    ) {
-        log.debug("Not implemented")
-        success()
+        log.debug("->")
+        
+        Task {
+            do {
+                try await crossSigning.manuallyVerifyUser(userId: userId)
+                log.debug("Successfully cross-signed a user")
+                
+                await MainActor.run {
+                    success()
+                }
+            } catch {
+                log.error("Failed cross-signing a user", context: error)
+                await MainActor.run {
+                    failure(error)
+                }
+            }
+        }
     }
     
     // MARK: - Private

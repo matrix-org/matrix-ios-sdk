@@ -16,7 +16,7 @@
 
 #import <Foundation/Foundation.h>
 
-@class MXCrypto;
+@class MXLegacyCrossSigning;
 @class MXRestClient;
 @class MXExportedOlmDevice;
 
@@ -43,13 +43,13 @@ typedef NS_ENUM(NSInteger, MXDehydrationServiceErrorCode)
  Dehydrate a new device for the current account
  
  @param restClient client used to call the dehydration API
- @param crypto crypto used to self sign the dehydrated device
+ @param crossSigning cross signing used to self sign the dehydrated device
  @param dehydrationKey key used to pickle the Olm account
  @param success callback called in case of success
  @param failure callback called in case of unexpected failure
  */
 - (void)dehydrateDeviceWithMatrixRestClient:(MXRestClient*)restClient
-                                     crypto:(MXCrypto*)crypto
+                               crossSigning:(MXLegacyCrossSigning *)crossSigning
                              dehydrationKey:(NSData*)dehydrationKey
                                     success:(void (^)(NSString * deviceId))success
                                     failure:(void (^)(NSError *error))failure;

@@ -31,7 +31,7 @@
 @interface MXMegolmDecryption ()
 {
     // The crypto module
-    MXCrypto *crypto;
+    MXLegacyCrypto *crypto;
 
     // The olm device interface
     MXOlmDevice *olmDevice;
@@ -57,7 +57,7 @@
 }
 
 #pragma mark - MXDecrypting
-- (instancetype)initWithCrypto:(MXCrypto *)theCrypto
+- (instancetype)initWithCrypto:(MXLegacyCrypto *)theCrypto
 {
     self = [super init];
     if (self)

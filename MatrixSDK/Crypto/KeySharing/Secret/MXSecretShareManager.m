@@ -42,7 +42,7 @@ static NSArray<MXEventTypeString> *kMXSecretShareEventTypes;
     NSMutableArray<NSString*> *cancelledRequestIds;
 }
 
-@property (nonatomic, readonly, weak) MXCrypto *crypto;
+@property (nonatomic, readonly, weak) MXLegacyCrypto *crypto;
 
 @end
 
@@ -172,7 +172,7 @@ static NSArray<MXEventTypeString> *kMXSecretShareEventTypes;
     });
 }
 
-- (instancetype)initWithCrypto:(MXCrypto *)crypto;
+- (instancetype)initWithCrypto:(MXLegacyCrypto *)crypto;
 {
     self = [super init];
     if (self)

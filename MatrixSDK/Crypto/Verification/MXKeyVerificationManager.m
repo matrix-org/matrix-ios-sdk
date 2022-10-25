@@ -582,7 +582,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
     });
 }
 
-- (instancetype)initWithCrypto:(MXCrypto *)crypto
+- (instancetype)initWithCrypto:(MXLegacyCrypto *)crypto
 {
     self = [super init];
     if (self)
@@ -1574,7 +1574,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
 {
     BOOL isOtherQRCodeDataValid = YES;
     
-    MXCrossSigning *crossSigning = self.crypto.crossSigning;
+    id<MXCrossSigning> crossSigning = self.crypto.crossSigning;
     
     NSString *masterKeyPublic = crossSigning.myUserCrossSigningKeys.masterKeys.keys;
     

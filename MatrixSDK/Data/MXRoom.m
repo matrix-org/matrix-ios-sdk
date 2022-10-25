@@ -3653,7 +3653,7 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
  */
 - (void)validateEncryptionStateConsistency
 {
-    MXCrypto *crypto = mxSession.crypto;
+    id<MXCrypto> crypto = mxSession.crypto;
     if (!crypto)
     {
 #ifdef MX_CRYPTO
@@ -3718,7 +3718,7 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
 
 - (void)membersTrustLevelSummaryWithForceDownload:(BOOL)forceDownload success:(void (^)(MXUsersTrustLevelSummary *usersTrustLevelSummary))success failure:(void (^)(NSError *error))failure
 {
-    MXCrypto *crypto = mxSession.crypto;
+    id<MXCrypto> crypto = mxSession.crypto;
     
     if (crypto && self.summary.isEncrypted)
     {
