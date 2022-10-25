@@ -243,15 +243,6 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
 
 #pragma mark Transactions
 
-- (void)beginKeyVerificationWithUserId:(NSString*)userId
-                           andDeviceId:(NSString*)deviceId
-                                method:(NSString*)method
-                               success:(void(^)(id<MXKeyVerificationTransaction> transaction))success
-                               failure:(void(^)(NSError *error))failure
-{
-    [self beginKeyVerificationWithUserId:userId andDeviceId:deviceId transactionId:nil dmRoomId:nil dmEventId:nil method:method success:success failure:failure];
-}
-
 - (void)beginKeyVerificationFromRequest:(id<MXKeyVerificationRequest>)request
                                  method:(NSString*)method
                                 success:(void(^)(id<MXKeyVerificationTransaction> transaction))success

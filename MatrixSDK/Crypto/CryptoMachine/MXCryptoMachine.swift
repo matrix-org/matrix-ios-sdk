@@ -327,6 +327,10 @@ extension MXCryptoMachine: MXCryptoUserIdentitySource {
         let request = try machine.verifyDevice(userId: userId, deviceId: deviceId)
         try await requests.uploadSignatures(request: request)
     }
+    
+    func setLocalTrust(userId: String, deviceId: String, trust: LocalTrust) throws {
+        try machine.setLocalTrust(userId: userId, deviceId: deviceId, trustState: trust)
+    }
 }
 
 extension MXCryptoMachine: MXCryptoRoomEventEncrypting {
@@ -540,6 +544,14 @@ extension MXCryptoMachine: MXCryptoVerificationRequesting {
         return request
     }
     
+    func requestVerification(userId: String, deviceId: String, methods: [String]) async throws -> VerificationRequest {
+        guard let result = try machine.requestVerificationWithDevice(userId: userId, deviceId: deviceId, methods: methods) else {
+            throw Error.missingVerificationRequest
+        }
+        try await handleOutgoingVerificationRequest(result.request)
+        return result.verification
+    }
+    
     func verificationRequests(userId: String) -> [VerificationRequest] {
         return machine.getVerificationRequests(userId: userId)
     }
@@ -613,14 +625,6 @@ extension MXCryptoMachine: MXCryptoVerifying {
 extension MXCryptoMachine: MXCryptoSASVerifying {
     func startSasVerification(userId: String, flowId: String) async throws -> Sas {
         guard let result = try machine.startSasVerification(userId: userId, flowId: flowId) else {
-            throw Error.missingVerification
-        }
-        try await handleOutgoingVerificationRequest(result.request)
-        return result.sas
-    }
-    
-    func startSasVerification(userId: String, deviceId: String) async throws -> Sas {
-        guard let result = try machine.startSasWithDevice(userId: userId, deviceId: deviceId) else {
             throw Error.missingVerification
         }
         try await handleOutgoingVerificationRequest(result.request)

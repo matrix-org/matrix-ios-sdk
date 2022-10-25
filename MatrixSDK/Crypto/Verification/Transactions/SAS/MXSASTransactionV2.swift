@@ -29,15 +29,11 @@ class MXSASTransactionV2: NSObject, MXSASTransaction {
         if sas.isDone {
             return MXSASTransactionStateVerified
         } else if sas.isCancelled {
-            return MXSASTransactionStateCancelled
+            return sas.cancelInfo?.cancelledByUs == true ? MXSASTransactionStateCancelledByMe : MXSASTransactionStateCancelled
         } else if sas.canBePresented {
             return MXSASTransactionStateShowSAS
-        } else if sas.hasBeenAccepted && !sas.haveWeConfirmed {
-            return MXSASTransactionStateIncomingShowAccept
-        } else if sas.haveWeConfirmed {
-            return MXSASTransactionStateOutgoingWaitForPartnerToAccept
         }
-        return MXSASTransactionStateUnknown
+        return sas.weStarted ? MXSASTransactionStateOutgoingWaitForPartnerToAccept : MXSASTransactionStateIncomingShowAccept
     }
     
     var sasEmoji: [MXEmojiRepresentation]? {
