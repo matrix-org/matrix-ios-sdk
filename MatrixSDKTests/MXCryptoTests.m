@@ -1806,14 +1806,14 @@
                 [bobSession eventWithEventId:eventId inRoom:roomId success:^(MXEvent *event) {
                     
                     // -> But he does not have keys decrypt it
-                    [bobSession.crypto hasKeysToDecryptEvent:event onComplete:^(BOOL hasKeys) {
+                    [bobSession.legacyCrypto hasKeysToDecryptEvent:event onComplete:^(BOOL hasKeys) {
                         XCTAssertFalse(hasKeys);
                         
                         // - Bob resumes his session
                         [bobSession resume:^{
                             
                             // -> He has keys now
-                            [bobSession.crypto hasKeysToDecryptEvent:event onComplete:^(BOOL hasKeys) {
+                            [bobSession.legacyCrypto hasKeysToDecryptEvent:event onComplete:^(BOOL hasKeys) {
                                 XCTAssertTrue(hasKeys);
                                 
                                 [expectation fulfill];
@@ -3292,17 +3292,17 @@
         
         // Visibility is set to not shared by default
         MXSDKOptions.sharedInstance.enableRoomSharedHistoryOnInvite = NO;
-        XCTAssertFalse([session.crypto isRoomSharingHistory:roomId]);
+        XCTAssertFalse([session.legacyCrypto isRoomSharingHistory:roomId]);
         
         // But can be enabled with a build flag
         MXSDKOptions.sharedInstance.enableRoomSharedHistoryOnInvite = YES;
-        XCTAssertTrue([session.crypto isRoomSharingHistory:roomId]);
+        XCTAssertTrue([session.legacyCrypto isRoomSharingHistory:roomId]);
         
         MXRoom *room = [session roomWithRoomId:roomId];
         [room liveTimeline:^(id<MXEventTimeline> liveTimeline) {
             [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomHistoryVisibility] onEvent:^(MXEvent * _Nonnull event, MXTimelineDirection direction, MXRoomState * _Nullable roomState) {
                 
-                BOOL sharedHistory = [session.crypto isRoomSharingHistory:roomId];
+                BOOL sharedHistory = [session.legacyCrypto isRoomSharingHistory:roomId];
                 BOOL expectsSharedHistory = [caseOutcomes[caseIndex].lastObject boolValue];
                 XCTAssertEqual(expectsSharedHistory, sharedHistory);
                 

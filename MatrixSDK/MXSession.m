@@ -1926,9 +1926,9 @@ typedef void (^MXOnResumeDone)(void);
  */
 - (void)validateAccountData
 {
-    // Detecting an issue where more than one valid SSSS key is present on the client
+    // Detecting an issue in legacy crypto where more than one valid SSSS key is present on the client
     // https://github.com/vector-im/element-ios/issues/4569
-    NSInteger keysCount = self.crypto.secretStorage.numberOfValidKeys;
+    NSInteger keysCount = ((MXLegacyCrypto *)self.crypto).secretStorage.numberOfValidKeys;
     if (keysCount > 1)
     {
         MXLogErrorDetails(@"[MXSession] validateAccountData: Detected multiple valid SSSS keys, should only have one at most", @{
@@ -4827,33 +4827,6 @@ typedef void (^MXOnResumeDone)(void);
         MXLogDebug(@"[MXSession] Start crypto -> No crypto");
         success();
     }
-}
-
-- (BOOL)decryptEvent:(MXEvent*)event inTimeline:(NSString*)timeline
-{
-    MXEventDecryptionResult *result;
-    if (event.eventType == MXEventTypeRoomEncrypted)
-    {
-        if (_crypto)
-        {
-            // TODO: One day, this method will be async
-            result = [_crypto decryptEvent:event inTimeline:timeline];
-        }
-        else
-        {
-            // Encryption not enabled
-            result = [MXEventDecryptionResult new];
-            result.error = [NSError errorWithDomain:MXDecryptingErrorDomain
-                                               code:MXDecryptingErrorEncryptionNotEnabledCode
-                                           userInfo:@{
-                                               NSLocalizedDescriptionKey: MXDecryptingErrorEncryptionNotEnabledReason
-                                           }];
-        }
-        
-        [event setClearData:result];
-    }
-    
-    return (result.error == nil);
 }
 
 - (void)decryptEvents:(NSArray<MXEvent*> *)events

@@ -1582,7 +1582,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
     {
         MXVerifyingAnotherUserQRCodeData *verifyingAnotherUserQRCodeData = (MXVerifyingAnotherUserQRCodeData*)otherQRCodeData;
         
-        MXCrossSigningInfo *otherUserCrossSigningKeys = [self.crypto crossSigningKeysForUser:otherUserId];
+        MXCrossSigningInfo *otherUserCrossSigningKeys = [self.crypto.crossSigning crossSigningKeysForUser:otherUserId];
         NSString *otherUserMasterKeyPublic = otherUserCrossSigningKeys.masterKeys.keys;
     
         // verifyingAnotherUserQRCodeData.otherUserCrossSigningMasterKeyPublic -> Current user master key public
@@ -1968,7 +1968,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
                                                                                otherUserId:(NSString*)otherUserId
 {
     MXCrossSigningInfo *myUserCrossSigningKeys = self.crypto.crossSigning.myUserCrossSigningKeys;
-    MXCrossSigningInfo *otherUserCrossSigningKeys = [self.crypto crossSigningKeysForUser:otherUserId];
+    MXCrossSigningInfo *otherUserCrossSigningKeys = [self.crypto.crossSigning crossSigningKeysForUser:otherUserId];
 
     NSString *userCrossSigningMasterKeyPublic = myUserCrossSigningKeys.masterKeys.keys;
     NSString *otherUserCrossSigningMasterKeyPublic = otherUserCrossSigningKeys.masterKeys.keys;

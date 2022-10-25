@@ -159,6 +159,14 @@ typedef NS_ENUM(NSInteger, MXCrossSigningErrorCode)
                    success:(void (^)(void))success
                    failure:(void (^)(NSError *error))failure;
 
+/**
+ Get the stored cross-siging information of a user.
+
+ @param userId The user.
+ @return the cross-signing information if any.
+ */
+- (nullable MXCrossSigningInfo *)crossSigningKeysForUser:(NSString*)userId;
+
 @end
 
 @interface MXLegacyCrossSigning : NSObject <MXCrossSigning>

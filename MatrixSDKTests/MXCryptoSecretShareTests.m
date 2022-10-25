@@ -107,7 +107,7 @@
             [newAliceSession.crypto setDeviceVerification:MXDeviceVerified forDevice:aliceSession.myDeviceId ofUser:aliceSession.myUserId success:nil failure:nil];
             
             // - Alice requests the secret from the new device
-            [newAliceSession.crypto.secretShareManager requestSecret:secretId toDeviceIds:nil success:^(NSString * _Nonnull requestId) {
+            [newAliceSession.legacyCrypto.secretShareManager requestSecret:secretId toDeviceIds:nil success:^(NSString * _Nonnull requestId) {
                 XCTAssertNotNil(requestId);
             } onSecretReceived:^BOOL(NSString * _Nonnull sharedSecret) {
                 
@@ -157,10 +157,10 @@
             [aliceSession pause];
             
             // - Alice requests the secret from the new device
-            [newAliceSession.crypto.secretShareManager requestSecret:secretId toDeviceIds:nil success:^(NSString * _Nonnull requestId) {
+            [newAliceSession.legacyCrypto.secretShareManager requestSecret:secretId toDeviceIds:nil success:^(NSString * _Nonnull requestId) {
                 
                 // - Alice cancels the request
-                [newAliceSession.crypto.secretShareManager cancelRequestWithRequestId:requestId success:^{
+                [newAliceSession.legacyCrypto.secretShareManager cancelRequestWithRequestId:requestId success:^{
                 } failure:^(NSError * _Nonnull error) {
                     XCTFail(@"The operation should not fail - NSError: %@", error);
                     [expectation fulfill];

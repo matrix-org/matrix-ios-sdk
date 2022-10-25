@@ -282,7 +282,7 @@
             
             // - Disable key share requests on Alice2
             [aliceSession2.crypto setOutgoingKeyRequestsEnabled:NO onComplete:nil];
-            aliceSession2.crypto.enableOutgoingKeyRequestsOnceSelfVerificationDone = NO;
+            aliceSession2.legacyCrypto.enableOutgoingKeyRequestsOnceSelfVerificationDone = NO;
             
             NSString *aliceUserId = aliceSession1.matrixRestClient.credentials.userId;
             
@@ -397,7 +397,7 @@
                                             XCTAssertEqual(aliceSession2.legacyCrypto.store.inboundGroupSessions.count, aliceSession1.legacyCrypto.store.inboundGroupSessions.count);
                                             
                                             // -> key share requests on Alice2 are enabled again
-                                            XCTAssertTrue(aliceSession2.crypto.isOutgoingKeyRequestsEnabled);
+                                            XCTAssertTrue(aliceSession2.legacyCrypto.isOutgoingKeyRequestsEnabled);
                                             
                                             [expectation fulfill];
                                         });

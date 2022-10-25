@@ -362,7 +362,7 @@
             XCTAssertTrue(aliceDevice1Trust.isCrossSigningVerified);
             
             // -> Alice must see their cross-signing info trusted
-            MXCrossSigningInfo *aliceCrossSigningInfo = [aliceSession.crypto crossSigningKeysForUser:aliceSession.myUserId];
+            MXCrossSigningInfo *aliceCrossSigningInfo = [aliceSession.crypto.crossSigning crossSigningKeysForUser:aliceSession.myUserId];
             XCTAssertNotNil(aliceCrossSigningInfo);
             XCTAssertTrue(aliceCrossSigningInfo.trustLevel.isVerified);
             XCTAssertTrue(aliceCrossSigningInfo.trustLevel.isLocallyVerified);

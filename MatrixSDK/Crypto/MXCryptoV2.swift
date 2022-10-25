@@ -73,19 +73,15 @@ private class MXCryptoV2: NSObject, MXCrypto, MXRecoveryServiceDelegate {
         return keyVerification
     }
     
-    private let userId: String
     private let cryptoQueue: DispatchQueue
     
     private weak var session: MXSession?
     
     private let machine: MXCryptoMachine
     private let deviceInfoSource: MXDeviceInfoSource
-    private let crossSigningInfoSource: MXCrossSigningInfoSource
     private let trustLevelSource: MXTrustLevelSource
     let crossSigning: MXCrossSigning
     private let keyVerification: MXKeyVerificationManagerV2
-    let secretStorage: MXSecretStorage
-    let secretShareManager: MXSecretShareManager
     private let backupEngine: MXCryptoKeyBackupEngine
     let backup: MXKeyBackup
     private(set) var recoveryService: MXRecoveryService!
@@ -95,7 +91,6 @@ private class MXCryptoV2: NSObject, MXCrypto, MXRecoveryServiceDelegate {
     private let log = MXNamedLog(name: "MXCryptoV2")
     
     public init(userId: String, deviceId: String, session: MXSession, restClient: MXRestClient) throws {
-        self.userId = userId
         self.cryptoQueue = DispatchQueue(label: "MXCryptoV2-\(userId)")
         self.session = session
         
@@ -109,7 +104,6 @@ private class MXCryptoV2: NSObject, MXCrypto, MXRecoveryServiceDelegate {
         )
         
         deviceInfoSource = MXDeviceInfoSource(source: machine)
-        crossSigningInfoSource = MXCrossSigningInfoSource(source: machine)
         trustLevelSource = MXTrustLevelSource(
             userIdentitySource: machine,
             devicesSource: machine
@@ -125,14 +119,11 @@ private class MXCryptoV2: NSObject, MXCrypto, MXRecoveryServiceDelegate {
             handler: machine
         )
         
-        secretShareManager = MXSecretShareManager()
-        secretStorage = MXSecretStorage(matrixSession: session, processingQueue: cryptoQueue)
-        
         backupEngine = MXCryptoKeyBackupEngine(backup: machine)
         backup = MXKeyBackup(
             engine: backupEngine,
             restClient: restClient,
-            secretShareManager: secretShareManager,
+            secretShareManager: MXSecretShareManager(),
             queue: cryptoQueue
         )
         
@@ -142,7 +133,10 @@ private class MXCryptoV2: NSObject, MXCrypto, MXRecoveryServiceDelegate {
             dependencies: .init(
                 credentials: restClient.credentials,
                 backup: backup,
-                secretStorage: secretStorage,
+                secretStorage: MXSecretStorage(
+                    matrixSession: session,
+                    processingQueue: cryptoQueue
+                ),
                 secretStore: MXCryptoSecretStoreV2(
                     backup: backup,
                     backupEngine: backupEngine,
@@ -153,23 +147,6 @@ private class MXCryptoV2: NSObject, MXCrypto, MXRecoveryServiceDelegate {
             ),
             delegate: self
         )
-    }
-    
-    // MARK: - Factories
-    
-    public class func createCrypto(withMatrixSession mxSession: MXSession!) -> MXCrypto! {
-        MXNamedLog(name: "MXCryptoV2").debug("Not implemented")
-        return nil
-    }
-    
-    // MARK: - Class methods
-    
-    public class func check(withMatrixSession mxSession: MXSession!, complete: ((MXCrypto?) -> Void)!) {
-        MXNamedLog(name: "MXCryptoV2").debug("Not implemented")
-    }
-    
-    public class func rehydrateExportedOlmDevice(_ exportedOlmDevice: MXExportedOlmDevice!, with credentials: MXCredentials!, complete: ((Bool) -> Void)!) {
-        MXNamedLog(name: "MXCryptoV2").debug("Not implemented")
     }
     
     // MARK: - Start / close
@@ -188,8 +165,13 @@ private class MXCryptoV2: NSObject, MXCrypto, MXRecoveryServiceDelegate {
     }
     
     public func close(_ deleteStore: Bool) {
+        undecryptableEvents = [:]
         if deleteStore {
-            self.deleteStore(nil)
+            do {
+                try machine.deleteAllData()
+            } catch {
+                log.failure("Cannot delete crypto store", context: error)
+            }
         }
     }
     
@@ -202,6 +184,8 @@ private class MXCryptoV2: NSObject, MXCrypto, MXRecoveryServiceDelegate {
         success: (([AnyHashable : Any]?, String?) -> Void)!,
         failure: ((Swift.Error?) -> Void)!
     ) -> MXHTTPOperation! {
+        let startDate = Date()
+        
         guard let content = eventContent, let eventType = eventType, let roomId = room?.roomId else {
             log.failure("Missing data to encrypt")
             return nil
@@ -224,6 +208,8 @@ private class MXCryptoV2: NSObject, MXCrypto, MXRecoveryServiceDelegate {
                     users: users
                 )
                 
+                let duration = Date().timeIntervalSince(startDate) * 1000
+                log.debug("Encrypted in \(duration) ms")
                 await MainActor.run {
                     success?(result, kMXEventTypeStringRoomEncrypted)
                 }
@@ -237,34 +223,12 @@ private class MXCryptoV2: NSObject, MXCrypto, MXRecoveryServiceDelegate {
         return MXHTTPOperation()
     }
     
-    public func decryptEvent(
-        _ event: MXEvent!,
-        inTimeline timeline: String!
-    ) -> MXEventDecryptionResult! {
-        guard let event = event else {
-            log.failure("Missing event")
-            return MXEventDecryptionResult()
-        }
-        guard event.isEncrypted && event.content?["algorithm"] as? String == kMXCryptoMegolmAlgorithm else {
-            log.debug("Ignoring non-room event")
-            return MXEventDecryptionResult()
-        }
-        
-        let result = machine.decryptRoomEvent(event)
-        if result.clearEvent == nil {
-            undecryptableEvents[event.eventId] = event
-        }
-        return result
-    }
-    
     public func decryptEvents(
         _ events: [MXEvent]!,
         inTimeline timeline: String!,
         onComplete: (([MXEventDecryptionResult]?) -> Void)!
     ) {
-        let results = events?.compactMap {
-            decryptEvent($0, inTimeline: timeline)
-        }
+        let results = events?.map(decrypt(event:))
         onComplete?(results)
     }
     
@@ -307,13 +271,27 @@ private class MXCryptoV2: NSObject, MXCrypto, MXRecoveryServiceDelegate {
         onComplete?()
     }
     
-    private func retryDecryptEvent(event: MXEvent) -> Bool {
-        guard let result = decryptEvent(event, inTimeline: nil) else {
-            log.error("Cannot get decryption result")
-            return false
+    private func decrypt(event: MXEvent) -> MXEventDecryptionResult {
+        guard event.isEncrypted && event.content?["algorithm"] as? String == kMXCryptoMegolmAlgorithm else {
+            log.debug("Ignoring non-room event")
+            return MXEventDecryptionResult()
         }
-        event.setClearData(result)
-        return result.clearEvent != nil
+        
+        let result = machine.decryptRoomEvent(event)
+        if result.clearEvent == nil {
+            undecryptableEvents[event.eventId] = event
+        }
+        return result
+    }
+    
+    private func retryUndecryptableEvents() {
+        for (eventId, event) in undecryptableEvents {
+            let result = decrypt(event: event)
+            if result.clearEvent != nil {
+                event.setClearData(result)
+                undecryptableEvents[eventId] = nil
+            }
+        }
     }
     
     // MARK: - Sync
@@ -384,6 +362,7 @@ private class MXCryptoV2: NSObject, MXCrypto, MXRecoveryServiceDelegate {
     
     public func trustLevelSummary(
         forUserIds userIds: [String]!,
+        forceDownload: Bool,
         success: ((MXUsersTrustLevelSummary?) -> Void)!,
         failure: ((Swift.Error?) -> Void)!
     ) {
@@ -393,21 +372,11 @@ private class MXCryptoV2: NSObject, MXCrypto, MXRecoveryServiceDelegate {
             return
         }
         
-        success?(
-            trustLevelSource.trustLevelSummary(userIds: userIds)
-        )
-    }
-    
-    public func trustLevelSummary(
-        forUserIds userIds: [String]!,
-        onComplete: ((MXUsersTrustLevelSummary?) -> Void)!
-    ) {
-        trustLevelSummary(
-            forUserIds: userIds,
-            success: onComplete,
-            failure: { _ in
-                onComplete?(nil)
-            })
+        _ = downloadKeys(userIds, forceDownload: forceDownload, success: { [weak self] _, _ in
+            success?(
+                self?.trustLevelSource.trustLevelSummary(userIds: userIds)
+            )
+        }, failure: failure)
     }
     
     public func setUserVerification(
@@ -512,10 +481,6 @@ private class MXCryptoV2: NSObject, MXCrypto, MXRecoveryServiceDelegate {
         log.debug("Not implemented")
     }
     
-    public func hasKeys(toDecryptEvent event: MXEvent!, onComplete: ((Bool) -> Void)!) {
-        log.debug("Not implemented")
-    }
-    
     public func downloadKeys(
         _ userIds: [String]!,
         forceDownload: Bool,
@@ -530,7 +495,7 @@ private class MXCryptoV2: NSObject, MXCrypto, MXRecoveryServiceDelegate {
         guard forceDownload else {
             success?(
                 deviceInfoSource.devicesMap(userIds: userIds),
-                crossSigningInfoSource.crossSigningInfo(userIds: userIds)
+                crossSigningInfo(userIds: userIds)
             )
             return MXHTTPOperation()
         }
@@ -541,7 +506,7 @@ private class MXCryptoV2: NSObject, MXCrypto, MXRecoveryServiceDelegate {
                 await MainActor.run {
                     success?(
                         deviceInfoSource.devicesMap(userIds: userIds),
-                        crossSigningInfoSource.crossSigningInfo(userIds: userIds)
+                        crossSigningInfo(userIds: userIds)
                     )
                 }
             } catch {
@@ -552,14 +517,6 @@ private class MXCryptoV2: NSObject, MXCrypto, MXRecoveryServiceDelegate {
         }
         
         return MXHTTPOperation()
-    }
-    
-    public func crossSigningKeys(forUser userId: String!) -> MXCrossSigningInfo! {
-        guard let userId = userId else {
-            log.failure("Missing user id")
-            return nil
-        }
-        return crossSigningInfoSource.crossSigningInfo(userId: userId)
     }
     
     public func devices(forUser userId: String!) -> [String : MXDeviceInfo]! {
@@ -584,15 +541,6 @@ private class MXCryptoV2: NSObject, MXCrypto, MXRecoveryServiceDelegate {
     
     public func resetDeviceKeys() {
         log.debug("Not implemented")
-    }
-    
-    public func deleteStore(_ onComplete: (() -> Void)!) {
-        do {
-            try machine.deleteAllData()
-        } catch {
-            log.failure("Cannot delete crypto store", context: error)
-        }
-        onComplete?()
     }
     
     public func requestAllPrivateKeys() {
@@ -641,12 +589,7 @@ private class MXCryptoV2: NSObject, MXCrypto, MXRecoveryServiceDelegate {
                 let result = try self.backupEngine.importRoomKeys(data, passphrase: password)
                 
                 await MainActor.run {
-                    for (eventId, event) in self.undecryptableEvents {
-                        if self.retryDecryptEvent(event: event) {
-                            self.undecryptableEvents[eventId] = nil
-                        }
-                    }
-                    
+                    self.retryUndecryptableEvents()
                     self.log.debug("Imported room keys")
                     success(UInt(result.total), UInt(result.imported))
                 }
@@ -663,29 +606,16 @@ private class MXCryptoV2: NSObject, MXCrypto, MXRecoveryServiceDelegate {
         // Not implemented, handled automatically by CryptoMachine
     }
     
-    public func accept(_ keyRequest: MXIncomingRoomKeyRequest!, success: (() -> Void)!, failure: ((Swift.Error?) -> Void)!) {
-        log.debug("Not implemented")
-    }
-    
     public func acceptAllPendingKeyRequests(fromUser userId: String!, andDevice deviceId: String!, onComplete: (() -> Void)!) {
-        log.debug("Not implemented")
-    }
-    
-    public func ignore(_ keyRequest: MXIncomingRoomKeyRequest!, onComplete: (() -> Void)!) {
-        log.debug("Not implemented")
+        // Not implemented, handled automatically by CryptoMachine
     }
     
     public func ignoreAllPendingKeyRequests(fromUser userId: String!, andDevice deviceId: String!, onComplete: (() -> Void)!) {
-        log.debug("Not implemented")
+        // Not implemented, handled automatically by CryptoMachine
     }
     
     public func setOutgoingKeyRequestsEnabled(_ enabled: Bool, onComplete: (() -> Void)!) {
-        log.debug("Not implemented")
-    }
-    
-    public func isOutgoingKeyRequestsEnabled() -> Bool {
-        log.debug("Not implemented")
-        return false
+        // Not implemented, handled automatically by CryptoMachine
     }
     
     public var enableOutgoingKeyRequestsOnceSelfVerificationDone: Bool {
@@ -699,18 +629,21 @@ private class MXCryptoV2: NSObject, MXCrypto, MXRecoveryServiceDelegate {
     }
     
     public func reRequestRoomKey(for event: MXEvent!) {
+        log.debug("->")
+        
         guard let event = event else {
             log.failure("Missing event")
             return
         }
+        undecryptableEvents[event.eventId] = event
         
         Task {
             log.debug("->")
             do {
                 try await machine.requestRoomKey(event: event)
                 await MainActor.run {
-                    let result = decryptEvent(event, inTimeline: nil)
-                    event.setClearData(result)
+                    retryUndecryptableEvents()
+                    
                     log.debug("Recieved room keys and re-decrypted event")
                 }
             } catch {
@@ -753,11 +686,6 @@ private class MXCryptoV2: NSObject, MXCrypto, MXRecoveryServiceDelegate {
         return summary.isEncrypted
     }
     
-    public func isRoomSharingHistory(_ roomId: String!) -> Bool {
-        log.debug("Not implemented")
-        return false
-    }
-    
     public func setBlacklistUnverifiedDevicesInRoom(_ roomId: String!, blacklist: Bool) {
         log.debug("Not implemented")
     }
@@ -767,7 +695,15 @@ private class MXCryptoV2: NSObject, MXCrypto, MXRecoveryServiceDelegate {
     private func getRoomUserIds(for room: MXRoom) async throws -> [String] {
         return try await room.members()?.members
             .compactMap(\.userId)
-            .filter { $0 != userId } ?? []
+            .filter { $0 != machine.userId } ?? []
+    }
+    
+    private func crossSigningInfo(userIds: [String]) -> [String: MXCrossSigningInfo] {
+        return userIds
+            .compactMap(crossSigning.crossSigningKeys(forUser:))
+            .reduce(into: [String: MXCrossSigningInfo] ()) { dict, info in
+                return dict[info.userId] = info
+            }
     }
 }
 
