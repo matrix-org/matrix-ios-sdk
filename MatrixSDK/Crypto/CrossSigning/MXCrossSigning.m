@@ -314,6 +314,11 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
     });
 }
 
+- (MXCrossSigningInfo *)crossSigningKeysForUser:(NSString *)userId
+{
+    return [self.crypto.store crossSigningKeysForUser:userId];
+}
+
 - (void)requestPrivateKeysToDeviceIds:(nullable NSArray<NSString*>*)deviceIds
                               success:(void (^)(void))success
                 onPrivateKeysReceived:(void (^)(void))onPrivateKeysReceived

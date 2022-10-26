@@ -481,7 +481,7 @@
                 XCTAssertEqual(recoveryService.secretsStoredLocally.count, 3);
                 
                 // -> No more underlying SSSS
-                MXSecretStorage *secretStorage = aliceSession.crypto.secretStorage;
+                MXSecretStorage *secretStorage = aliceSession.legacyCrypto.secretStorage;
                 XCTAssertNil(secretStorage.defaultKey);
                 XCTAssertFalse([secretStorage hasSecretWithSecretId:MXSecretId.crossSigningMaster withSecretStorageKeyId:ssssKeyId]);
                 XCTAssertFalse([secretStorage hasSecretWithSecretId:MXSecretId.crossSigningSelfSigning withSecretStorageKeyId:ssssKeyId]);

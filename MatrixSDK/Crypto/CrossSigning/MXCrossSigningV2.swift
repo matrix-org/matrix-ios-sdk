@@ -184,6 +184,10 @@ class MXCrossSigningV2: NSObject, MXCrossSigning {
         }
     }
     
+    func crossSigningKeys(forUser userId: String) -> MXCrossSigningInfo? {
+        return infoSource.crossSigningInfo(userId: userId)
+    }
+    
     // MARK: - Private
     
     private func authParameters(password: String) async throws -> [AnyHashable: Any] {

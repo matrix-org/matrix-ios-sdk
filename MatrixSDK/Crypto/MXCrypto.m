@@ -628,26 +628,6 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 
 - (MXEventDecryptionResult *)decryptEvent:(MXEvent *)event inTimeline:(NSString*)timeline
 {
-#ifdef MX_CRYPTO
-
-    __block MXEventDecryptionResult *result;
-
-    // TODO: dispatch_async (https://github.com/matrix-org/matrix-ios-sdk/issues/205)
-    // At the moment, we lock the main thread while decrypting events.
-    // Fortunately, decrypting is far quicker that encrypting.
-    dispatch_sync(decryptionQueue, ^{
-        result = [self decryptEvent2:event inTimeline:timeline];
-    });
-
-    return result;
-
-#else
-    return nil;
-#endif
-}
-
-- (MXEventDecryptionResult *)decryptEvent2:(MXEvent *)event inTimeline:(NSString*)timeline
-{
     MXEventDecryptionResult *result;
     
     if (!event.content.count)
@@ -708,7 +688,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
         // We need a [MXDecrypting decryptEvents:] method to limit the number of back and forth with olm/megolm module.
         for (MXEvent *event in events)
         {
-            [results addObject:[self decryptEvent2:event inTimeline:timeline]];
+            [results addObject:[self decryptEvent:event inTimeline:timeline]];
         }
         
         dispatch_async(dispatch_get_main_queue(), ^{
@@ -1270,10 +1250,11 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 }
 
 - (void)trustLevelSummaryForUserIds:(NSArray<NSString*>*)userIds
+                      forceDownload:(BOOL)forceDownload
                             success:(void (^)(MXUsersTrustLevelSummary *usersTrustLevelSummary))success
                             failure:(void (^)(NSError *error))failure
 {
-    [self downloadKeys:userIds forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
+    [self downloadKeys:userIds forceDownload:forceDownload success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
         
         // Read data from the store
         // It has been updated in the process of the downloadKeys response
@@ -1374,18 +1355,6 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
     return nil;
 #endif
 }
-
--(MXCrossSigningInfo *)crossSigningKeysForUser:(NSString *)userId
-{
-    MXCrossSigningInfo *crossSigningKeys;
-
-#ifdef MX_CRYPTO
-    crossSigningKeys = [self.store crossSigningKeysForUser:userId];
-#endif
-
-    return crossSigningKeys;
-}
-
 
 - (NSDictionary<NSString*, MXDeviceInfo*>*)devicesForUser:(NSString*)userId
 {
