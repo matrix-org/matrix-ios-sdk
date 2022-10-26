@@ -2789,6 +2789,22 @@ Note: Clients should consider avoiding this endpoint for URLs posted in encrypte
                                    success:(void (^)(void))success
                                    failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
+/**
+ Deletes the given devices, and invalidates any access token associated with them.
+ 
+ @discussion This API endpoint uses the User-Interactive Authentication API.
+ 
+ @param deviceIds The identifiers for devices.
+ @param authParameters The additional authentication information for the user-interactive authentication API.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)deleteDevicesByDeviceIds:(NSArray<NSString*>*)deviceIds
+                                  authParams:(NSDictionary*)authParameters
+                                     success:(void (^)(void))success
+                                     failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 #pragma mark - Cross-Signing
 
