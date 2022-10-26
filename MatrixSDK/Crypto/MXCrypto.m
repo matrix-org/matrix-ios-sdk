@@ -55,6 +55,8 @@
 #import "MXSharedHistoryKeyService.h"
 #import "MXNativeKeyBackupEngine.h"
 
+#warning File has not been annotated with nullability, see MX_ASSUME_MISSING_NULLABILITY_BEGIN
+
 /**
  The store to use for crypto.
  */
@@ -145,12 +147,8 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 
 @synthesize backup = _backup;
 @synthesize crossSigning = _crossSigning;
-@synthesize enableOutgoingKeyRequestsOnceSelfVerificationDone = _enableOutgoingKeyRequestsOnceSelfVerificationDone;
 @synthesize keyVerificationManager = _keyVerificationManager;
 @synthesize recoveryService = _recoveryService;
-@synthesize secretShareManager = _secretShareManager;
-@synthesize secretStorage = _secretStorage;
-@synthesize warnOnUnknowDevices = _warnOnUnknowDevices;
 
 + (id<MXCrypto>)createCryptoWithMatrixSession:(MXSession *)mxSession
 {

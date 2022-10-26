@@ -133,8 +133,8 @@
 
             [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
 
-            aliceSession.crypto.warnOnUnknowDevices = warnOnUnknowDevices;
-            bobSession.crypto.warnOnUnknowDevices = warnOnUnknowDevices;
+            aliceSession.legacyCrypto.warnOnUnknowDevices = warnOnUnknowDevices;
+            bobSession.legacyCrypto.warnOnUnknowDevices = warnOnUnknowDevices;
 
             // Listen to Bob MXSessionNewRoomNotification event
             __block __weak id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionNewRoomNotification object:bobSession queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
@@ -185,8 +185,8 @@
             
             [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
             
-            aliceSession.crypto.warnOnUnknowDevices = warnOnUnknowDevices;
-            bobSession.crypto.warnOnUnknowDevices = warnOnUnknowDevices;
+            aliceSession.legacyCrypto.warnOnUnknowDevices = warnOnUnknowDevices;
+            bobSession.legacyCrypto.warnOnUnknowDevices = warnOnUnknowDevices;
             
             [room inviteUser:bobSession.myUser.userId success:^{
                 readyToTest(aliceSession, bobSession, room.roomId, expectation);
@@ -263,9 +263,9 @@
 
             [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
 
-            aliceSession.crypto.warnOnUnknowDevices = warnOnUnknowDevices;
-            bobSession.crypto.warnOnUnknowDevices = warnOnUnknowDevices;
-            samSession.crypto.warnOnUnknowDevices = warnOnUnknowDevices;
+            aliceSession.legacyCrypto.warnOnUnknowDevices = warnOnUnknowDevices;
+            bobSession.legacyCrypto.warnOnUnknowDevices = warnOnUnknowDevices;
+            samSession.legacyCrypto.warnOnUnknowDevices = warnOnUnknowDevices;
 
             // Listen to Sam MXSessionNewRoomNotification event
             __block __weak id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionNewRoomNotification object:samSession queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {

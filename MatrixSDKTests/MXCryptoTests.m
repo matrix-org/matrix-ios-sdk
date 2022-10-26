@@ -1063,7 +1063,7 @@
         [matrixSDKTestsData relogUserSession:self session:aliceSession withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *aliceSession2) {
             [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
 
-            aliceSession2.crypto.warnOnUnknowDevices = NO;
+            aliceSession2.legacyCrypto.warnOnUnknowDevices = NO;
 
             MXRoom *roomFromBobPOV = [bobSession roomWithRoomId:roomId];
             MXRoom *roomFromAlice2POV = [aliceSession2 roomWithRoomId:roomId];
@@ -1156,8 +1156,8 @@
             [matrixSDKTestsData relogUserSession:self session:bobSession withPassword:MXTESTS_BOB_PWD onComplete:^(MXSession *bobSession2) {
                 [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
 
-                aliceSession2.crypto.warnOnUnknowDevices = NO;
-                bobSession2.crypto.warnOnUnknowDevices = NO;
+                aliceSession2.legacyCrypto.warnOnUnknowDevices = NO;
+                bobSession2.legacyCrypto.warnOnUnknowDevices = NO;
 
                 MXRoom *roomFromBob2POV = [bobSession2 roomWithRoomId:roomId];
                 MXRoom *roomFromAlice2POV = [aliceSession2 roomWithRoomId:roomId];
@@ -1519,7 +1519,7 @@
             }];
 
             // Alice marks the Bob and Sam devices as known (UNVERIFIED)
-            [aliceSession.crypto setDevicesKnown:unknownDevices complete:^{
+            [aliceSession.legacyCrypto setDevicesKnown:unknownDevices complete:^{
 
                 [roomFromAlicePOV sendTextMessage:aliceMessages[1] threadId:nil success:nil failure:^(NSError *error) {
                     XCTFail(@"Alice should be able to send message #1 - error: %@", error);
@@ -2033,7 +2033,7 @@
                 newContent[@"session_key"] = sessionInfo.session.sessionKey;
                 toDeviceEvent.clearEvent.wireContent = newContent;
 
-                [bobSession.crypto handleRoomKeyEvent:toDeviceEvent onComplete:^{}];
+                [bobSession.legacyCrypto handleRoomKeyEvent:toDeviceEvent onComplete:^{}];
 
                 // We still must be able to decrypt the event
                 // ie, the implementation must have ignored the new room key with the advanced outbound group
@@ -2106,7 +2106,7 @@
                     }];
                     
                     // Reinject the m.room_key event. This mimics a room_key event that arrives after message events.
-                    [bobSession.crypto handleRoomKeyEvent:toDeviceEvent onComplete:^{}];
+                    [bobSession.legacyCrypto handleRoomKeyEvent:toDeviceEvent onComplete:^{}];
                 }];
             }];
         }];
@@ -2156,7 +2156,7 @@
             [aliceSession close];
             [aliceSession1 setStore:[[MXFileStore alloc] init] success:^{
                 [aliceSession1 start:^{
-                    aliceSession1.crypto.warnOnUnknowDevices = NO;
+                    aliceSession1.legacyCrypto.warnOnUnknowDevices = NO;
             
                     // - Alice sends a 2nd message with a 2nd megolm session
                     MXRoom *roomFromAlicePOV1 = [aliceSession1 roomWithRoomId:roomId];
@@ -2171,7 +2171,7 @@
                         [aliceSession1 close];
                         [aliceSession2 setStore:[[MXFileStore alloc] init] success:^{
                             [aliceSession2 start:^{
-                                aliceSession2.crypto.warnOnUnknowDevices = NO;
+                                aliceSession2.legacyCrypto.warnOnUnknowDevices = NO;
                                 
                                 // Let us wedge the session now. Set crypto state like after the first message
                                 [aliceSession2.legacyCrypto.store storeSession:olmSession forDevice:bobSession.crypto.deviceCurve25519Key];
@@ -2303,8 +2303,8 @@
 
     [matrixSDKTestsE2EData doE2ETestWithBobAndAlice:self readyToTest:^(MXSession *bobSession, MXSession *aliceSession, XCTestExpectation *expectation) {
 
-        aliceSession.crypto.warnOnUnknowDevices = NO;
-        bobSession.crypto.warnOnUnknowDevices = NO;
+        aliceSession.legacyCrypto.warnOnUnknowDevices = NO;
+        bobSession.legacyCrypto.warnOnUnknowDevices = NO;
 
         [aliceSession createRoom:nil visibility:kMXRoomDirectoryVisibilityPublic roomAlias:nil topic:nil success:^(MXRoom *roomFromAlicePOV) {
 
@@ -2413,7 +2413,7 @@
             [matrixSDKTestsData relogUserSession:self session:aliceSession withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *aliceSession2) {
                 [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
 
-                aliceSession2.crypto.warnOnUnknowDevices = NO;
+                aliceSession2.legacyCrypto.warnOnUnknowDevices = NO;
 
                 // - Alice and Bob start sharing a room again
                 [aliceSession2 createRoom:nil visibility:kMXRoomDirectoryVisibilityPublic roomAlias:nil topic:nil success:^(MXRoom *roomFromAlice2POV) {
@@ -2491,8 +2491,8 @@
 
     [matrixSDKTestsE2EData doE2ETestWithBobAndAlice:self readyToTest:^(MXSession *bobSession, MXSession *aliceSession, XCTestExpectation *expectation) {
 
-        aliceSession.crypto.warnOnUnknowDevices = NO;
-        bobSession.crypto.warnOnUnknowDevices = NO;
+        aliceSession.legacyCrypto.warnOnUnknowDevices = NO;
+        bobSession.legacyCrypto.warnOnUnknowDevices = NO;
 
         [aliceSession createRoom:nil visibility:kMXRoomDirectoryVisibilityPublic roomAlias:nil topic:nil success:^(MXRoom *roomFromAlicePOV) {
 
@@ -2829,7 +2829,7 @@
         [matrixSDKTestsData relogUserSessionWithNewDevice:self session:aliceSession withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *aliceSession2) {
             [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
 
-            aliceSession2.crypto.warnOnUnknowDevices = NO;
+            aliceSession2.legacyCrypto.warnOnUnknowDevices = NO;
 
             MXRoom *roomFromAlice2POV = [aliceSession2 roomWithRoomId:roomId];
 
@@ -2887,7 +2887,7 @@
                                     XCTAssert(incomingKeyRequest.requestBody);
 
                                     //9 - Check [MXSession.crypto pendingKeyRequests:] result
-                                    [aliceSession2.crypto pendingKeyRequests:^(MXUsersDevicesMap<NSArray<MXIncomingRoomKeyRequest *> *> *pendingKeyRequests) {
+                                    [aliceSession2.legacyCrypto pendingKeyRequests:^(MXUsersDevicesMap<NSArray<MXIncomingRoomKeyRequest *> *> *pendingKeyRequests) {
 
                                         XCTAssertEqual(pendingKeyRequests.count, 1);
 
@@ -2900,16 +2900,16 @@
                                         XCTAssertEqualObjects(keyRequest.requestBody, incomingKeyRequest.requestBody);
 
                                         // 10 - Check [MXSession.crypto acceptAllPendingKeyRequestsFromUser:] with a wrong userId:deviceId pair
-                                        [aliceSession2.crypto acceptAllPendingKeyRequestsFromUser:alice1Credentials.userId andDevice:@"DEADBEEF" onComplete:^{
+                                        [aliceSession2.legacyCrypto acceptAllPendingKeyRequestsFromUser:alice1Credentials.userId andDevice:@"DEADBEEF" onComplete:^{
 
-                                            [aliceSession2.crypto pendingKeyRequests:^(MXUsersDevicesMap<NSArray<MXIncomingRoomKeyRequest *> *> *pendingKeyRequests2) {
+                                            [aliceSession2.legacyCrypto pendingKeyRequests:^(MXUsersDevicesMap<NSArray<MXIncomingRoomKeyRequest *> *> *pendingKeyRequests2) {
 
                                                 XCTAssertEqual(pendingKeyRequests2.count, 1, @"The pending request should be still here");
 
                                                 // 11 - Check [MXSession.crypto acceptAllPendingKeyRequestsFromUser:] with a valid userId:deviceId pair
-                                                [aliceSession2.crypto acceptAllPendingKeyRequestsFromUser:alice1Credentials.userId andDevice:alice1Credentials.deviceId onComplete:^{
+                                                [aliceSession2.legacyCrypto acceptAllPendingKeyRequestsFromUser:alice1Credentials.userId andDevice:alice1Credentials.deviceId onComplete:^{
 
-                                                    [aliceSession2.crypto pendingKeyRequests:^(MXUsersDevicesMap<NSArray<MXIncomingRoomKeyRequest *> *> *pendingKeyRequests3) {
+                                                    [aliceSession2.legacyCrypto pendingKeyRequests:^(MXUsersDevicesMap<NSArray<MXIncomingRoomKeyRequest *> *> *pendingKeyRequests3) {
 
                                                         XCTAssertEqual(pendingKeyRequests3.count, 0, @"There should be no more pending request");
 

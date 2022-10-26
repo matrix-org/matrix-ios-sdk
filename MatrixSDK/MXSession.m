@@ -542,13 +542,10 @@ typedef void (^MXOnResumeDone)(void);
 {
     MXLogDebug(@"[MXSession] handleSyncResponse: Received %tu joined rooms, %tu invited rooms, %tu left rooms, %tu toDevice events.", syncResponse.rooms.join.count, syncResponse.rooms.invite.count, syncResponse.rooms.leave.count, syncResponse.toDevice.events.count);
     
-    [self.crypto handleSyncResponse:syncResponse];
-    
     // Check whether this is the initial sync
     BOOL isInitialSync = !self.isEventStreamInitialised;
 
-    // Handle to_device events before everything else to make future decryptions work
-    [self handleToDeviceEvents:syncResponse.toDevice.events onComplete:^{
+    [self handleCryptoSyncResponse:syncResponse onComplete:^{
         
         dispatch_group_t dispatchGroup = dispatch_group_create();
         
@@ -739,26 +736,28 @@ typedef void (^MXOnResumeDone)(void);
         // and their /sync response has been processed
         dispatch_group_notify(dispatchGroup, dispatch_get_main_queue(), ^{
             
-            if (self.crypto)
+            // Legacy crypto requires that we deal with device list changes, OTKs etc at the end of the sync loop.
+            // This will be removed altogether with `MXLegacyCrypto`
+            if ([self.crypto isKindOfClass:[MXLegacyCrypto class]])
             {
                 // Handle device list updates
                 if (syncResponse.deviceLists)
                 {
-                    [self.crypto handleDeviceListsChanges:syncResponse.deviceLists];
+                    [(MXLegacyCrypto *)self.crypto handleDeviceListsChanges:syncResponse.deviceLists];
                 }
                 
                 // Handle one_time_keys_count
                 if (syncResponse.deviceOneTimeKeysCount)
                 {
-                    [self.crypto handleDeviceOneTimeKeysCount:syncResponse.deviceOneTimeKeysCount];
+                    [(MXLegacyCrypto *)self.crypto handleDeviceOneTimeKeysCount:syncResponse.deviceOneTimeKeysCount];
                 }
                 
-                [self.crypto handleDeviceUnusedFallbackKeys:syncResponse.unusedFallbackKeys];
+                [(MXLegacyCrypto *)self.crypto handleDeviceUnusedFallbackKeys:syncResponse.unusedFallbackKeys];
                 
                 // Tell the crypto module to do its processing
-                [self.crypto onSyncCompleted:self.store.eventStreamToken
-                               nextSyncToken:syncResponse.nextBatch
-                                  catchingUp:self.catchingUp];
+                [(MXLegacyCrypto *)self.crypto onSyncCompleted:self.store.eventStreamToken
+                                                 nextSyncToken:syncResponse.nextBatch
+                                                    catchingUp:self.catchingUp];
             }
 
             // Update live event stream token
@@ -1961,7 +1960,26 @@ typedef void (^MXOnResumeDone)(void);
     }
 }
 
-- (void)handleToDeviceEvents:(NSArray<MXEvent *> *)events  onComplete:(void (^)(void))onComplete
+// Temporary junction to deal with sync response depending on the variant of crypto
+// that cannot be easily hidden behind a protocol. Legacy implementation will eventually
+// be fully removed.
+- (void)handleCryptoSyncResponse:(MXSyncResponse *)syncResponse
+                      onComplete:(void (^)(void))onComplete
+{
+    if (!self.crypto || [self.crypto isKindOfClass:[MXLegacyCrypto class]])
+    {
+        // Legacy crypto requires pre-processed to-device events before everything else to make future decryptions work
+        [self handleToDeviceEvents:syncResponse.toDevice.events onComplete:onComplete];
+    }
+    else
+    {
+        // New and all future crypto modules can handle the entire sync response in full
+        [self.crypto handleSyncResponse:syncResponse];
+        onComplete();
+    }
+}
+
+- (void)handleToDeviceEvents:(NSArray<MXEvent *> *)events onComplete:(void (^)(void))onComplete
 {
     NSMutableArray *supportedEvents = [NSMutableArray arrayWithCapacity:events.count];
     for (MXEvent *event in events)
@@ -2018,7 +2036,7 @@ typedef void (^MXOnResumeDone)(void);
     {
         case MXEventTypeRoomKey:
         {
-            [_crypto handleRoomKeyEvent:event onComplete:onHandleToDeviceEventDone];
+            [(MXLegacyCrypto *)_crypto handleRoomKeyEvent:event onComplete:onHandleToDeviceEventDone];
             break;
         }
 
@@ -4888,9 +4906,9 @@ typedef void (^MXOnResumeDone)(void);
 
 - (void)resetReplayAttackCheckInTimeline:(NSString*)timeline
 {
-    if (_crypto)
+    if ([_crypto isKindOfClass:[MXLegacyCrypto class]])
     {
-        [_crypto resetReplayAttackCheckInTimeline:timeline];
+        [(MXLegacyCrypto *)_crypto resetReplayAttackCheckInTimeline:timeline];
     }
 }
 

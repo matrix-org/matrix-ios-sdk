@@ -281,7 +281,7 @@
         [matrixSDKTestsE2EData loginUserOnANewDevice:self credentials:aliceSession1.matrixRestClient.credentials withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *aliceSession2) {
             
             // - Disable key share requests on Alice2
-            [aliceSession2.crypto setOutgoingKeyRequestsEnabled:NO onComplete:nil];
+            [aliceSession2.legacyCrypto setOutgoingKeyRequestsEnabled:NO onComplete:nil];
             aliceSession2.legacyCrypto.enableOutgoingKeyRequestsOnceSelfVerificationDone = NO;
             
             NSString *aliceUserId = aliceSession1.matrixRestClient.credentials.userId;
@@ -307,7 +307,7 @@
                                 XCTAssertNotNil([aliceSession2.legacyCrypto.store outgoingRoomKeyRequestWithState:MXRoomKeyRequestStateUnsent]);
                                 
                                 // - Enable key share requests on Alice2
-                                [aliceSession2.crypto setOutgoingKeyRequestsEnabled:YES onComplete:^{
+                                [aliceSession2.legacyCrypto setOutgoingKeyRequestsEnabled:YES onComplete:^{
                                     
                                     // Wait a bit
                                     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
@@ -370,7 +370,7 @@
                     [matrixSDKTestsE2EData loginUserOnANewDevice:self credentials:aliceSession1.matrixRestClient.credentials withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *aliceSession2) {
                         
                         // - Disable key share requests on Alice2
-                        [aliceSession2.crypto setOutgoingKeyRequestsEnabled:NO onComplete:nil];
+                        [aliceSession2.legacyCrypto setOutgoingKeyRequestsEnabled:NO onComplete:nil];
                         
                         
                         // - Alice2 pagingates in the room

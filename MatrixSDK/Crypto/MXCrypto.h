@@ -41,6 +41,8 @@
 @class MXSession;
 @class MXRoom;
 
+NS_ASSUME_NONNULL_BEGIN
+
 /**
  Fires when we receive a room key request.
 
@@ -80,17 +82,17 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
 /**
  Curve25519 key for the account.
  */
-@property (nonatomic, readonly) NSString *deviceCurve25519Key;
+@property (nullable, nonatomic, readonly) NSString *deviceCurve25519Key;
 
 /**
  Ed25519 key for the account.
  */
-@property (nonatomic, readonly) NSString *deviceEd25519Key;
+@property (nullable, nonatomic, readonly) NSString *deviceEd25519Key;
 
 /**
  The key backup manager.
  */
-@property (nonatomic, readonly) MXKeyBackup *backup;
+@property (nullable, nonatomic, readonly) MXKeyBackup *backup;
 
 /**
  The device verification manager.
@@ -98,14 +100,16 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
 @property (nonatomic, readonly) id<MXKeyVerificationManager> keyVerificationManager;
 
 /**
+ The cross-signing manager.
+ */
+@property (nonatomic, readonly) id<MXCrossSigning> crossSigning;
+
+/**
  Service to manage backup of private keys on the homeserver.
  */
 @property (nonatomic, readonly) MXRecoveryService *recoveryService;
 
-/**
- The cross-signing manager.
- */
-@property (nonatomic, readonly) id<MXCrossSigning> crossSigning;
+#pragma mark - Crypto start / close
 
 /**
  Start the crypto module.
@@ -115,13 +119,24 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
  @param onComplete A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
  */
-- (void)start:(void (^)(void))onComplete
-      failure:(void (^)(NSError *error))failure;
+- (void)start:(nullable void (^)(void))onComplete
+      failure:(nullable void (^)(NSError *error))failure;
 
 /**
  Stop and release crypto objects.
  */
 - (void)close:(BOOL)deleteStore;
+
+#pragma mark - Event Encryption
+
+/**
+ Tells if a room is encrypted according to the crypo module.
+ It is different than the summary or state store. The crypto store
+ is more restrictive and can never be reverted to an unsuported algorithm
+ So prefer this when deciding if an event should be sent encrypted as a protection
+ against state broken/reset issues.
+ */
+- (BOOL)isRoomEncrypted:(NSString *)roomId;
 
 /**
  Encrypt an event content according to the configuration of the room.
@@ -135,9 +150,9 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
 
  @return a MXHTTPOperation instance. May be nil if all required materials is already in place.
  */
-- (MXHTTPOperation*)encryptEventContent:(NSDictionary*)eventContent withType:(MXEventTypeString)eventType inRoom:(MXRoom*)room
-                                success:(void (^)(NSDictionary *encryptedContent, NSString *encryptedEventType))success
-                                failure:(void (^)(NSError *error))failure;
+- (nullable MXHTTPOperation*)encryptEventContent:(NSDictionary*)eventContent withType:(MXEventTypeString)eventType inRoom:(MXRoom*)room
+                                         success:(nullable void (^)(NSDictionary *encryptedContent, NSString *encryptedEventType))success
+                                         failure:(nullable void (^)(NSError *error))failure;
 
 /**
  Decrypt received events
@@ -148,8 +163,8 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
  @param onComplete the block called when the operations completes. It returns the decryption result for every event.
  */
 - (void)decryptEvents:(NSArray<MXEvent*> *)events
-           inTimeline:(NSString*)timeline
-           onComplete:(void (^)(NSArray<MXEventDecryptionResult *>*))onComplete;
+           inTimeline:(nullable NSString*)timeline
+           onComplete:(nullable void (^)(NSArray<MXEventDecryptionResult *>*))onComplete;
 
 /**
  Ensure that the outbound session is ready to encrypt events.
@@ -165,9 +180,9 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
 
  @return a MXHTTPOperation instance. May be nil if all required materials is already in place.
  */
-- (MXHTTPOperation*)ensureEncryptionInRoom:(NSString*)roomId
-                                   success:(void (^)(void))success
-                                   failure:(void (^)(NSError *error))failure;
+- (nullable MXHTTPOperation*)ensureEncryptionInRoom:(NSString*)roomId
+                                            success:(nullable void (^)(void))success
+                                            failure:(nullable void (^)(NSError *error))failure;
 
 /**
  Return the device information for an encrypted event.
@@ -175,14 +190,7 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
  @param event The event.
  @return the device if any.
  */
-- (MXDeviceInfo *)eventDeviceInfo:(MXEvent*)event;
-
-/**
- Reset replay attack data for the given timeline.
-
- @param timeline the id of the timeline.
- */
-- (void)resetReplayAttackCheckInTimeline:(NSString*)timeline;
+- (nullable MXDeviceInfo *)eventDeviceInfo:(MXEvent*)event;
 
 /**
  Discard the current outbound group session for a specific room.
@@ -190,57 +198,16 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
  @param roomId Identifer of the room.
  @param onComplete the callback called once operation is done.
  */
-- (void)discardOutboundGroupSessionForRoomWithRoomId:(NSString*)roomId onComplete:(void (^)(void))onComplete;
+- (void)discardOutboundGroupSessionForRoomWithRoomId:(NSString*)roomId onComplete:(nullable void (^)(void))onComplete;
 
-/**
- Handle list of changed users provided in the /sync response.
-
- @param deviceLists the list of users who have a change in their devices.
- */
-- (void)handleDeviceListsChanges:(MXDeviceListResponse*)deviceLists;
-
-/**
- Handle one-time keys count returned in the /sync response.
-
- @param deviceOneTimeKeysCount the number of one-time keys the server has for our device.
- */
-- (void)handleDeviceOneTimeKeysCount:(NSDictionary<NSString *, NSNumber*>*)deviceOneTimeKeysCount;
-
-/**
- Handle the unused fallback keys returned in the /sync response.
-
- @param deviceUnusedFallbackKeys the algorithms for which there are unused fallback keys
- */
-- (void)handleDeviceUnusedFallbackKeys:(NSArray<NSString *> *)deviceUnusedFallbackKeys;
-
-/**
- Handle a room key event.
- 
- @param event the room key event.
- @param onComplete the block called when the operation completes.
- */
-- (void)handleRoomKeyEvent:(MXEvent*)event onComplete:(void (^)(void))onComplete;
+#pragma mark - Sync
 
 /**
  Handle the sync response that may contain crypto-related events
  */
 - (void)handleSyncResponse:(MXSyncResponse *)syncResponse;
 
-/**
- Handle the completion of a /sync.
-
- This is called after the processing of each successful /sync response.
- It is an opportunity to do a batch process on the information received.
-
- @param oldSyncToken The 'since' token passed to /sync. nil for the first successful
-                     sync since this client was started.
- @param nextSyncToken The 'next_batch' result from /sync, which will become the 'since'
-                      token for the next call to /sync.
- @param catchingUp YES if we are working our way through a backlog of events after connecting.
- */
-- (void)onSyncCompleted:(NSString*)oldSyncToken nextSyncToken:(NSString*)nextSyncToken catchingUp:(BOOL)catchingUp;
-
-#pragma mark - Local trust
+#pragma mark - Cross-signing / Local trust
 
 /**
  Update the blocked/verified state of the given device
@@ -253,18 +220,8 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
  @param failure A block object called when the operation fails.
  */
 - (void)setDeviceVerification:(MXDeviceVerification)verificationStatus forDevice:(NSString*)deviceId ofUser:(NSString*)userId
-                      success:(void (^)(void))success
-                      failure:(void (^)(NSError *error))failure;
-
-/**
- Move all the passed devices from the MXDeviceUnknown state to MXDeviceUnverified.
-
- @param devices the list of devices.
-
- @param complete A block object called when the operation completes.
- */
-- (void)setDevicesKnown:(MXUsersDevicesMap<MXDeviceInfo*>*)devices
-               complete:(void (^)(void))complete;
+                      success:(nullable void (^)(void))success
+                      failure:(nullable void (^)(NSError *error))failure;
 
 /**
  Update the verification state of the given user.
@@ -276,13 +233,11 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
  @param failure A block object called when the operation fails.
  */
 - (void)setUserVerification:(BOOL)verificationStatus forUser:(NSString*)userId
-                    success:(void (^)(void))success
-                    failure:(void (^)(NSError *error))failure;
-
-#pragma mark - Cross-signing trust
+                    success:(nullable void (^)(void))success
+                    failure:(nullable void (^)(NSError *error))failure;
 
 - (MXUserTrustLevel*)trustLevelForUser:(NSString*)userId;
-- (MXDeviceTrustLevel*)deviceTrustLevelForDevice:(NSString*)deviceId ofUser:(NSString*)userId;
+- (nullable MXDeviceTrustLevel*)deviceTrustLevelForDevice:(NSString*)deviceId ofUser:(NSString*)userId;
 
 /**
  Get a summary of users trust level (trusted users and devices count).
@@ -294,8 +249,8 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
  */
 - (void)trustLevelSummaryForUserIds:(NSArray<NSString*>*)userIds
                       forceDownload:(BOOL)forceDownload
-                            success:(void (^)(MXUsersTrustLevelSummary *usersTrustLevelSummary))success
-                            failure:(void (^)(NSError *error))failure;
+                            success:(nullable void (^)(MXUsersTrustLevelSummary  * _Nullable usersTrustLevelSummary))success
+                            failure:(nullable void (^)(NSError *error))failure;
 
 #pragma mark - Users keys
 
@@ -313,11 +268,11 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
 
  @return a MXHTTPOperation instance. May be nil if the data is already in the store.
  */
-- (MXHTTPOperation*)downloadKeys:(NSArray<NSString*>*)userIds
-                   forceDownload:(BOOL)forceDownload
-                         success:(void (^)(MXUsersDevicesMap<MXDeviceInfo*> *usersDevicesInfoMap,
-                                           NSDictionary<NSString* /* userId*/, MXCrossSigningInfo*> *crossSigningKeysMap))success
-                         failure:(void (^)(NSError *error))failure;
+- (nullable MXHTTPOperation*)downloadKeys:(NSArray<NSString*>*)userIds
+                            forceDownload:(BOOL)forceDownload
+                                  success:(nullable void (^)(MXUsersDevicesMap<MXDeviceInfo*> * _Nullable usersDevicesInfoMap,
+                                                             NSDictionary<NSString* /* userId*/, MXCrossSigningInfo*> * _Nullable crossSigningKeysMap))success
+                                  failure:(nullable void (^)(NSError *error))failure;
 
 /**
  Retrieve the known devices for a user.
@@ -335,26 +290,9 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
  @param userId The device user.
  @return the device if any.
  */
-- (MXDeviceInfo *)deviceWithDeviceId:(NSString*)deviceId ofUser:(NSString*)userId;
+- (nullable MXDeviceInfo *)deviceWithDeviceId:(NSString*)deviceId ofUser:(NSString*)userId;
 
-/**
- Reset stored devices keys.
- 
- This method, to take effect, must be called before [MXSession start] when MXSession 
- is going to do an initial /sync, ie when the app cleared its cache.
-
- It helps the end user to fix UISIs that other people get from his messages.
- */
-- (void)resetDeviceKeys;
-
-#pragma mark - Gossipping
-
-/**
- Make requests to get key private keys from other user's devices.
- */
-- (void)requestAllPrivateKeys;
-
-#pragma mark - import/export
+#pragma mark - Import / Export
 
 /**
  Get all room keys under an encrypted form.
@@ -364,8 +302,8 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
  @param failure A block object called when the operation fails.
  */
 - (void)exportRoomKeysWithPassword:(NSString*)password
-                           success:(void (^)(NSData *keyFile))success
-                           failure:(void (^)(NSError *error))failure;
+                           success:(nullable void (^)(NSData *keyFile))success
+                           failure:(nullable void (^)(NSError *error))failure;
 
 /**
  Import an encrypted room keys file.
@@ -377,44 +315,10 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
  @param failure A block object called when the operation fails.
  */
 - (void)importRoomKeys:(NSData *)keyFile withPassword:(NSString*)password
-               success:(void (^)(NSUInteger total, NSUInteger imported))success
-               failure:(void (^)(NSError *error))failure;
+               success:(nullable void (^)(NSUInteger total, NSUInteger imported))success
+               failure:(nullable void (^)(NSError *error))failure;
 
 #pragma mark - Key sharing
-
-/**
- Get all pending key requests sorted by userId/deviceId pairs.
-
- @param onComplete A block object called with the list of pending key requests.
- */
-- (void)pendingKeyRequests:(void (^)(MXUsersDevicesMap<NSArray<MXIncomingRoomKeyRequest *> *> *pendingKeyRequests))onComplete;
-
-/**
- Send responses to the key requests made by a user's device.
-
- @param userId the id of the user.
- @param deviceId the id of the user's device.
- @param onComplete A block object called when the operation completes.
- */
-- (void)acceptAllPendingKeyRequestsFromUser:(NSString*)userId andDevice:(NSString*)deviceId onComplete:(void (^)(void))onComplete;
-
-/**
- Ignore all pending key requests made by a user's device.
-
- @param userId the id of the user.
- @param deviceId the id of the user's device.
- @param onComplete A block object called when the operation completes.
- */
-- (void)ignoreAllPendingKeyRequestsFromUser:(NSString*)userId andDevice:(NSString*)deviceId onComplete:(void (^)(void))onComplete;
-
-/**
- Enable or disable outgoing key share requests.
- Enabled by default
- 
- @param enabled the new enable state.
- @param onComplete the block called when the operation completes
- */
-- (void)setOutgoingKeyRequestsEnabled:(BOOL)enabled onComplete:(void (^)(void))onComplete;
 
 /**
  Rerequest the encryption keys required to decrypt an event.
@@ -424,14 +328,6 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
 - (void)reRequestRoomKeyForEvent:(MXEvent*)event;
 
 #pragma mark - Crypto settings
-
-/**
- Warn (generates a NSError) when the user wants to send a message in a room where
- there is at least one device they have never seen.
-
- Default is YES.
- */
-@property (nonatomic) BOOL warnOnUnknowDevices;
 
 /**
  The global override for whether the client should ever send encrypted
@@ -461,15 +357,6 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
 - (BOOL)isBlacklistUnverifiedDevicesInRoom:(NSString *)roomId;
 
 /**
- Tells if a room is encrypted according to the crypo module.
- It is different than the summary or state store. The crypto store
- is more restrictive and can never be reverted to an unsuported algorithm
- So prefer this when deciding if an event should be sent encrypted as a protection
- against state broken/reset issues.
- */
-- (BOOL)isRoomEncrypted:(NSString *)roomId;
-
-/**
  Set the blacklist of unverified devices in a room.
  
  @param roomId the room id.
@@ -478,6 +365,10 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
 - (void)setBlacklistUnverifiedDevicesInRoom:(NSString *)roomId blacklist:(BOOL)blacklist;
 
 @end
+
+NS_ASSUME_NONNULL_END
+
+MX_ASSUME_MISSING_NULLABILITY_BEGIN
 
 @interface MXLegacyCrypto : NSObject <MXCrypto>
 
@@ -533,12 +424,95 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
 - (void)hasKeysToDecryptEvent:(MXEvent*)event
                    onComplete:(void (^)(BOOL))onComplete;
 
+
+/**
+ Handle list of changed users provided in the /sync response.
+
+ @param deviceLists the list of users who have a change in their devices.
+ */
+- (void)handleDeviceListsChanges:(MXDeviceListResponse*)deviceLists;
+
+/**
+ Handle one-time keys count returned in the /sync response.
+
+ @param deviceOneTimeKeysCount the number of one-time keys the server has for our device.
+ */
+- (void)handleDeviceOneTimeKeysCount:(NSDictionary<NSString *, NSNumber*>*)deviceOneTimeKeysCount;
+
+/**
+ Handle the unused fallback keys returned in the /sync response.
+
+ @param deviceUnusedFallbackKeys the algorithms for which there are unused fallback keys
+ */
+- (void)handleDeviceUnusedFallbackKeys:(NSArray<NSString *> *)deviceUnusedFallbackKeys;
+
+/**
+ Handle a room key event.
+ 
+ @param event the room key event.
+ @param onComplete the block called when the operation completes.
+ */
+- (void)handleRoomKeyEvent:(MXEvent*)event onComplete:(void (^)(void))onComplete;
+
+/**
+ Handle the completion of a /sync.
+
+ This is called after the processing of each successful /sync response.
+ It is an opportunity to do a batch process on the information received.
+
+ @param oldSyncToken The 'since' token passed to /sync. nil for the first successful
+                     sync since this client was started.
+ @param nextSyncToken The 'next_batch' result from /sync, which will become the 'since'
+                      token for the next call to /sync.
+ @param catchingUp YES if we are working our way through a backlog of events after connecting.
+ */
+- (void)onSyncCompleted:(NSString*)oldSyncToken nextSyncToken:(NSString*)nextSyncToken catchingUp:(BOOL)catchingUp;
+
+/**
+ Move all the passed devices from the MXDeviceUnknown state to MXDeviceUnverified.
+
+ @param devices the list of devices.
+
+ @param complete A block object called when the operation completes.
+ */
+- (void)setDevicesKnown:(MXUsersDevicesMap<MXDeviceInfo*>*)devices
+               complete:(void (^)(void))complete;
+
+/**
+ Reset replay attack data for the given timeline.
+
+ @param timeline the id of the timeline.
+ */
+- (void)resetReplayAttackCheckInTimeline:(NSString*)timeline;
+
+/**
+ Reset stored devices keys.
+ 
+ This method, to take effect, must be called before [MXSession start] when MXSession
+ is going to do an initial /sync, ie when the app cleared its cache.
+
+ It helps the end user to fix UISIs that other people get from his messages.
+ */
+- (void)resetDeviceKeys;
+
 /**
  Delete the crypto store.
 
  @param onComplete the callback called once operation is done.
  */
 - (void)deleteStore:(void (^)(void))onComplete;
+
+/**
+ Make requests to get key private keys from other user's devices.
+ */
+- (void)requestAllPrivateKeys;
+
+/**
+ Get all pending key requests sorted by userId/deviceId pairs.
+
+ @param onComplete A block object called with the list of pending key requests.
+ */
+- (void)pendingKeyRequests:(void (^)(MXUsersDevicesMap<NSArray<MXIncomingRoomKeyRequest *> *> *pendingKeyRequests))onComplete;
 
 /**
  Send response to a key request.
@@ -551,6 +525,16 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
                  success:(void (^)(void))success
                  failure:(void (^)(NSError *error))failure;
 
+
+/**
+ Send responses to the key requests made by a user's device.
+
+ @param userId the id of the user.
+ @param deviceId the id of the user's device.
+ @param onComplete A block object called when the operation completes.
+ */
+- (void)acceptAllPendingKeyRequestsFromUser:(NSString*)userId andDevice:(NSString*)deviceId onComplete:(void (^)(void))onComplete;
+
 /**
  Ignore a key request.
 
@@ -558,6 +542,24 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
  @param onComplete A block object called when the operation completes.
  */
 - (void)ignoreKeyRequest:(MXIncomingRoomKeyRequest *)keyRequest onComplete:(void (^)(void))onComplete;
+
+/**
+ Ignore all pending key requests made by a user's device.
+
+ @param userId the id of the user.
+ @param deviceId the id of the user's device.
+ @param onComplete A block object called when the operation completes.
+ */
+- (void)ignoreAllPendingKeyRequestsFromUser:(NSString*)userId andDevice:(NSString*)deviceId onComplete:(void (^)(void))onComplete;
+
+/**
+ Enable or disable outgoing key share requests.
+ Enabled by default
+ 
+ @param enabled the new enable state.
+ @param onComplete the block called when the operation completes
+ */
+- (void)setOutgoingKeyRequestsEnabled:(BOOL)enabled onComplete:(void (^)(void))onComplete;
 
 - (BOOL)isOutgoingKeyRequestsEnabled;
 
@@ -569,9 +571,19 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
 @property (nonatomic) BOOL enableOutgoingKeyRequestsOnceSelfVerificationDone;
 
 /**
+ Warn (generates a NSError) when the user wants to send a message in a room where
+ there is at least one device they have never seen.
+
+ Default is YES.
+ */
+@property (nonatomic) BOOL warnOnUnknowDevices;
+
+/**
  Get the current shared history status of the room, which depends on its `m.room.history_visibility`
  (history is considered shared if visibility is set to `shared` or `world_readable`)
  */
 - (BOOL)isRoomSharingHistory:(NSString *)roomId;
 
 @end
+
+MX_ASSUME_MISSING_NULLABILITY_END

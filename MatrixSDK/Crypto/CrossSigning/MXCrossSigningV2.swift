@@ -22,6 +22,7 @@ import Foundation
 class MXCrossSigningV2: NSObject, MXCrossSigning {
     enum Error: Swift.Error {
         case missingAuthSession
+        case cannotUnsetTrust
     }
     
     var state: MXCrossSigningState {
@@ -214,6 +215,22 @@ class MXCrossSigningV2: NSObject, MXCrossSigning {
             "password": password,
             "type": kMXLoginFlowTypePassword
         ]
+    }
+}
+
+extension MXCrossSigningV2: MXRecoveryServiceDelegate {
+    func setUserVerification(
+        _ verificationStatus: Bool,
+        forUser userId: String,
+        success: @escaping () -> Void,
+        failure: @escaping (Swift.Error?) -> Void
+    ) {
+        guard verificationStatus else {
+            log.failure("Cannot unset user trust")
+            failure(Error.cannotUnsetTrust)
+            return
+        }
+        signUser(withUserId: userId, success: success, failure: failure)
     }
 }
 

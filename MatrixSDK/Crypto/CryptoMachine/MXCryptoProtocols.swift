@@ -39,7 +39,7 @@ protocol MXCryptoSyncing: MXCryptoIdentity {
         unusedFallbackKeys: [String]?
     ) throws -> MXToDeviceSyncResponse
     
-    func completeSync() async throws
+    func processOutgoingRequests() async throws
 }
 
 /// Source of user devices and their cryptographic trust status
@@ -60,7 +60,7 @@ protocol MXCryptoUserIdentitySource: MXCryptoIdentity {
 
 /// Event encryption and decryption
 protocol MXCryptoRoomEventEncrypting: MXCryptoIdentity {
-    func shareRoomKeysIfNecessary(roomId: String, users: [String]) async throws
+    func shareRoomKeysIfNecessary(roomId: String, users: [String], settings: EncryptionSettings) async throws
     func encryptRoomEvent(content: [AnyHashable: Any], roomId: String, eventType: String, users: [String]) async throws -> [String: Any]
     func decryptRoomEvent(_ event: MXEvent) -> MXEventDecryptionResult
     func requestRoomKey(event: MXEvent) async throws

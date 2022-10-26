@@ -1402,7 +1402,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
                         // Attempt a new decryption
                         [bobSession decryptEvents:@[event] inTimeline:nil onComplete:^(NSArray<MXEvent *> *failedEvents) {
                             // Reinject the m.room_key event. This mimics a room_key event that arrives after message events.
-                            [bobSession.crypto handleRoomKeyEvent:toDeviceEvent onComplete:^{}];
+                            [bobSession.legacyCrypto handleRoomKeyEvent:toDeviceEvent onComplete:^{}];
                         }];
 
                         break;
