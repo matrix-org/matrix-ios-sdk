@@ -32,8 +32,12 @@ class MXSASTransactionV2: NSObject, MXSASTransaction {
             return sas.cancelInfo?.cancelledByUs == true ? MXSASTransactionStateCancelledByMe : MXSASTransactionStateCancelled
         } else if sas.canBePresented {
             return MXSASTransactionStateShowSAS
+        } else if sas.weStarted {
+            return MXSASTransactionStateOutgoingWaitForPartnerToAccept
+        } else if !sas.hasBeenAccepted {
+            return MXSASTransactionStateIncomingShowAccept
         }
-        return sas.weStarted ? MXSASTransactionStateOutgoingWaitForPartnerToAccept : MXSASTransactionStateIncomingShowAccept
+        return MXSASTransactionStateUnknown
     }
     
     var sasEmoji: [MXEmojiRepresentation]? {
@@ -113,6 +117,8 @@ class MXSASTransactionV2: NSObject, MXSASTransaction {
     }
     
     func accept() {
+        log.debug("->")
+        
         Task {
             do {
                 try await handler.acceptSasVerification(userId: otherUserId, flowId: transactionId)
@@ -124,6 +130,8 @@ class MXSASTransactionV2: NSObject, MXSASTransaction {
     }
     
     func confirmSASMatch() {
+        log.debug("->")
+        
         Task {
             do {
                 try await handler.confirmVerification(userId: otherUserId, flowId: transactionId)

@@ -205,7 +205,7 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
 /**
  Handle the sync response that may contain crypto-related events
  */
-- (void)handleSyncResponse:(MXSyncResponse *)syncResponse;
+- (void)handleSyncResponse:(MXSyncResponse *)syncResponse onComplete:(void (^)(void))onComplete;
 
 #pragma mark - Cross-signing / Local trust
 

@@ -34,6 +34,8 @@ class MXCryptoSecretStoreV2: NSObject, MXCryptoSecretStore {
     }
     
     func storeSecret(_ secret: String, withSecretId secretId: String) {
+        log.debug("Storing new secret \(secretId)")
+        
         switch secretId as NSString {
         case MXSecretId.crossSigningMaster.takeUnretainedValue():
             crossSigning.importCrossSigningKeys(

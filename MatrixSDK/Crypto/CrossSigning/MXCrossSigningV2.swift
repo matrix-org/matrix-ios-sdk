@@ -121,7 +121,7 @@ class MXCrossSigningV2: NSObject, MXCrossSigning {
         
         Task {
             do {
-                try await crossSigning.downloadKeys(users: [crossSigning.userId])
+                try await crossSigning.updateTrackedUsers(users: [crossSigning.userId])
                 myUserCrossSigningKeys = infoSource.crossSigningInfo(userId: crossSigning.userId)
                 
                 log.debug("Cross signing state refreshed")

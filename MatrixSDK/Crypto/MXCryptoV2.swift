@@ -74,6 +74,7 @@ private class MXCryptoV2: NSObject, MXCrypto {
     private let backupEngine: MXCryptoKeyBackupEngine?
     private let keyVerification: MXKeyVerificationManagerV2
     private var undecryptableEvents = [String: MXEvent]()
+    private var roomEventObserver: Any?
     private let log = MXNamedLog(name: "MXCryptoV2")
     
     // MARK: - Public properties
@@ -94,8 +95,9 @@ private class MXCryptoV2: NSObject, MXCrypto {
     init(session: MXSession) throws {
         guard
             let restClient = session.matrixRestClient,
-            let userId = session.credentials.userId,
-            let deviceId = session.credentials.deviceId
+            let credentials = session.credentials,
+            let userId = credentials.userId,
+            let deviceId = credentials.deviceId
         else {
             throw Error.missingCredentials
         }
@@ -105,7 +107,11 @@ private class MXCryptoV2: NSObject, MXCrypto {
         
         // A few features (global untrusted users blacklist) are not yet implemented in `MatrixSDKCrypto`
         // so they have to be stored locally. Will be moved to `MatrixSDKCrypto` eventually
-        self.legacyStore = MXRealmCryptoStore(credentials: session.credentials)
+        if MXRealmCryptoStore.hasData(for: credentials) {
+            self.legacyStore = MXRealmCryptoStore(credentials: credentials)
+        } else {
+            self.legacyStore = MXRealmCryptoStore.createStore(with: credentials)
+        }
         
         machine = try MXCryptoMachine(
             userId: userId,
@@ -169,6 +175,14 @@ private class MXCryptoV2: NSObject, MXCrypto {
         )
         
         log.debug("Initialized Crypto module")
+        
+        super.init()
+        
+        listenToRoomEvents(in: session)
+    }
+    
+    deinit {
+        session?.removeListener(roomEventObserver)
     }
     
     // MARK: - Crypto start / close
@@ -253,11 +267,10 @@ private class MXCryptoV2: NSObject, MXCrypto {
                     users: users,
                     settings: settings
                 )
-                let result = try await machine.encryptRoomEvent(
+                let result = try machine.encryptRoomEvent(
                     content: eventContent,
                     roomId: roomId,
-                    eventType: eventType,
-                    users: users
+                    eventType: eventType
                 )
                 
                 let duration = Date().timeIntervalSince(startDate) * 1000
@@ -346,26 +359,56 @@ private class MXCryptoV2: NSObject, MXCrypto {
     
     // MARK: - Sync
     
-    public func handle(_ syncResponse: MXSyncResponse) {
-        do {
-            let toDevice = try machine.handleSyncResponse(
-                toDevice: syncResponse.toDevice,
-                deviceLists: syncResponse.deviceLists,
-                deviceOneTimeKeysCounts: syncResponse.deviceOneTimeKeysCount ?? [:],
-                unusedFallbackKeys: syncResponse.unusedFallbackKeys
-            )
-            keyVerification.handleDeviceEvents(toDevice.events)
-            backup?.maybeSend()
-        } catch {
-            log.error("Cannot handle sync", context: error)
-        }
+    func handle(_ syncResponse: MXSyncResponse, onComplete: @escaping () -> Void) {
+        let uuid = UUID().uuidString
+        let toDeviceCount = syncResponse.toDevice?.events.count ?? 0
+        
+        log.debug("Handling new sync response \(uuid), \(toDeviceCount) to-device events")
         
         Task {
             do {
+                let senders = syncResponse
+                    .toDevice?
+                    .events
+                    .compactMap { $0.sender }
+                    .filter { $0 != machine.userId } ?? []
+                
+                try await machine.updateTrackedUsers(users: senders)
+                try await handle(syncResponse: syncResponse)
                 try await machine.processOutgoingRequests()
             } catch {
-                log.error("Error processing outgoing requests", context: error)
+                log.error("Cannot handle sync", context: error)
             }
+            
+            log.debug("Completing sync response \(uuid)")
+            await MainActor.run {
+                onComplete()
+            }
+        }
+    }
+    
+    @MainActor
+    private func handle(syncResponse: MXSyncResponse) async throws {
+        let toDevice = try machine.handleSyncResponse(
+            toDevice: syncResponse.toDevice,
+            deviceLists: syncResponse.deviceLists,
+            deviceOneTimeKeysCounts: syncResponse.deviceOneTimeKeysCount ?? [:],
+            unusedFallbackKeys: syncResponse.unusedFallbackKeys
+        )
+        
+        // Some of the to-device events processed by the machine require further updates
+        // on the client side, not currently exposed through any convenient api.
+        // These include new key verification events, or receiving backup key
+        // which allows downloading room keys from backup.
+        for event in toDevice.events {
+            keyVerification.handleDeviceEvent(event)
+            restoreBackupIfPossible(event: event)
+        }
+        
+        backup?.maybeSend()
+        
+        if !toDevice.events.isEmpty {
+            retryUndecryptableEvents()
         }
     }
     
@@ -488,7 +531,7 @@ private class MXCryptoV2: NSObject, MXCrypto {
         
         Task {
             do {
-                try await machine.downloadKeys(users: userIds)
+                try await machine.updateTrackedUsers(users: userIds)
                 
                 log.debug("Downloaded keys")
                 await MainActor.run {
@@ -623,6 +666,20 @@ private class MXCryptoV2: NSObject, MXCrypto {
     
     // MARK: - Private
     
+    private func listenToRoomEvents(in session: MXSession) {
+        roomEventObserver = session.listenToEvents(Array(MXKeyVerificationManagerV2.dmEventTypes)) { [weak self] event, direction, _ in
+            guard let self = self else { return }
+            
+            if direction == .forwards && event.sender != session.myUserId {
+                Task {
+                    try await self.machine.updateTrackedUsers(users: [event.sender])
+                    await self.keyVerification.handleRoomEvent(event)
+                    try await self.machine.processOutgoingRequests()
+                }
+            }
+        }
+    }
+    
     private func decrypt(event: MXEvent) -> MXEventDecryptionResult {
         guard event.isEncrypted && event.content?["algorithm"] as? String == kMXCryptoMegolmAlgorithm else {
             log.debug("Ignoring non-room event")
@@ -634,6 +691,34 @@ private class MXCryptoV2: NSObject, MXCrypto {
             undecryptableEvents[event.eventId] = event
         }
         return result
+    }
+    
+    private func restoreBackupIfPossible(event: MXEvent) {
+        guard
+            event.type == kMXEventTypeStringSecretSend
+            && event.content?["name"] as? NSString == MXSecretId.keyBackup.takeUnretainedValue(),
+            let secret = MXSecretShareSend(fromJSON: event.content)?.secret
+        else {
+            return
+        }
+        
+        log.debug("Restoring backup after receiving backup key")
+        
+        guard
+            let backupVersion = backup?.keyBackupVersion,
+            let version = backupVersion.version else
+        {
+            log.error("There is not backup version to restore")
+            return
+        }
+        
+        let data = MXBase64Tools.data(fromBase64: secret)
+        backupEngine?.savePrivateKey(data, version: version)
+        
+        log.debug("Restoring room keys")
+        backup?.restore(usingPrivateKeyKeyBackup: backupVersion, room: nil, session: nil) { [weak self] total, imported in
+            self?.log.debug("Restored \(imported) out of \(total) room keys")
+        }
     }
     
     private func retryUndecryptableEvents() {

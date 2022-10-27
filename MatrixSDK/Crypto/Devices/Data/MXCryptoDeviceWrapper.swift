@@ -38,9 +38,13 @@ import MatrixSDKCrypto
         deviceId = device.deviceId
         algorithms = device.algorithms
         keys = device.keys
-        unsignedData = [
-            "device_display_name": device.displayName as Any
-        ]
+        if let displayName = device.displayName {
+            unsignedData = [
+                "device_display_name": displayName
+            ]
+        } else {
+            unsignedData = [:]
+        }
         
         let status: MXDeviceVerification
         if device.isBlocked {

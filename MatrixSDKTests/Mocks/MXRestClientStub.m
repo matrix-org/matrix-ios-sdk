@@ -43,4 +43,13 @@
     return [[MXHTTPOperation alloc] init];
 }
 
+- (MXHTTPOperation *)downloadKeysForUsers:(NSArray<NSString *> *)userIds token:(NSString *)token success:(void (^)(MXKeysQueryResponse *))success failure:(void (^)(NSError *))failure
+{
+    if (success)
+    {
+        success([[MXKeysQueryResponse alloc] init]);
+    }
+    return [[MXHTTPOperation alloc] init];
+}
+
 @end

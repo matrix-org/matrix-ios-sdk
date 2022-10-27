@@ -57,7 +57,11 @@ class UserIdentitySourceStub: CryptoIdentityStub, MXCryptoUserIdentitySource {
         return verification[userId] ?? false
     }
     
-    func downloadKeys(users: [String]) async throws {
+    func isUserTracked(userId: String) -> Bool {
+        return false
+    }
+    
+    func updateTrackedUsers(users: [String]) async throws {
     }
     
     func manuallyVerifyUser(userId: String) async throws {
@@ -100,7 +104,11 @@ class CryptoCrossSigningStub: CryptoIdentityStub, MXCryptoCrossSigning {
         return stubbedVerifiedUsers.contains(userId)
     }
     
-    func downloadKeys(users: [String]) async throws {
+    func isUserTracked(userId: String) -> Bool {
+        return false
+    }
+    
+    func updateTrackedUsers(users: [String]) async throws {
     }
     
     func manuallyVerifyUser(userId: String) async throws {

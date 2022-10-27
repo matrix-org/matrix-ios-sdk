@@ -104,7 +104,7 @@ NSUInteger const kMXKeyBackupWaitingTimeToSendKeyBackup = 10000;
     } failure:^(NSError * _Nonnull error) {
         MXStrongifyAndReturnIfNil(self);
 
-        MXLogDebug(@"[MXKeyBackup] checkAndStartKeyBackup: Failed to get current version: %@", error);
+        MXLogErrorDetails(@"[MXKeyBackup] checkAndStartKeyBackup: Failed to get current version", error);
         self.state = MXKeyBackupStateUnknown;
     }];
 }
@@ -270,7 +270,7 @@ NSUInteger const kMXKeyBackupWaitingTimeToSendKeyBackup = 10000;
     } failure:^(NSError *error) {
         MXStrongifyAndReturnIfNil(self);
 
-        MXLogDebug(@"[MXKeyBackup] sendKeyBackup: backupRoomKeysSuccess failed. Error: %@", error);
+        MXLogErrorDetails(@"[MXKeyBackup] sendKeyBackup: backupRoomKeysSuccess failed", error);
 
         void (^backupAllGroupSessionsFailure)(NSError *error) = self->backupAllGroupSessionsFailure;
 
@@ -304,7 +304,7 @@ NSUInteger const kMXKeyBackupWaitingTimeToSendKeyBackup = 10000;
         [self restoreKeyBackupAutomaticallyWithPrivateKey:onComplete];
         
     } failure:^(NSError * _Nonnull error) {
-        MXLogDebug(@"[MXKeyBackup] requestPrivateKeys. Error for requestPrivateKeys: %@", error);
+        MXLogErrorDetails(@"[MXKeyBackup] requestPrivateKeys. Error for requestPrivateKeys", error);
         onComplete();
     }];
 }
@@ -323,15 +323,15 @@ NSUInteger const kMXKeyBackupWaitingTimeToSendKeyBackup = 10000;
                 [self restoreKeyBackupAutomaticallyWithPrivateKey:onComplete];
             }
         } failure:^(NSError * _Nonnull error) {
-            MXLogDebug(@"[MXKeyBackup] restoreKeyBackupAutomatically: Cannot fetch backup version. Error: %@", error);
+            MXLogErrorDetails(@"[MXKeyBackup] restoreKeyBackupAutomatically: Cannot fetch backup version", error);
         }];
         return;
     }
     
     // Check private keys
-    if (!self.engine.hasValidPrivateKey)
+    if (![self.engine hasValidPrivateKeyForKeyBackupVersion:self.keyBackupVersion])
     {
-        MXLogDebug(@"[MXKeyBackup] restoreKeyBackupAutomatically. Error: No valid private key");
+        MXLogError(@"[MXKeyBackup] restoreKeyBackupAutomatically. Error: No valid private key");
         onComplete();
         return;
     }
@@ -343,7 +343,7 @@ NSUInteger const kMXKeyBackupWaitingTimeToSendKeyBackup = 10000;
         onComplete();
         
     } failure:^(NSError * _Nonnull error) {
-        MXLogDebug(@"[MXKeyBackup] restoreKeyBackupAutomatically. Error for restoreKeyBackup: %@", error);
+        MXLogErrorDetails(@"[MXKeyBackup] restoreKeyBackupAutomatically. Error for restoreKeyBackup", error);
         onComplete();
     }];
 }
