@@ -79,6 +79,13 @@ private class MXCryptoV2: NSObject, MXCrypto {
     
     // MARK: - Public properties
     
+    var version: String {
+        guard let sdkVersion = Bundle(for: OlmMachine.self).infoDictionary?["CFBundleShortVersionString"] else {
+            return "Matrix SDK Crypto"
+        }
+        return "Matrix SDK Crypto \(sdkVersion)"
+    }
+    
     var deviceCurve25519Key: String? {
         return machine.deviceCurve25519Key
     }

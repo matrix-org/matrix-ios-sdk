@@ -1417,6 +1417,11 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 #endif
 }
 
+- (NSString *)version
+{
+    return [NSString stringWithFormat:@"OLM %@", self.olmVersion];
+}
+
 - (NSString *)deviceCurve25519Key
 {
 #ifdef MX_CRYPTO
