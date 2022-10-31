@@ -500,8 +500,8 @@
 		32AF9285240EA2430008A0FD /* MXSecretShareRequest.h in Headers */ = {isa = PBXBuildFile; fileRef = 32AF9282240EA2430008A0FD /* MXSecretShareRequest.h */; };
 		32AF9286240EA2430008A0FD /* MXSecretShareRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = 32AF9283240EA2430008A0FD /* MXSecretShareRequest.m */; };
 		32AF9287240EA2430008A0FD /* MXSecretShareRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = 32AF9283240EA2430008A0FD /* MXSecretShareRequest.m */; };
-		32AF928A240EA3880008A0FD /* MXSecretShareSend.h in Headers */ = {isa = PBXBuildFile; fileRef = 32AF9288240EA3880008A0FD /* MXSecretShareSend.h */; };
-		32AF928B240EA3880008A0FD /* MXSecretShareSend.h in Headers */ = {isa = PBXBuildFile; fileRef = 32AF9288240EA3880008A0FD /* MXSecretShareSend.h */; };
+		32AF928A240EA3880008A0FD /* MXSecretShareSend.h in Headers */ = {isa = PBXBuildFile; fileRef = 32AF9288240EA3880008A0FD /* MXSecretShareSend.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		32AF928B240EA3880008A0FD /* MXSecretShareSend.h in Headers */ = {isa = PBXBuildFile; fileRef = 32AF9288240EA3880008A0FD /* MXSecretShareSend.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32AF928C240EA3880008A0FD /* MXSecretShareSend.m in Sources */ = {isa = PBXBuildFile; fileRef = 32AF9289240EA3880008A0FD /* MXSecretShareSend.m */; };
 		32AF928D240EA3880008A0FD /* MXSecretShareSend.m in Sources */ = {isa = PBXBuildFile; fileRef = 32AF9289240EA3880008A0FD /* MXSecretShareSend.m */; };
 		32AF928F24110ADD0008A0FD /* MXSecretShareManager_Private.h in Headers */ = {isa = PBXBuildFile; fileRef = 32AF928E24110ADD0008A0FD /* MXSecretShareManager_Private.h */; };
@@ -1941,6 +1941,8 @@
 		ED8F1D3C2885BB2D00F897E7 /* MXCryptoProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED8F1D3A2885BB2D00F897E7 /* MXCryptoProtocols.swift */; };
 		EDA2CDD628F5C4230088ACE7 /* MXQRCodeTransactionV2UnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDA2CDD528F5C4230088ACE7 /* MXQRCodeTransactionV2UnitTests.swift */; };
 		EDA2CDD728F5C4230088ACE7 /* MXQRCodeTransactionV2UnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDA2CDD528F5C4230088ACE7 /* MXQRCodeTransactionV2UnitTests.swift */; };
+		EDA69340290BA92E00223252 /* MXCryptoMachineUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDA6933F290BA92E00223252 /* MXCryptoMachineUnitTests.swift */; };
+		EDA69341290BA92E00223252 /* MXCryptoMachineUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDA6933F290BA92E00223252 /* MXCryptoMachineUnitTests.swift */; };
 		EDAAC41928E2FCFE00DD89B5 /* MXCryptoSecretStoreV2.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDAAC41828E2FCFE00DD89B5 /* MXCryptoSecretStoreV2.swift */; };
 		EDAAC41A28E2FCFE00DD89B5 /* MXCryptoSecretStoreV2.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDAAC41828E2FCFE00DD89B5 /* MXCryptoSecretStoreV2.swift */; };
 		EDAAC41C28E30F3C00DD89B5 /* (null) in Headers */ = {isa = PBXBuildFile; settings = {ATTRIBUTES = (Public, ); }; };
@@ -3059,6 +3061,7 @@
 		ED8F1D332885ADE200F897E7 /* MXCryptoProtocolStubs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXCryptoProtocolStubs.swift; sourceTree = "<group>"; };
 		ED8F1D3A2885BB2D00F897E7 /* MXCryptoProtocols.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MXCryptoProtocols.swift; sourceTree = "<group>"; };
 		EDA2CDD528F5C4230088ACE7 /* MXQRCodeTransactionV2UnitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXQRCodeTransactionV2UnitTests.swift; sourceTree = "<group>"; };
+		EDA6933F290BA92E00223252 /* MXCryptoMachineUnitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXCryptoMachineUnitTests.swift; sourceTree = "<group>"; };
 		EDAAC41228E2F86800DD89B5 /* MXCryptoSecretStore.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXCryptoSecretStore.h; sourceTree = "<group>"; };
 		EDAAC41828E2FCFE00DD89B5 /* MXCryptoSecretStoreV2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXCryptoSecretStoreV2.swift; sourceTree = "<group>"; };
 		EDAAC42328E3177000DD89B5 /* MXRecoveryServiceDependencies.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MXRecoveryServiceDependencies.swift; sourceTree = "<group>"; };
@@ -5320,6 +5323,7 @@
 			isa = PBXGroup;
 			children = (
 				ED8F1D332885ADE200F897E7 /* MXCryptoProtocolStubs.swift */,
+				EDA6933F290BA92E00223252 /* MXCryptoMachineUnitTests.swift */,
 				ED2DD11B286C4F3E00F06731 /* MXCryptoRequestsUnitTests.swift */,
 				ED8F1D312885AC5700F897E7 /* Device+Stub.swift */,
 			);
@@ -7155,6 +7159,7 @@
 				32832B5E1BCC048300241108 /* MXStoreNoStoreTests.m in Sources */,
 				A816247C25F60C7700A46F05 /* MXDeviceListOperationsPoolUnitTests.swift in Sources */,
 				B1660F1C260A20B900C3AA12 /* MXSpaceServiceTest.swift in Sources */,
+				EDA69340290BA92E00223252 /* MXCryptoMachineUnitTests.swift in Sources */,
 				ED35652C281150310002BF6A /* MXOlmInboundGroupSessionUnitTests.swift in Sources */,
 				32C9B71823E81A1C00C6F30A /* MXCrossSigningVerificationTests.m in Sources */,
 				323C5A081A70E53500FB0549 /* MXToolsUnitTests.m in Sources */,
@@ -7786,6 +7791,7 @@
 				32C9B71923E81A1C00C6F30A /* MXCrossSigningVerificationTests.m in Sources */,
 				B1E09A1D2397FCE90057C069 /* MXCryptoKeyVerificationTests.m in Sources */,
 				B1E09A472397FD990057C069 /* MXEventScanStoreUnitTests.m in Sources */,
+				EDA69341290BA92E00223252 /* MXCryptoMachineUnitTests.swift in Sources */,
 				ED35652D281150310002BF6A /* MXOlmInboundGroupSessionUnitTests.swift in Sources */,
 				B1E09A3D2397FD820057C069 /* MXStoreFileStoreTests.m in Sources */,
 				32CEEF3E23AD134A0039BA98 /* MXCrossSigningTests.m in Sources */,

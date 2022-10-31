@@ -1925,6 +1925,11 @@ typedef void (^MXOnResumeDone)(void);
  */
 - (void)validateAccountData
 {
+    if (![self.crypto isKindOfClass:[MXLegacyCrypto class]])
+    {
+        return;
+    }
+    
     // Detecting an issue in legacy crypto where more than one valid SSSS key is present on the client
     // https://github.com/vector-im/element-ios/issues/4569
     NSInteger keysCount = ((MXLegacyCrypto *)self.crypto).secretStorage.numberOfValidKeys;
@@ -1974,8 +1979,7 @@ typedef void (^MXOnResumeDone)(void);
     else
     {
         // New and all future crypto modules can handle the entire sync response in full
-        [self.crypto handleSyncResponse:syncResponse];
-        onComplete();
+        [self.crypto handleSyncResponse:syncResponse onComplete:onComplete];
     }
 }
 
@@ -2036,7 +2040,10 @@ typedef void (^MXOnResumeDone)(void);
     {
         case MXEventTypeRoomKey:
         {
-            [(MXLegacyCrypto *)_crypto handleRoomKeyEvent:event onComplete:onHandleToDeviceEventDone];
+            if ([_crypto isKindOfClass:[MXLegacyCrypto class]])
+            {
+                [(MXLegacyCrypto *)_crypto handleRoomKeyEvent:event onComplete:onHandleToDeviceEventDone];
+            }
             break;
         }
 

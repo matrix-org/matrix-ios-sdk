@@ -37,6 +37,7 @@ extension MXEventDecryptionResult {
         senderCurve25519Key = event.senderCurve25519Key
         claimedEd25519Key = event.claimedEd25519Key
         forwardingCurve25519KeyChain = event.forwardingCurve25519Chain
+        isUntrusted = event.verificationState == VerificationState.untrusted
     }
 }
 

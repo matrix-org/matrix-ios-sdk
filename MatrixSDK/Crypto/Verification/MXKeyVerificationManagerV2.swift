@@ -38,7 +38,7 @@ class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
     
     // A set of room events we have to monitor manually to synchronize CryptoMachine
     // and verification UI, optionally triggering global notifications.
-    private static let dmEventTypes: Set<MXEventType> = [
+    static let dmEventTypes: Set<MXEventType> = [
         .roomMessage, // Verification request in DM is wrapped inside `m.room.message`
         .keyVerificationReady,
         .keyVerificationStart,
@@ -57,8 +57,6 @@ class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
     ]
     
     private weak var session: MXSession?
-    private var observer: Any?
-    
     private let handler: MXCryptoVerificationHandler
     
     // We need to keep track of request / transaction objects by reference
@@ -79,14 +77,6 @@ class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
         self.activeRequests = [:]
         self.activeTransactions = [:]
         self.resolver = MXKeyVerificationStateResolver(myUserId: session.myUserId, aggregations: session.aggregations)
-        
-        super.init()
-        
-        listenToRoomEvents(in: session)
-    }
-    
-    deinit {
-        session?.removeListener(observer)
     }
     
     var pendingRequests: [MXKeyVerificationRequest] {
@@ -269,25 +259,15 @@ class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
     
     // MARK: - Events
     
-    func handleDeviceEvents(_ events: [MXEvent]) {
-        for event in events {
-            guard Self.toDeviceEventTypes.contains(event.type) else {
-                continue
-            }
-            handleDeviceEvent(event)
+    @MainActor
+    func handleDeviceEvent(_ event: MXEvent) {
+        guard Self.toDeviceEventTypes.contains(event.type) else {
+            updatePendingVerification()
+            return
         }
-        updatePendingVerification()
-    }
-    
-    private func listenToRoomEvents(in session: MXSession) {
-        observer = session.listenToEvents(Array(Self.dmEventTypes)) { [weak self] event, direction, customObject in
-            if direction == .forwards && event.sender != session.myUserId {
-                self?.handleRoomEvent(event)
-            }
-        }
-    }
-    
-    private func handleDeviceEvent(_ event: MXEvent) {
+        
+        log.debug("->")
+        
         guard
             let userId = event.sender,
             let flowId = event.content["transaction_id"] as? String
@@ -295,8 +275,6 @@ class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
             log.error("Missing userId or flowId in event")
             return
         }
-        
-        log.debug("->")
         
         switch event.type {
         case kMXMessageTypeKeyVerificationRequest:
@@ -308,9 +286,16 @@ class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
         default:
             log.failure("Event type should not be handled by key verification", context: event.type)
         }
+        
+        updatePendingVerification()
     }
     
-    private func handleRoomEvent(_ event: MXEvent) {
+    @MainActor
+    func handleRoomEvent(_ event: MXEvent) {
+        guard Self.dmEventTypes.contains(where: { $0.identifier == event.type }) else {
+            return
+        }
+        
         log.debug("->")
         
         if !event.isEncrypted, let roomId = event.roomId {
@@ -322,17 +307,14 @@ class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
             
         } else if event.type == kMXEventTypeStringKeyVerificationStart, let flowId = event.relatesTo.eventId {
             handleIncomingVerification(userId: event.sender, flowId: flowId, transport: .directMessage)
-            
-        } else if Self.dmEventTypes.contains(where: { $0.identifier == event.type }) {
-            updatePendingVerification()
-            
-        } else if event.type != kMXEventTypeStringRoomMessage {
-            log.failure("Event type should not be handled by key verification", context: event.type)
         }
+        
+        updatePendingVerification()
     }
     
     // MARK: - Update
     
+    @MainActor
     func updatePendingVerification() {
         if !activeRequests.isEmpty {
             log.debug("Processing \(activeRequests.count) pending requests")
@@ -374,6 +356,8 @@ class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
         deviceIds: [String]?,
         methods: [String]
     ) async throws -> MXKeyVerificationRequest {
+        log.debug("->")
+        
         if userId == session?.myUserId {
             log.debug("Self-verification")
             return try await requestSelfVerification(methods: methods)
@@ -412,7 +396,7 @@ class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
     
     private func requestSelfVerification(methods: [String]) async throws -> MXKeyVerificationRequest {
         log.debug("->")
-        
+
         let request = try await handler.requestSelfVerification(methods: methods)
         return addRequest(for: request, transport: .directMessage)
     }
@@ -456,6 +440,10 @@ class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
                     MXKeyVerificationManagerNotificationRequestKey: request
                 ]
             )
+            NotificationCenter.default.post(
+                name: .MXKeyVerificationRequestDidChange,
+                object: request
+            )
         }
         return request
     }
@@ -481,14 +469,15 @@ class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
         switch verification {
         case .sasV1(let sas):
             log.debug("Tracking new SAS verification transaction")
-            let transaction = addSasTransaction(for: sas, transport: transport)
-            transaction.accept()
+            _ = addSasTransaction(for: sas, transport: transport, notify: true)
         case .qrCodeV1(let qrCode):
             if activeTransactions[flowId] is MXQRCodeTransaction {
                 // This flow may happen if we have previously started a QR verification, but so has the other side,
                 // and we scanned their code which now takes over the verification flow
                 log.debug("Updating existing QR verification transaction")
-                updatePendingVerification()
+                Task {
+                    await updatePendingVerification()
+                }
             } else {
                 log.debug("Tracking new QR verification transaction")
                 _ = addQrTransaction(for: qrCode, transport: transport)
@@ -498,7 +487,8 @@ class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
     
     private func addSasTransaction(
         for sas: Sas,
-        transport: MXKeyVerificationTransport
+        transport: MXKeyVerificationTransport,
+        notify: Bool = false
     ) -> MXSASTransactionV2 {
         let transaction = MXSASTransactionV2(
             sas: sas,
@@ -506,6 +496,19 @@ class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
             handler: handler
         )
         activeTransactions[transaction.transactionId] = transaction
+        if notify {
+            NotificationCenter.default.post(
+                name: .MXKeyVerificationManagerNewTransaction,
+                object: self,
+                userInfo: [
+                    MXKeyVerificationManagerNotificationTransactionKey: transaction
+                ]
+            )
+            NotificationCenter.default.post(
+                name: .MXKeyVerificationTransactionDidChange,
+                object: transaction
+            )
+        }
         return transaction
     }
     

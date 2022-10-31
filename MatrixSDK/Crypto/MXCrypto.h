@@ -80,6 +80,11 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
 @protocol MXCrypto <NSObject>
 
 /**
+ Version of the crypto module being used
+ */
+@property (nonatomic, readonly) NSString *version;
+
+/**
  Curve25519 key for the account.
  */
 @property (nullable, nonatomic, readonly) NSString *deviceCurve25519Key;
@@ -205,7 +210,7 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
 /**
  Handle the sync response that may contain crypto-related events
  */
-- (void)handleSyncResponse:(MXSyncResponse *)syncResponse;
+- (void)handleSyncResponse:(MXSyncResponse *)syncResponse onComplete:(void (^)(void))onComplete;
 
 #pragma mark - Cross-signing / Local trust
 

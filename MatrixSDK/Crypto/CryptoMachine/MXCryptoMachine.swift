@@ -163,13 +163,17 @@ extension MXCryptoMachine: MXCryptoSyncing {
             unusedFallbackKeys: unusedFallbackKeys
         )
         
-        guard let json = MXTools.deserialiseJSONString(result) as? [AnyHashable: Any] else {
-            log.error("Result cannot be serialized", context: [
+        guard
+            let json = MXTools.deserialiseJSONString(result) as? [Any],
+            let toDevice = MXToDeviceSyncResponse(fromJSON: ["events": json])
+        else {
+            log.failure("Result cannot be serialized", context: [
                 "result": result
             ])
             return MXToDeviceSyncResponse()
         }
-        return MXToDeviceSyncResponse(fromJSON: json)
+        
+        return toDevice
     }
     
     func processOutgoingRequests() async throws {
@@ -312,10 +316,32 @@ extension MXCryptoMachine: MXCryptoUserIdentitySource {
         }
     }
     
-    func downloadKeys(users: [String]) async throws {
-        try await handleRequest(
-            .keysQuery(requestId: UUID().uuidString, users: users)
-        )
+    func isUserTracked(userId: String) -> Bool {
+        do {
+            return try machine.isUserTracked(userId: userId)
+        } catch {
+            log.error("Failed checking user tracking")
+            return false
+        }
+    }
+    
+    func updateTrackedUsers(users: [String]) async throws {
+        machine.updateTrackedUsers(users: users)
+        try await withThrowingTaskGroup(of: Void.self) { [weak self] group in
+            guard let self = self else { return }
+            
+            for request in try machine.outgoingRequests() {
+                guard case .keysQuery = request else {
+                    continue
+                }
+                
+                group.addTask {
+                    try await self.handleRequest(request)
+                }
+            }
+            
+            try await group.waitForAll()
+        }
     }
     
     func manuallyVerifyUser(userId: String) async throws {
@@ -353,9 +379,8 @@ extension MXCryptoMachine: MXCryptoRoomEventEncrypting {
     func encryptRoomEvent(
         content: [AnyHashable : Any],
         roomId: String,
-        eventType: String,
-        users: [String]
-    ) async throws -> [String : Any] {
+        eventType: String
+    ) throws -> [String : Any] {
         guard let content = MXTools.serialiseJSONObject(content) else {
             throw Error.cannotSerialize
         }
@@ -423,25 +448,6 @@ extension MXCryptoMachine: MXCryptoRoomEventEncrypting {
     }
     
     // MARK: - Private
-    
-    private func updateTrackedUsers(users: [String]) async throws {
-        machine.updateTrackedUsers(users: users)
-        try await withThrowingTaskGroup(of: Void.self) { [weak self] group in
-            guard let self = self else { return }
-            
-            for request in try machine.outgoingRequests() {
-                guard case .keysQuery = request else {
-                    continue
-                }
-                
-                group.addTask {
-                    try await self.handleRequest(request)
-                }
-            }
-            
-            try await group.waitForAll()
-        }
-    }
     
     private func getMissingSessions(users: [String]) async throws {
         guard
