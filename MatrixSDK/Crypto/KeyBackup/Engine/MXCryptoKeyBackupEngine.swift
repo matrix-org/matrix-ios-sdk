@@ -41,28 +41,34 @@ class MXCryptoKeyBackupEngine: NSObject, MXKeyBackupEngine {
     }
     
     private let backup: MXCryptoBackup
+    private let roomEventDecryptor: MXRoomEventDecrypting
     private let log = MXNamedLog(name: "MXCryptoKeyBackupEngine")
     
-    init(backup: MXCryptoBackup) {
+    init(backup: MXCryptoBackup, roomEventDecryptor: MXRoomEventDecrypting) {
         self.backup = backup
+        self.roomEventDecryptor = roomEventDecryptor
     }
     
     // MARK: - Enable / Disable engine
     
-    func enableBackup(with keyBackupversion: MXKeyBackupVersion) throws {
+    func enableBackup(with keyBackupVersion: MXKeyBackupVersion) throws {
         log.debug("->")
         
-        guard let version = keyBackupversion.version else {
+        guard let version = keyBackupVersion.version else {
             log.error("Unknown backup version")
             throw Error.unknownBackupVersion
         }
         
-        let key = try MegolmV1BackupKey(keyBackupVersion: keyBackupversion)
+        let key = try MegolmV1BackupKey(keyBackupVersion: keyBackupVersion)
         try backup.enableBackup(key: key, version: version)
         log.debug("Backup enabled")
     }
     
     func disableBackup() {
+        guard enabled else {
+            return
+        }
+        
         log.debug("->")
         backup.disableBackup()
     }
@@ -248,58 +254,73 @@ class MXCryptoKeyBackupEngine: NSObject, MXKeyBackupEngine {
         success: @escaping (UInt, UInt) -> Void,
         failure: @escaping (Swift.Error) -> Void
     ) {
-        let count = keysBackupData.rooms
-            .map { roomId, room in
-                room.sessions.count
+        Task(priority: .medium) {
+            
+            let count = keysBackupData.rooms
+                .map { roomId, room in
+                    room.sessions.count
+                }
+                .reduce(0, +)
+            
+            log.debug("Importing \(count) encrypted sessions")
+            
+            let recoveryKey: BackupRecoveryKey
+            do {
+                let key = MXRecoveryKey.encode(privateKey)
+                recoveryKey = try BackupRecoveryKey.fromBase58(key: key)
+            } catch {
+                log.error("Failed creating recovery key")
+                failure(Error.invalidPrivateKey)
+                return
             }
-            .reduce(0, +)
-
-        log.debug("Importing \(count) encrypted sessions")
-        
-        let sessions = keysBackupData.rooms
-            .flatMap { roomId, room in
-                room.sessions
-                    .compactMap { sessionId, keyBackup in
-                        decrypt(
-                            keyBackupData:keyBackup,
-                            keyBackupVersion: keyBackupVersion,
-                            privateKey: privateKey,
-                            forSession: sessionId,
-                            inRoom: roomId
-                        )
-                    }
+            
+            let date1 = Date()
+            
+            let sessions = keysBackupData.rooms
+                .flatMap { roomId, room in
+                    room.sessions
+                        .compactMap { sessionId, keyBackup in
+                            decrypt(
+                                keyBackupData:keyBackup,
+                                keyBackupVersion: keyBackupVersion,
+                                recoveryKey: recoveryKey,
+                                forSession: sessionId,
+                                inRoom: roomId
+                            )
+                        }
+                }
+            
+            let duration1 = Date().timeIntervalSince(date1) * 1000
+            log.debug("Decrypted \(sessions.count) sessions in \(duration1) ms")
+            
+            let date2 = Date()
+            
+            do {
+                let result = try backup.importDecryptedKeys(roomKeys: sessions, progressListener: self)
+                await roomEventDecryptor.retryAllUndecryptedEvents()
+                
+                let duration2 = Date().timeIntervalSince(date2) * 1000
+                log.debug("Successfully imported \(result.imported) out of \(result.total) sessions in \(duration2) ms")
+                
+                await MainActor.run {
+                    success(UInt(result.total), UInt(result.imported))
+                }
+            } catch {
+                log.error("Failed importing sessions", context: error)
+                await MainActor.run {
+                    failure(error)
+                }
             }
-        
-        log.debug("Decrypted \(sessions.count) sessions")
-        
-        do {
-            let result = try backup.importDecryptedKeys(roomKeys: sessions, progressListener: self)
-            log.debug("Successfully imported \(result.imported) out of \(result.total) sessions")
-            success(UInt(result.total), UInt(result.imported))
-        } catch {
-            log.error("Failed importing sessions", context: error)
-            failure(error)
         }
     }
     
     private func decrypt(
         keyBackupData: MXKeyBackupData,
         keyBackupVersion: MXKeyBackupVersion,
-        privateKey: Data,
+        recoveryKey: BackupRecoveryKey,
         forSession sessionId: String,
         inRoom roomId: String
     ) -> MXMegolmSessionData? {
-        log.debug("->")
-        
-        let recoveryKey: BackupRecoveryKey
-        do {
-            let key = MXRecoveryKey.encode(privateKey)
-            recoveryKey = try BackupRecoveryKey.fromBase58(key: key)
-        } catch {
-            log.error("Failed creating recovery key")
-            return nil
-        }
-        
         guard
             let ciphertext = keyBackupData.sessionData["ciphertext"] as? String,
             let mac = keyBackupData.sessionData["mac"] as? String,
@@ -332,8 +353,6 @@ class MXCryptoKeyBackupEngine: NSObject, MXKeyBackupEngine {
         data.sessionId = sessionId
         data.roomId = roomId
         data.isUntrusted = true // Asymmetric backups are untrusted by default
-        
-        log.debug("Decrypted key backup data")
         return data
     }
     
@@ -343,8 +362,10 @@ class MXCryptoKeyBackupEngine: NSObject, MXKeyBackupEngine {
         return try backup.exportRoomKeys(passphrase: passphrase)
     }
     
-    func importRoomKeys(_ data: Data, passphrase: String) throws -> KeysImportResult {
-        return try backup.importRoomKeys(data, passphrase: passphrase, progressListener: self)
+    func importRoomKeys(_ data: Data, passphrase: String) async throws -> KeysImportResult {
+        let result = try backup.importRoomKeys(data, passphrase: passphrase, progressListener: self)
+        await roomEventDecryptor.retryAllUndecryptedEvents()
+        return result
     }
     
     // MARK: - Private
