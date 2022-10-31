@@ -16,8 +16,6 @@
 
 import Foundation
 
-#if DEBUG
-
 @objc public class MXCryptoV2Factory: NSObject {
     enum Error: Swift.Error {
         case cryptoNotAvailable
@@ -45,10 +43,12 @@ import Foundation
         }
         
         log.debug("Building crypto module")
-        Task {
+        Task.detached { [weak self] in
+            guard let self = self else { return }
+            
             do {
-                let store = try await createOrOpenLegacyStore(credentials: credentials)
-                migrateIfNecessary(legacyStore: store) {
+                let store = try await self.createOrOpenLegacyStore(credentials: credentials)
+                self.migrateIfNecessary(legacyStore: store) {
                     migrationProgress?($0)
                 }
                 
@@ -63,7 +63,7 @@ import Foundation
                     success(crypto)
                 }
             } catch {
-                log.failure("Cannot create crypto", context: error)
+                self.log.failure("Cannot create crypto", context: error)
                 await MainActor.run {
                     failure(error)
                 }
@@ -116,5 +116,3 @@ import Foundation
             
     }
 }
-
-#endif

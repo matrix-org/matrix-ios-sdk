@@ -15,9 +15,6 @@
 //
 
 import Foundation
-
-#if DEBUG
-
 import MatrixSDKCrypto
 
 /// QR transaction originating from `MatrixSDKCrypto`
@@ -236,5 +233,3 @@ private extension MXQRCodeTransactionState {
         }
     }
 }
-
-#endif

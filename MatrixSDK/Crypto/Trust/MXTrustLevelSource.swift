@@ -16,8 +16,6 @@
 
 import Foundation
 
-#if DEBUG
-
 /// Convenience struct which transforms `MatrixSDKCrypto` trust levels
 /// into `MatrixSDK` `MXUserTrustLevel`, `MXDeviceTrustLevel` and `MXUsersTrustLevelSummary` formats.
 struct MXTrustLevelSource {
@@ -80,5 +78,3 @@ struct MXTrustLevelSource {
         return progress
     }
 }
-
-#endif

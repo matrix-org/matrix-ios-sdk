@@ -16,8 +16,6 @@
 
 import Foundation
 
-#if DEBUG
-
 /// Convenience struct which transforms `MatrixSDKCrypto` device formats
 /// into `MatrixSDK` `MXDeviceInfo` formats.
 struct MXDeviceInfoSource {
@@ -50,5 +48,3 @@ struct MXDeviceInfoSource {
         return map
     }
 }
-
-#endif

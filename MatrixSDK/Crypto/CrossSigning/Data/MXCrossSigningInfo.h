@@ -33,12 +33,10 @@ extern NSString *const MXCrossSigningInfoTrustLevelDidChangeNotification;
  */
 @interface MXCrossSigningInfo : NSObject <NSCoding>
 
-#if DEBUG
 /**
  Initialize cross signing with MatrixSDKCrypto user identity
  */
 - (instancetype)initWithUserIdentity:(MXCryptoUserIdentityWrapper *)userIdentity;
-#endif
 
 /**
  The user's id.

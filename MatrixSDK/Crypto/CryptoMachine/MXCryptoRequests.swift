@@ -15,9 +15,6 @@
 //
 
 import Foundation
-
-#if DEBUG
-
 import MatrixSDKCrypto
 
 /// Convenience class to delegate network requests originating in Rust crypto module
@@ -251,5 +248,3 @@ extension SignatureUploadRequest {
         return signatures
     }
 }
-
-#endif

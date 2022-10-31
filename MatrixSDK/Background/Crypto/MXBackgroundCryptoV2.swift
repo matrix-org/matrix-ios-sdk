@@ -16,8 +16,6 @@
 
 import Foundation
 
-#if DEBUG
-
 import MatrixSDKCrypto
 
 /// An implementation of `MXBackgroundCrypto` which uses [matrix-rust-sdk](https://github.com/matrix-org/matrix-rust-sdk/tree/main/crates/matrix-sdk-crypto)
@@ -139,5 +137,3 @@ class MXBackgroundCryptoV2: MXBackgroundCrypto {
         )
     }
 }
-
-#endif

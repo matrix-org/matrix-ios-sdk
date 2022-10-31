@@ -16,9 +16,6 @@
 
 import Foundation
 @testable import MatrixSDK
-
-#if DEBUG
-
 import MatrixSDKCrypto
 
 class MXRoomEventEncryptionUnitTests: XCTestCase {
@@ -285,5 +282,3 @@ class MXRoomEventEncryptionUnitTests: XCTestCase {
         XCTAssertEqual(result["ciphertext"] as? [String: String], ["body": "Hello"])
     }
 }
-
-#endif

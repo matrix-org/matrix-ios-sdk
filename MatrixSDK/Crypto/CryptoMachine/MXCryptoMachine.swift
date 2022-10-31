@@ -15,9 +15,6 @@
 //
 
 import Foundation
-
-#if DEBUG
-
 import MatrixSDKCrypto
 
 typealias GetRoomAction = (String) -> MXRoom?
@@ -389,11 +386,11 @@ extension MXCryptoMachine: MXCryptoRoomEventEncrypting {
         log.debug("Checking room keys in room \(roomId)")
         
         try await sessionsQueue.sync { [weak self] in
-            self?.log.debug("Fetching missing sessions")
+            self?.log.debug("Collecting missing sessions")
             try await self?.getMissingSessions(users: users)
         }
         
-        log.debug("Acquiring room lock for room \(roomId)")
+        log.debug("Acquiring lock for room \(roomId)")
         let roomQueue = await roomQueues.getQueue(for: roomId)
         
         try await roomQueue.sync { [weak self] in
@@ -428,6 +425,8 @@ extension MXCryptoMachine: MXCryptoRoomEventEncrypting {
     // MARK: - Private
     
     private func getMissingSessions(users: [String]) async throws {
+        log.debug("Getting missing sessions for \(users.count) user(s)")
+        
         guard
             let request = try machine.getMissingSessions(users: users),
             case .keysClaim = request
@@ -443,11 +442,11 @@ extension MXCryptoMachine: MXCryptoRoomEventEncrypting {
     private func shareRoomKey(roomId: String, users: [String], settings: EncryptionSettings) async throws {
         let requests = try machine.shareRoomKey(roomId: roomId, users: users, settings: settings)
         guard !requests.isEmpty else {
-            log.debug("Room keys do not need to be shared")
+            log.debug("There are no new keys to share")
             return
         }
         
-        log.debug("Sharing room keys via \(requests.count) request(s")
+        log.debug("Created \(requests.count) key share requests")
         try await withThrowingTaskGroup(of: Void.self) { [weak self] group in
             guard let self = self else { return }
             
@@ -760,5 +759,3 @@ extension MXCryptoMachine: MXCryptoBackup {
         isComputingRoomKeyCounts = false
     }
 }
-
-#endif

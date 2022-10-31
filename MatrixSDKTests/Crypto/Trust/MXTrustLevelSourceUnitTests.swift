@@ -17,9 +17,6 @@
 import Foundation
 import XCTest
 @testable import MatrixSDK
-
-#if DEBUG
-
 import MatrixSDKCrypto
 
 class MXTrustLevelSourceUnitTests: XCTestCase {
@@ -79,5 +76,3 @@ class MXTrustLevelSourceUnitTests: XCTestCase {
         XCTAssertEqual(summary.trustedDevicesProgress.completedUnitCount, 2)
     }
 }
-
-#endif

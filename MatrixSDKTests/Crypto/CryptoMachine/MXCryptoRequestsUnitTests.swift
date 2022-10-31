@@ -16,9 +16,6 @@
 
 import Foundation
 @testable import MatrixSDK
-
-#if DEBUG
-
 import MatrixSDKCrypto
 
 class MXCryptoRequestsUnitTests: XCTestCase {
@@ -134,5 +131,3 @@ class MXCryptoRequestsUnitTests: XCTestCase {
         XCTAssertEqual(keys["user_signing_key"] as? [String: String], ["key": "C"])
     }
 }
-
-#endif

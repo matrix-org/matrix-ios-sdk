@@ -15,9 +15,6 @@
 //
 
 import Foundation
-
-#if DEBUG
-
 import MatrixSDKCrypto
 
 extension MXDeviceVerification {
@@ -37,5 +34,3 @@ extension MXDeviceVerification {
         }
     }
 }
-
-#endif

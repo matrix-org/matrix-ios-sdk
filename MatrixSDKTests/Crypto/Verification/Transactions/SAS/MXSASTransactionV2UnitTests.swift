@@ -16,9 +16,6 @@
 
 import Foundation
 import XCTest
-
-#if DEBUG
-
 import MatrixSDKCrypto
 @testable import MatrixSDK
 
@@ -137,5 +134,3 @@ class MXSASTransactionV2UnitTests: XCTestCase {
         XCTAssertEqual(transaction.state, MXSASTransactionStateCancelled)
     }
 }
-
-#endif

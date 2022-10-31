@@ -35,7 +35,6 @@ NSString *const MXDeviceInfoTrustLevelDidChangeNotification = @"MXDeviceInfoTrus
     return self;
 }
 
-#if DEBUG
 - (instancetype)initWithDevice:(MXCryptoDeviceWrapper *)device
 {
     self = [super init];
@@ -50,7 +49,6 @@ NSString *const MXDeviceInfoTrustLevelDidChangeNotification = @"MXDeviceInfoTrus
     }
     return self;
 }
-#endif
 
 - (NSString *)fingerprint
 {

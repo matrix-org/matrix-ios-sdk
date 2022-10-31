@@ -150,8 +150,6 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 @synthesize keyVerificationManager = _keyVerificationManager;
 @synthesize recoveryService = _recoveryService;
 
-#if DEBUG
-
 + (MXCryptoV2Factory *)sharedCryptoV2Factory
 {
     static MXCryptoV2Factory *factory = nil;
@@ -164,21 +162,17 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
     return factory;
 }
 
-#endif
-
 + (id<MXCrypto>)createCryptoWithMatrixSession:(MXSession *)mxSession
                                         error:(NSError **)error
 {
     __block id<MXCrypto> crypto;
 
 #ifdef MX_CRYPTO
-    #if DEBUG
     if (MXSDKOptions.sharedInstance.isCryptoSDKAvailable && MXSDKOptions.sharedInstance.enableCryptoSDK)
     {
         MXLogFailure(@"[MXCrypto] createCryptoWithMatrixSession: Crypto V2 should not be created directly, use initializeCryptoWithMatrixSession instead");
         return nil;
     }
-    #endif
     
     dispatch_queue_t cryptoQueue = [MXLegacyCrypto dispatchQueueForUser:mxSession.matrixRestClient.credentials.userId];
     dispatch_sync(cryptoQueue, ^{
@@ -198,7 +192,6 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
                                  complete:(void (^)(id<MXCrypto> crypto, NSError *error))complete
 {
 #ifdef MX_CRYPTO
-    #if DEBUG
     if (MXSDKOptions.sharedInstance.isCryptoSDKAvailable && MXSDKOptions.sharedInstance.enableCryptoSDK)
     {
         MXCryptoV2Factory *factory = [MXLegacyCrypto sharedCryptoV2Factory];
@@ -210,7 +203,6 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
                                 }];
         return;
     }
-    #endif
     
     [self initalizeLegacyCryptoWithMatrixSession:mxSession complete:complete];
 #else

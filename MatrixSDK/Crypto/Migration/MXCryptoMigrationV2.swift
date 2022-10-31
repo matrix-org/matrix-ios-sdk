@@ -15,9 +15,6 @@
 //
 
 import Foundation
-
-#if DEBUG
-
 import OLMKit
 import MatrixSDKCrypto
 
@@ -160,5 +157,3 @@ extension MXCryptoMigrationV2: ProgressListener {
         // Progress loggged manually
     }
 }
-
-#endif

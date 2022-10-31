@@ -16,8 +16,6 @@
 
 import Foundation
 
-#if DEBUG
-
 import MatrixSDKCrypto
 
 class VerificationRequestStub: VerificationRequestProtocol {
@@ -142,5 +140,3 @@ class VerificationRequestStub: VerificationRequestProtocol {
         .requested
     }
 }
-
-#endif
