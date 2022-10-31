@@ -179,18 +179,16 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 + (void)checkCryptoWithMatrixSession:(MXSession*)mxSession complete:(void (^)(id<MXCrypto> crypto))complete
 {
 #ifdef MX_CRYPTO
-    dispatch_async(dispatch_get_main_queue(), ^{
-        #if DEBUG
-        id<MXCrypto> cryptoV2 = [self createCryptoV2IfAvailableWithSession:mxSession];
-        if (cryptoV2)
-        {
-            complete(cryptoV2);
-            return;
-        }
-        #endif
-        
-        [self checkLegacyCryptoWithMatrixSession:mxSession complete:complete];
-    });
+    #if DEBUG
+    id<MXCrypto> cryptoV2 = [self createCryptoV2IfAvailableWithSession:mxSession];
+    if (cryptoV2)
+    {
+        complete(cryptoV2);
+        return;
+    }
+    #endif
+    
+    [self checkLegacyCryptoWithMatrixSession:mxSession complete:complete];
 #else
     complete(nil);
 #endif
