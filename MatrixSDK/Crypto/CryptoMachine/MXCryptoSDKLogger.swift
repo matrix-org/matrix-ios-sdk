@@ -15,9 +15,6 @@
 //
 
 import Foundation
-
-#if DEBUG
-
 import MatrixSDKCrypto
 
 /// Redirects logs originating in `MatrixSDKCrypto` into `MXLog`
@@ -45,5 +42,3 @@ class MXCryptoSDKLogger: Logger {
         MXLog.debug("[MXCryptoSDK] \(logLine)")
     }
 }
-
-#endif

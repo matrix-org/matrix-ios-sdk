@@ -15,9 +15,6 @@
 //
 
 import Foundation
-
-#if DEBUG
-
 import MatrixSDKCrypto
 
 /// Verification request originating from `MatrixSDKCrypto`
@@ -205,6 +202,4 @@ private extension MXKeyVerificationRequestState {
         }
     }
 }
-
-#endif
 

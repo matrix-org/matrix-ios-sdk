@@ -16,8 +16,6 @@
 
 import Foundation
 
-#if DEBUG
-
 /// Convenience struct which transforms `MatrixSDKCrypto` cross signing info formats
 /// into `MatrixSDK` `MXCrossSigningInfo` formats.
 struct MXCrossSigningInfoSource {
@@ -40,5 +38,3 @@ struct MXCrossSigningInfoSource {
         )
     }
 }
-
-#endif

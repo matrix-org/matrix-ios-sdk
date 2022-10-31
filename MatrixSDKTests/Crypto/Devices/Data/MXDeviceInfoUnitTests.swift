@@ -17,9 +17,6 @@
 import Foundation
 import XCTest
 @testable import MatrixSDK
-
-#if DEBUG
-
 import MatrixSDKCrypto
 
 class MXDeviceInfoUnitTests: XCTestCase {
@@ -89,5 +86,3 @@ class MXDeviceInfoUnitTests: XCTestCase {
         )
     }
 }
-
-#endif

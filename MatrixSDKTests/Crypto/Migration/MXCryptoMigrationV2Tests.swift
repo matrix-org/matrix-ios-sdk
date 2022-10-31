@@ -15,9 +15,6 @@
 //
 
 import Foundation
-
-#if DEBUG
-
 import MatrixSDKCrypto
 @testable import MatrixSDK
 
@@ -202,5 +199,3 @@ extension MXCryptoMigrationV2Tests: Logger {
         MXLog.debug("[MXCryptoMigrationV2Tests]: \(logLine)")
     }
 }
-
-#endif

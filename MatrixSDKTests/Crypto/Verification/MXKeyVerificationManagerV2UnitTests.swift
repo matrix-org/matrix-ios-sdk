@@ -18,8 +18,6 @@ import Foundation
 import XCTest
 @testable import MatrixSDK
 
-#if DEBUG
-
 class MXKeyVerificationManagerV2UnitTests: XCTestCase {
     class MockSession: MXSession {
         override var myUserId: String! {
@@ -89,5 +87,3 @@ class MXKeyVerificationManagerV2UnitTests: XCTestCase {
         waitForExpectations(timeout: 1)
     }
 }
-
-#endif

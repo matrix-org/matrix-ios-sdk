@@ -16,9 +16,6 @@
 
 import Foundation
 @testable import MatrixSDK
-
-#if DEBUG
-
 @testable import MatrixSDKCrypto
 
 class CryptoIdentityStub: MXCryptoIdentity {
@@ -214,5 +211,3 @@ class CryptoBackupStub: MXCryptoBackup {
         return KeysImportResult(imported: 0, total: 0, keys: [:])
     }
 }
-
-#endif

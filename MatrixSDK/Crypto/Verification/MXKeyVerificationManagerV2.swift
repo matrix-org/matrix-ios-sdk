@@ -6,9 +6,6 @@
 //
 
 import Foundation
-
-#if DEBUG
-
 import MatrixSDKCrypto
 
 class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
@@ -491,5 +488,3 @@ class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
         return messageType == kMXMessageTypeKeyVerificationRequest
     }
 }
-
-#endif

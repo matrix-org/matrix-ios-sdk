@@ -15,9 +15,6 @@
 //
 
 import Foundation
-
-#if DEBUG
-
 import MatrixSDKCrypto
 
 extension Device {
@@ -47,5 +44,3 @@ extension Device {
         )
     }
 }
-
-#endif
