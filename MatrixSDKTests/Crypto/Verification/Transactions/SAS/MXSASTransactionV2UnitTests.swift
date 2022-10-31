@@ -135,6 +135,14 @@ class MXSASTransactionV2UnitTests: XCTestCase {
                 isDone: false,
                 isCancelled: false
             ), MXSASTransactionStateIncomingShowAccept),
+            (.stub(
+                weStarted: false,
+                hasBeenAccepted: true,
+                canBePresented: false,
+                haveWeConfirmed: false,
+                isDone: false,
+                isCancelled: false
+            ), MXSASTransactionStateUnknown),
         ]
 
         for (stub, state) in testCases {

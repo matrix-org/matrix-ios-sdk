@@ -23,10 +23,6 @@ import Foundation
     // These methods and properties will not be available in MXCrossSigningV2 and therefore given
     // integration tests cannot be run (or have to be re-written).
     var legacyCrossSigning: MXLegacyCrossSigning? {
-        guard let crossSigning = crossSigning else {
-            return nil
-        }
-        
         guard let legacy = crossSigning as? MXLegacyCrossSigning else {
             assertionFailure("Legacy cross signing is not available, adjust test to not depend on legacy APIs")
             return nil

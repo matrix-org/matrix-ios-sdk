@@ -55,6 +55,8 @@
 #import "MXSharedHistoryKeyService.h"
 #import "MXNativeKeyBackupEngine.h"
 
+#warning File has not been annotated with nullability, see MX_ASSUME_MISSING_NULLABILITY_BEGIN
+
 /**
  The store to use for crypto.
  */
@@ -145,12 +147,8 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 
 @synthesize backup = _backup;
 @synthesize crossSigning = _crossSigning;
-@synthesize enableOutgoingKeyRequestsOnceSelfVerificationDone = _enableOutgoingKeyRequestsOnceSelfVerificationDone;
 @synthesize keyVerificationManager = _keyVerificationManager;
 @synthesize recoveryService = _recoveryService;
-@synthesize secretShareManager = _secretShareManager;
-@synthesize secretStorage = _secretStorage;
-@synthesize warnOnUnknowDevices = _warnOnUnknowDevices;
 
 + (id<MXCrypto>)createCryptoWithMatrixSession:(MXSession *)mxSession
 {
@@ -181,14 +179,24 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 + (void)checkCryptoWithMatrixSession:(MXSession*)mxSession complete:(void (^)(id<MXCrypto> crypto))complete
 {
 #ifdef MX_CRYPTO
-    
     #if DEBUG
     id<MXCrypto> cryptoV2 = [self createCryptoV2IfAvailableWithSession:mxSession];
-    if (cryptoV2) {
+    if (cryptoV2)
+    {
         complete(cryptoV2);
         return;
     }
     #endif
+    
+    [self checkLegacyCryptoWithMatrixSession:mxSession complete:complete];
+#else
+    complete(nil);
+#endif
+}
+
++ (void)checkLegacyCryptoWithMatrixSession:(MXSession*)mxSession complete:(void (^)(id<MXCrypto> crypto))complete
+{
+#ifdef MX_CRYPTO
 
     MXLogDebug(@"[MXCrypto] checkCryptoWithMatrixSession for %@", mxSession.matrixRestClient.credentials.userId);
 
@@ -911,11 +919,12 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 #endif
 }
 
-- (void)handleSyncResponse:(MXSyncResponse *)syncResponse
+- (void)handleSyncResponse:(MXSyncResponse *)syncResponse onComplete:(void (^)(void))onComplete
 {
     // Not implemented, the default `MXCrypto` instead uses more specific functions
     // such as `handleRoomKeyEvent` and `handleDeviceUnusedFallbackKeys`. The method
     // is possibly used by `MXCrypto` subclasses.
+    onComplete();
 }
 
 - (void)onSyncCompleted:(NSString *)oldSyncToken nextSyncToken:(NSString *)nextSyncToken catchingUp:(BOOL)catchingUp
@@ -1404,6 +1413,11 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
         [self.store storeDeviceSyncToken:nil];
     });
 #endif
+}
+
+- (NSString *)version
+{
+    return [NSString stringWithFormat:@"OLM %@", self.olmVersion];
 }
 
 - (NSString *)deviceCurve25519Key
