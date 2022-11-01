@@ -101,35 +101,53 @@
 
 + (MXFilterJSONModel*)syncFilterWithMessageLimit:(NSUInteger)messageLimit
 {
-    MXFilterJSONModel *filter = [[MXFilterJSONModel alloc] init];
-
-    filter.room = [[MXRoomFilter alloc] init];
-    filter.room.timeline = [[MXRoomEventFilter alloc] init];
-    filter.room.timeline.limit = messageLimit;
-
-    return filter;
+    return [self syncFilterWithMessageLimit:messageLimit unreadThreadNotifications:NO];
 }
 
 + (MXFilterJSONModel*)syncFilterForLazyLoading
 {
-    MXFilterJSONModel *filter = [[MXFilterJSONModel alloc] init];
-
-    filter.room = [[MXRoomFilter alloc] init];
-    filter.room.state = [[MXRoomEventFilter alloc] init];
-    filter.room.state.lazyLoadMembers = YES;
-
-    return filter;
+    return [self syncFilterForLazyLoadingWithUnreadThreadNotifications:NO];
 }
 
 + (MXFilterJSONModel*)syncFilterForLazyLoadingWithMessageLimit:(NSUInteger)messageLimit
+{
+    return [self syncFilterForLazyLoadingWithMessageLimit:messageLimit unreadThreadNotifications:NO];
+}
+
++ (MXFilterJSONModel*)syncFilterWithMessageLimit:(NSUInteger)messageLimit unreadThreadNotifications:(BOOL)unreadThreadNotifications
 {
     MXFilterJSONModel *filter = [[MXFilterJSONModel alloc] init];
 
     filter.room = [[MXRoomFilter alloc] init];
     filter.room.timeline = [[MXRoomEventFilter alloc] init];
     filter.room.timeline.limit = messageLimit;
+    filter.room.timeline.unreadThreadNotifications = unreadThreadNotifications;
+
+    return filter;
+}
+
++ (MXFilterJSONModel*)syncFilterForLazyLoadingWithUnreadThreadNotifications:(BOOL)unreadThreadNotifications
+{
+    MXFilterJSONModel *filter = [[MXFilterJSONModel alloc] init];
+
+    filter.room = [[MXRoomFilter alloc] init];
     filter.room.state = [[MXRoomEventFilter alloc] init];
     filter.room.state.lazyLoadMembers = YES;
+    filter.room.timeline = [[MXRoomEventFilter alloc] init];
+    filter.room.timeline.unreadThreadNotifications = unreadThreadNotifications;
+
+    return filter;
+}
+
++ (MXFilterJSONModel*)syncFilterForLazyLoadingWithMessageLimit:(NSUInteger)messageLimit unreadThreadNotifications:(BOOL)unreadThreadNotifications
+{
+    MXFilterJSONModel *filter = [[MXFilterJSONModel alloc] init];
+
+    filter.room = [[MXRoomFilter alloc] init];
+    filter.room.timeline = [[MXRoomEventFilter alloc] init];
+    filter.room.timeline.limit = messageLimit;
+    filter.room.timeline.unreadThreadNotifications = unreadThreadNotifications;
+    filter.room.state = [[MXRoomEventFilter alloc] init];
 
     return filter;
 }

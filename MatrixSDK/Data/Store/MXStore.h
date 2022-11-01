@@ -310,6 +310,18 @@
 - (NSUInteger)localUnreadEventCount:(nonnull NSString*)roomId threadId:(nullable NSString*)threadId withTypeIn:(nullable NSArray*)types;
 
 /**
+ Count the unread events wrote in the store per thread.
+ 
+ @discussion: The returned count is relative to the local storage. The actual unread messages
+ for a room may be higher than the returned value.
+ 
+ @param roomId the room id.
+ @param types an array of event types strings (MXEventTypeString).
+ @return The number of unread events per thread which have their type listed in the provided array.
+ */
+- (nonnull NSDictionary <NSString *, NSNumber *> *)localUnreadEventCountPerThread:(nonnull NSString*)roomId withTypeIn:(nullable NSArray*)types;
+
+/**
  Incoming events since the last user receipt data.
 
  @discussion: The returned count is relative to the local storage. The actual unread messages
