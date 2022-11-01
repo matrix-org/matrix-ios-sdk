@@ -48,6 +48,7 @@ public actor MXTaskQueue {
             assertionFailure("Failing to get value of the correct type should not be possible")
             throw Error.valueUnavailable
         }
+        previousTask = nil
         return value
     }
 

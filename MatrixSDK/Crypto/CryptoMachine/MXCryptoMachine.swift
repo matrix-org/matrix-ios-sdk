@@ -39,6 +39,7 @@ class MXCryptoMachine {
     }
     
     private static let storeFolder = "MXCryptoStore"
+    private static let kdfRounds: Int32 = 500_000
     
     enum Error: Swift.Error {
         case invalidStorage
@@ -51,6 +52,8 @@ class MXCryptoMachine {
         case missingEmojis
         case missingDecimals
         case cannotCancelVerification
+        case cannotExportKeys
+        case cannotImportKeys
     }
     
     private let machine: OlmMachine
@@ -122,7 +125,7 @@ extension MXCryptoMachine: MXCryptoIdentity {
     
     var deviceCurve25519Key: String? {
         guard let key = machine.identityKeys()[kMXKeyCurve25519Type] else {
-            log.error("Cannot get device curve25519 key")
+            log.failure("Cannot get device curve25519 key")
             return nil
         }
         return key
@@ -130,7 +133,7 @@ extension MXCryptoMachine: MXCryptoIdentity {
     
     var deviceEd25519Key: String? {
         guard let key = machine.identityKeys()[kMXKeyEd25519Type] else {
-            log.error("Cannot get device ed25519 key")
+            log.failure("Cannot get device ed25519 key")
             return nil
         }
         return key
@@ -160,18 +163,22 @@ extension MXCryptoMachine: MXCryptoSyncing {
             unusedFallbackKeys: unusedFallbackKeys
         )
         
-        guard let json = MXTools.deserialiseJSONString(result) as? [AnyHashable: Any] else {
-            log.error("Result cannot be serialized", context: [
+        guard
+            let json = MXTools.deserialiseJSONString(result) as? [Any],
+            let toDevice = MXToDeviceSyncResponse(fromJSON: ["events": json])
+        else {
+            log.failure("Result cannot be serialized", context: [
                 "result": result
             ])
             return MXToDeviceSyncResponse()
         }
-        return MXToDeviceSyncResponse(fromJSON: json)
+        
+        return toDevice
     }
     
-    func completeSync() async throws {
+    func processOutgoingRequests() async throws {
         try await syncQueue.sync { [weak self] in
-            try await self?.processOutgoingRequests()
+            try await self?.handleOutgoingRequests()
         }
     }
     
@@ -232,7 +239,7 @@ extension MXCryptoMachine: MXCryptoSyncing {
         try self.machine.markRequestAsSent(requestId: requestId, requestType: requestType, response: response ?? "")
     }
     
-    private func processOutgoingRequests() async throws {
+    private func handleOutgoingRequests() async throws {
         let requests = try machine.outgoingRequests()
         
         try await withThrowingTaskGroup(of: Void.self) { [weak self] group in
@@ -309,10 +316,32 @@ extension MXCryptoMachine: MXCryptoUserIdentitySource {
         }
     }
     
-    func downloadKeys(users: [String]) async throws {
-        try await handleRequest(
-            .keysQuery(requestId: UUID().uuidString, users: users)
-        )
+    func isUserTracked(userId: String) -> Bool {
+        do {
+            return try machine.isUserTracked(userId: userId)
+        } catch {
+            log.error("Failed checking user tracking")
+            return false
+        }
+    }
+    
+    func updateTrackedUsers(users: [String]) async throws {
+        machine.updateTrackedUsers(users: users)
+        try await withThrowingTaskGroup(of: Void.self) { [weak self] group in
+            guard let self = self else { return }
+            
+            for request in try machine.outgoingRequests() {
+                guard case .keysQuery = request else {
+                    continue
+                }
+                
+                group.addTask {
+                    try await self.handleRequest(request)
+                }
+            }
+            
+            try await group.waitForAll()
+        }
     }
     
     func manuallyVerifyUser(userId: String) async throws {
@@ -324,10 +353,18 @@ extension MXCryptoMachine: MXCryptoUserIdentitySource {
         let request = try machine.verifyDevice(userId: userId, deviceId: deviceId)
         try await requests.uploadSignatures(request: request)
     }
+    
+    func setLocalTrust(userId: String, deviceId: String, trust: LocalTrust) throws {
+        try machine.setLocalTrust(userId: userId, deviceId: deviceId, trustState: trust)
+    }
 }
 
 extension MXCryptoMachine: MXCryptoRoomEventEncrypting {
-    func shareRoomKeysIfNecessary(roomId: String, users: [String]) async throws {
+    func shareRoomKeysIfNecessary(
+        roomId: String,
+        users: [String],
+        settings: EncryptionSettings
+    ) async throws {
         try await sessionsQueue.sync { [weak self] in
             try await self?.updateTrackedUsers(users: users)
             try await self?.getMissingSessions(users: users)
@@ -335,21 +372,19 @@ extension MXCryptoMachine: MXCryptoRoomEventEncrypting {
         
         let roomQueue = await roomQueues.getQueue(for: roomId)
         try await roomQueue.sync { [weak self] in
-            try await self?.shareRoomKey(roomId: roomId, users: users)
+            try await self?.shareRoomKey(roomId: roomId, users: users, settings: settings)
         }
     }
     
     func encryptRoomEvent(
         content: [AnyHashable : Any],
         roomId: String,
-        eventType: String,
-        users: [String]
-    ) async throws -> [String : Any] {
+        eventType: String
+    ) throws -> [String : Any] {
         guard let content = MXTools.serialiseJSONObject(content) else {
             throw Error.cannotSerialize
         }
         
-        try await shareRoomKeysIfNecessary(roomId: roomId, users: users)
         let event = try machine.encrypt(roomId: roomId, eventType: eventType as String, content: content)
         return MXTools.deserialiseJSONString(event) as? [String: Any] ?? [:]
     }
@@ -414,25 +449,6 @@ extension MXCryptoMachine: MXCryptoRoomEventEncrypting {
     
     // MARK: - Private
     
-    private func updateTrackedUsers(users: [String]) async throws {
-        machine.updateTrackedUsers(users: users)
-        try await withThrowingTaskGroup(of: Void.self) { [weak self] group in
-            guard let self = self else { return }
-            
-            for request in try machine.outgoingRequests() {
-                guard case .keysQuery = request else {
-                    continue
-                }
-                
-                group.addTask {
-                    try await self.handleRequest(request)
-                }
-            }
-            
-            try await group.waitForAll()
-        }
-    }
-    
     private func getMissingSessions(users: [String]) async throws {
         guard
             let request = try machine.getMissingSessions(users: users),
@@ -443,8 +459,8 @@ extension MXCryptoMachine: MXCryptoRoomEventEncrypting {
         try await handleRequest(request)
     }
     
-    private func shareRoomKey(roomId: String, users: [String]) async throws {
-        let requests = try machine.shareRoomKey(roomId: roomId, users: users)
+    private func shareRoomKey(roomId: String, users: [String], settings: EncryptionSettings) async throws {
+        let requests = try machine.shareRoomKey(roomId: roomId, users: users, settings: settings)
         try await withThrowingTaskGroup(of: Void.self) { [weak self] group in
             guard let self = self else { return }
             
@@ -478,6 +494,14 @@ extension MXCryptoMachine: MXCryptoCrossSigning {
     
     func exportCrossSigningKeys() -> CrossSigningKeyExport? {
         machine.exportCrossSigningKeys()
+    }
+    
+    func importCrossSigningKeys(export: CrossSigningKeyExport) {
+        do {
+            try machine.importCrossSigningKeys(export: export)
+        } catch {
+            log.error("Failed importing cross signing keys", context: error)
+        }
     }
 }
 
@@ -527,6 +551,14 @@ extension MXCryptoMachine: MXCryptoVerificationRequesting {
             throw Error.missingVerificationRequest
         }
         return request
+    }
+    
+    func requestVerification(userId: String, deviceId: String, methods: [String]) async throws -> VerificationRequest {
+        guard let result = try machine.requestVerificationWithDevice(userId: userId, deviceId: deviceId, methods: methods) else {
+            throw Error.missingVerificationRequest
+        }
+        try await handleOutgoingVerificationRequest(result.request)
+        return result.verification
     }
     
     func verificationRequests(userId: String) -> [VerificationRequest] {
@@ -602,14 +634,6 @@ extension MXCryptoMachine: MXCryptoVerifying {
 extension MXCryptoMachine: MXCryptoSASVerifying {
     func startSasVerification(userId: String, flowId: String) async throws -> Sas {
         guard let result = try machine.startSasVerification(userId: userId, flowId: flowId) else {
-            throw Error.missingVerification
-        }
-        try await handleOutgoingVerificationRequest(result.request)
-        return result.sas
-    }
-    
-    func startSasVerification(userId: String, deviceId: String) async throws -> Sas {
-        guard let result = try machine.startSasWithDevice(userId: userId, deviceId: deviceId) else {
             throw Error.missingVerification
         }
         try await handleOutgoingVerificationRequest(result.request)
@@ -739,6 +763,21 @@ extension MXCryptoMachine: MXCryptoBackup {
             throw Error.cannotSerialize
         }
         return try machine.importDecryptedRoomKeys(keys: json, progressListener: progressListener)
+    }
+    
+    func exportRoomKeys(passphrase: String) throws -> Data {
+        let string = try machine.exportRoomKeys(passphrase: passphrase, rounds: Self.kdfRounds)
+        guard let data = string.data(using: .utf8) else {
+            throw Error.cannotExportKeys
+        }
+        return data
+    }
+    
+    func importRoomKeys(_ data: Data, passphrase: String, progressListener: ProgressListener) throws -> KeysImportResult {
+        guard let string = String(data: data, encoding: .utf8) else {
+            throw Error.cannotImportKeys
+        }
+        return try machine.importRoomKeys(keys: string, passphrase: passphrase, progressListener: progressListener)
     }
 }
 

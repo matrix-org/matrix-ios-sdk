@@ -58,7 +58,7 @@ public class MXSharedHistoryKeyManager: NSObject {
             
             self?.shareSessions(Set(sessions), userId: userId, devices: devices)
         } failure: {
-            MXLog.debug("[MXSharedHistoryRoomKeyRequestManager] Failed downloading user keys - \(String(describing: $0?.localizedDescription))")
+            MXLog.debug("[MXSharedHistoryRoomKeyRequestManager] Failed downloading user keys - \(String(describing: $0.localizedDescription))")
         }
     }
     

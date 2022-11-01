@@ -23,7 +23,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface MXNativeKeyBackupEngine : NSObject <MXKeyBackupEngine>
 
-- (instancetype)initWithCrypto:(MXCrypto *)crypto;
+- (instancetype)initWithCrypto:(MXLegacyCrypto *)crypto;
 
 /**
  The backup algorithm being used. Nil if key backup not enabled yet.

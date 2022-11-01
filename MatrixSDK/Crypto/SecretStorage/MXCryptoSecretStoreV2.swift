@@ -22,28 +22,55 @@ import Foundation
 /// backup secrets are stored internally in the Crypto machine
 /// and others have to be managed manually.
 class MXCryptoSecretStoreV2: NSObject, MXCryptoSecretStore {
-    private let backup: MXKeyBackup
-    private let backupEngine: MXKeyBackupEngine
+    private let backup: MXKeyBackup?
+    private let backupEngine: MXKeyBackupEngine?
     private let crossSigning: MXCryptoCrossSigning
     private let log = MXNamedLog(name: "MXCryptoSecretStoreV2")
     
-    init(backup: MXKeyBackup, backupEngine: MXKeyBackupEngine, crossSigning: MXCryptoCrossSigning) {
+    init(backup: MXKeyBackup?, backupEngine: MXKeyBackupEngine?, crossSigning: MXCryptoCrossSigning) {
         self.backup = backup
         self.backupEngine = backupEngine
         self.crossSigning = crossSigning
     }
     
     func storeSecret(_ secret: String, withSecretId secretId: String) {
-        guard let version = backup.keyBackupVersion?.version else {
-            log.error("No key backup version available")
-            return
-        }
-
-        if secretId == MXSecretId.keyBackup.takeUnretainedValue() as String {
+        log.debug("Storing new secret \(secretId)")
+        
+        switch secretId as NSString {
+        case MXSecretId.crossSigningMaster.takeUnretainedValue():
+            crossSigning.importCrossSigningKeys(
+                export: .init(
+                    masterKey: secret,
+                    selfSigningKey: nil,
+                    userSigningKey: nil
+                )
+            )
+        case MXSecretId.crossSigningSelfSigning.takeUnretainedValue():
+            crossSigning.importCrossSigningKeys(
+                export: .init(
+                    masterKey: nil,
+                    selfSigningKey: secret,
+                    userSigningKey: nil
+                )
+            )
+        case MXSecretId.crossSigningUserSigning.takeUnretainedValue():
+            crossSigning.importCrossSigningKeys(
+                export: .init(
+                    masterKey: nil,
+                    selfSigningKey: nil,
+                    userSigningKey: secret
+                )
+            )
+        case MXSecretId.keyBackup.takeUnretainedValue():
+            guard let version = backup?.keyBackupVersion?.version else {
+                log.error("No key backup version available")
+                return
+            }
+            
             let privateKey = MXBase64Tools.data(fromBase64: secret)
-            backupEngine.savePrivateKey(privateKey, version: version)
-        } else {
-            log.error("Not implemented")
+            backupEngine?.savePrivateKey(privateKey, version: version)
+        default:
+            log.error("Unsupported type of secret", context: secretId)
         }
     }
     
@@ -56,18 +83,14 @@ class MXCryptoSecretStoreV2: NSObject, MXCryptoSecretStore {
         case MXSecretId.crossSigningUserSigning.takeUnretainedValue():
             return crossSigning.exportCrossSigningKeys()?.userSigningKey
         case MXSecretId.keyBackup.takeUnretainedValue():
-            guard let privateKey = backupEngine.privateKey() else {
+            guard let privateKey = backupEngine?.privateKey() else {
                 return nil
             }
             return MXBase64Tools.base64(from: privateKey)
         default:
-            log.error("Not implemented")
+            log.error("Unsupported type of secret", context: secretId)
             return nil
         }
-    }
-    
-    func deleteSecret(withSecretId secretId: String) {
-        log.error("Not implemented")
     }
 }
 

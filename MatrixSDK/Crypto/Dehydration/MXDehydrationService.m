@@ -37,7 +37,7 @@ NSString *const MXDehydrationServiceErrorDomain = @"org.matrix.sdk.dehydration.s
 @implementation MXDehydrationService
 
 - (void)dehydrateDeviceWithMatrixRestClient:(MXRestClient*)restClient
-                                     crypto:(MXCrypto*)crypto
+                               crossSigning:(MXLegacyCrossSigning *)crossSigning
                              dehydrationKey:(NSData*)dehydrationKey
                                     success:(void (^)( NSString * deviceId))success
                                     failure:(void (^)(NSError *error))failure;
@@ -98,7 +98,7 @@ NSString *const MXDehydrationServiceErrorDomain = @"org.matrix.sdk.dehydration.s
         
         // Cross sign and device sign together so that the new session gets automatically validated on upload
         MXWeakify(self);
-        [crypto.crossSigning signObject:deviceInfo.signalableJSONDictionary withKeyType:MXCrossSigningKeyType.selfSigning success:^(NSDictionary *signedObject) {
+        [crossSigning signObject:deviceInfo.signalableJSONDictionary withKeyType:MXCrossSigningKeyType.selfSigning success:^(NSDictionary *signedObject) {
             MXStrongifyAndReturnIfNil(self);
             
             NSMutableDictionary *signatures = [NSMutableDictionary dictionary];
@@ -165,7 +165,7 @@ NSString *const MXDehydrationServiceErrorDomain = @"org.matrix.sdk.dehydration.s
             MXLogDebug(@"[MXDehydrationService] rehydrateDevice: Exporting dehydrated device %@", device.deviceId);
             MXCredentials *tmpCredentials = [restClient.credentials copy];
             tmpCredentials.deviceId = device.deviceId;
-            [MXCrypto rehydrateExportedOlmDevice:[[MXExportedOlmDevice alloc] initWithAccount:device.account pickleKey:dehydrationKey forSessions:@[]] withCredentials:tmpCredentials complete:^(BOOL stored) {
+            [MXLegacyCrypto rehydrateExportedOlmDevice:[[MXExportedOlmDevice alloc] initWithAccount:device.account pickleKey:dehydrationKey forSessions:@[]] withCredentials:tmpCredentials complete:^(BOOL stored) {
                 dispatch_async(dispatch_get_main_queue(), ^{
                     if (stored)
                     {
