@@ -1005,11 +1005,6 @@ NSString *const kMXEventTimelineMain = @"main";
     return nil;
 }
 
-//- (NSString *)threadIdForReadReceipt
-//{
-//    return self.threadId ? self.threadId : kMXEventTimelineMain;
-//}
-
 #pragma mark - Crypto
 - (BOOL)isEncrypted
 {

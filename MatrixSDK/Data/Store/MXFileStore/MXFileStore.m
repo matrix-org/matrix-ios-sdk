@@ -957,27 +957,6 @@ static NSUInteger preloadOptions;
     return store;
 }
 
-//- (RoomReceiptsStore*)getOrCreateRoomReceiptsStore:(NSString *)roomId
-//{
-//    RoomReceiptsStore *receiptsStore = roomReceiptsStores[roomId];
-//    if (nil == receiptsStore)
-//    {
-//        //  This object is global, which means that we will be able to open only one room at a time.
-//        //  A per-room lock might be better.
-//        @synchronized (roomReceiptsStores) {
-//            NSString *roomFile = [self readReceiptsFileForRoom:roomId forBackup:NO];
-//            receiptsStore = [self loadReceiptsStoreFromFileAt:roomFile forRoomWithId:roomId];
-//            if (!receiptsStore)
-//            {
-//                receiptsStore = [RoomReceiptsStore new];
-//            }
-//            roomReceiptsStores[roomId] = receiptsStore;
-//        }
-//    }
-//    
-//    return receiptsStore;
-//}
-
 - (RoomThreadedReceiptsStore*)getOrCreateRoomThreadedReceiptsStore:(NSString*)roomId
 {
     RoomThreadedReceiptsStore *threadedStore = roomThreadedReceiptsStores[roomId];

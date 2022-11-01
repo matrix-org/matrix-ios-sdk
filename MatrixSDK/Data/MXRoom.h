@@ -1307,6 +1307,7 @@ Remove a tag applied on an event of the room
 
  @param receiptType the receipt type (like kMXEventTypeStringRead).
  @param eventId the id of the event.
+ @param threadId the id of the thread (nil for unthread read receipt).
  @param userId the user who generates the receipt.
  @param ts the receipt timestamp in ms since Epoch.
  @return YES if the receipt data is valid and has been stored.

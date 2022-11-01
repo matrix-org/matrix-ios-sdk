@@ -1730,6 +1730,7 @@ public extension MXRestClient {
      - parameters:
         - roomId: the id of the room.
         - eventId: the id of the event.
+        - threadId: the id of the thread (`nil` for unthreaded RR)
         - completion: A block object called when the operation completes.
         - response: Indicates whether the operation was successful.
      

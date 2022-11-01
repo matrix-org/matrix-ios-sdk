@@ -78,14 +78,6 @@ typedef NSMutableDictionary<NSString*, RoomReceiptsStore*> RoomThreadedReceiptsS
 - (MXMemoryRoomOutgoingMessagesStore*)getOrCreateRoomOutgoingMessagesStore:(NSString*)roomId;
 
 /**
- Interface to create or retrieve receipts for a room.
- 
- @param roomId the id of the room.
- @return receipts dictionary by user id.
- */
-//- (RoomReceiptsStore*)getOrCreateRoomReceiptsStore:(NSString*)roomId;
-
-/**
  Interface to create or retrieve threaded receipts for a room.
  
  @param roomId the id of the room.

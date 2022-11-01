@@ -36,15 +36,12 @@ class MXReceiptDataIntegrationTests: XCTestCase {
 
     //  MARK - Tests
     
-    /// Test: Expect a thread is listed in the thread list after sending an event to a thread
     /// - Create a Bob session
-    /// - Create an initial room
-    /// - Send a text message A to be used as thread root event
-    /// - Send a threaded event B referencing the root event A
-    /// - Expect a thread created with identifier A
-    /// - Expect thread's last message is B
-    /// - Expect thread has the root event
-    /// - Expect thread's number of replies is 1
+    /// - Create a Alice session
+    /// - Create an initial room for both
+    /// - Send a text message A in main timeline
+    /// - Store Bob threaded RR and Alice threaded RR in the local store for main timeline
+    /// - Expect to have only Alice's RR stored for the main timeline
     func testReadReceiptsStorageInMainTimeline() {
         let bobStore = MXMemoryStore()
         let aliceStore = MXMemoryStore()
@@ -105,15 +102,14 @@ class MXReceiptDataIntegrationTests: XCTestCase {
         }
     }
 
-    /// Test: Expect a thread is listed in the thread list after sending an event to a thread
     /// - Create a Bob session
-    /// - Create an initial room
-    /// - Send a text message A to be used as thread root event
-    /// - Send a threaded event B referencing the root event A
-    /// - Expect a thread created with identifier A
-    /// - Expect thread's last message is B
-    /// - Expect thread has the root event
-    /// - Expect thread's number of replies is 1
+    /// - Create a Alice session
+    /// - Create an initial room for both
+    /// - Send a text message A in main timeline
+    /// - Send a text message A1 as a thread of the message A
+    /// - Store Alice threaded RR in the local store for thread A
+    /// - Expect to have Alice's RR stored for the thread A from Bob's POV
+    /// - Expect to have Bob RR stored for the thread A from Alice's POV
     func testReadReceiptsStorageInThread() {
         let bobStore = MXMemoryStore()
         let aliceStore = MXMemoryStore()
@@ -215,15 +211,14 @@ class MXReceiptDataIntegrationTests: XCTestCase {
         }
     }
     
-    /// Test: Expect a thread is listed in the thread list after sending an event to a thread
     /// - Create a Bob session
-    /// - Create an initial room
-    /// - Send a text message A to be used as thread root event
-    /// - Send a threaded event B referencing the root event A
-    /// - Expect a thread created with identifier A
-    /// - Expect thread's last message is B
-    /// - Expect thread has the root event
-    /// - Expect thread's number of replies is 1
+    /// - Create a Alice session
+    /// - Create an initial room for both
+    /// - Send a text message A in main timeline
+    /// - Send a text message A1 as a thread of the message A
+    /// - Store Alice unthreaded RR in the local store
+    /// - Expect to have Alice's RR stored for the main timeline
+    /// - Expect to have Alice's RR stored for the thread A
     func testUnthreadedReadReceiptsStorage() {
         let bobStore = MXMemoryStore()
         let aliceStore = MXMemoryStore()
@@ -256,54 +251,34 @@ class MXReceiptDataIntegrationTests: XCTestCase {
                                 return
                             }
 
-                            guard bobRoom.storeLocalReceipt(kMXEventTypeStringRead, eventId: eventId, threadId: threadId, userId: aliceSession.myUserId, ts: UInt64(Date().timeIntervalSince1970 * 1000)) else {
+                            guard bobRoom.storeLocalReceipt(kMXEventTypeStringRead, eventId: eventId, threadId: nil, userId: aliceSession.myUserId, ts: UInt64(Date().timeIntervalSince1970 * 1000)) else {
                                 XCTFail("failed to store alice RR in main timeline.")
                                 expectation.fulfill()
                                 return
                             }
 
-                            bobRoom.sendTextMessage("Thread message 2", threadId: threadId, localEcho: &localEcho) { response2 in
-                                switch response2 {
-                                case .success(let eventId):
-                                    guard let eventId = eventId else {
-                                        XCTFail("eventId must not be nil")
-                                        expectation.fulfill()
-                                        return
-                                    }
-
-                                    guard bobRoom.storeLocalReceipt(kMXEventTypeStringRead, eventId: eventId, threadId: nil, userId: aliceSession.myUserId, ts: UInt64(Date().timeIntervalSince1970 * 1000)) else {
-                                        XCTFail("failed to store alice RR in main timeline.")
-                                        expectation.fulfill()
-                                        return
-                                    }
-
-                                    bobRoom.getEventReceipts(eventId, threadId: kMXEventTimelineMain, sorted: false) { receiptDataList in
-                                        XCTAssertEqual(receiptDataList.count, 1, "event should have just 1 read receipt for the main timeline")
-                                        guard let receiptData = receiptDataList.first else {
-                                            XCTFail("event should have at least 1 read receipt")
-                                            return
-                                        }
-                                        XCTAssertEqual(receiptData.userId, aliceSession.myUserId, "read receipt should be attributed to alice")
-                                        XCTAssertNil(receiptData.threadId, "read receipt should be unthreaded")
-                                    }
-
-                                    bobRoom.getEventReceipts(eventId, threadId: threadId, sorted: false) { receiptDataList in
-                                        XCTAssertEqual(receiptDataList.count, 1, "event should have just 1 read receipt for the thread")
-                                        guard let receiptData = receiptDataList.first else {
-                                            XCTFail("event should have at least 1 read receipt")
-                                            return
-                                        }
-                                        XCTAssertEqual(receiptData.userId, aliceSession.myUserId, "read receipt should be attributed to alice")
-                                        XCTAssertNil(receiptData.threadId, "read receipt should be unthreaded")
-                                    }
-                                    
-                                    expectation.fulfill()
-                                    
-                                case .failure(let error):
-                                    XCTFail("Failed to setup test conditions: \(error)")
-                                    expectation.fulfill()
+                            bobRoom.getEventReceipts(eventId, threadId: kMXEventTimelineMain, sorted: false) { receiptDataList in
+                                XCTAssertEqual(receiptDataList.count, 1, "event should have just 1 read receipt for the main timeline")
+                                guard let receiptData = receiptDataList.first else {
+                                    XCTFail("event should have at least 1 read receipt")
+                                    return
                                 }
+                                XCTAssertEqual(receiptData.userId, aliceSession.myUserId, "read receipt should be attributed to alice")
+                                XCTAssertNil(receiptData.threadId, "read receipt should be unthreaded")
                             }
+
+                            bobRoom.getEventReceipts(eventId, threadId: threadId, sorted: false) { receiptDataList in
+                                XCTAssertEqual(receiptDataList.count, 1, "event should have just 1 read receipt for the thread")
+                                guard let receiptData = receiptDataList.first else {
+                                    XCTFail("event should have at least 1 read receipt")
+                                    return
+                                }
+                                XCTAssertEqual(receiptData.userId, aliceSession.myUserId, "read receipt should be attributed to alice")
+                                XCTAssertNil(receiptData.threadId, "read receipt should be unthreaded")
+                            }
+                            
+                            expectation.fulfill()
+
                         case .failure(let error):
                             XCTFail("Failed to setup test conditions: \(error)")
                             expectation.fulfill()
@@ -318,15 +293,13 @@ class MXReceiptDataIntegrationTests: XCTestCase {
         }
     }
     
-    /// Test: Expect a thread is listed in the thread list after sending an event to a thread
     /// - Create a Bob session
-    /// - Create an initial room
-    /// - Send a text message A to be used as thread root event
-    /// - Send a threaded event B referencing the root event A
-    /// - Expect a thread created with identifier A
-    /// - Expect thread's last message is B
-    /// - Expect thread has the root event
-    /// - Expect thread's number of replies is 1
+    /// - Create a Alice session
+    /// - Create an initial room for both
+    /// - Send a text message A in main timeline
+    /// - Acknowledge message from Alice's main timeline
+    /// - Wait for Alice's RR in Bob's main timeline
+    /// - Expect to retrieve Alice's RR in Bob's main timeline
     func testAcknowledgeMessageInMainTimeline() {
         let bobStore = MXMemoryStore()
         let aliceStore = MXMemoryStore()
@@ -383,15 +356,14 @@ class MXReceiptDataIntegrationTests: XCTestCase {
     }
 
 
-    /// Test: Expect a thread is listed in the thread list after sending an event to a thread
     /// - Create a Bob session
-    /// - Create an initial room
-    /// - Send a text message A to be used as thread root event
-    /// - Send a threaded event B referencing the root event A
-    /// - Expect a thread created with identifier A
-    /// - Expect thread's last message is B
-    /// - Expect thread has the root event
-    /// - Expect thread's number of replies is 1
+    /// - Create a Alice session
+    /// - Create an initial room for both
+    /// - Send a text message A in main timeline
+    /// - Send a text message A1 as a thread of the message A
+    /// - Acknowledge message A1 from Alice's thread timeline
+    /// - Wait for Alice's threaded RR in Bob's thread timeline
+    /// - Expect to retrieve Alice's threaded RR in Bob's thread timeline
     func testAcknowledgeMessageInThread() {
         let bobStore = MXMemoryStore()
         let aliceStore = MXMemoryStore()
@@ -421,12 +393,7 @@ class MXReceiptDataIntegrationTests: XCTestCase {
                     
                     bobRoom.sendTextMessage("Thread message", threadId: threadId, localEcho: &localEcho) { response2 in
                         switch response2 {
-                        case .success(let eventId):
-//                            guard let eventId = eventId else {
-//                                XCTFail("eventId must not be nil")
-//                                expectation.fulfill()
-//                                return
-//                            }
+                        case .success:
                             
                             bobRoom.liveTimeline({ timeline in
                             })
@@ -435,12 +402,7 @@ class MXReceiptDataIntegrationTests: XCTestCase {
                                 bobThreadingService.removeAllDelegates()
                                 aliceThreadingService.allThreads(inRoom: aliceRoom.roomId, completion: { response in
                                     switch response {
-                                    case .success(let threads):
-//                                        guard let thread = threads.first else {
-//                                            XCTFail("Thread must be created")
-//                                            expectation.fulfill()
-//                                            return
-//                                        }
+                                    case .success:
                                         
                                         guard let bobThread = bobSession.threadingService.thread(withId: threadId) else {
                                             XCTFail("Unable to retrieve thread within Bob's session")
@@ -491,15 +453,6 @@ class MXReceiptDataIntegrationTests: XCTestCase {
                                                 expectation.fulfill()
                                             }
                                         }
-
-//
-//                                        aliceRoom.liveTimeline { timeline in
-//                                            let _ = timeline?.listenToEvents([.roomMessage], { event, direction, roomState in
-//                                                aliceRoom.acknowledgeEvent(event, andUpdateReadMarker: true)
-//                                            })
-//                                        }
-
-//                                        expectation.fulfill()
 
                                     case .failure(let error):
                                         XCTFail("Failed to setup test conditions: \(error)")
