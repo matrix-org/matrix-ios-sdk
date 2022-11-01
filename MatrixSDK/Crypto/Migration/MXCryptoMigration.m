@@ -37,7 +37,7 @@ NSUInteger const kMXCryptoMigrationKeyPurgeRetryCountLimit = 10;
 
 @interface MXCryptoMigration ()
 {
-    __weak MXCrypto *crypto;
+    __weak MXLegacyCrypto *crypto;
     NSUInteger keyPurgeRetryCount;
 }
 
@@ -46,7 +46,7 @@ NSUInteger const kMXCryptoMigrationKeyPurgeRetryCountLimit = 10;
 
 @implementation MXCryptoMigration
 
-- (instancetype)initWithCrypto:(MXCrypto *)theCrypto
+- (instancetype)initWithCrypto:(MXLegacyCrypto *)theCrypto
 {
     self = [self init];
     if (self)

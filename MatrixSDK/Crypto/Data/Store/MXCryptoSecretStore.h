@@ -42,13 +42,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (nullable NSString *)secretWithSecretId:(NSString *)secretId;
 
 
-/**
- Delete a secret.
- 
- @param secretId the id of the secret.
- */
-- (void)deleteSecretWithSecretId:(NSString *)secretId;
-
 @end
 
 NS_ASSUME_NONNULL_END

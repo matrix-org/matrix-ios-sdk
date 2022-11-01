@@ -122,6 +122,8 @@ class MXKeyVerificationRequestV2: NSObject, MXKeyVerificationRequest {
         success: @escaping () -> Void,
         failure: @escaping (Error) -> Void
     ) {
+        log.debug("->")
+        
         Task {
             do {
                 try await handler.acceptVerificationRequest(
@@ -147,6 +149,8 @@ class MXKeyVerificationRequestV2: NSObject, MXKeyVerificationRequest {
         success: (() -> Void)?,
         failure: ((Error) -> Void)? = nil
     ) {
+        log.debug("->")
+        
         Task {
             do {
                 try await handler.cancelVerification(

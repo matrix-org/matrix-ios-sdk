@@ -137,7 +137,7 @@ class MXKeyBackupUnitTests: XCTestCase {
         var error: NSError? = nil
         let publicKey = olmPkDecryption.setPrivateKey(privateKey, error: &error)
 
-        let crypto = MXCrypto()
+        let crypto = MXLegacyCrypto()
         let json: [String: Any] = [
             "public_key": publicKey,
             "signatures": [
@@ -289,7 +289,7 @@ class MXKeyBackupUnitTests: XCTestCase {
             return
         }
 
-        let crypto = MXCrypto()
+        let crypto = MXLegacyCrypto()
         let json: [String: Any] = [
             "iv": iv,
             "mac": mac,
