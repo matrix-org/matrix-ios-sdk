@@ -207,6 +207,7 @@ NSString *const kMXJoinRulesContentKeyRoomId = @"room_id";
 // Threads support
 
 NSString *const kMXEventTimelineMain = @"main";
+NSString *const kMXEventUnthreaded = @"unthreaded";
 
 #pragma mark - MXEvent
 @interface MXEvent ()
@@ -606,7 +607,7 @@ NSString *const kMXEventTimelineMain = @"main";
                     }
                 }
                 
-                [list addObject:threadId ?: [NSNull null]];
+                [list addObject:threadId ?: kMXEventUnthreaded];
             }
         }
     }
