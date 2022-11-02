@@ -168,6 +168,21 @@ public class MXThreadingService: NSObject {
         thread.markAsRead()
         notifyDidUpdateThreads()
     }
+    
+    @discardableResult
+    public func allThreads(inRoomWithId roomId: String,
+                           onlyParticipated: Bool,
+                           completion: @escaping ([MXThreadProtocol]) -> Void) -> MXHTTPOperation? {
+        return allThreads(inRoom: roomId, onlyParticipated: onlyParticipated) { response in
+            switch response {
+            case .success(let threads):
+                completion(threads)
+            case .failure(let error):
+                MXLog.warning("[MXThreadingService] allThreads failed with error: \(error)")
+                completion([])
+            }
+        }
+    }
 
     @discardableResult
     public func allThreads(inRoom roomId: String,
