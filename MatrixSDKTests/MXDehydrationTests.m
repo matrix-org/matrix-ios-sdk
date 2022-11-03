@@ -31,6 +31,7 @@
 
 #import <OLMKit/OLMKit.h>
 #import "MXDehydrationService.h"
+#import "MatrixSDKTestsSwiftHeader.h"
 
 // Do not bother with retain cycles warnings in tests
 #pragma clang diagnostic push
@@ -83,7 +84,7 @@
         [mxSession.crypto.crossSigning setupWithPassword:MXTESTS_ALICE_PWD success:^{
             
             // - Alice creates a dehydrated device
-            [self.dehydrationService dehydrateDeviceWithMatrixRestClient:mxSession.matrixRestClient crypto:mxSession.crypto dehydrationKey:self.dehydrationKey success:^(NSString *dehydratedDeviceId) {
+            [self.dehydrationService dehydrateDeviceWithMatrixRestClient:mxSession.matrixRestClient crossSigning:mxSession.legacyCrypto.legacyCrossSigning dehydrationKey:self.dehydrationKey success:^(NSString *dehydratedDeviceId) {
                 // - Alice downloads their own devices keys
                 [mxSession.crypto downloadKeys:@[mxSession.myUserId] forceDownload:YES success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
                     
@@ -93,7 +94,7 @@
                     MXDeviceInfo *dehydratedDevice = [usersDevicesInfoMap objectForDevice:dehydratedDeviceId forUser:mxSession.myUserId];
                     XCTAssertNotNil(dehydratedDevice);
                     XCTAssertEqualObjects(dehydratedDevice.deviceId, dehydratedDeviceId);
-                    XCTAssertTrue([mxSession.crypto.crossSigning isDeviceVerified:dehydratedDevice]);
+                    XCTAssertTrue([mxSession.legacyCrypto.legacyCrossSigning isDeviceVerified:dehydratedDevice]);
                     
                     [expectation fulfill];
                 } failure:^(NSError * error) {
@@ -125,7 +126,7 @@
             NSString *bobUserId = bobSession.myUserId;
             
             // - Bob creates a dehydrated device and logs out
-            [self.dehydrationService dehydrateDeviceWithMatrixRestClient:bobSession.matrixRestClient crypto:bobSession.crypto dehydrationKey:self.dehydrationKey success:^(NSString *bobDehydratedDeviceId) {
+            [self.dehydrationService dehydrateDeviceWithMatrixRestClient:bobSession.matrixRestClient crossSigning:bobSession.legacyCrypto.legacyCrossSigning dehydrationKey:self.dehydrationKey success:^(NSString *bobDehydratedDeviceId) {
                 dispatch_async(dispatch_get_main_queue(), ^{
                     [bobSession logout:^{
                         
@@ -216,7 +217,7 @@
             
             NSString *aliceSessionDevice = aliceSession.myDeviceId;
             // - Alice setup a dehydrated device
-            [self.dehydrationService dehydrateDeviceWithMatrixRestClient:aliceSession.matrixRestClient crypto:aliceSession.crypto dehydrationKey:self.dehydrationKey success:^(NSString *dehydratedDeviceId) {
+            [self.dehydrationService dehydrateDeviceWithMatrixRestClient:aliceSession.matrixRestClient crossSigning:aliceSession.legacyCrypto.legacyCrossSigning dehydrationKey:self.dehydrationKey success:^(NSString *dehydratedDeviceId) {
                 dispatch_async(dispatch_get_main_queue(), ^{
                     // - Alice logs off and logs in back
                     [self.matrixSDKTestsData loginUserOnANewDevice:self credentials:nil withPassword:MXTESTS_ALICE_PWD sessionToLogout:aliceSession newSessionStore:nil startNewSession:NO e2e:YES onComplete:^(MXSession *aliceSession2) {
@@ -240,8 +241,8 @@
                             
                             [aliceSession2 start:^{
                                 XCTAssertNotNil(aliceSession2.crypto);
-                                XCTAssertEqualObjects(aliceSession2.crypto.myDevice.deviceId, dehydratedDeviceId);
-                                XCTAssertEqualObjects(aliceSession2.crypto.store.deviceId, dehydratedDeviceId);
+                                XCTAssertEqualObjects(aliceSession2.legacyCrypto.myDevice.deviceId, dehydratedDeviceId);
+                                XCTAssertEqualObjects(aliceSession2.legacyCrypto.store.deviceId, dehydratedDeviceId);
                                 XCTAssertTrue([aliceSession2.crypto.crossSigning canTrustCrossSigning]);
                             } failure:^(NSError *error) {
                                 XCTFail(@"Cannot set up intial test conditions - error: %@", error);
@@ -281,7 +282,7 @@
         [aliceSession.crypto.crossSigning setupWithPassword:MXTESTS_ALICE_PWD success:^{
             
             // - Alice creates a dehydrated device
-            [self.dehydrationService dehydrateDeviceWithMatrixRestClient:aliceSession.matrixRestClient crypto:aliceSession.crypto dehydrationKey:self.dehydrationKey success:^(NSString *deviceId) {
+            [self.dehydrationService dehydrateDeviceWithMatrixRestClient:aliceSession.matrixRestClient crossSigning:aliceSession.legacyCrypto.legacyCrossSigning dehydrationKey:self.dehydrationKey success:^(NSString *deviceId) {
                 dispatch_async(dispatch_get_main_queue(), ^{
                     // - Alice logs out and logs on
                     [self.matrixSDKTestsData loginUserOnANewDevice:self credentials:nil withPassword:MXTESTS_ALICE_PWD sessionToLogout:aliceSession newSessionStore:nil startNewSession:NO e2e:YES onComplete:^(MXSession *aliceSession2) {
@@ -380,7 +381,7 @@
             MXCredentials *bobCredentials = bobSession.credentials;
             
             // - Bob creates a dehydrated device and logs out
-            [self.dehydrationService dehydrateDeviceWithMatrixRestClient:bobSession.matrixRestClient crypto:bobSession.crypto dehydrationKey:self.dehydrationKey success:^(NSString *bobDehydratedDeviceId) {
+            [self.dehydrationService dehydrateDeviceWithMatrixRestClient:bobSession.matrixRestClient crossSigning:bobSession.legacyCrypto.legacyCrossSigning dehydrationKey:self.dehydrationKey success:^(NSString *bobDehydratedDeviceId) {
                 dispatch_async(dispatch_get_main_queue(), ^{
                     [bobSession logout:^{
                         [bobSession close];
@@ -505,7 +506,7 @@
     XCTAssertNotNil(event.wireContent[@"ciphertext"]);
     XCTAssertNotNil(event.wireContent[@"session_id"]);
     XCTAssertNotNil(event.wireContent[@"sender_key"]);
-    XCTAssertEqualObjects(event.wireContent[@"device_id"], senderSession.crypto.store.deviceId);
+    XCTAssertEqualObjects(event.wireContent[@"device_id"], senderSession.legacyCrypto.store.deviceId);
 
     // Check decrypted data
     XCTAssert(event.eventId);

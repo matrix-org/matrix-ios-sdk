@@ -469,7 +469,7 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
  The module that manages E2E encryption.
  Nil if the feature is not enabled ('cryptoEnabled' property).
  */
-@property (nonatomic, readonly) MXCrypto *crypto;
+@property (nonatomic, readonly) id<MXCrypto> crypto;
 
 /**
  Antivirus scanner used to scan medias.
@@ -1559,17 +1559,6 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 
 
 #pragma mark - Crypto
-/**
- Decrypt an event and update its data.
-
- @warning This method is deprecated, use -[MXSession decryptEvents:inTimeline:onComplete:] instead.
- 
- @param event the event to decrypt.
- @param timeline the id of the timeline where the event is decrypted. It is used
-        to prevent replay attack.
- @return YES if decryption is successful.
- */
-- (BOOL)decryptEvent:(MXEvent*)event inTimeline:(NSString*)timeline __attribute__((deprecated("use -[MXSession decryptEvents:inTimeline:onComplete:] instead")));
 
 /**
  Decrypt events asynchronously and update their data.

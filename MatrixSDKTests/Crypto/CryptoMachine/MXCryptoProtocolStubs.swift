@@ -57,13 +57,20 @@ class UserIdentitySourceStub: CryptoIdentityStub, MXCryptoUserIdentitySource {
         return verification[userId] ?? false
     }
     
-    func downloadKeys(users: [String]) async throws {
+    func isUserTracked(userId: String) -> Bool {
+        return false
+    }
+    
+    func updateTrackedUsers(users: [String]) async throws {
     }
     
     func manuallyVerifyUser(userId: String) async throws {
     }
     
     func manuallyVerifyDevice(userId: String, deviceId: String) async throws {
+    }
+    
+    func setLocalTrust(userId: String, deviceId: String, trust: LocalTrust) throws {
     }
 }
 
@@ -97,13 +104,20 @@ class CryptoCrossSigningStub: CryptoIdentityStub, MXCryptoCrossSigning {
         return stubbedVerifiedUsers.contains(userId)
     }
     
-    func downloadKeys(users: [String]) async throws {
+    func isUserTracked(userId: String) -> Bool {
+        return false
+    }
+    
+    func updateTrackedUsers(users: [String]) async throws {
     }
     
     func manuallyVerifyUser(userId: String) async throws {
     }
     
     func manuallyVerifyDevice(userId: String, deviceId: String) async throws {
+    }
+    
+    func setLocalTrust(userId: String, deviceId: String, trust: LocalTrust) throws {
     }
 }
 
@@ -126,6 +140,10 @@ extension CryptoVerificationStub: MXCryptoVerificationRequesting {
     
     func requestVerification(userId: String, roomId: String, methods: [String]) async throws -> VerificationRequest {
         .stub(otherUserId: userId, roomId: roomId, ourMethods: methods)
+    }
+    
+    func requestVerification(userId: String, deviceId: String, methods: [String]) async throws -> VerificationRequest {
+        .stub(otherUserId: userId, otherDeviceId: deviceId, ourMethods: methods)
     }
     
     func verificationRequests(userId: String) -> [VerificationRequest] {
@@ -161,10 +179,6 @@ extension CryptoVerificationStub: MXCryptoVerifying {
 extension CryptoVerificationStub: MXCryptoSASVerifying {
     func startSasVerification(userId: String, flowId: String) async throws -> Sas {
         .stub(otherUserId: userId, flowId: flowId)
-    }
-    
-    func startSasVerification(userId: String, deviceId: String) async throws -> Sas {
-        .stub(otherUserId: userId, otherDeviceId: deviceId)
     }
     
     func acceptSasVerification(userId: String, flowId: String) async throws {

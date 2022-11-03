@@ -125,21 +125,6 @@ FOUNDATION_EXPORT NSString *const MXKeyVerificationManagerNotificationTransactio
 #pragma mark - Transactions
 
 /**
- Begin a device verification.
-
- @param userId the other user id.
- @param deviceId the other user device id.
- @param method the verification method (ex: MXKeyVerificationMethodSAS).
- @param success a block called when the operation succeeds.
- @param failure a block called when the operation fails.
- */
-- (void)beginKeyVerificationWithUserId:(NSString*)userId
-                           andDeviceId:(NSString*)deviceId
-                                method:(NSString*)method
-                               success:(void(^)(id<MXKeyVerificationTransaction> transaction))success
-                               failure:(void(^)(NSError *error))failure __attribute__((deprecated("Start key verification with a request (requestVerificationByToDeviceWithUserId) instead")));
-
-/**
  Begin a device verification from a request.
  
  @param request the verification request.

@@ -40,9 +40,8 @@ typedef NS_ENUM(NSInteger, MXRecoveryServiceErrorCode)
 - (void)setUserVerification:(BOOL)verificationStatus
                     forUser:(NSString*)userId
                     success:(void (^)(void))success
-                    failure:(void (^)(NSError *error))failure;
+                    failure:(void (^)( NSError * _Nullable error))failure;
 @end
-
 
 /**
  `MXRecoveryService` manages the backup of secrets/keys used by `MXCrypto`.

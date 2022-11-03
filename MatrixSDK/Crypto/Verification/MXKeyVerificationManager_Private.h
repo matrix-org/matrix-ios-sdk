@@ -18,7 +18,7 @@
 
 #import "MXKeyVerificationTransaction_Private.h"
 
-@class MXCrypto;
+@class MXLegacyCrypto;
 @class MXQRCodeData;
 
 NS_ASSUME_NONNULL_BEGIN
@@ -31,14 +31,14 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  The Matrix crypto.
  */
-@property (nonatomic, readonly, weak) MXCrypto *crypto;
+@property (nonatomic, readonly, weak) MXLegacyCrypto *crypto;
 
 /**
  Constructor.
 
  @param crypto the related 'MXCrypto'.
  */
-- (instancetype)initWithCrypto:(MXCrypto *)crypto;
+- (instancetype)initWithCrypto:(MXLegacyCrypto *)crypto;
 
 
 #pragma mark - Requests

@@ -16,6 +16,9 @@
  */
 
 #import <Foundation/Foundation.h>
+#import "MXWarnings.h"
+
+MX_ASSUME_MISSING_NULLABILITY_BEGIN
 
 /**
  `MXAccountData` holds the user account data.
@@ -77,3 +80,5 @@
 - (nullable NSDictionary <NSString *, id>*)localNotificationSettingsForDeviceWithId:(nonnull NSString*)deviceId;
 
 @end
+
+MX_ASSUME_MISSING_NULLABILITY_END
