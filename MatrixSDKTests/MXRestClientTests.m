@@ -1112,7 +1112,8 @@
 #pragma mark - Filter operations
 - (void)testFilter
 {
-    [self.matrixSDKTestsData doMXRestClientTestWithAlice:self readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation) {
+    [self.matrixSDKTestsData doMXRestClientTestWithBobAndAliceInARoom:self
+                                                          readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
         MXFilterJSONModel *filter = [[MXFilterJSONModel alloc] init];
 
@@ -1120,15 +1121,13 @@
         filter.eventFormat = @"federation";
 
         filter.room = [[MXRoomFilter alloc] init];
-        filter.room.rooms = @[@"!aroom:matrix:org"];
-        filter.room.notRooms = @[@"!notaroom:matrix:org"];
+        filter.room.rooms = @[roomId];
 
         filter.room.ephemeral = [[MXRoomEventFilter alloc] init];
         filter.room.ephemeral.containsURL = NO;
         filter.room.ephemeral.types = @[@"atype"];
         filter.room.ephemeral.notTypes = @[@"notatype"];
-        filter.room.ephemeral.rooms = @[@"!aroom_ephemeral:matrix:org"];
-        filter.room.ephemeral.notRooms = @[@"!notaroom_ephemeral:matrix:org"];
+        filter.room.ephemeral.rooms = @[roomId];;
         filter.room.ephemeral.senders = @[@"@asender:matrix.org"];
         filter.room.ephemeral.notSenders = @[@"@notasender:matrix.org"];
 
