@@ -21,6 +21,7 @@
 
 #import "MXHTTPClient_Private.h"
 #import "MXFileStore.h"
+#import "MatrixSDKTestsSwiftHeader.h"
 
 // Do not bother with retain cycles warnings in tests
 #pragma clang diagnostic push
@@ -1191,7 +1192,7 @@ Common initial conditions:
         MXRoom *room = [aliceSession roomWithRoomId:roomId];
         [room listenToEventsOfTypes:@[kMXEventTypeStringRoomEncryption] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-            aliceSession.crypto.warnOnUnknowDevices = NO;
+            aliceSession.legacyCrypto.warnOnUnknowDevices = NO;
 
             NSString *messageFromAlice = @"An encrypted message";
 

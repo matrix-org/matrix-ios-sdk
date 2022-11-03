@@ -124,7 +124,7 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
         _roomId = roomId;
         mxSession = mxSession2;
         
-        if (mxSession.crypto)
+        if ([mxSession.crypto isKindOfClass:[MXLegacyCrypto class]])
         {
             MXMegolmDecryption *decryption = [[MXMegolmDecryption alloc] initWithCrypto:mxSession.crypto];
             sharedHistoryKeyManager = [[MXSharedHistoryKeyManager alloc] initWithRoomId:roomId
@@ -3710,7 +3710,7 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
  */
 - (void)validateEncryptionStateConsistency
 {
-    MXCrypto *crypto = mxSession.crypto;
+    id<MXCrypto> crypto = mxSession.crypto;
     if (!crypto)
     {
 #ifdef MX_CRYPTO
@@ -3775,7 +3775,7 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
 
 - (void)membersTrustLevelSummaryWithForceDownload:(BOOL)forceDownload success:(void (^)(MXUsersTrustLevelSummary *usersTrustLevelSummary))success failure:(void (^)(NSError *error))failure
 {
-    MXCrypto *crypto = mxSession.crypto;
+    id<MXCrypto> crypto = mxSession.crypto;
     
     if (crypto && self.summary.isEncrypted)
     {
@@ -3790,17 +3790,7 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
                 [memberIds addObject:member.userId];
             }
             
-            if (forceDownload)
-            {
-                [crypto trustLevelSummaryForUserIds:memberIds success:success failure:failure];
-            }
-            else
-            {
-                [crypto trustLevelSummaryForUserIds:memberIds onComplete:^(MXUsersTrustLevelSummary *trustLevelSummary) {
-                    success(trustLevelSummary);
-                }];
-            }
-            
+            [crypto trustLevelSummaryForUserIds:memberIds forceDownload:forceDownload success:success failure:failure];
         } failure:failure];
     }
     else

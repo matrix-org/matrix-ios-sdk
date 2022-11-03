@@ -19,10 +19,10 @@
 #import "MXJSONModel.h"
 #import "MXPusherData.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 FOUNDATION_EXPORT NSString *const kMXPusherEnabledKey;
 FOUNDATION_EXPORT NSString *const kMXPusherDeviceIdKey;
-
-NS_ASSUME_NONNULL_BEGIN
 
 @interface MXPusher : MXJSONModel
 

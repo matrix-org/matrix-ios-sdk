@@ -228,6 +228,14 @@
  */
 - (NSArray<MXCrossSigningInfo*> *)crossSigningKeys;
 
+#pragma mark - Secrets
+
+/**
+ Delete a secret.
+ 
+ @param secretId the id of the secret.
+ */
+- (void)deleteSecretWithSecretId:(NSString *)secretId;
 
 #pragma mark - Message keys
 

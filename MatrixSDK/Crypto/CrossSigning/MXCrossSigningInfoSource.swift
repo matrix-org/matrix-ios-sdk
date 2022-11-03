@@ -39,14 +39,6 @@ struct MXCrossSigningInfoSource {
             )
         )
     }
-    
-    func crossSigningInfo(userIds: [String]) -> [String: MXCrossSigningInfo] {
-        return userIds
-            .compactMap(crossSigningInfo(userId:))
-            .reduce(into: [String: MXCrossSigningInfo] ()) { dict, info in
-                return dict[info.userId] = info
-            }
-    }
 }
 
 #endif

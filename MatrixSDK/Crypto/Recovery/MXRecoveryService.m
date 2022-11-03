@@ -854,6 +854,7 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
 {
     // Accept secrets by default
     BOOL valid = YES;
+    MXCrossSigningTools *tools = [[MXCrossSigningTools alloc] init];
     
     if ([secretId isEqualToString:MXSecretId.keyBackup])
     {
@@ -872,7 +873,7 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
         MXCrossSigningInfo *crossSigningInfo = self.dependencies.crossSigning.myUserCrossSigningKeys;
         if (crossSigningInfo)
         {
-            valid = [self.dependencies.crossSigning isSecretValid:secret forPublicKeys:crossSigningInfo.masterKeys.keys];
+            valid = [tools isSecretValid:secret forPublicKeys:crossSigningInfo.masterKeys.keys];
         }
         else
         {
@@ -884,7 +885,7 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
         MXCrossSigningInfo *crossSigningInfo = self.dependencies.crossSigning.myUserCrossSigningKeys;
         if (crossSigningInfo)
         {
-            valid = [self.dependencies.crossSigning isSecretValid:secret forPublicKeys:crossSigningInfo.selfSignedKeys.keys];
+            valid = [tools isSecretValid:secret forPublicKeys:crossSigningInfo.selfSignedKeys.keys];
         }
         else
         {
@@ -896,7 +897,7 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
         MXCrossSigningInfo *crossSigningInfo = self.dependencies.crossSigning.myUserCrossSigningKeys;
         if (crossSigningInfo)
         {
-            valid = [self.dependencies.crossSigning isSecretValid:secret forPublicKeys:crossSigningInfo.userSignedKeys.keys];
+            valid = [tools isSecretValid:secret forPublicKeys:crossSigningInfo.userSignedKeys.keys];
         }
         else
         {

@@ -27,6 +27,7 @@
 #import "MXKeyVerificationRequestByDMJSONModel.h"
 
 #import "MXQRCodeTransaction_Private.h"
+#import "MatrixSDKTestsSwiftHeader.h"
 
 // Do not bother with retain cycles warnings in tests
 #pragma clang diagnostic push
@@ -264,8 +265,8 @@
                             && transactionFromAlice2POV.state == MXSASTransactionStateVerified)
                         {
                             // -> Devices must be really verified
-                            MXDeviceInfo *aliceDevice2FromAlice1POV = [aliceSession1.crypto.store deviceWithDeviceId:alice2.deviceId forUser:alice2.userId];
-                            MXDeviceInfo *aliceDevice1FromAlice2POV = [aliceSession2.crypto.store deviceWithDeviceId:alice.deviceId forUser:alice.userId];
+                            MXDeviceInfo *aliceDevice2FromAlice1POV = [aliceSession1.legacyCrypto.store deviceWithDeviceId:alice2.deviceId forUser:alice2.userId];
+                            MXDeviceInfo *aliceDevice1FromAlice2POV = [aliceSession2.legacyCrypto.store deviceWithDeviceId:alice.deviceId forUser:alice.userId];
                             
                             XCTAssertEqual(aliceDevice2FromAlice1POV.trustLevel.localVerificationStatus, MXDeviceVerified);
                             XCTAssertTrue(aliceDevice2FromAlice1POV.trustLevel.isCrossSigningVerified);
@@ -273,8 +274,8 @@
                             XCTAssertTrue(aliceDevice1FromAlice2POV.trustLevel.isCrossSigningVerified);
 
                             // -> My user must be really verified
-                            MXCrossSigningInfo *aliceFromAlice1POV = [aliceSession1.crypto.store crossSigningKeysForUser:alice.userId];
-                            MXCrossSigningInfo *aliceFromAlice2POV = [aliceSession2.crypto.store crossSigningKeysForUser:alice.userId];
+                            MXCrossSigningInfo *aliceFromAlice1POV = [aliceSession1.legacyCrypto.store crossSigningKeysForUser:alice.userId];
+                            MXCrossSigningInfo *aliceFromAlice2POV = [aliceSession2.legacyCrypto.store crossSigningKeysForUser:alice.userId];
 
                             XCTAssertTrue(aliceFromAlice1POV.trustLevel.isCrossSigningVerified);
                             XCTAssertTrue(aliceFromAlice1POV.trustLevel.isLocallyVerified);
@@ -471,8 +472,8 @@
                             && transactionFromBobPOV.state == MXSASTransactionStateVerified)
                         {
                             // -> Devices must be really verified
-                            MXDeviceInfo *bobDeviceFromAlicePOV = [aliceSession.crypto.store deviceWithDeviceId:bob.deviceId forUser:bob.userId];
-                            MXDeviceInfo *aliceDeviceFromBobPOV = [bobSession.crypto.store deviceWithDeviceId:alice.deviceId forUser:alice.userId];
+                            MXDeviceInfo *bobDeviceFromAlicePOV = [aliceSession.legacyCrypto.store deviceWithDeviceId:bob.deviceId forUser:bob.userId];
+                            MXDeviceInfo *aliceDeviceFromBobPOV = [bobSession.legacyCrypto.store deviceWithDeviceId:alice.deviceId forUser:alice.userId];
                             
                             XCTAssertEqual(bobDeviceFromAlicePOV.trustLevel.localVerificationStatus, MXDeviceVerified);
                             XCTAssertTrue(bobDeviceFromAlicePOV.trustLevel.isCrossSigningVerified);
@@ -480,8 +481,8 @@
                             XCTAssertTrue(aliceDeviceFromBobPOV.trustLevel.isCrossSigningVerified);
 
                             // -> Users must be really verified
-                            MXCrossSigningInfo *bobFromAlicePOV = [aliceSession.crypto.store crossSigningKeysForUser:bob.userId];
-                            MXCrossSigningInfo *aliceFromBobPOV = [bobSession.crypto.store crossSigningKeysForUser:alice.userId];
+                            MXCrossSigningInfo *bobFromAlicePOV = [aliceSession.legacyCrypto.store crossSigningKeysForUser:bob.userId];
+                            MXCrossSigningInfo *aliceFromBobPOV = [bobSession.legacyCrypto.store crossSigningKeysForUser:alice.userId];
                             
                             XCTAssertTrue(bobFromAlicePOV.trustLevel.isCrossSigningVerified);
                             XCTAssertTrue(bobFromAlicePOV.trustLevel.isLocallyVerified);
@@ -698,8 +699,8 @@
                             && qrCodeTransactionFromBobPOV.state == MXQRCodeTransactionStateVerified)
                         {
                             // -> Devices must be really verified
-                            MXDeviceInfo *bobDeviceFromAlicePOV = [aliceSession.crypto.store deviceWithDeviceId:bob.deviceId forUser:bob.userId];
-                            MXDeviceInfo *aliceDeviceFromBobPOV = [bobSession.crypto.store deviceWithDeviceId:alice.deviceId forUser:alice.userId];
+                            MXDeviceInfo *bobDeviceFromAlicePOV = [aliceSession.legacyCrypto.store deviceWithDeviceId:bob.deviceId forUser:bob.userId];
+                            MXDeviceInfo *aliceDeviceFromBobPOV = [bobSession.legacyCrypto.store deviceWithDeviceId:alice.deviceId forUser:alice.userId];
                             
                             XCTAssertEqual(bobDeviceFromAlicePOV.trustLevel.localVerificationStatus, MXDeviceVerified);
                             XCTAssertTrue(bobDeviceFromAlicePOV.trustLevel.isCrossSigningVerified);
@@ -707,8 +708,8 @@
                             XCTAssertTrue(aliceDeviceFromBobPOV.trustLevel.isCrossSigningVerified);
                             
                             // -> Users must be really verified
-                            MXCrossSigningInfo *bobFromAlicePOV = [aliceSession.crypto.store crossSigningKeysForUser:bob.userId];
-                            MXCrossSigningInfo *aliceFromBobPOV = [bobSession.crypto.store crossSigningKeysForUser:alice.userId];
+                            MXCrossSigningInfo *bobFromAlicePOV = [aliceSession.legacyCrypto.store crossSigningKeysForUser:bob.userId];
+                            MXCrossSigningInfo *aliceFromBobPOV = [bobSession.legacyCrypto.store crossSigningKeysForUser:alice.userId];
                             
                             XCTAssertTrue(bobFromAlicePOV.trustLevel.isCrossSigningVerified);
                             XCTAssertTrue(bobFromAlicePOV.trustLevel.isLocallyVerified);

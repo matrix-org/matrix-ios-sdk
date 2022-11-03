@@ -21,7 +21,7 @@
 
 #import "MXDeviceListOperation.h"
 
-@class MXCrypto;
+@class MXLegacyCrypto;
 
 /**
  `MXDeviceListOperationsPool` manages a pool of `MXDeviceListOperation` operations
@@ -51,7 +51,7 @@
  @param crypto the crypto module.
  */
 
-- (id)initWithCrypto:(MXCrypto *)crypto;
+- (id)initWithCrypto:(MXLegacyCrypto *)crypto;
 
 /**
  Add/Remove an operation to/from the pool.

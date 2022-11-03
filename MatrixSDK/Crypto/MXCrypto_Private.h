@@ -40,7 +40,7 @@
  
  These methods run on a dedicated thread and must be called with the corresponding care.
  */
-@interface MXCrypto ()
+@interface MXLegacyCrypto ()
 
 /**
  The store for crypto data.

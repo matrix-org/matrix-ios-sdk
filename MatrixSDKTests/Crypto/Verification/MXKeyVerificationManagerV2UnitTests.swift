@@ -89,31 +89,6 @@ class MXKeyVerificationManagerV2UnitTests: XCTestCase {
         waitForExpectations(timeout: 1)
     }
     
-    func test_beginKeyVerification() {
-        let exp = expectation(description: "exp")
-        
-        manager.beginKeyVerification(
-            withUserId: "Bob",
-            andDeviceId: "BobDevice",
-            method: "QR") { transaction in
-                
-                XCTAssertEqual(transaction.isIncoming, false)
-                XCTAssertEqual(transaction.otherUserId, "Bob")
-                XCTAssertEqual(transaction.otherDeviceId, "BobDevice")
-                XCTAssertEqual(transaction.transport, .toDevice)
-                
-                self.manager.transactions {
-                    XCTAssertEqual($0.first?.transactionId, transaction.transactionId)
-                    exp.fulfill()
-                }
-            } failure: {
-                XCTFail("Failed with error \($0)")
-                exp.fulfill()
-            }
-
-        waitForExpectations(timeout: 1)
-    }
-    
     func test_beginKeyVerificationFromRequest() {
         let exp = expectation(description: "exp")
         
