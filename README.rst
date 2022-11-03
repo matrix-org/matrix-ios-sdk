@@ -478,22 +478,26 @@ Unit tests classes use the suffix "UnitTests" to differentiate them. A unit test
 
 Out of the box, the tests use one of the homeservers (located at
 http://localhost:8080) of the "Demo Federation of Homeservers"
-(https://github.com/matrix-org/synapse#running-a-demo-federation-of-synapses).
+(https://matrix-org.github.io/synapse/develop/development/demo.html?highlight=demo#synapse-demo-setup).
 
 You first need to follow instructions to set up Synapse in development mode at https://github.com/matrix-org/synapse#synapse-development.
-If you have already installed all dependencies, the steps are::
+The cookbook is::
 
+      $ pip install --user pipx
+      $ pipx install poetry
+      $ python3 -m pipx ensurepath   # To run if `pipx install poetry` complained about PATH not being correctly set 
       $ git clone https://github.com/matrix-org/synapse.git
       $ cd synapse
-      $ virtualenv -p python3 env
-      $ source env/bin/activate
-      (env) $ python -m pip install --no-use-pep517 -e .
+      $ poetry install --extras all
 
-Every time you want to launch these test homeservers, type::
+To launch these test homeservers, type from the synapse root folder::
 
-      $ virtualenv -p python3 env
-      $ source env/bin/activate
-      (env) $ demo/start.sh --no-rate-limit
+      $ poetry run ./demo/start.sh --no-rate-limit
+
+To stop and reset the servers::
+
+      $ poetry run ./demo/stop.sh
+      $ poetry run ./demo/clean.sh
 
 You can now run tests from the Xcode Test navigator tab or select the
 MatrixSDKTests scheme and click on the "Test" action.

@@ -119,4 +119,18 @@ extension MXEvent {
         event.setClearData(result)
         return event
     }
+    
+    static func encryptedFixture(
+        id: String = "1",
+        sessionId: String = "123"
+    ) -> MXEvent {
+        return MXEvent(fromJSON: [
+            "type": "m.room.encrypted",
+            "event_id": id,
+            "content": [
+                "algorithm": kMXCryptoMegolmAlgorithm,
+                "session_id": sessionId
+            ]
+        ])!
+    }
 }
