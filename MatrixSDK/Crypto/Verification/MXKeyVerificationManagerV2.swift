@@ -291,25 +291,26 @@ class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
     }
     
     @MainActor
-    func handleRoomEvent(_ event: MXEvent) {
-        guard Self.dmEventTypes.contains(where: { $0.identifier == event.type }) else {
-            return
+    func handleRoomEvent(_ event: MXEvent) -> String? {
+        guard isRoomVerificationEvent(event) else {
+            return nil
         }
-        
-        log.debug("->")
         
         if !event.isEncrypted, let roomId = event.roomId {
             handler.receiveUnencryptedVerificationEvent(event: event, roomId: roomId)
+            updatePendingVerification()
         }
         
         if event.type == kMXEventTypeStringRoomMessage && event.content?[kMXMessageTypeKey] as? String == kMXMessageTypeKeyVerificationRequest {
             handleIncomingRequest(userId: event.sender, flowId: event.eventId, transport: .directMessage)
+            return event.sender
             
         } else if event.type == kMXEventTypeStringKeyVerificationStart, let flowId = event.relatesTo.eventId {
             handleIncomingVerification(userId: event.sender, flowId: flowId, transport: .directMessage)
+            return event.sender
+        } else {
+            return nil
         }
-        
-        updatePendingVerification()
     }
     
     // MARK: - Update
@@ -469,7 +470,15 @@ class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
         switch verification {
         case .sasV1(let sas):
             log.debug("Tracking new SAS verification transaction")
-            _ = addSasTransaction(for: sas, transport: transport, notify: true)
+            let transaction = addSasTransaction(for: sas, transport: transport, notify: true)
+            if activeRequests[transaction.transactionId] != nil {
+                log.debug("Auto-accepting transaction that matches a pending request")
+                transaction.accept()
+                Task {
+                    await updatePendingVerification()
+                }
+            }
+            
         case .qrCodeV1(let qrCode):
             if activeTransactions[flowId] is MXQRCodeTransaction {
                 // This flow may happen if we have previously started a QR verification, but so has the other side,
@@ -538,6 +547,26 @@ class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
             throw MXSession.Error.missingRoom
         }
         return roomId
+    }
+    
+    private func isRoomVerificationEvent(_ event: MXEvent) -> Bool {
+        // Filter incoming events by allowed list of event types
+        guard Self.dmEventTypes.contains(where: { $0.identifier == event.type }) else {
+            return false
+        }
+        
+        // If it isn't a room message, it must be one of the direction verification events
+        guard event.type == MXEventType.roomMessage.identifier else {
+            return true
+        }
+        
+        // If the event does not have a message type, it cannot be accepted
+        guard let messageType = event.content[kMXMessageTypeKey] as? String else {
+            return false
+        }
+        
+        // Only requests are wrapped inside `m.room.message` types
+        return messageType == kMXMessageTypeKeyVerificationRequest
     }
 }
 
