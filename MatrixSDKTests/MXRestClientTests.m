@@ -1333,42 +1333,7 @@
             // Check data sent by the home server has been correcltly modelled
             XCTAssertTrue([pushRules.global isKindOfClass:[MXPushRulesSet class]]);
 
-            XCTAssertNotNil(pushRules.global.content);
-            XCTAssertTrue([pushRules.global.content isKindOfClass:[NSArray class]]);
-
-            MXPushRule *pushRule = pushRules.global.content[0];
-            XCTAssertTrue([pushRule isKindOfClass:[MXPushRule class]]);
-
-            XCTAssertNotNil(pushRule.actions);
-
-            MXPushRuleAction *pushAction = pushRule.actions[0];
-            XCTAssertTrue([pushAction isKindOfClass:[MXPushRuleAction class]]);
-
-            // Test a rule with room_member_count condition. There must be one for 1:1 in underride rules
-            MXPushRule *roomMemberCountRule;
-            for (MXPushRule *pushRule in pushRules.global.underride)
-            {
-                if (pushRule.conditions.count)
-                {
-                    MXPushRuleCondition *condition = pushRule.conditions[0];
-                    if (condition.kindType == MXPushRuleConditionTypeRoomMemberCount)
-                    {
-                        roomMemberCountRule = pushRule;
-                        break;
-                    }
-                }
-            }
-            XCTAssertNotNil(roomMemberCountRule);
-
-            MXPushRuleCondition *condition = roomMemberCountRule.conditions[0];
-            XCTAssertNotNil(condition);
-            XCTAssertEqualObjects(condition.kind, kMXPushRuleConditionStringRoomMemberCount);
-
-            XCTAssertEqual(condition.kindType, MXPushRuleConditionTypeRoomMemberCount);
-
-            XCTAssertNotNil(condition.parameters);
-            NSNumber *number= condition.parameters[@"is"];
-            XCTAssertEqual(number.intValue, 2);
+            // TODO: Check new default push rules
 
             [expectation fulfill];
 
