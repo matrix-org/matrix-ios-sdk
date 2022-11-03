@@ -33,7 +33,7 @@
 
 @interface MXMegolmEncryption ()
 {
-    MXCrypto *crypto;
+    MXLegacyCrypto *crypto;
 
     // The id of the room we will be sending to.
     NSString *roomId;
@@ -60,7 +60,7 @@
 
 
 #pragma mark - MXEncrypting
-- (instancetype)initWithCrypto:(MXCrypto *)theCrypto andRoom:(NSString *)theRoomId
+- (instancetype)initWithCrypto:(MXLegacyCrypto *)theCrypto andRoom:(NSString *)theRoomId
 {
     self = [super init];
     if (self)

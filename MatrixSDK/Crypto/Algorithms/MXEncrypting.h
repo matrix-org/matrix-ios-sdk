@@ -20,7 +20,7 @@
 #import "MXEvent.h"
 #import "MXDeviceInfo.h"
 
-@class MXCrypto;
+@class MXLegacyCrypto;
 
 @protocol MXEncrypting <NSObject>
 
@@ -30,7 +30,7 @@
  @param crypto the related 'MXCrypto'.
  @param roomId the id of the room we will be sending to.
  */
-- (instancetype)initWithCrypto:(MXCrypto*)crypto andRoom:(NSString*)roomId;
+- (instancetype)initWithCrypto:(MXLegacyCrypto*)crypto andRoom:(NSString*)roomId;
 
 /**
  Encrypt an event content according to the configuration of the room.

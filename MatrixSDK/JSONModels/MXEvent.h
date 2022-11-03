@@ -307,6 +307,7 @@ FOUNDATION_EXPORT NSString *const kMXJoinRulesContentKeyRoomId;
 // Threads support
 
 FOUNDATION_EXPORT NSString *const kMXEventTimelineMain;
+FOUNDATION_EXPORT NSString *const kMXEventUnthreaded;
 
 /**
  The internal event state used to handle the different steps of the event sending.

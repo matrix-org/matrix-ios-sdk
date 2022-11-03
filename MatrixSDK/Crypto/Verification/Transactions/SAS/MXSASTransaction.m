@@ -368,8 +368,8 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
 
         __block MXTransactionCancelCode *cancelCode;
         dispatch_group_t group = dispatch_group_create();
-        
-        MXCrossSigningKey *otherUserMasterKeys= [self.manager.crypto crossSigningKeysForUser:self.otherDevice.userId].masterKeys;
+
+        MXCrossSigningKey *otherUserMasterKeys= [self.manager.crypto.crossSigning crossSigningKeysForUser:self.otherDevice.userId].masterKeys;
 
         for (NSString *keyFullId in self.theirMac.mac)
         {

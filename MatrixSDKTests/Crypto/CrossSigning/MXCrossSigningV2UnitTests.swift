@@ -41,11 +41,6 @@ class MXCrossSigningV2UnitTests: XCTestCase {
         XCTAssertEqual(crossSigning.state, .notBootstrapped)
     }
     
-    func test_state_canCrossSign() {
-        crypto.stubbedStatus = CrossSigningStatus(hasMaster: true, hasSelfSigning: true, hasUserSigning: true)
-        XCTAssertEqual(crossSigning.state, .canCrossSign)
-    }
-    
     func test_state_crossSigningExists() {
         let exp = expectation(description: "exp")
         crypto.stubbedVerifiedUsers = []
@@ -79,6 +74,26 @@ class MXCrossSigningV2UnitTests: XCTestCase {
         ]
         crossSigning.refreshState { _ in
             XCTAssertEqual(self.crossSigning.state, .trustCrossSigning)
+            exp.fulfill()
+        }
+        waitForExpectations(timeout: 1)
+    }
+    
+    func test_state_canCrossSign() {
+        let exp = expectation(description: "exp")
+        crypto.stubbedStatus = CrossSigningStatus(hasMaster: true, hasSelfSigning: true, hasUserSigning: true)
+        crypto.stubbedVerifiedUsers = ["Alice"]
+        crypto.stubbedIdentities = [
+            "Alice": .own(
+                userId: "Alice",
+                trustsOurOwnDevice: true,
+                masterKey: "",
+                selfSigningKey: "",
+                userSigningKey: ""
+            )
+        ]
+        crossSigning.refreshState { _ in
+            XCTAssertEqual(self.crossSigning.state, .canCrossSign)
             exp.fulfill()
         }
         waitForExpectations(timeout: 1)
