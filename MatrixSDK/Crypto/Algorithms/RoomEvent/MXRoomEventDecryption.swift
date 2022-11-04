@@ -30,10 +30,10 @@ protocol MXRoomEventDecrypting: Actor {
     /// Note: room key could be contained in `m.room_key` or `m.forwarded_room_key`
     func handlePossibleRoomKeyEvent(_ event: MXEvent)
     
-    /// Retry decrypting all previously undecrypted events
+    /// Retry decrypting events with specific session ids
     ///
     /// Note: this may be useful if we have just imported keys from backup / file
-    func retryAllUndecryptedEvents()
+    func retryUndecryptedEvents(sessionIds: [String])
     
     /// Reset the store of undecrypted events
     func resetUndecryptedEvents()
@@ -46,7 +46,7 @@ actor MXRoomEventDecryption: MXRoomEventDecrypting {
         
     private let handler: MXCryptoRoomEventDecrypting
     private var undecryptedEvents: [SessionId: [EventId: MXEvent]]
-    private let log = MXNamedLog(name: "MXCryptoRoomEventDecryptor")
+    private let log = MXNamedLog(name: "MXRoomEventDecryption")
     
     init(handler: MXCryptoRoomEventDecrypting) {
         self.handler = handler
@@ -82,14 +82,14 @@ actor MXRoomEventDecryption: MXRoomEventDecrypting {
         retryDecryption(events: events)
     }
     
-    func retryAllUndecryptedEvents() {
-        let allEvents = undecryptedEvents
+    func retryUndecryptedEvents(sessionIds: [String]) {
+        let events = sessionIds
             .flatMap {
-                $0.value.map {
+                undecryptedEvents[$0]?.map {
                     $0.value
-                }
+                } ?? []
             }
-        retryDecryption(events: allEvents)
+        retryDecryption(events: events)
     }
     
     func resetUndecryptedEvents() {
@@ -100,11 +100,15 @@ actor MXRoomEventDecryption: MXRoomEventDecrypting {
     
     private func decrypt(event: MXEvent) -> MXEventDecryptionResult {
         guard
-            let sessionId = sessionId(for: event),
-            event.content?["algorithm"] as? String == kMXCryptoMegolmAlgorithm
+            event.isEncrypted && event.clear == nil,
+            event.content?["algorithm"] as? String == kMXCryptoMegolmAlgorithm,
+            let sessionId = sessionId(for: event)
         else {
             log.debug("Ignoring unencrypted or non-room event")
-            return MXEventDecryptionResult()
+            
+            let result = MXEventDecryptionResult()
+            result.clearEvent = event.clear?.jsonDictionary()
+            return result
         }
         
         do {
@@ -117,8 +121,9 @@ actor MXRoomEventDecryption: MXRoomEventDecrypting {
         // hardcoded non-localized error message. Will be changed in future PR
         } catch DecryptionError.Megolm(message: "decryption failed because the room key is missing") {
             if undecryptedEvents[sessionId] == nil {
-                log.error("Failed to decrypt event due to missing room keys (further errors for the same key will be supressed)", context: [
-                    "session_id": sessionId
+                log.error("Failed to decrypt one or more events due to missing room keys", context: [
+                    "session_id": sessionId,
+                    "details": "further errors for the same key will be supressed"
                 ])
             }
             
@@ -178,7 +183,8 @@ actor MXRoomEventDecryption: MXRoomEventDecrypting {
             guard result.clearEvent != nil else {
                 log.error("Event still not decryptable", context: [
                     "event_id": event.eventId ?? "unknown",
-                    "session_id": sessionId(for: event)
+                    "session_id": sessionId(for: event),
+                    "error": result.error.localizedDescription
                 ])
                 continue
             }
@@ -207,8 +213,9 @@ actor MXRoomEventDecryption: MXRoomEventDecrypting {
     }
     
     private func sessionId(for event: MXEvent) -> String? {
-        guard event.isEncrypted, let sessionId = event.content["session_id"] as? String else {
-            log.error("Event is not encrypted or is missing session id")
+        let sessionId = event.content["session_id"] ?? event.wireContent["session_id"]
+        guard let sessionId = sessionId as? String else {
+            log.failure("Event is missing session id")
             return nil
         }
         return sessionId

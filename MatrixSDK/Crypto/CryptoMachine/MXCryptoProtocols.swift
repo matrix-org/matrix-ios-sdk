@@ -54,8 +54,8 @@ protocol MXCryptoUserIdentitySource: MXCryptoIdentity {
     func isUserVerified(userId: String) -> Bool
     func isUserTracked(userId: String) -> Bool
     func downloadKeys(users: [String]) async throws
-    func manuallyVerifyUser(userId: String) async throws
-    func manuallyVerifyDevice(userId: String, deviceId: String) async throws
+    func verifyUser(userId: String) async throws
+    func verifyDevice(userId: String, deviceId: String) async throws
     func setLocalTrust(userId: String, deviceId: String, trust: LocalTrust) throws
 }
 

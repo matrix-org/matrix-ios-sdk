@@ -146,7 +146,7 @@ class MXCrossSigningV2: NSObject, MXCrossSigning {
         
         Task {
             do {
-                try await crossSigning.manuallyVerifyDevice(userId: crossSigning.userId, deviceId: deviceId)
+                try await crossSigning.verifyDevice(userId: crossSigning.userId, deviceId: deviceId)
                 
                 log.debug("Successfully cross-signed a device")
                 await MainActor.run {
@@ -170,7 +170,7 @@ class MXCrossSigningV2: NSObject, MXCrossSigning {
         
         Task {
             do {
-                try await crossSigning.manuallyVerifyUser(userId: userId)
+                try await crossSigning.verifyUser(userId: userId)
                 log.debug("Successfully cross-signed a user")
                 
                 await MainActor.run {
