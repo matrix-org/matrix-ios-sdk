@@ -1283,7 +1283,12 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
 
 - (NSDictionary *)JSONDictionary
 {
-    return self.responseJSON;
+    NSMutableDictionary *dictionary = [self.responseJSON mutableCopy];
+    if (!dictionary[@"failures"])
+    {
+        dictionary[@"failures"] = @{};
+    }
+    return dictionary.copy;
 }
 
 @end

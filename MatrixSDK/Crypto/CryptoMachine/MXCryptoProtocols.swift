@@ -39,7 +39,7 @@ protocol MXCryptoSyncing: MXCryptoIdentity {
         unusedFallbackKeys: [String]?
     ) throws -> MXToDeviceSyncResponse
     
-    func completeSync() async throws
+    func processOutgoingRequests() async throws
 }
 
 /// Source of user devices and their cryptographic trust status
@@ -52,18 +52,24 @@ protocol MXCryptoDevicesSource: MXCryptoIdentity {
 protocol MXCryptoUserIdentitySource: MXCryptoIdentity {
     func userIdentity(userId: String) -> UserIdentity?
     func isUserVerified(userId: String) -> Bool
+    func isUserTracked(userId: String) -> Bool
     func downloadKeys(users: [String]) async throws
     func manuallyVerifyUser(userId: String) async throws
     func manuallyVerifyDevice(userId: String, deviceId: String) async throws
+    func setLocalTrust(userId: String, deviceId: String, trust: LocalTrust) throws
 }
 
-/// Event encryption and decryption
+/// Room event encryption
 protocol MXCryptoRoomEventEncrypting: MXCryptoIdentity {
-    func shareRoomKeysIfNecessary(roomId: String, users: [String]) async throws
-    func encryptRoomEvent(content: [AnyHashable: Any], roomId: String, eventType: String, users: [String]) async throws -> [String: Any]
-    func decryptRoomEvent(_ event: MXEvent) -> MXEventDecryptionResult
-    func requestRoomKey(event: MXEvent) async throws
+    func shareRoomKeysIfNecessary(roomId: String, users: [String], settings: EncryptionSettings) async throws
+    func encryptRoomEvent(content: [AnyHashable: Any], roomId: String, eventType: String) throws -> [String: Any]
     func discardRoomKey(roomId: String)
+}
+
+/// Room event decryption
+protocol MXCryptoRoomEventDecrypting: MXCryptoIdentity {
+    func decryptRoomEvent(_ event: MXEvent) throws -> DecryptedEvent
+    func requestRoomKey(event: MXEvent) async throws
 }
 
 /// Cross-signing functionality
@@ -79,6 +85,7 @@ protocol MXCryptoVerificationRequesting: MXCryptoIdentity {
     func receiveUnencryptedVerificationEvent(event: MXEvent, roomId: String)
     func requestSelfVerification(methods: [String]) async throws -> VerificationRequest
     func requestVerification(userId: String, roomId: String, methods: [String]) async throws -> VerificationRequest
+    func requestVerification(userId: String, deviceId: String, methods: [String]) async throws -> VerificationRequest
     func verificationRequests(userId: String) -> [VerificationRequest]
     func verificationRequest(userId: String, flowId: String) -> VerificationRequest?
     func acceptVerificationRequest(userId: String, flowId: String, methods: [String]) async throws
@@ -95,7 +102,6 @@ protocol MXCryptoVerifying: MXCryptoIdentity {
 /// Lifecycle of SAS-specific verification transaction
 protocol MXCryptoSASVerifying: MXCryptoVerifying {
     func startSasVerification(userId: String, flowId: String) async throws -> Sas
-    func startSasVerification(userId: String, deviceId: String) async throws -> Sas
     func acceptSasVerification(userId: String, flowId: String) async throws
     func emojiIndexes(sas: Sas) throws -> [Int]
     func sasDecimals(sas: Sas) throws -> [Int]

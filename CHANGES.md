@@ -1,3 +1,19 @@
+## Changes in 0.24.2 (2022-11-01)
+
+🙌 Improvements
+
+- CryptoV2: Manual key export / import ([#1608](https://github.com/matrix-org/matrix-ios-sdk/pull/1608))
+- CryptoV2: Set local trust and deprecate legacy verification method ([#1613](https://github.com/matrix-org/matrix-ios-sdk/pull/1613))
+- Crypto: Define MXCrypto and MXCrossSigning as protocols ([#1614](https://github.com/matrix-org/matrix-ios-sdk/pull/1614))
+- CryptoV2: Cross-sign self after restoring session ([#1616](https://github.com/matrix-org/matrix-ios-sdk/pull/1616))
+- Crypto: Curate MXCrypto protocol methods ([#1618](https://github.com/matrix-org/matrix-ios-sdk/pull/1618))
+- Crypto: Complete MXCryptoV2 implementation ([#1620](https://github.com/matrix-org/matrix-ios-sdk/pull/1620))
+
+🚧 In development 🚧
+
+- Device Manger: Multi session sign out. ([#1619](https://github.com/vector-im/element-ios/issues/1619))
+
+
 ## Changes in 0.24.1 (2022-10-18)
 
 🙌 Improvements

@@ -22,12 +22,28 @@ import Foundation
 import MatrixSDKCrypto
 
 class MXCryptoKeyBackupEngineUnitTests: XCTestCase {
+    actor DecryptorDummy: MXRoomEventDecrypting {
+        func decrypt(events: [MXEvent]) -> [MXEventDecryptionResult] {
+            return []
+        }
+        
+        func handlePossibleRoomKeyEvent(_ event: MXEvent) {
+        }
+        
+        func retryAllUndecryptedEvents() {
+        }
+        
+        func resetUndecryptedEvents() {
+        }
+    }
+    
+    
     var backup: CryptoBackupStub!
     var engine: MXCryptoKeyBackupEngine!
     
     override func setUp() {
         backup = CryptoBackupStub()
-        engine = MXCryptoKeyBackupEngine(backup: backup)
+        engine = MXCryptoKeyBackupEngine(backup: backup, roomEventDecryptor: DecryptorDummy())
     }
     
     func test_createsBackupKeyFromVersion() {

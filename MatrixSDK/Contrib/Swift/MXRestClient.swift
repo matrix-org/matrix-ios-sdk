@@ -1921,6 +1921,22 @@ public extension MXRestClient {
         return __deleteDevice(byDeviceId: deviceId, authParams: authParameters, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
+    /**
+     Deletes the given devices, and invalidates any access token associated with them.
+     
+     @discussion This API endpoint uses the User-Interactive Authentication API.
+     
+     @param deviceIds The identifiers for devices.
+     @param authParameters The additional authentication information for the user-interactive authentication API.
+     @param success A block object called when the operation succeeds.
+     @param failure A block object called when the operation fails.
+     
+     @return a MXHTTPOperation instance.
+     */
+    @nonobjc @discardableResult func deleteDevices(_ deviceIds: [String], authParameters: [String: Any], completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
+        return __deleteDevices(byDeviceIds: deviceIds, authParams: authParameters, success: currySuccess(completion), failure: curryFailure(completion))
+    }
+    
     // MARK: - Spaces
     
     /// Get the space children of a given space.
