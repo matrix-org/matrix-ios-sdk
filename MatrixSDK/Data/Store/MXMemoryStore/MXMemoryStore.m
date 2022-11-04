@@ -326,6 +326,20 @@
     return result;
 }
 
+- (NSDictionary <NSString *, NSNumber *> *)localUnreadEventCountPerThread:(nonnull NSString*)roomId withTypeIn:(nullable NSArray*)types
+{
+    NSMutableDictionary <NSString *, NSNumber *> *unreadEventCountPerThread = [NSMutableDictionary dictionary];
+    
+    RoomThreadedReceiptsStore *threadedStore = [self getOrCreateRoomThreadedReceiptsStore:roomId];
+    for (NSString *threadId in threadedStore.allKeys)
+    {
+        NSUInteger unreadCount = [self localUnreadEventCount:roomId threadId:threadId withTypeIn:types];
+        unreadEventCountPerThread[threadId] = @(unreadCount);
+    }
+    
+    return unreadEventCountPerThread;
+}
+
 - (NSArray<MXEvent *> *)newIncomingEventsInRoom:(NSString *)roomId
                                        threadId:(NSString *)threadId
                                      withTypeIn:(NSArray<MXEventTypeString> *)types

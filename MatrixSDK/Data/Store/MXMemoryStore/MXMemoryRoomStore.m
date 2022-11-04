@@ -110,6 +110,7 @@
 
     if (eventId)
     {
+        NSString *_threadId = ![threadId isEqualToString:kMXEventTimelineMain] ? threadId : nil;
         // Check messages from the most recent
         for (NSInteger i = messages.count - 1; i >= 0 ; i--)
         {
@@ -119,7 +120,7 @@
             {
                 // Keep events matching filters
                 BOOL typeAllowed = !types || [types containsObject:event.type];
-                BOOL threadAllowed = !threadId || [event.threadId isEqualToString:threadId];
+                BOOL threadAllowed = (!_threadId && !event.isInThread) || [event.threadId isEqualToString:_threadId];
                 BOOL senderAllowed = ![event.sender isEqualToString:userId];
                 if (typeAllowed && threadAllowed && senderAllowed)
                 {

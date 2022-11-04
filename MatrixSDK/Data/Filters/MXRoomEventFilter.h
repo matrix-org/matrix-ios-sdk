@@ -87,4 +87,9 @@
  */
 @property (nonatomic) BOOL lazyLoadMembers;
 
+/**
+ Enable unread thread notifications count as per MSC3773.
+ */
+@property (nonatomic) BOOL unreadThreadNotifications;
+
 @end
