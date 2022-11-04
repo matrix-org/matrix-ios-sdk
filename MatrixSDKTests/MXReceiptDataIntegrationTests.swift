@@ -333,7 +333,7 @@ class MXReceiptDataIntegrationTests: XCTestCase {
                     
                     bobRoom.liveTimeline { timeline in
                         let _ = timeline?.listenToEvents([.receipt], { event, direction, roomState in
-                            bobRoom.getEventReceipts(eventId, threadId: nil, sorted: true) { receiptDataList in
+                            bobRoom.getEventReceipts(eventId, threadId: kMXEventTimelineMain, sorted: true) { receiptDataList in
                                 guard !receiptDataList.isEmpty else {
                                     return
                                 }

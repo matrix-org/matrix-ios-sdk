@@ -16,7 +16,7 @@
 
 import Foundation
 
-#if DEBUG
+#if DEBUG && os(iOS)
 
 import MatrixSDKCrypto
 @testable import MatrixSDK
