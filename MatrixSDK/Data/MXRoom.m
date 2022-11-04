@@ -3300,9 +3300,15 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
     }
     else if (updatedReadReceiptEvent)
     {
+        NSString *threadId = nil;
+        if (MXSDKOptions.sharedInstance.enableThreads)
+        {
+            threadId = updatedReadReceiptEvent.threadId ?: kMXEventTimelineMain;
+        }
+        
         [mxSession.matrixRestClient sendReadReceipt:self.roomId
                                             eventId:updatedReadReceiptEvent.eventId
-                                           threadId:updatedReadReceiptEvent.threadId ?: kMXEventTimelineMain
+                                           threadId:threadId
                                             success:nil
                                             failure:nil];
     }
@@ -3388,9 +3394,15 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
     }
     else if (updatedReceiptData)
     {
+        NSString *threadId = nil;
+        if (MXSDKOptions.sharedInstance.enableThreads)
+        {
+            threadId = event.threadId ?: kMXEventTimelineMain;
+        }
+        
         [mxSession.matrixRestClient sendReadReceipt:self.roomId
                                             eventId:updatedReceiptData.eventId
-                                           threadId:event.threadId ?: kMXEventTimelineMain
+                                           threadId:threadId
                                             success:nil
                                             failure:nil];
     }
@@ -3512,7 +3524,11 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
     {
         // as per MSC3773, read markers do not yet support read receipts with thread ID.
         // The read receipt with the right threadId should be sent by the client.
-        [mxSession.matrixRestClient sendReadReceipt:self.roomId eventId:receiptEventId threadId:threadId success:nil failure:nil];
+        [mxSession.matrixRestClient sendReadReceipt:self.roomId
+                                            eventId:receiptEventId
+                                           threadId:MXSDKOptions.sharedInstance.enableThreads ? threadId: nil
+                                            success:nil
+                                            failure:nil];
     }
 }
 
