@@ -275,7 +275,7 @@
     }];
 }
 
-- (void)testDefaultRoomMemberCountCondition
+- (void)testDefaultEventMatchCondition
 {
     [matrixSDKTestsData doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXSession *bobSession, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
