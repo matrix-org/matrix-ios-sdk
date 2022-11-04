@@ -93,6 +93,15 @@
 - (id<MXEventsEnumerator>)enumeratorForMessagesWithTypeIn:(NSArray*)types;
 
 /**
+ Get all events in thread since the root message event.
+
+ @param threadId the thread id to find events in.
+ @param types a set of event types strings (MXEventTypeString).
+ @return the messages events after an event Id
+ */
+- (NSArray<MXEvent*>*)eventsInThreadWithThreadId:(NSString *)threadId except:(NSString *)userId withTypeIn:(NSSet<MXEventTypeString>*)types;
+
+/**
  Get all events newer than the event with the passed id.
 
  @param eventId the event id to find.
