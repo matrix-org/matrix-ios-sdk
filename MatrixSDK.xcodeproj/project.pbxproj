@@ -687,6 +687,8 @@
 		3A858DE327529183006322C1 /* MXRoomCapabilityType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A858DE027517C0E006322C1 /* MXRoomCapabilityType.swift */; };
 		3A858DE8275511A4006322C1 /* MXRoomAliasAvailabilityCheckerResultTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A858DE7275511A4006322C1 /* MXRoomAliasAvailabilityCheckerResultTests.swift */; };
 		3A858DE9275511A4006322C1 /* MXRoomAliasAvailabilityCheckerResultTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A858DE7275511A4006322C1 /* MXRoomAliasAvailabilityCheckerResultTests.swift */; };
+		3A96CD492901512C00F9A5AB /* MXReceiptDataIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A96CD482901512C00F9A5AB /* MXReceiptDataIntegrationTests.swift */; };
+		3A96CD4A2901512C00F9A5AB /* MXReceiptDataIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A96CD482901512C00F9A5AB /* MXReceiptDataIntegrationTests.swift */; };
 		3A9E2B4328EB3960000DB2A7 /* MXMatrixVersionsUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A9E2B4228EB3960000DB2A7 /* MXMatrixVersionsUnitTests.swift */; };
 		3A9E2B4428EB3960000DB2A7 /* MXMatrixVersionsUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A9E2B4228EB3960000DB2A7 /* MXMatrixVersionsUnitTests.swift */; };
 		3AB5EBB4270B332B0058703A /* MXSpaceStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AB5EBB3270B332B0058703A /* MXSpaceStore.swift */; };
@@ -2586,6 +2588,7 @@
 		3A858DDB275120D1006322C1 /* MXHomeserverCapabilitiesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXHomeserverCapabilitiesTests.swift; sourceTree = "<group>"; };
 		3A858DE027517C0E006322C1 /* MXRoomCapabilityType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXRoomCapabilityType.swift; sourceTree = "<group>"; };
 		3A858DE7275511A4006322C1 /* MXRoomAliasAvailabilityCheckerResultTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXRoomAliasAvailabilityCheckerResultTests.swift; sourceTree = "<group>"; };
+		3A96CD482901512C00F9A5AB /* MXReceiptDataIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXReceiptDataIntegrationTests.swift; sourceTree = "<group>"; };
 		3A9E2B4228EB3960000DB2A7 /* MXMatrixVersionsUnitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXMatrixVersionsUnitTests.swift; sourceTree = "<group>"; };
 		3AB5EBB3270B332B0058703A /* MXSpaceStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXSpaceStore.swift; sourceTree = "<group>"; };
 		3AB5EBB6270ED1C00058703A /* MXSpaceFileStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXSpaceFileStore.swift; sourceTree = "<group>"; };
@@ -4328,6 +4331,7 @@
 				B1EE98D328048ACF00AB63F0 /* MXGeoURIComponentsUnitTests.swift */,
 				B1F04B152811EFF700103EBE /* MXBeaconAggregationsTests.swift */,
 				3A9E2B4228EB3960000DB2A7 /* MXMatrixVersionsUnitTests.swift */,
+				3A96CD482901512C00F9A5AB /* MXReceiptDataIntegrationTests.swift */,
 			);
 			path = MatrixSDKTests;
 			sourceTree = "<group>";
@@ -7164,6 +7168,7 @@
 				322985D226FC9E61001890BC /* MXSessionTracker.swift in Sources */,
 				32B477822638133C00EA5800 /* MXFilterUnitTests.m in Sources */,
 				322985CF26FBAE7B001890BC /* TestObserver.swift in Sources */,
+				3A96CD492901512C00F9A5AB /* MXReceiptDataIntegrationTests.swift in Sources */,
 				32DC15D71A8DFF0D006F9AD3 /* MXNotificationCenterTests.m in Sources */,
 				ED51943928462D130006EEC6 /* MXRoomStateUnitTests.swift in Sources */,
 				329571991B024D2B00ABB3BA /* MXMockCallStack.m in Sources */,
@@ -7799,6 +7804,7 @@
 				322985D326FC9E61001890BC /* MXSessionTracker.swift in Sources */,
 				B1E09A392397FD7D0057C069 /* MXMyUserTests.m in Sources */,
 				322985D026FBAE7B001890BC /* TestObserver.swift in Sources */,
+				3A96CD4A2901512C00F9A5AB /* MXReceiptDataIntegrationTests.swift in Sources */,
 				B1E09A202397FCE90057C069 /* MXCurve25519KeyBackupTests.m in Sources */,
 				ED7019DD2886C24100FC31B9 /* MXCrossSigningInfoSourceUnitTests.swift in Sources */,
 				ED51943A28462D130006EEC6 /* MXRoomStateUnitTests.swift in Sources */,

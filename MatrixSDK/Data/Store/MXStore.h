@@ -250,11 +250,13 @@
  
  @param roomId The room Id.
  @param eventId The event Id.
+ @param threadId The thread Id. kMXEventTimelineMain for the main timeline.
  @param sort to sort them from the latest to the oldest
  @param completion Completion block containing the receipts for an event in a dedicated room.
  */
 - (void)getEventReceipts:(nonnull NSString*)roomId
                  eventId:(nonnull NSString*)eventId
+                threadId:(nonnull NSString*)threadId
                   sorted:(BOOL)sort
               completion:(nonnull void (^)(NSArray<MXReceiptData*> * _Nonnull))completion;
 
@@ -268,13 +270,23 @@
 - (BOOL)storeReceipt:(nonnull MXReceiptData*)receipt inRoom:(nonnull NSString*)roomId;
 
 /**
- Retrieve the receipt for a user in a room
+ Retrieve the receipt for a user within all threads in a room
  
  @param roomId The roomId
  @param userId The user identifier
+ @return all the currently stored receipts ordered by thread ID.
+ */
+- (nonnull NSDictionary<NSString *, MXReceiptData *> *)getReceiptsInRoom:(nonnull NSString*)roomId forUserId:(nonnull NSString*)userId;
+
+/**
+ Retrieve the receipt for a user in a room within a specific thread.
+ 
+ @param roomId The roomId
+ @param threadId The ID of the thread. kMXEventTimelineMain for the main timeline.
+ @param userId The user identifier
  @return the current stored receipt (nil by default).
  */
-- (MXReceiptData * _Nullable)getReceiptInRoom:(nonnull NSString*)roomId forUserId:(nonnull NSString*)userId;
+- (nullable MXReceiptData *)getReceiptInRoom:(nonnull NSString*)roomId threadId:(nonnull NSString*)threadId forUserId:(nonnull NSString*)userId;
 
 /**
  Load receipts for a room asynchronously.
