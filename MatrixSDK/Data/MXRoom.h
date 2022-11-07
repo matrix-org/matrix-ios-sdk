@@ -164,15 +164,6 @@ FOUNDATION_EXPORT NSInteger const kMXRoomInvalidInviteSenderErrorCode;
  The text message partially typed by the user but not yet sent.
  The value is stored by the session store. Thus, it can be retrieved
  when the application restarts.
- 
- @deprecated use partialAttributedTextMessage
- */
-@property (nonatomic) NSString *partialTextMessage __deprecated_msg("use partialAttributedTextMessage");
-
-/**
- The text message partially typed by the user but not yet sent.
- The value is stored by the session store. Thus, it can be retrieved
- when the application restarts.
  */
 // @TODO(summary): Move to MXRoomSummary
 @property (nonatomic) NSAttributedString *partialAttributedTextMessage;
@@ -587,6 +578,34 @@ FOUNDATION_EXPORT NSInteger const kMXRoomInvalidInviteSenderErrorCode;
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)sendVoiceMessage:(NSURL*)fileLocalURL
+                            mimeType:(NSString*)mimeType
+                            duration:(NSUInteger)duration
+                             samples:(NSArray<NSNumber *> *)samples
+                            threadId:(NSString*)threadId
+                           localEcho:(MXEvent**)localEcho
+                             success:(void (^)(NSString *eventId))success
+                             failure:(void (^)(NSError *error))failure
+                  keepActualFilename:(BOOL)keepActualName NS_REFINED_FOR_SWIFT;
+
+/**
+ Send a voice message to the room.
+ 
+ @param fileLocalURL the local filesystem path of the file to send.
+ @param additionalContentParams (optional) the additional parameters to the content.
+ @param mimeType (optional) the mime type of the file. Defaults to `audio/ogg`
+ @param duration the length of the voice message in milliseconds
+ @param samples an array of floating point values normalized to [0, 1], boxed within NSNumbers
+ @param threadId the identifier of thread to send the event.
+ @param localEcho a pointer to a MXEvent object (@see sendMessageWithContent: for details).
+ @param success A block object called when the operation succeeds. It returns
+ the event id of the event generated on the home server
+ @param failure A block object called when the operation fails.
+ @param keepActualName if YES, the filename in the local storage will be kept while sending.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)sendVoiceMessage:(NSURL*)fileLocalURL
+             additionalContentParams:(NSDictionary *)additionalContentParams
                             mimeType:(NSString*)mimeType
                             duration:(NSUInteger)duration
                              samples:(NSArray<NSNumber *> *)samples
@@ -1272,10 +1291,12 @@ Remove a tag applied on an event of the room
  Returns the read receipts list for an event, excluding the read receipt from the current user.
 
  @param eventId The event Id.
+ @param threadId The thread Id. Use `kMXEventTimelineMain` for the main timeline.
  @param sort YES to sort them from the latest to the oldest.
  @param completion Completion block containing the receipts for an event in a dedicated room.
  */
 - (void)getEventReceipts:(nonnull NSString*)eventId
+                threadId:(nonnull NSString*)threadId
                   sorted:(BOOL)sort
               completion:(nonnull void (^)(NSArray<MXReceiptData*> * _Nonnull))completion;
 
@@ -1286,11 +1307,12 @@ Remove a tag applied on an event of the room
 
  @param receiptType the receipt type (like kMXEventTypeStringRead).
  @param eventId the id of the event.
+ @param threadId the id of the thread (nil for unthread read receipt).
  @param userId the user who generates the receipt.
  @param ts the receipt timestamp in ms since Epoch.
  @return YES if the receipt data is valid and has been stored.
  */
-- (BOOL)storeLocalReceipt:(NSString*)receiptType eventId:(NSString*)eventId userId:(NSString*)userId ts:(uint64_t)ts;
+- (BOOL)storeLocalReceipt:(NSString*)receiptType eventId:(NSString*)eventId threadId:(nullable NSString*)threadId userId:(NSString*)userId ts:(uint64_t)ts;
 
 
 #pragma mark - Read marker handling

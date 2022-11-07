@@ -16,11 +16,10 @@
 
 import Foundation
 
-#if DEBUG && os(iOS)
+#if DEBUG
 
 /// Convenience struct which transforms `MatrixSDKCrypto` trust levels
 /// into `MatrixSDK` `MXUserTrustLevel`, `MXDeviceTrustLevel` and `MXUsersTrustLevelSummary` formats.
-@available(iOS 13.0.0, *)
 struct MXTrustLevelSource {
     private let userIdentitySource: MXCryptoUserIdentitySource
     private let devicesSource: MXCryptoDevicesSource
@@ -32,9 +31,12 @@ struct MXTrustLevelSource {
     
     func userTrustLevel(userId: String) -> MXUserTrustLevel {
         let isVerified = userIdentitySource.isUserVerified(userId: userId)
+        
+        // `MatrixSDKCrypto` does not distinguish local and cross-signed
+        // verification status for users
         return .init(
             crossSigningVerified: isVerified,
-            locallyVerified: false // Note: Local verification not yet implemented
+            locallyVerified: isVerified
         )
     }
     

@@ -16,7 +16,7 @@
 
 import Foundation
 
-#if DEBUG && os(iOS)
+#if DEBUG
 
 import MatrixSDKCrypto
 
@@ -38,12 +38,26 @@ import MatrixSDKCrypto
         deviceId = device.deviceId
         algorithms = device.algorithms
         keys = device.keys
-        unsignedData = [
-            "device_display_name": device.displayName as Any
-        ]
-        trustLevel = MXDeviceTrustLevel(
+        if let displayName = device.displayName {
+            unsignedData = [
+                "device_display_name": displayName
+            ]
+        } else {
+            unsignedData = [:]
+        }
+        
+        let status: MXDeviceVerification
+        if device.isBlocked {
+            status = .blocked
+        } else if device.locallyTrusted {
+            status = .verified
+        } else {
             // Note: currently not distinguishing between unknown and unverified
-            localVerificationStatus: device.locallyTrusted ? .verified : .unknown,
+            status = .unknown
+        }
+        
+        trustLevel = MXDeviceTrustLevel(
+            localVerificationStatus: status,
             crossSigningVerified: device.crossSigningTrusted
         )
     }

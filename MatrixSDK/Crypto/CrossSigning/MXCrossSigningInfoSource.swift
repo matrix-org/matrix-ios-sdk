@@ -16,11 +16,10 @@
 
 import Foundation
 
-#if DEBUG && os(iOS)
+#if DEBUG
 
 /// Convenience struct which transforms `MatrixSDKCrypto` cross signing info formats
 /// into `MatrixSDK` `MXCrossSigningInfo` formats.
-@available(iOS 13.0.0, *)
 struct MXCrossSigningInfoSource {
     private let source: MXCryptoUserIdentitySource
     
@@ -39,14 +38,6 @@ struct MXCrossSigningInfoSource {
                 isVerified: isVerified
             )
         )
-    }
-    
-    func crossSigningInfo(userIds: [String]) -> [String: MXCrossSigningInfo] {
-        return userIds
-            .compactMap(crossSigningInfo(userId:))
-            .reduce(into: [String: MXCrossSigningInfo] ()) { dict, info in
-                return dict[info.userId] = info
-            }
     }
 }
 

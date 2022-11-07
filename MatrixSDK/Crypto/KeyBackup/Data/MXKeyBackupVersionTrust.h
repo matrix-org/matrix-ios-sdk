@@ -39,11 +39,6 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @property (nonatomic) NSArray<MXKeyBackupVersionTrustSignature*> *signatures;
 
-/**
- Flag indicating the backup trusted locally.
- */
-@property (nonatomic, getter=isTrustedLocally) BOOL trustedLocally;
-
 @end
 
 

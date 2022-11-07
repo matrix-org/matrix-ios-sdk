@@ -23,7 +23,7 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @interface MXIncomingSASTransaction ()
 
-- (nullable instancetype)initWithOtherDevice:(MXDeviceInfo*)otherDevice startEvent:(MXEvent *)event andManager:(MXKeyVerificationManager *)manager;
+- (nullable instancetype)initWithOtherDevice:(MXDeviceInfo*)otherDevice startEvent:(MXEvent *)event andManager:(MXLegacyKeyVerificationManager *)manager;
 
 @end
 

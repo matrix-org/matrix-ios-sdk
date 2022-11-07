@@ -582,6 +582,35 @@ NSString *const kMXPresenceOffline = @"offline";
 
 @end
 
+@interface MXLoginToken()
+
+@property (nonatomic) NSDictionary *json;
+
+@end
+
+@implementation MXLoginToken
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXLoginToken *loginToken = [[MXLoginToken alloc] init];
+    if (loginToken)
+    {
+        MXJSONModelSetString(loginToken.token, JSONDictionary[@"login_token"]);
+        MXJSONModelSetUInt64(loginToken.expiresIn, JSONDictionary[@"expires_in"]);
+
+        MXJSONModelSetDictionary(loginToken.json, JSONDictionary);
+    }
+    return loginToken;
+}
+
+- (NSDictionary *)JSONDictionary
+{
+    return _json;
+}
+
+@end
+
+
 
 NSString *const kMXPushRuleActionStringNotify       = @"notify";
 NSString *const kMXPushRuleActionStringDontNotify   = @"dont_notify";
@@ -1254,51 +1283,12 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
 
 - (NSDictionary *)JSONDictionary
 {
-    return self.responseJSON;
-}
-
-@end
-
-#pragma mark - Device Management
-
-@implementation MXDevice
-
-+ (id)modelFromJSON:(NSDictionary *)JSONDictionary
-{
-    MXDevice *device = [[MXDevice alloc] init];
-    if (device)
+    NSMutableDictionary *dictionary = [self.responseJSON mutableCopy];
+    if (!dictionary[@"failures"])
     {
-        MXJSONModelSetString(device.deviceId, JSONDictionary[@"device_id"]);
-        MXJSONModelSetString(device.displayName, JSONDictionary[@"display_name"]);
-        MXJSONModelSetString(device.lastSeenIp, JSONDictionary[@"last_seen_ip"]);
-        MXJSONModelSetUInt64(device.lastSeenTs, JSONDictionary[@"last_seen_ts"]);
+        dictionary[@"failures"] = @{};
     }
-    
-    return device;
-}
-
-- (instancetype)initWithCoder:(NSCoder *)aDecoder
-{
-    self = [super init];
-    if (self)
-    {
-        _deviceId = [aDecoder decodeObjectForKey:@"device_id"];
-        _displayName = [aDecoder decodeObjectForKey:@"display_name"];
-        _lastSeenIp = [aDecoder decodeObjectForKey:@"last_seen_ip"];
-        _lastSeenTs = [((NSNumber*)[aDecoder decodeObjectForKey:@"last_seen_ts"]) unsignedLongLongValue];
-    }
-    return self;
-}
-
-- (void)encodeWithCoder:(NSCoder *)aCoder
-{
-    [aCoder encodeObject:_deviceId forKey:@"device_id"];
-    if (_displayName)
-    {
-        [aCoder encodeObject:_displayName forKey:@"display_name"];
-    }
-    [aCoder encodeObject:_lastSeenIp forKey:@"last_seen_ip"];
-    [aCoder encodeObject:@(_lastSeenTs) forKey:@"last_seen_ts"];
+    return dictionary.copy;
 }
 
 @end

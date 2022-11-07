@@ -28,7 +28,7 @@
 #import "MXSASTransaction.h"
 
 @interface MXKeyVerificationStatusResolver ()
-@property (nonatomic, weak) MXKeyVerificationManager *manager;
+@property (nonatomic, weak) MXLegacyKeyVerificationManager *manager;
 @property (nonatomic) MXSession *mxSession;
 @end
 
@@ -37,7 +37,7 @@
 
 #pragma mark - Setup
 
-- (instancetype)initWithManager:(MXKeyVerificationManager*)manager matrixSession:(MXSession*)matrixSession;
+- (instancetype)initWithManager:(MXLegacyKeyVerificationManager*)manager matrixSession:(MXSession*)matrixSession;
 
 {
     self = [super init];
@@ -340,9 +340,9 @@
     
     if (transaction)
     {
-        if ([transaction isKindOfClass:MXQRCodeTransaction.class])
+        if ([transaction isKindOfClass:MXLegacyQRCodeTransaction.class])
         {
-            MXQRCodeTransaction *qrCodeTransaction = (MXQRCodeTransaction*)transaction;
+            MXLegacyQRCodeTransaction *qrCodeTransaction = (MXLegacyQRCodeTransaction*)transaction;
             
             switch (qrCodeTransaction.state) {
                 case MXQRCodeTransactionStateUnknown:

@@ -533,6 +533,17 @@ FOUNDATION_EXPORT NSString *const kMXPresenceOffline;
 
 @end
 
+/**
+ `MXLoginToken` represents the response of a /login/token creation request
+ */
+@interface MXLoginToken : MXJSONModel
+
+@property (nonatomic) NSString *token;
+
+@property (nonatomic) uint64_t expiresIn;
+
+@end
+
 
 @class MXPushRuleCondition;
 
@@ -1140,34 +1151,6 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
      Instead, the corresponding user or device is missing from the one_time_keys result.
      */
     @property (nonatomic) NSDictionary *failures;
-
-@end
-
-#pragma mark - Device Management
-/**
- `MXDevice` represents a device of the current user.
- */
-@interface MXDevice : MXJSONModel
-
-    /**
-     A unique identifier of the device.
-     */
-    @property (nonatomic) NSString *deviceId;
-
-    /**
-     The display name set by the user for this device. Absent if no name has been set.
-     */
-    @property (nonatomic) NSString *displayName;
-
-    /**
-     The IP address where this device was last seen. (May be a few minutes out of date, for efficiency reasons).
-     */
-    @property (nonatomic) NSString *lastSeenIp;
-
-    /**
-     The timestamp (in milliseconds since the unix epoch) when this devices was last seen. (May be a few minutes out of date, for efficiency reasons).
-     */
-    @property (nonatomic) uint64_t lastSeenTs;
 
 @end
 

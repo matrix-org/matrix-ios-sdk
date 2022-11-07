@@ -16,12 +16,11 @@
 
 import Foundation
 
-#if DEBUG && os(iOS)
+#if DEBUG
 
 import MatrixSDKCrypto
 
 /// Verification request originating from `MatrixSDKCrypto`
-@available(iOS 13.0.0, *)
 class MXKeyVerificationRequestV2: NSObject, MXKeyVerificationRequest {
     var state: MXKeyVerificationRequestState {
         // State as enum will be moved to MatrixSDKCrypto in the future
@@ -48,8 +47,12 @@ class MXKeyVerificationRequestV2: NSObject, MXKeyVerificationRequest {
         )
     }
     
+    var myUserId: String {
+        return handler.userId
+    }
+    
     var isFromMyUser: Bool {
-        return otherUser == handler.userId
+        return otherUser == myUserId
     }
     
     var isFromMyDevice: Bool {
@@ -61,6 +64,10 @@ class MXKeyVerificationRequestV2: NSObject, MXKeyVerificationRequest {
     }
     
     let transport: MXKeyVerificationTransport
+    
+    var roomId: String? {
+        return request.roomId
+    }
     
     var otherUser: String {
         return request.otherUserId
@@ -88,6 +95,8 @@ class MXKeyVerificationRequestV2: NSObject, MXKeyVerificationRequest {
     private let log = MXNamedLog(name: "MXKeyVerificationRequestV2")
     
     init(request: VerificationRequest, transport: MXKeyVerificationTransport, handler: MXCryptoVerificationRequesting) {
+        log.debug("Creating new request")
+        
         self.request = request
         self.transport = transport
         self.handler = handler
@@ -95,12 +104,15 @@ class MXKeyVerificationRequestV2: NSObject, MXKeyVerificationRequest {
     
     func processUpdates() -> MXKeyVerificationUpdateResult {
         guard let request = handler.verificationRequest(userId: otherUser, flowId: requestId) else {
+            log.debug("Request was removed")
             return .removed
         }
         
         guard self.request != request else {
             return .noUpdates
         }
+        
+        log.debug("Request was updated - \(request)")
         self.request = request
         return .updated
     }
@@ -110,6 +122,8 @@ class MXKeyVerificationRequestV2: NSObject, MXKeyVerificationRequest {
         success: @escaping () -> Void,
         failure: @escaping (Error) -> Void
     ) {
+        log.debug("->")
+        
         Task {
             do {
                 try await handler.acceptVerificationRequest(
@@ -118,10 +132,12 @@ class MXKeyVerificationRequestV2: NSObject, MXKeyVerificationRequest {
                     methods: methods
                 )
                 await MainActor.run {
+                    log.debug("Accepted request")
                     success()
                 }
             } catch {
                 await MainActor.run {
+                    log.error("Failed accepting request", context: error)
                     failure(error)
                 }
             }
@@ -133,6 +149,8 @@ class MXKeyVerificationRequestV2: NSObject, MXKeyVerificationRequest {
         success: (() -> Void)?,
         failure: ((Error) -> Void)? = nil
     ) {
+        log.debug("->")
+        
         Task {
             do {
                 try await handler.cancelVerification(
@@ -141,10 +159,12 @@ class MXKeyVerificationRequestV2: NSObject, MXKeyVerificationRequest {
                     cancelCode: code.value
                 )
                 await MainActor.run {
+                    log.debug("Cancelled request")
                     success?()
                 }
             } catch {
                 await MainActor.run {
+                    log.error("Failed cancelling request", context: error)
                     failure?(error)
                 }
             }

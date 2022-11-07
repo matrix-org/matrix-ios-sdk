@@ -18,6 +18,7 @@
 
 #import "MXTools.h"
 #import "MatrixSDKTestsSwiftHeader.h"
+#import "MatrixSDKSwiftHeader.h"
 
 @interface MXToolsUnitTests : XCTestCase
 
@@ -128,5 +129,55 @@
     XCTAssertEqualObjects(currentResult, [MXTools urlStringWithBase:currentResult queryParameters:@[parameter]]);
     XCTAssertNotEqualObjects(url, [MXTools urlStringWithBase:currentResult queryParameters:@[parameter]]);
 }
+
+#pragma mark - Supported To-Device events
+
+- (void)testSupportedToDeviceEvents
+{
+    MXEvent *event1 = [MXEvent modelFromJSON:@{
+        @"type": @"m.room.encrypted",
+        @"content": @{
+            @"algorithm": kMXCryptoOlmAlgorithm
+        }
+    }];
+    XCTAssertTrue([MXTools isSupportedToDeviceEvent:event1]);
+    
+    MXEvent *event2 = [MXEvent modelFromJSON:@{
+        @"type": @"m.room.message",
+    }];
+    XCTAssertTrue([MXTools isSupportedToDeviceEvent:event2]);
+    
+    MXEvent *event3 = [MXEvent modelFromJSON:@{
+        @"type": @"random",
+    }];
+    XCTAssertTrue([MXTools isSupportedToDeviceEvent:event3]);
+}
+
+- (void)testUnsupportedToDeviceEvents
+{
+    MXEvent *event1 = [MXEvent modelFromJSON:@{
+        @"type": @"m.room.encrypted",
+        @"content": @{
+            @"algorithm": kMXCryptoMegolmAlgorithm
+        }
+    }];
+    XCTAssertFalse([MXTools isSupportedToDeviceEvent:event1]);
+    
+    MXEvent *event2 = [MXEvent modelFromJSON:@{
+        @"type": @"m.room_key",
+    }];
+    XCTAssertFalse([MXTools isSupportedToDeviceEvent:event2]);
+    
+    MXEvent *event3 = [MXEvent modelFromJSON:@{
+        @"type": @"m.forwarded_room_key",
+    }];
+    XCTAssertFalse([MXTools isSupportedToDeviceEvent:event3]);
+    
+    MXEvent *event4 = [MXEvent modelFromJSON:@{
+        @"type": @"m.secret.send",
+    }];
+    XCTAssertFalse([MXTools isSupportedToDeviceEvent:event4]);
+}
+
 
 @end

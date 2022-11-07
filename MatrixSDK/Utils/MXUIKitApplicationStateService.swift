@@ -66,8 +66,6 @@ public class MXUIKitApplicationStateService: NSObject {
         applicationState = .inactive
         super.init()
         
-        // The service must be created on the main tread
-        assert(Thread.isMainThread, "[MXUIKitApplicationStateService] initialized on non-main thread.")
         applicationState = self.sharedApplicationState
 
         registerApplicationStateChangeNotifications()
@@ -114,8 +112,13 @@ public class MXUIKitApplicationStateService: NSObject {
     
     private var sharedApplicationState: UIApplication.State {
         get {
+            guard let application = self.sharedApplication else {
+                return .inactive
+            }
+
             // Can be only called from the main thread
-            self.sharedApplication?.applicationState ?? .inactive
+            assert(Thread.isMainThread, "[MXUIKitApplicationStateService] UIApplication.applicationState called on non-main thread.")
+            return application.applicationState
         }
     }
 }

@@ -34,4 +34,103 @@ extension MXEvent {
             ]
         ])!
     }
+    
+    static func fixture(
+        type: String,
+        sender: String = "",
+        content: [String: Any] = [:]
+    ) -> MXEvent {
+        let result = MXEventDecryptionResult()
+        result.clearEvent = [
+            "type": type,
+            "content": content
+        ]
+        
+        let event = MXEvent(fromJSON: [:])!
+        event.sender = sender
+        event.setClearData(result)
+        return event
+    }
+    
+    static func roomKeyFixture(
+        algorithm: String = "megolm",
+        roomId: String = "!123:matrix.org",
+        sessionId: String = "session1",
+        sessionKey: String = "<key>",
+        senderKey: String = "<sender_key>",
+        claimedKey: String = "<claimed_key>",
+        sharedHistory: Bool? = nil
+    ) -> MXEvent {
+        var content: [String: Any] = [
+            "type": kMXEventTypeStringRoomKey,
+            "room_id": roomId,
+            "session_id": sessionId,
+            "session_key": sessionKey,
+            "algorithm": algorithm
+        ]
+        
+        if let sharedHistory = sharedHistory {
+            content["org.matrix.msc3061.shared_history"] = sharedHistory
+        }
+        
+        let result = MXEventDecryptionResult()
+        result.senderCurve25519Key = senderKey
+        result.claimedEd25519Key = claimedKey
+        result.clearEvent = [
+            "type": kMXEventTypeStringRoomKey,
+            "content": content
+        ]
+        
+        let event = MXEvent(fromJSON: [:])!
+        event.setClearData(result)
+        return event
+    }
+    
+    static func forwardedRoomKeyFixture(
+        algorithm: String = "megolm",
+        roomId: String = "!123:matrix.org",
+        sessionId: String = "session1",
+        sessionKey: String = "<key>",
+        senderKey: String = "<sender_key>",
+        initialSenderKey: String = "<initial_sender_key>",
+        claimedKey: String = "<claimed_key>",
+        sharedHistory: Bool = false
+    ) -> MXEvent {
+        let content: [String: Any] = [
+            "type": kMXEventTypeStringRoomKey,
+            "room_id": roomId,
+            "session_id": sessionId,
+            "session_key": sessionKey,
+            "algorithm": algorithm,
+            "sender_key": initialSenderKey,
+            "sender_claimed_ed25519_key": claimedKey,
+            kMXSharedHistoryKeyName: sharedHistory
+        ]
+        
+        let result = MXEventDecryptionResult()
+        result.senderCurve25519Key = senderKey
+        result.claimedEd25519Key = claimedKey
+        result.clearEvent = [
+            "type": kMXEventTypeStringRoomForwardedKey,
+            "content": content
+        ]
+        
+        let event = MXEvent(fromJSON: [:])!
+        event.setClearData(result)
+        return event
+    }
+    
+    static func encryptedFixture(
+        id: String = "1",
+        sessionId: String = "123"
+    ) -> MXEvent {
+        return MXEvent(fromJSON: [
+            "type": "m.room.encrypted",
+            "event_id": id,
+            "content": [
+                "algorithm": kMXCryptoMegolmAlgorithm,
+                "session_id": sessionId
+            ]
+        ])!
+    }
 }

@@ -227,7 +227,6 @@ internal func uncurryResponse<T>(_ response: MXResponse<T>, success: @escaping (
 ///     room.members($0)
 /// }
 /// ```
-@available(iOS 13.0.0, macOS 10.15.0, *)
 internal func performCallbackRequest<T>(_ request: (@escaping (MXResponse<T>) -> Void) -> Void) async throws -> T {
     return try await withCheckedThrowingContinuation { continuation in
         request {

@@ -267,7 +267,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                     return
                 }
                 
-                newAliceSession?.crypto.warnOnUnknowDevices = warnOnUnknownDevices
+                newAliceSession?.legacyCrypto?.warnOnUnknowDevices = warnOnUnknownDevices
                 
                 // - Alice sends a message
                 var localEcho: MXEvent?
@@ -1636,7 +1636,7 @@ extension MXBackgroundSyncServiceTests {
 
             } failure: { (error) in
                 XCTFail("Cannot set up initial test conditions")
-                completion(.failure(error ?? MXBackgroundSyncServiceError.unknown))
+                completion(.failure(error))
             }
         }
     }

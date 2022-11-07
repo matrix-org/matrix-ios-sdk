@@ -23,13 +23,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface MXSecretStorage ()
 
-/**
- Constructor.
- 
- @param mxSession the related 'MXSession' instance.
- */
-- (instancetype)initWithMatrixSession:(MXSession *)mxSession  processingQueue:(dispatch_queue_t)processingQueue;
-
 - (nullable MXEncryptedSecretContent *)encryptedZeroStringWithPrivateKey:(NSData*)privateKey iv:(nullable NSData*)iv error:(NSError**)error;
 
 - (nullable MXEncryptedSecretContent *)encryptSecret:(NSString*)unpaddedBase64Secret withSecretId:(nullable NSString*)secretId privateKey:(NSData*)privateKey iv:(nullable NSData*)iv error:(NSError**)error;

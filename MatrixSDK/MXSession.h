@@ -469,7 +469,7 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
  The module that manages E2E encryption.
  Nil if the feature is not enabled ('cryptoEnabled' property).
  */
-@property (nonatomic, readonly) MXCrypto *crypto;
+@property (nonatomic, readonly) id<MXCrypto> crypto;
 
 /**
  Antivirus scanner used to scan medias.
@@ -602,6 +602,11 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
                    calling this block. It SHOULD not be modified by this block.
  */
 - (void)resume:(void (^)(void))resumeDone;
+
+/**
+Update client information without waiting for sync to happen.
+ */
+- (void)updateClientInformation;
 
 typedef void (^MXOnBackgroundSyncDone)(void);
 typedef void (^MXOnBackgroundSyncFail)(NSError *error);
@@ -975,6 +980,14 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  @return the MXRoom instance (nil if no room exists yet).
  */
 - (MXRoom *)directJoinedRoomWithUserId:(NSString*)userId;
+
+/**
+ Return the first joined direct chat listed in account data for this user,
+ or it will create one if no room exists yet.
+ */
+- (MXHTTPOperation *)getOrCreateDirectJoinedRoomWithUserId:(NSString*)userId
+                                                   success:(void (^)(MXRoom *))success
+                                                   failure:(void (^)(NSError *error))failure;
 
 /**
  Get the direct user id of a room.
@@ -1546,17 +1559,6 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 
 
 #pragma mark - Crypto
-/**
- Decrypt an event and update its data.
-
- @warning This method is deprecated, use -[MXSession decryptEvents:inTimeline:onComplete:] instead.
- 
- @param event the event to decrypt.
- @param timeline the id of the timeline where the event is decrypted. It is used
-        to prevent replay attack.
- @return YES if decryption is successful.
- */
-- (BOOL)decryptEvent:(MXEvent*)event inTimeline:(NSString*)timeline __attribute__((deprecated("use -[MXSession decryptEvents:inTimeline:onComplete:] instead")));
 
 /**
  Decrypt events asynchronously and update their data.

@@ -73,6 +73,9 @@ public enum MXEventType: Equatable, Hashable {
     case keyVerificationMac
     case keyVerificationCancel
     case keyVerificationDone
+    case secretRequest
+    case secretSend
+    case secretStorageDefaultKey
     case taggedEvents
     case spaceChild
     case spaceOrder
@@ -132,6 +135,9 @@ public enum MXEventType: Equatable, Hashable {
         case .keyVerificationMac: return kMXEventTypeStringKeyVerificationMac
         case .keyVerificationCancel: return kMXEventTypeStringKeyVerificationCancel
         case .keyVerificationDone: return kMXEventTypeStringKeyVerificationDone
+        case .secretRequest: return kMXEventTypeStringSecretRequest
+        case .secretSend: return kMXEventTypeStringSecretSend
+        case .secretStorageDefaultKey: return kMXEventTypeStringSecretStorageDefaultKey
         case .taggedEvents: return kMXEventTypeStringTaggedEvents
         case .spaceChild: return kMXEventTypeStringSpaceChild
         case .spaceOrder: return kMXEventTypeStringSpaceOrderMSC3230
@@ -151,7 +157,7 @@ public enum MXEventType: Equatable, Hashable {
     }
     
     public init(identifier: String) {
-        let events: [MXEventType] = [.roomName, .roomTopic, .roomAvatar, .roomMember, .roomCreate, .roomJoinRules, .roomPowerLevels, .roomAliases, .roomCanonicalAlias, .roomEncrypted, .roomEncryption, .roomGuestAccess, .roomHistoryVisibility, .roomKey, .roomForwardedKey, .roomKeyRequest, .roomMessage, .roomMessageFeedback, .roomRedaction, .roomThirdPartyInvite, .roomTag, .presence, .typing, .callInvite, .callCandidates, .callAnswer, .callSelectAnswer, .callHangup, .callReject, .callNegotiate, .callReplaces, .callRejectReplacement, .callAssertedIdentity, .callAssertedIdentityUnstable, .reaction, .receipt, .roomTombStone, .keyVerificationStart, .keyVerificationAccept, .keyVerificationKey, .keyVerificationMac, .keyVerificationCancel, .keyVerificationDone, .taggedEvents, .spaceChild, .spaceOrder, .pollStart, .pollResponse, .pollEnd, .beaconInfo, .beacon]
+        let events: [MXEventType] = [.roomName, .roomTopic, .roomAvatar, .roomMember, .roomCreate, .roomJoinRules, .roomPowerLevels, .roomAliases, .roomCanonicalAlias, .roomEncrypted, .roomEncryption, .roomGuestAccess, .roomHistoryVisibility, .roomKey, .roomForwardedKey, .roomKeyRequest, .roomMessage, .roomMessageFeedback, .roomRedaction, .roomThirdPartyInvite, .roomTag, .presence, .typing, .callInvite, .callCandidates, .callAnswer, .callSelectAnswer, .callHangup, .callReject, .callNegotiate, .callReplaces, .callRejectReplacement, .callAssertedIdentity, .callAssertedIdentityUnstable, .reaction, .receipt, .roomTombStone, .keyVerificationStart, .keyVerificationAccept, .keyVerificationKey, .keyVerificationMac, .keyVerificationCancel, .keyVerificationDone, .secretRequest, .secretSend, .secretStorageDefaultKey, .taggedEvents, .spaceChild, .spaceOrder, .pollStart, .pollResponse, .pollEnd, .beaconInfo, .beacon]
         
         if let type = events.first(where: { $0.identifier == identifier }) {
             self = type

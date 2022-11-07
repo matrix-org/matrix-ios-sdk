@@ -1,3 +1,78 @@
+## Changes in 0.24.2 (2022-11-01)
+
+🙌 Improvements
+
+- CryptoV2: Manual key export / import ([#1608](https://github.com/matrix-org/matrix-ios-sdk/pull/1608))
+- CryptoV2: Set local trust and deprecate legacy verification method ([#1613](https://github.com/matrix-org/matrix-ios-sdk/pull/1613))
+- Crypto: Define MXCrypto and MXCrossSigning as protocols ([#1614](https://github.com/matrix-org/matrix-ios-sdk/pull/1614))
+- CryptoV2: Cross-sign self after restoring session ([#1616](https://github.com/matrix-org/matrix-ios-sdk/pull/1616))
+- Crypto: Curate MXCrypto protocol methods ([#1618](https://github.com/matrix-org/matrix-ios-sdk/pull/1618))
+- Crypto: Complete MXCryptoV2 implementation ([#1620](https://github.com/matrix-org/matrix-ios-sdk/pull/1620))
+
+🚧 In development 🚧
+
+- Device Manger: Multi session sign out. ([#1619](https://github.com/vector-im/element-ios/issues/1619))
+
+
+## Changes in 0.24.1 (2022-10-18)
+
+🙌 Improvements
+
+- Support additional content in voice message. ([#1595](https://github.com/matrix-org/matrix-ios-sdk/pull/1595))
+- Key verification: Refactor verification manager, requests, transactions ([#1599](https://github.com/matrix-org/matrix-ios-sdk/pull/1599))
+- Crypto: Refactor QR transactions ([#1602](https://github.com/matrix-org/matrix-ios-sdk/pull/1602))
+- CryptoV2: Integrate Mac-compatible MatrixSDKCrypto ([#1603](https://github.com/matrix-org/matrix-ios-sdk/pull/1603))
+- CryptoV2: Unencrypted verification events ([#1605](https://github.com/matrix-org/matrix-ios-sdk/pull/1605))
+- Crypto: Remove megolm decrypt cache build flag ([#1606](https://github.com/matrix-org/matrix-ios-sdk/pull/1606))
+- Device Manager: Exposed method to update client information. ([#1609](https://github.com/vector-im/element-ios/issues/1609))
+- CryptoV2: Manual device verification ([#6781](https://github.com/vector-im/element-ios/issues/6781))
+- Add support for m.local_notification_settings.<device-id> in account_data ([#6797](https://github.com/vector-im/element-ios/issues/6797))
+- CryptoV2: Incoming verification requests ([#6809](https://github.com/vector-im/element-ios/issues/6809))
+- CryptoV2: QR code verification ([#6859](https://github.com/vector-im/element-ios/issues/6859))
+
+🐛 Bugfixes
+
+- Fix users' display name in messages. ([#6850](https://github.com/vector-im/element-ios/issues/6850))
+
+Others
+
+- Expose rest client method for generating login tokens through MSC3882 ([#1601](https://github.com/matrix-org/matrix-ios-sdk/pull/1601))
+
+
+## Changes in 0.24.0 (2022-10-04)
+
+🙌 Improvements
+
+- Crypto: Enable group session cache by default ([#1575](https://github.com/matrix-org/matrix-ios-sdk/pull/1575))
+- Crypto: Extract key backup engine ([#1578](https://github.com/matrix-org/matrix-ios-sdk/pull/1578))
+- MXSession: Set client information data if needed on resume. ([#1582](https://github.com/matrix-org/matrix-ios-sdk/pull/1582))
+- MXDevice: Move to dedicated file and implement MSC-3852. ([#1583](https://github.com/matrix-org/matrix-ios-sdk/pull/1583))
+- Add `enableNewClientInformationFeature` sdk option, disabled by default (PSG-799). ([#1588](https://github.com/matrix-org/matrix-ios-sdk/pull/1588))
+- Remove MXRoom's partialTextMessage support ([#6670](https://github.com/vector-im/element-ios/issues/6670))
+- CryptoV2: Key backups ([#6769](https://github.com/vector-im/element-ios/issues/6769))
+- CryptoV2: Key gossiping ([#6773](https://github.com/vector-im/element-ios/issues/6773))
+- User sessions: Add support for MSC3881 ([#6787](https://github.com/vector-im/element-ios/issues/6787))
+
+🧱 Build
+
+- Disable codecov/patch. ([#1579](https://github.com/matrix-org/matrix-ios-sdk/pull/1579))
+
+⚠️ API Changes
+
+- Upgrade minimum iOS and OSX deployment target to 13.0 and 10.15 respectively ([#1574](https://github.com/matrix-org/matrix-ios-sdk/pull/1574))
+
+Others
+
+- Avoid main thread assertion if we can't get the application ([#6754](https://github.com/vector-im/element-ios/issues/6754))
+
+
+## Changes in 0.23.19 (2022-09-28)
+
+🐛 Bugfixes
+
+- CVE-2022-39255: Olm/Megolm protocol confusion ([Security advisory](https://github.com/matrix-org/matrix-ios-sdk/security/advisories/GHSA-hw6g-j8v6-9hcm))
+- CVE-2022-39257: Impersonation via forwarded Megolm sessions ([Security advisory](https://github.com/matrix-org/matrix-ios-sdk/security/advisories/GHSA-qxr3-5jmq-xcf4))
+
 ## Changes in 0.23.18 (2022-09-07)
 
 ✨ Features

@@ -23,7 +23,7 @@
 #import "MXEventDecryptionResult.h"
 #import "MXIncomingRoomKeyRequest.h"
 
-@class MXCrypto, MXOlmInboundGroupSession;
+@class MXLegacyCrypto, MXOlmInboundGroupSession, MXRoomKeyResult;
 
 
 @protocol MXDecrypting <NSObject>
@@ -33,7 +33,7 @@
 
  @param crypto the related 'MXCrypto'.
 */
-- (instancetype)initWithCrypto:(MXCrypto*)crypto;
+- (instancetype)initWithCrypto:(MXLegacyCrypto*)crypto;
 
 /**
  Check if we have keys to decrypt an event.
@@ -56,11 +56,18 @@
 - (MXEventDecryptionResult *)decryptEvent:(MXEvent*)event inTimeline:(NSString*)timeline;
 
 /**
- * Handle a key event.
- *
- * @param event the key event.
+ Handle a key event.
+ 
+ @param event the key event.
  */
 - (void)onRoomKeyEvent:(MXEvent*)event;
+
+/**
+ Handle new room key
+ 
+ @param key the domain object with key details and safety
+ */
+- (void)onRoomKey:(MXRoomKeyResult*)key;
 
 /**
  Notification that a room key has been imported.

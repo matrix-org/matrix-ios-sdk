@@ -18,11 +18,10 @@ import Foundation
 import XCTest
 @testable import MatrixSDK
 
-#if DEBUG && os(iOS)
+#if DEBUG
 
 import MatrixSDKCrypto
 
-@available(iOS 13.0.0, *)
 class MXCrossSigningInfoSourceUnitTests: XCTestCase {
     var cryptoSource: UserIdentitySourceStub!
     var source: MXCrossSigningInfoSource!
@@ -55,29 +54,6 @@ class MXCrossSigningInfoSourceUnitTests: XCTestCase {
         
         XCTAssertEqual(info?.userId, "Alice")
         XCTAssertEqual(info?.trustLevel.isVerified, true)
-    }
-    
-    func test_crossSigningInfo_returnsMultipleIdentities() {
-        cryptoSource.identities = [
-            "Bob": UserIdentity.own(
-                userId: "Bob",
-                trustsOurOwnDevice: true,
-                masterKey: "master",
-                selfSigningKey: "self",
-                userSigningKey: "user"
-            ),
-            "Charlie": UserIdentity.other(
-                userId: "Charlie",
-                masterKey: "master",
-                selfSigningKey: "self"
-            )
-        ]
-        
-        let infos = source.crossSigningInfo(userIds: ["Alice", "Bob", "Charlie"])
-        
-        XCTAssertEqual(infos.count, 2)
-        XCTAssertEqual(infos["Bob"]?.userId, "Bob")
-        XCTAssertEqual(infos["Charlie"]?.userId, "Charlie")
     }
 }
 

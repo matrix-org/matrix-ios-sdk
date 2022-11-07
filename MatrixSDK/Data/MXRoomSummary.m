@@ -26,6 +26,7 @@
 #import "MXTools.h"
 #import "MXEventRelations.h"
 #import "MXEventReplace.h"
+#import "MXRoomSyncUnreadNotifications.h"
 
 #import "MXRoomSync.h"
 #import "MatrixSDKSwiftHeader.h"
@@ -769,9 +770,12 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
 {
     BOOL updated = NO;
 
-    NSUInteger localUnreadEventCount = [self.mxSession.store localUnreadEventCount:self.roomId
-                                                                          threadId:nil
-                                                                        withTypeIn:self.mxSession.unreadEventTypes];
+    NSDictionary <NSString *, NSNumber *> *localUnreadEventCountPerThread = [self.mxSession.store localUnreadEventCountPerThread:self.roomId withTypeIn:self.mxSession.unreadEventTypes];
+    NSUInteger localUnreadEventCount = 0;
+    for (NSNumber *unreadCount in localUnreadEventCountPerThread.allValues)
+    {
+        localUnreadEventCount += unreadCount.unsignedIntValue;
+    }
     
     if (self.localUnreadEventCount != localUnreadEventCount)
     {
@@ -861,26 +865,23 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
         // Check for unread events in store and update the localUnreadEventCount value if needed
         updated |= [self updateLocalUnreadEventCount];
 
-        // Store notification counts from unreadNotifications field in /sync response
-        if (roomSync.unreadNotifications)
+        // Store notification counts from unreadNotifications and unreadNotificationsPerThread fields in /sync response
+        if (roomSync.unreadNotifications || roomSync.unreadNotificationsPerThread)
         {
-            // Caution: the server may provide a not null count whereas we know locally the user has read all room messages
-            // (see for example this issue https://github.com/matrix-org/synapse/issues/2193).
-            // Patch: Ignore the server information when the user has read all messages.
-            if (roomSync.unreadNotifications.notificationCount && self.localUnreadEventCount == 0)
+            // compute the notification counts from unreadNotifications and unreadNotificationsPerThread fields in /sync response
+            NSUInteger notificationCount = roomSync.unreadNotifications.notificationCount;
+            NSUInteger highlightCount = roomSync.unreadNotifications.highlightCount;
+            for (MXRoomSyncUnreadNotifications *unreadNotifications in roomSync.unreadNotificationsPerThread.allValues)
             {
-                if (self.notificationCount != 0)
-                {
-                    self->_notificationCount = 0;
-                    self->_highlightCount = 0;
-                    updated = YES;
-                }
+                notificationCount += unreadNotifications.notificationCount;
+                highlightCount += unreadNotifications.highlightCount;
             }
-            else if (self.notificationCount != roomSync.unreadNotifications.notificationCount
-                     || self.highlightCount != roomSync.unreadNotifications.highlightCount)
+
+            // store the new notification counts
+            if (self.notificationCount != notificationCount || self.highlightCount != highlightCount)
             {
-                self->_notificationCount = roomSync.unreadNotifications.notificationCount;
-                self->_highlightCount = roomSync.unreadNotifications.highlightCount;
+                self->_notificationCount = notificationCount;
+                self->_highlightCount = highlightCount;
                 updated = YES;
             }
         }

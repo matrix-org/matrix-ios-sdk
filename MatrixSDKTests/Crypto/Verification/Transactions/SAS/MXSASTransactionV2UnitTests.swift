@@ -17,12 +17,11 @@
 import Foundation
 import XCTest
 
-#if os(iOS)
+#if DEBUG
 
 import MatrixSDKCrypto
 @testable import MatrixSDK
 
-@available(iOS 13.0.0, *)
 class MXSASTransactionV2UnitTests: XCTestCase {
     var verification: CryptoVerificationStub!
     override func setUp() {
@@ -76,15 +75,21 @@ class MXSASTransactionV2UnitTests: XCTestCase {
         XCTAssertEqual(emoji, expectedEmojis)
     }
     
+    func test_sasDecimals() {
+        verification.stubbedDecimals = [
+            "123": [1, 3, 10, 20]
+        ]
+        
+        let transaction = makeTransaction(for: .stub(
+            flowId: "123"
+        ))
+        
+        let decimals = transaction.sasDecimal
+        XCTAssertEqual(decimals, "1 3 10 20")
+    }
+    
     func test_state() {
         let testCases: [(Sas, MXSASTransactionState)] = [
-            (.stub(
-                hasBeenAccepted: false,
-                canBePresented: false,
-                haveWeConfirmed: false,
-                isDone: false,
-                isCancelled: false
-            ), MXSASTransactionStateUnknown),
             (.stub(
                 hasBeenAccepted: false,
                 canBePresented: false,
@@ -101,25 +106,43 @@ class MXSASTransactionV2UnitTests: XCTestCase {
             ), MXSASTransactionStateCancelled),
             (.stub(
                 hasBeenAccepted: false,
+                canBePresented: false,
+                haveWeConfirmed: false,
+                isDone: false,
+                isCancelled: true,
+                cancelInfo: .init(cancelCode: "", reason: "", cancelledByUs: true)
+            ), MXSASTransactionStateCancelledByMe),
+            (.stub(
+                hasBeenAccepted: false,
                 canBePresented: true,
                 haveWeConfirmed: false,
                 isDone: false,
                 isCancelled: false
             ), MXSASTransactionStateShowSAS),
             (.stub(
-                hasBeenAccepted: true,
+                weStarted: true,
+                hasBeenAccepted: false,
+                canBePresented: false,
+                haveWeConfirmed: false,
+                isDone: false,
+                isCancelled: false
+            ), MXSASTransactionStateOutgoingWaitForPartnerToAccept),
+            (.stub(
+                weStarted: false,
+                hasBeenAccepted: false,
                 canBePresented: false,
                 haveWeConfirmed: false,
                 isDone: false,
                 isCancelled: false
             ), MXSASTransactionStateIncomingShowAccept),
             (.stub(
-                hasBeenAccepted: false,
+                weStarted: false,
+                hasBeenAccepted: true,
                 canBePresented: false,
-                haveWeConfirmed: true,
+                haveWeConfirmed: false,
                 isDone: false,
                 isCancelled: false
-            ), MXSASTransactionStateOutgoingWaitForPartnerToAccept),
+            ), MXSASTransactionStateUnknown),
         ]
 
         for (stub, state) in testCases {

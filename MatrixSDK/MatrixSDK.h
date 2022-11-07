@@ -171,6 +171,12 @@ FOUNDATION_EXPORT NSString *MatrixSDKVersion;
 #import "MXCachedSyncResponse.h"
 #import "MXBackgroundCryptoStore.h"
 #import "MXSharedHistoryKeyService.h"
+#import "MXRoomKeyEventContent.h"
+#import "MXForwardedRoomKeyEventContent.h"
+#import "MXKeyBackupEngine.h"
+#import "MXCryptoTools.h"
+#import "MXRecoveryKey.h"
+#import "MXSecretShareSend.h"
 
 //  Sync response models
 #import "MXSyncResponse.h"
@@ -194,4 +200,5 @@ FOUNDATION_EXPORT NSString *MatrixSDKVersion;
 #import "MXBeaconInfo.h"
 #import "MXBeacon.h"
 #import "MXEventAssetType.h"
+#import "MXDevice.h"
 

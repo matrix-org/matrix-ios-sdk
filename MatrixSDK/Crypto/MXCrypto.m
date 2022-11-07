@@ -53,6 +53,10 @@
 
 #import "MatrixSDKSwiftHeader.h"
 #import "MXSharedHistoryKeyService.h"
+#import "MXNativeKeyBackupEngine.h"
+
+#warning File has not been annotated with nullability, see MX_ASSUME_MISSING_NULLABILITY_BEGIN
+
 /**
  The store to use for crypto.
  */
@@ -76,7 +80,7 @@ static NSString *const kMXCryptoOneTimeKeyClaimCompleteNotificationErrorKey     
 NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 
-@interface MXCrypto ()
+@interface MXLegacyCrypto () <MXRecoveryServiceDelegate, MXUnrequestedForwardedRoomKeyManagerDelegate>
 {
     // MXEncrypting instance for each room.
     NSMutableDictionary<NSString*, id<MXEncrypting>> *roomEncryptors;
@@ -107,6 +111,9 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
     // The manager for incoming room key requests
     MXIncomingRoomKeyRequestManager *incomingRoomKeyRequestManager;
     
+    // The manager for unrequested m.forwarded_room_keys
+    MXUnrequestedForwardedRoomKeyManager *unrequestedForwardedRoomKeyManager;
+    
     // The date of the last time we forced establishment
     // of a new session for each user:device.
     MXUsersDevicesMap<NSDate*> *lastNewSessionForcedDates;
@@ -136,28 +143,32 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 
 #endif
 
+@implementation MXLegacyCrypto
 
-@implementation MXCrypto
+@synthesize backup = _backup;
+@synthesize crossSigning = _crossSigning;
+@synthesize keyVerificationManager = _keyVerificationManager;
+@synthesize recoveryService = _recoveryService;
 
-+ (MXCrypto *)createCryptoWithMatrixSession:(MXSession *)mxSession
++ (id<MXCrypto>)createCryptoWithMatrixSession:(MXSession *)mxSession
 {
-    __block MXCrypto *crypto;
+    __block id<MXCrypto> crypto;
 
 #ifdef MX_CRYPTO
     
     #if DEBUG
-    MXCrypto *cryptoV2 = [self createCryptoV2IfAvailableWithSession:mxSession];
+    id<MXCrypto> cryptoV2 = [self createCryptoV2IfAvailableWithSession:mxSession];
     if (cryptoV2) {
         return cryptoV2;
     }
     #endif
     
-    dispatch_queue_t cryptoQueue = [MXCrypto dispatchQueueForUser:mxSession.matrixRestClient.credentials.userId];
+    dispatch_queue_t cryptoQueue = [MXLegacyCrypto dispatchQueueForUser:mxSession.matrixRestClient.credentials.userId];
     dispatch_sync(cryptoQueue, ^{
 
         MXCryptoStoreClass *cryptoStore = [MXCryptoStoreClass createStoreWithCredentials:mxSession.matrixRestClient.credentials];
         cryptoStore.cryptoVersion = MXCryptoVersionLast;
-        crypto = [[MXCrypto alloc] initWithMatrixSession:mxSession cryptoQueue:cryptoQueue andStore:cryptoStore];
+        crypto = [[MXLegacyCrypto alloc] initWithMatrixSession:mxSession cryptoQueue:cryptoQueue andStore:cryptoStore];
 
     });
 #endif
@@ -165,21 +176,31 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
     return crypto;
 }
 
-+ (void)checkCryptoWithMatrixSession:(MXSession*)mxSession complete:(void (^)(MXCrypto *crypto))complete
++ (void)checkCryptoWithMatrixSession:(MXSession*)mxSession complete:(void (^)(id<MXCrypto> crypto))complete
 {
 #ifdef MX_CRYPTO
-    
     #if DEBUG
-    MXCrypto *cryptoV2 = [self createCryptoV2IfAvailableWithSession:mxSession];
-    if (cryptoV2) {
+    id<MXCrypto> cryptoV2 = [self createCryptoV2IfAvailableWithSession:mxSession];
+    if (cryptoV2)
+    {
         complete(cryptoV2);
         return;
     }
     #endif
+    
+    [self checkLegacyCryptoWithMatrixSession:mxSession complete:complete];
+#else
+    complete(nil);
+#endif
+}
+
++ (void)checkLegacyCryptoWithMatrixSession:(MXSession*)mxSession complete:(void (^)(id<MXCrypto> crypto))complete
+{
+#ifdef MX_CRYPTO
 
     MXLogDebug(@"[MXCrypto] checkCryptoWithMatrixSession for %@", mxSession.matrixRestClient.credentials.userId);
 
-    dispatch_queue_t cryptoQueue = [MXCrypto dispatchQueueForUser:mxSession.matrixRestClient.credentials.userId];
+    dispatch_queue_t cryptoQueue = [MXLegacyCrypto dispatchQueueForUser:mxSession.matrixRestClient.credentials.userId];
     dispatch_async(cryptoQueue, ^{
 
         //  clear the read-only store
@@ -196,7 +217,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 
                 MXLogDebug(@"[MXCrypto] checkCryptoWithMatrixSession: Crypto store opened");
 
-                MXCrypto *crypto = [[MXCrypto alloc] initWithMatrixSession:mxSession cryptoQueue:cryptoQueue andStore:cryptoStore];
+                id<MXCrypto> crypto = [[MXLegacyCrypto alloc] initWithMatrixSession:mxSession cryptoQueue:cryptoQueue andStore:cryptoStore];
 
                 dispatch_async(dispatch_get_main_queue(), ^{
                     complete(crypto);
@@ -220,7 +241,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
             // Create it
             MXCryptoStoreClass *cryptoStore = [MXCryptoStoreClass createStoreWithCredentials:mxSession.matrixRestClient.credentials];
             cryptoStore.cryptoVersion = MXCryptoVersionLast;
-            MXCrypto *crypto = [[MXCrypto alloc] initWithMatrixSession:mxSession cryptoQueue:cryptoQueue andStore:cryptoStore];
+            id<MXCrypto> crypto = [[MXLegacyCrypto alloc] initWithMatrixSession:mxSession cryptoQueue:cryptoQueue andStore:cryptoStore];
 
             dispatch_async(dispatch_get_main_queue(), ^{
                 complete(crypto);
@@ -246,7 +267,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
                           complete:(void (^)(BOOL success))complete;
 {
 #ifdef MX_CRYPTO
-    dispatch_queue_t cryptoQueue = [MXCrypto dispatchQueueForUser:credentials.userId];
+    dispatch_queue_t cryptoQueue = [MXLegacyCrypto dispatchQueueForUser:credentials.userId];
     dispatch_async(cryptoQueue, ^{
         if ([MXCryptoStoreClass hasDataForCredentials:credentials])
         {
@@ -434,6 +455,9 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 
         [self->outgoingRoomKeyRequestManager close];
         self->outgoingRoomKeyRequestManager = nil;
+        
+        [self->unrequestedForwardedRoomKeyManager close];
+        self->outgoingRoomKeyRequestManager = nil;
 
         if (deleteStore)
         {
@@ -612,26 +636,6 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 
 - (MXEventDecryptionResult *)decryptEvent:(MXEvent *)event inTimeline:(NSString*)timeline
 {
-#ifdef MX_CRYPTO
-
-    __block MXEventDecryptionResult *result;
-
-    // TODO: dispatch_async (https://github.com/matrix-org/matrix-ios-sdk/issues/205)
-    // At the moment, we lock the main thread while decrypting events.
-    // Fortunately, decrypting is far quicker that encrypting.
-    dispatch_sync(decryptionQueue, ^{
-        result = [self decryptEvent2:event inTimeline:timeline];
-    });
-
-    return result;
-
-#else
-    return nil;
-#endif
-}
-
-- (MXEventDecryptionResult *)decryptEvent2:(MXEvent *)event inTimeline:(NSString*)timeline
-{
     MXEventDecryptionResult *result;
     
     if (!event.content.count)
@@ -692,7 +696,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
         // We need a [MXDecrypting decryptEvents:] method to limit the number of back and forth with olm/megolm module.
         for (MXEvent *event in events)
         {
-            [results addObject:[self decryptEvent2:event inTimeline:timeline]];
+            [results addObject:[self decryptEvent:event inTimeline:timeline]];
         }
         
         dispatch_async(dispatch_get_main_queue(), ^{
@@ -915,11 +919,12 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 #endif
 }
 
-- (void)handleSyncResponse:(MXSyncResponse *)syncResponse
+- (void)handleSyncResponse:(MXSyncResponse *)syncResponse onComplete:(void (^)(void))onComplete
 {
     // Not implemented, the default `MXCrypto` instead uses more specific functions
     // such as `handleRoomKeyEvent` and `handleDeviceUnusedFallbackKeys`. The method
     // is possibly used by `MXCrypto` subclasses.
+    onComplete();
 }
 
 - (void)onSyncCompleted:(NSString *)oldSyncToken nextSyncToken:(NSString *)nextSyncToken catchingUp:(BOOL)catchingUp
@@ -983,6 +988,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
         {
             [self maybeUploadOneTimeKeys:nil failure:nil];
             [self->incomingRoomKeyRequestManager processReceivedRoomKeyRequests];
+            [self->unrequestedForwardedRoomKeyManager processUnrequestedKeys];
         }
     });
 
@@ -1253,10 +1259,11 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 }
 
 - (void)trustLevelSummaryForUserIds:(NSArray<NSString*>*)userIds
+                      forceDownload:(BOOL)forceDownload
                             success:(void (^)(MXUsersTrustLevelSummary *usersTrustLevelSummary))success
                             failure:(void (^)(NSError *error))failure
 {
-    [self downloadKeys:userIds forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
+    [self downloadKeys:userIds forceDownload:forceDownload success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
         
         // Read data from the store
         // It has been updated in the process of the downloadKeys response
@@ -1358,18 +1365,6 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 #endif
 }
 
--(MXCrossSigningInfo *)crossSigningKeysForUser:(NSString *)userId
-{
-    MXCrossSigningInfo *crossSigningKeys;
-
-#ifdef MX_CRYPTO
-    crossSigningKeys = [self.store crossSigningKeysForUser:userId];
-#endif
-
-    return crossSigningKeys;
-}
-
-
 - (NSDictionary<NSString*, MXDeviceInfo*>*)devicesForUser:(NSString*)userId
 {
     NSDictionary<NSString*, MXDeviceInfo*> *devices;
@@ -1418,6 +1413,11 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
         [self.store storeDeviceSyncToken:nil];
     });
 #endif
+}
+
+- (NSString *)version
+{
+    return [NSString stringWithFormat:@"OLM %@", self.olmVersion];
 }
 
 - (NSString *)deviceCurve25519Key
@@ -1474,7 +1474,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
     if (!self.crossSigning.canCrossSign)
     {
         MXLogDebug(@"[MXCrypto] requestAllPrivateKeys: Request cross-signing private keys");
-        [self.crossSigning requestPrivateKeys];
+        [(MXLegacyCrossSigning *)self.crossSigning requestPrivateKeys];
     }
 }
 
@@ -1490,41 +1490,6 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 
 
 #pragma mark - import/export
-
-- (void)exportRoomKeys:(void (^)(NSArray<NSDictionary *> *))success failure:(void (^)(NSError *))failure
-{
-#ifdef MX_CRYPTO
-    MXWeakify(self);
-    dispatch_async(cargoQueue, ^{
-        MXStrongifyAndReturnIfNil(self);
-
-        NSDate *startDate = [NSDate date];
-
-        NSMutableArray *keys = [NSMutableArray array];
-
-        for (MXOlmInboundGroupSession *session in [self.store inboundGroupSessions])
-        {
-            MXMegolmSessionData *sessionData = [session exportSessionData];
-            if (sessionData)
-            {
-                [keys addObject:sessionData.JSONDictionary];
-            }
-        }
-
-        MXLogDebug(@"[MXCrypto] exportRoomKeys: Exported %tu keys in %.0fms", keys.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
-
-        dispatch_async(dispatch_get_main_queue(), ^{
-
-            if (success)
-            {
-                success(keys);
-            }
-
-        });
-
-    });
-#endif
-}
 
 - (void)exportRoomKeysWithPassword:(NSString *)password success:(void (^)(NSData *))success failure:(void (^)(NSError *))failure
 {
@@ -1982,7 +1947,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
         _warnOnUnknowDevices = YES;
         _enableOutgoingKeyRequestsOnceSelfVerificationDone = YES;
 
-        decryptionQueue = [MXCrypto dispatchQueueForUser:_mxSession.matrixRestClient.credentials.userId];
+        decryptionQueue = [MXLegacyCrypto dispatchQueueForUser:_mxSession.matrixRestClient.credentials.userId];
         
         cargoQueue = dispatch_queue_create([NSString stringWithFormat:@"MXCrypto-Cargo-%@", _mxSession.myDeviceId].UTF8String, DISPATCH_QUEUE_SERIAL);
         
@@ -2032,27 +1997,40 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 
         oneTimeKeyCount = -1;
 
-        if ([MXSDKOptions sharedInstance].enableKeyBackupWhenStartingMXCrypto)
-        {
-            _backup = [[MXKeyBackup alloc] initWithCrypto:self];
-        }
-
         outgoingRoomKeyRequestManager = [[MXOutgoingRoomKeyRequestManager alloc]
                                          initWithMatrixRestClient:_matrixRestClient
                                          deviceId:_myDevice.deviceId
-                                         cryptoQueue:[MXCrypto dispatchQueueForUser:_myDevice.userId]
+                                         cryptoQueue:[MXLegacyCrypto dispatchQueueForUser:_myDevice.userId]
                                          cryptoStore:_store];
 
         incomingRoomKeyRequestManager = [[MXIncomingRoomKeyRequestManager alloc] initWithCrypto:self];
+        
+        unrequestedForwardedRoomKeyManager = [[MXUnrequestedForwardedRoomKeyManager alloc] init];
+        unrequestedForwardedRoomKeyManager.delegate = self;
 
-        _keyVerificationManager = [[MXKeyVerificationManager alloc] initWithCrypto:self];
+        _keyVerificationManager = [[MXLegacyKeyVerificationManager alloc] initWithCrypto:self];
         
         _secretStorage = [[MXSecretStorage alloc] initWithMatrixSession:_mxSession processingQueue:_cryptoQueue];
         _secretShareManager = [[MXSecretShareManager alloc] initWithCrypto:self];
 
-        _crossSigning = [[MXCrossSigning alloc] initWithCrypto:self];
+        _crossSigning = [[MXLegacyCrossSigning alloc] initWithCrypto:self];
         
-        _recoveryService = [[MXRecoveryService alloc] initWithCrypto:self];
+        if ([MXSDKOptions sharedInstance].enableKeyBackupWhenStartingMXCrypto)
+        {
+            id<MXKeyBackupEngine> engine = [[MXNativeKeyBackupEngine alloc] initWithCrypto:self];
+            _backup = [[MXKeyBackup alloc] initWithEngine:engine
+                                               restClient:_matrixRestClient
+                                       secretShareManager:_secretShareManager
+                                                    queue:_cryptoQueue];
+        }
+        
+        MXRecoveryServiceDependencies *dependencies = [[MXRecoveryServiceDependencies alloc] initWithCredentials:_mxSession.matrixRestClient.credentials
+                                                                                                          backup:_backup
+                                                                                                   secretStorage:_secretStorage
+                                                                                                     secretStore:_store
+                                                                                                    crossSigning:_crossSigning
+                                                                                                     cryptoQueue:_cryptoQueue];
+        _recoveryService = [[MXRecoveryService alloc] initWithDependencies:dependencies delegate:self];
         
         cryptoMigration = [[MXCryptoMigration alloc] initWithCrypto:self];
         
@@ -2583,6 +2561,11 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
     [outgoingRoomKeyRequestManager cancelRoomKeyRequest:requestBody];
 }
 
+- (void)handleUnrequestedRoomKeyInfo:(MXRoomKeyInfo *)keyInfo senderId:(NSString *)senderId senderKey:(NSString *)senderKey
+{
+    [unrequestedForwardedRoomKeyManager addPendingKeyWithKeyInfo:keyInfo senderId:senderId senderKey:senderKey];
+}
+
 - (NSDictionary*)buildMegolmKeyForwardingMessage:(NSString*)roomId senderKey:(NSString*)senderKey sessionId:(NSString*)sessionId  chainIndex:(NSNumber*)chainIndex
 {
     NSDictionary *key = [self.olmDevice getInboundGroupSessionKey:roomId senderKey:senderKey sessionId:sessionId chainIndex:chainIndex];
@@ -2802,16 +2785,16 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
  */
 - (void)onRoomMembership:(MXEvent*)event roomState:(MXRoomState*)roomState
 {
-    id<MXEncrypting> alg = roomEncryptors[event.roomId];
-    if (!alg)
-    {
-        // No encrypting in this room
-        return;
-    }
-
     // Check whether we have to track the devices for this user.
     BOOL shouldTrack = NO;
     NSString *userId = event.stateKey;
+    
+    MXRoomMemberEventContent *content = [MXRoomMemberEventContent modelFromJSON:event.content];
+    if ([userId isEqualToString:self.mxSession.credentials.userId] && [content.membership isEqualToString:kMXMembershipStringInvite])
+    {
+        [unrequestedForwardedRoomKeyManager onRoomInviteWithRoomId:event.roomId senderId:event.sender];
+    }
+    
     MXRoomMember *member = [roomState.members memberWithUserId:userId];
     if (member)
     {
@@ -3262,6 +3245,25 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
             @"error": error ?: @"unknown"
         });
     }];
+}
+
+#pragma mark - MXUnrequestedForwardedRoomKeyManagerDelegate
+
+- (void)downloadDeviceKeysWithUserId:(NSString *)userId completion:(void (^)(MXUsersDevicesMap<MXDeviceInfo *> *))completion
+{
+    [self downloadKeys:@[userId] forceDownload:YES success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
+        completion(usersDevicesInfoMap);
+    } failure:^(NSError *error) {
+        MXLogError(@"[MXCrypto]: Failed downloading keys for key forward manager");
+        completion([[MXUsersDevicesMap alloc] init]);
+    }];
+}
+
+- (void)acceptRoomKeyWithKeyInfo:(MXRoomKeyInfo *)keyInfo
+{
+    id<MXDecrypting> decryptor = [self getRoomDecryptor:keyInfo.roomId algorithm:keyInfo.algorithm];
+    MXRoomKeyResult *key = [[MXRoomKeyResult alloc] initWithType:MXRoomKeyTypeUnsafe info:keyInfo];
+    [decryptor onRoomKey:key];
 }
 
 #endif

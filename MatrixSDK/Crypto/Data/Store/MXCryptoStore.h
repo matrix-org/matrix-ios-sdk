@@ -31,6 +31,7 @@
 #import "MXCrossSigningInfo.h"
 #import "MXOutgoingRoomKeyRequest.h"
 #import "MXIncomingRoomKeyRequest.h"
+#import "MXCryptoSecretStore.h"
 
 @class OLMAccount;
 @class OLMOutboundGroupSession;
@@ -39,7 +40,7 @@
  The `MXCryptoStore` protocol defines an interface that must be implemented in order to store
  crypto data for a matrix account.
  */
-@protocol MXCryptoStore <NSObject>
+@protocol MXCryptoStore <NSObject, MXCryptoSecretStore>
 
 /**
  Indicate if the store contains data for the passed account.
@@ -227,6 +228,14 @@
  */
 - (NSArray<MXCrossSigningInfo*> *)crossSigningKeys;
 
+#pragma mark - Secrets
+
+/**
+ Delete a secret.
+ 
+ @param secretId the id of the secret.
+ */
+- (void)deleteSecretWithSecretId:(NSString *)secretId;
 
 #pragma mark - Message keys
 
@@ -501,34 +510,6 @@
  @return a map userId -> deviceId -> [MXIncomingRoomKeyRequest*].
  */
 - (MXUsersDevicesMap<NSArray<MXIncomingRoomKeyRequest *> *> *)incomingRoomKeyRequests;
-
-
-#pragma mark - Secret storage
-
-/**
- Store a secret.
- 
- @param secret the secret.
- @param secretId the id of the secret.
- */
-- (void)storeSecret:(NSString*)secret withSecretId:(NSString*)secretId;
-
-/**
- Retrieve a secret.
- 
- @param secretId the id of the secret.
- @return the secret. Nil if the secret does not exist.
- */
-- (NSString*)secretWithSecretId:(NSString*)secretId;
-
-
-/**
- Delete a secret.
- 
- @param secretId the id of the secret.
- */
-- (void)deleteSecretWithSecretId:(NSString*)secretId;
-
 
 #pragma mark - Crypto settings
 

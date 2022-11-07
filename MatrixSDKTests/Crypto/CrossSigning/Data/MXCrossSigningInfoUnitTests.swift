@@ -18,7 +18,7 @@ import Foundation
 import XCTest
 @testable import MatrixSDK
 
-#if DEBUG && os(iOS)
+#if DEBUG
 
 import MatrixSDKCrypto
 
@@ -82,7 +82,7 @@ class MXCrossSigningInfoUnitTests: XCTestCase {
         XCTAssertNil(info.userSignedKeys)
         XCTAssertEqual(
             info.trustLevel,
-            MXUserTrustLevel(crossSigningVerified: true, locallyVerified: false)
+            MXUserTrustLevel(crossSigningVerified: true, locallyVerified: true)
         )
     }
     

@@ -21,6 +21,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+@class MXSession;
 
 #pragma mark - Constants
 
@@ -44,6 +45,13 @@ typedef NS_ENUM(NSUInteger, MXSecretStorageErrorCode)
  See https://github.com/uhoreg/matrix-doc/blob/ssss/proposals/1946-secure_server-side_storage.md
  */
 @interface MXSecretStorage : NSObject
+
+/**
+ Constructor.
+ 
+ @param mxSession the related 'MXSession' instance.
+ */
+- (instancetype)initWithMatrixSession:(MXSession *)mxSession  processingQueue:(dispatch_queue_t)processingQueue;
 
 #pragma mark - Secret Storage Key
 

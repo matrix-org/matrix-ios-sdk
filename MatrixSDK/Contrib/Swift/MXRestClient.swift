@@ -266,6 +266,9 @@ public extension MXRestClient {
         return URL(string: fallbackString)!
     }
 
+    @nonobjc func generateLoginToken(withCompletion completion: @escaping (_ response: MXResponse<MXLoginToken>) -> Void) -> MXHTTPOperation {
+        return __generateLoginToken(success: currySuccess(completion), failure: curryFailure(completion))
+    }
     
     /**
      Reset the account password.
@@ -376,13 +379,15 @@ public extension MXRestClient {
         - profileTag: The profile tag for this device. Identifies this device in push rules.
         - lang: The user's preferred language for push, eg. 'en' or 'en-US'
         - data: Dictionary of data as required by your push gateway (generally the notification URI and aps-environment for APNS).
+        - append: If `true`, the homeserver should add another pusher with the given pushkey and App ID in addition to any others with different user IDs.
+        - enabled: Whether the pusher should actively create push notifications
         - completion: A block object called when the operation succeeds.
         - response: indicates whether the request succeeded or not.
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func setPusher(pushKey: String, kind: MXPusherKind, appId: String, appDisplayName: String, deviceDisplayName: String, profileTag: String, lang: String, data: [String: Any], append: Bool, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
-        return __setPusherWithPushkey(pushKey, kind: kind.objectValue, appId: appId, appDisplayName: appDisplayName, deviceDisplayName: deviceDisplayName, profileTag: profileTag, lang: lang, data: data, append: append, success: currySuccess(completion), failure: curryFailure(completion))
+    @nonobjc @discardableResult func setPusher(pushKey: String, kind: MXPusherKind, appId: String, appDisplayName: String, deviceDisplayName: String, profileTag: String, lang: String, data: [String: Any], append: Bool, enabled: Bool = true, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
+        return __setPusherWithPushkey(pushKey, kind: kind.objectValue, appId: appId, appDisplayName: appDisplayName, deviceDisplayName: deviceDisplayName, profileTag: profileTag, lang: lang, data: data, append: append, enabled: enabled, success: currySuccess(completion), failure: curryFailure(completion))
     }
     // TODO: setPusherWithPushKey - futher refinement
     /*
@@ -392,7 +397,18 @@ public extension MXRestClient {
      Something like "MXPusherDescriptor"?
      */
     
-    
+    /**
+     Gets all currently active pushers for the authenticated user.
+     
+     - parameters:
+        - response: indicates whether the request succeeded or not.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func pushers(completion: @escaping (_ response: MXResponse<[MXPusher]>) -> Void) -> MXHTTPOperation {
+        return __pushers(currySuccess(completion), failure: curryFailure(completion))
+    }
+
     /**
      Get all push notifications rules.
      
@@ -1714,13 +1730,14 @@ public extension MXRestClient {
      - parameters:
         - roomId: the id of the room.
         - eventId: the id of the event.
+        - threadId: the id of the thread (`nil` for unthreaded RR)
         - completion: A block object called when the operation completes.
         - response: Indicates whether the operation was successful.
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func sendReadReceipt(toRoom roomId: String, forEvent eventId: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
-        return __sendReadReceipt(roomId, eventId: eventId, success: currySuccess(completion), failure: curryFailure(completion))
+    @nonobjc @discardableResult func sendReadReceipt(toRoom roomId: String, forEvent eventId: String, threadId: String?, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
+        return __sendReadReceipt(roomId, eventId: eventId, threadId: threadId, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
     
@@ -1904,6 +1921,22 @@ public extension MXRestClient {
         return __deleteDevice(byDeviceId: deviceId, authParams: authParameters, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
+    /**
+     Deletes the given devices, and invalidates any access token associated with them.
+     
+     @discussion This API endpoint uses the User-Interactive Authentication API.
+     
+     @param deviceIds The identifiers for devices.
+     @param authParameters The additional authentication information for the user-interactive authentication API.
+     @param success A block object called when the operation succeeds.
+     @param failure A block object called when the operation fails.
+     
+     @return a MXHTTPOperation instance.
+     */
+    @nonobjc @discardableResult func deleteDevices(_ deviceIds: [String], authParameters: [String: Any], completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
+        return __deleteDevices(byDeviceIds: deviceIds, authParams: authParameters, success: currySuccess(completion), failure: curryFailure(completion))
+    }
+    
     // MARK: - Spaces
     
     /// Get the space children of a given space.
@@ -1959,5 +1992,14 @@ public extension MXRestClient {
         }
         return __relations(forEvent: eventId, inRoom: roomId, relationType: relationType, eventType: eventType, from: from, direction: direction, limit: _limit, success: currySuccess(completion), failure: curryFailure(completion))
     }
-    
+
+    // MARK: - Versions
+
+    /// Get the supported versions of the homeserver
+    /// - Parameters:
+    ///   - completion: A closure called when the operation completes.
+    /// - Returns: a `MXHTTPOperation` instance.
+    @nonobjc @discardableResult func supportedMatrixVersions(completion: @escaping (_ response: MXResponse<MXMatrixVersions>) -> Void) -> MXHTTPOperation {
+        return __supportedMatrixVersions(currySuccess(completion), failure: curryFailure(completion))
+    }
 }

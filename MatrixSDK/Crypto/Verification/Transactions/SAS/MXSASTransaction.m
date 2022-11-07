@@ -46,17 +46,22 @@ NSArray<NSString*> *kKnownShortCodes;
 static NSArray<MXEmojiRepresentation*> *kSasEmojis;
 
 
-@implementation MXDefaultSASTransaction
+@implementation MXLegacySASTransaction
 
 @synthesize state = _state;
 @synthesize sasBytes = _sasBytes;
+
+- (void)accept
+{
+    MXLogFailure(@"[MXKeyVerification] Cannot accept outgoing transaction");
+}
 
 - (NSString *)sasDecimal
 {
     NSString *sasDecimal;
     if (_sasBytes && [self.accepted.shortAuthenticationString containsObject:MXKeyVerificationSASModeDecimal])
     {
-        sasDecimal = [[MXDefaultSASTransaction decimalRepresentationForSas:_sasBytes] componentsJoinedByString:@" "];
+        sasDecimal = [[MXLegacySASTransaction decimalRepresentationForSas:_sasBytes] componentsJoinedByString:@" "];
     }
 
     return sasDecimal;
@@ -67,7 +72,7 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
     NSArray *sasEmoji;
     if (_sasBytes && [self.accepted.shortAuthenticationString containsObject:MXKeyVerificationSASModeEmoji])
     {
-        sasEmoji = [MXDefaultSASTransaction emojiRepresentationForSas:_sasBytes];
+        sasEmoji = [MXLegacySASTransaction emojiRepresentationForSas:_sasBytes];
     }
 
     return sasEmoji;
@@ -129,7 +134,7 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
     });
 }
 
-- (instancetype)initWithOtherDevice:(MXDeviceInfo*)otherDevice andManager:(MXKeyVerificationManager*)manager
+- (instancetype)initWithOtherDevice:(MXDeviceInfo*)otherDevice andManager:(MXLegacyKeyVerificationManager*)manager
 {
     self = [super initWithOtherDevice:otherDevice andManager:manager];
     if (self)
@@ -364,6 +369,8 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
         __block MXTransactionCancelCode *cancelCode;
         dispatch_group_t group = dispatch_group_create();
 
+        MXCrossSigningKey *otherUserMasterKeys= [self.manager.crypto.crossSigning crossSigningKeysForUser:self.otherDevice.userId].masterKeys;
+
         for (NSString *keyFullId in self.theirMac.mac)
         {
             MXKey *key = [[MXKey alloc] initWithKeyFullId:keyFullId value:self.theirMac.mac[keyFullId]];
@@ -372,6 +379,13 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
             MXDeviceInfo *device = [self.manager.crypto deviceWithDeviceId:key.keyId ofUser:self.otherDevice.userId];
             if (device)
             {
+                if ([device.deviceId isEqualToString:otherUserMasterKeys.keys])
+                {
+                    MXLogWarning(@"[MXKeyVerification][MXSASTransaction] verifyMacs: Device id should not be the same as master key");
+                    cancelCode = MXTransactionCancelCode.invalidMessage;
+                    break;
+                }
+                
                 if ([key.value isEqualToString:[self macUsingAgreedMethod:device.keys[keyFullId]
                                                                      info:[NSString stringWithFormat:@"%@%@", baseInfo, keyFullId]]])
                 {
@@ -398,7 +412,6 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
             else
             {
                 // This key is maybe a cross-signing master key
-                MXCrossSigningKey *otherUserMasterKeys= [self.manager.crypto crossSigningKeysForUser:self.otherDevice.userId].masterKeys;
                 if (otherUserMasterKeys)
                 {
                     // Check MAC with user's MSK keys

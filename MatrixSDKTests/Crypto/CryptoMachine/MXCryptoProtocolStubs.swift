@@ -17,9 +17,9 @@
 import Foundation
 @testable import MatrixSDK
 
-#if DEBUG && os(iOS)
+#if DEBUG
 
-import MatrixSDKCrypto
+@testable import MatrixSDKCrypto
 
 class CryptoIdentityStub: MXCryptoIdentity {
     var userId: String = "Alice"
@@ -46,7 +46,6 @@ class DevicesSourceStub: CryptoIdentityStub, MXCryptoDevicesSource {
     }
 }
 
-@available(iOS 13.0.0, *)
 class UserIdentitySourceStub: CryptoIdentityStub, MXCryptoUserIdentitySource {
     var identities = [String: UserIdentity]()
     func userIdentity(userId: String) -> UserIdentity? {
@@ -58,12 +57,23 @@ class UserIdentitySourceStub: CryptoIdentityStub, MXCryptoUserIdentitySource {
         return verification[userId] ?? false
     }
     
+    func isUserTracked(userId: String) -> Bool {
+        return true
+    }
+    
     func downloadKeys(users: [String]) async throws {
-        
+    }
+    
+    func manuallyVerifyUser(userId: String) async throws {
+    }
+    
+    func manuallyVerifyDevice(userId: String, deviceId: String) async throws {
+    }
+    
+    func setLocalTrust(userId: String, deviceId: String, trust: LocalTrust) throws {
     }
 }
 
-@available(iOS 13.0.0, *)
 class CryptoCrossSigningStub: CryptoIdentityStub, MXCryptoCrossSigning {
     var stubbedStatus = CrossSigningStatus(
         hasMaster: false,
@@ -77,6 +87,13 @@ class CryptoCrossSigningStub: CryptoIdentityStub, MXCryptoCrossSigning {
     func bootstrapCrossSigning(authParams: [AnyHashable : Any]) async throws {
     }
     
+    func exportCrossSigningKeys() -> CrossSigningKeyExport? {
+        return nil
+    }
+    
+    func importCrossSigningKeys(export: CrossSigningKeyExport) {
+    }
+    
     var stubbedIdentities = [String: UserIdentity]()
     func userIdentity(userId: String) -> UserIdentity? {
         stubbedIdentities[userId]
@@ -87,26 +104,50 @@ class CryptoCrossSigningStub: CryptoIdentityStub, MXCryptoCrossSigning {
         return stubbedVerifiedUsers.contains(userId)
     }
     
+    func isUserTracked(userId: String) -> Bool {
+        return true
+    }
+    
     func downloadKeys(users: [String]) async throws {
+    }
+    
+    func manuallyVerifyUser(userId: String) async throws {
+    }
+    
+    func manuallyVerifyDevice(userId: String, deviceId: String) async throws {
+    }
+    
+    func setLocalTrust(userId: String, deviceId: String, trust: LocalTrust) throws {
     }
 }
 
-@available(iOS 13.0.0, *)
 class CryptoVerificationStub: CryptoIdentityStub {
     var stubbedRequests = [String: VerificationRequest]()
     var stubbedTransactions = [String: Verification]()
     var stubbedErrors = [String: Error]()
     var stubbedEmojis = [String: [Int]]()
+    var stubbedDecimals = [String: [Int]]()
+    var stubbedQRData = Data()
 }
 
-@available(iOS 13.0.0, *)
 extension CryptoVerificationStub: MXCryptoVerificationRequesting {
+    func receiveUnencryptedVerificationEvent(event: MXEvent, roomId: String) {
+    }
+    
     func requestSelfVerification(methods: [String]) async throws -> VerificationRequest {
-        .stub()
+        .stub(ourMethods: methods)
     }
     
     func requestVerification(userId: String, roomId: String, methods: [String]) async throws -> VerificationRequest {
-        .stub()
+        .stub(otherUserId: userId, roomId: roomId, ourMethods: methods)
+    }
+    
+    func requestVerification(userId: String, deviceId: String, methods: [String]) async throws -> VerificationRequest {
+        .stub(otherUserId: userId, otherDeviceId: deviceId, ourMethods: methods)
+    }
+    
+    func verificationRequests(userId: String) -> [VerificationRequest] {
+        return stubbedRequests.values.map { $0 }
     }
     
     func verificationRequest(userId: String, flowId: String) -> VerificationRequest? {
@@ -126,7 +167,6 @@ extension CryptoVerificationStub: MXCryptoVerificationRequesting {
     }
 }
 
-@available(iOS 13.0.0, *)
 extension CryptoVerificationStub: MXCryptoVerifying {
     func verification(userId: String, flowId: String) -> Verification? {
         return stubbedTransactions[flowId]
@@ -136,10 +176,9 @@ extension CryptoVerificationStub: MXCryptoVerifying {
     }
 }
 
-@available(iOS 13.0.0, *)
 extension CryptoVerificationStub: MXCryptoSASVerifying {
     func startSasVerification(userId: String, flowId: String) async throws -> Sas {
-        .stub()
+        .stub(otherUserId: userId, flowId: flowId)
     }
     
     func acceptSasVerification(userId: String, flowId: String) async throws {
@@ -147,6 +186,72 @@ extension CryptoVerificationStub: MXCryptoSASVerifying {
     
     func emojiIndexes(sas: Sas) throws -> [Int] {
         stubbedEmojis[sas.flowId] ?? []
+    }
+    
+    func sasDecimals(sas: Sas) throws -> [Int] {
+        return stubbedDecimals[sas.flowId] ?? []
+    }
+}
+
+extension CryptoVerificationStub: MXCryptoQRCodeVerifying {
+    func startQrVerification(userId: String, flowId: String) throws -> QrCode {
+        return .stub()
+    }
+    
+    func scanQrCode(userId: String, flowId: String, data: Data) async throws -> QrCode {
+        return .stub()
+    }
+    
+    func generateQrCode(userId: String, flowId: String) throws -> Data {
+        return stubbedQRData
+    }
+}
+
+class CryptoBackupStub: MXCryptoBackup {
+    var isBackupEnabled: Bool = false
+    var backupKeys: BackupKeys?
+    var roomKeyCounts: RoomKeyCounts?
+    
+    var versionSpy: String?
+    var backupKeySpy: MegolmV1BackupKey?
+    var recoveryKeySpy: BackupRecoveryKey?
+    var roomKeysSpy: [MXMegolmSessionData]?
+    
+    func enableBackup(key: MegolmV1BackupKey, version: String) throws {
+        versionSpy = version
+        backupKeySpy = key
+    }
+    
+    func disableBackup() {
+    }
+    
+    func saveRecoveryKey(key: BackupRecoveryKey, version: String?) throws {
+        recoveryKeySpy = key
+    }
+    
+    func verifyBackup(version: MXKeyBackupVersion) -> Bool {
+        return true
+    }
+    
+    var stubbedSignature = [String : [String : String]]()
+    func sign(object: [AnyHashable : Any]) throws -> [String : [String : String]] {
+        return stubbedSignature
+    }
+    
+    func backupRoomKeys() async throws {
+    }
+    
+    func importDecryptedKeys(roomKeys: [MXMegolmSessionData], progressListener: ProgressListener) throws -> KeysImportResult {
+        roomKeysSpy = roomKeys
+        return KeysImportResult(imported: Int64(roomKeys.count), total: Int64(roomKeys.count), keys: [:])
+    }
+    
+    func exportRoomKeys(passphrase: String) throws -> Data {
+        return Data()
+    }
+    
+    func importRoomKeys(_ data: Data, passphrase: String, progressListener: ProgressListener) throws -> KeysImportResult {
+        return KeysImportResult(imported: 0, total: 0, keys: [:])
     }
 }
 

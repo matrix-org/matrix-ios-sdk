@@ -16,13 +16,12 @@
 
 import Foundation
 
-#if DEBUG && os(iOS)
+#if DEBUG
 
 import MatrixSDKCrypto
 
 /// Convenience class to delegate network requests originating in Rust crypto module
 /// to the native REST API client
-@available(iOS 13.0.0, *)
 struct MXCryptoRequests {
     private let restClient: MXRestClient
     init(restClient: MXRestClient) {
@@ -106,10 +105,23 @@ struct MXCryptoRequests {
             )
         }
     }
+    
+    func backupKeys(request: KeysBackupRequest) async throws -> [AnyHashable: Any] {
+        return try await performCallbackRequest { continuation in
+            restClient.sendKeysBackup(
+                request.keysBackupData,
+                version: request.version,
+                success: {
+                    continuation(.success($0 ?? [:]))
+                }, failure: {
+                    continuation(.failure($0 ?? Error.unknownError))
+                }
+            )
+        }
+    }
 }
 
 /// Convenience structs mapping Rust requests to data for native REST API requests
-@available(iOS 13.0.0, *)
 extension MXCryptoRequests {
     enum Error: Swift.Error {
         case cannotCreateRequest
@@ -176,9 +188,24 @@ extension MXCryptoRequests {
             self.content = json
         }
     }
+    
+    struct KeysBackupRequest {
+        let version: String
+        let keysBackupData: MXKeysBackupData
+        
+        init(version: String, rooms: String) throws {
+            self.version = version
+            guard
+                let json = MXTools.deserialiseJSONString(rooms),
+                let data = MXKeysBackupData(fromJSON: ["rooms": json])
+            else {
+                throw Error.cannotCreateRequest
+            }
+            self.keysBackupData = data
+        }
+    }
 }
 
-@available(iOS 13.0.0, *)
 extension UploadSigningKeysRequest {
     func jsonKeys() throws -> [AnyHashable: Any] {
         guard
@@ -197,7 +224,6 @@ extension UploadSigningKeysRequest {
     }
 }
 
-@available(iOS 13.0.0, *)
 extension SignatureUploadRequest {
     func jsonSignature() throws -> [AnyHashable: Any] {
         guard let signatures = MXTools.deserialiseJSONString(body) as? [AnyHashable: Any] else {

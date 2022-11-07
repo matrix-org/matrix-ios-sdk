@@ -42,7 +42,7 @@ static NSArray<MXEventTypeString> *kMXSecretShareEventTypes;
     NSMutableArray<NSString*> *cancelledRequestIds;
 }
 
-@property (nonatomic, readonly, weak) MXCrypto *crypto;
+@property (nonatomic, readonly, weak) MXLegacyCrypto *crypto;
 
 @end
 
@@ -172,7 +172,7 @@ static NSArray<MXEventTypeString> *kMXSecretShareEventTypes;
     });
 }
 
-- (instancetype)initWithCrypto:(MXCrypto *)crypto;
+- (instancetype)initWithCrypto:(MXLegacyCrypto *)crypto;
 {
     self = [super init];
     if (self)
@@ -402,6 +402,12 @@ static NSArray<MXEventTypeString> *kMXSecretShareEventTypes;
 
 - (void)handleSecretSendEvent:(MXEvent*)event
 {
+    if (![self canAcceptSecretSendEvent:event])
+    {
+        MXLogDebug(@"[MXSecretShareManager] handleSecretSendEvent: Rejecting unacceptable secret");
+        return;
+    }
+    
     MXSecretShareSend *shareSend;
     MXJSONModelSetMXJSONModel(shareSend, MXSecretShareSend, event.content);
     if (!shareSend)
@@ -427,5 +433,30 @@ static NSArray<MXEventTypeString> *kMXSecretShareEventTypes;
         MXLogDebug(@"[MXSecretShareManager] handleSecretSendEvent: Not valid secret. Keep request %@ on", shareSend.requestId);
     }
 }
+
+- (BOOL)canAcceptSecretSendEvent:(MXEvent*)event
+{
+    // No need to download keys, after a verification we already forced download
+    MXDeviceInfo *sendingDevice = [self.crypto.store deviceWithIdentityKey:event.senderKey];
+    if (!sendingDevice)
+    {
+        MXLogError(@"[MXSecretShareManager] canAcceptSecretSendEvent: Unknown sending device");
+        return NO;
+    }
+    
+    if (![sendingDevice.userId isEqualToString:self.crypto.mxSession.myUserId])
+    {
+        MXLogDebug(@"[MXSecretShareManager] canAcceptSecretSendEvent: Ignoring secret from another user");
+        return NO;
+    }
+    
+    if (!sendingDevice.trustLevel.isVerified)
+    {
+        MXLogDebug(@"[MXSecretShareManager] canAcceptSecretSendEvent: Ignoring secret from untrusted device");
+        return NO;
+    }
+    return YES;
+}
+
 
 @end

@@ -18,11 +18,10 @@ import Foundation
 import XCTest
 @testable import MatrixSDK
 
-#if DEBUG && os(iOS)
+#if DEBUG
 
 import MatrixSDKCrypto
 
-@available(iOS 13.0.0, *)
 class MXDeviceInfoSourceUnitTests: XCTestCase {
     var cryptoSource: DevicesSourceStub!
     var source: MXDeviceInfoSource!
