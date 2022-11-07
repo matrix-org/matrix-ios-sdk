@@ -130,7 +130,7 @@ public class MXThreadingService: NSObject {
     /// - Parameter roomId: Room identifier
     /// - Returns: Notifications count
     public func notificationsCount(forRoom roomId: String) -> MXThreadNotificationsCount {
-        let notified = unsortedParticipatedThreads(inRoom: roomId).filter { $0.notificationCount > 0 }.count
+        let notified = unsortedThreads(inRoom: roomId).filter { $0.notificationCount > 0 }.count
         let highlighted = unsortedThreads(inRoom: roomId).filter { $0.highlightCount > 0 }.count
         return MXThreadNotificationsCount(numberOfNotifiedThreads: UInt(notified),
                                           numberOfHighlightedThreads: UInt(highlighted))

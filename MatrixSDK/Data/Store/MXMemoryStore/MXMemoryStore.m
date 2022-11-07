@@ -356,7 +356,14 @@
 
     if (data == nil)
     {
-        return @[];
+        if (receiptsStore.count > 0)
+        {
+            return [store eventsInThreadWithThreadId:threadId except:credentials.userId withTypeIn:[NSSet setWithArray:types]];
+        }
+        else
+        {
+            return @[];
+        }
     }
 
     // Check the current stored events (by ignoring oneself events)
