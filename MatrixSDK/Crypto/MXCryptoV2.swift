@@ -386,9 +386,11 @@ private class MXCryptoV2: NSObject, MXCrypto {
     
     func handle(_ syncResponse: MXSyncResponse, onComplete: @escaping () -> Void) {
         let toDeviceCount = syncResponse.toDevice?.events.count ?? 0
+        let devicesChanged = syncResponse.deviceLists?.changed?.count ?? 0
+        let devicesLeft = syncResponse.deviceLists?.left?.count ?? 0
         
         MXLog.debug("[MXCryptoV2] --------------------------------")
-        log.debug("Handling new sync response with \(toDeviceCount) to-device event(s)")
+        log.debug("Handling new sync response with \(toDeviceCount) to-device event(s), \(devicesChanged) device(s) changed, \(devicesLeft) device(s) left")
         
         Task(priority: .medium) {
             do {
@@ -447,7 +449,7 @@ private class MXCryptoV2: NSObject, MXCrypto {
             
             Task {
                 do {
-                    try await machine.manuallyVerifyDevice(userId: userId, deviceId: deviceId)
+                    try await machine.verifyDevice(userId: userId, deviceId: deviceId)
                     log.debug("Successfully marked device as verified")
                     await MainActor.run {
                         success?()
@@ -486,22 +488,16 @@ private class MXCryptoV2: NSObject, MXCrypto {
             return
         }
         
-        log.debug("Setting user verification status manually")
-        
-        Task {
-            do {
-                try await machine.manuallyVerifyUser(userId: userId)
-                log.debug("Successfully marked user as verified")
-                await MainActor.run {
-                    success?()
-                }
-            } catch {
-                log.error("Failed marking user as verified", context: error)
-                await MainActor.run {
-                    failure?(error)
-                }
+        log.debug("Signing user")
+        crossSigning.signUser(
+            withUserId: userId,
+            success: {
+                success?()
+            },
+            failure: {
+                failure?($0)
             }
-        }
+        )
     }
     
     public func trustLevel(forUser userId: String) -> MXUserTrustLevel {
@@ -726,8 +722,7 @@ private class MXCryptoV2: NSObject, MXCrypto {
     
     private func getRoomUserIds(for room: MXRoom) async throws -> [String] {
         return try await room.members()?.members
-            .compactMap(\.userId)
-            .filter { $0 != machine.userId } ?? []
+            .compactMap(\.userId) ?? []
     }
     
     private func crossSigningInfo(userIds: [String]) -> [String: MXCrossSigningInfo] {

@@ -108,11 +108,18 @@ class MXCryptoMachine {
         log.debug("Keys successfully uploaded")
     }
     
-    private static func storeURL(for userId: String) throws -> URL {
+    func deleteAllData() throws {
+        let url = try Self.storeURL(for: machine.userId())
+        try FileManager.default.removeItem(at: url)
+    }
+}
+
+extension MXCryptoMachine {
+    static func storeURL(for userId: String) throws -> URL {
         let container: URL
         if let sharedContainerURL = FileManager.default.applicationGroupContainerURL() {
             container = sharedContainerURL
-        } else if let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first {
+        } else if let url = platformDirectoryURL() {
             container = url
         } else {
             throw Error.invalidStorage
@@ -123,9 +130,18 @@ class MXCryptoMachine {
             .appendingPathComponent(userId)
     }
     
-    func deleteAllData() throws {
-        let url = try Self.storeURL(for: machine.userId())
-        try FileManager.default.removeItem(at: url)
+    private static func platformDirectoryURL() -> URL? {
+        #if os(OSX)
+        guard
+            let applicationSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first,
+            let identifier = Bundle.main.bundleIdentifier
+        else {
+            return nil
+        }
+        return applicationSupport.appendingPathComponent(identifier)
+        #else
+        return FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first
+        #endif
     }
 }
 
@@ -334,12 +350,12 @@ extension MXCryptoMachine: MXCryptoUserIdentitySource {
         )
     }
     
-    func manuallyVerifyUser(userId: String) async throws {
+    func verifyUser(userId: String) async throws {
         let request = try machine.verifyIdentity(userId: userId)
         try await requests.uploadSignatures(request: request)
     }
     
-    func manuallyVerifyDevice(userId: String, deviceId: String) async throws {
+    func verifyDevice(userId: String, deviceId: String) async throws {
         let request = try machine.verifyDevice(userId: userId, deviceId: deviceId)
         try await requests.uploadSignatures(request: request)
     }

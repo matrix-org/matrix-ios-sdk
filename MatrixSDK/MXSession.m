@@ -2082,7 +2082,7 @@ typedef void (^MXOnResumeDone)(void);
 {
     BOOL isInValidState = _state == MXSessionStateStoreDataReady || _state == MXSessionStatePaused;
     if (!isInValidState) {
-        NSString *message = [NSString stringWithFormat:@"[MXSession] state %@ is not valid to handle background sync cache, investigate why the method was called", [MXTools readableSessionState:_state]];
+        NSString *message = [NSString stringWithFormat:@"[MXSession] handleBackgroundSyncCacheIfRequired: state %@ is not valid to handle background sync cache, investigate why the method was called", [MXTools readableSessionState:_state]];
         MXLogFailure(message);
         if (completion)
         {
@@ -4928,6 +4928,12 @@ typedef void (^MXOnResumeDone)(void);
     MXRoomSummary *summary = [self roomSummaryWithRoomId:event.roomId];
     if (summary)
     {
+        if (!summary.lastMessage)
+        {
+            [summary resetLastMessage:nil failure:nil commit:YES];
+            return;
+        }
+
         [self eventWithEventId:summary.lastMessage.eventId
                         inRoom:summary.roomId
                        success:^(MXEvent *lastEvent) {

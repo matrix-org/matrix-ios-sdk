@@ -297,7 +297,7 @@ class MXCryptoKeyBackupEngine: NSObject, MXKeyBackupEngine {
             
             do {
                 let result = try backup.importDecryptedKeys(roomKeys: sessions, progressListener: self)
-                await roomEventDecryptor.retryAllUndecryptedEvents()
+                await roomEventDecryptor.retryUndecryptedEvents(sessionIds: sessions.map(\.sessionId))
                 
                 let duration2 = Date().timeIntervalSince(date2) * 1000
                 log.debug("Successfully imported \(result.imported) out of \(result.total) sessions in \(duration2) ms")
@@ -364,7 +364,14 @@ class MXCryptoKeyBackupEngine: NSObject, MXKeyBackupEngine {
     
     func importRoomKeys(_ data: Data, passphrase: String) async throws -> KeysImportResult {
         let result = try backup.importRoomKeys(data, passphrase: passphrase, progressListener: self)
-        await roomEventDecryptor.retryAllUndecryptedEvents()
+        let sessionIds = result.keys
+            .flatMap { (roomId, senders) in
+                senders.flatMap { (sender, sessionIds) in
+                    sessionIds
+                }
+            }
+        
+        await roomEventDecryptor.retryUndecryptedEvents(sessionIds: sessionIds)
         return result
     }
     

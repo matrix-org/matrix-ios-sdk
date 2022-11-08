@@ -23,18 +23,31 @@ import MatrixSDKCrypto
 
 class MXCryptoMachineUnitTests: XCTestCase {
     
+    var userId = "@alice:matrix.org"
     var restClient: MXRestClient!
     var machine: MXCryptoMachine!
     
     override func setUp() {
         restClient = MXRestClientStub()
         machine = try! MXCryptoMachine(
-            userId: "@alice:matrix.org",
+            userId: userId,
             deviceId: "ABCD",
             restClient: restClient,
             getRoomAction: {
                 MXRoom(roomId: $0, andMatrixSession: nil)
             })
+    }
+    
+    override func tearDown() {
+        do {
+            let url = try MXCryptoMachine.storeURL(for: userId)
+            guard FileManager.default.fileExists(atPath: url.path) else {
+                return
+            }
+            try FileManager.default.removeItem(at: url)
+        } catch {
+            XCTFail("Cannot tear down test - \(error)")
+        }
     }
     
     func test_handleSyncResponse_canProcessEmptyResponse() throws {
