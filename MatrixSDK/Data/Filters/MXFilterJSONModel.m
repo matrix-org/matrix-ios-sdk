@@ -137,10 +137,10 @@
     filter.room = [[MXRoomFilter alloc] init];
     filter.room.state = [[MXRoomEventFilter alloc] init];
     filter.room.state.lazyLoadMembers = YES;
-    filter.room.timeline = [[MXRoomEventFilter alloc] init];
     // As per MSC3773, this parameter defaults to false so no need to send false
     if (unreadThreadNotifications)
     {
+        filter.room.timeline = [[MXRoomEventFilter alloc] init];
         filter.room.timeline.unreadThreadNotifications = unreadThreadNotifications;
     }
 
