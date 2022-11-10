@@ -121,7 +121,11 @@
     filter.room = [[MXRoomFilter alloc] init];
     filter.room.timeline = [[MXRoomEventFilter alloc] init];
     filter.room.timeline.limit = messageLimit;
-    filter.room.timeline.unreadThreadNotifications = unreadThreadNotifications;
+    // As per MSC3773, this parameter defaults to false so no need to send false
+    if (unreadThreadNotifications)
+    {
+        filter.room.timeline.unreadThreadNotifications = unreadThreadNotifications;
+    }
 
     return filter;
 }
@@ -134,7 +138,11 @@
     filter.room.state = [[MXRoomEventFilter alloc] init];
     filter.room.state.lazyLoadMembers = YES;
     filter.room.timeline = [[MXRoomEventFilter alloc] init];
-    filter.room.timeline.unreadThreadNotifications = unreadThreadNotifications;
+    // As per MSC3773, this parameter defaults to false so no need to send false
+    if (unreadThreadNotifications)
+    {
+        filter.room.timeline.unreadThreadNotifications = unreadThreadNotifications;
+    }
 
     return filter;
 }
@@ -146,8 +154,13 @@
     filter.room = [[MXRoomFilter alloc] init];
     filter.room.timeline = [[MXRoomEventFilter alloc] init];
     filter.room.timeline.limit = messageLimit;
-    filter.room.timeline.unreadThreadNotifications = unreadThreadNotifications;
+    // As per MSC3773, this parameter defaults to false so no need to send false
+    if (unreadThreadNotifications)
+    {
+        filter.room.timeline.unreadThreadNotifications = unreadThreadNotifications;
+    }
     filter.room.state = [[MXRoomEventFilter alloc] init];
+    filter.room.state.lazyLoadMembers = YES;
 
     return filter;
 }
