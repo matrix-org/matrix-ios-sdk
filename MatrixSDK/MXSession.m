@@ -288,7 +288,12 @@ typedef void (^MXOnResumeDone)(void);
                                       kMXEventTypeStringCallHangup,
                                       kMXEventTypeStringCallReject,
                                       kMXEventTypeStringCallNegotiate,
-                                      kMXEventTypeStringSticker
+                                      kMXEventTypeStringSticker,
+                                      kMXEventTypeStringPollStart,
+                                      kMXEventTypeStringPollEnd,
+                                      // unstable event types
+                                      kMXEventTypeStringPollStartMSC3381,
+                                      kMXEventTypeStringPollEndMSC3381
                                       ];
 
         _unreadEventTypes = @[kMXEventTypeStringRoomName,
