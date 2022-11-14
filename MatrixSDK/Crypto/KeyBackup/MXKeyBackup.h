@@ -305,6 +305,10 @@ FOUNDATION_EXPORT NSString *const kMXKeyBackupDidStateChangeNotification;
 */
 @property (nonatomic, readonly) BOOL hasPrivateKeyInCryptoStore;
 
+/**
+ The ratio of imported vs total keys or nil if not actively importing keys
+ */
+@property (nullable, nonatomic, readonly) NSProgress *importProgress;
 
 #pragma mark - Backup trust
 
