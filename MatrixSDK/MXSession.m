@@ -291,7 +291,6 @@ typedef void (^MXOnResumeDone)(void);
                                       kMXEventTypeStringSticker,
                                       kMXEventTypeStringPollStart,
                                       kMXEventTypeStringPollEnd,
-                                      // unstable event types
                                       kMXEventTypeStringPollStartMSC3381,
                                       kMXEventTypeStringPollEndMSC3381
                                       ];
