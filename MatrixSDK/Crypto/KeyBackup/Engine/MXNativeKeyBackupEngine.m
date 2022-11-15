@@ -531,6 +531,12 @@ static Class DefaultAlgorithmClass;
     } failure:failure];
 }
 
+- (NSProgress *)importProgress
+{
+    // Not implemented for legacy backup
+    return nil;
+}
+
 - (void)importKeysWithKeysBackupData:(MXKeysBackupData *)keysBackupData
                           privateKey:(NSData *)privateKey
                     keyBackupVersion:(MXKeyBackupVersion *)keyBackupVersion

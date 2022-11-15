@@ -21,11 +21,21 @@ import Foundation
 import MatrixSDKCrypto
 
 class MXCryptoKeyBackupEngine: NSObject, MXKeyBackupEngine {
+    // Batch size chosen arbitrarily, will be moved to CryptoSDK
+    private static let ImportBatchSize = 1000
+    
+    struct EncryptedSession {
+        let roomId: String
+        let sessionId: String
+        let keyBackup: MXKeyBackupData
+    }
+    
     enum Error: Swift.Error {
         case unknownBackupVersion
         case invalidData
         case invalidPrivateKey
         case algorithmNotSupported(String)
+        case importAlreadyInProgress
     }
     
     var enabled: Bool {
@@ -43,6 +53,7 @@ class MXCryptoKeyBackupEngine: NSObject, MXKeyBackupEngine {
     private let backup: MXCryptoBackup
     private let roomEventDecryptor: MXRoomEventDecrypting
     private let log = MXNamedLog(name: "MXCryptoKeyBackupEngine")
+    private var activeImportProgress: Progress?
     
     init(backup: MXCryptoBackup, roomEventDecryptor: MXRoomEventDecrypting) {
         self.backup = backup
@@ -221,8 +232,11 @@ class MXCryptoKeyBackupEngine: NSObject, MXKeyBackupEngine {
         
         let progress = Progress(totalUnitCount: counts.total)
         progress.completedUnitCount = counts.backedUp
-        
-        log.debug("Backed up \(progress.completedUnitCount) out of \(progress.totalUnitCount) keys")
+        if progress.isFinished {
+            log.debug("All keys are backed up")
+        } else {
+            log.debug("Backed up \(progress.completedUnitCount) out of \(progress.totalUnitCount) keys")
+        }
         return progress
     }
     
@@ -254,62 +268,68 @@ class MXCryptoKeyBackupEngine: NSObject, MXKeyBackupEngine {
         success: @escaping (UInt, UInt) -> Void,
         failure: @escaping (Swift.Error) -> Void
     ) {
+        guard activeImportProgress == nil else {
+            log.failure("Another import is already ongoing")
+            failure(Error.importAlreadyInProgress)
+            return
+        }
+        
+        let recoveryKey: BackupRecoveryKey
+        do {
+            let key = MXRecoveryKey.encode(privateKey)
+            recoveryKey = try BackupRecoveryKey.fromBase58(key: key)
+        } catch {
+            log.error("Failed creating recovery key")
+            failure(Error.invalidPrivateKey)
+            return
+        }
+        
         Task(priority: .medium) {
-            
-            let count = keysBackupData.rooms
-                .map { roomId, room in
-                    room.sessions.count
+            let encryptedSessions = keysBackupData.rooms.flatMap { roomId, room in
+                room.sessions.map { sessionId, keyBackup in
+                    EncryptedSession(roomId: roomId, sessionId: sessionId, keyBackup: keyBackup)
                 }
-                .reduce(0, +)
-            
-            log.debug("Importing \(count) encrypted sessions")
-            
-            let recoveryKey: BackupRecoveryKey
-            do {
-                let key = MXRecoveryKey.encode(privateKey)
-                recoveryKey = try BackupRecoveryKey.fromBase58(key: key)
-            } catch {
-                log.error("Failed creating recovery key")
-                failure(Error.invalidPrivateKey)
-                return
             }
             
-            let date1 = Date()
+            let count = encryptedSessions.count
+            activeImportProgress = Progress(totalUnitCount: Int64(count))
+            log.debug("Importing \(count) encrypted sessions")
             
-            let sessions = keysBackupData.rooms
-                .flatMap { roomId, room in
-                    room.sessions
-                        .compactMap { sessionId, keyBackup in
-                            decrypt(
-                                keyBackupData:keyBackup,
-                                keyBackupVersion: keyBackupVersion,
-                                recoveryKey: recoveryKey,
-                                forSession: sessionId,
-                                inRoom: roomId
-                            )
-                        }
-                }
+            let date = Date()
             
-            let duration1 = Date().timeIntervalSince(date1) * 1000
-            log.debug("Decrypted \(sessions.count) sessions in \(duration1) ms")
-            
-            let date2 = Date()
-            
-            do {
-                let result = try backup.importDecryptedKeys(roomKeys: sessions, progressListener: self)
-                await roomEventDecryptor.retryUndecryptedEvents(sessionIds: sessions.map(\.sessionId))
+            for batchIndex in stride(from: 0, to: count, by: Self.ImportBatchSize) {
+                log.debug("Decrypting and importing batch \(batchIndex)")
+                let endIndex = min(batchIndex + Self.ImportBatchSize, count)
+                let batch = encryptedSessions[batchIndex ..< endIndex]
                 
-                let duration2 = Date().timeIntervalSince(date2) * 1000
-                log.debug("Successfully imported \(result.imported) out of \(result.total) sessions in \(duration2) ms")
-                
-                await MainActor.run {
-                    success(UInt(result.total), UInt(result.imported))
+                autoreleasepool {
+                    let sessions = batch.compactMap {
+                        decrypt(
+                            keyBackupData: $0.keyBackup,
+                            keyBackupVersion: keyBackupVersion,
+                            recoveryKey: recoveryKey,
+                            forSession: $0.sessionId,
+                            inRoom: $0.roomId
+                        )
+                    }
+                    
+                    do {
+                        let result = try backup.importDecryptedKeys(roomKeys: sessions, progressListener: self)
+                        activeImportProgress?.completedUnitCount += Int64(result.imported)
+                    } catch {
+                        log.error("Failed importing batch of sessions", context: error)
+                    }
                 }
-            } catch {
-                log.error("Failed importing sessions", context: error)
-                await MainActor.run {
-                    failure(error)
-                }
+                await roomEventDecryptor.retryUndecryptedEvents(sessionIds: batch.map(\.sessionId))
+            }
+            
+            let imported = activeImportProgress?.completedUnitCount ?? 0
+            let duration = Date().timeIntervalSince(date) * 1000
+            log.debug("Successfully imported \(imported) out of \(count) sessions in \(duration) ms")
+            activeImportProgress = nil
+            
+            await MainActor.run {
+                success(UInt(count), UInt(imported))
             }
         }
     }
@@ -362,6 +382,10 @@ class MXCryptoKeyBackupEngine: NSObject, MXKeyBackupEngine {
         return try backup.exportRoomKeys(passphrase: passphrase)
     }
     
+    func importProgress() -> Progress? {
+        return activeImportProgress
+    }
+    
     func importRoomKeys(_ data: Data, passphrase: String) async throws -> KeysImportResult {
         let result = try backup.importRoomKeys(data, passphrase: passphrase, progressListener: self)
         let sessionIds = result.keys
@@ -388,7 +412,7 @@ class MXCryptoKeyBackupEngine: NSObject, MXKeyBackupEngine {
 
 extension MXCryptoKeyBackupEngine: ProgressListener {
     func onProgress(progress: Int32, total: Int32) {
-        log.debug("Backup / export progress \(progress) of \(total) total")
+        // Progress loggged manually via `activeImportProgress`
     }
 }
 

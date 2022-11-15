@@ -859,6 +859,11 @@ NSUInteger const kMXKeyBackupWaitingTimeToSendKeyBackup = 10000;
     return self.engine.privateKey != nil;
 }
 
+- (NSProgress *)importProgress
+{
+    return self.engine.importProgress;
+}
+
 #pragma mark - Backup trust
 
 - (void)trustForKeyBackupVersion:(MXKeyBackupVersion *)keyBackupVersion onComplete:(void (^)(MXKeyBackupVersionTrust * _Nonnull))onComplete
