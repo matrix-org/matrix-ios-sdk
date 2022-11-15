@@ -1,3 +1,30 @@
+## Changes in 0.24.3 (2022-11-15)
+
+✨ Features
+
+- Threads: added support to read receipts (MSC3771) ([#6663](https://github.com/vector-im/element-ios/issues/6663))
+- Threads: added support to notifications count (MSC3773) ([#6664](https://github.com/vector-im/element-ios/issues/6664))
+- Threads: added support to labs flag for read receipts ([#7029](https://github.com/vector-im/element-ios/issues/7029))
+- Threads: notification count in main timeline including un participated threads ([#7038](https://github.com/vector-im/element-ios/issues/7038))
+
+🙌 Improvements
+
+- CryptoV2: Room event decryption ([#1627](https://github.com/matrix-org/matrix-ios-sdk/pull/1627))
+- CryptoV2: Bugfixes ([#1630](https://github.com/matrix-org/matrix-ios-sdk/pull/1630))
+- CryptoV2: Log decryption errors separately ([#1632](https://github.com/matrix-org/matrix-ios-sdk/pull/1632))
+- Adds the sending of read receipts for poll start/end events ([#1633](https://github.com/matrix-org/matrix-ios-sdk/pull/1633))
+
+🐛 Bugfixes
+
+- Tests: Fix or disable flakey integration tests ([#1628](https://github.com/matrix-org/matrix-ios-sdk/pull/1628))
+- Threads: removed "unread_thread_notifications" from sync filters for server that doesn't support MSC3773 ([#7066](https://github.com/vector-im/element-ios/issues/7066))
+- Threads: Display number of unread messages above threads button ([#7076](https://github.com/vector-im/element-ios/issues/7076))
+
+📄 Documentation
+
+- Doc: Update the synapse installation section with poetry usage ([#1625](https://github.com/matrix-org/matrix-ios-sdk/pull/1625))
+
+
 ## Changes in 0.24.2 (2022-11-01)
 
 🙌 Improvements
