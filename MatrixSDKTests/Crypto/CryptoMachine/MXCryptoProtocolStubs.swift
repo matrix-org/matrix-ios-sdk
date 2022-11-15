@@ -58,16 +58,16 @@ class UserIdentitySourceStub: CryptoIdentityStub, MXCryptoUserIdentitySource {
     }
     
     func isUserTracked(userId: String) -> Bool {
-        return false
+        return true
     }
     
-    func updateTrackedUsers(users: [String]) async throws {
+    func downloadKeys(users: [String]) async throws {
     }
     
-    func manuallyVerifyUser(userId: String) async throws {
+    func verifyUser(userId: String) async throws {
     }
     
-    func manuallyVerifyDevice(userId: String, deviceId: String) async throws {
+    func verifyDevice(userId: String, deviceId: String) async throws {
     }
     
     func setLocalTrust(userId: String, deviceId: String, trust: LocalTrust) throws {
@@ -105,16 +105,16 @@ class CryptoCrossSigningStub: CryptoIdentityStub, MXCryptoCrossSigning {
     }
     
     func isUserTracked(userId: String) -> Bool {
-        return false
+        return true
     }
     
-    func updateTrackedUsers(users: [String]) async throws {
+    func downloadKeys(users: [String]) async throws {
     }
     
-    func manuallyVerifyUser(userId: String) async throws {
+    func verifyUser(userId: String) async throws {
     }
     
-    func manuallyVerifyDevice(userId: String, deviceId: String) async throws {
+    func verifyDevice(userId: String, deviceId: String) async throws {
     }
     
     func setLocalTrust(userId: String, deviceId: String, trust: LocalTrust) throws {

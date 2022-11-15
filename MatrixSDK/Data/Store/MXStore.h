@@ -250,11 +250,13 @@
  
  @param roomId The room Id.
  @param eventId The event Id.
+ @param threadId The thread Id. kMXEventTimelineMain for the main timeline.
  @param sort to sort them from the latest to the oldest
  @param completion Completion block containing the receipts for an event in a dedicated room.
  */
 - (void)getEventReceipts:(nonnull NSString*)roomId
                  eventId:(nonnull NSString*)eventId
+                threadId:(nonnull NSString*)threadId
                   sorted:(BOOL)sort
               completion:(nonnull void (^)(NSArray<MXReceiptData*> * _Nonnull))completion;
 
@@ -268,13 +270,23 @@
 - (BOOL)storeReceipt:(nonnull MXReceiptData*)receipt inRoom:(nonnull NSString*)roomId;
 
 /**
- Retrieve the receipt for a user in a room
+ Retrieve the receipt for a user within all threads in a room
  
  @param roomId The roomId
  @param userId The user identifier
+ @return all the currently stored receipts ordered by thread ID.
+ */
+- (nonnull NSDictionary<NSString *, MXReceiptData *> *)getReceiptsInRoom:(nonnull NSString*)roomId forUserId:(nonnull NSString*)userId;
+
+/**
+ Retrieve the receipt for a user in a room within a specific thread.
+ 
+ @param roomId The roomId
+ @param threadId The ID of the thread. kMXEventTimelineMain for the main timeline.
+ @param userId The user identifier
  @return the current stored receipt (nil by default).
  */
-- (MXReceiptData * _Nullable)getReceiptInRoom:(nonnull NSString*)roomId forUserId:(nonnull NSString*)userId;
+- (nullable MXReceiptData *)getReceiptInRoom:(nonnull NSString*)roomId threadId:(nonnull NSString*)threadId forUserId:(nonnull NSString*)userId;
 
 /**
  Load receipts for a room asynchronously.
@@ -296,6 +308,18 @@
  @return The number of unread events which have their type listed in the provided array.
  */
 - (NSUInteger)localUnreadEventCount:(nonnull NSString*)roomId threadId:(nullable NSString*)threadId withTypeIn:(nullable NSArray*)types;
+
+/**
+ Count the unread events wrote in the store per thread.
+ 
+ @discussion: The returned count is relative to the local storage. The actual unread messages
+ for a room may be higher than the returned value.
+ 
+ @param roomId the room id.
+ @param types an array of event types strings (MXEventTypeString).
+ @return The number of unread events per thread which have their type listed in the provided array.
+ */
+- (nonnull NSDictionary <NSString *, NSNumber *> *)localUnreadEventCountPerThread:(nonnull NSString*)roomId withTypeIn:(nullable NSArray*)types;
 
 /**
  Incoming events since the last user receipt data.

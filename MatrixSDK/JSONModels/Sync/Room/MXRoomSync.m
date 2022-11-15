@@ -35,6 +35,22 @@
         MXJSONModelSetMXJSONModel(roomSync.ephemeral, MXRoomSyncEphemeral, JSONDictionary[@"ephemeral"]);
         MXJSONModelSetMXJSONModel(roomSync.accountData, MXRoomSyncAccountData, JSONDictionary[@"account_data"]);
         MXJSONModelSetMXJSONModel(roomSync.unreadNotifications, MXRoomSyncUnreadNotifications, JSONDictionary[@"unread_notifications"]);
+        NSDictionary *threadNotifications;
+        MXJSONModelSetDictionary(threadNotifications, JSONDictionary[@"unread_thread_notifications"]);
+        if (threadNotifications)
+        {
+            NSMutableDictionary <NSString *, MXRoomSyncUnreadNotifications *> *unreadNotificationsPerThread = [NSMutableDictionary new];
+            for (NSString *threadId in [threadNotifications allKeys])
+            {
+                MXRoomSyncUnreadNotifications *unreadNotifications;
+                MXJSONModelSetMXJSONModel(unreadNotifications, MXRoomSyncUnreadNotifications, threadNotifications[threadId]);
+                if (unreadNotifications)
+                {
+                    unreadNotificationsPerThread[threadId] = unreadNotifications;
+                }
+            }
+            roomSync.unreadNotificationsPerThread = unreadNotificationsPerThread;
+        }
         MXJSONModelSetMXJSONModel(roomSync.summary, MXRoomSyncSummary, JSONDictionary[@"summary"]);
     }
     return roomSync;

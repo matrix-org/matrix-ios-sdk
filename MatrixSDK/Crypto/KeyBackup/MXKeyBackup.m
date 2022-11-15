@@ -720,7 +720,7 @@ NSUInteger const kMXKeyBackupWaitingTimeToSendKeyBackup = 10000;
         NSData *privateKey = [self.engine validPrivateKeyForRecoveryKey:recoveryKey forKeyBackupVersion:keyBackupVersion error:&error];
         if (error || !privateKey)
         {
-            MXLogDebug(@"[MXKeyBackup] restoreKeyBackup: Invalid recovery key. Error: %@", error);
+            MXLogErrorDetails(@"[MXKeyBackup] restoreKeyBackup: Invalid recovery key", error);
             if (failure)
             {
                 dispatch_async(dispatch_get_main_queue(), ^{
@@ -831,7 +831,7 @@ NSUInteger const kMXKeyBackupWaitingTimeToSendKeyBackup = 10000;
 
         if (![self.engine hasValidPrivateKeyForKeyBackupVersion:keyBackupVersion])
         {
-            MXLogDebug(@"[MXKeyBackup] restoreUsingPrivateKeyKeyBackup. Error: Private key does not match: for: %@", keyBackupVersion);
+            MXLogError(@"[MXKeyBackup] restoreUsingPrivateKeyKeyBackup. Error: Private key does not match");
             if (failure)
             {
                 dispatch_async(dispatch_get_main_queue(), ^{
@@ -843,6 +843,7 @@ NSUInteger const kMXKeyBackupWaitingTimeToSendKeyBackup = 10000;
                     failure(error);
                 });
             }
+            return;
         }
 
         // Launch the restore
@@ -985,7 +986,7 @@ NSUInteger const kMXKeyBackupWaitingTimeToSendKeyBackup = 10000;
         }
         else
         {
-            MXLogDebug(@"[MXKeyBackup] trustKeyBackupVersion:withRecoveryKey: Invalid recovery key. Error: %@", error);
+            MXLogErrorDetails(@"[MXKeyBackup] trustKeyBackupVersion:withRecoveryKey: Invalid recovery key", error);
 
             if (failure)
             {
@@ -1100,7 +1101,7 @@ NSUInteger const kMXKeyBackupWaitingTimeToSendKeyBackup = 10000;
 
 - (void)setState:(MXKeyBackupState)state
 {
-    MXLogDebug(@"[MXKeyBackup] setState: %@ -> %@", @(_state), @(state));
+    MXLogDebug(@"[MXKeyBackup] setState: %@ -> %@", [self descriptionForState:_state], [self descriptionForState:state]);
 
     _state = state;
 
@@ -1156,6 +1157,30 @@ NSUInteger const kMXKeyBackupWaitingTimeToSendKeyBackup = 10000;
     }
 
     return operation;
+}
+
+- (NSString *)descriptionForState:(MXKeyBackupState)state
+{
+    switch (state) {
+        case MXKeyBackupStateUnknown:
+            return @"Unknown";
+        case MXKeyBackupStateCheckingBackUpOnHomeserver:
+            return @"CheckingBackUpOnHomeserver";
+        case MXKeyBackupStateWrongBackUpVersion:
+            return @"WrongBackUpVersion";
+        case MXKeyBackupStateDisabled:
+            return @"Disabled";
+        case MXKeyBackupStateNotTrusted:
+            return @"NotTrusted";
+        case MXKeyBackupStateEnabling:
+            return @"Enabling";
+        case MXKeyBackupStateReadyToBackUp:
+            return @"ReadyToBackUp";
+        case MXKeyBackupStateWillBackUp:
+            return @"WillBackUp";
+        case MXKeyBackupStateBackingUp:
+            return @"BackingUp";
+    };
 }
 
 @end

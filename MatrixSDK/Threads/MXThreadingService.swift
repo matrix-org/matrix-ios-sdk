@@ -130,10 +130,17 @@ public class MXThreadingService: NSObject {
     /// - Parameter roomId: Room identifier
     /// - Returns: Notifications count
     public func notificationsCount(forRoom roomId: String) -> MXThreadNotificationsCount {
-        let notified = unsortedParticipatedThreads(inRoom: roomId).filter { $0.notificationCount > 0 }.count
-        let highlighted = unsortedThreads(inRoom: roomId).filter { $0.highlightCount > 0 }.count
-        return MXThreadNotificationsCount(numberOfNotifiedThreads: UInt(notified),
-                                          numberOfHighlightedThreads: UInt(highlighted))
+        var notified: UInt = 0
+        var highlighted: UInt = 0
+        var notificationsNumber: UInt = 0
+        for thread in unsortedThreads(inRoom: roomId) {
+            notified += thread.notificationCount > 0 ? 1 : 0
+            highlighted += thread.highlightCount > 0 ? 1 : 0
+            notificationsNumber += thread.notificationCount
+        }
+        return MXThreadNotificationsCount(numberOfNotifiedThreads: notified,
+                                          numberOfHighlightedThreads: highlighted,
+                                          notificationsNumber: notificationsNumber)
     }
     
     /// Method to check an event is a thread root or not
@@ -167,6 +174,21 @@ public class MXThreadingService: NSObject {
         }
         thread.markAsRead()
         notifyDidUpdateThreads()
+    }
+    
+    @discardableResult
+    public func allThreads(inRoomWithId roomId: String,
+                           onlyParticipated: Bool,
+                           completion: @escaping ([MXThreadProtocol]) -> Void) -> MXHTTPOperation? {
+        return allThreads(inRoom: roomId, onlyParticipated: onlyParticipated) { response in
+            switch response {
+            case .success(let threads):
+                completion(threads)
+            case .failure(let error):
+                MXLog.warning("[MXThreadingService] allThreads failed with error: \(error)")
+                completion([])
+            }
+        }
     }
 
     @discardableResult

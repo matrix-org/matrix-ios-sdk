@@ -2270,6 +2270,7 @@ Note: Clients should consider avoiding this endpoint for URLs posted in encrypte
  */
 - (MXHTTPOperation*)sendReadReceipt:(NSString*)roomId
                             eventId:(NSString*)eventId
+                           threadId:(nullable NSString*)threadId
                             success:(void (^)(void))success
                             failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 

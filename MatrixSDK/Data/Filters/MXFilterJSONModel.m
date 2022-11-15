@@ -101,33 +101,64 @@
 
 + (MXFilterJSONModel*)syncFilterWithMessageLimit:(NSUInteger)messageLimit
 {
+    return [self syncFilterWithMessageLimit:messageLimit unreadThreadNotifications:NO];
+}
+
++ (MXFilterJSONModel*)syncFilterForLazyLoading
+{
+    return [self syncFilterForLazyLoadingWithUnreadThreadNotifications:NO];
+}
+
++ (MXFilterJSONModel*)syncFilterForLazyLoadingWithMessageLimit:(NSUInteger)messageLimit
+{
+    return [self syncFilterForLazyLoadingWithMessageLimit:messageLimit unreadThreadNotifications:NO];
+}
+
++ (MXFilterJSONModel*)syncFilterWithMessageLimit:(NSUInteger)messageLimit unreadThreadNotifications:(BOOL)unreadThreadNotifications
+{
     MXFilterJSONModel *filter = [[MXFilterJSONModel alloc] init];
 
     filter.room = [[MXRoomFilter alloc] init];
     filter.room.timeline = [[MXRoomEventFilter alloc] init];
     filter.room.timeline.limit = messageLimit;
+    // As per MSC3773, this parameter defaults to false so no need to send false
+    if (unreadThreadNotifications)
+    {
+        filter.room.timeline.unreadThreadNotifications = unreadThreadNotifications;
+    }
 
     return filter;
 }
 
-+ (MXFilterJSONModel*)syncFilterForLazyLoading
++ (MXFilterJSONModel*)syncFilterForLazyLoadingWithUnreadThreadNotifications:(BOOL)unreadThreadNotifications
 {
     MXFilterJSONModel *filter = [[MXFilterJSONModel alloc] init];
 
     filter.room = [[MXRoomFilter alloc] init];
     filter.room.state = [[MXRoomEventFilter alloc] init];
     filter.room.state.lazyLoadMembers = YES;
+    // As per MSC3773, this parameter defaults to false so no need to send false
+    if (unreadThreadNotifications)
+    {
+        filter.room.timeline = [[MXRoomEventFilter alloc] init];
+        filter.room.timeline.unreadThreadNotifications = unreadThreadNotifications;
+    }
 
     return filter;
 }
 
-+ (MXFilterJSONModel*)syncFilterForLazyLoadingWithMessageLimit:(NSUInteger)messageLimit
++ (MXFilterJSONModel*)syncFilterForLazyLoadingWithMessageLimit:(NSUInteger)messageLimit unreadThreadNotifications:(BOOL)unreadThreadNotifications
 {
     MXFilterJSONModel *filter = [[MXFilterJSONModel alloc] init];
 
     filter.room = [[MXRoomFilter alloc] init];
     filter.room.timeline = [[MXRoomEventFilter alloc] init];
     filter.room.timeline.limit = messageLimit;
+    // As per MSC3773, this parameter defaults to false so no need to send false
+    if (unreadThreadNotifications)
+    {
+        filter.room.timeline.unreadThreadNotifications = unreadThreadNotifications;
+    }
     filter.room.state = [[MXRoomEventFilter alloc] init];
     filter.room.state.lazyLoadMembers = YES;
 

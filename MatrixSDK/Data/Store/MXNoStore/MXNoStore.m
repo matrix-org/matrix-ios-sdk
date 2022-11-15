@@ -411,6 +411,23 @@
     return nil;
 }
 
+- (void)getEventReceipts:(nonnull NSString *)roomId eventId:(nonnull NSString *)eventId threadId:(nonnull NSString *)threadId sorted:(BOOL)sort completion:(nonnull void (^)(NSArray<MXReceiptData *> * _Nonnull))completion {
+    if (completion)
+    {
+        completion(@[]);
+    }
+}
+
+
+- (nullable MXReceiptData *)getReceiptInRoom:(nonnull NSString *)roomId threadId:(nonnull NSString *)threadId forUserId:(nonnull NSString *)userId {
+    return nil;
+}
+
+
+- (nonnull NSDictionary<NSString *,MXReceiptData *> *)getReceiptsInRoom:(nonnull NSString *)roomId forUserId:(nonnull NSString *)userId {
+    return @{};
+}
+
 - (void)loadReceiptsForRoom:(NSString *)roomId completion:(void (^)(void))completion
 {
     if (completion)
@@ -424,6 +441,11 @@
 - (NSUInteger)localUnreadEventCount:(NSString *)roomId threadId:(NSString *)threadId withTypeIn:(NSArray *)types
 {
     return 0;
+}
+
+- (NSDictionary<NSString *,NSNumber *> *)localUnreadEventCountPerThread:(NSString *)roomId withTypeIn:(NSArray *)types
+{
+    return @{};
 }
 
 - (NSArray<MXEvent *> *)newIncomingEventsInRoom:(NSString *)roomId threadId:(NSString *)threadId withTypeIn:(NSArray<MXEventTypeString> *)types

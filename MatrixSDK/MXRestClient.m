@@ -4074,6 +4074,7 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
 #pragma mark - read receipt
 - (MXHTTPOperation*)sendReadReceipt:(NSString*)roomId
                             eventId:(NSString*)eventId
+                           threadId:(NSString*)threadId
                             success:(void (^)(void))success
                             failure:(void (^)(NSError *error))failure
 {
@@ -4081,11 +4082,17 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
                       apiPathPrefix,
                       roomId,
                       [MXTools encodeURIComponent:eventId]];
+    
+    NSMutableDictionary *parameters = [NSMutableDictionary new];
+    if (threadId)
+    {
+        parameters[@"thread_id"] = threadId;
+    }
 
     MXWeakify(self);
     return [httpClient requestWithMethod:@"POST"
                                     path:path
-                              parameters:[[NSDictionary alloc] init]
+                              parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
                                      MXStrongifyAndReturnIfNil(self);
                                      [self dispatchSuccess:success];
