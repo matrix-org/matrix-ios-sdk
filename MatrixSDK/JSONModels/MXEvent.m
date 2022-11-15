@@ -204,6 +204,11 @@ NSString *const kMXJoinRulesContentKeyAllow = @"allow";
 NSString *const kMXJoinRulesContentKeyType = @"type";
 NSString *const kMXJoinRulesContentKeyRoomId = @"room_id";
 
+// Threads support
+
+NSString *const kMXEventTimelineMain = @"main";
+NSString *const kMXEventUnthreaded = @"unthreaded";
+
 #pragma mark - MXEvent
 @interface MXEvent ()
 {
@@ -567,6 +572,42 @@ NSString *const kMXJoinRulesContentKeyRoomId = @"room_id";
             if (readDict)
             {
                 [list addObject:eventId];
+            }
+        }
+    }
+    
+    return list;
+}
+
+- (NSArray *)readReceiptThreadIds
+{
+    NSMutableArray* list = nil;
+    
+    if (_wireEventType == MXEventTypeReceipt)
+    {
+        NSArray* eventIds = [_wireContent allKeys];
+        list = [[NSMutableArray alloc] initWithCapacity:eventIds.count];
+        
+        for (NSString* eventId in eventIds)
+        {
+            NSDictionary* eventDict = [_wireContent objectForKey:eventId];
+            NSDictionary* readDict = [eventDict objectForKey:kMXEventTypeStringRead];
+            
+            if (readDict)
+            {
+                NSArray<NSDictionary *>* userDicts = [readDict allValues];
+                
+                NSString *threadId;
+                for (NSDictionary *userDict in userDicts)
+                {
+                    threadId = userDict[@"thread_id"];
+                    if (threadId)
+                    {
+                        break;
+                    }
+                }
+                
+                [list addObject:threadId ?: kMXEventUnthreaded];
             }
         }
     }

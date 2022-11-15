@@ -1730,13 +1730,14 @@ public extension MXRestClient {
      - parameters:
         - roomId: the id of the room.
         - eventId: the id of the event.
+        - threadId: the id of the thread (`nil` for unthreaded RR)
         - completion: A block object called when the operation completes.
         - response: Indicates whether the operation was successful.
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func sendReadReceipt(toRoom roomId: String, forEvent eventId: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
-        return __sendReadReceipt(roomId, eventId: eventId, success: currySuccess(completion), failure: curryFailure(completion))
+    @nonobjc @discardableResult func sendReadReceipt(toRoom roomId: String, forEvent eventId: String, threadId: String?, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
+        return __sendReadReceipt(roomId, eventId: eventId, threadId: threadId, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
     

@@ -208,7 +208,7 @@ class MXBackgroundStore: NSObject, MXStore {
         return nil
     }
     
-    func getEventReceipts(_ roomId: String, eventId: String, sorted sort: Bool, completion: @escaping ([MXReceiptData]) -> Void) {
+    func getEventReceipts(_ roomId: String, eventId: String, threadId: String, sorted sort: Bool, completion: @escaping ([MXReceiptData]) -> Void) {
         DispatchQueue.main.async {
             completion([])
         }
@@ -218,8 +218,12 @@ class MXBackgroundStore: NSObject, MXStore {
         return false
     }
     
-    func getReceiptInRoom(_ roomId: String, forUserId userId: String) -> MXReceiptData? {
+    func getReceiptInRoom(_ roomId: String, threadId: String, forUserId userId: String) -> MXReceiptData? {
         return nil
+    }
+    
+    func getReceiptsInRoom(_ roomId: String, forUserId userId: String) -> [String: MXReceiptData] {
+        return [:]
     }
     
     func loadReceipts(forRoom roomId: String, completion: (() -> Void)? = nil) {
@@ -230,6 +234,10 @@ class MXBackgroundStore: NSObject, MXStore {
     
     func localUnreadEventCount(_ roomId: String, threadId: String?, withTypeIn types: [Any]?) -> UInt {
         return 0
+    }
+    
+    func localUnreadEventCountPerThread(_ roomId: String, withTypeIn types: [Any]?) -> [String : NSNumber]! {
+        return [:]
     }
 
     func newIncomingEvents(inRoom roomId: String, threadId: String?, withTypeIn types: [String]?) -> [MXEvent] {

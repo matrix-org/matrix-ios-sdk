@@ -45,7 +45,7 @@ class MXAnalyticsDestination: BaseDestination {
             return dictionary
         } else if let error = context as? Error {
             return [
-                "error": error.localizedDescription
+                "error": error
             ]
         } else {
             return [

@@ -22,12 +22,31 @@ import Foundation
 import MatrixSDKCrypto
 
 class MXCryptoKeyBackupEngineUnitTests: XCTestCase {
+    actor DecryptorSpy: MXRoomEventDecrypting {
+        func decrypt(events: [MXEvent]) -> [MXEventDecryptionResult] {
+            return []
+        }
+        
+        func handlePossibleRoomKeyEvent(_ event: MXEvent) {
+        }
+        
+        var spySessionIds: [String] = []
+        func retryUndecryptedEvents(sessionIds: [String]) {
+            spySessionIds = sessionIds
+        }
+        
+        func resetUndecryptedEvents() {
+        }
+    }
+    
+    var decryptor: DecryptorSpy!
     var backup: CryptoBackupStub!
     var engine: MXCryptoKeyBackupEngine!
     
     override func setUp() {
+        decryptor = DecryptorSpy()
         backup = CryptoBackupStub()
-        engine = MXCryptoKeyBackupEngine(backup: backup)
+        engine = MXCryptoKeyBackupEngine(backup: backup, roomEventDecryptor: decryptor)
     }
     
     func test_createsBackupKeyFromVersion() {
@@ -199,7 +218,11 @@ class MXCryptoKeyBackupEngineUnitTests: XCTestCase {
                 XCTAssertEqual(Set(sessionIds), ["1", "2", "3"])
                 XCTAssertEqual(Set(roomIds), ["A", "B"])
                 
-                exp.fulfill()
+                Task {
+                    let sessionIds = await self.decryptor.spySessionIds
+                    XCTAssertEqual(Set(sessionIds), ["1", "2", "3"])
+                    exp.fulfill()
+                }
             },
             failure: {
                 XCTFail("Importing failed with error \($0)")

@@ -25,6 +25,11 @@
 typedef NSMutableDictionary<NSString*, MXReceiptData*> RoomReceiptsStore;
 
 /**
+ Receipts in a room by threadId. Keys are thread ID.
+ */
+typedef NSMutableDictionary<NSString*, RoomReceiptsStore*> RoomThreadedReceiptsStore;
+
+/**
  `MXMemoryStore` is an implementation of the `MXStore` interface that stores events in memory.
  */
 @interface MXMemoryStore : NSObject <MXStore>
@@ -42,9 +47,9 @@ typedef NSMutableDictionary<NSString*, MXReceiptData*> RoomReceiptsStore;
     // The keys are groups ids.
     NSMutableDictionary <NSString*, MXGroup*> *groups;
 
-    // Dict of room receipts stores
+    // Dict of room threaded receipts stores
     // The keys are room ids.
-    NSMutableDictionary <NSString*, RoomReceiptsStore*> *roomReceiptsStores;
+    NSMutableDictionary <NSString*, RoomThreadedReceiptsStore*> *roomThreadedReceiptsStores;
 
     // Matrix filters
     // FilterId -> Filter JSON string
@@ -73,11 +78,20 @@ typedef NSMutableDictionary<NSString*, MXReceiptData*> RoomReceiptsStore;
 - (MXMemoryRoomOutgoingMessagesStore*)getOrCreateRoomOutgoingMessagesStore:(NSString*)roomId;
 
 /**
- Interface to create or retrieve receipts for a room.
+ Interface to create or retrieve threaded receipts for a room.
  
  @param roomId the id of the room.
- @return receipts dictionary by user id.
+ @return receipts dictionary by thread id.
  */
-- (RoomReceiptsStore*)getOrCreateRoomReceiptsStore:(NSString*)roomId;
+- (RoomThreadedReceiptsStore*)getOrCreateRoomThreadedReceiptsStore:(NSString*)roomId;
+
+/**
+ Interface to create or retrieve threaded receipts for a room.
+ 
+ @param roomId the id of the room.
+ @param threadId the id of the thread. `kMXEventTimelineMain` for the main timeline.
+ @return receipts dictionary by thread id.
+ */
+- (RoomReceiptsStore*)getOrCreateReceiptsStoreForRoomWithId:(NSString*)roomId threadId:(NSString* _Nullable)threadId;
 
 @end

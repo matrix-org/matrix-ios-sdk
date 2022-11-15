@@ -275,7 +275,7 @@
     }];
 }
 
-- (void)testDefaultRoomMemberCountCondition
+- (void)testDefaultEventMatchCondition
 {
     [matrixSDKTestsData doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXSession *bobSession, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
@@ -288,8 +288,8 @@
             XCTAssert(rule.isDefault, @"The rule must be the server default rule. Rule: %@", rule);
 
             MXPushRuleCondition *condition = rule.conditions[0];
-            XCTAssertEqualObjects(condition.kind, kMXPushRuleConditionStringRoomMemberCount, @"The default content rule with room_member_count condition must fire first");
-            XCTAssertEqual(condition.kindType, MXPushRuleConditionTypeRoomMemberCount);
+            XCTAssertEqualObjects(condition.kind, kMXPushRuleConditionStringEventMatch, @"The default content rule with room_member_count condition must fire first");
+            XCTAssertEqual(condition.kindType, MXPushRuleConditionTypeEventMatch);
 
             // Check the right event has been notified
             XCTAssertEqualObjects(event.content[kMXMessageBodyKey], messageFromAlice, @"The wrong messsage has been caught. event: %@", event);

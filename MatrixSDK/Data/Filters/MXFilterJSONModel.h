@@ -84,4 +84,31 @@
  */
 + (MXFilterJSONModel*)syncFilterForLazyLoadingWithMessageLimit:(NSUInteger)messageLimit;
 
+/**
+ Build a Matrix filter to retrieve a max given number of messages per room in /sync requests.
+
+ @param messageLimit messageLimit the messages count limit.
+ @param unreadThreadNotifications enable/disable threads notifications count as per MSC3773.
+ @return the Matrix filter.
+ */
++ (MXFilterJSONModel*)syncFilterWithMessageLimit:(NSUInteger)messageLimit unreadThreadNotifications:(BOOL)unreadThreadNotifications;
+
+/**
+ Build a Matrix filter to enable room members lazy loading in /sync requests.
+ 
+ @param unreadThreadNotifications enable/disable threads notifications count as per MSC3773.
+ @return the Matrix filter.
+ */
++ (MXFilterJSONModel*)syncFilterForLazyLoadingWithUnreadThreadNotifications:(BOOL)unreadThreadNotifications;
+
+/**
+ Build a Matrix filter to enable room members lazy loading in /sync requests
+ with a message count limit per room.
+
+ @param messageLimit messageLimit the messages count limit.
+ @param unreadThreadNotifications enable/disable threads notifications count as per MSC3773.
+ @return the Matrix filter.
+ */
++ (MXFilterJSONModel*)syncFilterForLazyLoadingWithMessageLimit:(NSUInteger)messageLimit unreadThreadNotifications:(BOOL)unreadThreadNotifications;
+
 @end
