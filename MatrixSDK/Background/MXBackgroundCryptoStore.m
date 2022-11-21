@@ -230,6 +230,8 @@ NSString *const MXBackgroundCryptoStoreUserIdSuffix = @":bgCryptoStore";
 - (void)storeInboundGroupSessions:(NSArray<MXOlmInboundGroupSession *>*)sessions
 {
     [bgCryptoStore storeInboundGroupSessions:sessions];
+    [cryptoStore setReadOnly:NO];
+    [cryptoStore storeInboundGroupSessions:sessions];
 }
 
 - (void)performSessionOperationWithGroupSessionWithId:(NSString*)sessionId senderKey:(NSString*)senderKey block:(void (^)(MXOlmInboundGroupSession *inboundGroupSession))block
