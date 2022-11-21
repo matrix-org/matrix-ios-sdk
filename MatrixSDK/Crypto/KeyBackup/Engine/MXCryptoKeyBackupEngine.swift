@@ -284,7 +284,7 @@ class MXCryptoKeyBackupEngine: NSObject, MXKeyBackupEngine {
             return
         }
         
-        Task(priority: .medium) {
+        Task {
             let encryptedSessions = keysBackupData.rooms.flatMap { roomId, room in
                 room.sessions.map { sessionId, keyBackup in
                     EncryptedSession(roomId: roomId, sessionId: sessionId, keyBackup: keyBackup)
