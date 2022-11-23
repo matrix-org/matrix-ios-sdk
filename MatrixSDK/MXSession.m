@@ -2084,7 +2084,7 @@ typedef void (^MXOnResumeDone)(void);
 
 - (void)handleBackgroundSyncCacheIfRequiredWithCompletion:(void (^)(void))completion
 {
-    BOOL isInValidState = _state == MXSessionStateStoreDataReady || _state == MXSessionStatePaused;
+    BOOL isInValidState = _state == MXSessionStateStoreDataReady || _state == MXSessionStatePaused || _state == MXSessionStatePauseRequested;
     if (!isInValidState) {
         NSString *message = [NSString stringWithFormat:@"[MXSession] handleBackgroundSyncCacheIfRequired: state %@ is not valid to handle background sync cache, investigate why the method was called", [MXTools readableSessionState:_state]];
         MXLogFailure(message);
