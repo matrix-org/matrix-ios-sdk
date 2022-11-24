@@ -95,6 +95,11 @@
 - (void)open:(void (^)(void))onComplete failure:(void (^)(NSError *error))failure;
 
 /**
+ The user id.
+ */
+- (NSString*)userId;
+
+/**
  Store the device id.
  */
 - (void)storeDeviceId:(NSString*)deviceId;
@@ -256,10 +261,9 @@
 /**
  Store a session between this device and another device.
 
- @param deviceKey the public key of the other device.
  @param session the end-to-end session.
  */
-- (void)storeSession:(MXOlmSession*)session forDevice:(NSString*)deviceKey;
+- (void)storeSession:(MXOlmSession*)session;
 
 /**
  Retrieve an end-to-end session between this device and another device.
@@ -291,6 +295,12 @@
  */
 - (NSArray<MXOlmSession*>*)sessionsWithDevice:(NSString*)deviceKey;
 
+/**
+ Retrieve all end-to-end sessions between this device and all other devices
+
+ @return a array of end-to-end sessions.
+ */
+- (NSArray<MXOlmSession*>*)sessions;
 
 /**
  Store inbound group sessions.

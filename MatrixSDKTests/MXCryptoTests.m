@@ -2174,7 +2174,7 @@
                                 aliceSession2.legacyCrypto.warnOnUnknowDevices = NO;
                                 
                                 // Let us wedge the session now. Set crypto state like after the first message
-                                [aliceSession2.legacyCrypto.store storeSession:olmSession forDevice:bobSession.crypto.deviceCurve25519Key];
+                                [aliceSession2.legacyCrypto.store storeSession:olmSession];
                                 
                                 // - Alice sends a 3rd message with a 3rd megolm session but a wedged olm session
                                 MXRoom *roomFromAlicePOV2 = [aliceSession2 roomWithRoomId:roomId];

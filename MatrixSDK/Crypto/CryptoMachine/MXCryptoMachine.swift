@@ -80,6 +80,7 @@ class MXCryptoMachine {
         getRoomAction: @escaping GetRoomAction
     ) throws {
         let url = try Self.storeURL(for: userId)
+        
         machine = try OlmMachine(
             userId: userId,
             deviceId: deviceId,
@@ -93,8 +94,6 @@ class MXCryptoMachine {
             try await requests.queryKeys(users: users)
         }
         self.getRoomAction = getRoomAction
-        
-        setLogger(logger: self)
     }
     
     func start() async throws {
@@ -748,12 +747,6 @@ extension MXCryptoMachine: MXCryptoBackup {
             cachedRoomKeyCounts = nil
         }
         isComputingRoomKeyCounts = false
-    }
-}
-
-extension MXCryptoMachine: Logger {
-    func log(logLine: String) {
-        MXLog.debug("[MXCryptoMachine] \(logLine)")
     }
 }
 

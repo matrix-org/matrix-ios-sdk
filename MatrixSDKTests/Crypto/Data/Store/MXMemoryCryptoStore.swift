@@ -75,6 +75,12 @@ public class MXMemoryCryptoStore: NSObject, MXCryptoStore {
     public func open(_ onComplete: (() -> Void)!, failure: ((Error?) -> Void)!) {
         onComplete?()
     }
+    
+    // MARK: - User ID
+    
+    public func userId() -> String! {
+        storeAccount?.userId
+    }
 
     // MARK: - Device ID
 
@@ -184,8 +190,8 @@ public class MXMemoryCryptoStore: NSObject, MXCryptoStore {
 
     // MARK: - OLM Session
 
-    public func store(_ session: MXOlmSession!, forDevice deviceKey: String!) {
-        let key = OlmSessionMapKey(sessionId: session.session.sessionIdentifier(), deviceKey: deviceKey)
+    public func store(_ session: MXOlmSession!) {
+        let key = OlmSessionMapKey(sessionId: session.session.sessionIdentifier(), deviceKey: session.deviceKey)
         olmSessions[key] = session
     }
 
@@ -201,6 +207,10 @@ public class MXMemoryCryptoStore: NSObject, MXCryptoStore {
 
     public func sessions(withDevice deviceKey: String!) -> [MXOlmSession]! {
         Array(olmSessions.filter { $0.key.deviceKey == deviceKey }.values)
+    }
+    
+    public func sessions() -> [MXOlmSession]! {
+        Array(olmSessions.values)
     }
 
     // MARK: - Inbound Group Sessions

@@ -33,6 +33,7 @@
         "MXCrossSigningTests",
         "MXCrossSigningVerificationTests",
         "MXCryptoKeyVerificationTests",
+        "MXCryptoMigrationV2Tests",
         "MXCryptoSecretStorageTests",
         "MXCryptoShareTests",
         "MXCryptoTests",
