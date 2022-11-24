@@ -61,6 +61,7 @@ static MXSDKOptions *sharedOnceInstance = nil;
         
         _enableSymmetricBackup = NO;
         _enableNewClientInformationFeature = NO;
+        _enableSyncProgress = NO;
     }
     
     return self;
