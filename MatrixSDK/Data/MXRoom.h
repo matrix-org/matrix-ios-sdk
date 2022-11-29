@@ -176,12 +176,18 @@ FOUNDATION_EXPORT NSInteger const kMXRoomInvalidInviteSenderErrorCode;
 
 /**
  Indicate if the room is tagged as a direct chat.
+ 
+ @warning: This is an O(n) computed property that iterates through all
+ direct rooms to determine whether any particular room is direct.
  */
 @property (nonatomic, readonly) BOOL isDirect;
 
 /**
  The user identifier for whom this room is tagged as direct (if any).
  nil if the room is not a direct chat.
+ 
+ @warning: This is an O(n) computed property that iterates through all
+ direct rooms to determine given direct user id.
  */
 @property (nonatomic, readonly) NSString *directUserId;
 

@@ -54,6 +54,8 @@
 @class MXCapabilities;
 @class MXDevice;
 
+MX_ASSUME_MISSING_NULLABILITY_BEGIN
+
 #pragma mark - Constants definitions
 /**
  A constant representing the URI path for release 0 of the Client-Server HTTP API.
@@ -3014,3 +3016,5 @@ Note: Clients should consider avoiding this endpoint for URLs posted in encrypte
                                               failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 @end
+
+MX_ASSUME_MISSING_NULLABILITY_END

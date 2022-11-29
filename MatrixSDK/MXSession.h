@@ -352,6 +352,7 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
 @class MXCapabilities;
 @class MXEventStreamService;
 @class MXLocationService;
+@class MXSessionSyncProgress;
 
 #pragma mark - MXSession
 /**
@@ -432,6 +433,11 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
  True when the filter used for /sync requests enables lazy loading of room members.
  */
 @property (nonatomic, readonly) BOOL syncWithLazyLoadOfRoomMembers;
+
+/**
+ Handler that can compute the overal progress of sync and report it to a delegate
+ */
+@property (nonatomic, readonly) MXSessionSyncProgress *syncProgress;
 
 /**
  The profile of the current user.
