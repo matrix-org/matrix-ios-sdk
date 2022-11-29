@@ -81,6 +81,7 @@ public enum MXBackgroundSyncServiceError: Error {
         // We can flush any crypto data if our sync response store is empty
         let resetBackgroundCryptoStore = syncResponseStoreManager.syncToken() == nil
         
+        #if DEBUG
         if MXSDKOptions.sharedInstance().enableCryptoV2 {
             do {
                 crypto = try MXBackgroundCryptoV2(credentials: credentials, restClient: restClient)
@@ -91,6 +92,9 @@ public enum MXBackgroundSyncServiceError: Error {
         } else {
             crypto = MXLegacyBackgroundCrypto(credentials: credentials, resetBackgroundCryptoStore: resetBackgroundCryptoStore)
         }
+        #else
+        crypto = MXLegacyBackgroundCrypto(credentials: credentials, resetBackgroundCryptoStore: resetBackgroundCryptoStore)
+        #endif
         
         pushRulesManager = MXBackgroundPushRulesManager(withCredentials: credentials)
         if let accountData = syncResponseStoreManager.syncResponseStore.accountData {
