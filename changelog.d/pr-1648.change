@@ -1,0 +1,1 @@
+Pod: Fix linting on release mode & run fastlane lint on release configuration.
