@@ -31,7 +31,7 @@ platform :ios do
   desc "Lint MatrixSDK podspec"
   lane :lint_pod_MatrixSDK do
     # Use Debug config to divide build time by 3
-    custom_pod_lib_lint(podspec: "../MatrixSDK.podspec", parameters: ["--allow-warnings", "--fail-fast", "--configuration=Debug"])
+    custom_pod_lib_lint(podspec: "../MatrixSDK.podspec", parameters: ["--allow-warnings", "--fail-fast", "--configuration=Release"])
   end
 
   desc "Push all pods"
