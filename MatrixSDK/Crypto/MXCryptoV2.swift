@@ -19,17 +19,9 @@ import Foundation
 #if DEBUG
 public extension MXLegacyCrypto {
     /// Create a Rust-based work-in-progress implementation of `MXCrypto`
-    ///
-    /// The experimental crypto module is created only if:
-    /// - using DEBUG build
-    /// - enabling `enableCryptoV2` feature flag
-    @objc static func createCryptoV2IfAvailable(session: MXSession!) -> MXCrypto? {
+    @objc static func createCryptoV2(session: MXSession!) -> MXCrypto? {
         let log = MXNamedLog(name: "MXCryptoV2")
-        
-        guard MXSDKOptions.sharedInstance().enableCryptoV2 else {
-            return nil
-        }
-        
+                
         guard let session = session else {
             log.failure("Cannot create crypto V2, missing session")
             return nil

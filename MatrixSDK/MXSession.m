@@ -121,7 +121,7 @@ typedef void (^MXOnResumeDone)(void);
      */
     NSMutableArray *globalEventListeners;
 
-    /** 
+    /**
      The block to call when MSSession resume is complete.
      */
     MXOnResumeDone onResumeDone;
@@ -966,6 +966,7 @@ typedef void (^MXOnResumeDone)(void);
             MXLogDebug(@"[MXSession] Crypto has been started");
         }  failure:^(NSError *error) {
             MXLogDebug(@"[MXSession] Crypto failed to start. Error: %@", error);
+            failure(error);
         }];
     }
     else
@@ -2271,7 +2272,7 @@ typedef void (^MXOnResumeDone)(void);
 
         if (_state == MXSessionStateRunning)
         {
-            [_crypto start:success failure:failure];
+            [self startCrypto:success failure:failure];
         }
         else
         {
@@ -4907,6 +4908,8 @@ typedef void (^MXOnResumeDone)(void);
 - (void)startCrypto:(void (^)(void))success
             failure:(void (^)(NSError *error))failure
 {
+#ifdef MX_CRYPTO
+    
     MXLogDebug(@"[MXSession] Start crypto");
 
     if (_crypto)
@@ -4915,9 +4918,21 @@ typedef void (^MXOnResumeDone)(void);
     }
     else
     {
-        MXLogDebug(@"[MXSession] Start crypto -> No crypto");
+        NSError *error = [NSError errorWithDomain:MXCryptoErrorDomain code:MXCryptoUnavailableErrorCode userInfo:@{
+            NSLocalizedDescriptionKey: @"Encryption not available, please restart the app",
+        }];
+        if (failure)
+        {
+            failure(error);
+        }
+    }
+#else
+    MXLogDebug(@"[MXSession] Start crypto -> No crypto");
+    if (success)
+    {
         success();
     }
+#endif
 }
 
 - (void)decryptEvents:(NSArray<MXEvent*> *)events

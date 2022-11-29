@@ -43,6 +43,12 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+FOUNDATION_EXPORT NSString *const MXCryptoErrorDomain;
+typedef NS_ENUM(NSInteger, MXCryptoErrorCode)
+{
+    MXCryptoUnavailableErrorCode,
+};
+
 /**
  Fires when we receive a room key request.
 

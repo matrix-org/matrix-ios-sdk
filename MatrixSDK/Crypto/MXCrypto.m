@@ -62,6 +62,8 @@
  */
 #define MXCryptoStoreClass MXRealmCryptoStore
 
+NSString *const MXCryptoErrorDomain = @"org.matrix.sdk.crypto";
+
 NSString *const kMXCryptoRoomKeyRequestNotification = @"kMXCryptoRoomKeyRequestNotification";
 NSString *const kMXCryptoRoomKeyRequestNotificationRequestKey = @"kMXCryptoRoomKeyRequestNotificationRequestKey";
 NSString *const kMXCryptoRoomKeyRequestCancellationNotification = @"kMXCryptoRoomKeyRequestCancellationNotification";
@@ -157,9 +159,9 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 #ifdef MX_CRYPTO
     
     #if DEBUG
-    id<MXCrypto> cryptoV2 = [self createCryptoV2IfAvailableWithSession:mxSession];
-    if (cryptoV2) {
-        return cryptoV2;
+    if (MXSDKOptions.sharedInstance.enableCryptoV2)
+    {
+        return [self createCryptoV2WithSession:mxSession];
     }
     #endif
     
@@ -180,10 +182,9 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 {
 #ifdef MX_CRYPTO
     #if DEBUG
-    id<MXCrypto> cryptoV2 = [self createCryptoV2IfAvailableWithSession:mxSession];
-    if (cryptoV2)
+    if (MXSDKOptions.sharedInstance.enableCryptoV2)
     {
-        complete(cryptoV2);
+        complete([self createCryptoV2WithSession:mxSession]);
         return;
     }
     #endif
