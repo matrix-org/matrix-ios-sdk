@@ -30,10 +30,10 @@ protocol MXRoomEventDecrypting: Actor {
     /// Note: room key could be contained in `m.room_key` or `m.forwarded_room_key`
     func handlePossibleRoomKeyEvent(_ event: MXEvent)
     
-    /// Retry decrypting all previously undecrypted events
+    /// Retry decrypting events with specific session ids
     ///
     /// Note: this may be useful if we have just imported keys from backup / file
-    func retryAllUndecryptedEvents()
+    func retryUndecryptedEvents(sessionIds: [String])
     
     /// Reset the store of undecrypted events
     func resetUndecryptedEvents()
@@ -43,10 +43,14 @@ protocol MXRoomEventDecrypting: Actor {
 actor MXRoomEventDecryption: MXRoomEventDecrypting {
     typealias SessionId = String
     typealias EventId = String
+    
+    // `Megolm` error does not currently expose the type of "missing keys" error, so have to match against
+    // hardcoded non-localized error message. Will be changed in future PR
+    private static let MissingKeysMessage = "decryption failed because the room key is missing"
         
     private let handler: MXCryptoRoomEventDecrypting
     private var undecryptedEvents: [SessionId: [EventId: MXEvent]]
-    private let log = MXNamedLog(name: "MXCryptoRoomEventDecryptor")
+    private let log = MXNamedLog(name: "MXRoomEventDecryption")
     
     init(handler: MXCryptoRoomEventDecrypting) {
         self.handler = handler
@@ -82,14 +86,14 @@ actor MXRoomEventDecryption: MXRoomEventDecrypting {
         retryDecryption(events: events)
     }
     
-    func retryAllUndecryptedEvents() {
-        let allEvents = undecryptedEvents
+    func retryUndecryptedEvents(sessionIds: [String]) {
+        let events = sessionIds
             .flatMap {
-                $0.value.map {
+                undecryptedEvents[$0]?.map {
                     $0.value
-                }
+                } ?? []
             }
-        retryDecryption(events: allEvents)
+        retryDecryption(events: events)
     }
     
     func resetUndecryptedEvents() {
@@ -100,11 +104,15 @@ actor MXRoomEventDecryption: MXRoomEventDecrypting {
     
     private func decrypt(event: MXEvent) -> MXEventDecryptionResult {
         guard
-            let sessionId = sessionId(for: event),
-            event.content?["algorithm"] as? String == kMXCryptoMegolmAlgorithm
+            event.isEncrypted && event.clear == nil,
+            event.content?["algorithm"] as? String == kMXCryptoMegolmAlgorithm,
+            let sessionId = sessionId(for: event)
         else {
             log.debug("Ignoring unencrypted or non-room event")
-            return MXEventDecryptionResult()
+            
+            let result = MXEventDecryptionResult()
+            result.clearEvent = event.clear?.jsonDictionary()
+            return result
         }
         
         do {
@@ -113,33 +121,10 @@ actor MXRoomEventDecryption: MXRoomEventDecrypting {
             log.debug("Successfully decrypted event `\(result.clearEvent["type"] ?? "unknown")`")
             return result
             
-        // `Megolm` error does not currently expose the type of "missing keys" error, so have to match against
-        // hardcoded non-localized error message. Will be changed in future PR
-        } catch DecryptionError.Megolm(message: "decryption failed because the room key is missing") {
-            if undecryptedEvents[sessionId] == nil {
-                log.error("Failed to decrypt event due to missing room keys (further errors for the same key will be supressed)", context: [
-                    "session_id": sessionId
-                ])
-            }
-            
-            addUndecryptedEvent(event)
-            
-            let result = MXEventDecryptionResult()
-            result.error = NSError(
-                domain: MXDecryptingErrorDomain,
-                code: Int(MXDecryptingErrorUnknownInboundSessionIdCode.rawValue),
-                userInfo: [
-                    NSLocalizedDescriptionKey: MXDecryptingErrorUnknownInboundSessionIdReason
-                ]
-            )
-            return result
+        } catch let error as DecryptionError {
+            return handleDecryptionError(for: event, sessionId: sessionId, error: error)
         } catch {
-            log.error("Failed to decrypt event", context: error)
-            addUndecryptedEvent(event)
-            
-            let result = MXEventDecryptionResult()
-            result.error = error
-            return result
+            return handleGenericError(for: event, sessionId: sessionId, error: error)
         }
     }
     
@@ -178,7 +163,8 @@ actor MXRoomEventDecryption: MXRoomEventDecrypting {
             guard result.clearEvent != nil else {
                 log.error("Event still not decryptable", context: [
                     "event_id": event.eventId ?? "unknown",
-                    "session_id": sessionId(for: event)
+                    "session_id": sessionId(for: event),
+                    "error": result.error.localizedDescription
                 ])
                 continue
             }
@@ -207,11 +193,78 @@ actor MXRoomEventDecryption: MXRoomEventDecrypting {
     }
     
     private func sessionId(for event: MXEvent) -> String? {
-        guard event.isEncrypted, let sessionId = event.content["session_id"] as? String else {
-            log.error("Event is not encrypted or is missing session id")
+        let sessionId = event.content["session_id"] ?? event.wireContent["session_id"]
+        guard let sessionId = sessionId as? String else {
+            log.failure("Event is missing session id")
             return nil
         }
         return sessionId
+    }
+
+    // MARK: - Error handling
+
+    private func handleDecryptionError(for event: MXEvent, sessionId: String, error: DecryptionError) -> MXEventDecryptionResult {
+        switch error {
+        case .Identifier(let message):
+            log.error("Failed to decrypt event due to identifier", context: [
+                "session_id": sessionId,
+                "message": message,
+                "error": error
+            ])
+            return trackedDecryptionResult(for: event, error: error)
+            
+        case .Serialization(let message):
+            log.error("Failed to decrypt event due to serialization", context: [
+                "session_id": sessionId,
+                "message": message,
+                "error": error
+            ])
+            return trackedDecryptionResult(for: event, error: error)
+            
+        case .Megolm(let message):
+            if message == Self.MissingKeysMessage {
+                if undecryptedEvents[sessionId] == nil {
+                    log.error("Failed to decrypt event(s) due to missing room keys", context: [
+                        "session_id": sessionId,
+                        "message": message,
+                        "error": error,
+                        "details": "further errors for the same key will be supressed",
+                    ])
+                }
+                
+                let keysError = NSError(
+                    domain: MXDecryptingErrorDomain,
+                    code: Int(MXDecryptingErrorUnknownInboundSessionIdCode.rawValue),
+                    userInfo: [
+                        NSLocalizedDescriptionKey: MXDecryptingErrorUnknownInboundSessionIdReason
+                    ]
+                )
+                return trackedDecryptionResult(for: event, error: keysError)
+            } else {
+                log.error("Failed to decrypt event due to megolm error", context: [
+                    "session_id": sessionId,
+                    "message": message,
+                    "error": error
+                ])
+                return trackedDecryptionResult(for: event, error: error)
+            }
+        }
+    }
+    
+    private func handleGenericError(for event: MXEvent, sessionId: String, error: Error) -> MXEventDecryptionResult {
+        log.error("Failed to decrypt event", context: [
+            "session_id": sessionId,
+            "error": error
+        ])
+        return trackedDecryptionResult(for: event, error: error)
+    }
+    
+    private func trackedDecryptionResult(for event: MXEvent, error: Error) -> MXEventDecryptionResult {
+        addUndecryptedEvent(event)
+        
+        let result = MXEventDecryptionResult()
+        result.error = error
+        return result
     }
 }
 

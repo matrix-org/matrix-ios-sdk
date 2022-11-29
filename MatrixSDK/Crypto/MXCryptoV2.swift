@@ -74,6 +74,7 @@ private class MXCryptoV2: NSObject, MXCrypto {
     private let trustLevelSource: MXTrustLevelSource
     private let backupEngine: MXCryptoKeyBackupEngine?
     private let keyVerification: MXKeyVerificationManagerV2
+    private var startTask: Task<(), Never>?
     private var roomEventObserver: Any?
     private let log = MXNamedLog(name: "MXCryptoV2")
     
@@ -192,8 +193,14 @@ private class MXCryptoV2: NSObject, MXCrypto {
         _ onComplete: (() -> Void)?,
         failure: ((Swift.Error) -> Void)?
     ) {
+        guard startTask == nil else {
+            log.error("Crypto module has already been started")
+            onComplete?()
+            return
+        }
+        
         log.debug("->")
-        Task {
+        startTask = Task {
             do {
                 try await machine.start()
                 crossSigning.refreshState(success: nil)
@@ -215,6 +222,10 @@ private class MXCryptoV2: NSObject, MXCrypto {
     
     public func close(_ deleteStore: Bool) {
         log.debug("->")
+        
+        startTask?.cancel()
+        startTask = nil
+        
         session?.removeListener(roomEventObserver)
         Task {
             await roomEventDecryptor.resetUndecryptedEvents()
@@ -386,11 +397,13 @@ private class MXCryptoV2: NSObject, MXCrypto {
     
     func handle(_ syncResponse: MXSyncResponse, onComplete: @escaping () -> Void) {
         let toDeviceCount = syncResponse.toDevice?.events.count ?? 0
+        let devicesChanged = syncResponse.deviceLists?.changed?.count ?? 0
+        let devicesLeft = syncResponse.deviceLists?.left?.count ?? 0
         
         MXLog.debug("[MXCryptoV2] --------------------------------")
-        log.debug("Handling new sync response with \(toDeviceCount) to-device event(s)")
+        log.debug("Handling new sync response with \(toDeviceCount) to-device event(s), \(devicesChanged) device(s) changed, \(devicesLeft) device(s) left")
         
-        Task(priority: .medium) {
+        Task {
             do {
                 let toDevice = try machine.handleSyncResponse(
                     toDevice: syncResponse.toDevice,
@@ -447,7 +460,7 @@ private class MXCryptoV2: NSObject, MXCrypto {
             
             Task {
                 do {
-                    try await machine.manuallyVerifyDevice(userId: userId, deviceId: deviceId)
+                    try await machine.verifyDevice(userId: userId, deviceId: deviceId)
                     log.debug("Successfully marked device as verified")
                     await MainActor.run {
                         success?()
@@ -486,22 +499,16 @@ private class MXCryptoV2: NSObject, MXCrypto {
             return
         }
         
-        log.debug("Setting user verification status manually")
-        
-        Task {
-            do {
-                try await machine.manuallyVerifyUser(userId: userId)
-                log.debug("Successfully marked user as verified")
-                await MainActor.run {
-                    success?()
-                }
-            } catch {
-                log.error("Failed marking user as verified", context: error)
-                await MainActor.run {
-                    failure?(error)
-                }
+        log.debug("Signing user")
+        crossSigning.signUser(
+            withUserId: userId,
+            success: {
+                success?()
+            },
+            failure: {
+                failure?($0)
             }
-        }
+        )
     }
     
     public func trustLevel(forUser userId: String) -> MXUserTrustLevel {
@@ -590,18 +597,16 @@ private class MXCryptoV2: NSObject, MXCrypto {
             return
         }
         
-        Task(priority: .medium) { [weak self] in
-            guard let self = self else { return }
-            
+        Task {
             do {
                 let data = try engine.exportRoomKeys(passphrase: password)
                 await MainActor.run {
-                    self.log.debug("Exported room keys")
+                    log.debug("Exported room keys")
                     success?(data)
                 }
             } catch {
                 await MainActor.run {
-                    self.log.error("Failed exporting room keys", context: error)
+                    log.error("Failed exporting room keys", context: error)
                     failure?(error)
                 }
             }
@@ -622,7 +627,7 @@ private class MXCryptoV2: NSObject, MXCrypto {
             return
         }
         
-        Task(priority: .medium) {
+        Task {
             do {
                 let result = try await engine.importRoomKeys(keyFile, passphrase: password)
                 
@@ -684,13 +689,12 @@ private class MXCryptoV2: NSObject, MXCrypto {
             guard let self = self else { return }
             
             if direction == .forwards && event.sender != session.myUserId {
-                Task(priority: .medium) {
+                Task {
                     if let userId = await self.keyVerification.handleRoomEvent(event), !self.machine.isUserTracked(userId: userId) {
                         // If we recieved a verification event from a new user we do not yet track
                         // we need to download their keys to be able to proceed with the verification flow
                         try await self.machine.downloadKeys(users: [userId])
                     }
-                    try await self.machine.processOutgoingRequests()
                 }
             }
         }
@@ -726,8 +730,7 @@ private class MXCryptoV2: NSObject, MXCrypto {
     
     private func getRoomUserIds(for room: MXRoom) async throws -> [String] {
         return try await room.members()?.members
-            .compactMap(\.userId)
-            .filter { $0 != machine.userId } ?? []
+            .compactMap(\.userId) ?? []
     }
     
     private func crossSigningInfo(userIds: [String]) -> [String: MXCrossSigningInfo] {

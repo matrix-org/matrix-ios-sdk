@@ -3537,12 +3537,14 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
 - (BOOL)isDirect
 {
     // Check whether this room is tagged as direct for one of the room members.
+    // This is an O(n) operation.
     return (self.directUserId != nil);
 }
 
 - (NSString *)directUserId
 {
     // Get the information from the user account data that is managed by MXSession
+    // This is an O(n) operation.
     return [self.mxSession directUserIdInRoom:_roomId];
 }
 

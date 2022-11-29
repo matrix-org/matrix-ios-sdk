@@ -64,6 +64,12 @@ class MXCryptoMachine {
     private let syncQueue = MXTaskQueue()
     private var roomQueues = RoomQueues()
     
+    // Temporary properties to help with the performance of backup keys checks
+    // until the performance is improved in the rust-sdk
+    private var cachedRoomKeyCounts: RoomKeyCounts?
+    private var isComputingRoomKeyCounts = false
+    private let processingQueue = DispatchQueue(label: "org.matrix.sdk.MXCryptoMachine.processingQueue")
+    
     private let log = MXNamedLog(name: "MXCryptoMachine")
 
     init(userId: String, deviceId: String, restClient: MXRestClient, getRoomAction: @escaping GetRoomAction) throws {
@@ -108,11 +114,18 @@ class MXCryptoMachine {
         log.debug("Keys successfully uploaded")
     }
     
-    private static func storeURL(for userId: String) throws -> URL {
+    func deleteAllData() throws {
+        let url = try Self.storeURL(for: machine.userId())
+        try FileManager.default.removeItem(at: url)
+    }
+}
+
+extension MXCryptoMachine {
+    static func storeURL(for userId: String) throws -> URL {
         let container: URL
         if let sharedContainerURL = FileManager.default.applicationGroupContainerURL() {
             container = sharedContainerURL
-        } else if let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first {
+        } else if let url = platformDirectoryURL() {
             container = url
         } else {
             throw Error.invalidStorage
@@ -123,9 +136,18 @@ class MXCryptoMachine {
             .appendingPathComponent(userId)
     }
     
-    func deleteAllData() throws {
-        let url = try Self.storeURL(for: machine.userId())
-        try FileManager.default.removeItem(at: url)
+    private static func platformDirectoryURL() -> URL? {
+        #if os(OSX)
+        guard
+            let applicationSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first,
+            let identifier = Bundle.main.bundleIdentifier
+        else {
+            return nil
+        }
+        return applicationSupport.appendingPathComponent(identifier)
+        #else
+        return FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first
+        #endif
     }
 }
 
@@ -334,12 +356,12 @@ extension MXCryptoMachine: MXCryptoUserIdentitySource {
         )
     }
     
-    func manuallyVerifyUser(userId: String) async throws {
+    func verifyUser(userId: String) async throws {
         let request = try machine.verifyIdentity(userId: userId)
         try await requests.uploadSignatures(request: request)
     }
     
-    func manuallyVerifyDevice(userId: String, deviceId: String) async throws {
+    func verifyDevice(userId: String, deviceId: String) async throws {
         let request = try machine.verifyDevice(userId: userId, deviceId: deviceId)
         try await requests.uploadSignatures(request: request)
     }
@@ -684,12 +706,16 @@ extension MXCryptoMachine: MXCryptoBackup {
     }
     
     var roomKeyCounts: RoomKeyCounts? {
-        do {
-            return try machine.roomKeyCounts()
-        } catch {
-            log.error("Cannot get room key counts", context: error)
-            return nil
+        // Checking the number of backed-up keys is currently very compute-heavy
+        // and blocks the main thread for large accounts. A light-weight `hasKeysToBackup`
+        // method will be added into rust-sdk and for the time-being we return cached counts
+        // on the main thread and compute new value on separate queue
+        if !isComputingRoomKeyCounts {
+            processingQueue.async { [weak self] in
+                self?.updateRoomKeyCounts()
+            }
         }
+        return cachedRoomKeyCounts
     }
     
     func enableBackup(key: MegolmV1BackupKey, version: String) throws {
@@ -760,6 +786,24 @@ extension MXCryptoMachine: MXCryptoBackup {
             throw Error.cannotImportKeys
         }
         return try machine.importRoomKeys(keys: string, passphrase: passphrase, progressListener: progressListener)
+    }
+    
+    // MARK: - Private
+    
+    private func updateRoomKeyCounts() {
+        // Checking condition again for safety as we are on another thread
+        guard !isComputingRoomKeyCounts else {
+            return
+        }
+        
+        isComputingRoomKeyCounts = true
+        do {
+            cachedRoomKeyCounts = try machine.roomKeyCounts()
+        } catch {
+            log.error("Cannot get room key counts", context: error)
+            cachedRoomKeyCounts = nil
+        }
+        isComputingRoomKeyCounts = false
     }
 }
 

@@ -37,11 +37,7 @@ extension MXEventDecryptionResult {
         senderCurve25519Key = event.senderCurve25519Key
         claimedEd25519Key = event.claimedEd25519Key
         forwardingCurve25519KeyChain = event.forwardingCurve25519Chain
-        
-        // Untrusted state not yet fully implemented, will equal to:
-        // `isUntrusted = event.verificationState == VerificationState.untrusted`
-        MXLog.warning("[MXEventDecryptionResult] trust not yet implemeneted")
-        isUntrusted = false
+        isUntrusted = event.verificationState == VerificationState.untrusted
     }
 }
 

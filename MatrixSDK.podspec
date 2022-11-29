@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
 
   s.name         = "MatrixSDK"
-  s.version      = "0.24.2"
+  s.version      = "0.24.3"
   s.summary      = "The iOS SDK to build apps compatible with Matrix (https://www.matrix.org)"
 
   s.description  = <<-DESC
@@ -66,7 +66,7 @@ Pod::Spec.new do |s|
   
   # Experimental / NOT production-ready Rust-based crypto library
   s.subspec 'CryptoSDK' do |ss|
-    ss.dependency 'MatrixSDKCrypto', '0.1.5', :configurations => ["DEBUG"]
+    ss.dependency 'MatrixSDKCrypto', '0.1.5', :configurations => ["DEBUG"], :inhibit_warnings => true
   end
 
 end

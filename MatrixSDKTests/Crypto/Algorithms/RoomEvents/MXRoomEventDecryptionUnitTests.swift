@@ -137,10 +137,10 @@ class MXRoomEventDecryptionUnitTests: XCTestCase {
     
     // MARK: - Retry all
     
-    func test_retryAllUndecryptedEvents() async {
+    func test_retryUndecryptedEvents() async {
         let events = await prepareEventsForRedecryption()
         
-        await roomDecryptor.retryAllUndecryptedEvents()
+        await roomDecryptor.retryUndecryptedEvents(sessionIds: ["123", "456"])
         await waitForDecryption()
         
         XCTAssertNotNil(events[0].clear)

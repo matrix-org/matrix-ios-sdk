@@ -125,7 +125,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (BOOL)hasKeysToBackup;
 
 /**
- The ratio of total vs backed up keys
+ The ratio of backed up vs total keys
  */
 - (NSProgress *)backupProgress;
 
@@ -134,6 +134,11 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void)backupKeysWithSuccess:(void (^)(void))success
                       failure:(void (^)(NSError *error))failure;
+
+/**
+ The ratio of imported vs total keys or nil if not actively importing keys
+ */
+- (nullable NSProgress *)importProgress;
 
 /**
  Import encypted backup keys
