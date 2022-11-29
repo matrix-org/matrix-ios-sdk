@@ -498,13 +498,8 @@ public class MXSpaceService: NSObject {
         let startDate = Date()
         MXLog.debug("[MXSpaceService] buildGraph: started")
         
-        var directRoomIds = Set<String>()
-        let roomIds: [String] = self.session.rooms.compactMap { room in
-            if room.isDirect {
-                directRoomIds.insert(room.roomId)
-            }
-            return room.roomId
-        }
+        var directRoomIds = Set(session.directRooms?.flatMap(\.value) ?? [])
+        let roomIds = session.rooms.compactMap(\.roomId)
         
         let output = PrepareDataResult()
         MXLog.debug("[MXSpaceService] buildGraph: preparing data for \(roomIds.count) rooms")
