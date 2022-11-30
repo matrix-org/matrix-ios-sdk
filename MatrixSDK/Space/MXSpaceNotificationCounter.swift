@@ -204,8 +204,10 @@ public class MXSpaceNotificationCounter: NSObject {
             }
         } else if roomInfo.membership == .invite {
             if roomInfo.isDirect {
+                notificationState.directMissedDiscussionsCount += 1
                 notificationState.directMissedDiscussionsHighlightedCount += 1
             } else {
+                notificationState.groupMissedDiscussionsCount += 1
                 notificationState.groupMissedDiscussionsHighlightedCount += 1
             }
         }
