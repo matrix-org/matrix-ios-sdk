@@ -401,6 +401,18 @@ typedef void (^MXOnResumeDone)(void);
         [MXLegacyCrypto checkCryptoWithMatrixSession:self complete:^(id<MXCrypto> crypto) {
             MXStrongifyAndReturnIfNil(self);
             
+            if (!crypto)
+            {
+                if (failure)
+                {
+                    NSError *error = [NSError errorWithDomain:MXCryptoErrorDomain code:MXCryptoUnavailableErrorCode userInfo:@{
+                        NSLocalizedDescriptionKey: @"Encryption not available, please restart the app",
+                    }];
+                    failure(error);
+                }
+                return;
+            }
+            
             self->_crypto = crypto;
 
             // Sanity check: The session may be closed before the end of this operation.
@@ -2269,6 +2281,17 @@ typedef void (^MXOnResumeDone)(void);
     if (enableCrypto && !_crypto)
     {
         _crypto = [MXLegacyCrypto createCryptoWithMatrixSession:self];
+        if (!_crypto)
+        {
+            if (failure)
+            {
+                NSError *error = [NSError errorWithDomain:MXCryptoErrorDomain code:MXCryptoUnavailableErrorCode userInfo:@{
+                    NSLocalizedDescriptionKey: @"Encryption not available, please restart the app",
+                }];
+                failure(error);
+            }
+            return;
+        }
 
         if (_state == MXSessionStateRunning)
         {
@@ -4908,8 +4931,6 @@ typedef void (^MXOnResumeDone)(void);
 - (void)startCrypto:(void (^)(void))success
             failure:(void (^)(NSError *error))failure
 {
-#ifdef MX_CRYPTO
-    
     MXLogDebug(@"[MXSession] Start crypto");
 
     if (_crypto)
@@ -4918,21 +4939,9 @@ typedef void (^MXOnResumeDone)(void);
     }
     else
     {
-        NSError *error = [NSError errorWithDomain:MXCryptoErrorDomain code:MXCryptoUnavailableErrorCode userInfo:@{
-            NSLocalizedDescriptionKey: @"Encryption not available, please restart the app",
-        }];
-        if (failure)
-        {
-            failure(error);
-        }
-    }
-#else
-    MXLogDebug(@"[MXSession] Start crypto -> No crypto");
-    if (success)
-    {
+        MXLogDebug(@"[MXSession] Start crypto -> No crypto");
         success();
     }
-#endif
 }
 
 - (void)decryptEvents:(NSArray<MXEvent*> *)events
