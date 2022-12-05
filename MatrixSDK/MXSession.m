@@ -398,16 +398,13 @@ typedef void (^MXOnResumeDone)(void);
 
         // Check if the user has enabled crypto
         MXWeakify(self);
-        [MXLegacyCrypto checkCryptoWithMatrixSession:self complete:^(id<MXCrypto> crypto) {
+        [MXLegacyCrypto checkCryptoWithMatrixSession:self complete:^(id<MXCrypto> crypto, NSError *error) {
             MXStrongifyAndReturnIfNil(self);
             
-            if (!crypto)
+            if (!crypto && error)
             {
                 if (failure)
                 {
-                    NSError *error = [NSError errorWithDomain:MXCryptoErrorDomain code:MXCryptoUnavailableErrorCode userInfo:@{
-                        NSLocalizedDescriptionKey: @"Encryption not available, please restart the app",
-                    }];
                     failure(error);
                 }
                 return;
@@ -2280,14 +2277,12 @@ typedef void (^MXOnResumeDone)(void);
 
     if (enableCrypto && !_crypto)
     {
-        _crypto = [MXLegacyCrypto createCryptoWithMatrixSession:self];
-        if (!_crypto)
+        NSError *error;
+        _crypto = [MXLegacyCrypto createCryptoWithMatrixSession:self error:&error];
+        if (!_crypto && error)
         {
             if (failure)
             {
-                NSError *error = [NSError errorWithDomain:MXCryptoErrorDomain code:MXCryptoUnavailableErrorCode userInfo:@{
-                    NSLocalizedDescriptionKey: @"Encryption not available, please restart the app",
-                }];
                 failure(error);
             }
             return;

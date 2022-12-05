@@ -62,8 +62,6 @@
  */
 #define MXCryptoStoreClass MXRealmCryptoStore
 
-NSString *const MXCryptoErrorDomain = @"org.matrix.sdk.crypto";
-
 NSString *const kMXCryptoRoomKeyRequestNotification = @"kMXCryptoRoomKeyRequestNotification";
 NSString *const kMXCryptoRoomKeyRequestNotificationRequestKey = @"kMXCryptoRoomKeyRequestNotificationRequestKey";
 NSString *const kMXCryptoRoomKeyRequestCancellationNotification = @"kMXCryptoRoomKeyRequestCancellationNotification";
@@ -153,6 +151,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 @synthesize recoveryService = _recoveryService;
 
 + (id<MXCrypto>)createCryptoWithMatrixSession:(MXSession *)mxSession
+                                        error:(NSError **)error
 {
     __block id<MXCrypto> crypto;
 
@@ -161,7 +160,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
     #if DEBUG
     if (MXSDKOptions.sharedInstance.enableCryptoV2)
     {
-        return [self createCryptoV2WithSession:mxSession];
+        return [self createCryptoV2WithSession:mxSession error:error];
     }
     #endif
     
@@ -178,13 +177,16 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
     return crypto;
 }
 
-+ (void)checkCryptoWithMatrixSession:(MXSession*)mxSession complete:(void (^)(id<MXCrypto> crypto))complete
++ (void)checkCryptoWithMatrixSession:(MXSession *)mxSession
+                            complete:(void (^)(id<MXCrypto> crypto, NSError *error))complete
 {
 #ifdef MX_CRYPTO
     #if DEBUG
     if (MXSDKOptions.sharedInstance.enableCryptoV2)
     {
-        complete([self createCryptoV2WithSession:mxSession]);
+        NSError *error;
+        id<MXCrypto> crypto = [self createCryptoV2WithSession:mxSession error:&error];
+        complete(crypto, error);
         return;
     }
     #endif
@@ -195,7 +197,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 #endif
 }
 
-+ (void)checkLegacyCryptoWithMatrixSession:(MXSession*)mxSession complete:(void (^)(id<MXCrypto> crypto))complete
++ (void)checkLegacyCryptoWithMatrixSession:(MXSession*)mxSession complete:(void (^)(id<MXCrypto> crypto, NSError *error))complete
 {
 #ifdef MX_CRYPTO
 
@@ -221,7 +223,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
                 id<MXCrypto> crypto = [[MXLegacyCrypto alloc] initWithMatrixSession:mxSession cryptoQueue:cryptoQueue andStore:cryptoStore];
 
                 dispatch_async(dispatch_get_main_queue(), ^{
-                    complete(crypto);
+                    complete(crypto, nil);
                 });
 
             } failure:^(NSError *error) {
@@ -229,7 +231,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
                 MXLogDebug(@"[MXCrypto] checkCryptoWithMatrixSession: Crypto store failed to open. Error: %@", error);
                 
                 dispatch_async(dispatch_get_main_queue(), ^{
-                    complete(nil);
+                    complete(nil, error);
                 });
             }];
         }
@@ -245,21 +247,21 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
             id<MXCrypto> crypto = [[MXLegacyCrypto alloc] initWithMatrixSession:mxSession cryptoQueue:cryptoQueue andStore:cryptoStore];
 
             dispatch_async(dispatch_get_main_queue(), ^{
-                complete(crypto);
+                complete(crypto, nil);
             });
         }
         else
         {
             // Else do not enable crypto
             dispatch_async(dispatch_get_main_queue(), ^{
-                complete(nil);
+                complete(nil, nil);
             });
         }
 
     });
 
 #else
-    complete(nil);
+    complete(nil, nil);
 #endif
 }
 
