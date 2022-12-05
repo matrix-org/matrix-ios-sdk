@@ -121,7 +121,7 @@ typedef void (^MXOnResumeDone)(void);
      */
     NSMutableArray *globalEventListeners;
 
-    /** 
+    /**
      The block to call when MSSession resume is complete.
      */
     MXOnResumeDone onResumeDone;
@@ -398,8 +398,17 @@ typedef void (^MXOnResumeDone)(void);
 
         // Check if the user has enabled crypto
         MXWeakify(self);
-        [MXLegacyCrypto checkCryptoWithMatrixSession:self complete:^(id<MXCrypto> crypto) {
+        [MXLegacyCrypto checkCryptoWithMatrixSession:self complete:^(id<MXCrypto> crypto, NSError *error) {
             MXStrongifyAndReturnIfNil(self);
+            
+            if (!crypto && error)
+            {
+                if (failure)
+                {
+                    failure(error);
+                }
+                return;
+            }
             
             self->_crypto = crypto;
 
@@ -966,6 +975,7 @@ typedef void (^MXOnResumeDone)(void);
             MXLogDebug(@"[MXSession] Crypto has been started");
         }  failure:^(NSError *error) {
             MXLogDebug(@"[MXSession] Crypto failed to start. Error: %@", error);
+            failure(error);
         }];
     }
     else
@@ -2267,11 +2277,20 @@ typedef void (^MXOnResumeDone)(void);
 
     if (enableCrypto && !_crypto)
     {
-        _crypto = [MXLegacyCrypto createCryptoWithMatrixSession:self];
+        NSError *error;
+        _crypto = [MXLegacyCrypto createCryptoWithMatrixSession:self error:&error];
+        if (!_crypto && error)
+        {
+            if (failure)
+            {
+                failure(error);
+            }
+            return;
+        }
 
         if (_state == MXSessionStateRunning)
         {
-            [_crypto start:success failure:failure];
+            [self startCrypto:success failure:failure];
         }
         else
         {
