@@ -129,6 +129,8 @@ NSString *const kMXMessageContentKeyNewContent       = @"m.new_content";
 //  https://github.com/matrix-org/matrix-doc/pull/3440
 NSString *const MXEventRelationTypeThread            = @"m.thread";
 
+NSString *const kMXToDeviceMessageId                 = @"org.matrix.msgid";
+
 NSString *const kMXEventLocalEventIdPrefix           = @"kMXEventLocalId_";
 
 uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;

@@ -3239,7 +3239,9 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
         MXUsersDevicesMap<NSDictionary*> *contentMap = [MXUsersDevicesMap new];
         [contentMap setObject:encryptedContent forUser:sender andDevice:device.deviceId];
         
-        [self.matrixRestClient sendToDevice:kMXEventTypeStringRoomEncrypted contentMap:contentMap txnId:nil success:nil failure:^(NSError *error) {
+        MXToDevicePayload *payload = [[MXToDevicePayload alloc] initWithEventType:kMXEventTypeStringRoomEncrypted
+                                                                       contentMap:contentMap];
+        [self.matrixRestClient sendToDevice:payload success:nil failure:^(NSError *error) {
             MXLogDebug(@"[MXCrypto] markOlmSessionForUnwedgingInEvent: ERROR for sendToDevice: %@", error);
         }];
         

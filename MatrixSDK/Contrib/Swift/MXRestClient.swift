@@ -1833,15 +1833,14 @@ public extension MXRestClient {
      Send an event to a specific list of devices
      
      - paramaeters:
-        - eventType: the type of event to send
-        - contentMap: content to send. Map from user_id to device_id to content dictionary.
+        - payload: Payload with `eventType` and `contentMap` to be sent
         - completion: A block object called when the operation completes.
         - response: Indicates whether the operation was successful.
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func sendDirectToDevice(eventType: String, contentMap: MXUsersDevicesMap<NSDictionary>, txnId: String?, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
-        return __send(toDevice: eventType, contentMap: contentMap, txnId: txnId, success: currySuccess(completion), failure: curryFailure(completion))
+    @nonobjc @discardableResult func sendDirectToDevice(payload: MXToDevicePayload, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
+        return __send(toDevice: payload, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
     
