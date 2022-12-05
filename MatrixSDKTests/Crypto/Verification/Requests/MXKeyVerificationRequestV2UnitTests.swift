@@ -23,20 +23,15 @@ import MatrixSDKCrypto
 @testable import MatrixSDK
 
 class MXKeyVerificationRequestV2UnitTests: XCTestCase {
-    enum Error: Swift.Error, Equatable {
-        case dummy
-    }
-    
     var verification: CryptoVerificationStub!
     
     override func setUp() {
         verification = CryptoVerificationStub()
     }
     
-    func makeRequest(for request: VerificationRequest = .stub()) -> MXKeyVerificationRequestV2 {
+    func makeRequest(for request: VerificationRequestStub = .init()) -> MXKeyVerificationRequestV2 {
         .init(
             request: request,
-            transport: .directMessage,
             handler: verification
         )
     }
@@ -44,7 +39,7 @@ class MXKeyVerificationRequestV2UnitTests: XCTestCase {
     // MARK: - Test Properties
     
     func test_usesCorrectProperties() {
-        let stub = VerificationRequest.stub(
+        let stub = VerificationRequestStub(
             otherUserId: "Alice",
             otherDeviceId: "Device2",
             flowId: "123",
@@ -68,12 +63,12 @@ class MXKeyVerificationRequestV2UnitTests: XCTestCase {
     
     func test_isFromMyUser_ifUsersMatch() {
         verification.userId = "Alice"
-        let request1 = makeRequest(for: .stub(
+        let request1 = makeRequest(for: .init(
             otherUserId: "Alice"
         ))
         XCTAssertTrue(request1.isFromMyUser)
         
-        let request2 = makeRequest(for: .stub(
+        let request2 = makeRequest(for: .init(
             otherUserId: "Bob"
         ))
         XCTAssertFalse(request2.isFromMyUser)
@@ -83,14 +78,14 @@ class MXKeyVerificationRequestV2UnitTests: XCTestCase {
         let ourMethods = ["A", "B"]
         let theirMethods = ["C", "D"]
         
-        let request1 = makeRequest(for: .stub(
+        let request1 = makeRequest(for: .init(
             weStarted: true,
             theirMethods: theirMethods,
             ourMethods: ourMethods
         ))
         XCTAssertEqual(request1.methods, ourMethods)
         
-        let request2 = makeRequest(for: .stub(
+        let request2 = makeRequest(for: .init(
             weStarted: false,
             theirMethods: theirMethods,
             ourMethods: ourMethods
@@ -99,44 +94,44 @@ class MXKeyVerificationRequestV2UnitTests: XCTestCase {
     }
     
     func test_state() {
-        let testCases: [(VerificationRequest, MXKeyVerificationRequestState)] = [
-            (.stub(
+        let testCases: [(VerificationRequestStub, MXKeyVerificationRequestState)] = [
+            (.init(
                 isReady: false,
                 isPassive: false,
                 isDone: false,
                 isCancelled: false
             ), MXKeyVerificationRequestStatePending),
-            (.stub(
+            (.init(
                 isReady: false,
                 isPassive: false,
                 isDone: true,
                 isCancelled: false
             ), MXKeyVerificationRequestStateAccepted),
-            (.stub(
+            (.init(
                 isReady: true,
                 isPassive: false,
                 isDone: false,
                 isCancelled: false
             ), MXKeyVerificationRequestStateReady),
-            (.stub(
+            (.init(
                 isReady: false,
                 isPassive: false,
                 isDone: false,
                 isCancelled: true
             ), MXKeyVerificationRequestStateCancelled),
-            (.stub(
+            (.init(
                 isReady: false,
                 isPassive: true,
                 isDone: false,
                 isCancelled: false
             ), MXKeyVerificationRequestStatePending),
-            (.stub(
+            (.init(
                 isReady: true,
                 isPassive: true,
                 isDone: true,
                 isCancelled: true
             ), MXKeyVerificationRequestStateAccepted),
-            (.stub(
+            (.init(
                 isReady: true,
                 isPassive: true,
                 isDone: false,
@@ -157,7 +152,7 @@ class MXKeyVerificationRequestV2UnitTests: XCTestCase {
             cancelledByUs: true
         )
         
-        let request = makeRequest(for: .stub(cancelInfo: cancelInfo))
+        let request = makeRequest(for: .init(cancelInfo: cancelInfo))
 
         XCTAssertEqual(request.reasonCancelCode?.value, "123")
         XCTAssertEqual(request.reasonCancelCode?.humanReadable, "Changed mind")
@@ -165,22 +160,13 @@ class MXKeyVerificationRequestV2UnitTests: XCTestCase {
     
     // MARK: - Test Updates
     
-    func test_processUpdated_removedIfNoMatchingRequest() {
-        verification.stubbedRequests = [:]
-        let request = makeRequest()
-        
-        let result = request.processUpdates()
-        
-        XCTAssertEqual(result, MXKeyVerificationUpdateResult.removed)
-    }
-    
     func test_processUpdated_noUpdatesIfRequestUnchanged() {
-        let stub = VerificationRequest.stub(
+        let stub = VerificationRequestStub(
             flowId: "ABC",
             isReady: false
         )
-        verification.stubbedRequests = [stub.flowId: stub]
         let request = makeRequest(for: stub)
+        stub._isReady = false
         
         let result = request.processUpdates()
 
@@ -188,16 +174,12 @@ class MXKeyVerificationRequestV2UnitTests: XCTestCase {
     }
     
     func test_processUpdated_updatedIfRequestChanged() {
-        let stub = VerificationRequest.stub(
+        let stub = VerificationRequestStub(
             flowId: "ABC",
             isReady: false
         )
-        verification.stubbedRequests = [stub.flowId: stub]
         let request = makeRequest(for: stub)
-        verification.stubbedRequests = [stub.flowId: .stub(
-            flowId: "ABC",
-            isReady: true
-        )]
+        stub._isReady = true
         
         let result = request.processUpdates()
 
@@ -209,8 +191,9 @@ class MXKeyVerificationRequestV2UnitTests: XCTestCase {
     
     func test_acceptSucceeds() {
         let exp = expectation(description: "exp")
-        verification.stubbedErrors = [:]
-        let request = makeRequest(for: .stub(flowId: "ABC"))
+        let stub = VerificationRequestStub()
+        stub.shouldFail = false
+        let request = makeRequest(for: stub)
         
         request.accept(withMethods: []) {
             exp.fulfill()
@@ -224,14 +207,15 @@ class MXKeyVerificationRequestV2UnitTests: XCTestCase {
     
     func test_acceptFails() {
         let exp = expectation(description: "exp")
-        verification.stubbedErrors = ["ABC": Error.dummy]
-        let request = makeRequest(for: .stub(flowId: "ABC"))
+        let stub = VerificationRequestStub()
+        stub.shouldFail = true
+        let request = makeRequest(for: stub)
         
         request.accept(withMethods: []) {
             XCTFail("Accepting should not succeed")
         } failure: { error in
             exp.fulfill()
-            XCTAssertEqual(error as? Error, Error.dummy)
+            XCTAssert(error is MXKeyVerificationRequestV2.Error)
         }
         
         waitForExpectations(timeout: 1)
@@ -239,8 +223,9 @@ class MXKeyVerificationRequestV2UnitTests: XCTestCase {
     
     func test_cancelSucceeds() {
         let exp = expectation(description: "exp")
-        verification.stubbedErrors = [:]
-        let request = makeRequest(for: .stub(flowId: "ABC"))
+        let stub = VerificationRequestStub()
+        stub.shouldFail = false
+        let request = makeRequest(for: stub)
         
         request.cancel(with: MXTransactionCancelCode()) {
             exp.fulfill()
@@ -254,15 +239,15 @@ class MXKeyVerificationRequestV2UnitTests: XCTestCase {
     
     func test_cancelFails() {
         let exp = expectation(description: "exp")
-        verification.stubbedErrors = ["ABC": Error.dummy]
-        let request = makeRequest(for: .stub(flowId: "ABC"))
-        
+        let stub = VerificationRequestStub()
+        stub.shouldFail = true
+        let request = makeRequest(for: stub)
         
         request.cancel(with: MXTransactionCancelCode()) {
             XCTFail("Cancelling should not succeed")
         } failure: { error in
             exp.fulfill()
-            XCTAssertEqual(error as? Error, Error.dummy)
+            XCTAssert(error is MXKeyVerificationRequestV2.Error)
         }
         
         waitForExpectations(timeout: 1)

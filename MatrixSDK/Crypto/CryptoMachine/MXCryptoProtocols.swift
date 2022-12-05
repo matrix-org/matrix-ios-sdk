@@ -80,38 +80,17 @@ protocol MXCryptoCrossSigning: MXCryptoUserIdentitySource {
     func importCrossSigningKeys(export: CrossSigningKeyExport)
 }
 
-/// Lifecycle of verification request
-protocol MXCryptoVerificationRequesting: MXCryptoIdentity {
-    func receiveUnencryptedVerificationEvent(event: MXEvent, roomId: String)
-    func requestSelfVerification(methods: [String]) async throws -> VerificationRequest
-    func requestVerification(userId: String, roomId: String, methods: [String]) async throws -> VerificationRequest
-    func requestVerification(userId: String, deviceId: String, methods: [String]) async throws -> VerificationRequest
-    func verificationRequests(userId: String) -> [VerificationRequest]
-    func verificationRequest(userId: String, flowId: String) -> VerificationRequest?
-    func acceptVerificationRequest(userId: String, flowId: String, methods: [String]) async throws
-    func cancelVerification(userId: String, flowId: String, cancelCode: String) async throws
-}
-
-/// Lifecycle of verification transaction
+/// Verification functionality
 protocol MXCryptoVerifying: MXCryptoIdentity {
-    func verification(userId: String, flowId: String) -> Verification?
-    func confirmVerification(userId: String, flowId: String) async throws
-    func cancelVerification(userId: String, flowId: String, cancelCode: String) async throws
-}
-
-/// Lifecycle of SAS-specific verification transaction
-protocol MXCryptoSASVerifying: MXCryptoVerifying {
-    func startSasVerification(userId: String, flowId: String) async throws -> Sas
-    func acceptSasVerification(userId: String, flowId: String) async throws
-    func emojiIndexes(sas: Sas) throws -> [Int]
-    func sasDecimals(sas: Sas) throws -> [Int]
-}
-
-/// Lifecycle of QR code-specific verification transaction
-protocol MXCryptoQRCodeVerifying: MXCryptoVerifying {
-    func startQrVerification(userId: String, flowId: String) throws -> QrCode
-    func scanQrCode(userId: String, flowId: String, data: Data) async throws -> QrCode
-    func generateQrCode(userId: String, flowId: String) throws -> Data
+    func receiveUnencryptedVerificationEvent(event: MXEvent, roomId: String)
+    func requestSelfVerification(methods: [String]) async throws -> VerificationRequestProtocol
+    func requestVerification(userId: String, roomId: String, methods: [String]) async throws -> VerificationRequestProtocol
+    func requestVerification(userId: String, deviceId: String, methods: [String]) async throws -> VerificationRequestProtocol
+    func verificationRequests(userId: String) -> [VerificationRequestProtocol]
+    func verificationRequest(userId: String, flowId: String) -> VerificationRequestProtocol?
+    func verification(userId: String, flowId: String) -> MXVerification?
+    func handleOutgoingVerificationRequest(_ request: OutgoingVerificationRequest) async throws
+    func handleVerificationConfirmation(_ result: ConfirmVerificationResult) async throws
 }
 
 /// Room keys backup functionality
@@ -132,6 +111,14 @@ protocol MXCryptoBackup {
     
     func exportRoomKeys(passphrase: String) throws -> Data
     func importRoomKeys(_ data: Data, passphrase: String, progressListener: ProgressListener) throws -> KeysImportResult
+}
+
+/// Wrapper around `MatrixSDKCrypto`'s `Verification`, modelled as an exhaustive enum
+///
+/// Note: this is not currently possible to do automatically with uniffi
+enum MXVerification {
+    case sas(SasProtocol)
+    case qrCode(QrCodeProtocol)
 }
 
 #endif

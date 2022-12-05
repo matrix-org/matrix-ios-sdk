@@ -28,10 +28,10 @@ class MXQRCodeTransactionV2UnitTests: XCTestCase {
         verification = CryptoVerificationStub()
     }
     
-    func makeTransaction(for qrCode: QrCode = .stub()) -> MXQRCodeTransactionV2 {
+    func makeTransaction(for qrCode: QrCodeStub = .init(), isIncoming: Bool = true) -> MXQRCodeTransactionV2 {
         .init(
             qrCode: qrCode,
-            transport: .directMessage,
+            isIncoming: isIncoming,
             handler: verification
         )
     }
@@ -39,7 +39,7 @@ class MXQRCodeTransactionV2UnitTests: XCTestCase {
     // MARK: - Test Properties
     
     func test_usesCorrectProperties() {
-        let stub = QrCode.stub(
+        let stub = QrCodeStub(
             otherUserId: "Bob",
             otherDeviceId: "Device2",
             flowId: "123",
@@ -51,7 +51,7 @@ class MXQRCodeTransactionV2UnitTests: XCTestCase {
         
         XCTAssertEqual(transaction.transactionId, "123")
         XCTAssertEqual(transaction.transport, MXKeyVerificationTransport.directMessage)
-        XCTAssertFalse(transaction.isIncoming)
+        XCTAssertTrue(transaction.isIncoming)
         XCTAssertEqual(transaction.otherUserId, "Bob")
         XCTAssertEqual(transaction.otherDeviceId, "Device2")
         XCTAssertEqual(transaction.dmRoomId, "ABC")
@@ -59,52 +59,39 @@ class MXQRCodeTransactionV2UnitTests: XCTestCase {
     }
     
     func test_state() {
-        let testCases: [(QrCode, MXQRCodeTransactionState)] = [
-            (.stub(
+        let testCases: [(QrCodeStub, MXQRCodeTransactionState)] = [
+            (.init(
                 weStarted: false,
-                otherSideScanned: false,
-                hasBeenConfirmed: false,
                 reciprocated: false,
+                hasBeenScanned: false,
                 isDone: false,
                 isCancelled: false
             ), .unknown),
-            (.stub(
+            (.init(
                 weStarted: false,
-                otherSideScanned: false,
-                hasBeenConfirmed: false,
                 reciprocated: false,
+                hasBeenScanned: false,
                 isDone: true,
                 isCancelled: false
             ), .verified),
-            (.stub(
+            (.init(
                 weStarted: false,
-                otherSideScanned: false,
-                hasBeenConfirmed: false,
                 reciprocated: false,
+                hasBeenScanned: false,
                 isDone: false,
                 isCancelled: true
             ), .cancelled),
-            (.stub(
+            (.init(
                 weStarted: false,
-                otherSideScanned: true,
-                hasBeenConfirmed: false,
                 reciprocated: false,
+                hasBeenScanned: true,
                 isDone: false,
                 isCancelled: false
             ), .qrScannedByOther),
-            (.stub(
-                weStarted: false,
-                otherSideScanned: false,
-                hasBeenConfirmed: true,
-                reciprocated: false,
-                isDone: false,
-                isCancelled: false
-            ), .qrScannedByOther),
-            (.stub(
+            (.init(
                 weStarted: true,
-                otherSideScanned: false,
-                hasBeenConfirmed: false,
                 reciprocated: false,
+                hasBeenScanned: false,
                 isDone: false,
                 isCancelled: false
             ), .waitingOtherConfirm),
@@ -113,23 +100,11 @@ class MXQRCodeTransactionV2UnitTests: XCTestCase {
         for (stub, state) in testCases {
             let transaction = MXQRCodeTransactionV2(
                 qrCode: stub,
-                transport: .directMessage,
+                isIncoming: true,
                 handler: verification
             )
             XCTAssertEqual(transaction.state, state)
         }
-    }
-
-    func test_isIncomingIfWeStarted() {
-        let transaction1 = makeTransaction(for: .stub(
-            weStarted: true
-        ))
-        XCTAssertFalse(transaction1.isIncoming)
-
-        let transaction2 = makeTransaction(for: .stub(
-            weStarted: true
-        ))
-        XCTAssertFalse(transaction2.isIncoming)
     }
 
     func test_reasonCancelCode() {
@@ -140,8 +115,8 @@ class MXQRCodeTransactionV2UnitTests: XCTestCase {
         )
 
         let transaction = MXQRCodeTransactionV2(
-            qrCode: .stub(cancelInfo: cancelInfo),
-            transport: .directMessage,
+            qrCode: QrCodeStub(cancelInfo: cancelInfo),
+            isIncoming: true,
             handler: verification
         )
 
@@ -161,11 +136,11 @@ class MXQRCodeTransactionV2UnitTests: XCTestCase {
     }
 
     func test_processUpdated_noUpdatesIfRequestUnchanged() {
-        let stub = QrCode.stub(
+        let stub = QrCodeStub(
             flowId: "ABC",
             isDone: false
         )
-        verification.stubbedTransactions = [stub.flowId: .qrCodeV1(qrcode: stub)]
+        verification.stubbedTransactions = [stub.flowId(): .qrCode(stub)]
         let transaction = makeTransaction(for: stub)
 
         let result = transaction.processUpdates()
@@ -174,13 +149,13 @@ class MXQRCodeTransactionV2UnitTests: XCTestCase {
     }
 
     func test_processUpdated_updatedIfRequestChanged() {
-        let stub = QrCode.stub(
+        let stub = QrCodeStub(
             flowId: "ABC",
             isDone: false
         )
-        verification.stubbedTransactions = [stub.flowId: .qrCodeV1(qrcode: stub)]
+        verification.stubbedTransactions = [stub.flowId(): .qrCode(stub)]
         let transaction = makeTransaction(for: stub)
-        verification.stubbedTransactions = [stub.flowId: .qrCodeV1(qrcode: .stub(
+        verification.stubbedTransactions = [stub.flowId(): .qrCode(QrCodeStub(
             flowId: "ABC",
             isDone: true
         ))]
