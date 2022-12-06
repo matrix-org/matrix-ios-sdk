@@ -1458,6 +1458,20 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
                            failure:(void (^)(NSError *error))failure;
 
 /**
+ Delete an account_data event for the client.
+ 
+ @param type The event type of the account_data to delete (@see kMXAccountDataType* strings)
+ Custom types should be namespaced to avoid clashes.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)deleteAccountDataWithType:(NSString*)type
+                                      success:(void (^)(void))success
+                                      failure:(void (^)(NSError *error))failure;
+
+/**
  Set the identity server in the user's account data.
 
  `kMXSessionAccountDataDidChangeIdentityServerNotification` will be sent once the
