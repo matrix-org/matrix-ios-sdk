@@ -1197,10 +1197,9 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
 
 - (MXHTTPOperation*)deleteAccountDataWithType:(NSString*)type
                                       success:(void (^)(void))success
-                                      failure:(void (^)(NSError *error))failure {
-    
-    // WARNING: Check api prefix
-    NSString *path = [NSString stringWithFormat:@"%@/user/%@/account_data/%@", apiPathPrefix, credentials.userId, type];
+                                      failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"%@/org.matrix.msc3391/user/%@/account_data/%@", kMXAPIPrefixPathUnstable, credentials.userId, type];
 
     MXWeakify(self);
     return [httpClient requestWithMethod:@"DELETE"

@@ -69,7 +69,8 @@
     accountDataDict[type] = data;
 }
 
-- (void)deleteDataWithType:(NSString *)type {
+- (void)deleteDataWithType:(NSString *)type
+{
     [accountDataDict removeObjectForKey:type];
 }
 

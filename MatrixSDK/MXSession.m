@@ -4506,7 +4506,8 @@ typedef void (^MXOnResumeDone)(void);
     } failure:failure];
 }
 
-- (MXHTTPOperation *)deleteAccountDataWithType:(NSString *)type success:(void (^)(void))success failure:(void (^)(NSError *))failure {
+- (MXHTTPOperation *)deleteAccountDataWithType:(NSString *)type success:(void (^)(void))success failure:(void (^)(NSError *))failure
+{
     MXWeakify(self);
     return [matrixRestClient deleteAccountDataWithType:type success:^{
         MXStrongifyAndReturnIfNil(self);
