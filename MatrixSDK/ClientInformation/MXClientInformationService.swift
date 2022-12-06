@@ -34,7 +34,7 @@ public class MXClientInformationService: NSObject {
         }
 
         guard MXSDKOptions.sharedInstance().enableNewClientInformationFeature else {
-            return removeDataIfNeeded(on: session)
+            return deleteDataIfNeeded(on: session)
         }
 
         guard let updatedInfo = createClientInformation() else {
@@ -56,17 +56,16 @@ public class MXClientInformationService: NSObject {
         }
     }
 
-    private func removeDataIfNeeded(on session: MXSession) {
+    private func deleteDataIfNeeded(on session: MXSession) {
         let type = accountDataType(for: session)
 
-        guard let currentInfo = session.accountData.accountData(forEventType: type),
-            !currentInfo.isEmpty else {
+        guard session.accountData.accountData(forEventType: type) != nil else {
             // not exists, no need to do anything
             MXLog.debug("[MXClientInformationService] removeDataIfNeeded: no need to remove")
             return
         }
 
-        session.setAccountData([:], forType: type) {
+        session.deleteAccountData(withType: type) {
             MXLog.debug("[MXClientInformationService] removeDataIfNeeded: removed successfully")
         } failure: { error in
             MXLog.debug("[MXClientInformationService] removeDataIfNeeded: remove failed: \(String(describing: error))")
