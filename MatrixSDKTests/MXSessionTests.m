@@ -1507,6 +1507,21 @@
     }];
 }
 
+#pragma mark Account Data tests
+
+-(void)testAccountDataIsDeletedLocally
+{
+    id<MXStore> store = MXFileStore.new;
+    [matrixSDKTestsData doMXSessionTestWithBob:self andStore:store readyToTest:^(MXSession *mxSession, XCTestExpectation *expectation) {
+        NSString* accountDataType = @"foo";
+        [mxSession.accountData updateDataWithType:accountDataType data:NSDictionary.new];
+        XCTAssertNotNil([mxSession.accountData accountDataForEventType:accountDataType]);
+        [mxSession deleteAccountDataWithType:accountDataType
+                                     success:^{ XCTAssertNil([mxSession.accountData accountDataForEventType:accountDataType]); [expectation fulfill]; }
+                                     failure:^(NSError *error) { }
+        ];
+    }];
+}
 
 @end
 
