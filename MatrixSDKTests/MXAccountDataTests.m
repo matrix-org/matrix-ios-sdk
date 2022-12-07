@@ -246,6 +246,16 @@
     }];
 }
 
+- (void)testDeletionOfAccountData {
+    NSString* accountDataType = @"foo";
+    MXAccountData* data = MXAccountData.new;
+    
+    [data updateDataWithType:accountDataType data:NSDictionary.new];
+    XCTAssertNotNil([data accountDataForEventType:accountDataType]);
+    
+    [data deleteDataWithType:accountDataType];
+    XCTAssertNil([data accountDataForEventType:accountDataType]);
+}
 
 @end
 
