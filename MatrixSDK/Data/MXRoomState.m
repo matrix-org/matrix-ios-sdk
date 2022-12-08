@@ -562,11 +562,7 @@
     // Update store with new room state when all state event have been processed
     if (_isLive && [mxSession.store respondsToSelector:@selector(storeStateForRoom:stateEvents:)])
     {
-        MXRoom *currentRoom = [mxSession roomWithRoomId:_roomId];
-        // Check if the room membership is different from Unknown.
-        if (currentRoom.summary.membership != MXMembershipUnknown) {
-            [mxSession.store storeStateForRoom:_roomId stateEvents:self.stateEvents];
-        }
+        [mxSession.store storeStateForRoom:_roomId stateEvents:self.stateEvents];
     }
 }
 
