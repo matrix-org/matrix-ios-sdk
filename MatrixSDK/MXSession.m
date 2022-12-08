@@ -2047,6 +2047,7 @@ typedef void (^MXOnResumeDone)(void);
     {
         if ([MXTools isSupportedToDeviceEvent:event])
         {
+            MXLogDebug(@"[MXSession] handleToDeviceEvents: Processing new to-device event msgid: %@", event.content[kMXToDeviceMessageId])
             [supportedEvents addObject:event];
         }
     }
@@ -2064,6 +2065,7 @@ typedef void (^MXOnResumeDone)(void);
         {
             if (!event.decryptionError)
             {
+                MXLogDebug(@"[MXSession] handleToDeviceEvents: Received new to-device event `%@` from `%@` msgid: %@", event.type, event.sender, event.wireContent[kMXToDeviceMessageId])
                 dispatch_group_enter(dispatchGroup);
                 [self handleToDeviceEvent:event onComplete:^{
                     dispatch_group_leave(dispatchGroup);

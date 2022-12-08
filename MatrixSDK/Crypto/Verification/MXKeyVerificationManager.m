@@ -40,6 +40,8 @@
 
 #import "MXQRCodeDataBuilder.h"
 
+#import "MatrixSDKSwiftHeader.h"
+
 #pragma mark - Constants
 
 NSString *const MXKeyVerificationErrorDomain = @"org.matrix.sdk.verification";
@@ -164,7 +166,12 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
         [contentMap setObject:requestJSONModel.JSONDictionary forUser:userId andDevice:deviceId];
     }
     
-    [self.crypto.matrixRestClient sendToDevice:kMXMessageTypeKeyVerificationRequest contentMap:contentMap txnId:nil success:^{
+    MXToDevicePayload *payload = [[MXToDevicePayload alloc]
+                                  initWithEventType:kMXMessageTypeKeyVerificationRequest
+                                  contentMap:contentMap
+                                  transactionId:nil
+                                  addMessageId:NO]; // Should not add anything for verification events as it would break their signatures
+    [self.crypto.matrixRestClient sendToDevice:payload success:^{
         
         MXEvent *event = [MXEvent modelFromJSON:@{
                                                   @"sender": self.crypto.mxSession.myUserId,
@@ -1338,7 +1345,11 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
         [contentMap setObject:content forUser:userId andDevice:deviceId];
     }
     
-    return [self.crypto.matrixRestClient sendToDevice:eventType contentMap:contentMap txnId:nil success:success failure:failure];
+    MXToDevicePayload *payload = [[MXToDevicePayload alloc] initWithEventType:eventType
+                                                                   contentMap:contentMap
+                                                                transactionId:nil
+                                                                 addMessageId:NO]; // // Should not add anything for verification events as it would break their signatures
+    return [self.crypto.matrixRestClient sendToDevice:payload success:success failure:failure];
 }
 
 

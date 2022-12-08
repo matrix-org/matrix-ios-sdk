@@ -223,7 +223,7 @@ extension MXCryptoMachine: MXCryptoSyncing {
         switch request {
         case .toDevice(let requestId, let eventType, let body):
             try await requests.sendToDevice(
-                request: .init(eventType: eventType, body: body)
+                request: .init(eventType: eventType, body: body, addMessageId: true)
             )
             try markRequestAsSent(requestId: requestId, requestType: .toDevice)
 
@@ -595,7 +595,9 @@ extension MXCryptoMachine: MXCryptoVerificationRequesting {
             try await requests.sendToDevice(
                 request: .init(
                     eventType: eventType,
-                    body: body
+                    body: body,
+                    // Should not add anything for verification events as it would break their signatures
+                    addMessageId: false
                 )
             )
         case .inRoom(_, let roomId, let eventType, let content):

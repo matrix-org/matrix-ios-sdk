@@ -34,9 +34,10 @@ class MXCryptoRequestsUnitTests: XCTestCase {
         ]
         
         do {
-            let request = try MXCryptoRequests.ToDeviceRequest(eventType: "A", body: MXTools.serialiseJSONObject(body))
+            let request = try MXCryptoRequests.ToDeviceRequest(eventType: "A", body: MXTools.serialiseJSONObject(body), addMessageId: true)
             XCTAssertEqual(request.eventType, "A")
             XCTAssertEqual(request.contentMap.map, body)
+            XCTAssertTrue(request.addMessageId)
         } catch {
             XCTFail("Failed creating to device request with error - \(error)")
         }

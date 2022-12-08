@@ -1454,7 +1454,9 @@
                                          }
                                  } forUser:mxSession.myUserId];
 
-        [aliceRestClient sendToDevice:kMXEventTypeStringRoomKeyRequest contentMap:contentMap txnId:nil success:^{
+        MXToDevicePayload *payload = [[MXToDevicePayload alloc] initWithEventType:kMXEventTypeStringRoomKeyRequest
+                                                                       contentMap:contentMap];
+        [aliceRestClient sendToDevice:payload success:^{
 
         } failure:^(NSError *error) {
             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
