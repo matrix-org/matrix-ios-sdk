@@ -629,7 +629,7 @@ NS_REFINED_FOR_SWIFT;
  */
 - (MXHTTPOperation*)deleteAccountDataWithType:(NSString*)type
                                       success:(void (^)(void))success
-                                      failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+                                      failure:(void (^)(NSError *error))failure;
 
 #pragma mark - Filtering
 /**
