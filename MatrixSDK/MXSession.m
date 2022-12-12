@@ -4513,7 +4513,7 @@ typedef void (^MXOnResumeDone)(void);
         MXStrongifyAndReturnIfNil(self);
         
         // Delete account data locally
-        [self->_accountData deleteDataWithType:type];
+        [self->_accountData updateDataWithType:type data:nil];
         
         if (success)
         {

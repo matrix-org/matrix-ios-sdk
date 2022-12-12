@@ -253,7 +253,7 @@
     [data updateDataWithType:accountDataType data:NSDictionary.new];
     XCTAssertNotNil([data accountDataForEventType:accountDataType]);
     
-    [data deleteDataWithType:accountDataType];
+    [data updateDataWithType:accountDataType data:nil];
     XCTAssertNil([data accountDataForEventType:accountDataType]);
 }
 
