@@ -59,7 +59,7 @@ MX_ASSUME_MISSING_NULLABILITY_BEGIN
 /**
  Delete the account data with the a given type.
  
- For internal use only.
+ For internal use only. Use [MXSession deleteAccountDataWithType:] to delete account data.
  
  @param type the event type in the account data.
  */
