@@ -1921,6 +1921,10 @@ typedef void (^MXOnResumeDone)(void);
 
             // Update the corresponding part of account data
             if (event[@"content"] == nil || [event[@"content"] isEmpty]) {
+                /*
+                 MSC3391 returns an empty object in the sync after the user delete one account_data event using the associated DELETE endpoint.
+                 https://github.com/ShadowJonathan/matrix-doc/blob/account-data-delete/proposals/3391-account-data-delete.md#sync
+                 */
                 [_accountData deleteDataWithType:event[@"type"]];
             } else {
                 [_accountData updateWithEvent:event];
