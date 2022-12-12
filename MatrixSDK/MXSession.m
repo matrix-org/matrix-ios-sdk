@@ -1920,7 +1920,11 @@ typedef void (^MXOnResumeDone)(void);
             }
 
             // Update the corresponding part of account data
-            [_accountData updateWithEvent:event];
+            if (event[@"content"] == nil || [event[@"content"] isEmpty]) {
+                [_accountData deleteDataWithType:event[@"type"]];
+            } else {
+                [_accountData updateWithEvent:event];
+            }
 
             if ([event[@"type"] isEqualToString:kMXAccountDataTypeIdentityServer])
             {
