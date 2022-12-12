@@ -26,96 +26,71 @@ class MXQRCodeTransactionV2: NSObject, MXQRCodeTransaction {
         case cannotCancel
     }
     
-    var state: MXQRCodeTransactionState {
-        qrCode.state
+    private(set) var state: MXQRCodeTransactionState = .unknown {
+        didSet {
+            if state != oldValue {
+                log.debug("\(oldValue.description) -> \(state.description)")
+                
+                DispatchQueue.main.async {
+                    NotificationCenter.default.post(name: .MXKeyVerificationTransactionDidChange, object: self)
+                }
+            }
+        }
     }
 
+    let transactionId: String
+    var transport: MXKeyVerificationTransport
+    let isIncoming: Bool
+    
+    let otherUserId: String
+    let otherDeviceId: String
+    
     var qrCodeData: MXQRCodeData? {
-        guard let code = qrCode.generateQrCode() else {
+        guard let code = qrCode?.generateQrCode() else {
             log.error("Cannot generate QR code")
             return nil
         }
         let data = MXBase64Tools.data(fromBase64: code)
         return MXQRCodeDataCoder().decode(data)
     }
+    
+    private(set) var reasonCancelCode: MXTransactionCancelCode?
+    let error: Swift.Error?
+    
+    let dmRoomId: String?
+    let dmEventId: String?
 
-    var transactionId: String {
-        qrCode.flowId()
-    }
-
-    var transport: MXKeyVerificationTransport {
-        dmRoomId != nil ? .directMessage : .toDevice
-    }
-
-    let isIncoming: Bool
-
-    var otherUserId: String {
-        qrCode.otherUserId()
-    }
-
-    var otherDeviceId: String {
-        qrCode.otherDeviceId()
-    }
-
-    var reasonCancelCode: MXTransactionCancelCode? {
-        guard let info = qrCode.cancelInfo() else {
-            return nil
-        }
-        return .init(
-            value: info.cancelCode,
-            humanReadable: info.reason
-        )
-    }
-
-    var error: Swift.Error? {
-        nil
-    }
-
-    var dmRoomId: String? {
-        qrCode.roomId()
-    }
-
-    var dmEventId: String? {
-        dmRoomId != nil ? transactionId : nil
-    }
-
-    private var qrCode: QrCodeProtocol
+    private let request: VerificationRequestProtocol
+    private var qrCode: QrCodeProtocol?
     private let handler: MXCryptoVerifying
     private let log = MXNamedLog(name: "MXQRCodeTransactionV2")
 
-    init(qrCode: QrCodeProtocol, isIncoming: Bool, handler: MXCryptoVerifying) {
+    init(
+        request: VerificationRequestProtocol,
+        qrCode: QrCodeProtocol?,
+        isIncoming: Bool,
+        handler: MXCryptoVerifying
+    ) {
+        self.request = request
         self.qrCode = qrCode
         self.handler = handler
         
+        self.transactionId = request.flowId()
+        self.transport = request.roomId() != nil ? .directMessage : .toDevice
         self.isIncoming = isIncoming
-    }
-    
-    // Updates to state will be handled in rust-sdk in a fuiture PR
-    func processUpdates() -> MXKeyVerificationUpdateResult {
-        guard
-            let verification = handler.verification(userId: otherUserId, flowId: transactionId),
-            case .qrCode(let qrCode) = verification
-        else {
-            log.debug("Transaction was removed")
-            return .removed
-        }
-
-        guard self.qrCode.state != qrCode.state else {
-            return .noUpdates
-        }
-
-        log.debug("Transaction was updated - \(qrCode)")
-        self.qrCode = qrCode
-        return .updated
+        self.otherUserId = request.otherUserId()
+        self.otherDeviceId = request.otherDeviceId() ?? ""
+        self.error = nil
+        self.dmRoomId = request.roomId()
+        self.dmEventId = request.roomId() != nil ? request.flowId() : nil
+        
+        super.init()
+        
+        qrCode?.setChangesListener(listener: self)
     }
 
     func userHasScannedOtherQrCodeData(_ otherQRCodeData: MXQRCodeData) {
         log.debug("->")
-        
-        guard let request = handler.verificationRequest(userId: otherUserId, flowId: transactionId) else {
-            log.failure("There is no corresponding verification request")
-            return
-        }
         
         let data = MXQRCodeDataCoder().encode(otherQRCodeData)
         let string = MXBase64Tools.base64(from: data)
@@ -130,6 +105,7 @@ class MXQRCodeTransactionV2: NSObject, MXQRCodeTransaction {
                 log.debug("Scanned QR code")
                 await MainActor.run {
                     self.qrCode = result.qr
+                    self.qrCode?.setChangesListener(listener: self)
                 }
             } catch {
                 log.error("Failed scanning QR code", context: error)
@@ -138,6 +114,11 @@ class MXQRCodeTransactionV2: NSObject, MXQRCodeTransaction {
     }
 
     func otherUserScannedMyQrCode(_ otherUserScanned: Bool) {
+        guard let qrCode = qrCode else {
+            log.failure("No QR code")
+            return
+        }
+        
         guard otherUserScanned else {
             log.debug("Cancelling due to mismatched keys")
             cancel(with: .mismatchedKeys())
@@ -169,9 +150,21 @@ class MXQRCodeTransactionV2: NSObject, MXQRCodeTransaction {
         success: @escaping () -> Void,
         failure: @escaping (Swift.Error) -> Void
     ) {
+        guard state != .cancelled && state != .cancelledByMe else {
+            log.error("Transaction is already cancelled")
+            success()
+            return
+        }
+        
+        guard let qrCode = qrCode else {
+            log.failure("No QR code")
+            failure(Error.cannotCancel)
+            return
+        }
+        
         log.debug("->")
         guard let result = qrCode.cancel(cancelCode: code.value) else {
-            log.failure("Cannot cancel transcation")
+            log.error("Cannot cancel transcation")
             failure(Error.cannotCancel)
             return
         }
@@ -193,20 +186,53 @@ class MXQRCodeTransactionV2: NSObject, MXQRCodeTransaction {
     }
 }
 
-extension QrCodeProtocol {
-    var state: MXQRCodeTransactionState {
-        // State as enum will be moved to MatrixSDKCrypto in the future
-        // to avoid the mapping of booleans into state
-        if isDone() {
-            return .verified
-        } else if isCancelled() {
-            return .cancelled
-        } else if hasBeenScanned() {
-            return .qrScannedByOther
-        } else if weStarted() {
-            return .waitingOtherConfirm
+extension MXQRCodeTransactionV2: QrCodeListener {
+    func onChange(state: QrCodeState) {
+        log.debug("\(state)")
+        
+        switch state {
+        case .started:
+            self.state = .unknown
+        case .scanned:
+            self.state = .qrScannedByOther
+        case .confirmed:
+            self.state = .scannedOtherQR
+        case .reciprocated:
+            self.state = .waitingOtherConfirm
+        case .done:
+            self.state = .verified
+        case .cancelled(let cancelInfo):
+            reasonCancelCode = MXTransactionCancelCode(
+                value: cancelInfo.cancelCode,
+                humanReadable: cancelInfo.reason
+            )
+            self.state = cancelInfo.cancelledByUs ? .cancelledByMe : .cancelled
         }
-        return .unknown
+    }
+}
+
+private extension MXQRCodeTransactionState {
+    var description: String {
+        switch self {
+        case .unknown:
+            return "unknown"
+        case .scannedOtherQR:
+            return "scannedOtherQR"
+        case .waitingOtherConfirm:
+            return "waitingOtherConfirm"
+        case .qrScannedByOther:
+            return "qrScannedByOther"
+        case .verified:
+            return "verified"
+        case .cancelled:
+            return "cancelled"
+        case .cancelledByMe:
+            return "cancelledByMe"
+        case .error:
+            return "error"
+        @unknown default:
+            return "unknown"
+        }
     }
 }
 

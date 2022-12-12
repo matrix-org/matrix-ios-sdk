@@ -28,8 +28,9 @@ class MXQRCodeTransactionV2UnitTests: XCTestCase {
         verification = CryptoVerificationStub()
     }
     
-    func makeTransaction(for qrCode: QrCodeStub = .init(), isIncoming: Bool = true) -> MXQRCodeTransactionV2 {
+    func makeTransaction(for request: VerificationRequestStub = .init(), qrCode: QrCodeStub = .init(), isIncoming: Bool = true) -> MXQRCodeTransactionV2 {
         .init(
+            request: request,
             qrCode: qrCode,
             isIncoming: isIncoming,
             handler: verification
@@ -47,7 +48,7 @@ class MXQRCodeTransactionV2UnitTests: XCTestCase {
             weStarted: true
         )
         
-        let transaction = makeTransaction(for: stub)
+        let transaction = makeTransaction(qrCode: stub)
         
         XCTAssertEqual(transaction.transactionId, "123")
         XCTAssertEqual(transaction.transport, MXKeyVerificationTransport.directMessage)
@@ -58,112 +59,66 @@ class MXQRCodeTransactionV2UnitTests: XCTestCase {
         XCTAssertEqual(transaction.dmEventId, "123")
     }
     
-    func test_state() {
-        let testCases: [(QrCodeStub, MXQRCodeTransactionState)] = [
-            (.init(
-                weStarted: false,
-                reciprocated: false,
-                hasBeenScanned: false,
-                isDone: false,
-                isCancelled: false
-            ), .unknown),
-            (.init(
-                weStarted: false,
-                reciprocated: false,
-                hasBeenScanned: false,
-                isDone: true,
-                isCancelled: false
-            ), .verified),
-            (.init(
-                weStarted: false,
-                reciprocated: false,
-                hasBeenScanned: false,
-                isDone: false,
-                isCancelled: true
-            ), .cancelled),
-            (.init(
-                weStarted: false,
-                reciprocated: false,
-                hasBeenScanned: true,
-                isDone: false,
-                isCancelled: false
-            ), .qrScannedByOther),
-            (.init(
-                weStarted: true,
-                reciprocated: false,
-                hasBeenScanned: false,
-                isDone: false,
-                isCancelled: false
-            ), .waitingOtherConfirm),
-        ]
+    func test_usesCorrectTransport() {
+        let transaction1 = makeTransaction(for: .init(roomId: "ABC"))
+        XCTAssertEqual(transaction1.transport, .directMessage)
+        XCTAssertEqual(transaction1.dmEventId, "123")
 
-        for (stub, state) in testCases {
-            let transaction = MXQRCodeTransactionV2(
-                qrCode: stub,
-                isIncoming: true,
-                handler: verification
-            )
-            XCTAssertEqual(transaction.state, state)
-        }
+        let transaction2 = makeTransaction(for: .init(roomId: nil))
+        XCTAssertEqual(transaction2.transport, .toDevice)
+        XCTAssertNil(transaction2.dmEventId)
     }
 
-    func test_reasonCancelCode() {
-        let cancelInfo = CancelInfo(
-            cancelCode: "123",
-            reason: "Changed mind",
-            cancelledByUs: true
-        )
+    // MARK: - Test State
+    
+    func test_startedState() {
+        let incoming = makeTransaction()
+        incoming.onChange(state: .started)
+        XCTAssertEqual(incoming.state, .unknown)
+    }
+    
+    func test_scannedState() {
+        let incoming = makeTransaction()
+        incoming.onChange(state: .scanned)
+        XCTAssertEqual(incoming.state, .qrScannedByOther)
+    }
+    
+    func test_confirmedState() {
+        let incoming = makeTransaction()
+        incoming.onChange(state: .confirmed)
+        XCTAssertEqual(incoming.state, .scannedOtherQR)
+    }
+    
+    func test_reciprocatedState() {
+        let incoming = makeTransaction()
+        incoming.onChange(state: .reciprocated)
+        XCTAssertEqual(incoming.state, .waitingOtherConfirm)
+    }
+    
+    func test_doneState() {
+        let incoming = makeTransaction()
+        incoming.onChange(state: .done)
+        XCTAssertEqual(incoming.state, .verified)
+    }
 
-        let transaction = MXQRCodeTransactionV2(
-            qrCode: QrCodeStub(cancelInfo: cancelInfo),
-            isIncoming: true,
-            handler: verification
-        )
+    func test_cancelledByMeState() {
+        let transaction = makeTransaction()
+
+        transaction.onChange(state: .cancelled(cancelInfo: .init(cancelCode: "123", reason: "Changed mind", cancelledByUs: true)))
 
         XCTAssertEqual(transaction.reasonCancelCode?.value, "123")
         XCTAssertEqual(transaction.reasonCancelCode?.humanReadable, "Changed mind")
+        XCTAssertEqual(transaction.state, .cancelledByMe)
     }
 
-    // MARK: - Test Updates
-
-    func test_processUpdated_removedIfNoMatchingRequest() {
-        verification.stubbedTransactions = [:]
+    func test_cancelledByThemState() {
         let transaction = makeTransaction()
 
-        let result = transaction.processUpdates()
+        transaction.onChange(state: .cancelled(cancelInfo: .init(cancelCode: "123", reason: "Changed mind", cancelledByUs: false)))
 
-        XCTAssertEqual(result, MXKeyVerificationUpdateResult.removed)
-    }
-
-    func test_processUpdated_noUpdatesIfRequestUnchanged() {
-        let stub = QrCodeStub(
-            flowId: "ABC",
-            isDone: false
-        )
-        verification.stubbedTransactions = [stub.flowId(): .qrCode(stub)]
-        let transaction = makeTransaction(for: stub)
-
-        let result = transaction.processUpdates()
-
-        XCTAssertEqual(result, MXKeyVerificationUpdateResult.noUpdates)
-    }
-
-    func test_processUpdated_updatedIfRequestChanged() {
-        let stub = QrCodeStub(
-            flowId: "ABC",
-            isDone: false
-        )
-        verification.stubbedTransactions = [stub.flowId(): .qrCode(stub)]
-        let transaction = makeTransaction(for: stub)
-        verification.stubbedTransactions = [stub.flowId(): .qrCode(QrCodeStub(
-            flowId: "ABC",
-            isDone: true
-        ))]
-
-        let result = transaction.processUpdates()
-
-        XCTAssertEqual(result, MXKeyVerificationUpdateResult.updated)
-        XCTAssertEqual(transaction.state, .verified)
+        XCTAssertEqual(transaction.reasonCancelCode?.value, "123")
+        XCTAssertEqual(transaction.reasonCancelCode?.humanReadable, "Changed mind")
+        XCTAssertEqual(transaction.state, .cancelled)
     }
 }
 
