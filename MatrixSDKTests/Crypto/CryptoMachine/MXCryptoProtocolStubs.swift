@@ -122,88 +122,42 @@ class CryptoCrossSigningStub: CryptoIdentityStub, MXCryptoCrossSigning {
 }
 
 class CryptoVerificationStub: CryptoIdentityStub {
-    var stubbedRequests = [String: VerificationRequest]()
-    var stubbedTransactions = [String: Verification]()
-    var stubbedErrors = [String: Error]()
-    var stubbedEmojis = [String: [Int]]()
-    var stubbedDecimals = [String: [Int]]()
-    var stubbedQRData = Data()
-}
-
-extension CryptoVerificationStub: MXCryptoVerificationRequesting {
-    func receiveUnencryptedVerificationEvent(event: MXEvent, roomId: String) {
-    }
-    
-    func requestSelfVerification(methods: [String]) async throws -> VerificationRequest {
-        .stub(ourMethods: methods)
-    }
-    
-    func requestVerification(userId: String, roomId: String, methods: [String]) async throws -> VerificationRequest {
-        .stub(otherUserId: userId, roomId: roomId, ourMethods: methods)
-    }
-    
-    func requestVerification(userId: String, deviceId: String, methods: [String]) async throws -> VerificationRequest {
-        .stub(otherUserId: userId, otherDeviceId: deviceId, ourMethods: methods)
-    }
-    
-    func verificationRequests(userId: String) -> [VerificationRequest] {
-        return stubbedRequests.values.map { $0 }
-    }
-    
-    func verificationRequest(userId: String, flowId: String) -> VerificationRequest? {
-        return stubbedRequests[flowId]
-    }
-    
-    func acceptVerificationRequest(userId: String, flowId: String, methods: [String]) async throws {
-        if let error = stubbedErrors[flowId] {
-            throw error
-        }
-    }
-    
-    func cancelVerification(userId: String, flowId: String, cancelCode: String) async throws {
-        if let error = stubbedErrors[flowId] {
-            throw error
-        }
-    }
+    var stubbedTransactions = [String: MXVerification]()
 }
 
 extension CryptoVerificationStub: MXCryptoVerifying {
-    func verification(userId: String, flowId: String) -> Verification? {
-        return stubbedTransactions[flowId]
+    func receiveUnencryptedVerificationEvent(event: MXEvent, roomId: String) {
+        
     }
     
-    func confirmVerification(userId: String, flowId: String) async throws {
-    }
-}
-
-extension CryptoVerificationStub: MXCryptoSASVerifying {
-    func startSasVerification(userId: String, flowId: String) async throws -> Sas {
-        .stub(otherUserId: userId, flowId: flowId)
+    func requestSelfVerification(methods: [String]) async throws -> VerificationRequestProtocol {
+        VerificationRequestStub(ourMethods: methods)
     }
     
-    func acceptSasVerification(userId: String, flowId: String) async throws {
+    func requestVerification(userId: String, roomId: String, methods: [String]) async throws -> VerificationRequestProtocol {
+        VerificationRequestStub(otherUserId: userId, roomId: roomId, ourMethods: methods)
     }
     
-    func emojiIndexes(sas: Sas) throws -> [Int] {
-        stubbedEmojis[sas.flowId] ?? []
+    func requestVerification(userId: String, deviceId: String, methods: [String]) async throws -> VerificationRequestProtocol {
+        VerificationRequestStub(otherUserId: userId, otherDeviceId: deviceId, ourMethods: methods)
     }
     
-    func sasDecimals(sas: Sas) throws -> [Int] {
-        return stubbedDecimals[sas.flowId] ?? []
-    }
-}
-
-extension CryptoVerificationStub: MXCryptoQRCodeVerifying {
-    func startQrVerification(userId: String, flowId: String) throws -> QrCode {
-        return .stub()
+    func verificationRequests(userId: String) -> [VerificationRequestProtocol] {
+        []
     }
     
-    func scanQrCode(userId: String, flowId: String, data: Data) async throws -> QrCode {
-        return .stub()
+    func verificationRequest(userId: String, flowId: String) -> VerificationRequestProtocol? {
+        nil
     }
     
-    func generateQrCode(userId: String, flowId: String) throws -> Data {
-        return stubbedQRData
+    func verification(userId: String, flowId: String) -> MXVerification? {
+        stubbedTransactions[flowId]
+    }
+    
+    func handleOutgoingVerificationRequest(_ request: OutgoingVerificationRequest) async throws {
+    }
+    
+    func handleVerificationConfirmation(_ result: ConfirmVerificationResult) async throws {
     }
 }
 

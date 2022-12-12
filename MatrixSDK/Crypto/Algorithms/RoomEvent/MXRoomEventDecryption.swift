@@ -103,12 +103,14 @@ actor MXRoomEventDecryption: MXRoomEventDecrypting {
     // MARK: - Private
     
     private func decrypt(event: MXEvent) -> MXEventDecryptionResult {
+        let eventId = event.eventId ?? "unknown"
+        
         guard
             event.isEncrypted && event.clear == nil,
             event.content?["algorithm"] as? String == kMXCryptoMegolmAlgorithm,
             let sessionId = sessionId(for: event)
         else {
-            log.debug("Ignoring unencrypted or non-room event")
+            log.debug("Ignoring unencrypted or non-room event `\(eventId)`")
             
             let result = MXEventDecryptionResult()
             result.clearEvent = event.clear?.jsonDictionary()
@@ -118,7 +120,7 @@ actor MXRoomEventDecryption: MXRoomEventDecrypting {
         do {
             let decryptedEvent = try handler.decryptRoomEvent(event)
             let result = try MXEventDecryptionResult(event: decryptedEvent)
-            log.debug("Successfully decrypted event `\(result.clearEvent["type"] ?? "unknown")`")
+            log.debug("Successfully decrypted event `\(result.clearEvent["type"] ?? "unknown")` eventId `\(eventId)`")
             return result
             
         } catch let error as DecryptionError {
@@ -260,6 +262,7 @@ actor MXRoomEventDecryption: MXRoomEventDecrypting {
     }
     
     private func trackedDecryptionResult(for event: MXEvent, error: Error) -> MXEventDecryptionResult {
+        log.debug("Unable to decrypt event `\(event.eventId ?? "unknown")`")
         addUndecryptedEvent(event)
         
         let result = MXEventDecryptionResult()
