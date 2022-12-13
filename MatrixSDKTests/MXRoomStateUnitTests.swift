@@ -83,6 +83,8 @@ class MXRoomStateUnitTests: XCTestCase {
         
         // Store has no state, but API is set to return two events
         store.stubbedStatePerRoom[roomId] = []
+        let room = session.getOrCreateRoom(roomId)
+        room?.summary.membership = .join
         restClient.stubbedStatePerRoom = [roomId: events]
 
         let exp = expectation(description: "roomState")
