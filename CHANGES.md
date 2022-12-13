@@ -1,3 +1,17 @@
+## Changes in 0.24.6 (2022-12-13)
+
+🙌 Improvements
+
+- Change invites count logic. ([#1645](https://github.com/matrix-org/matrix-ios-sdk/pull/1645))
+- Crypto: Fail launch when unavailable crypto ([#1646](https://github.com/matrix-org/matrix-ios-sdk/pull/1646))
+- Add message id for to-device events ([#1652](https://github.com/matrix-org/matrix-ios-sdk/pull/1652))
+- CryptoV2: Update to latest Verification API ([#1654](https://github.com/matrix-org/matrix-ios-sdk/pull/1654))
+
+🧱 Build
+
+- Update Ruby gems. ([#1655](https://github.com/matrix-org/matrix-ios-sdk/pull/1655))
+
+
 ## Changes in 0.24.5 (2022-11-29)
 
 🙌 Improvements

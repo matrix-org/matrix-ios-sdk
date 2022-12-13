@@ -21,6 +21,7 @@
 #import "MXPendingSecretShareRequest.h"
 #import "MXSecretShareSend.h"
 #import "MXTools.h"
+#import "MatrixSDKSwiftHeader.h"
 
 
 #pragma mark - Constants
@@ -210,7 +211,9 @@ static NSArray<MXEventTypeString> *kMXSecretShareEventTypes;
         [contentMap setObject:message forUser:myUser.userId andDevice:@"*"];
     }
     
-    return [_crypto.matrixRestClient sendToDevice:kMXEventTypeStringSecretRequest contentMap:contentMap txnId:nil success:success failure:failure];
+    MXToDevicePayload *payload = [[MXToDevicePayload alloc] initWithEventType:kMXEventTypeStringSecretRequest
+                                                                   contentMap:contentMap];
+    return [_crypto.matrixRestClient sendToDevice:payload success:success failure:failure];
 }
 
 - (BOOL)isSecretShareEvent:(MXEventTypeString)type
@@ -390,7 +393,9 @@ static NSArray<MXEventTypeString> *kMXSecretShareEventTypes;
         MXUsersDevicesMap<NSDictionary*> *contentMap = [MXUsersDevicesMap new];
         [contentMap setObject:encryptedContent forUser:myUser.userId andDevice:device.deviceId];
         
-        [self.crypto.matrixRestClient sendToDevice:kMXEventTypeStringRoomEncrypted contentMap:contentMap txnId:nil success:nil failure:^(NSError *error) {
+        MXToDevicePayload *payload = [[MXToDevicePayload alloc] initWithEventType:kMXEventTypeStringRoomEncrypted
+                                                                       contentMap:contentMap];
+        [self.crypto.matrixRestClient sendToDevice:payload success:nil failure:^(NSError *error) {
             MXLogDebug(@"[MXSecretShareManager] shareSecret: ERROR for sendToDevice: %@", error);
         }];
         

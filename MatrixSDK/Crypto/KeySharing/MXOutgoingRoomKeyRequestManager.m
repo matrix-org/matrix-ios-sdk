@@ -18,6 +18,7 @@
 
 #import "MXTools.h"
 #import "MXOutgoingRoomKeyRequest.h"
+#import "MatrixSDKSwiftHeader.h"
 
 #ifdef MX_CRYPTO
 
@@ -359,7 +360,11 @@ NSUInteger const SEND_KEY_REQUESTS_DELAY_MS = 500;
         [contentMap setObject:message forUser:recipient[@"userId"] andDevice:recipient[@"deviceId"]];
     }
 
-    [matrixRestClient sendToDevice:kMXEventTypeStringRoomKeyRequest contentMap:contentMap txnId:txnId success:success failure:failure];
+    MXToDevicePayload *payload = [[MXToDevicePayload alloc] initWithEventType:kMXEventTypeStringRoomKeyRequest
+                                                                   contentMap:contentMap
+                                                                transactionId:txnId
+                                                                 addMessageId:YES];
+    [matrixRestClient sendToDevice:payload success:success failure:failure];
 }
 
 /**

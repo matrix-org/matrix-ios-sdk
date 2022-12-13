@@ -53,6 +53,7 @@
 @class MXSpaceChildrenRequestParameters;
 @class MXCapabilities;
 @class MXDevice;
+@class MXToDevicePayload;
 
 MX_ASSUME_MISSING_NULLABILITY_BEGIN
 
@@ -2707,17 +2708,14 @@ Note: Clients should consider avoiding this endpoint for URLs posted in encrypte
 /**
  Send an event to a specific list of devices
 
- @param eventType the type of event to send
- @param contentMap content to send. Map from user_id to device_id to content dictionary.
- @param txnId the transaction id to use. If nil, one will be generated.
+ @param payload Payload with `eventType` and `contentMap` to be sent
 
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
 
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)sendToDevice:(NSString*)eventType contentMap:(MXUsersDevicesMap<NSDictionary*>*)contentMap
-                           txnId:(NSString*)txnId
+- (MXHTTPOperation*)sendToDevice:(MXToDevicePayload*)payload
                          success:(void (^)(void))success
                          failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 

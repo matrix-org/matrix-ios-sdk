@@ -21,24 +21,18 @@ import Foundation
 import MatrixSDKCrypto
 
 /// Verification request originating from `MatrixSDKCrypto`
-class MXKeyVerificationRequestV2: NSObject, MXKeyVerificationRequest {
-    var state: MXKeyVerificationRequestState {
-        // State as enum will be moved to MatrixSDKCrypto in the future
-        // to avoid the mapping of booleans into state
-        if request.isDone {
-            return MXKeyVerificationRequestStateAccepted
-        } else if request.isCancelled {
-            return MXKeyVerificationRequestStateCancelled
-        } else if request.isReady {
-            return MXKeyVerificationRequestStateReady
-        } else if request.isPassive {
-            return MXKeyVerificationRequestStatePending
-        }
-        return MXKeyVerificationRequestStatePending
+class MXKeyVerificationRequestV2: NSObject, MXKeyVerificationRequest { 
+    enum Error: Swift.Error {
+        case cannotAccept
+        case cannotCancel
+        case cannotStartSasVerification
+        case cannotStartQrVerification
     }
     
+    private(set) var state: MXKeyVerificationRequestState = MXKeyVerificationRequestStatePending
+    
     var reasonCancelCode: MXTransactionCancelCode? {
-        guard let info = request.cancelInfo else {
+        guard let info = request.cancelInfo() else {
             return nil
         }
         return .init(
@@ -48,96 +42,93 @@ class MXKeyVerificationRequestV2: NSObject, MXKeyVerificationRequest {
     }
     
     var myUserId: String {
-        return handler.userId
+        handler.userId
     }
     
     var isFromMyUser: Bool {
-        return otherUser == myUserId
+        otherUser == myUserId
     }
     
     var isFromMyDevice: Bool {
-        return request.weStarted
+        request.weStarted()
     }
     
     var requestId: String {
-        return request.flowId
+        request.flowId()
     }
     
-    let transport: MXKeyVerificationTransport
+    var transport: MXKeyVerificationTransport {
+        roomId != nil ? .directMessage : .toDevice
+    }
     
     var roomId: String? {
-        return request.roomId
+        request.roomId()
     }
     
     var otherUser: String {
-        return request.otherUserId
+        request.otherUserId()
     }
     
     var otherDevice: String? {
-        return request.otherDeviceId
+        request.otherDeviceId()
     }
     
     var methods: [String] {
-        return (isFromMyDevice ? myMethods : otherMethods) ?? []
+        (isFromMyDevice ? myMethods : otherMethods) ?? []
     }
     
     var myMethods: [String]? {
-        return request.ourMethods
+        request.ourSupportedMethods()
     }
     
     var otherMethods: [String]? {
-        return request.theirMethods
+        request.theirSupportedMethods()
     }
     
-    private var request: VerificationRequest
-    private let handler: MXCryptoVerificationRequesting
+    private let request: VerificationRequestProtocol
+    private let handler: MXCryptoVerifying
     
     private let log = MXNamedLog(name: "MXKeyVerificationRequestV2")
     
-    init(request: VerificationRequest, transport: MXKeyVerificationTransport, handler: MXCryptoVerificationRequesting) {
-        log.debug("Creating new request")
-        
+    init(request: VerificationRequestProtocol, handler: MXCryptoVerifying) {
         self.request = request
-        self.transport = transport
         self.handler = handler
+        self.state = request.state
     }
     
+    // Updates to state will be handled in rust-sdk in a fuiture PR
     func processUpdates() -> MXKeyVerificationUpdateResult {
-        guard let request = handler.verificationRequest(userId: otherUser, flowId: requestId) else {
-            log.debug("Request was removed")
-            return .removed
-        }
-        
-        guard self.request != request else {
+        guard state != request.state else {
             return .noUpdates
         }
         
         log.debug("Request was updated - \(request)")
-        self.request = request
+        state = request.state
         return .updated
     }
     
     func accept(
         withMethods methods: [String],
         success: @escaping () -> Void,
-        failure: @escaping (Error) -> Void
+        failure: @escaping (Swift.Error) -> Void
     ) {
         log.debug("->")
+        guard let outgoingRequest = request.accept(methods: methods) else {
+            log.error("Cannot accept request")
+            failure(Error.cannotAccept)
+            return
+        }
         
         Task {
             do {
-                try await handler.acceptVerificationRequest(
-                    userId: otherUser,
-                    flowId: requestId,
-                    methods: methods
-                )
+                try await handler.handleOutgoingVerificationRequest(outgoingRequest)
+                log.debug("Accepted request")
                 await MainActor.run {
-                    log.debug("Accepted request")
                     success()
                 }
             } catch {
+                log.error("Failed accepting request", context: error)
                 await MainActor.run {
-                    log.error("Failed accepting request", context: error)
                     failure(error)
                 }
             }
@@ -147,28 +138,64 @@ class MXKeyVerificationRequestV2: NSObject, MXKeyVerificationRequest {
     func cancel(
         with code: MXTransactionCancelCode,
         success: (() -> Void)?,
-        failure: ((Error) -> Void)? = nil
+        failure: ((Swift.Error) -> Void)? = nil
     ) {
         log.debug("->")
+        guard let outgoingRequest = request.cancel() else {
+            log.error("Cannot cancel request")
+            failure?(Error.cannotCancel)
+            return
+        }
         
         Task {
             do {
-                try await handler.cancelVerification(
-                    userId: otherUser,
-                    flowId: requestId,
-                    cancelCode: code.value
-                )
+                try await handler.handleOutgoingVerificationRequest(outgoingRequest)
+                log.debug("Cancelled request")
                 await MainActor.run {
-                    log.debug("Cancelled request")
                     success?()
                 }
             } catch {
+                log.error("Failed cancelling request", context: error)
                 await MainActor.run {
-                    log.error("Failed cancelling request", context: error)
                     failure?(error)
                 }
             }
         }
+    }
+    
+    func startSasVerification() async throws -> SasProtocol {
+        guard let result = try request.startSasVerification() else {
+            log.failure("Cannot start Sas")
+            throw Error.cannotStartSasVerification
+        }
+        
+        try await handler.handleOutgoingVerificationRequest(result.request)
+        return result.sas
+    }
+    
+    func startQrVerification() throws -> QrCodeProtocol {
+        guard let qrCode = try request.startQrVerification() else {
+            log.failure("Cannot start QrCode")
+            throw Error.cannotStartQrVerification
+        }
+        return qrCode
+    }
+}
+
+extension VerificationRequestProtocol {
+    var state: MXKeyVerificationRequestState {
+        // State as enum will be moved to MatrixSDKCrypto in the future
+        // to avoid the mapping of booleans into state
+        if isDone() {
+            return MXKeyVerificationRequestStateAccepted
+        } else if isCancelled() {
+            return MXKeyVerificationRequestStateCancelled
+        } else if isReady() {
+            return MXKeyVerificationRequestStateReady
+        } else if isPassive() {
+            return MXKeyVerificationRequestStatePending
+        }
+        return MXKeyVerificationRequestStatePending
     }
 }
 

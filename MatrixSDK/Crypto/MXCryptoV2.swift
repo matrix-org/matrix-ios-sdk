@@ -18,28 +18,28 @@ import Foundation
 
 #if DEBUG
 public extension MXLegacyCrypto {
-    /// Create a Rust-based work-in-progress implementation of `MXCrypto`
-    ///
-    /// The experimental crypto module is created only if:
-    /// - using DEBUG build
-    /// - enabling `enableCryptoV2` feature flag
-    @objc static func createCryptoV2IfAvailable(session: MXSession!) -> MXCrypto? {
-        let log = MXNamedLog(name: "MXCryptoV2")
+    enum CryptoError: Swift.Error, LocalizedError {
+        case cryptoNotAvailable
         
-        guard MXSDKOptions.sharedInstance().enableCryptoV2 else {
-            return nil
+        public var errorDescription: String? {
+            return "Encryption not available, please restart the app"
         }
-        
+    }
+    
+    /// Create a Rust-based work-in-progress implementation of `MXCrypto`
+    @objc static func createCryptoV2(session: MXSession!) throws -> MXCrypto {
+        let log = MXNamedLog(name: "MXCryptoV2")
+
         guard let session = session else {
             log.failure("Cannot create crypto V2, missing session")
-            return nil
+            throw CryptoError.cryptoNotAvailable
         }
-        
+
         do {
             return try MXCryptoV2(session: session)
         } catch {
             log.failure("Error creating crypto V2", context: error)
-            return nil
+            throw CryptoError.cryptoNotAvailable
         }
     }
 }

@@ -121,7 +121,7 @@ typedef void (^MXOnResumeDone)(void);
      */
     NSMutableArray *globalEventListeners;
 
-    /** 
+    /**
      The block to call when MSSession resume is complete.
      */
     MXOnResumeDone onResumeDone;
@@ -398,8 +398,17 @@ typedef void (^MXOnResumeDone)(void);
 
         // Check if the user has enabled crypto
         MXWeakify(self);
-        [MXLegacyCrypto checkCryptoWithMatrixSession:self complete:^(id<MXCrypto> crypto) {
+        [MXLegacyCrypto checkCryptoWithMatrixSession:self complete:^(id<MXCrypto> crypto, NSError *error) {
             MXStrongifyAndReturnIfNil(self);
+            
+            if (!crypto && error)
+            {
+                if (failure)
+                {
+                    failure(error);
+                }
+                return;
+            }
             
             self->_crypto = crypto;
 
@@ -966,6 +975,7 @@ typedef void (^MXOnResumeDone)(void);
             MXLogDebug(@"[MXSession] Crypto has been started");
         }  failure:^(NSError *error) {
             MXLogDebug(@"[MXSession] Crypto failed to start. Error: %@", error);
+            failure(error);
         }];
     }
     else
@@ -2037,6 +2047,7 @@ typedef void (^MXOnResumeDone)(void);
     {
         if ([MXTools isSupportedToDeviceEvent:event])
         {
+            MXLogDebug(@"[MXSession] handleToDeviceEvents: Processing new to-device event msgid: %@", event.content[kMXToDeviceMessageId])
             [supportedEvents addObject:event];
         }
     }
@@ -2054,6 +2065,7 @@ typedef void (^MXOnResumeDone)(void);
         {
             if (!event.decryptionError)
             {
+                MXLogDebug(@"[MXSession] handleToDeviceEvents: Received new to-device event `%@` from `%@` msgid: %@", event.type, event.sender, event.wireContent[kMXToDeviceMessageId])
                 dispatch_group_enter(dispatchGroup);
                 [self handleToDeviceEvent:event onComplete:^{
                     dispatch_group_leave(dispatchGroup);
@@ -2243,8 +2255,7 @@ typedef void (^MXOnResumeDone)(void);
 {
     MXLogDebug(@"[MXSession] handleOutdatedSyncResponse: %tu joined rooms, %tu invited rooms, %tu left rooms, %tu toDevice events.", syncResponse.rooms.join.count, syncResponse.rooms.invite.count, syncResponse.rooms.leave.count, syncResponse.toDevice.events.count);
     
-    // Handle only to_device events. They are sent only once by the homeserver
-    [self handleToDeviceEvents:syncResponse.toDevice.events onComplete:completion];
+    [self handleCryptoSyncResponse:syncResponse onComplete:completion];
 }
 
 - (CGFloat)syncProgressForCompleted:(NSInteger)completed total:(NSInteger)total
@@ -2267,11 +2278,20 @@ typedef void (^MXOnResumeDone)(void);
 
     if (enableCrypto && !_crypto)
     {
-        _crypto = [MXLegacyCrypto createCryptoWithMatrixSession:self];
+        NSError *error;
+        _crypto = [MXLegacyCrypto createCryptoWithMatrixSession:self error:&error];
+        if (!_crypto && error)
+        {
+            if (failure)
+            {
+                failure(error);
+            }
+            return;
+        }
 
         if (_state == MXSessionStateRunning)
         {
-            [_crypto start:success failure:failure];
+            [self startCrypto:success failure:failure];
         }
         else
         {
