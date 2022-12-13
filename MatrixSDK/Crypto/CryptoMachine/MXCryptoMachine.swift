@@ -223,7 +223,7 @@ extension MXCryptoMachine: MXCryptoSyncing {
         switch request {
         case .toDevice(let requestId, let eventType, let body):
             try await requests.sendToDevice(
-                request: .init(eventType: eventType, body: body)
+                request: .init(eventType: eventType, body: body, addMessageId: true)
             )
             try markRequestAsSent(requestId: requestId, requestType: .toDevice)
 
@@ -509,7 +509,7 @@ extension MXCryptoMachine: MXCryptoCrossSigning {
     }
 }
 
-extension MXCryptoMachine: MXCryptoVerificationRequesting {
+extension MXCryptoMachine: MXCryptoVerifying {
     func receiveUnencryptedVerificationEvent(event: MXEvent, roomId: String) {
         guard let string = event.jsonString() else {
             log.failure("Invalid event")
@@ -522,7 +522,7 @@ extension MXCryptoMachine: MXCryptoVerificationRequesting {
         }
     }
     
-    func requestSelfVerification(methods: [String]) async throws -> VerificationRequest {
+    func requestSelfVerification(methods: [String]) async throws -> VerificationRequestProtocol {
         guard let result = try machine.requestSelfVerification(methods: methods) else {
             throw Error.missingVerification
         }
@@ -530,7 +530,7 @@ extension MXCryptoMachine: MXCryptoVerificationRequesting {
         return result.verification
     }
     
-    func requestVerification(userId: String, roomId: String, methods: [String]) async throws -> VerificationRequest {
+    func requestVerification(userId: String, roomId: String, methods: [String]) async throws -> VerificationRequestProtocol {
         guard let content = try machine.verificationRequestContent(userId: userId, methods: methods) else {
             throw Error.missingVerificationContent
         }
@@ -557,7 +557,7 @@ extension MXCryptoMachine: MXCryptoVerificationRequesting {
         return request
     }
     
-    func requestVerification(userId: String, deviceId: String, methods: [String]) async throws -> VerificationRequest {
+    func requestVerification(userId: String, deviceId: String, methods: [String]) async throws -> VerificationRequestProtocol {
         guard let result = try machine.requestVerificationWithDevice(userId: userId, deviceId: deviceId, methods: methods) else {
             throw Error.missingVerificationRequest
         }
@@ -565,37 +565,38 @@ extension MXCryptoMachine: MXCryptoVerificationRequesting {
         return result.verification
     }
     
-    func verificationRequests(userId: String) -> [VerificationRequest] {
+    func verificationRequests(userId: String) -> [VerificationRequestProtocol] {
         return machine.getVerificationRequests(userId: userId)
     }
     
-    func verificationRequest(userId: String, flowId: String) -> VerificationRequest? {
+    func verificationRequest(userId: String, flowId: String) -> VerificationRequestProtocol? {
         return machine.getVerificationRequest(userId: userId, flowId: flowId)
     }
     
-    func acceptVerificationRequest(userId: String, flowId: String, methods: [String]) async throws {
-        guard let request = machine.acceptVerificationRequest(userId: userId, flowId: flowId, methods: methods) else {
-            throw Error.missingVerificationRequest
+    func verification(userId: String, flowId: String) -> MXVerification? {
+        guard let verification = machine.getVerification(userId: userId, flowId: flowId) else {
+            return nil
         }
-        try await handleOutgoingVerificationRequest(request)
+        
+        if let sas = verification.asSas() {
+            return .sas(sas)
+        } else if let qrCode = verification.asQr() {
+            return .qrCode(qrCode)
+        } else {
+            log.failure("Invalid state of verification")
+            return nil
+        }
     }
     
-    func cancelVerification(userId: String, flowId: String, cancelCode: String) async throws {
-        guard let request = machine.cancelVerification(userId: userId, flowId: flowId, cancelCode: cancelCode) else {
-            throw Error.cannotCancelVerification
-        }
-        try await handleOutgoingVerificationRequest(request)
-    }
-    
-    // MARK: - Private
-    
-    private func handleOutgoingVerificationRequest(_ request: OutgoingVerificationRequest) async throws {
+    func handleOutgoingVerificationRequest(_ request: OutgoingVerificationRequest) async throws {
         switch request {
         case .toDevice(_, let eventType, let body):
             try await requests.sendToDevice(
                 request: .init(
                     eventType: eventType,
-                    body: body
+                    body: body,
+                    // Should not add anything for verification events as it would break their signatures
+                    addMessageId: false
                 )
             )
         case .inRoom(_, let roomId, let eventType, let content):
@@ -606,19 +607,8 @@ extension MXCryptoMachine: MXCryptoVerificationRequesting {
             )
         }
     }
-}
-
-extension MXCryptoMachine: MXCryptoVerifying {
-    func verification(userId: String, flowId: String) -> Verification? {
-        return machine.getVerification(userId: userId, flowId: flowId)
-    }
     
-    func confirmVerification(userId: String, flowId: String) async throws {
-        let result = try machine.confirmVerification(userId: userId, flowId: flowId)
-        guard let result = result else {
-            throw Error.missingVerification
-        }
-        
+    func handleVerificationConfirmation(_ result: ConfirmVerificationResult) async throws {
         if let request = result.signatureRequest {
             try await requests.uploadSignatures(request: request)
         }
@@ -632,62 +622,6 @@ extension MXCryptoMachine: MXCryptoVerifying {
             
             try await group.waitForAll()
         }
-    }
-}
-
-extension MXCryptoMachine: MXCryptoSASVerifying {
-    func startSasVerification(userId: String, flowId: String) async throws -> Sas {
-        guard let result = try machine.startSasVerification(userId: userId, flowId: flowId) else {
-            throw Error.missingVerification
-        }
-        try await handleOutgoingVerificationRequest(result.request)
-        return result.sas
-    }
-    
-    func acceptSasVerification(userId: String, flowId: String) async throws {
-        guard let request = machine.acceptSasVerification(userId: userId, flowId: flowId) else {
-            throw Error.missingVerification
-        }
-        try await handleOutgoingVerificationRequest(request)
-    }
-
-    func emojiIndexes(sas: Sas) throws -> [Int] {
-        guard let indexes = machine.getEmojiIndex(userId: sas.otherUserId, flowId: sas.flowId) else {
-            throw Error.missingEmojis
-        }
-        return indexes.map(Int.init)
-    }
-    
-    func sasDecimals(sas: Sas) throws -> [Int] {
-        guard let decimals = machine.getDecimals(userId: sas.otherUserId, flowId: sas.flowId) else {
-            throw Error.missingDecimals
-        }
-        return decimals.map(Int.init)
-    }
-}
-
-extension MXCryptoMachine: MXCryptoQRCodeVerifying {
-    func startQrVerification(userId: String, flowId: String) throws -> QrCode {
-        guard let result = try machine.startQrVerification(userId: userId, flowId: flowId) else {
-            throw Error.missingVerification
-        }
-        return result
-    }
-    
-    func scanQrCode(userId: String, flowId: String, data: Data) async throws -> QrCode {
-        let string = MXBase64Tools.base64(from: data)
-        guard let result = machine.scanQrCode(userId: userId, flowId: flowId, data: string) else {
-            throw Error.missingVerification
-        }
-        try await handleOutgoingVerificationRequest(result.request)
-        return result.qr
-    }
-    
-    func generateQrCode(userId: String, flowId: String) throws -> Data {
-        guard let string = machine.generateQrCode(userId: userId, flowId: flowId) else {
-            throw Error.missingVerification
-        }
-        return MXBase64Tools.data(fromBase64: string)
     }
 }
 
@@ -741,7 +675,8 @@ extension MXCryptoMachine: MXCryptoBackup {
         }
         
         do {
-            return try machine.verifyBackup(authData: string)
+            let verification = try machine.verifyBackup(authData: string)
+            return verification.trusted
         } catch {
             log.error("Failed verifying backup", context: error)
             return false

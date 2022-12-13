@@ -72,7 +72,6 @@
         "MXKeyVerificationManagerV2UnitTests",
         "MXKeyVerificationRequestV2UnitTests",
         "MXKeyVerificationStateResolverUnitTests",
-        "MXLoggerUnitTests",
         "MXMediaScanStoreUnitTests",
         "MXMegolmDecryptionUnitTests",
         "MXMegolmExportEncryptionUnitTests",
@@ -98,6 +97,7 @@
         "MXTaskQueueUnitTests",
         "MXThreadEventTimelineUnitTests",
         "MXThreadingServiceUnitTests",
+        "MXToDevicePayloadUnitTests",
         "MXToolsUnitTests",
         "MXTrustLevelSourceUnitTests",
         "MXUnrequestedForwardedRoomKeyManagerUnitTests"

@@ -396,9 +396,11 @@ MX_ASSUME_MISSING_NULLABILITY_BEGIN
  Create a new crypto instance and data for the given user.
  
  @param mxSession the session on which to enable crypto.
+ @param error pointer to error that is non-nil if crypto failed to be created
  @return the fresh crypto instance.
  */
-+ (id<MXCrypto>)createCryptoWithMatrixSession:(MXSession*)mxSession;
++ (id<MXCrypto>)createCryptoWithMatrixSession:(MXSession*)mxSession
+                                        error:(NSError **)error;
 
 /**
  Check if the user has previously enabled crypto.
@@ -406,7 +408,8 @@ MX_ASSUME_MISSING_NULLABILITY_BEGIN
 
  @param complete a block called in any case when the operation completes.
  */
-+ (void)checkCryptoWithMatrixSession:(MXSession*)mxSession complete:(void (^)(id<MXCrypto> crypto))complete;
++ (void)checkCryptoWithMatrixSession:(MXSession*)mxSession
+                            complete:(void (^)(id<MXCrypto> crypto, NSError *error))complete;
 
 /**
  Stores the exportedOlmDevice related to the credentials into the store.

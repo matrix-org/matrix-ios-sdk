@@ -231,6 +231,11 @@ FOUNDATION_EXPORT NSString *const kMXMessageContentKeyNewContent;   // Edited co
 FOUNDATION_EXPORT NSString *const MXEventRelationTypeThread;        // Thread
 
 /**
+ To-device messages
+ */
+FOUNDATION_EXPORT NSString *const kMXToDeviceMessageId;
+
+/**
  Prefix used for id of temporary local event.
  */
 FOUNDATION_EXPORT NSString *const kMXEventLocalEventIdPrefix;

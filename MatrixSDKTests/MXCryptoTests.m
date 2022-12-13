@@ -2865,7 +2865,11 @@
                     MXUsersDevicesMap<NSDictionary*> *contentMap = [[MXUsersDevicesMap alloc] init];
                     [contentMap setObject:requestMessage forUser:alice1Credentials.userId andDevice:@"*"];
 
-                    [alice1MatrixRestClient sendToDevice:kMXEventTypeStringRoomKeyRequest contentMap:contentMap txnId:requestMessage[@"request_id"] success:nil failure:^(NSError *error) {
+                    MXToDevicePayload *payload = [[MXToDevicePayload alloc] initWithEventType:kMXEventTypeStringRoomKeyRequest
+                                                                                   contentMap:contentMap
+                                                                                transactionId:requestMessage[@"request_id"]
+                                                                                 addMessageId:YES];
+                    [alice1MatrixRestClient sendToDevice:payload success:nil failure:^(NSError *error) {
                         XCTFail(@"The operation should not fail - NSError: %@", error);
                         [expectation fulfill];
                     }];
