@@ -34,6 +34,15 @@
     return [[MXHTTPOperation alloc] init];
 }
 
+-(MXHTTPOperation *)deleteAccountDataWithType:(NSString *)type success:(void (^)(void))success failure:(void (^)(NSError *))failure
+{
+    if (success)
+    {
+        success();
+    }
+    return [MXHTTPOperation new];
+}
+
 - (MXHTTPOperation *)syncFromToken:(NSString *)token serverTimeout:(NSUInteger)serverTimeout clientTimeout:(NSUInteger)clientTimeout setPresence:(NSString *)setPresence filter:(NSString *)filterId success:(void (^)(MXSyncResponse *))success failure:(void (^)(NSError *))failure
 {
     if (success)
