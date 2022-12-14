@@ -252,11 +252,14 @@
         [mxSession setAccountData:@{} forType:@"test" success:^{
             XCTAssertEqual(mxSession.accountData.allAccountDataEvents.count, 2);
             
-            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0.1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+            [NSNotificationCenter.defaultCenter addObserverForName:kMXSessionAccountDataDidChangeNotification
+                                                            object:mxSession
+                                                             queue:nil
+                                                        usingBlock:^(NSNotification * _Nonnull note) {
                 // after the sync the empty account data has been removed
                 XCTAssertEqual(mxSession.accountData.allAccountDataEvents.count, 1);
                 [expectation fulfill];
-            });
+            }];
         } failure:^(NSError *error) {
             XCTFail();
         }];
@@ -269,11 +272,14 @@
         [mxSession setAccountData:@{@"key": @"value"} forType:@"test" success:^{
             XCTAssertEqual(mxSession.accountData.allAccountDataEvents.count, 2);
             
-            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0.1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+            [NSNotificationCenter.defaultCenter addObserverForName:kMXSessionAccountDataDidChangeNotification
+                                                            object:mxSession
+                                                             queue:nil
+                                                        usingBlock:^(NSNotification * _Nonnull note) {
                 // after the sync the new account data is there
                 XCTAssertEqual(mxSession.accountData.allAccountDataEvents.count, 2);
                 [expectation fulfill];
-            });
+            }];
         } failure:^(NSError *error) {
             XCTFail();
         }];
