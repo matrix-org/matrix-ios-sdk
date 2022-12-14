@@ -1,12 +1,12 @@
-.. image:: https://img.shields.io/cocoapods/v/MatrixSDK?style=flat-square 
+.. image:: https://img.shields.io/cocoapods/v/MatrixSDK?style=flat-square
    :target: https://github.com/matrix-org/matrix-ios-sdk/releases
 .. image:: https://img.shields.io/cocoapods/p/MatrixSDK?style=flat-square
    :target: README.rst
-.. image:: https://img.shields.io/github/workflow/status/matrix-org/matrix-ios-sdk/Lint%20CI/develop?style=flat-square 
+.. image:: https://img.shields.io/github/workflow/status/matrix-org/matrix-ios-sdk/Lint%20CI/develop?style=flat-square
    :target: https://github.com/matrix-org/matrix-ios-sdk/actions?query=branch%3Adevelop
-.. image:: https://codecov.io/gh/matrix-org/matrix-ios-sdk/branch/develop/graph/badge.svg?token=2c9mzJoVpu 
+.. image:: https://codecov.io/gh/matrix-org/matrix-ios-sdk/branch/develop/graph/badge.svg?token=2c9mzJoVpu
    :target: https://codecov.io/gh/matrix-org/matrix-ios-sdk
-.. image:: https://img.shields.io/badge/License-Apache%202.0-yellowgreen.svg?style=flat-square 
+.. image:: https://img.shields.io/badge/License-Apache%202.0-yellowgreen.svg?style=flat-square
    :target: https://opensource.org/licenses/Apache-2.0
 
 Matrix iOS SDK
@@ -472,7 +472,7 @@ Then, open ``MatrixSDK.xcworkspace``.
 
 Tests
 =====
-The tests in the SDK Xcode project are both unit and integration tests. 
+The tests in the SDK Xcode project are both unit and integration tests.
 
 Unit tests classes use the suffix "UnitTests" to differentiate them. A unit test is a test that does not make any HTTP requests or uses mocked HTTP requests.
 
@@ -480,12 +480,22 @@ Out of the box, the tests use one of the homeservers (located at
 http://localhost:8080) of the "Demo Federation of Homeservers"
 (https://matrix-org.github.io/synapse/develop/development/demo.html?highlight=demo#synapse-demo-setup).
 
+Before you install synapse you may need few dependencies to be installed on Mac OS:
+
+- **Homebrew**: run ``/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)”``. More information can be found here https://brew.sh
+- **python 3**: downloading the latest stable version should be fine. Download the ``.pkg`` and install it from here https://www.python.org/downloads/
+- **pipx**: with python installed run ``pip3 install --user pipx``
+- **Rust**: run ``curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh``. more information can be found here https://www.rust-lang.org/tools/install
+- **icu4c**: Run ``brew install icu4c``
+- **Update env variables for icu4c**: if you use zsh run ``echo 'export PATH="/opt/homebrew/opt/icu4c/bin:$PATH"' >> ~/.zshrc``. Otherwise try to update ``.bash_profile`` in the same way. If you can’t find ``icu4c`` in the default homebew folder try to run ``which icu4c`` to find the correct path and update the command above.
+- **pg_config**: you can get it by running ``brew install postgresql``
+
 You first need to follow instructions to set up Synapse in development mode at https://github.com/matrix-org/synapse#synapse-development.
 The cookbook is::
 
       $ pip install --user pipx
       $ pipx install poetry
-      $ python3 -m pipx ensurepath   # To run if `pipx install poetry` complained about PATH not being correctly set 
+      $ python3 -m pipx ensurepath   # To run if `pipx install poetry` complained about PATH not being correctly set
       $ git clone https://github.com/matrix-org/synapse.git
       $ cd synapse
       $ poetry install --extras all
@@ -493,6 +503,8 @@ The cookbook is::
 To launch these test homeservers, type from the synapse root folder::
 
       $ poetry run ./demo/start.sh --no-rate-limit
+
+To verify that the synapse instance is actually running correctly, open a web browser and go to `http://127.0.0.1:8080`. A web page should confirm it.
 
 To stop and reset the servers::
 
