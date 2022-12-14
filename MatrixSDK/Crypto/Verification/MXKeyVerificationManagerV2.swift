@@ -497,19 +497,6 @@ class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
     private func addSasTransaction(for sas: SasProtocol, isIncoming: Bool) -> MXSASTransactionV2 {
         let transaction = MXSASTransactionV2(sas: sas, isIncoming: isIncoming, handler: handler)
         activeTransactions[transaction.transactionId] = transaction
-        if isIncoming {
-            NotificationCenter.default.post(
-                name: .MXKeyVerificationManagerNewTransaction,
-                object: self,
-                userInfo: [
-                    MXKeyVerificationManagerNotificationTransactionKey: transaction
-                ]
-            )
-            NotificationCenter.default.post(
-                name: .MXKeyVerificationTransactionDidChange,
-                object: transaction
-            )
-        }
         return transaction
     }
     
