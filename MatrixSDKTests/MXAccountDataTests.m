@@ -246,6 +246,46 @@
     }];
 }
 
+- (void)testEmptyAccountDataEventsAreDeleted
+{
+    [matrixSDKTestsData doMXSessionTestWithBob:self readyToTest:^(MXSession *mxSession, XCTestExpectation *expectation) {
+        [mxSession setAccountData:@{} forType:@"test" success:^{
+            XCTAssertEqual(mxSession.accountData.allAccountDataEvents.count, 2);
+            
+            [NSNotificationCenter.defaultCenter addObserverForName:kMXSessionAccountDataDidChangeNotification
+                                                            object:mxSession
+                                                             queue:nil
+                                                        usingBlock:^(NSNotification * _Nonnull note) {
+                // after the sync the empty account data has been removed
+                XCTAssertEqual(mxSession.accountData.allAccountDataEvents.count, 1);
+                [expectation fulfill];
+            }];
+        } failure:^(NSError *error) {
+            XCTFail();
+        }];
+    }];
+}
+
+- (void)testOtherAccountDataEventsArentDeleted
+{
+    [matrixSDKTestsData doMXSessionTestWithBob:self readyToTest:^(MXSession *mxSession, XCTestExpectation *expectation) {
+        [mxSession setAccountData:@{@"key": @"value"} forType:@"test" success:^{
+            XCTAssertEqual(mxSession.accountData.allAccountDataEvents.count, 2);
+            
+            [NSNotificationCenter.defaultCenter addObserverForName:kMXSessionAccountDataDidChangeNotification
+                                                            object:mxSession
+                                                             queue:nil
+                                                        usingBlock:^(NSNotification * _Nonnull note) {
+                // after the sync the new account data is there
+                XCTAssertEqual(mxSession.accountData.allAccountDataEvents.count, 2);
+                [expectation fulfill];
+            }];
+        } failure:^(NSError *error) {
+            XCTFail();
+        }];
+    }];
+}
+
 - (void)testDeletionOfAccountData {
     NSString* accountDataType = @"foo";
     MXAccountData* data = MXAccountData.new;
