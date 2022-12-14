@@ -494,8 +494,8 @@ You first need to follow instructions to set up Synapse in development mode at h
 The cookbook is::
 
       $ pip install --user pipx
-      $ pipx install poetry
       $ python3 -m pipx ensurepath   # To run if `pipx install poetry` complained about PATH not being correctly set
+      $ pipx install poetry
       $ git clone https://github.com/matrix-org/synapse.git
       $ cd synapse
       $ poetry install --extras all
