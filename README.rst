@@ -487,7 +487,7 @@ Before you install synapse you may need few dependencies to be installed on Mac 
 - **pipx**: with python installed run ``pip3 install --user pipx``
 - **Rust**: run ``curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh``. more information can be found here https://www.rust-lang.org/tools/install
 - **icu4c**: Run ``brew install icu4c``
-- **Update env variables for icu4c**: if you use zsh run ``echo 'export PATH="/opt/homebrew/opt/icu4c/bin:$PATH"' >> ~/.zshrc``. Otherwise try to update ``.bash_profile`` in the same way. If you can’t find ``icu4c`` in the default homebew folder try to run ``which icu4c`` to find the correct path and update the command above.
+- **Update env variables for icu4c**: if you use zsh run ``echo 'export PATH="/opt/homebrew/opt/icu4c/bin:$PATH"' >> ~/.zshrc``. Otherwise try to update ``.bash_profile`` in the same way. You may have configured another folder for brew binaries. In that case try to run ``brew info icu4c`` to spot the correct path.
 - **pg_config**: you can get it by running ``brew install postgresql``
 
 You first need to follow instructions to set up Synapse in development mode at https://github.com/matrix-org/synapse#synapse-development.
