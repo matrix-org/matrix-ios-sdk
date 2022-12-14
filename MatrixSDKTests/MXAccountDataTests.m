@@ -246,6 +246,40 @@
     }];
 }
 
+- (void)testEmptyAccountDataEventsAreDeleted
+{
+    [matrixSDKTestsData doMXSessionTestWithBob:self readyToTest:^(MXSession *mxSession, XCTestExpectation *expectation) {
+        [mxSession setAccountData:@{} forType:@"test" success:^{
+            XCTAssertEqual(mxSession.accountData.allAccountDataEvents.count, 2);
+            
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0.1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+                // after the sync the empty account data has been removed
+                XCTAssertEqual(mxSession.accountData.allAccountDataEvents.count, 1);
+                [expectation fulfill];
+            });
+        } failure:^(NSError *error) {
+            XCTFail();
+        }];
+    }];
+}
+
+- (void)testOtherAccountDataEventsArentDeleted
+{
+    [matrixSDKTestsData doMXSessionTestWithBob:self readyToTest:^(MXSession *mxSession, XCTestExpectation *expectation) {
+        [mxSession setAccountData:@{@"key": @"value"} forType:@"test" success:^{
+            XCTAssertEqual(mxSession.accountData.allAccountDataEvents.count, 2);
+            
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0.1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+                // after the sync the new account data is there
+                XCTAssertEqual(mxSession.accountData.allAccountDataEvents.count, 2);
+                [expectation fulfill];
+            });
+        } failure:^(NSError *error) {
+            XCTFail();
+        }];
+    }];
+}
+
 - (void)testDeletionOfAccountData {
     NSString* accountDataType = @"foo";
     MXAccountData* data = MXAccountData.new;
