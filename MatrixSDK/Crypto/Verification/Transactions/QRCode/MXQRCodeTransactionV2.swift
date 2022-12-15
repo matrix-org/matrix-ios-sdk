@@ -28,12 +28,13 @@ class MXQRCodeTransactionV2: NSObject, MXQRCodeTransaction {
     
     private(set) var state: MXQRCodeTransactionState = .unknown {
         didSet {
-            if state != oldValue {
-                log.debug("\(oldValue.description) -> \(state.description)")
-                
-                DispatchQueue.main.async {
-                    NotificationCenter.default.post(name: .MXKeyVerificationTransactionDidChange, object: self)
-                }
+            guard state != oldValue else {
+                return
+            }
+            
+            log.debug("\(oldValue.description) -> \(state.description)")
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(name: .MXKeyVerificationTransactionDidChange, object: self)
             }
         }
     }

@@ -28,12 +28,13 @@ class MXSASTransactionV2: NSObject, MXSASTransaction {
     
     private(set) var state: MXSASTransactionState = MXSASTransactionStateUnknown {
         didSet {
-            if state != oldValue {
-                log.debug("\(oldValue.description) -> \(state.description)")
-                
-                DispatchQueue.main.async {
-                    NotificationCenter.default.post(name: .MXKeyVerificationTransactionDidChange, object: self)
-                }
+            guard state != oldValue else {
+                return
+            }
+            
+            log.debug("\(oldValue.description) -> \(state.description)")
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(name: .MXKeyVerificationTransactionDidChange, object: self)
             }
         }
     }

@@ -31,12 +31,13 @@ class MXKeyVerificationRequestV2: NSObject, MXKeyVerificationRequest {
     
     private(set) var state: MXKeyVerificationRequestState = MXKeyVerificationRequestStatePending {
         didSet {
-            if state != oldValue {
-                log.debug("\(oldValue.description) -> \(state.description)")
-                
-                DispatchQueue.main.async {
-                    NotificationCenter.default.post(name: .MXKeyVerificationRequestDidChange, object: self)
-                }
+            guard state != oldValue else {
+                return
+            }
+            
+            log.debug("\(oldValue.description) -> \(state.description)")
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(name: .MXKeyVerificationRequestDidChange, object: self)
             }
         }
     }
