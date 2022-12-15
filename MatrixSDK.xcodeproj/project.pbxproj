@@ -1943,8 +1943,6 @@
 		ED76A4AE28EDA2CE00036FF0 /* MXKeyVerificationStateResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED76A4AC28EDA2CE00036FF0 /* MXKeyVerificationStateResolver.swift */; };
 		ED79B9852940BB45008952F6 /* MXToDevicePayloadUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED79B9842940BB45008952F6 /* MXToDevicePayloadUnitTests.swift */; };
 		ED79B9862940BB45008952F6 /* MXToDevicePayloadUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED79B9842940BB45008952F6 /* MXToDevicePayloadUnitTests.swift */; };
-		ED79B9882940E3CA008952F6 /* MXPlaceholderQRCodeTransaction.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED79B9872940E3CA008952F6 /* MXPlaceholderQRCodeTransaction.swift */; };
-		ED79B9892940E3CA008952F6 /* MXPlaceholderQRCodeTransaction.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED79B9872940E3CA008952F6 /* MXPlaceholderQRCodeTransaction.swift */; };
 		ED825F8F29014EDA006A614E /* MXSession+LegacyCrypto.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED825F8E29014EDA006A614E /* MXSession+LegacyCrypto.swift */; };
 		ED825F9029014EDA006A614E /* MXSession+LegacyCrypto.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED825F8E29014EDA006A614E /* MXSession+LegacyCrypto.swift */; };
 		ED88999127F2065D00718486 /* MXRoomAliasResolution.h in Headers */ = {isa = PBXBuildFile; fileRef = ED88998F27F2065C00718486 /* MXRoomAliasResolution.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -3091,7 +3089,6 @@
 		ED751DAD28EDEC7E003748C3 /* MXKeyVerificationStateResolverUnitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXKeyVerificationStateResolverUnitTests.swift; sourceTree = "<group>"; };
 		ED76A4AC28EDA2CE00036FF0 /* MXKeyVerificationStateResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXKeyVerificationStateResolver.swift; sourceTree = "<group>"; };
 		ED79B9842940BB45008952F6 /* MXToDevicePayloadUnitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXToDevicePayloadUnitTests.swift; sourceTree = "<group>"; };
-		ED79B9872940E3CA008952F6 /* MXPlaceholderQRCodeTransaction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXPlaceholderQRCodeTransaction.swift; sourceTree = "<group>"; };
 		ED825F8E29014EDA006A614E /* MXSession+LegacyCrypto.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MXSession+LegacyCrypto.swift"; sourceTree = "<group>"; };
 		ED88998F27F2065C00718486 /* MXRoomAliasResolution.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXRoomAliasResolution.h; sourceTree = "<group>"; };
 		ED88999027F2065D00718486 /* MXRoomAliasResolution.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXRoomAliasResolution.m; sourceTree = "<group>"; };
@@ -4841,7 +4838,6 @@
 				B19A309A240424BD00FB6F35 /* MXQRCodeTransaction_Private.h */,
 				B19A309B240424BD00FB6F35 /* MXQRCodeTransaction.m */,
 				ED28068628F06D360070AE9F /* MXQRCodeTransactionV2.swift */,
-				ED79B9872940E3CA008952F6 /* MXPlaceholderQRCodeTransaction.swift */,
 			);
 			path = QRCode;
 			sourceTree = "<group>";
@@ -6820,7 +6816,6 @@
 				ECBF658126DE2A8500AA3A99 /* MXMemoryRoomOutgoingMessagesStore.m in Sources */,
 				32F00ABD2488E1CD00131741 /* MXRecoveryService.m in Sources */,
 				3275FD9D21A6B60B00B9C13D /* MXLoginPolicy.m in Sources */,
-				ED79B9882940E3CA008952F6 /* MXPlaceholderQRCodeTransaction.swift in Sources */,
 				327F8DB31C6112BA00581CA3 /* MXRoomThirdPartyInvite.m in Sources */,
 				B17982FC2119E4A2001FD722 /* MXRoomPowerLevels.m in Sources */,
 				ED6DAC0228C76F0A00ECDCB6 /* MXRoomKeyInfo.swift in Sources */,
@@ -7468,7 +7463,6 @@
 				ECBF658226DE2A8500AA3A99 /* MXMemoryRoomOutgoingMessagesStore.m in Sources */,
 				324DD2AF246AEB7B00377005 /* MXSecretStoragePassphrase.m in Sources */,
 				B14EF1EF2397E90400758AF0 /* MXIdentityService.m in Sources */,
-				ED79B9892940E3CA008952F6 /* MXPlaceholderQRCodeTransaction.swift in Sources */,
 				ECF29BE62641953C0053E6D6 /* MXAssertedIdentityModel.m in Sources */,
 				EC8A53C625B1BC77004E0802 /* MXTurnServerResponse.m in Sources */,
 				ED6DAC0328C76F0A00ECDCB6 /* MXRoomKeyInfo.swift in Sources */,

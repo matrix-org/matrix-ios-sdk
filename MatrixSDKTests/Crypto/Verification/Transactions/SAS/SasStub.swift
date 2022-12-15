@@ -89,7 +89,7 @@ struct SasStub: SasProtocol {
         nil
     }
     
-    func setChangesListener(callback: SasListener) {
+    func setChangesListener(listener: SasListener) {
     }
     
     func state() -> SasState {
