@@ -81,20 +81,16 @@ public enum MXBackgroundSyncServiceError: Error {
         // We can flush any crypto data if our sync response store is empty
         let resetBackgroundCryptoStore = syncResponseStoreManager.syncToken() == nil
         
-        #if DEBUG
-        if MXSDKOptions.sharedInstance().enableCryptoV2 {
-            do {
-                crypto = try MXBackgroundCryptoV2(credentials: credentials, restClient: restClient)
-            } catch {
-                MXLog.failure("[MXBackgroundSyncService] init: Cannot initialize crypto v2", context: error)
-                crypto = MXLegacyBackgroundCrypto(credentials: credentials, resetBackgroundCryptoStore: resetBackgroundCryptoStore)
+        crypto = {
+            #if DEBUG
+            if MXSDKOptions.sharedInstance().enableCryptoV2 {
+                // Crypto V2 is currently unable to decrypt notifications due to single-process store,
+                // so it uses dummy background crypto that does not do anything.
+                return MXDummyBackgroundCrypto()
             }
-        } else {
-            crypto = MXLegacyBackgroundCrypto(credentials: credentials, resetBackgroundCryptoStore: resetBackgroundCryptoStore)
-        }
-        #else
-        crypto = MXLegacyBackgroundCrypto(credentials: credentials, resetBackgroundCryptoStore: resetBackgroundCryptoStore)
-        #endif
+            #endif
+            return MXLegacyBackgroundCrypto(credentials: credentials, resetBackgroundCryptoStore: resetBackgroundCryptoStore)
+        }()
         
         pushRulesManager = MXBackgroundPushRulesManager(withCredentials: credentials)
         if let accountData = syncResponseStoreManager.syncResponseStore.accountData {

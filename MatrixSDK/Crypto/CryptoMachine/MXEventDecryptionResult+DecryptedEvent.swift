@@ -37,7 +37,11 @@ extension MXEventDecryptionResult {
         senderCurve25519Key = event.senderCurve25519Key
         claimedEd25519Key = event.claimedEd25519Key
         forwardingCurve25519KeyChain = event.forwardingCurve25519Chain
-        isUntrusted = event.verificationState == VerificationState.untrusted
+        
+        // `Untrusted` state from rust is currently ignored as it lacks "undecided" option,
+        // will be changed in a future PR into:
+        // isUntrusted = event.verificationState == VerificationState.untrusted
+        isUntrusted = false
     }
 }
 
