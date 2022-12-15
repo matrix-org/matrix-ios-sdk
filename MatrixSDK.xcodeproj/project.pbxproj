@@ -1912,6 +1912,8 @@
 		ED6DAC1F28C79D2000ECDCB6 /* MXUnrequestedForwardedRoomKeyManagerUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED6DAC1D28C79D2000ECDCB6 /* MXUnrequestedForwardedRoomKeyManagerUnitTests.swift */; };
 		ED6DAC2128C7A51400ECDCB6 /* MXDateProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED6DAC2028C7A4F000ECDCB6 /* MXDateProvider.swift */; };
 		ED6DAC2228C7A51400ECDCB6 /* MXDateProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED6DAC2028C7A4F000ECDCB6 /* MXDateProvider.swift */; };
+		ED6E87A9294B3BAB00100D9C /* MXAnalyticsDestinationUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED6E87A8294B3BAB00100D9C /* MXAnalyticsDestinationUnitTests.swift */; };
+		ED6E87AA294B3BAB00100D9C /* MXAnalyticsDestinationUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED6E87A8294B3BAB00100D9C /* MXAnalyticsDestinationUnitTests.swift */; };
 		ED7019DD2886C24100FC31B9 /* MXCrossSigningInfoSourceUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED8F1D242885A39800F897E7 /* MXCrossSigningInfoSourceUnitTests.swift */; };
 		ED7019DE2886C24A00FC31B9 /* MXTrustLevelSourceUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED8F1D2F2885AB0300F897E7 /* MXTrustLevelSourceUnitTests.swift */; };
 		ED7019DF2886C25600FC31B9 /* MXDeviceInfoUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED8F1D1B2885909E00F897E7 /* MXDeviceInfoUnitTests.swift */; };
@@ -3077,6 +3079,7 @@
 		ED6DAC1A28C79AA300ECDCB6 /* MXUnrequestedForwardedRoomKeyManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MXUnrequestedForwardedRoomKeyManager.swift; sourceTree = "<group>"; };
 		ED6DAC1D28C79D2000ECDCB6 /* MXUnrequestedForwardedRoomKeyManagerUnitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXUnrequestedForwardedRoomKeyManagerUnitTests.swift; sourceTree = "<group>"; };
 		ED6DAC2028C7A4F000ECDCB6 /* MXDateProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXDateProvider.swift; sourceTree = "<group>"; };
+		ED6E87A8294B3BAB00100D9C /* MXAnalyticsDestinationUnitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXAnalyticsDestinationUnitTests.swift; sourceTree = "<group>"; };
 		ED7019E42886C32900FC31B9 /* MXSASTransactionV2.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MXSASTransactionV2.swift; sourceTree = "<group>"; };
 		ED7019E72886C33100FC31B9 /* MXKeyVerificationRequestV2.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MXKeyVerificationRequestV2.swift; sourceTree = "<group>"; };
 		ED7019EA2886C33A00FC31B9 /* MXKeyVerificationManagerV2.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MXKeyVerificationManagerV2.swift; sourceTree = "<group>"; };
@@ -3434,6 +3437,7 @@
 		322985C526FA66FD001890BC /* Utils */ = {
 			isa = PBXGroup;
 			children = (
+				ED6E87A7294B3B9900100D9C /* Logs */,
 				322985CA26FAF898001890BC /* MXSession.swift */,
 				322985CE26FBAE7B001890BC /* TestObserver.swift */,
 				322985D126FC9E61001890BC /* MXSessionTracker.swift */,
@@ -5508,6 +5512,14 @@
 			path = Store;
 			sourceTree = "<group>";
 		};
+		ED6E87A7294B3B9900100D9C /* Logs */ = {
+			isa = PBXGroup;
+			children = (
+				ED6E87A8294B3BAB00100D9C /* MXAnalyticsDestinationUnitTests.swift */,
+			);
+			path = Logs;
+			sourceTree = "<group>";
+		};
 		ED7019ED2886CA6C00FC31B9 /* Verification */ = {
 			isa = PBXGroup;
 			children = (
@@ -7238,6 +7250,7 @@
 				B146D4FF21A5C0BD00D8C2C6 /* MXMediaScanStoreUnitTests.m in Sources */,
 				32BD34BE1E84134A006EDC0D /* MatrixSDKTestsE2EData.m in Sources */,
 				ED751DAE28EDEC7E003748C3 /* MXKeyVerificationStateResolverUnitTests.swift in Sources */,
+				ED6E87A9294B3BAB00100D9C /* MXAnalyticsDestinationUnitTests.swift in Sources */,
 				B146D4FE21A5C0BD00D8C2C6 /* MXEventScanStoreUnitTests.m in Sources */,
 				EDF1B6932876CD8600BBBCEE /* MXTaskQueueUnitTests.swift in Sources */,
 				32684CB821085F770046D2F9 /* MXLazyLoadingTests.m in Sources */,
@@ -7885,6 +7898,7 @@
 				B1E09A242397FCE90057C069 /* MXPeekingRoomTests.m in Sources */,
 				B1E09A452397FD990057C069 /* MXLazyLoadingTests.m in Sources */,
 				ED751DAF28EDEC7E003748C3 /* MXKeyVerificationStateResolverUnitTests.swift in Sources */,
+				ED6E87AA294B3BAB00100D9C /* MXAnalyticsDestinationUnitTests.swift in Sources */,
 				B1E09A1C2397FCE90057C069 /* MXEventAnnotationUnitTests.swift in Sources */,
 				B1E09A262397FCE90057C069 /* MXPushRuleUnitTests.m in Sources */,
 				EDF1B6942876CD8600BBBCEE /* MXTaskQueueUnitTests.swift in Sources */,

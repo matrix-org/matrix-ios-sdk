@@ -30,10 +30,18 @@ class MXAnalyticsDestination: BaseDestination {
     
     override func send(_ level: SwiftyBeaver.Level, msg: String, thread: String, file: String, function: String, line: Int, context: Any? = nil) -> String? {
         let message = super.send(level, msg: msg, thread: thread, file: file, function: function, line: line, context: context)
-        #if !DEBUG
-        MXSDKOptions.sharedInstance().analyticsDelegate?.trackNonFatalIssue(msg, details: formattedDetails(from: context))
-        #endif
+        if shouldTrackIssue(with: context) {
+            MXSDKOptions.sharedInstance().analyticsDelegate?.trackNonFatalIssue(msg, details: formattedDetails(from: context))
+        }
         return message
+    }
+    
+    private func shouldTrackIssue(with context: Any?) -> Bool {
+        // We will track all issues except for those with a cancellation error
+        guard let error = context as? NSError else {
+            return true
+        }
+        return !error.isCancelledError
     }
     
     private func formattedDetails(from context: Any?) -> [String: Any]? {
@@ -52,5 +60,11 @@ class MXAnalyticsDestination: BaseDestination {
                 "context": String(describing: context)
             ]
         }
+    }
+}
+
+private extension NSError {
+    var isCancelledError: Bool {
+        domain == NSURLErrorDomain && code == NSURLErrorCancelled
     }
 }
