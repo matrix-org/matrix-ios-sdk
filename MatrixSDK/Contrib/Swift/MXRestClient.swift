@@ -42,6 +42,15 @@ public enum MXThreadsIncludeParameter: String, RawRepresentable, Equatable, Hash
     case all
     case participated
     
+    public init?(rawValue: String) {
+        switch rawValue {
+        case kMXThreadsListIncludeAllParameter:             self = .all
+        case kMXThreadsListIncludeParticipatedParameter:    self = .participated
+        default:
+            return nil
+        }
+    }
+    
     public var rawValue: String {
         switch self {
         case .all:               return kMXThreadsListIncludeAllParameter
