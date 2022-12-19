@@ -38,11 +38,11 @@ public enum MXAccountDataType: Equatable, Hashable {
 }
 
 /// Represents the threads request include parameter
-public enum MXThreadsIncludeParameter: Equatable, Hashable {
+public enum MXThreadsIncludeParameter: String, RawRepresentable, Equatable, Hashable {
     case all
     case participated
     
-    var rawValue: String {
+    public var rawValue: String {
         switch self {
         case .all:               return kMXThreadsListIncludeAllParameter
         case .participated:      return kMXThreadsListIncludeParticipatedParameter
