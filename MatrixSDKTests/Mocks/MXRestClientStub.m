@@ -58,11 +58,18 @@
     
     if (response) {
         success(response);
+        return [MXHTTPOperation new];
     } else {
-        failure([[NSError alloc] initWithDomain:@"RelationsAPIDomain" code:0 userInfo:nil]);
+        return [super relationsForEvent:eventId
+                                 inRoom:roomId
+                           relationType:relationType
+                              eventType:eventType
+                                   from:from
+                              direction:direction
+                                  limit:limit
+                                success:success
+                                failure:failure];
     }
- 
-    return [MXHTTPOperation new];
 }
 
 @end
