@@ -1,1 +1,1 @@
-Polls: fetch polls event on m.poll.end
+Polls: ensure polls are up to date after they are closed.
