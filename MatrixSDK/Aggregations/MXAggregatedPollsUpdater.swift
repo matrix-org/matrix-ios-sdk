@@ -17,11 +17,15 @@
 import Foundation
 
 @objcMembers
+/// `MXAggregatedPollsUpdater` populates the local database with poll events when some of them may be missing.
+/// This can happen for example when a user joins a room with an ongoing poll.
+/// In this case `poll.start` and `poll.response` events may be missing causing incorrect rendering of polls on the timeline.
+/// This type fetches all the related events of a poll when a `poll.end` event triggers.
 public final class MXAggregatedPollsUpdater: NSObject {
     private let session: MXSession
     private let store: MXStore
     
-    init(session: MXSession, store: MXStore) {
+    public init(session: MXSession, store: MXStore) {
         self.session = session
         self.store = store
     }
