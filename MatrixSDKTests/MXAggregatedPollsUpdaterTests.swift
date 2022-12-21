@@ -18,28 +18,92 @@ import XCTest
 import MatrixSDK
 
 final class MXAggregatedPollsUpdaterTests: XCTestCase {
-
-    override func setUpWithError() throws {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
+    private var matrixSDKTestsData: MatrixSDKTestsData!
+    private let roomId = "roomId"
+    private let pollStartId = "pollStartId"
+    private let numberOfResponses: UInt = 3
+    
+    override func setUp() {
+        super.setUp()
+        matrixSDKTestsData = MatrixSDKTestsData()
     }
-
-    override func tearDownWithError() throws {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
+    
+    override func tearDown() {
+        matrixSDKTestsData = nil
+        super.tearDown()
     }
-
-    func testExample() throws {
-        // This is an example of a functional test case.
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
-        // Any test you write for XCTest can be annotated as throws and async.
-        // Mark your test throws to produce an unexpected failure when your test encounters an uncaught error.
-        // Mark your test async to allow awaiting for asynchronous code to complete. Check the results with assertions afterwards.
-    }
-
-    func testPerformanceExample() throws {
-        // This is an example of a performance test case.
-        self.measure {
-            // Put the code you want to measure the time of here.
+    
+    func testRelatedEventsAreStored() {
+        setupWithBobCredentials { expectation, session, restClient, store in
+            
+            let updater = MXAggregatedPollsUpdater(session: session, store: store)
+            let pollEndEvent: MXEvent = .mockEvent(roomId: self.roomId, eventId: "eventId1", eventType: "m.poll.end", relatedEventId: self.pollStartId)
+            updater.refreshPoll(after: pollEndEvent)
+            
+            (0 ..< self.numberOfResponses).forEach { index in
+                XCTAssertTrue(store.eventExists(withEventId: "eventId\(index)", inRoom: self.roomId))
+            }
+            
+            expectation.fulfill()
         }
     }
+}
 
+private extension MXAggregatedPollsUpdaterTests {
+    func setupWithBobCredentials( _ completion: @escaping (_ expectation: XCTestExpectation, _ session: MXSession, _ restClient: MXRestClientStub, _ store: MXMemoryStore) -> Void) {
+        let expectation = self.expectation(description: #function)
+        
+        matrixSDKTestsData.getBobCredentials(self) {
+            XCTAssertNotNil(self.matrixSDKTestsData.bobCredentials)
+            
+            let restClient = MXRestClientStub(credentials: self.matrixSDKTestsData.bobCredentials!)
+            restClient.stubbedRelatedEventsPerEvent = [
+                self.pollStartId : MXAggregationPaginatedResponse(originalEvent: .mockEvent(roomId: self.roomId, eventId: self.pollStartId, eventType: "m.poll.start"),
+                                                                  chunk: .pollResponses(count: self.numberOfResponses, roomId: self.roomId, relatedEventId: self.pollStartId),
+                                                                  nextBatch: nil)
+            ]
+            
+            let session = MXSession(matrixRestClient: restClient)
+            XCTAssertNotNil(session)
+           
+            let store = MXMemoryStore()
+            
+            session?.setStore(store) { response in
+                completion(expectation, session!, restClient, store)
+                session?.close()
+            }
+        }
+        
+        wait(for: [expectation], timeout: 2)
+    }
+}
+
+private extension MXEvent {
+    static func mockEvent(roomId: String, eventId: String, eventType: String, relatedEventId: String? = nil) -> MXEvent {
+        var event: [String: Any] = [
+            "event_id": eventId,
+            "type": eventType,
+            "room_id": roomId,
+            "content": [String: String]()
+        ]
+        
+        if let relatedEventId = relatedEventId {
+            event["content"] = [
+                "m.relates_to": [
+                    "event_id": relatedEventId,
+                    "rel_type": "m.reference"
+                ]
+            ]
+        }
+        
+        return .init(fromJSON: event)
+    }
+}
+
+private extension Array where Element == MXEvent {
+    static func pollResponses(count: UInt, roomId: String, relatedEventId: String) -> [MXEvent] {
+        (0 ..< count).map { index in
+            MXEvent.mockEvent(roomId: roomId, eventId: "eventId\(index)", eventType: "m.poll.response", relatedEventId: relatedEventId)
+        }
+    }
 }
