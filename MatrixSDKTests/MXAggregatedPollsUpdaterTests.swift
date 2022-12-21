@@ -47,6 +47,39 @@ final class MXAggregatedPollsUpdaterTests: XCTestCase {
             expectation.fulfill()
         }
     }
+    
+    func testRelatedEventsArenStoredForWrongInputEvent() {
+        setupWithBobCredentials { expectation, session, restClient, store in
+            
+            let updater = MXAggregatedPollsUpdater(session: session, store: store)
+            let pollEndEvent: MXEvent = .mockEvent(roomId: self.roomId, eventId: "eventId1", eventType: "m.poll.foo", relatedEventId: self.pollStartId)
+            updater.refreshPoll(after: pollEndEvent)
+            
+            (0 ..< self.numberOfResponses).forEach { index in
+                XCTAssertFalse(store.eventExists(withEventId: "eventId\(index)", inRoom: self.roomId))
+            }
+            
+            expectation.fulfill()
+        }
+    }
+    
+    func testRelatedEventsArenStoredForStartEventAlreadyPresent() {
+        setupWithBobCredentials { expectation, session, restClient, store in
+            
+            let updater = MXAggregatedPollsUpdater(session: session, store: store)
+            let pollEndEvent: MXEvent = .mockEvent(roomId: self.roomId, eventId: "eventId1", eventType: "m.poll.end", relatedEventId: self.pollStartId)
+            
+            store.storeEvent(forRoom: self.roomId, event: .mockEvent(roomId: self.roomId, eventId: self.pollStartId, eventType: "m.poll.start"), direction: .backwards)
+            
+            updater.refreshPoll(after: pollEndEvent)
+            
+            (0 ..< self.numberOfResponses).forEach { index in
+                XCTAssertFalse(store.eventExists(withEventId: "eventId\(index)", inRoom: self.roomId))
+            }
+            
+            expectation.fulfill()
+        }
+    }
 }
 
 private extension MXAggregatedPollsUpdaterTests {
