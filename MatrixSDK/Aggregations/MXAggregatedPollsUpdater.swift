@@ -74,13 +74,18 @@ private extension MXSession {
     }
     
     func storeIfNeeded(events: [MXEvent]) {
-        events
+       let eventsToStore = events
             .filter { event in
-                event.isEncrypted == false && self.store.eventExists(withEventId: event.eventId, inRoom: event.roomId) == false
+                event.isEncrypted == false && store.eventExists(withEventId: event.eventId, inRoom: event.roomId) == false
             }
-            .forEach { event in
-                self.store.storeEvent(forRoom: event.roomId, event: event, direction: .backwards)
-            }
+        
+        for event in eventsToStore {
+            store.storeEvent(forRoom: event.roomId, event: event, direction: .backwards)
+        }
+
+        if eventsToStore.isEmpty == false {
+            store.commit?()
+        }
     }
 }
 

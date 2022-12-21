@@ -48,7 +48,7 @@ final class MXAggregatedPollsUpdaterTests: XCTestCase {
         }
     }
     
-    func testRelatedEventsArenStoredForWrongInputEvent() {
+    func testRelatedEventsAreNotStored_WrongInputEvent() {
         setupWithBobCredentials { expectation, session, restClient, store in
             
             let updater = MXAggregatedPollsUpdater(session: session, store: store)
@@ -63,7 +63,7 @@ final class MXAggregatedPollsUpdaterTests: XCTestCase {
         }
     }
     
-    func testRelatedEventsArenStoredForStartEventAlreadyPresent() {
+    func testRelatedEventsAreNotStored_StartEventAlreadyPresent() {
         setupWithBobCredentials { expectation, session, restClient, store in
             
             let updater = MXAggregatedPollsUpdater(session: session, store: store)
