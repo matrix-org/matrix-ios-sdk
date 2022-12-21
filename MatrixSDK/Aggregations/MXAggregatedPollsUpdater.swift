@@ -61,26 +61,22 @@ public final class MXAggregatedPollsUpdater: NSObject {
 
 private extension MXSession {
     func decryptAndStore(response: MXAggregationPaginatedResponse) {
+        // reverse chronological order
         let allEvents = response.chunk + response.originalEventArray
-        
-        let eventsToDecrypt = allEvents
-            .filter {
-                $0.isEncrypted && $0.clear == nil
-            }
          
-        decryptEvents(eventsToDecrypt, inTimeline: nil) { [weak self] failedEvents in
-            guard let self = self else {
-                return
-            }
-            
-            allEvents
-                .filter { event in
-                    !event.isEncrypted && !self.store.eventExists(withEventId: event.eventId, inRoom: event.roomId)
-                }
-                .forEach { event in
-                    self.store.storeEvent(forRoom: event.roomId, event: event, direction: .backwards)
-                }
+        decryptEvents(allEvents, inTimeline: nil) { [weak self] failedEvents in
+            self?.storeIfNeeded(events: allEvents)
         }
+    }
+    
+    func storeIfNeeded(events: [MXEvent]) {
+        events
+            .filter { event in
+                event.isEncrypted == false && self.store.eventExists(withEventId: event.eventId, inRoom: event.roomId) == false
+            }
+            .forEach { event in
+                self.store.storeEvent(forRoom: event.roomId, event: event, direction: .backwards)
+            }
     }
 }
 
