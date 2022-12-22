@@ -52,4 +52,24 @@
     return [[MXHTTPOperation alloc] init];
 }
 
+- (MXHTTPOperation *)relationsForEvent:(NSString *)eventId inRoom:(NSString *)roomId relationType:(NSString *)relationType eventType:(NSString *)eventType from:(NSString *)from direction:(MXTimelineDirection)direction limit:(NSInteger)limit success:(void (^)(MXAggregationPaginatedResponse *))success failure:(void (^)(NSError *))failure {
+    
+    MXAggregationPaginatedResponse* response = self.stubbedRelatedEventsPerEvent[eventId];
+    
+    if (response) {
+        success(response);
+        return [MXHTTPOperation new];
+    } else {
+        return [super relationsForEvent:eventId
+                                 inRoom:roomId
+                           relationType:relationType
+                              eventType:eventType
+                                   from:from
+                              direction:direction
+                                  limit:limit
+                                success:success
+                                failure:failure];
+    }
+}
+
 @end

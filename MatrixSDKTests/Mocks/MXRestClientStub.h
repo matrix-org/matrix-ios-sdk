@@ -18,6 +18,7 @@
 #define MXRestClientStub_h
 
 #import "MXRestClient.h"
+#import "MXAggregationPaginatedResponse.h"
 
 /**
  Stubbed version of MXRestClient which can be used in unit tests without making any actual API calls
@@ -28,6 +29,11 @@
  Stubbed data that will be returned when calling `stateOfRoom` instead of making HTTP requests
  */
 @property (nonatomic, strong) NSDictionary<NSString *, NSArray <NSDictionary *>*> *stubbedStatePerRoom;
+
+/**
+ Stubbed data that will be returned when calling `relationsForEvent` instead of making HTTP requests
+ */
+@property (nonatomic, strong) NSDictionary<NSString *, MXAggregationPaginatedResponse *> *stubbedRelatedEventsPerEvent;
 
 @end
 
