@@ -71,6 +71,7 @@ NSString *const kMXSessionDidUpdateGroupSummaryNotification = @"kMXSessionDidUpd
 NSString *const kMXSessionDidUpdateGroupRoomsNotification = @"kMXSessionDidUpdateGroupRoomsNotification";
 NSString *const kMXSessionDidUpdateGroupUsersNotification = @"kMXSessionDidUpdateGroupUsersNotification";
 NSString *const kMXSessionDidUpdatePublicisedGroupsForUsersNotification = @"kMXSessionDidUpdatePublicisedGroupsForUsersNotification";
+NSString *const kMXSessionDidFailToDecryptEventsNotification = @"kMXSessionDidFailToDecryptEventsNotification";
 
 NSString *const kMXSessionNotificationRoomIdKey = @"roomId";
 NSString *const kMXSessionNotificationGroupKey = @"group";
@@ -79,6 +80,7 @@ NSString *const kMXSessionNotificationEventKey = @"event";
 NSString *const kMXSessionNotificationSyncResponseKey = @"syncResponse";
 NSString *const kMXSessionNotificationErrorKey = @"error";
 NSString *const kMXSessionNotificationUserIdsArrayKey = @"userIds";
+NSString *const kMXSessionNotificationEventsArrayKey = @"events";
 
 NSString *const kMXSessionNoRoomTag = @"m.recent";  // Use the same value as matrix-react-sdk
 
@@ -4998,6 +5000,12 @@ typedef void (^MXOnResumeDone)(void);
                 {
                     [failedEvents addObject:event];
                 }
+            }
+            
+            if (failedEvents.count > 0) {
+                [NSNotificationCenter.defaultCenter postNotificationName:kMXSessionDidFailToDecryptEventsNotification
+                                                                  object:self
+                                                                userInfo:@{ kMXSessionNotificationEventsArrayKey: failedEvents }];
             }
             
             onComplete(failedEvents);
