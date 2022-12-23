@@ -155,6 +155,38 @@ class MXPollAggregatorTest: XCTestCase {
         }
     }
     
+    func testErrorsAreIgnoredForOtherPolls() {
+        createScenarioForBobAndAlice { bobSession, aliceSession, bobRoom, aliceRoom, pollStartEvent, expectation in
+            self.pollAggregator = try! PollAggregator(session: bobSession, room: bobRoom, pollStartEventId: pollStartEvent.eventId)
+            self.pollAggregator.handleErroredRelatedEventsIds(["A", "B"], to: "someId")
+            XCTAssertFalse(self.pollAggregator.poll.hasDecryptionError)
+            expectation.fulfill()
+        }
+    }
+    
+    func testNoErrorsAreIgnored() {
+        createScenarioForBobAndAlice { bobSession, aliceSession, bobRoom, aliceRoom, pollStartEvent, expectation in
+            self.pollAggregator = try! PollAggregator(session: bobSession, room: bobRoom, pollStartEventId: pollStartEvent.eventId)
+            self.pollAggregator.handleErroredRelatedEventsIds([], to: pollStartEvent.eventId)
+            XCTAssertFalse(self.pollAggregator.poll.hasDecryptionError)
+            expectation.fulfill()
+        }
+    }
+    
+    func testErrorsAreConsideredWhenRelatedToThisPoll() {
+        createScenarioForBobAndAlice { bobSession, aliceSession, bobRoom, aliceRoom, pollStartEvent, expectation in
+            self.pollAggregator = try! PollAggregator(session: bobSession, room: bobRoom, pollStartEventId: pollStartEvent.eventId)
+
+            self.pollAggregator.delegate = PollAggregatorBlockWrapper(dataUpdateCallback: {
+                XCTAssertTrue(self.pollAggregator.poll.hasDecryptionError)
+                expectation.fulfill()
+                self.pollAggregator.delegate = nil
+            })
+            
+            self.pollAggregator.handleErroredRelatedEventsIds(["A", "B"], to: pollStartEvent.eventId)
+        }
+    }
+    
     // MARK: - Private
     
     func createScenarioForBobAndAlice(_ readyToTest: @escaping (MXSession, MXSession, MXRoom, MXRoom, MXEvent, XCTestExpectation) -> Void) {
