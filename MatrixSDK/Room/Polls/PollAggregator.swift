@@ -52,6 +52,7 @@ public class PollAggregator {
     
     private var events: [MXEvent] = []
     private var hasBeenEdited = false
+    private var relatedErroredEvents: Set<String> = []
     
     public private(set) var poll: PollProtocol! {
         didSet {
@@ -80,6 +81,25 @@ public class PollAggregator {
         NotificationCenter.default.addObserver(self, selector: #selector(handleRoomDataFlush), name: .mxRoomDidFlushData, object: self.room)
         setupEditListener()
         try buildPollStartContent()
+    }
+    
+    public func handleErroredRelatedEventsIds(_ ids: Set<String>?, to parentEvent: String) {
+        guard parentEvent == pollStartEventId else {
+            return
+        }
+        
+        let newErroredEvents = ids ?? []
+        guard relatedErroredEvents != newErroredEvents else {
+            return
+        }
+        
+        relatedErroredEvents = newErroredEvents
+        
+        self.poll = pollBuilder.build(pollStartEventContent: pollStartEventContent,
+                                      events: events,
+                                      currentUserIdentifier: session.myUserId,
+                                      hasBeenEdited: hasBeenEdited,
+                                      hasDecryptionError: hasDecryptionError)
     }
     
     private func setupEditListener() {
@@ -113,7 +133,8 @@ public class PollAggregator {
         poll = pollBuilder.build(pollStartEventContent: eventContent,
                                  events: events,
                                  currentUserIdentifier: session.myUserId,
-                                 hasBeenEdited: hasBeenEdited)
+                                 hasBeenEdited: hasBeenEdited,
+                                 hasDecryptionError: hasDecryptionError)
         
         reloadPollData()
     }
@@ -151,13 +172,15 @@ public class PollAggregator {
                 self.poll = self.pollBuilder.build(pollStartEventContent: self.pollStartEventContent,
                                                    events: self.events,
                                                    currentUserIdentifier: self.session.myUserId,
-                                                   hasBeenEdited: self.hasBeenEdited)
+                                                   hasBeenEdited: self.hasBeenEdited,
+                                                   hasDecryptionError: self.hasDecryptionError)
             } as Any
             
             self.poll = self.pollBuilder.build(pollStartEventContent: self.pollStartEventContent,
                                                events: self.events,
                                                currentUserIdentifier: self.session.myUserId,
-                                               hasBeenEdited: self.hasBeenEdited)
+                                               hasBeenEdited: self.hasBeenEdited,
+                                               hasDecryptionError: self.hasDecryptionError)
             
             self.delegate?.pollAggregatorDidEndLoading(self)
             
@@ -168,5 +191,9 @@ public class PollAggregator {
             
             self.delegate?.pollAggregator(self, didFailWithError: error)
         }
+    }
+    
+    private var hasDecryptionError: Bool {
+        relatedErroredEvents.isEmpty == false
     }
 }
