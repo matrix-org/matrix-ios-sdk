@@ -71,6 +71,25 @@ public class PollAggregator {
         }
     }
     
+    public convenience init(session: MXSession, room: MXRoom, pollEvent: MXEvent) throws {
+        var pollStartEventId: String?
+        
+        switch pollEvent.eventType {
+        case .pollStart:
+            pollStartEventId = pollEvent.eventId
+        case .pollEnd:
+            pollStartEventId = pollEvent.relatesTo.eventId
+        default:
+            pollStartEventId = nil
+        }
+        
+        guard let pollStartEventId = pollStartEventId else {
+            throw PollAggregatorError.invalidPollStartEvent
+        }
+        
+        try self.init(session: session, room: room, pollStartEventId: pollStartEventId)
+    }
+    
     public init(session: MXSession, room: MXRoom, pollStartEventId: String) throws {
         self.session = session
         self.room = room
