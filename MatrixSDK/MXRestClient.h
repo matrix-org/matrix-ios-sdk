@@ -91,6 +91,11 @@ FOUNDATION_EXPORT NSString *const kMXAccountDataTypeRecentRoomsKey;
 FOUNDATION_EXPORT NSString *const kMXAccountDataLocalNotificationKeyPrefix;
 FOUNDATION_EXPORT NSString *const kMXAccountDataIsSilencedKey;
 
+/**
+ Threads list request parameters
+ */
+FOUNDATION_EXPORT NSString *const kMXThreadsListIncludeAllParameter;
+FOUNDATION_EXPORT NSString *const kMXThreadsListIncludeParticipatedParameter;
 
 /**
  MXRestClient error domain
@@ -1699,6 +1704,23 @@ NS_REFINED_FOR_SWIFT;
                                    to:(NSString*)roomVersion
                               success:(void (^)(NSString *replacementRoomId))success
                               failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
+/**
+ List all the threads of a room.
+ 
+ @param roomId the id of the room.
+ @param include wether the response should include all threads (e.g. `kMXThreadsListIncludeAllParameter`) or only threads participated by the user (e.g. `kMXThreadsListIncludeParticipatedParameter`)
+ @param from the token to pass for doing pagination from a previous response.
+ @param success A block object called when the operation succeeds. It provides the list of root events of the threads and, optionally, the next batch token.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)threadsInRoomWithId:(NSString*)roomId
+                                include:(NSString *)include
+                                   from:(nullable NSString*)from
+                                success:(void (^)(MXAggregationPaginatedResponse *response))success
+                                failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 #pragma mark - Room tags operations
 /**
