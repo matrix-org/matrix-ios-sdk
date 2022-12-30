@@ -2192,6 +2192,17 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
         
         senderMessageBody = question;
     }
+    if (eventToReply.eventType == MXEventTypePollEnd)
+    {
+        MXEvent* pollStartEvent = [mxSession.store eventWithEventId:eventToReply.relatesTo.eventId inRoom:self.roomId];
+        
+        if (pollStartEvent) {
+            NSString *question = [MXEventContentPollStart modelFromJSON:pollStartEvent.content].question;
+            senderMessageBody = question;
+        } else { // we need a fallback to avoid crashes. Now is the m.poll.start event id
+            senderMessageBody = eventToReply.relatesTo.eventId;
+        }
+    }
     else if (eventToReply.eventType == MXEventTypeBeaconInfo)
     {
         senderMessageBody = stringLocalizer.senderSentTheirLiveLocation;
