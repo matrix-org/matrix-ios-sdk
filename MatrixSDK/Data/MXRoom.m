@@ -2199,7 +2199,8 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
         if (pollStartEvent) {
             NSString *question = [MXEventContentPollStart modelFromJSON:pollStartEvent.content].question;
             senderMessageBody = question;
-        } else { // we need a fallback to avoid crashes. Now is the m.poll.start event id
+        } else {
+            // we need a fallback to avoid crashes since the m.poll.start event may be missing.
             senderMessageBody = eventToReply.relatesTo.eventId;
         }
     }
