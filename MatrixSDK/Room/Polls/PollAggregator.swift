@@ -52,7 +52,7 @@ public class PollAggregator {
     
     private var events: [MXEvent] = []
     private var hasBeenEdited = false
-    private var relatedErroredEvents: Set<String> = []
+    private var relatedUndecryptableEvents: Set<String> = []
     
     public private(set) var poll: PollProtocol! {
         didSet {
@@ -88,12 +88,12 @@ public class PollAggregator {
             return
         }
         
-        let newErroredEvents = ids ?? []
-        guard relatedErroredEvents != newErroredEvents else {
+        let newUndecryptableEvents = ids ?? []
+        guard relatedUndecryptableEvents != newUndecryptableEvents else {
             return
         }
         
-        relatedErroredEvents = newErroredEvents
+        relatedUndecryptableEvents = newUndecryptableEvents
         
         self.poll = pollBuilder.build(pollStartEventContent: pollStartEventContent,
                                       events: events,
@@ -194,6 +194,6 @@ public class PollAggregator {
     }
     
     private var hasDecryptionError: Bool {
-        relatedErroredEvents.isEmpty == false
+        relatedUndecryptableEvents.isEmpty == false
     }
 }
