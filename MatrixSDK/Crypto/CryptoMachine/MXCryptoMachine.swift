@@ -38,11 +38,9 @@ class MXCryptoMachine {
         }
     }
     
-    private static let storeFolder = "MXCryptoStore"
     private static let kdfRounds: Int32 = 500_000
     
     enum Error: Swift.Error {
-        case invalidStorage
         case invalidEvent
         case cannotSerialize
         case missingRoom
@@ -79,7 +77,10 @@ class MXCryptoMachine {
         restClient: MXRestClient,
         getRoomAction: @escaping GetRoomAction
     ) throws {
-        let url = try Self.storeURL(for: userId)
+        MXCryptoMachineLogger.shared.log(logLine: "Starting logs")
+        
+        let url = try MXCryptoMachineStore.createStoreURLIfNecessary(for: userId)
+        log.debug("Opening crypto store at \(url.path)/matrix-sdk-crypto.sqlite3") // Hardcoding path to db for debugging purpose
         
         machine = try OlmMachine(
             userId: userId,
@@ -87,6 +88,7 @@ class MXCryptoMachine {
             path: url.path,
             passphrase: nil
         )
+        
         let requests = MXCryptoRequests(restClient: restClient)
         self.requests = requests
         
@@ -126,39 +128,8 @@ class MXCryptoMachine {
     }
     
     func deleteAllData() throws {
-        let url = try Self.storeURL(for: machine.userId())
+        let url = try MXCryptoMachineStore.storeURL(for: userId)
         try FileManager.default.removeItem(at: url)
-    }
-}
-
-extension MXCryptoMachine {
-    static func storeURL(for userId: String) throws -> URL {
-        let container: URL
-        if let sharedContainerURL = FileManager.default.applicationGroupContainerURL() {
-            container = sharedContainerURL
-        } else if let url = platformDirectoryURL() {
-            container = url
-        } else {
-            throw Error.invalidStorage
-        }
-
-        return container
-            .appendingPathComponent(Self.storeFolder)
-            .appendingPathComponent(userId)
-    }
-    
-    private static func platformDirectoryURL() -> URL? {
-        #if os(OSX)
-        guard
-            let applicationSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first,
-            let identifier = Bundle.main.bundleIdentifier
-        else {
-            return nil
-        }
-        return applicationSupport.appendingPathComponent(identifier)
-        #else
-        return FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first
-        #endif
     }
 }
 
@@ -225,7 +196,7 @@ extension MXCryptoMachine: MXCryptoSyncing {
     }
     
     func downloadKeysIfNecessary(users: [String]) async throws {
-        machine.updateTrackedUsers(users: users)
+        try machine.updateTrackedUsers(users: users)
 
         // Out-of-sync check if there is a pending outgoing request for some of these users
         // (note that if a request is already in-flight, keys query scheduler will deduplicate them)
@@ -242,7 +213,7 @@ extension MXCryptoMachine: MXCryptoSyncing {
     
     @available(*, deprecated, message: "The application should not manually force reload keys, use `downloadKeysIfNecessary` instead")
     func reloadKeys(users: [String]) async throws {
-        machine.updateTrackedUsers(users: users)
+        try machine.updateTrackedUsers(users: users)
         try await handleRequest(
             .keysQuery(requestId: UUID().uuidString, users: users)
         )
@@ -396,7 +367,11 @@ extension MXCryptoMachine: MXCryptoUserIdentitySource {
 
 extension MXCryptoMachine: MXCryptoRoomEventEncrypting {
     func addTrackedUsers(_ users: [String]) {
-        machine.updateTrackedUsers(users: users)
+        do {
+            try machine.updateTrackedUsers(users: users)
+        } catch {
+            log.error("Failed updating tracked users", context: error)
+        }
     }
     
     func shareRoomKeysIfNecessary(

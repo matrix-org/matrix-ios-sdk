@@ -53,7 +53,6 @@ class MXBackgroundCryptoV2: MXBackgroundCrypto {
     
     func handleSyncResponse(_ syncResponse: MXSyncResponse) async {
         let toDeviceCount = syncResponse.toDevice?.events.count ?? 0
-        
         log.debug("Handling new sync response with \(toDeviceCount) to-device event(s)")
         
         do {
@@ -69,6 +68,8 @@ class MXBackgroundCryptoV2: MXBackgroundCrypto {
     }
     
     func canDecryptEvent(_ event: MXEvent) -> Bool {
+        log.debug("->")
+        
         if !event.isEncrypted {
             return true
         }
@@ -91,6 +92,8 @@ class MXBackgroundCryptoV2: MXBackgroundCrypto {
     }
     
     func decryptEvent(_ event: MXEvent) throws {
+        log.debug("->")
+        
         let decrypted = try machine.decryptRoomEvent(event)
         let result = try MXEventDecryptionResult(event: decrypted)
         event.setClearData(result)
