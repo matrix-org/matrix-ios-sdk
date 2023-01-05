@@ -40,7 +40,7 @@ public enum MXBackgroundSyncServiceError: Error {
     private let processingQueue: DispatchQueue
     public let credentials: MXCredentials
     private let syncResponseStoreManager: MXSyncResponseStoreManager
-    private let crypto: MXBackgroundCrypto
+    private let crypto: MXBackgroundCrypto?
     private var store: MXStore
     private let restClient: MXRestClient
     private var pushRulesManager: MXBackgroundPushRulesManager
@@ -75,8 +75,15 @@ public enum MXBackgroundSyncServiceError: Error {
         let syncResponseStore = MXSyncResponseFileStore(withCredentials: credentials)
         syncResponseStoreManager = MXSyncResponseStoreManager(syncResponseStore: syncResponseStore)
         
-        restClient = MXRestClient(credentials: credentials, unrecognizedCertificateHandler: nil, persistentTokenDataHandler: persistTokenDataHandler, unauthenticatedHandler: unauthenticatedHandler)
+        let restClient = MXRestClient(
+            credentials: credentials,
+            unrecognizedCertificateHandler: nil,
+            persistentTokenDataHandler: persistTokenDataHandler,
+            unauthenticatedHandler: unauthenticatedHandler
+        )
         restClient.completionQueue = processingQueue
+        self.restClient = restClient
+        
         store = MXBackgroundStore(withCredentials: credentials)
         // We can flush any crypto data if our sync response store is empty
         let resetBackgroundCryptoStore = syncResponseStoreManager.syncToken() == nil
@@ -84,9 +91,12 @@ public enum MXBackgroundSyncServiceError: Error {
         crypto = {
             #if DEBUG
             if MXSDKOptions.sharedInstance().isCryptoSDKAvailable && MXSDKOptions.sharedInstance().enableCryptoSDK {
-                // Crypto V2 is currently unable to decrypt notifications due to single-process store,
-                // so it uses dummy background crypto that does not do anything.
-                return MXDummyBackgroundCrypto()
+                do {
+                    return try MXBackgroundCryptoV2(credentials: credentials, restClient: restClient)
+                } catch {
+                    MXLog.failure("Cannot create background crypto", context: error)
+                    return nil
+                }
             }
             #endif
             return MXLegacyBackgroundCrypto(credentials: credentials, resetBackgroundCryptoStore: resetBackgroundCryptoStore)
@@ -98,6 +108,7 @@ public enum MXBackgroundSyncServiceError: Error {
         } else if let accountData = store.userAccountData ?? nil {
             pushRulesManager.handleAccountData(accountData)
         }
+        MXLog.debug("[MXBackgroundSyncService] init complete")
         super.init()
     }
     
@@ -288,7 +299,7 @@ public enum MXBackgroundSyncServiceError: Error {
             }
             
             //  should decrypt it first
-            if crypto.canDecryptEvent(event) {
+            if let crypto = crypto, crypto.canDecryptEvent(event) {
                 //  we have keys to decrypt the event
                 MXLog.debug("[MXBackgroundSyncService] fetchEvent: Event needs to be decrpyted, and we have the keys to decrypt it.")
                 
@@ -303,7 +314,7 @@ public enum MXBackgroundSyncServiceError: Error {
                 }
             } else {
                 //  we don't have keys to decrypt the event
-                MXLog.debug("[MXBackgroundSyncService] fetchEvent: Event needs to be decrpyted, but we don't have the keys to decrypt it.")
+                MXLog.debug("[MXBackgroundSyncService] fetchEvent: Event needs to be decrypted, but we don't have the keys to decrypt it.")
                 handleDecryptionFailure(withError: nil)
             }
         }
@@ -395,7 +406,8 @@ public enum MXBackgroundSyncServiceError: Error {
                     await self.handleSyncResponse(syncResponse, syncToken: eventStreamToken)
                     
                     if let event = self.syncResponseStoreManager.event(withEventId: eventId, inRoom: roomId),
-                       !self.crypto.canDecryptEvent(event),
+                       let crypto = self.crypto,
+                       !crypto.canDecryptEvent(event),
                        (syncResponse.toDevice?.events ?? []).count > 0 {
                         //  we got the event but not the keys to decrypt it. continue to sync
                         self.launchBackgroundSync(forEventId: eventId, roomId: roomId, completion: completion)
@@ -434,7 +446,7 @@ public enum MXBackgroundSyncServiceError: Error {
         }
         syncResponseStoreManager.updateStore(with: syncResponse, syncToken: syncToken)
         
-        await crypto.handleSyncResponse(syncResponse)
+        await crypto?.handleSyncResponse(syncResponse)
         
         if MXSDKOptions.sharedInstance().autoAcceptRoomInvites,
            let invitedRooms = syncResponse.rooms?.invite {
