@@ -1995,6 +1995,10 @@
 		EDBCF33A281A8D3D00ED5044 /* MXSharedHistoryKeyService.m in Sources */ = {isa = PBXBuildFile; fileRef = EDBCF338281A8D3D00ED5044 /* MXSharedHistoryKeyService.m */; };
 		EDC2A0E628369E740039F3D6 /* CryptoTests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = EDC2A0E528369E740039F3D6 /* CryptoTests.xctestplan */; };
 		EDC2A0E728369E740039F3D6 /* CryptoTests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = EDC2A0E528369E740039F3D6 /* CryptoTests.xctestplan */; };
+		EDC8C4082968A993003792C5 /* MXKeysQueryScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDC8C4072968A993003792C5 /* MXKeysQueryScheduler.swift */; };
+		EDC8C4092968A993003792C5 /* MXKeysQueryScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDC8C4072968A993003792C5 /* MXKeysQueryScheduler.swift */; };
+		EDC8C40D2968C37E003792C5 /* MXKeysQuerySchedulerUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDC8C40A2968A9F7003792C5 /* MXKeysQuerySchedulerUnitTests.swift */; };
+		EDC8C40E2968C37F003792C5 /* MXKeysQuerySchedulerUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDC8C40A2968A9F7003792C5 /* MXKeysQuerySchedulerUnitTests.swift */; };
 		EDCB65E22912AB0C00F55D4D /* MXRoomEventDecryption.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDCB65E12912AB0C00F55D4D /* MXRoomEventDecryption.swift */; };
 		EDCB65E32912AB0C00F55D4D /* MXRoomEventDecryption.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDCB65E12912AB0C00F55D4D /* MXRoomEventDecryption.swift */; };
 		EDD4197E28DCAA5F007F3757 /* MXNativeKeyBackupEngine.h in Headers */ = {isa = PBXBuildFile; fileRef = EDD4197D28DCAA5F007F3757 /* MXNativeKeyBackupEngine.h */; };
@@ -3120,6 +3124,8 @@
 		EDBCF335281A8AB900ED5044 /* MXSharedHistoryKeyService.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXSharedHistoryKeyService.h; sourceTree = "<group>"; };
 		EDBCF338281A8D3D00ED5044 /* MXSharedHistoryKeyService.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXSharedHistoryKeyService.m; sourceTree = "<group>"; };
 		EDC2A0E528369E740039F3D6 /* CryptoTests.xctestplan */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CryptoTests.xctestplan; sourceTree = "<group>"; };
+		EDC8C4072968A993003792C5 /* MXKeysQueryScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXKeysQueryScheduler.swift; sourceTree = "<group>"; };
+		EDC8C40A2968A9F7003792C5 /* MXKeysQuerySchedulerUnitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXKeysQuerySchedulerUnitTests.swift; sourceTree = "<group>"; };
 		EDCB65E12912AB0C00F55D4D /* MXRoomEventDecryption.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXRoomEventDecryption.swift; sourceTree = "<group>"; };
 		EDD4197D28DCAA5F007F3757 /* MXNativeKeyBackupEngine.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXNativeKeyBackupEngine.h; sourceTree = "<group>"; };
 		EDD4198028DCAA7B007F3757 /* MXNativeKeyBackupEngine.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXNativeKeyBackupEngine.m; sourceTree = "<group>"; };
@@ -5395,6 +5401,7 @@
 				ED8F1D3A2885BB2D00F897E7 /* MXCryptoProtocols.swift */,
 				ED2DD112286C450600F06731 /* MXEventDecryptionResult+DecryptedEvent.swift */,
 				ED2DD113286C450600F06731 /* MXCryptoRequests.swift */,
+				EDC8C4072968A993003792C5 /* MXKeysQueryScheduler.swift */,
 			);
 			path = CryptoMachine;
 			sourceTree = "<group>";
@@ -5407,6 +5414,7 @@
 				ED2DD11B286C4F3E00F06731 /* MXCryptoRequestsUnitTests.swift */,
 				ED8F1D312885AC5700F897E7 /* Device+Stub.swift */,
 				ED1FE90A2912E13A0046F722 /* DecryptedEvent+Stub.swift */,
+				EDC8C40A2968A9F7003792C5 /* MXKeysQuerySchedulerUnitTests.swift */,
 			);
 			path = CryptoMachine;
 			sourceTree = "<group>";
@@ -7001,6 +7009,7 @@
 				ECD2897D26E8F06F00F268CF /* MXStoreRoomListDataFetcher.swift in Sources */,
 				32D2CC0323422462002BD8CA /* MX3PidAddSession.m in Sources */,
 				3283F7791EAF30F700C1688C /* MXBugReportRestClient.m in Sources */,
+				EDC8C4082968A993003792C5 /* MXKeysQueryScheduler.swift in Sources */,
 				32B0E33B23A2989A0054FF1A /* MXEventReferenceChunk.m in Sources */,
 				A780625027B2CE74005780C0 /* FileManager+AppGroupContainer.swift in Sources */,
 				9274AFE91EE580240009BEB6 /* MXCallKitAdapter.m in Sources */,
@@ -7253,6 +7262,7 @@
 				322A51D81D9E846800C8536D /* MXCryptoTests.m in Sources */,
 				B146D4FF21A5C0BD00D8C2C6 /* MXMediaScanStoreUnitTests.m in Sources */,
 				32BD34BE1E84134A006EDC0D /* MatrixSDKTestsE2EData.m in Sources */,
+				EDC8C40E2968C37F003792C5 /* MXKeysQuerySchedulerUnitTests.swift in Sources */,
 				ED751DAE28EDEC7E003748C3 /* MXKeyVerificationStateResolverUnitTests.swift in Sources */,
 				ED6E87A9294B3BAB00100D9C /* MXAnalyticsDestinationUnitTests.swift in Sources */,
 				B146D4FE21A5C0BD00D8C2C6 /* MXEventScanStoreUnitTests.m in Sources */,
@@ -7650,6 +7660,7 @@
 				EC1165B727107E330089FA56 /* MXStoreRoomListDataCounts.swift in Sources */,
 				B14EF2392397E90400758AF0 /* MXMediaManager.m in Sources */,
 				B14EF23A2397E90400758AF0 /* MXHTTPOperation.m in Sources */,
+				EDC8C4092968A993003792C5 /* MXKeysQueryScheduler.swift in Sources */,
 				A780625127B2CE74005780C0 /* FileManager+AppGroupContainer.swift in Sources */,
 				B14EF23B2397E90400758AF0 /* MXKeyBackupData.m in Sources */,
 				B14EF23C2397E90400758AF0 /* MXJSONModels.m in Sources */,
@@ -7902,6 +7913,7 @@
 				32B090FE26201C8D002924AA /* MXAsyncTaskQueueUnitTests.swift in Sources */,
 				B1E09A242397FCE90057C069 /* MXPeekingRoomTests.m in Sources */,
 				B1E09A452397FD990057C069 /* MXLazyLoadingTests.m in Sources */,
+				EDC8C40D2968C37E003792C5 /* MXKeysQuerySchedulerUnitTests.swift in Sources */,
 				ED751DAF28EDEC7E003748C3 /* MXKeyVerificationStateResolverUnitTests.swift in Sources */,
 				ED6E87AA294B3BAB00100D9C /* MXAnalyticsDestinationUnitTests.swift in Sources */,
 				B1E09A1C2397FCE90057C069 /* MXEventAnnotationUnitTests.swift in Sources */,
