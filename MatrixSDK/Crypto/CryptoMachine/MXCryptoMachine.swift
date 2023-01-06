@@ -28,13 +28,13 @@ typealias GetRoomAction = (String) -> MXRoom?
 /// - mapping to and from raw strings passed into the Rust machine
 /// - performing network requests and marking them as completed on behalf of the Rust machine
 class MXCryptoMachine {
-    actor RoomQueues {
-        private var queues = [String: MXTaskQueue]()
+    actor RoomSchedulers {
+        private var schedulers = [String: MXSerialTaskScheduler<Void>]()
         
-        func getQueue(for roomId: String) -> MXTaskQueue {
-            let queue = queues[roomId] ?? MXTaskQueue()
-            queues[roomId] = queue
-            return queue
+        func getScheduler(for roomId: String) -> MXSerialTaskScheduler<Void> {
+            let scheduler = schedulers[roomId] ?? .init()
+            schedulers[roomId] = scheduler
+            return scheduler
         }
     }
     
@@ -60,9 +60,9 @@ class MXCryptoMachine {
     private let requests: MXCryptoRequests
     private let getRoomAction: GetRoomAction
     
-    private let sessionsQueue = MXTaskQueue()
-    private let syncQueue = MXTaskQueue()
-    private var roomQueues = RoomQueues()
+    private let sessionsScheduler = MXSerialTaskScheduler<Void>()
+    private let syncScheduler = MXSerialTaskScheduler<Void>()
+    private var roomSchedulers = RoomSchedulers()
     
     // Temporary properties to help with the performance of backup keys checks
     // until the performance is improved in the rust-sdk
@@ -212,7 +212,7 @@ extension MXCryptoMachine: MXCryptoSyncing {
     }
     
     func processOutgoingRequests() async throws {
-        try await syncQueue.sync { [weak self] in
+        try await syncScheduler.add { [weak self] in
             try await self?.handleOutgoingRequests()
         }
     }
@@ -377,13 +377,13 @@ extension MXCryptoMachine: MXCryptoRoomEventEncrypting {
         users: [String],
         settings: EncryptionSettings
     ) async throws {
-        try await sessionsQueue.sync { [weak self] in
+        try await sessionsScheduler.add { [weak self] in
             try await self?.updateTrackedUsers(users: users)
             try await self?.getMissingSessions(users: users)
         }
-        
-        let roomQueue = await roomQueues.getQueue(for: roomId)
-        try await roomQueue.sync { [weak self] in
+
+        let roomScheduler = await roomSchedulers.getScheduler(for: roomId)
+        try await roomScheduler.add { [weak self] in
             try await self?.shareRoomKey(roomId: roomId, users: users, settings: settings)
         }
     }

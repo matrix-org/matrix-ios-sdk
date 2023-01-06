@@ -2022,10 +2022,10 @@
 		EDE70DC528DA1B7F00099736 /* MXCryptoTools.h in Headers */ = {isa = PBXBuildFile; fileRef = 3250E7C8220C913900736CB5 /* MXCryptoTools.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		EDE70DC828DA22F800099736 /* MXKeyBackupEngine.h in Headers */ = {isa = PBXBuildFile; fileRef = EDE70DC728DA22F800099736 /* MXKeyBackupEngine.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		EDE70DC928DA22F800099736 /* MXKeyBackupEngine.h in Headers */ = {isa = PBXBuildFile; fileRef = EDE70DC728DA22F800099736 /* MXKeyBackupEngine.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		EDF1B6902876CD2C00BBBCEE /* MXTaskQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDF1B68F2876CD2C00BBBCEE /* MXTaskQueue.swift */; };
-		EDF1B6912876CD2C00BBBCEE /* MXTaskQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDF1B68F2876CD2C00BBBCEE /* MXTaskQueue.swift */; };
-		EDF1B6932876CD8600BBBCEE /* MXTaskQueueUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDF1B6922876CD8600BBBCEE /* MXTaskQueueUnitTests.swift */; };
-		EDF1B6942876CD8600BBBCEE /* MXTaskQueueUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDF1B6922876CD8600BBBCEE /* MXTaskQueueUnitTests.swift */; };
+		EDF1B6902876CD2C00BBBCEE /* MXTaskScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDF1B68F2876CD2C00BBBCEE /* MXTaskScheduler.swift */; };
+		EDF1B6912876CD2C00BBBCEE /* MXTaskScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDF1B68F2876CD2C00BBBCEE /* MXTaskScheduler.swift */; };
+		EDF1B6932876CD8600BBBCEE /* MXTaskSchedulerUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDF1B6922876CD8600BBBCEE /* MXTaskSchedulerUnitTests.swift */; };
+		EDF1B6942876CD8600BBBCEE /* MXTaskSchedulerUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDF1B6922876CD8600BBBCEE /* MXTaskSchedulerUnitTests.swift */; };
 		EDF4678727E3331D00435913 /* EventsEnumeratorDataSourceStub.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDF4678627E3331D00435913 /* EventsEnumeratorDataSourceStub.swift */; };
 		EDF4678827E3331D00435913 /* EventsEnumeratorDataSourceStub.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDF4678627E3331D00435913 /* EventsEnumeratorDataSourceStub.swift */; };
 		F0173EAC1FCF0E8900B5F6A3 /* MXGroup.h in Headers */ = {isa = PBXBuildFile; fileRef = F0173EAA1FCF0E8800B5F6A3 /* MXGroup.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -3133,8 +3133,8 @@
 		EDDD90C72901611600B760E0 /* MXLegacyCrypto+LegacyCrossSigning.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MXLegacyCrypto+LegacyCrossSigning.swift"; sourceTree = "<group>"; };
 		EDE1B13A28B7BEAB000DEEE8 /* MXCrossSigningV2UnitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXCrossSigningV2UnitTests.swift; sourceTree = "<group>"; };
 		EDE70DC728DA22F800099736 /* MXKeyBackupEngine.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXKeyBackupEngine.h; sourceTree = "<group>"; };
-		EDF1B68F2876CD2C00BBBCEE /* MXTaskQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXTaskQueue.swift; sourceTree = "<group>"; };
-		EDF1B6922876CD8600BBBCEE /* MXTaskQueueUnitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXTaskQueueUnitTests.swift; sourceTree = "<group>"; };
+		EDF1B68F2876CD2C00BBBCEE /* MXTaskScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXTaskScheduler.swift; sourceTree = "<group>"; };
+		EDF1B6922876CD8600BBBCEE /* MXTaskSchedulerUnitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXTaskSchedulerUnitTests.swift; sourceTree = "<group>"; };
 		EDF4678627E3331D00435913 /* EventsEnumeratorDataSourceStub.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsEnumeratorDataSourceStub.swift; sourceTree = "<group>"; };
 		F0173EAA1FCF0E8800B5F6A3 /* MXGroup.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXGroup.h; sourceTree = "<group>"; };
 		F0173EAB1FCF0E8900B5F6A3 /* MXGroup.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXGroup.m; sourceTree = "<group>"; };
@@ -3394,7 +3394,7 @@
 				32A9E8231EF4026E0081358A /* MXUIKitBackgroundModeHandler.m */,
 				B17B2BDA2369FC81009D6650 /* MXUIKitBackgroundTask.h */,
 				B17B2BDB2369FC81009D6650 /* MXUIKitBackgroundTask.m */,
-				EDF1B68F2876CD2C00BBBCEE /* MXTaskQueue.swift */,
+				EDF1B68F2876CD2C00BBBCEE /* MXTaskScheduler.swift */,
 				ED1AE9292881AC7100D3432A /* MXWarnings.h */,
 				ED6DAC2028C7A4F000ECDCB6 /* MXDateProvider.swift */,
 				EDDBA7EF293F353900AD1480 /* MXToDevicePayload.swift */,
@@ -3444,7 +3444,7 @@
 				322985CA26FAF898001890BC /* MXSession.swift */,
 				322985CE26FBAE7B001890BC /* TestObserver.swift */,
 				322985D126FC9E61001890BC /* MXSessionTracker.swift */,
-				EDF1B6922876CD8600BBBCEE /* MXTaskQueueUnitTests.swift */,
+				EDF1B6922876CD8600BBBCEE /* MXTaskSchedulerUnitTests.swift */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -7025,7 +7025,7 @@
 				B18B0E4A25FB783B00E32151 /* MXSpaceCreationParameters.swift in Sources */,
 				EDD578E52881C37C006739DD /* MXCrossSigningInfoSource.swift in Sources */,
 				EC2EACFF266625170038B61F /* MXRoomLastMessage.m in Sources */,
-				EDF1B6902876CD2C00BBBCEE /* MXTaskQueue.swift in Sources */,
+				EDF1B6902876CD2C00BBBCEE /* MXTaskScheduler.swift in Sources */,
 				EC8A539525B1BC77004E0802 /* MXUserModel.m in Sources */,
 				3252DCAF224BE5D40032264F /* MXKeyVerificationManager.m in Sources */,
 				323E0C5C1A306D7A00A31D73 /* MXEvent.m in Sources */,
@@ -7256,7 +7256,7 @@
 				ED751DAE28EDEC7E003748C3 /* MXKeyVerificationStateResolverUnitTests.swift in Sources */,
 				ED6E87A9294B3BAB00100D9C /* MXAnalyticsDestinationUnitTests.swift in Sources */,
 				B146D4FE21A5C0BD00D8C2C6 /* MXEventScanStoreUnitTests.m in Sources */,
-				EDF1B6932876CD8600BBBCEE /* MXTaskQueueUnitTests.swift in Sources */,
+				EDF1B6932876CD8600BBBCEE /* MXTaskSchedulerUnitTests.swift in Sources */,
 				32684CB821085F770046D2F9 /* MXLazyLoadingTests.m in Sources */,
 				18121F75273E6D2400B68ADF /* MXPollBuilderTests.swift in Sources */,
 				ED7019F72886CA6C00FC31B9 /* VerificationRequestStub.swift in Sources */,
@@ -7674,7 +7674,7 @@
 				B14EF2412397E90400758AF0 /* MXRoomFilter.m in Sources */,
 				EDD578E62881C37C006739DD /* MXCrossSigningInfoSource.swift in Sources */,
 				EC8A53D925B1BCC6004E0802 /* MXThirdPartyProtocolInstance.m in Sources */,
-				EDF1B6912876CD2C00BBBCEE /* MXTaskQueue.swift in Sources */,
+				EDF1B6912876CD2C00BBBCEE /* MXTaskScheduler.swift in Sources */,
 				B14EF2422397E90400758AF0 /* MXDeviceInfo.m in Sources */,
 				B14EF2432397E90400758AF0 /* MXIncomingSASTransaction.m in Sources */,
 				B14EF2442397E90400758AF0 /* NSObject+sortedKeys.m in Sources */,
@@ -7906,7 +7906,7 @@
 				ED6E87AA294B3BAB00100D9C /* MXAnalyticsDestinationUnitTests.swift in Sources */,
 				B1E09A1C2397FCE90057C069 /* MXEventAnnotationUnitTests.swift in Sources */,
 				B1E09A262397FCE90057C069 /* MXPushRuleUnitTests.m in Sources */,
-				EDF1B6942876CD8600BBBCEE /* MXTaskQueueUnitTests.swift in Sources */,
+				EDF1B6942876CD8600BBBCEE /* MXTaskSchedulerUnitTests.swift in Sources */,
 				B1E09A442397FD940057C069 /* Dummy.swift in Sources */,
 				ED7019F82886CA6C00FC31B9 /* VerificationRequestStub.swift in Sources */,
 				18121F76273E6D2400B68ADF /* MXPollBuilderTests.swift in Sources */,

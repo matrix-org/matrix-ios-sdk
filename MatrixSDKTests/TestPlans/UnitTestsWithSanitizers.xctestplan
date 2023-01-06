@@ -95,7 +95,7 @@
         "MXSharedHistoryKeyManagerUnitTests",
         "MXStoreRoomListDataManagerUnitTests",
         "MXSyncResponseUnitTests",
-        "MXTaskQueueUnitTests",
+        "MXTaskSchedulerUnitTests",
         "MXThreadEventTimelineUnitTests",
         "MXThreadingServiceUnitTests",
         "MXToDevicePayloadUnitTests",
