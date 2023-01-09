@@ -1509,31 +1509,6 @@
     }];
 }
 
-#pragma mark Failing decryption
-
--(void)testNotificationIsCorrectAfterDecryptionFailure
-{
-    MXEvent* fakeEncryptedEvent = [MXEvent modelFromJSON:@{
-        @"event_id": @"abc",
-        @"type": kMXEventTypeStringRoomEncrypted,
-        @"content": @{ @"garbage": @"0000" }
-    }];
-    
-    [matrixSDKTestsData doMXSessionTestWithBob:self readyToTest:^(MXSession *mxSession, XCTestExpectation *expectation) {
-        [NSNotificationCenter.defaultCenter addObserverForName:kMXSessionDidFailToDecryptEventsNotification object:mxSession queue:nil usingBlock:^(NSNotification * _Nonnull notification) {
-            XCTAssertTrue(mxSession == notification.object);
-            NSArray* events = notification.userInfo[kMXSessionNotificationEventsArrayKey];
-            XCTAssertTrue(fakeEncryptedEvent == events.firstObject);
-            [expectation fulfill];
-        }];
-        
-        [mxSession enableCrypto:YES
-                        success:^{ [mxSession decryptEvents:@[fakeEncryptedEvent] inTimeline:nil onComplete:^(NSArray<MXEvent *> *failedEvents) {}]; }
-                        failure:^(NSError *error) { XCTFail();}
-        ];
-    }];
-}
-
 #pragma mark Account Data tests
 
 -(void)testAccountDataIsDeletedLocally

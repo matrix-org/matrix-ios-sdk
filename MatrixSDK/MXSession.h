@@ -302,14 +302,6 @@ FOUNDATION_EXPORT NSString *const kMXSessionDidUpdateGroupUsersNotification;
  */
 FOUNDATION_EXPORT NSString *const kMXSessionDidUpdatePublicisedGroupsForUsersNotification;
 
-/**
- Posted when MXSession fails to decrypt a list of events.
- 
- The passed userInfo dictionary contains:
- - `kMXSessionNotificationEventsArrayKey` the list of the events the session fails to decrypt.
- */
-FOUNDATION_EXPORT NSString *const kMXSessionDidFailToDecryptEventsNotification;
-
 #pragma mark - Notifications keys
 /**
  The key in notification userInfo dictionary representating the roomId.
@@ -346,12 +338,6 @@ FOUNDATION_EXPORT NSString *const kMXSessionNotificationErrorKey;
  The key in notification userInfo dictionary representating a list of user ids.
  */
 FOUNDATION_EXPORT NSString *const kMXSessionNotificationUserIdsArrayKey;
-
-/**
- The key in notification userInfo dictionary representating a list of events.
- */
-FOUNDATION_EXPORT NSString *const kMXSessionNotificationEventsArrayKey;
-
 
 #pragma mark - Other constants
 /**

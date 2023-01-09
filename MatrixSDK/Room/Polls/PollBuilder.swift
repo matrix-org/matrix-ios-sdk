@@ -22,11 +22,11 @@ struct PollBuilder {
         static let maxAnswerOptionCount = 20
     }
     
-    func build(pollStartEventContent: MXEventContentPollStart, events: [MXEvent], currentUserIdentifier: String, hasBeenEdited: Bool = false, hasDecryptionError: Bool = false) -> PollProtocol {
+    func build(pollStartEventContent: MXEventContentPollStart, events: [MXEvent], currentUserIdentifier: String, hasBeenEdited: Bool = false) -> PollProtocol {
         
         let poll = Poll()
         poll.hasBeenEdited = hasBeenEdited
-        poll.hasDecryptionError = hasDecryptionError
+        poll.hasDecryptionError = events.contains(where: { $0.isEncrypted && $0.clear == nil })
         
         poll.text = pollStartEventContent.question
         poll.maxAllowedSelections = max(1, pollStartEventContent.maxSelections.uintValue)
