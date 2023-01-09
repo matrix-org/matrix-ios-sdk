@@ -77,8 +77,12 @@ public class PollAggregator {
         self.pollStartEventId = pollStartEventId
         self.pollBuilder = PollBuilder()
         
-        NotificationCenter.default.addObserver(self, selector: #selector(handleRoomDataFlush), name: NSNotification.Name.mxRoomDidFlushData, object: self.room)
-        
+        NotificationCenter.default.addObserver(self, selector: #selector(handleRoomDataFlush), name: .mxRoomDidFlushData, object: self.room)
+        setupEditListener()
+        try buildPollStartContent()
+    }
+    
+    private func setupEditListener() {
         editEventsListener = session.aggregations.listenToEditsUpdate(inRoom: self.room.roomId) { [weak self] event in
             guard let self = self,
                   self.pollStartEventId == event.relatesTo.eventId
@@ -92,8 +96,6 @@ public class PollAggregator {
                 self.delegate?.pollAggregator(self, didFailWithError: PollAggregatorError.invalidPollStartEvent)
             }
         }
-        
-        try buildPollStartContent()
     }
     
     private func buildPollStartContent() throws {

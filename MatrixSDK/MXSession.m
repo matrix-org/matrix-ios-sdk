@@ -4999,7 +4999,7 @@ typedef void (^MXOnResumeDone)(void);
                     [failedEvents addObject:event];
                 }
             }
-            
+
             onComplete(failedEvents);
         }];
     }

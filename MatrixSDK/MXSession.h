@@ -339,7 +339,6 @@ FOUNDATION_EXPORT NSString *const kMXSessionNotificationErrorKey;
  */
 FOUNDATION_EXPORT NSString *const kMXSessionNotificationUserIdsArrayKey;
 
-
 #pragma mark - Other constants
 /**
  Fake tag used to identify rooms that do not have tags in `roomsWithTag` and `roomsByTags` methods.

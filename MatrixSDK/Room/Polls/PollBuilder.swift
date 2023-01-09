@@ -26,6 +26,7 @@ struct PollBuilder {
         
         let poll = Poll()
         poll.hasBeenEdited = hasBeenEdited
+        poll.hasDecryptionError = events.contains(where: { $0.isEncrypted && $0.clear == nil })
         
         poll.text = pollStartEventContent.question
         poll.maxAllowedSelections = max(1, pollStartEventContent.maxSelections.uintValue)
