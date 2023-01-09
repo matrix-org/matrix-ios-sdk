@@ -778,17 +778,11 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleConditionStringSenderNotificationPe
  Push rule scope definitions - String version
  */
 FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringGlobal;
-FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
 
 /**
  `MXPushRulesResponse` represents the response to the /pushRules/ request.
  */
 @interface MXPushRulesResponse : MXJSONModel
-
-    /**
-     Set of push rules specific per device.
-     */
-    // @property (nonatomic) NSDictionary *device;
 
     /**
      Set of global push rules.
