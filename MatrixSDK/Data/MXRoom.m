@@ -2449,17 +2449,17 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
 
 - (BOOL)canReplyToEvent:(MXEvent *)eventToReply
 {
-    if(eventToReply.eventType == MXEventTypePollStart)
+    if (eventToReply.eventType == MXEventTypePollStart)
     {
         return YES;
     }
     
-    if(eventToReply.eventType == MXEventTypePollEnd)
+    if (eventToReply.eventType == MXEventTypePollEnd)
     {
         return YES;
     }
     
-    if(eventToReply.eventType == MXEventTypeBeaconInfo)
+    if (eventToReply.eventType == MXEventTypeBeaconInfo)
     {
         return YES;
     }
