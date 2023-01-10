@@ -1287,6 +1287,23 @@ Remove a tag applied on an event of the room
 - (void)acknowledgeEvent:(MXEvent*)event andUpdateReadMarker:(BOOL)updateReadMarker;
 
 /**
+ It will set the entire room as unread.
+ This is only local since it's not possible to remove from the server the read events.
+ */
+-(void)markAsUnread;
+
+/**
+ It will unset the entire room from unread list.
+ This is only a local list.
+ */
+-(void)unmarkAsUnread;
+
+/**
+ it will return if the room is marked unread by the user
+ */
+@property (nonatomic, readonly) BOOL isMarkedAsUnread;
+
+/**
  Move the read marker to the latest event.
  Update the read receipt by acknowledging the latest event of type defined in MXSession.acknowledgableEventTypes.
  This is will indicate to the homeserver that the user has read all the events.

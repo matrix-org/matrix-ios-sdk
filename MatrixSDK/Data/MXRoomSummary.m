@@ -222,6 +222,11 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     {
         return;
     }
+    // if there is a new LastMessage then it's better to unmark the room as unread
+    if (nil != _lastMessage && ![_lastMessage.eventId isEqualToString:summary.lastMessage.eventId])
+    {
+        [self.room unmarkAsUnread];
+    }
     
     _roomTypeString = summary.roomTypeString;
     _roomType = summary.roomType;
@@ -299,6 +304,11 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
 
 - (void)updateLastMessage:(MXRoomLastMessage *)message
 {
+    // if there is a new LastMessage then it's better to unmark the room as unread
+    if (![_lastMessage.eventId isEqualToString:message.eventId])
+    {
+        [self.room unmarkAsUnread];
+    }
     _lastMessage = message;
 }
 

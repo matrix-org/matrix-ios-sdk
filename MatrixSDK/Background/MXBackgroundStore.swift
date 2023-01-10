@@ -287,6 +287,17 @@ class MXBackgroundStore: NSObject, MXStore {
         return []
     }
     
+    func markRoom(asUnread roomId: String) {
+        //  no-op
+    }
+    
+    func unmarkRoom(asUnread roomId: String) {
+        //  no-op
+    }
+    
+    func isRoomMarked(asUnread roomId: String) -> Bool {
+        return false
+    }
 }
 
 //  MARK: - MXRoomSummaryStore

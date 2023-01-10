@@ -3331,8 +3331,24 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
     }
 }
 
+- (void)markAsUnread
+{
+    [mxSession.store markRoomAsUnread:self.roomId];
+}
+
+- (void)unmarkAsUnread
+{
+    [mxSession.store unmarkRoomAsUnread:self.roomId];
+}
+
+- (BOOL)isMarkedAsUnread
+{
+    return [mxSession.store isRoomMarkedAsUnread:self.roomId];
+}
+
 - (void)markAllAsRead
 {
+    [self unmarkAsUnread];
     NSString *readMarkerEventId = nil;
     MXReceiptData *updatedReceiptData = nil;
     
