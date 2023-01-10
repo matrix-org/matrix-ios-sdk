@@ -1920,7 +1920,15 @@ typedef void (^MXOnResumeDone)(void);
             }
 
             // Update the corresponding part of account data
-            [_accountData updateWithEvent:event];
+            if (event[@"content"] == nil || [event[@"content"] count] == 0) {
+                /*
+                 MSC3391 returns an empty object in the sync after the user delete one account_data event using the associated DELETE endpoint.
+                 https://github.com/ShadowJonathan/matrix-doc/blob/account-data-delete/proposals/3391-account-data-delete.md#sync
+                 */
+                [_accountData deleteDataWithType:event[@"type"]];
+            } else {
+                [_accountData updateWithEvent:event];
+            }
 
             if ([event[@"type"] isEqualToString:kMXAccountDataTypeIdentityServer])
             {
@@ -4507,6 +4515,22 @@ typedef void (^MXOnResumeDone)(void);
     } failure:failure];
 }
 
+- (MXHTTPOperation *)deleteAccountDataWithType:(NSString *)type success:(void (^)(void))success failure:(void (^)(NSError *))failure
+{
+    MXWeakify(self);
+    return [matrixRestClient deleteAccountDataWithType:type success:^{
+        MXStrongifyAndReturnIfNil(self);
+        
+        // Delete account data locally
+        [self->_accountData deleteDataWithType:type];
+        
+        if (success)
+        {
+            success();
+        }
+    } failure:failure];
+}
+
 - (MXHTTPOperation *)setAccountDataIdentityServer:(NSString *)identityServer
                                           success:(void (^)(void))success
                                           failure:(void (^)(NSError *))failure
@@ -4975,7 +4999,7 @@ typedef void (^MXOnResumeDone)(void);
                     [failedEvents addObject:event];
                 }
             }
-            
+
             onComplete(failedEvents);
         }];
     }

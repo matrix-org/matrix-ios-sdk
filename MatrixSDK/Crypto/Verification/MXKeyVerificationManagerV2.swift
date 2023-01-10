@@ -11,17 +11,6 @@ import Foundation
 
 import MatrixSDKCrypto
 
-/// Result of processing updates on verification object (request or transaction)
-/// after each sync loop
-enum MXKeyVerificationUpdateResult {
-    // The object has not changed since last sync
-    case noUpdates
-    // The object's state has changed
-    case updated
-    // The object is no longer available (e.g. it was cancelled)
-    case removed
-}
-
 class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
     enum Error: Swift.Error {
         case requestNotSupported
@@ -220,25 +209,23 @@ class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
             return transaction
         }
 
-        guard let request = activeRequests[transactionId] else {
+        guard
+            let activeRequest = activeRequests[transactionId],
+            let request = handler.verificationRequest(userId: activeRequest.otherUser, flowId: activeRequest.requestId)
+        else {
             log.error("There is no pending verification request")
             return nil
         }
 
         do {
+            let qr = try activeRequest.startQrVerification()
             log.debug("Starting new QR verification")
-            let qr = try request.startQrVerification()
-            return addQrTransaction(for: qr, isIncoming: false)
+            return addQrTransaction(for: request, qrCode: qr, isIncoming: false)
         } catch {
+            /// Placehoder QR transaction generated in case we cannot start a QR verification flow
+            /// (the other device cannot scan our code) but we may be able to scan theirs
             log.debug("Adding placeholder QR verification")
-            let transaction = MXPlaceholderQRCodeTransaction(
-                otherUserId: request.otherUser,
-                otherDeviceId: request.otherDevice ?? "",
-                flowId: request.requestId,
-                roomId: request.roomId
-            )
-            activeTransactions[transaction.transactionId] = transaction
-            return transaction
+            return addQrTransaction(for: request, qrCode: nil, isIncoming: false)
         }
     }
     
@@ -255,7 +242,6 @@ class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
     @MainActor
     func handleDeviceEvent(_ event: MXEvent) {
         guard Self.toDeviceEventTypes.contains(event.type) else {
-            updatePendingVerification()
             return
         }
         
@@ -279,8 +265,6 @@ class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
         default:
             log.failure("Event type should not be handled by key verification", context: event.type)
         }
-        
-        updatePendingVerification()
     }
     
     @MainActor
@@ -291,7 +275,6 @@ class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
         
         if !event.isEncrypted, let roomId = event.roomId {
             handler.receiveUnencryptedVerificationEvent(event: event, roomId: roomId)
-            updatePendingVerification()
         }
         
         if event.type == kMXEventTypeStringRoomMessage && event.content?[kMXMessageTypeKey] as? String == kMXMessageTypeKeyVerificationRequest {
@@ -302,62 +285,13 @@ class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
             handleIncomingVerification(userId: event.sender, flowId: flowId)
             return event.sender
         } else {
-            updatePendingVerification()
             return nil
-        }
-    }
-    
-    // MARK: - Update
-    
-    @MainActor
-    func updatePendingVerification() {
-        if !activeRequests.isEmpty {
-            log.debug("Processing \(activeRequests.count) pending requests")
-        }
-
-        let completedStates = Set([
-            MXKeyVerificationRequestStateAccepted.rawValue,
-            MXKeyVerificationRequestStateExpired.rawValue,
-            MXKeyVerificationRequestStateCancelled.rawValue,
-            MXKeyVerificationRequestStateCancelledByMe.rawValue
-        ])
-        for request in activeRequests.values {
-            switch request.processUpdates() {
-            case .noUpdates:
-                break
-            case .updated:
-                NotificationCenter.default.post(name: .MXKeyVerificationRequestDidChange, object: request)
-            case .removed:
-                NotificationCenter.default.post(name: .MXKeyVerificationRequestDidChange, object: request)
-                activeRequests[request.requestId] = nil
-            }
-            
-            if completedStates.contains(request.state.rawValue) {
-                NotificationCenter.default.post(name: .MXKeyVerificationRequestDidChange, object: request)
-                activeRequests[request.requestId] = nil
-            }
-        }
-
-        // QR code transactions do not yet have `changes` listener, so have to manage updates manually
-        for transaction in activeTransactions.values {
-            guard let transaction = transaction as? MXQRCodeTransactionV2 else {
-                continue
-            }
-            
-            switch transaction.processUpdates() {
-            case .noUpdates:
-                break
-            case .updated:
-                NotificationCenter.default.post(name: .MXKeyVerificationTransactionDidChange, object: transaction)
-            case .removed:
-                NotificationCenter.default.post(name: .MXKeyVerificationTransactionDidChange, object: transaction)
-                activeTransactions[transaction.transactionId] = nil
-            }
         }
     }
     
     // MARK: - Verification requests
     
+    @MainActor
     func requestVerificationByToDevice(
         withUserId userId: String,
         deviceIds: [String]?,
@@ -379,6 +313,7 @@ class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
         }
     }
     
+    @MainActor
     private func requestVerification(userId: String, roomId: String, methods: [String]) async throws -> MXKeyVerificationRequest {
         log.debug("->")
         
@@ -387,9 +322,10 @@ class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
             roomId: roomId,
             methods: methods
         )
-        return await addRequest(for: request)
+        return addRequest(for: request)
     }
     
+    @MainActor
     private func requestVerification(userId: String, deviceId: String, methods: [String]) async throws -> MXKeyVerificationRequest {
         log.debug("->")
         
@@ -398,14 +334,15 @@ class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
             deviceId: deviceId,
             methods: methods
         )
-        return await addRequest(for: request)
+        return addRequest(for: request)
     }
     
+    @MainActor
     private func requestSelfVerification(methods: [String]) async throws -> MXKeyVerificationRequest {
         log.debug("->")
 
         let request = try await handler.requestSelfVerification(methods: methods)
-        return await addRequest(for: request)
+        return addRequest(for: request)
     }
     
     @MainActor
@@ -464,7 +401,10 @@ class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
     private func handleIncomingVerification(userId: String, flowId: String) {
         log.debug(flowId)
         
-        guard let verification = handler.verification(userId: userId, flowId: flowId) else {
+        guard
+            let request = handler.verificationRequest(userId: userId, flowId: flowId),
+            let verification = handler.verification(userId: userId, flowId: flowId)
+        else {
             log.error("Verification is not known", context: [
                 "flow_id": flowId
             ])
@@ -478,17 +418,15 @@ class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
             if activeRequests[transaction.transactionId] != nil {
                 log.debug("Auto-accepting transaction that matches a pending request")
                 transaction.accept()
-                updatePendingVerification()
             }
         case .qrCode(let qrCode):
             if activeTransactions[flowId] is MXQRCodeTransaction {
                 // This flow may happen if we have previously started a QR verification, but so has the other side,
                 // and we scanned their code which now takes over the verification flow
                 log.debug("Updating existing QR verification transaction")
-                updatePendingVerification()
             } else {
                 log.debug("Tracking new QR verification transaction")
-                _ = addQrTransaction(for: qrCode, isIncoming: true)
+                _ = addQrTransaction(for: request, qrCode: qrCode, isIncoming: true)
             }
         }
     }
@@ -497,25 +435,12 @@ class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
     private func addSasTransaction(for sas: SasProtocol, isIncoming: Bool) -> MXSASTransactionV2 {
         let transaction = MXSASTransactionV2(sas: sas, isIncoming: isIncoming, handler: handler)
         activeTransactions[transaction.transactionId] = transaction
-        if isIncoming {
-            NotificationCenter.default.post(
-                name: .MXKeyVerificationManagerNewTransaction,
-                object: self,
-                userInfo: [
-                    MXKeyVerificationManagerNotificationTransactionKey: transaction
-                ]
-            )
-            NotificationCenter.default.post(
-                name: .MXKeyVerificationTransactionDidChange,
-                object: transaction
-            )
-        }
         return transaction
     }
     
     @MainActor
-    private func addQrTransaction(for qrCode: QrCodeProtocol, isIncoming: Bool) -> MXQRCodeTransactionV2 {
-        let transaction = MXQRCodeTransactionV2(qrCode: qrCode, isIncoming: isIncoming, handler: handler)
+    private func addQrTransaction(for request: VerificationRequestProtocol, qrCode: QrCodeProtocol?, isIncoming: Bool) -> MXQRCodeTransactionV2 {
+        let transaction = MXQRCodeTransactionV2(request: request, qrCode: qrCode, isIncoming: isIncoming, handler: handler)
         activeTransactions[transaction.transactionId] = transaction
         return transaction
     }

@@ -57,6 +57,15 @@ MX_ASSUME_MISSING_NULLABILITY_BEGIN
 - (void)updateDataWithType:(NSString*)type data:(NSDictionary*)data;
 
 /**
+ Delete the account data with the a given type.
+ 
+ For internal use only. Use [MXSession deleteAccountDataWithType:] to delete account data.
+ 
+ @param type the event type in the account data.
+ */
+- (void)deleteDataWithType:(NSString*)type;
+
+/**
  Get account data event by event type.
 
  @param eventType The event type being queried.

@@ -25,7 +25,7 @@ class VerificationRequestStub: VerificationRequestProtocol {
     var _otherUserId: String
     var _otherDeviceId: String
     var _flowId: String
-    var _roomId: String
+    var _roomId: String?
     var _weStarted: Bool
     var _isReady: Bool
     var _isPassive: Bool
@@ -41,7 +41,7 @@ class VerificationRequestStub: VerificationRequestProtocol {
         otherUserId: String = "Bob",
         otherDeviceId: String = "Device2",
         flowId: String = "123",
-        roomId: String = "ABC",
+        roomId: String? = "ABC",
         weStarted: Bool = true,
         isReady: Bool = false,
         isPassive: Bool = false,
@@ -132,6 +132,14 @@ class VerificationRequestStub: VerificationRequestProtocol {
     
     func cancel() -> OutgoingVerificationRequest? {
         shouldFail ? nil : .inRoom(requestId: "", roomId: "2", eventType: "", content: "")
+    }
+    
+    func setChangesListener(listener: VerificationRequestListener) {
+        
+    }
+    
+    func state() -> VerificationRequestState {
+        .requested
     }
 }
 

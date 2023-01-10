@@ -69,6 +69,11 @@
     accountDataDict[type] = data;
 }
 
+- (void)deleteDataWithType:(NSString *)type
+{
+    [accountDataDict removeObjectForKey:type];
+}
+
 - (NSDictionary *)accountDataForEventType:(NSString*)eventType
 {
     return accountDataDict[eventType];

@@ -156,7 +156,7 @@ class MXSpaceServiceTest: XCTestCase {
                             return
                         }
                         
-                        XCTAssert(roomState.powerLevels.eventsDefault == 100)
+                        XCTAssertNil(roomState.powerLevels)
                                                 
                         expectation.fulfill()
                     }

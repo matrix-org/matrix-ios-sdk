@@ -42,6 +42,7 @@
         "MXAesUnitTests",
         "MXAggregatedEditsUnitTests",
         "MXAggregatedReferenceUnitTests",
+        "MXAnalyticsDestinationUnitTests",
         "MXAsyncTaskQueueUnitTests",
         "MXAuthenticationSessionUnitTests",
         "MXBackgroundTaskUnitTests",
