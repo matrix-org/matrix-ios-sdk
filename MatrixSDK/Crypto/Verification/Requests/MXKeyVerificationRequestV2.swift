@@ -29,82 +29,62 @@ class MXKeyVerificationRequestV2: NSObject, MXKeyVerificationRequest {
         case cannotStartQrVerification
     }
     
-    private(set) var state: MXKeyVerificationRequestState = MXKeyVerificationRequestStatePending
-    
-    var reasonCancelCode: MXTransactionCancelCode? {
-        guard let info = request.cancelInfo() else {
-            return nil
+    private(set) var state: MXKeyVerificationRequestState = MXKeyVerificationRequestStatePending {
+        didSet {
+            guard state != oldValue else {
+                return
+            }
+            
+            log.debug("\(oldValue.description) -> \(state.description)")
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(name: .MXKeyVerificationRequestDidChange, object: self)
+            }
         }
-        return .init(
-            value: info.cancelCode,
-            humanReadable: info.reason
-        )
     }
     
-    var myUserId: String {
-        handler.userId
-    }
+    let requestId: String
+    let transport: MXKeyVerificationTransport
     
-    var isFromMyUser: Bool {
-        otherUser == myUserId
-    }
+    let myUserId: String
+    let otherUser: String
+    let otherDevice: String?
     
-    var isFromMyDevice: Bool {
-        request.weStarted()
-    }
+    let isFromMyUser: Bool
+    let isFromMyDevice: Bool
     
-    var requestId: String {
-        request.flowId()
-    }
-    
-    var transport: MXKeyVerificationTransport {
-        roomId != nil ? .directMessage : .toDevice
-    }
-    
-    var roomId: String? {
-        request.roomId()
-    }
-    
-    var otherUser: String {
-        request.otherUserId()
-    }
-    
-    var otherDevice: String? {
-        request.otherDeviceId()
-    }
+    let roomId: String?
     
     var methods: [String] {
         (isFromMyDevice ? myMethods : otherMethods) ?? []
     }
+    private (set) var myMethods: [String]?
+    private (set) var otherMethods: [String]?
     
-    var myMethods: [String]? {
-        request.ourSupportedMethods()
-    }
-    
-    var otherMethods: [String]? {
-        request.theirSupportedMethods()
-    }
-    
+    private (set) var reasonCancelCode: MXTransactionCancelCode?
+
     private let request: VerificationRequestProtocol
     private let handler: MXCryptoVerifying
-    
     private let log = MXNamedLog(name: "MXKeyVerificationRequestV2")
     
     init(request: VerificationRequestProtocol, handler: MXCryptoVerifying) {
         self.request = request
         self.handler = handler
-        self.state = request.state
-    }
-    
-    // Updates to state will be handled in rust-sdk in a fuiture PR
-    func processUpdates() -> MXKeyVerificationUpdateResult {
-        guard state != request.state else {
-            return .noUpdates
-        }
         
-        log.debug("Request was updated - \(request)")
-        state = request.state
-        return .updated
+        self.requestId = request.flowId()
+        self.transport = request.roomId() != nil ?.directMessage : .toDevice
+        
+        self.myUserId = handler.userId
+        self.otherUser = request.otherUserId()
+        self.otherDevice = request.otherDeviceId()
+        self.isFromMyUser = otherUser == myUserId
+        self.isFromMyDevice = request.weStarted()
+        self.roomId = request.roomId()
+        self.myMethods = request.ourSupportedMethods()
+        self.otherMethods = request.theirSupportedMethods()
+        
+        super.init()
+        
+        request.setChangesListener(listener: self)
     }
     
     func accept(
@@ -175,28 +155,56 @@ class MXKeyVerificationRequestV2: NSObject, MXKeyVerificationRequest {
     
     func startQrVerification() throws -> QrCodeProtocol {
         guard let qrCode = try request.startQrVerification() else {
-            log.failure("Cannot start QrCode")
+            log.error("Cannot start QrCode")
             throw Error.cannotStartQrVerification
         }
         return qrCode
     }
 }
 
-extension VerificationRequestProtocol {
-    var state: MXKeyVerificationRequestState {
-        // State as enum will be moved to MatrixSDKCrypto in the future
-        // to avoid the mapping of booleans into state
-        if isDone() {
-            return MXKeyVerificationRequestStateAccepted
-        } else if isCancelled() {
-            return MXKeyVerificationRequestStateCancelled
-        } else if isReady() {
-            return MXKeyVerificationRequestStateReady
-        } else if isPassive() {
-            return MXKeyVerificationRequestStatePending
+extension MXKeyVerificationRequestV2: VerificationRequestListener {
+    func onChange(state: VerificationRequestState) {
+        log.debug("\(state)")
+        
+        switch state {
+        case .requested:
+            self.state = MXKeyVerificationRequestStatePending
+        case .ready(let theirMethods, let ourMethods):
+            self.myMethods = ourMethods
+            self.otherMethods = theirMethods
+            self.state = MXKeyVerificationRequestStateReady
+        case .done:
+            self.state = MXKeyVerificationRequestStateAccepted
+        case .cancelled(let cancelInfo):
+            reasonCancelCode = MXTransactionCancelCode(
+                value: cancelInfo.cancelCode,
+                humanReadable: cancelInfo.reason
+            )
+            self.state = cancelInfo.cancelledByUs ? MXKeyVerificationRequestStateCancelledByMe : MXKeyVerificationRequestStateCancelled
         }
-        return MXKeyVerificationRequestStatePending
+    }
+}
+
+private extension MXKeyVerificationRequestState {
+    var description: String {
+        switch self {
+        case MXKeyVerificationRequestStatePending:
+            return "pending"
+        case MXKeyVerificationRequestStateExpired:
+            return "expired"
+        case MXKeyVerificationRequestStateCancelled:
+            return "cancelled"
+        case MXKeyVerificationRequestStateCancelledByMe:
+            return "cancelledByMe"
+        case MXKeyVerificationRequestStateReady:
+            return "ready"
+        case MXKeyVerificationRequestStateAccepted:
+            return "accepted"
+        default:
+            return "unknown"
+        }
     }
 }
 
 #endif
+

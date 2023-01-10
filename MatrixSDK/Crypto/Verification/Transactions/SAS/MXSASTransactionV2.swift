@@ -28,10 +28,13 @@ class MXSASTransactionV2: NSObject, MXSASTransaction {
     
     private(set) var state: MXSASTransactionState = MXSASTransactionStateUnknown {
         didSet {
-            if state != oldValue {
-                DispatchQueue.main.async {
-                    NotificationCenter.default.post(name: .MXKeyVerificationTransactionDidChange, object: self)
-                }
+            guard state != oldValue else {
+                return
+            }
+            
+            log.debug("\(oldValue.description) -> \(state.description)")
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(name: .MXKeyVerificationTransactionDidChange, object: self)
             }
         }
     }
@@ -71,7 +74,7 @@ class MXSASTransactionV2: NSObject, MXSASTransaction {
         
         super.init()
         
-        sas.setChangesListener(callback: self)
+        sas.setChangesListener(listener: self)
     }
     
     func accept() {
@@ -146,6 +149,8 @@ class MXSASTransactionV2: NSObject, MXSASTransaction {
 
 extension MXSASTransactionV2: SasListener {
     func onChange(state: SasState) {
+        log.debug("\(state)")
+        
         switch state {
         case .started:
             self.state = isIncoming ? MXSASTransactionStateIncomingShowAccept : MXSASTransactionStateOutgoingWaitForPartnerToAccept
@@ -170,6 +175,35 @@ extension MXSASTransactionV2: SasListener {
                 humanReadable: cancelInfo.reason
             )
             self.state = cancelInfo.cancelledByUs == true ? MXSASTransactionStateCancelledByMe : MXSASTransactionStateCancelled
+        }
+    }
+}
+
+extension MXSASTransactionState {
+    var description: String {
+        switch self {
+        case MXSASTransactionStateUnknown:
+            return "unknown"
+        case MXSASTransactionStateIncomingShowAccept:
+            return "incomingShowAccept"
+        case MXSASTransactionStateOutgoingWaitForPartnerToAccept:
+            return "outgoingWaitForPartnerToAccept"
+        case MXSASTransactionStateWaitForPartnerKey:
+            return "waitForPartnerKey"
+        case MXSASTransactionStateShowSAS:
+            return "showSAS"
+        case MXSASTransactionStateWaitForPartnerToConfirm:
+            return "waitForPartnerToConfirm"
+        case MXSASTransactionStateVerified:
+            return "verified"
+        case MXSASTransactionStateCancelled:
+            return "cancelled"
+        case MXSASTransactionStateCancelledByMe:
+            return "cancelledByMe"
+        case MXSASTransactionStateError:
+            return "error"
+        default:
+            return "unknown"
         }
     }
 }

@@ -108,6 +108,13 @@ struct QrCodeStub: QrCodeProtocol {
         nil
     }
     
+    func setChangesListener(listener: QrCodeListener) {
+    }
+    
+    func state() -> QrCodeState {
+        .started
+    }
+    
 }
 
 #endif

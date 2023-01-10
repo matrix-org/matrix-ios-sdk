@@ -71,14 +71,37 @@ public class PollAggregator {
         }
     }
     
+    public convenience init(session: MXSession, room: MXRoom, pollEvent: MXEvent) throws {
+        var pollStartEventId: String?
+        
+        switch pollEvent.eventType {
+        case .pollStart:
+            pollStartEventId = pollEvent.eventId
+        case .pollEnd:
+            pollStartEventId = pollEvent.relatesTo.eventId
+        default:
+            pollStartEventId = nil
+        }
+        
+        guard let pollStartEventId = pollStartEventId else {
+            throw PollAggregatorError.invalidPollStartEvent
+        }
+        
+        try self.init(session: session, room: room, pollStartEventId: pollStartEventId)
+    }
+    
     public init(session: MXSession, room: MXRoom, pollStartEventId: String) throws {
         self.session = session
         self.room = room
         self.pollStartEventId = pollStartEventId
         self.pollBuilder = PollBuilder()
         
-        NotificationCenter.default.addObserver(self, selector: #selector(handleRoomDataFlush), name: NSNotification.Name.mxRoomDidFlushData, object: self.room)
-        
+        NotificationCenter.default.addObserver(self, selector: #selector(handleRoomDataFlush), name: .mxRoomDidFlushData, object: self.room)
+        setupEditListener()
+        try buildPollStartContent()
+    }
+    
+    private func setupEditListener() {
         editEventsListener = session.aggregations.listenToEditsUpdate(inRoom: self.room.roomId) { [weak self] event in
             guard let self = self,
                   self.pollStartEventId == event.relatesTo.eventId
@@ -92,8 +115,6 @@ public class PollAggregator {
                 self.delegate?.pollAggregator(self, didFailWithError: PollAggregatorError.invalidPollStartEvent)
             }
         }
-        
-        try buildPollStartContent()
     }
     
     private func buildPollStartContent() throws {

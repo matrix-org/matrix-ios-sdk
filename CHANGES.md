@@ -1,3 +1,22 @@
+## Changes in 0.24.7 (2023-01-10)
+
+✨ Features
+
+- Threads: Load the thread list using server-side sorting and pagination ([#6059](https://github.com/vector-im/element-ios/issues/6059))
+
+🙌 Improvements
+
+- Add API to delete user's account data. ([#1651](https://github.com/matrix-org/matrix-ios-sdk/pull/1651))
+- Change Sync parser to delete empty account_data events. ([#1656](https://github.com/matrix-org/matrix-ios-sdk/pull/1656))
+- CryptoV2: Disable notification decryption ([#1662](https://github.com/matrix-org/matrix-ios-sdk/pull/1662))
+- CryptoV2: Verification request and QR listener ([#1663](https://github.com/matrix-org/matrix-ios-sdk/pull/1663))
+- Analytics: Do not track cancellation errors ([#1664](https://github.com/matrix-org/matrix-ios-sdk/pull/1664))
+- Polls: ensure polls are up to date after they are closed. ([#1672](https://github.com/matrix-org/matrix-ios-sdk/pull/1672))
+- Polls: handle decryption errors. ([#1673](https://github.com/matrix-org/matrix-ios-sdk/pull/1673))
+- Polls: add support for rendering/replying to poll ended events. ([#1674](https://github.com/matrix-org/matrix-ios-sdk/pull/1674))
+- Remove commented device property on MXPushRulesRespose. ([#1677](https://github.com/matrix-org/matrix-ios-sdk/pull/1677))
+
+
 ## Changes in 0.24.6 (2022-12-13)
 
 🙌 Improvements

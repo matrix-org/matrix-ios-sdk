@@ -37,6 +37,7 @@ public protocol PollProtocol {
     var isClosed: Bool { get }
     var totalAnswerCount: UInt { get }
     var hasBeenEdited: Bool { get }
+    var hasDecryptionError: Bool { get }
 }
 
 class PollAnswerOption: PollAnswerOptionProtocol {
@@ -56,6 +57,7 @@ class Poll: PollProtocol {
     var maxAllowedSelections: UInt = 1
     var isClosed: Bool = false
     var hasBeenEdited: Bool = false
+    var hasDecryptionError: Bool = false
     
     var totalAnswerCount: UInt {
         return self.answerOptions.reduce(0) { $0 + $1.count}

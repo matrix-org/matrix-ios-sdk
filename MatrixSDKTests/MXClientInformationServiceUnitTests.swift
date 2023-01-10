@@ -92,7 +92,7 @@ class MXClientInformationServiceUnitTests: XCTestCase {
 
         // must be empty after updateData
         let updatedInfo = session.accountData.accountData(forEventType: type)
-        XCTAssert(updatedInfo?.isEmpty ?? true)
+        XCTAssertNil(updatedInfo)
 
         session.close()
     }

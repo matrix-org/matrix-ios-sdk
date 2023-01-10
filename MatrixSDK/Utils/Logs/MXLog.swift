@@ -215,8 +215,11 @@ private var logger: SwiftyBeaver.Type = {
         }
         logger.addDestination(consoleDestination)
         
+        #if !DEBUG
+        // Non-debug builds will log fatal issues to analytics if tracking consent provided
         let analytics = MXAnalyticsDestination()
         logger.addDestination(analytics)
+        #endif
     }
 }
 

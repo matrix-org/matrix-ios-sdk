@@ -61,6 +61,16 @@ class MXKeyVerificationRequestV2UnitTests: XCTestCase {
         XCTAssertEqual(request.otherMethods, ["sas", "qr"])
     }
     
+    func test_usesCorrectTransport() {
+        let request1 = makeRequest(for: .init(roomId: "ABC"))
+        XCTAssertEqual(request1.transport, .directMessage)
+        XCTAssertEqual(request1.roomId, "ABC")
+        
+        let request2 = makeRequest(for: .init(roomId: nil))
+        XCTAssertEqual(request2.transport, .toDevice)
+        XCTAssertNil(request2.roomId)
+    }
+    
     func test_isFromMyUser_ifUsersMatch() {
         verification.userId = "Alice"
         let request1 = makeRequest(for: .init(
@@ -93,100 +103,51 @@ class MXKeyVerificationRequestV2UnitTests: XCTestCase {
         XCTAssertEqual(request2.methods, theirMethods)
     }
     
-    func test_state() {
-        let testCases: [(VerificationRequestStub, MXKeyVerificationRequestState)] = [
-            (.init(
-                isReady: false,
-                isPassive: false,
-                isDone: false,
-                isCancelled: false
-            ), MXKeyVerificationRequestStatePending),
-            (.init(
-                isReady: false,
-                isPassive: false,
-                isDone: true,
-                isCancelled: false
-            ), MXKeyVerificationRequestStateAccepted),
-            (.init(
-                isReady: true,
-                isPassive: false,
-                isDone: false,
-                isCancelled: false
-            ), MXKeyVerificationRequestStateReady),
-            (.init(
-                isReady: false,
-                isPassive: false,
-                isDone: false,
-                isCancelled: true
-            ), MXKeyVerificationRequestStateCancelled),
-            (.init(
-                isReady: false,
-                isPassive: true,
-                isDone: false,
-                isCancelled: false
-            ), MXKeyVerificationRequestStatePending),
-            (.init(
-                isReady: true,
-                isPassive: true,
-                isDone: true,
-                isCancelled: true
-            ), MXKeyVerificationRequestStateAccepted),
-            (.init(
-                isReady: true,
-                isPassive: true,
-                isDone: false,
-                isCancelled: true
-            ), MXKeyVerificationRequestStateCancelled),
-        ]
-        
-        for (stub, state) in testCases {
-            let request = makeRequest(for: stub)
-            XCTAssertEqual(request.state, state)
-        }
+    // MARK: - Test State
+    
+    func test_requestedState() {
+        let request = makeRequest()
+        request.onChange(state: .requested)
+        XCTAssertEqual(request.state, MXKeyVerificationRequestStatePending)
     }
-
-    func test_reasonCancelCode() {
-        let cancelInfo = CancelInfo(
-            cancelCode: "123",
-            reason: "Changed mind",
-            cancelledByUs: true
-        )
+    
+    func test_readyState() {
+        let request = makeRequest()
         
-        let request = makeRequest(for: .init(cancelInfo: cancelInfo))
-
+        request.onChange(state: .ready(theirMethods: ["1", "2"], ourMethods: ["3", "4"]))
+        
+        XCTAssertEqual(request.state, MXKeyVerificationRequestStateReady)
+        XCTAssertEqual(request.myMethods, ["3", "4"])
+        XCTAssertEqual(request.otherMethods, ["1", "2"])
+        XCTAssertEqual(request.methods, ["3", "4"])
+    }
+    
+    func test_doneState() {
+        let request = makeRequest()
+        request.onChange(state: .done)
+        XCTAssertEqual(request.state, MXKeyVerificationRequestStateAccepted)
+    }
+    
+    func test_cancelledByMeState() {
+        let request = makeRequest()
+        
+        request.onChange(state: .cancelled(cancelInfo: .init(cancelCode: "123", reason: "Changed mind", cancelledByUs: true)))
+        
         XCTAssertEqual(request.reasonCancelCode?.value, "123")
         XCTAssertEqual(request.reasonCancelCode?.humanReadable, "Changed mind")
+        XCTAssertEqual(request.state, MXKeyVerificationRequestStateCancelledByMe)
     }
     
-    // MARK: - Test Updates
-    
-    func test_processUpdated_noUpdatesIfRequestUnchanged() {
-        let stub = VerificationRequestStub(
-            flowId: "ABC",
-            isReady: false
-        )
-        let request = makeRequest(for: stub)
-        stub._isReady = false
+    func test_cancelledByThemState() {
+        let request = makeRequest()
         
-        let result = request.processUpdates()
-
-        XCTAssertEqual(result, MXKeyVerificationUpdateResult.noUpdates)
-    }
-    
-    func test_processUpdated_updatedIfRequestChanged() {
-        let stub = VerificationRequestStub(
-            flowId: "ABC",
-            isReady: false
-        )
-        let request = makeRequest(for: stub)
-        stub._isReady = true
+        request.onChange(state: .cancelled(cancelInfo: .init(cancelCode: "123", reason: "Changed mind", cancelledByUs: false)))
         
-        let result = request.processUpdates()
-
-        XCTAssertEqual(result, MXKeyVerificationUpdateResult.updated)
-        XCTAssertEqual(request.state, MXKeyVerificationRequestStateReady)
+        XCTAssertEqual(request.reasonCancelCode?.value, "123")
+        XCTAssertEqual(request.reasonCancelCode?.humanReadable, "Changed mind")
+        XCTAssertEqual(request.state, MXKeyVerificationRequestStateCancelled)
     }
-    
+
     // MARK: - Test Interactions
     
     func test_acceptSucceeds() {

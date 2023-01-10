@@ -606,6 +606,8 @@ extension MXCryptoMachine: MXCryptoVerifying {
                 content: content
             )
         }
+        
+        try await processOutgoingRequests()
     }
     
     func handleVerificationConfirmation(_ result: ConfirmVerificationResult) async throws {
@@ -744,21 +746,7 @@ extension MXCryptoMachine: MXCryptoBackup {
 
 extension MXCryptoMachine: Logger {
     func log(logLine: String) {
-        #if DEBUG
         MXLog.debug("[MXCryptoMachine] \(logLine)")
-        #else
-        // Filtering out verbose logs for non-debug builds
-        guard !logLine.starts(with: "DEBUG") else {
-            return
-        }
-        MXLog.debug("[MXCryptoMachine] \(logLine)")
-        #endif
-    }
-    
-    func log(error: String) {
-        MXLog.error("[MXCryptoMachine] Error", context: [
-            "error": error
-        ])
     }
 }
 

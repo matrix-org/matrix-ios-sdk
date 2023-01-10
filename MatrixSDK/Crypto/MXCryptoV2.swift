@@ -695,6 +695,12 @@ private class MXCryptoV2: NSObject, MXCrypto {
                         // we need to download their keys to be able to proceed with the verification flow
                         try await self.machine.downloadKeys(users: [userId])
                     }
+                    
+                    do {
+                        try await self.machine.processOutgoingRequests()
+                    } catch {
+                        self.log.error("Error processing requests", context: error)
+                    }
                 }
             }
         }

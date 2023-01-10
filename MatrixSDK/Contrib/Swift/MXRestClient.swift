@@ -37,6 +37,27 @@ public enum MXAccountDataType: Equatable, Hashable {
     }
 }
 
+/// Represents the threads request include parameter
+public enum MXThreadsIncludeParameter: String, RawRepresentable, Equatable, Hashable {
+    case all
+    case participated
+    
+    public init?(rawValue: String) {
+        switch rawValue {
+        case kMXThreadsListIncludeAllParameter:             self = .all
+        case kMXThreadsListIncludeParticipatedParameter:    self = .participated
+        default:
+            return nil
+        }
+    }
+    
+    public var rawValue: String {
+        switch self {
+        case .all:               return kMXThreadsListIncludeAllParameter
+        case .participated:      return kMXThreadsListIncludeParticipatedParameter
+        }
+    }
+}
 
 
 
@@ -1239,6 +1260,22 @@ public extension MXRestClient {
     @nonobjc @discardableResult func roomSummary(with roomIdOrAlias: String, via: [String], completion: @escaping (_ response: MXResponse<MXPublicRoom>) -> Void) -> MXHTTPOperation {
         return __roomSummary(with: roomIdOrAlias, via: via, success: currySuccess(completion), failure: curryFailure(completion))
     }
+    
+    /**
+     List all the threads of a room.
+     
+     - parameters:
+        - roomId: the id of the room.
+        - include: wether the response should include all threads (e.g. `.all`) or only threads participated by the user (e.g. `.participated`)
+        - from: the token to pass for doing pagination from a previous response.
+        - completion: A block object called when the operation completes.
+        - response: Provides the list of root events of the threads and, optionally, the next batch token.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func threadsInRoomWithId(_ roomId: String, include: MXThreadsIncludeParameter, from: String?, completion: @escaping (_ response: MXResponse<MXAggregationPaginatedResponse>) -> Void) -> MXHTTPOperation {
+        return __threadsInRoom(withId: roomId, include: include.rawValue, from: from,  success: currySuccess(completion), failure: curryFailure(completion))
+    };
     
     /**
      Upgrade a room to a new version

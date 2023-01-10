@@ -833,7 +833,6 @@ NSString *const kMXPushRuleConditionStringSenderNotificationPermission  = @"send
 @implementation MXPushRulesResponse
 
 NSString *const kMXPushRuleScopeStringGlobal = @"global";
-NSString *const kMXPushRuleScopeStringDevice = @"device";
 
 + (id)modelFromJSON:(NSDictionary *)JSONDictionary
 {
@@ -844,8 +843,6 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
         {
             pushRulesResponse.global = [MXPushRulesSet modelFromJSON:JSONDictionary[kMXPushRuleScopeStringGlobal] withScope:kMXPushRuleScopeStringGlobal];
         }
-
-        // TODO support device rules
 
         pushRulesResponse->JSONDictionary = JSONDictionary;
     }
