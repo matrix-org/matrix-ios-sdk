@@ -29,19 +29,19 @@ class MXKeysQuerySchedulerUnitTests: XCTestCase {
     
     var queryCounter: Int!
     var queryStartSpy: (() -> Void)?
-    var stubbedResponse: Response!
     var stubbedResult: Result<Response, Error>!
     var scheduler: MXKeysQueryScheduler<Response>!
     
     override func setUp() {
         queryCounter = 0
-        stubbedResponse = [
-            "alice": ["A"],
-            "bob": ["B"],
-            "carol": ["C"],
-            "david": ["D"],
-        ]
-        stubbedResult = .success(stubbedResponse)
+        stubbedResult = .success(
+            [
+                "alice": ["A"],
+                "bob": ["B"],
+                "carol": ["C"],
+                "david": ["D"],
+            ]
+        )
         
         scheduler = MXKeysQueryScheduler(queryAction: queryAction(users:))
     }
@@ -137,9 +137,9 @@ class MXKeysQuerySchedulerUnitTests: XCTestCase {
 
     func test_executeMultipleAliceQueriesOnce() {
         queryStartSpy = {
-            self.stubbedResponse = [
+            self.stubbedResult = .success([
                 "alice": ["A1", "A2"]
-            ]
+            ])
         }
 
         let exp = expectation(description: "exp")
@@ -176,9 +176,9 @@ class MXKeysQuerySchedulerUnitTests: XCTestCase {
 
     func test_executeEachAliceQuerySeparately() {
         queryStartSpy = {
-            self.stubbedResponse = [
+            self.stubbedResult = .success([
                 "alice": ["A1", "A2"]
-            ]
+            ])
         }
 
         var exp = expectation(description: "exp")
@@ -216,9 +216,9 @@ class MXKeysQuerySchedulerUnitTests: XCTestCase {
 
     func test_executeMultipleBobQueriesOnce() {
         queryStartSpy = {
-            self.stubbedResponse = [
+            self.stubbedResult = .success([
                 "bob": ["B1", "B2"]
-            ]
+            ])
         }
 
         let exp = expectation(description: "exp")
@@ -250,10 +250,10 @@ class MXKeysQuerySchedulerUnitTests: XCTestCase {
 
     func test_executeSecondBobQuerySeparately() {
         queryStartSpy = {
-            self.stubbedResponse = [
+            self.stubbedResult = .success([
                 "bob": ["B1", "B2"],
                 "carol": ["C"]
-            ]
+            ])
         }
 
         let exp = expectation(description: "exp")
@@ -402,7 +402,9 @@ class MXKeysQuerySchedulerUnitTests: XCTestCase {
     func test_queryBobAfterFail() {
         stubbedResult = .failure(Error.dummy)
         queryStartSpy = {
-            self.stubbedResult = .success(self.stubbedResponse)
+            self.stubbedResult = .success([
+                "bob": ["B"],
+            ])
         }
         
         let exp = expectation(description: "exp")

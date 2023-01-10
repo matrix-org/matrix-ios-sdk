@@ -47,7 +47,7 @@ public actor MXKeysQueryScheduler<Response> {
     /// If there is no ongoing query, it will be executed right away,
     /// otherwise it will be scheduled for the next available run.
     public func query(users: Set<String>) async throws -> Response {
-        log("Querying \(users.count) user(s) ...")
+        log("Querying \(users.count) user(s): \(users) ...")
         
         let task = currentOrNextQuery(users: users)
         return try await task.value
