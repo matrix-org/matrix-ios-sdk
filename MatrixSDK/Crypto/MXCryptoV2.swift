@@ -542,19 +542,13 @@ private class MXCryptoV2: NSObject, MXCrypto {
     ) -> MXHTTPOperation? {
         log.debug("->")
         
-        guard forceDownload else {
-            success?(
-                deviceInfoSource.devicesMap(userIds: userIds),
-                crossSigningInfo(userIds: userIds)
-            )
-            return nil
-        }
-        
-        log.debug("Force-downloading keys")
-        
         Task {
             do {
-                try await machine.downloadKeys(users: userIds)
+                if forceDownload {
+                    try await machine.reloadKeys(users: userIds)
+                } else {
+                    try await machine.downloadKeysIfNecessary(users: userIds)
+                }
                 
                 log.debug("Downloaded keys")
                 await MainActor.run {
@@ -690,10 +684,10 @@ private class MXCryptoV2: NSObject, MXCrypto {
             
             if direction == .forwards && event.sender != session.myUserId {
                 Task {
-                    if let userId = await self.keyVerification.handleRoomEvent(event), !self.machine.isUserTracked(userId: userId) {
+                    if let userId = await self.keyVerification.handleRoomEvent(event) {
                         // If we recieved a verification event from a new user we do not yet track
                         // we need to download their keys to be able to proceed with the verification flow
-                        try await self.machine.downloadKeys(users: [userId])
+                        try await self.machine.downloadKeysIfNecessary(users: [userId])
                     }
                     
                     do {

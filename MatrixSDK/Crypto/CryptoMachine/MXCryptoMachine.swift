@@ -58,6 +58,7 @@ class MXCryptoMachine {
     
     private let machine: OlmMachine
     private let requests: MXCryptoRequests
+    private let queryScheduler: MXKeysQueryScheduler<MXKeysQueryResponse>
     private let getRoomAction: GetRoomAction
     
     private let sessionsQueue = MXTaskQueue()
@@ -72,7 +73,12 @@ class MXCryptoMachine {
     
     private let log = MXNamedLog(name: "MXCryptoMachine")
 
-    init(userId: String, deviceId: String, restClient: MXRestClient, getRoomAction: @escaping GetRoomAction) throws {
+    init(
+        userId: String,
+        deviceId: String,
+        restClient: MXRestClient,
+        getRoomAction: @escaping GetRoomAction
+    ) throws {
         let url = try Self.storeURL(for: userId)
         machine = try OlmMachine(
             userId: userId,
@@ -80,7 +86,12 @@ class MXCryptoMachine {
             path: url.path,
             passphrase: nil
         )
-        requests = MXCryptoRequests(restClient: restClient)
+        let requests = MXCryptoRequests(restClient: restClient)
+        self.requests = requests
+        
+        queryScheduler = MXKeysQueryScheduler { users in
+            try await requests.queryKeys(users: users)
+        }
         self.getRoomAction = getRoomAction
         
         setLogger(logger: self)
@@ -211,6 +222,31 @@ extension MXCryptoMachine: MXCryptoSyncing {
         return toDevice
     }
     
+    func downloadKeysIfNecessary(users: [String]) async throws {
+        machine.updateTrackedUsers(users: users)
+        try await withThrowingTaskGroup(of: Void.self) { [weak self] group in
+            guard let self = self else { return }
+
+            for request in try machine.outgoingRequests() {
+                if case .keysQuery(_, let requestUsers) = request {
+                    let usersInCommon = Set(requestUsers).intersection(users)
+                    if !usersInCommon.isEmpty {
+                        try await self.handleRequest(request)
+                        return
+                    }
+                }
+            }
+        }
+    }
+    
+    @available(*, deprecated, message: "The application should not manually force reload keys, use `downloadKeysIfNecessary` instead")
+    func reloadKeys(users: [String]) async throws {
+        machine.updateTrackedUsers(users: users)
+        try await handleRequest(
+            .keysQuery(requestId: UUID().uuidString, users: users)
+        )
+    }
+    
     func processOutgoingRequests() async throws {
         try await syncQueue.sync { [weak self] in
             try await self?.handleOutgoingRequests()
@@ -234,7 +270,8 @@ extension MXCryptoMachine: MXCryptoSyncing {
             try markRequestAsSent(requestId: requestId, requestType: .keysUpload, response: response.jsonString())
             
         case .keysQuery(let requestId, let users):
-            let response = try await requests.queryKeys(users: users)
+            // Key queries go through a scheduler layer instead of directly through the rest client
+            let response = try await queryScheduler.query(users: Set(users))
             try markRequestAsSent(requestId: requestId, requestType: .keysQuery, response: response.jsonString())
             
         case .keysClaim(let requestId, let oneTimeKeys):
@@ -341,21 +378,6 @@ extension MXCryptoMachine: MXCryptoUserIdentitySource {
         }
     }
     
-    func isUserTracked(userId: String) -> Bool {
-        do {
-            return try machine.isUserTracked(userId: userId)
-        } catch {
-            log.error("Failed checking user tracking")
-            return false
-        }
-    }
-    
-    func downloadKeys(users: [String]) async throws {
-        try await handleRequest(
-            .keysQuery(requestId: UUID().uuidString, users: users)
-        )
-    }
-    
     func verifyUser(userId: String) async throws {
         let request = try machine.verifyIdentity(userId: userId)
         try await requests.uploadSignatures(request: request)
@@ -378,7 +400,7 @@ extension MXCryptoMachine: MXCryptoRoomEventEncrypting {
         settings: EncryptionSettings
     ) async throws {
         try await sessionsQueue.sync { [weak self] in
-            try await self?.updateTrackedUsers(users: users)
+            try await self?.downloadKeysIfNecessary(users: users)
             try await self?.getMissingSessions(users: users)
         }
         
@@ -410,25 +432,6 @@ extension MXCryptoMachine: MXCryptoRoomEventEncrypting {
     }
     
     // MARK: - Private
-    
-    private func updateTrackedUsers(users: [String]) async throws {
-        machine.updateTrackedUsers(users: users)
-        try await withThrowingTaskGroup(of: Void.self) { [weak self] group in
-            guard let self = self else { return }
-
-            for request in try machine.outgoingRequests() {
-                guard case .keysQuery = request else {
-                    continue
-                }
-
-                group.addTask {
-                    try await self.handleRequest(request)
-                }
-            }
-
-            try await group.waitForAll()
-        }
-    }
     
     private func getMissingSessions(users: [String]) async throws {
         guard
@@ -484,6 +487,10 @@ extension MXCryptoMachine: MXCryptoRoomEventDecrypting {
 }
 
 extension MXCryptoMachine: MXCryptoCrossSigning {
+    func refreshCrossSigningStatus() async throws {
+        try await reloadKeys(users: [userId])
+    }
+    
     func crossSigningStatus() -> CrossSigningStatus {
         return machine.crossSigningStatus()
     }
