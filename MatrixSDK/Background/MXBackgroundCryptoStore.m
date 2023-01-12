@@ -180,7 +180,7 @@ NSString *const MXBackgroundCryptoStoreUserIdSuffix = @":bgCryptoStore";
         if (olmSession)
         {
             MXLogDebug(@"[MXBackgroundCryptoStore] performSessionOperationWithDevice: Transfer data for %@ from cryptoStore to bgCryptoStore", sessionId);
-            [bgCryptoStore storeSession:olmSession forDevice:deviceKey];
+            [bgCryptoStore storeSession:olmSession];
         }
     }
     
@@ -209,9 +209,21 @@ NSString *const MXBackgroundCryptoStoreUserIdSuffix = @":bgCryptoStore";
     return sessions;
 }
 
-- (void)storeSession:(MXOlmSession*)session forDevice:(NSString*)deviceKey
+- (NSArray<MXOlmSession *> *)sessions
 {
-    [bgCryptoStore storeSession:session forDevice:deviceKey];
+    NSArray<MXOlmSession*> *bgSessions = [bgCryptoStore sessions] ?: @[];
+    NSArray<MXOlmSession*> *appSessions = [cryptoStore sessions] ?: @[];
+
+    NSMutableArray<MXOlmSession*> *sessions = [NSMutableArray array];
+    [sessions addObjectsFromArray:bgSessions];
+    [sessions addObjectsFromArray:appSessions];
+
+    return sessions;
+}
+
+- (void)storeSession:(MXOlmSession*)session
+{
+    [bgCryptoStore storeSession:session];
 }
 
 
@@ -320,6 +332,12 @@ NSString *const MXBackgroundCryptoStoreUserIdSuffix = @":bgCryptoStore";
 + (void)deleteReadonlyStoreWithCredentials:(MXCredentials*)credentials
 {
     NSAssert(NO, @"This method should be useless in the context of MXBackgroundCryptoStore");
+}
+
+- (NSString *)userId
+{
+    NSAssert(NO, @"This method should be useless in the context of MXBackgroundCryptoStore");
+    return nil;
 }
 
 - (void)storeDeviceId:(NSString*)deviceId

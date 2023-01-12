@@ -172,14 +172,14 @@ NSInteger const kMXInboundGroupSessionCacheSize = 100;
 
     if (olmSession)
     {
-        MXOlmSession *mxOlmSession = [[MXOlmSession alloc] initWithOlmSession:olmSession];
+        MXOlmSession *mxOlmSession = [[MXOlmSession alloc] initWithOlmSession:olmSession deviceKey:theirIdentityKey];
 
         // Pretend we've received a message at this point, otherwise
         // if we try to send a message to the device, it won't use
         // this session
         [mxOlmSession didReceiveMessage];
 
-        [store storeSession:mxOlmSession forDevice:theirIdentityKey];
+        [store storeSession:mxOlmSession];
         return olmSession.sessionIdentifier;
     }
     else if (error)
@@ -221,13 +221,13 @@ NSInteger const kMXInboundGroupSessionCacheSize = 100;
             MXLogDebug(@"[MXOlmDevice] createInboundSession. decryptMessage error: %@", error);
         }
         
-        MXOlmSession *mxOlmSession = [[MXOlmSession alloc] initWithOlmSession:olmSession];
+        MXOlmSession *mxOlmSession = [[MXOlmSession alloc] initWithOlmSession:olmSession deviceKey:theirDeviceIdentityKey];
         
         // This counts as a received message: set last received message time
         // to now
         [mxOlmSession didReceiveMessage];
         
-        [store storeSession:mxOlmSession forDevice:theirDeviceIdentityKey];
+        [store storeSession:mxOlmSession];
     }
 
     return olmSession.sessionIdentifier;
