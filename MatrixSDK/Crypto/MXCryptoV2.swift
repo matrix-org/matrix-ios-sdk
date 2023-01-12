@@ -203,7 +203,9 @@ private class MXCryptoV2: NSObject, MXCrypto {
         log.debug("->")
         startTask = Task {
             do {
-                try await machine.start()
+                try migrateIfNecessary()
+                
+                try await machine.uploadKeysIfNecessary()
                 crossSigning.refreshState(success: nil)
                 backup?.checkAndStart()
                 
@@ -245,6 +247,20 @@ private class MXCryptoV2: NSObject, MXCrypto {
                 log.failure("Cannot delete crypto store", context: error)
             }
         }
+    }
+    
+    private func migrateIfNecessary() throws {
+        guard legacyStore.cryptoVersion.rawValue < MXCryptoVersion.versionLegacyDeprecated.rawValue else {
+            log.debug("Legacy crypto has already been deprecated, no need to migrate")
+            return
+        }
+
+        log.debug("Requires migration from legacy crypto")
+        let migration = MXCryptoMigrationV2(legacyStore: legacyStore)
+        try migration.migrateCrypto()
+        
+        log.debug("Marking legacy crypto as deprecated")
+        legacyStore.cryptoVersion = MXCryptoVersion.versionLegacyDeprecated
     }
     
     // MARK: - Event Encryption
