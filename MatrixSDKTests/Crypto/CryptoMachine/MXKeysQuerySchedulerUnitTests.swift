@@ -71,37 +71,41 @@ class MXKeysQuerySchedulerUnitTests: XCTestCase {
         users: Set<String>,
         completion: @escaping (Response) -> Void,
         failure: ((Swift.Error) -> Void)? = nil
-    ) {
-        Task.detached {
-            do {
-                let result = try await self.scheduler.query(users: users)
-                completion(result)
-            } catch {
-                failure?(error)
+    ) async {
+        return await withCheckedContinuation { continuation in
+            Task.detached {
+                continuation.resume()
+                
+                do {
+                    let result = try await self.scheduler.query(users: users)
+                    completion(result)
+                } catch {
+                    failure?(error)
+                }
             }
         }
     }
     
     // MARK: - Tests
     
-    func test_queryAlice() {
+    func test_queryAlice() async {
         let exp = expectation(description: "exp")
         
-        query(users: ["alice"]) { response in
+        await query(users: ["alice"]) { response in
             XCTAssertEqual(response, [
                 "alice": ["A"]
             ])
             exp.fulfill()
         }
 
-        waitForExpectations(timeout: 1)
+        await waitForExpectations(timeout: 1)
         XCTAssertQueriesCount(1)
     }
     
-    func test_queryAliceAndBob() {
+    func test_queryAliceAndBob() async {
         let exp = expectation(description: "exp")
         
-        query(users: ["alice", "bob"]) { response in
+        await query(users: ["alice", "bob"]) { response in
             XCTAssertEqual(response, [
                 "alice": ["A"],
                 "bob": ["B"],
@@ -109,33 +113,33 @@ class MXKeysQuerySchedulerUnitTests: XCTestCase {
             exp.fulfill()
         }
 
-        waitForExpectations(timeout: 1)
+        await waitForExpectations(timeout: 1)
         XCTAssertQueriesCount(1)
     }
 
-    func test_queryBobAfterAlice() {
+    func test_queryBobAfterAlice() async {
         let exp = expectation(description: "exp")
         exp.expectedFulfillmentCount = 2
 
-        query(users: ["alice"]) { response in
+        await query(users: ["alice"]) { response in
             XCTAssertEqual(response, [
                 "alice": ["A"],
             ])
             exp.fulfill()
         }
 
-        query(users: ["bob"]) { response in
+        await query(users: ["bob"]) { response in
             XCTAssertEqual(response, [
                 "bob": ["B"],
             ])
             exp.fulfill()
         }
 
-        waitForExpectations(timeout: 1)
+        await waitForExpectations(timeout: 1)
         XCTAssertQueriesCount(2)
     }
 
-    func test_executeMultipleAliceQueriesOnce() {
+    func test_executeMultipleAliceQueriesOnce() async {
         queryStartSpy = {
             self.stubbedResult = .success([
                 "alice": ["A1", "A2"]
@@ -145,28 +149,28 @@ class MXKeysQuerySchedulerUnitTests: XCTestCase {
         let exp = expectation(description: "exp")
         exp.expectedFulfillmentCount = 3
 
-        query(users: ["alice"]) { response in
+        await query(users: ["alice"]) { response in
             XCTAssertEqual(response, [
                 "alice": ["A"],
             ])
             exp.fulfill()
         }
 
-        query(users: ["alice"]) { response in
+        await query(users: ["alice"]) { response in
             XCTAssertEqual(response, [
                 "alice": ["A"],
             ])
             exp.fulfill()
         }
 
-        query(users: ["alice"]) { response in
+        await query(users: ["alice"]) { response in
             XCTAssertEqual(response, [
                 "alice": ["A"],
             ])
             exp.fulfill()
         }
 
-        waitForExpectations(timeout: 1)
+        await waitForExpectations(timeout: 1)
         
         // Three queries are made but since they query the same user,
         // second and third query will simply await the results of
@@ -174,7 +178,7 @@ class MXKeysQuerySchedulerUnitTests: XCTestCase {
         XCTAssertQueriesCount(1)
     }
 
-    func test_executeEachAliceQuerySeparately() {
+    func test_executeEachAliceQuerySeparately() async {
         queryStartSpy = {
             self.stubbedResult = .success([
                 "alice": ["A1", "A2"]
@@ -182,39 +186,39 @@ class MXKeysQuerySchedulerUnitTests: XCTestCase {
         }
 
         var exp = expectation(description: "exp")
-        query(users: ["alice"]) { response in
+        await query(users: ["alice"]) { response in
             XCTAssertEqual(response, [
                 "alice": ["A"],
             ])
             exp.fulfill()
         }
-        waitForExpectations(timeout: 1)
+        await waitForExpectations(timeout: 1)
 
         exp = expectation(description: "exp")
-        query(users: ["alice"]) { response in
+        await query(users: ["alice"]) { response in
             XCTAssertEqual(response, [
                 "alice": ["A1", "A2"],
             ])
             exp.fulfill()
         }
-        waitForExpectations(timeout: 1)
+        await waitForExpectations(timeout: 1)
 
         exp = expectation(description: "exp")
-        query(users: ["alice"]) { response in
+        await query(users: ["alice"]) { response in
             XCTAssertEqual(response, [
                 "alice": ["A1", "A2"],
             ])
             exp.fulfill()
         }
         
-        waitForExpectations(timeout: 1)
+        await waitForExpectations(timeout: 1)
         
         // Each of the three queries is made when no other query
         // is ongoing, meaning they will all execute
         XCTAssertQueriesCount(3)
     }
 
-    func test_executeMultipleBobQueriesOnce() {
+    func test_executeMultipleBobQueriesOnce() async {
         queryStartSpy = {
             self.stubbedResult = .success([
                 "bob": ["B1", "B2"]
@@ -224,7 +228,7 @@ class MXKeysQuerySchedulerUnitTests: XCTestCase {
         let exp = expectation(description: "exp")
         exp.expectedFulfillmentCount = 2
 
-        query(users: ["alice", "bob"]) { response in
+        await query(users: ["alice", "bob"]) { response in
             XCTAssertEqual(response, [
                 "alice": ["A"],
                 "bob": ["B"],
@@ -232,7 +236,7 @@ class MXKeysQuerySchedulerUnitTests: XCTestCase {
             exp.fulfill()
         }
 
-        query(users: ["bob"]) { response in
+        await query(users: ["bob"]) { response in
             XCTAssertEqual(response, [
                 "alice": ["A"],
                 "bob": ["B"],
@@ -240,7 +244,7 @@ class MXKeysQuerySchedulerUnitTests: XCTestCase {
             exp.fulfill()
         }
 
-        waitForExpectations(timeout: 1)
+        await waitForExpectations(timeout: 1)
         
         // The second query contains a different set of users,
         // but since there is no user additional to the first
@@ -248,7 +252,7 @@ class MXKeysQuerySchedulerUnitTests: XCTestCase {
         XCTAssertQueriesCount(1)
     }
 
-    func test_executeSecondBobQuerySeparately() {
+    func test_executeSecondBobQuerySeparately() async {
         queryStartSpy = {
             self.stubbedResult = .success([
                 "bob": ["B1", "B2"],
@@ -259,7 +263,7 @@ class MXKeysQuerySchedulerUnitTests: XCTestCase {
         let exp = expectation(description: "exp")
         exp.expectedFulfillmentCount = 2
 
-        query(users: ["alice", "bob"]) { response in
+        await query(users: ["alice", "bob"]) { response in
             XCTAssertEqual(response, [
                 "alice": ["A"],
                 "bob": ["B"],
@@ -267,7 +271,7 @@ class MXKeysQuerySchedulerUnitTests: XCTestCase {
             exp.fulfill()
         }
 
-        query(users: ["bob", "carol"]) { response in
+        await query(users: ["bob", "carol"]) { response in
             XCTAssertEqual(response, [
                 "bob": ["B1", "B2"],
                 "carol": ["C"],
@@ -275,7 +279,7 @@ class MXKeysQuerySchedulerUnitTests: XCTestCase {
             exp.fulfill()
         }
 
-        waitForExpectations(timeout: 1)
+        await waitForExpectations(timeout: 1)
 
         // The second query contains one user shared with the first,
         // but also one new user, meaning the second query cannot be
@@ -283,11 +287,11 @@ class MXKeysQuerySchedulerUnitTests: XCTestCase {
         XCTAssertQueriesCount(2)
     }
 
-    func test_nextQueryAggregatesPendingUsers() {
+    func test_nextQueryAggregatesPendingUsers() async {
         let exp = expectation(description: "exp")
         exp.expectedFulfillmentCount = 4
 
-        query(users: ["alice"]) { response in
+        await query(users: ["alice"]) { response in
             XCTAssertEqual(response, [
                 "alice": ["A"],
             ])
@@ -296,7 +300,7 @@ class MXKeysQuerySchedulerUnitTests: XCTestCase {
 
         // Making three future / pending queries has the same outcome
         // as making a single query with all users aggregated.
-        query(users: ["bob"]) { response in
+        await query(users: ["bob"]) { response in
             XCTAssertEqual(response, [
                 "bob": ["B"],
                 "carol": ["C"],
@@ -305,7 +309,7 @@ class MXKeysQuerySchedulerUnitTests: XCTestCase {
             exp.fulfill()
         }
 
-        query(users: ["carol"]) { response in
+        await query(users: ["carol"]) { response in
             XCTAssertEqual(response, [
                 "bob": ["B"],
                 "carol": ["C"],
@@ -314,7 +318,7 @@ class MXKeysQuerySchedulerUnitTests: XCTestCase {
             exp.fulfill()
         }
 
-        query(users: ["david"]) { response in
+        await query(users: ["david"]) { response in
             XCTAssertEqual(response, [
                 "bob": ["B"],
                 "carol": ["C"],
@@ -323,22 +327,22 @@ class MXKeysQuerySchedulerUnitTests: XCTestCase {
             exp.fulfill()
         }
 
-        waitForExpectations(timeout: 1)
+        await waitForExpectations(timeout: 1)
         XCTAssertQueriesCount(2)
     }
     
-    func test_pendingUsersResetAfterQuery() {
+    func test_pendingUsersResetAfterQuery() async {
         var exp = expectation(description: "exp")
         exp.expectedFulfillmentCount = 3
 
-        query(users: ["alice"]) { response in
+        await query(users: ["alice"]) { response in
             XCTAssertEqual(response, [
                 "alice": ["A"],
             ])
             exp.fulfill()
         }
 
-        query(users: ["bob"]) { response in
+        await query(users: ["bob"]) { response in
             XCTAssertEqual(response, [
                 "bob": ["B"],
                 "carol": ["C"],
@@ -346,7 +350,7 @@ class MXKeysQuerySchedulerUnitTests: XCTestCase {
             exp.fulfill()
         }
 
-        query(users: ["carol"]) { response in
+        await query(users: ["carol"]) { response in
             XCTAssertEqual(response, [
                 "bob": ["B"],
                 "carol": ["C"],
@@ -354,12 +358,12 @@ class MXKeysQuerySchedulerUnitTests: XCTestCase {
             exp.fulfill()
         }
 
-        waitForExpectations(timeout: 1)
+        await waitForExpectations(timeout: 1)
 
         exp = expectation(description: "exp")
         exp.expectedFulfillmentCount = 2
 
-        query(users: ["alice"]) { response in
+        await query(users: ["alice"]) { response in
             XCTAssertEqual(response, [
                 "alice": ["A"],
             ])
@@ -369,19 +373,19 @@ class MXKeysQuerySchedulerUnitTests: XCTestCase {
         // Even though we have previously aggregated some users,
         // once that query completed, all future queries will
         // start with a clean list again
-        query(users: ["david"]) { response in
+        await query(users: ["david"]) { response in
             XCTAssertEqual(response, [
                 "david": ["D"],
             ])
             exp.fulfill()
         }
 
-        waitForExpectations(timeout: 1)
+        await waitForExpectations(timeout: 1)
 
         XCTAssertQueriesCount(4)
     }
     
-    func test_queryFail() {
+    func test_queryFail() async {
         scheduler = MXKeysQueryScheduler { _ in
             try! await Task.sleep(nanoseconds: 1_000_000)
             throw Error.dummy
@@ -389,17 +393,17 @@ class MXKeysQuerySchedulerUnitTests: XCTestCase {
         
         let exp = expectation(description: "exp")
         
-        query(users: ["alice"], completion: { _ in
+        await query(users: ["alice"], completion: { _ in
             XCTFail("Should not succeed")
         }, failure: { error in
             XCTAssertEqual(error as? Error, Error.dummy)
             exp.fulfill()
         })
         
-        waitForExpectations(timeout: 1)
+        await waitForExpectations(timeout: 1)
     }
     
-    func test_queryBobAfterFail() {
+    func test_queryBobAfterFail() async {
         stubbedResult = .failure(Error.dummy)
         queryStartSpy = {
             self.stubbedResult = .success([
@@ -410,21 +414,21 @@ class MXKeysQuerySchedulerUnitTests: XCTestCase {
         let exp = expectation(description: "exp")
         exp.expectedFulfillmentCount = 2
         
-        query(users: ["alice"], completion: { _ in
+        await query(users: ["alice"], completion: { _ in
             XCTFail("Should not succeed")
         }, failure: { error in
             XCTAssertEqual(error as? Error, Error.dummy)
             exp.fulfill()
         })
 
-        query(users: ["bob"]) { response in
+        await query(users: ["bob"]) { response in
             XCTAssertEqual(response, [
                 "bob": ["B"]
             ])
             exp.fulfill()
         }
         
-        waitForExpectations(timeout: 1)
+        await waitForExpectations(timeout: 1)
     }
     
     // MARK: - Helpers

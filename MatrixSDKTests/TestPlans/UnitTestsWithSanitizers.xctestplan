@@ -55,6 +55,7 @@
         "MXCrossSigningV2UnitTests",
         "MXCryptoKeyBackupEngineUnitTests",
         "MXCryptoMachineUnitTests",
+        "MXCryptoMigrationStoreUnitTests",
         "MXCryptoRequestsUnitTests",
         "MXDeviceInfoSourceUnitTests",
         "MXDeviceInfoUnitTests",

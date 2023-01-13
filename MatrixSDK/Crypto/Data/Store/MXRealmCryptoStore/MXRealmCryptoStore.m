@@ -478,6 +478,11 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
     onComplete();
 }
 
+- (NSString *)userId
+{
+    return self.accountInCurrentThread.userId;
+}
+
 - (void)storeDeviceId:(NSString*)deviceId
 {
     MXRealmOlmAccount *account = self.accountInCurrentThread;
@@ -821,7 +826,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
 }
 
 
-- (void)storeSession:(MXOlmSession*)session forDevice:(NSString*)deviceKey
+- (void)storeSession:(MXOlmSession*)session
 {
     __block BOOL isNew = NO;
     NSDate *startDate = [NSDate date];
@@ -829,7 +834,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
     RLMRealm *realm = self.realm;
     [realm transactionWithName:@"[MXRealmCryptoStore] storeSession" block:^{
         
-        MXRealmOlmSession *realmOlmSession = [MXRealmOlmSession objectsInRealm:realm where:@"sessionId = %@ AND deviceKey = %@", session.session.sessionIdentifier, deviceKey].firstObject;
+        MXRealmOlmSession *realmOlmSession = [MXRealmOlmSession objectsInRealm:realm where:@"sessionId = %@ AND deviceKey = %@", session.session.sessionIdentifier, session.deviceKey].firstObject;
         if (realmOlmSession)
         {
             // Update the existing one
@@ -841,7 +846,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
             isNew = YES;
             realmOlmSession = [[MXRealmOlmSession alloc] initWithValue:@{
                 @"sessionId": session.session.sessionIdentifier,
-                @"deviceKey": deviceKey,
+                @"deviceKey": session.deviceKey,
                 @"olmSessionData": [NSKeyedArchiver archivedDataWithRootObject:session.session]
             }];
             realmOlmSession.lastReceivedMessageTs = session.lastReceivedMessageTs;
@@ -863,7 +868,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
     {
         OLMSession *olmSession = [NSKeyedUnarchiver unarchiveObjectWithData:realmOlmSession.olmSessionData];
         
-        mxOlmSession = [[MXOlmSession alloc] initWithOlmSession:olmSession];
+        mxOlmSession = [[MXOlmSession alloc] initWithOlmSession:olmSession deviceKey:realmOlmSession.deviceKey];
         mxOlmSession.lastReceivedMessageTs = realmOlmSession.lastReceivedMessageTs;
     }
     
@@ -879,7 +884,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
         {
             OLMSession *olmSession = [NSKeyedUnarchiver unarchiveObjectWithData:realmOlmSession.olmSessionData];
             
-            MXOlmSession *mxOlmSession = [[MXOlmSession alloc] initWithOlmSession:olmSession];
+            MXOlmSession *mxOlmSession = [[MXOlmSession alloc] initWithOlmSession:olmSession deviceKey:realmOlmSession.deviceKey];
             mxOlmSession.lastReceivedMessageTs = realmOlmSession.lastReceivedMessageTs;
             
             block(mxOlmSession);
@@ -914,7 +919,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
         {
             OLMSession *olmSession = [NSKeyedUnarchiver unarchiveObjectWithData:realmOlmSession.olmSessionData];
             
-            MXOlmSession *mxOlmSession = [[MXOlmSession alloc] initWithOlmSession:olmSession];
+            MXOlmSession *mxOlmSession = [[MXOlmSession alloc] initWithOlmSession:olmSession deviceKey:realmOlmSession.deviceKey];
             mxOlmSession.lastReceivedMessageTs = realmOlmSession.lastReceivedMessageTs;
             
             [sessionsWithDevice addObject:mxOlmSession];
@@ -922,6 +927,27 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
     }
     
     return sessionsWithDevice;
+}
+
+- (NSArray<MXOlmSession*>*)sessions
+{
+    NSMutableArray<MXOlmSession*> *sessions = [NSMutableArray array];
+    
+    RLMResults<MXRealmOlmSession *> *realmOlmSessions = [MXRealmOlmSession allObjectsInRealm:self.realm];
+    for (MXRealmOlmSession *realmOlmSession in realmOlmSessions)
+    {
+        if (realmOlmSession.olmSessionData)
+        {
+            OLMSession *olmSession = [NSKeyedUnarchiver unarchiveObjectWithData:realmOlmSession.olmSessionData];
+            
+            MXOlmSession *mxOlmSession = [[MXOlmSession alloc] initWithOlmSession:olmSession deviceKey:realmOlmSession.deviceKey];
+            mxOlmSession.lastReceivedMessageTs = realmOlmSession.lastReceivedMessageTs;
+            
+            [sessions addObject:mxOlmSession];
+        }
+    }
+    
+    return sessions;
 }
 
 #pragma mark - MXRealmOlmInboundGroupSession

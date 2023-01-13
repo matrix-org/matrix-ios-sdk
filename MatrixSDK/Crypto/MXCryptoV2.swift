@@ -76,6 +76,7 @@ private class MXCryptoV2: NSObject, MXCrypto {
     private let keyVerification: MXKeyVerificationManagerV2
     private var startTask: Task<(), Never>?
     private var roomEventObserver: Any?
+    private let cryptoLog = MXCryptoMachineLogger()
     private let log = MXNamedLog(name: "MXCryptoV2")
     
     // MARK: - Public properties
