@@ -1045,6 +1045,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     NSUInteger prime = 2;
     NSUInteger result = 1;
 
+    result = prime * result + [_directUserId hash];
     result = prime * result + [_roomId hash];
     result = prime * result + [_roomTypeString hash];
     result = prime * result + [_avatar hash];
