@@ -1858,6 +1858,8 @@
 		ED4114EC292E498100728459 /* MXBackgroundCryptoV2.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED4114EA292E498100728459 /* MXBackgroundCryptoV2.swift */; };
 		ED4114EE292E49C000728459 /* MXLegacyBackgroundCrypto.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED4114ED292E49C000728459 /* MXLegacyBackgroundCrypto.swift */; };
 		ED4114EF292E49C000728459 /* MXLegacyBackgroundCrypto.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED4114ED292E49C000728459 /* MXLegacyBackgroundCrypto.swift */; };
+		ED4368B129784CCE002B6272 /* MXRealmCryptoStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED4368B029784CCE002B6272 /* MXRealmCryptoStoreTests.swift */; };
+		ED4368B229784CCE002B6272 /* MXRealmCryptoStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED4368B029784CCE002B6272 /* MXRealmCryptoStoreTests.swift */; };
 		ED44F01128180BCC00452A5D /* MXSharedHistoryKeyRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED44F01028180BCC00452A5D /* MXSharedHistoryKeyRequest.swift */; };
 		ED44F01228180BCC00452A5D /* MXSharedHistoryKeyRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED44F01028180BCC00452A5D /* MXSharedHistoryKeyRequest.swift */; };
 		ED44F01428180EAB00452A5D /* MXSharedHistoryKeyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED44F01328180EAB00452A5D /* MXSharedHistoryKeyManager.swift */; };
@@ -3070,6 +3072,7 @@
 		ED4114E7292E496C00728459 /* MXBackgroundCrypto.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXBackgroundCrypto.swift; sourceTree = "<group>"; };
 		ED4114EA292E498100728459 /* MXBackgroundCryptoV2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXBackgroundCryptoV2.swift; sourceTree = "<group>"; };
 		ED4114ED292E49C000728459 /* MXLegacyBackgroundCrypto.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXLegacyBackgroundCrypto.swift; sourceTree = "<group>"; };
+		ED4368B029784CCE002B6272 /* MXRealmCryptoStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXRealmCryptoStoreTests.swift; sourceTree = "<group>"; };
 		ED44F01028180BCC00452A5D /* MXSharedHistoryKeyRequest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MXSharedHistoryKeyRequest.swift; sourceTree = "<group>"; };
 		ED44F01328180EAB00452A5D /* MXSharedHistoryKeyManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MXSharedHistoryKeyManager.swift; sourceTree = "<group>"; };
 		ED44F01728180F1C00452A5D /* MXSharedHistoryKeyManagerUnitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXSharedHistoryKeyManagerUnitTests.swift; sourceTree = "<group>"; };
@@ -5467,6 +5470,14 @@
 			path = Crypto;
 			sourceTree = "<group>";
 		};
+		ED4368AF29784CA3002B6272 /* MXRealmCryptoStore */ = {
+			isa = PBXGroup;
+			children = (
+				ED4368B029784CCE002B6272 /* MXRealmCryptoStoreTests.swift */,
+			);
+			path = MXRealmCryptoStore;
+			sourceTree = "<group>";
+		};
 		ED44F01628180F1300452A5D /* KeySharing */ = {
 			isa = PBXGroup;
 			children = (
@@ -5571,6 +5582,7 @@
 		ED6DAC1328C78D3700ECDCB6 /* Store */ = {
 			isa = PBXGroup;
 			children = (
+				ED4368AF29784CA3002B6272 /* MXRealmCryptoStore */,
 				ED6DAC1428C78D4000ECDCB6 /* MXMemoryCryptoStore.swift */,
 			);
 			path = Store;
@@ -7348,6 +7360,7 @@
 				EDB4209527DF822B0036AF39 /* MXEventsByTypesEnumeratorOnArrayTests.swift in Sources */,
 				EC40385D28A16EDA0067D5B8 /* MXAes256KeyBackupTests.m in Sources */,
 				ED6DAC0728C77E1100ECDCB6 /* MXForwardedRoomKeyEventContentUnitTests.swift in Sources */,
+				ED4368B129784CCE002B6272 /* MXRealmCryptoStoreTests.swift in Sources */,
 				3A9E2B4328EB3960000DB2A7 /* MXMatrixVersionsUnitTests.swift in Sources */,
 				3265CB3B1A151C3800E24B2F /* MXRoomStateTests.m in Sources */,
 				ED8F1D302885AB0300F897E7 /* MXTrustLevelSourceUnitTests.swift in Sources */,
@@ -8006,6 +8019,7 @@
 				EDB4209627DF822B0036AF39 /* MXEventsByTypesEnumeratorOnArrayTests.swift in Sources */,
 				EC40385E28A16EDA0067D5B8 /* MXAes256KeyBackupTests.m in Sources */,
 				ED6DAC0828C77E1100ECDCB6 /* MXForwardedRoomKeyEventContentUnitTests.swift in Sources */,
+				ED4368B229784CCE002B6272 /* MXRealmCryptoStoreTests.swift in Sources */,
 				3A9E2B4428EB3960000DB2A7 /* MXMatrixVersionsUnitTests.swift in Sources */,
 				32B477AA2638186000EA5800 /* MXHTTPAdditionalHeadersUnitTests.m in Sources */,
 				B135066A27EA100100BD3276 /* MXBeaconInfoUnitTests.swift in Sources */,

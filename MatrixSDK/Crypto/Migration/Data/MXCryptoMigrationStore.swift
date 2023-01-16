@@ -28,17 +28,65 @@ struct MXCryptoMigrationStore {
     
     let legacyStore: MXCryptoStore
     
+    var olmSessionCount: UInt {
+        legacyStore.sessionsCount()
+    }
+    
+    var megolmSessionCount: UInt {
+        legacyStore.inboundGroupSessionsCount(false)
+    }
+    
     func extractData(with pickleKey: Data) throws -> MigrationData {
         return .init(
             account: try pickledAccount(pickleKey: pickleKey),
-            sessions: olmSessions(pickleKey: pickleKey),
-            inboundGroupSessions: megolmSessions(pickleKey: pickleKey),
+            sessions: [], // Sessions are extracted in batches separately
+            inboundGroupSessions: [], // Group sessions are extracted in batches separately
             backupVersion: legacyStore.backupVersion,
             backupRecoveryKey: backupRecoveryKey(),
             pickleKey: [UInt8](pickleKey),
             crossSigning: crossSigning(),
             trackedUsers: trackedUsers()
         )
+    }
+    
+    func extractSessions(
+        with pickleKey: Data,
+        batchSize: Int,
+        callback: @escaping ([PickledSession], Double) -> Void
+    ) {
+        legacyStore.enumerateSessions(by: batchSize) { sessions, progress in
+            let pickled: [PickledSession] = sessions?.compactMap {
+                do {
+                    return try PickledSession(session: $0, pickleKey: pickleKey)
+                } catch {
+                    MXLog.error("[MXCryptoMigrationStore] cannot extract olm session", context: error)
+                    return nil
+                }
+            } ?? []
+            callback(pickled, progress)
+        }
+    }
+    
+    func extractGroupSessions(
+        with pickleKey: Data,
+        batchSize: Int,
+        callback: @escaping ([PickledInboundGroupSession], Double) -> Void
+    ) {
+        legacyStore.enumerateInboundGroupSessions(by: batchSize) { sessions, backedUp, progress in
+            let pickled: [PickledInboundGroupSession] = sessions?.compactMap {
+                do {
+                    return try PickledInboundGroupSession(
+                        session: $0,
+                        pickleKey: pickleKey,
+                        backedUp: backedUp?.contains($0.session.sessionIdentifier()) == true
+                    )
+                } catch {
+                    MXLog.error("[MXCryptoMigrationStore] cannot extract megolm session", context: error)
+                    return nil
+                }
+            } ?? []
+            callback(pickled, progress)
+        }
     }
     
     private func pickledAccount(pickleKey: Data) throws -> PickledAccount {
@@ -55,43 +103,6 @@ struct MXCryptoMigrationStore {
             account: account,
             pickleKey: pickleKey
         )
-    }
-    
-    private func olmSessions(pickleKey: Data) -> [PickledSession] {
-        return legacyStore
-            .sessions()?
-            .compactMap {
-                do {
-                    return try PickledSession(session: $0, pickleKey: pickleKey)
-                } catch {
-                    MXLog.error("[MXCryptoMigrationStore] cannot extract olm session", context: error)
-                    return nil
-                }
-            } ?? []
-    }
-    
-    private func megolmSessions(pickleKey: Data) -> [PickledInboundGroupSession] {
-        guard let sessions = legacyStore.inboundGroupSessions() else {
-            return []
-        }
-        
-        let sessionsToBackup = Set(
-            legacyStore.inboundGroupSessions(toBackup: UInt.max)
-                .compactMap { $0.session?.sessionIdentifier() }
-        )
-        
-        return sessions.compactMap {
-            do {
-                return try PickledInboundGroupSession(
-                    session: $0,
-                    pickleKey: pickleKey,
-                    backedUp: !sessionsToBackup.contains($0.session?.sessionIdentifier() ?? "")
-                )
-            } catch {
-                MXLog.error("[MXCryptoMigrationStore] cannot extract megolm session", context: error)
-                return nil
-            }
-        }
     }
     
     private func backupRecoveryKey() -> String? {

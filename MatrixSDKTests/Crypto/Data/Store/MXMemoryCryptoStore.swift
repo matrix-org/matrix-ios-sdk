@@ -209,8 +209,12 @@ public class MXMemoryCryptoStore: NSObject, MXCryptoStore {
         Array(olmSessions.filter { $0.key.deviceKey == deviceKey }.values)
     }
     
-    public func sessions() -> [MXOlmSession]! {
-        Array(olmSessions.values)
+    public func enumerateSessions(by batchSize: Int, block: (([MXOlmSession]?, Double) -> Void)!) {
+        block(Array(olmSessions.values), 1)
+    }
+    
+    public func sessionsCount() -> UInt {
+        UInt(olmSessions.count)
     }
 
     // MARK: - Inbound Group Sessions
@@ -230,6 +234,11 @@ public class MXMemoryCryptoStore: NSObject, MXCryptoStore {
 
     public func inboundGroupSessions() -> [MXOlmInboundGroupSession]! {
         inboundSessions.map { $0.session }
+    }
+    
+    public func enumerateInboundGroupSessions(by batchSize: Int, block: (([MXOlmInboundGroupSession]?, Set<String>?, Double) -> Void)!) {
+        let backedUp = inboundSessions.filter { $0.backedUp }.map(\.sessionId)
+        block(inboundGroupSessions(), Set(backedUp), 1)
     }
 
     public func inboundGroupSessions(withSessionId sessionId: String!) -> [MXOlmInboundGroupSession]! {

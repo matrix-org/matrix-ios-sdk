@@ -209,18 +209,6 @@ NSString *const MXBackgroundCryptoStoreUserIdSuffix = @":bgCryptoStore";
     return sessions;
 }
 
-- (NSArray<MXOlmSession *> *)sessions
-{
-    NSArray<MXOlmSession*> *bgSessions = [bgCryptoStore sessions] ?: @[];
-    NSArray<MXOlmSession*> *appSessions = [cryptoStore sessions] ?: @[];
-
-    NSMutableArray<MXOlmSession*> *sessions = [NSMutableArray array];
-    [sessions addObjectsFromArray:bgSessions];
-    [sessions addObjectsFromArray:appSessions];
-
-    return sessions;
-}
-
 - (void)storeSession:(MXOlmSession*)session
 {
     [bgCryptoStore storeSession:session];
@@ -354,6 +342,22 @@ NSString *const MXBackgroundCryptoStoreUserIdSuffix = @":bgCryptoStore";
 - (void)storeDeviceSyncToken:(NSString*)deviceSyncToken
 {
     NSAssert(NO, @"This method should be useless in the context of MXBackgroundCryptoStore");
+}
+
+- (void)enumerateSessionsBy:(NSInteger)batchSize block:(void (^)(NSArray<MXOlmSession *> *, double))block
+{
+    NSAssert(NO, @"This method should be useless in the context of MXBackgroundCryptoStore");
+}
+
+- (void)enumerateInboundGroupSessionsBy:(NSInteger)batchSize block:(void (^)(NSArray<MXOlmInboundGroupSession *> *, NSSet<NSString *> *, double))block
+{
+    NSAssert(NO, @"This method should be useless in the context of MXBackgroundCryptoStore");
+}
+
+- (NSUInteger)sessionsCount
+{
+    NSAssert(NO, @"This method should be useless in the context of MXBackgroundCryptoStore");
+    return 0;
 }
 
 - (NSArray<MXOlmInboundGroupSession*> *)inboundGroupSessions

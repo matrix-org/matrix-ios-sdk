@@ -22,6 +22,8 @@ import OLMKit
 import MatrixSDKCrypto
 
 class MXCryptoMigrationV2: NSObject {
+    private static let SessionBatchSize = 1000
+    
     private let store: MXCryptoMigrationStore
     private let log = MXNamedLog(name: "MXCryptoMachineMigration")
     
@@ -31,10 +33,12 @@ class MXCryptoMigrationV2: NSObject {
         OLMKit.sharedInstance().pickleKeyDelegate = self
     }
     
-    func migrateCrypto() throws {
+    func migrateCrypto(updateProgress: @escaping (Double) -> Void) throws {
         log.debug("Starting migration")
+        updateProgress(0)
         
-        let data = try store.extractData(with: pickleKey())
+        let key = pickleKey()
+        let data = try store.extractData(with: key)
         let url = try MXCryptoMachine.storeURL(for: data.account.userId)
         
         if FileManager.default.fileExists(atPath: url.path) {
@@ -45,8 +49,8 @@ class MXCryptoMigrationV2: NSObject {
         Migration summary
           - user id         : \(data.account.userId)
           - device id       : \(data.account.deviceId)
-          - olm_sessions    : \(data.sessions.count)
-          - megolm_sessions : \(data.inboundGroupSessions.count)
+          - olm_sessions    : \(store.olmSessionCount)
+          - megolm_sessions : \(store.megolmSessionCount)
           - backup_key      : \(data.backupRecoveryKey != nil ? "true" : "false")
           - cross_signing   : \(data.crossSigning.masterKey != nil ? "true" : "false")
           - tracked_users   : \(data.trackedUsers.count)
@@ -60,7 +64,69 @@ class MXCryptoMigrationV2: NSObject {
             progressListener: self
         )
         
+        log.debug("Migrating olm sessions in batches")
+        
+        // How much does migration of olm vs megolm sessions contribute to the overall progress
+        let olmToMegolmProgressRatio = 0.25
+        
+        store.extractSessions(with: key, batchSize: Self.SessionBatchSize) { [weak self] batch, progress in
+            updateProgress(progress * olmToMegolmProgressRatio)
+            
+            do {
+                try self?.migrateSessions(
+                    data: data,
+                    sessions: batch,
+                    url: url
+                )
+            } catch {
+                self?.log.error("Error migrating some sessions", context: error)
+            }
+        }
+        
+        log.debug("Migrating megolm sessions in batches")
+        
+        store.extractGroupSessions(with: key, batchSize: Self.SessionBatchSize) { [weak self] batch, progress in
+            updateProgress(olmToMegolmProgressRatio + progress * (1 - olmToMegolmProgressRatio))
+            
+            do {
+                try self?.migrateSessions(
+                    data: data,
+                    inboundGroupSessions: batch,
+                    url: url
+                )
+            } catch {
+                self?.log.error("Error migrating some sessions", context: error)
+            }
+        }
+        
         log.debug("Migration complete")
+        updateProgress(1)
+    }
+    
+    // To migrate sessions in batches and keep memory under control we are repeatedly calling `migrate`
+    // function whilst only passing data for sessions and account, keeping the rest empty.
+    // This API will be improved in `MatrixCryptoSDK` in the future.
+    private func migrateSessions(
+        data: MigrationData,
+        sessions: [PickledSession] = [],
+        inboundGroupSessions: [PickledInboundGroupSession] = [],
+        url: URL
+    ) throws {
+        try migrate(
+            data: .init(
+                account: data.account,
+                sessions: sessions,
+                inboundGroupSessions: inboundGroupSessions,
+                backupVersion: data.backupVersion,
+                backupRecoveryKey: data.backupRecoveryKey,
+                pickleKey: data.pickleKey,
+                crossSigning: data.crossSigning,
+                trackedUsers: data.trackedUsers
+            ),
+            path: url.path,
+            passphrase: nil,
+            progressListener: self
+        )
     }
 }
 
@@ -84,7 +150,7 @@ extension MXCryptoMigrationV2: OLMKitPickleKeyDelegate {
 
 extension MXCryptoMigrationV2: ProgressListener {
     func onProgress(progress: Int32, total: Int32) {
-        log.debug("Migration progress \(progress) out of \(total)")
+        // Progress loggged manually
     }
 }
 

@@ -17,37 +17,122 @@
 import Foundation
 
 #if DEBUG
-public extension MXLegacyCrypto {
-    enum CryptoError: Swift.Error, LocalizedError {
+
+import MatrixSDKCrypto
+
+@objc public class MXCryptoV2Factory: NSObject {
+    enum Error: Swift.Error {
         case cryptoNotAvailable
+        case storeNotAvailable
+    }
+    
+    private let log = MXNamedLog(name: "MXCryptoV2Factory")
+    
+    @objc public func buildCrypto(
+        session: MXSession!,
+        migrationProgress: ((Double) -> Void)?,
+        success: @escaping (MXCrypto?) -> Void,
+        failure: @escaping (Swift.Error) -> Void
+    ) {
+        guard
+            let session = session,
+            let credentials = session.credentials,
+            let userId = credentials.userId
+        else {
+            log.failure("Missing reuired dependencies")
+            failure(Error.cryptoNotAvailable)
+            return
+        }
         
-        public var errorDescription: String? {
-            return "Encryption not available, please restart the app"
+        log.debug("Building crypto for \(userId)")
+        let queue = DispatchQueue(label: "MXCryptoV2-\(userId)")
+        queue.async { [weak self] in
+            self?.createOrOpenLegacyStore(credentials: credentials) { legacyStore in
+                guard let self = self else { return }
+                
+                do {
+                    try self.migrateIfNecessary(legacyStore: legacyStore) {
+                        migrationProgress?($0)
+                    }
+                    
+                    let crypto = try MXCryptoV2(
+                        session: session,
+                        cryptoQueue: queue,
+                        legacyStore: legacyStore
+                    )
+                    
+                    DispatchQueue.main.async {
+                        success(crypto)
+                    }
+                } catch {
+                    self.log.failure("Cannot create crypto")
+                    DispatchQueue.main.async {
+                        failure(error)
+                    }
+                }
+                
+            } failure: { error in
+                DispatchQueue.main.async {
+                    failure(error)
+                }
+            }
         }
     }
     
-    /// Create a Rust-based work-in-progress implementation of `MXCrypto`
-    @objc static func createCryptoV2(session: MXSession!) throws -> MXCrypto {
-        let log = MXNamedLog(name: "MXCryptoV2")
-
-        guard let session = session else {
-            log.failure("Cannot create crypto V2, missing session")
-            throw CryptoError.cryptoNotAvailable
-        }
-
-        do {
-            return try MXCryptoV2(session: session)
-        } catch {
-            log.failure("Error creating crypto V2", context: error)
-            throw CryptoError.cryptoNotAvailable
+    // A few features (e.g. global untrusted users blacklist) are not yet implemented in `MatrixSDKCrypto`
+    // so they have to be stored in a legacy database. Will be moved to `MatrixSDKCrypto` eventually
+    private func createOrOpenLegacyStore(
+        credentials: MXCredentials,
+        success: @escaping (MXCryptoStore) -> Void,
+        failure: @escaping (Swift.Error) -> Void
+    ) {
+        MXRealmCryptoStore.deleteReadonlyStore(with: credentials)
+        if MXRealmCryptoStore.hasData(for: credentials) {
+            log.debug("Legacy crypto store exists")
+            
+            guard let legacyStore = MXRealmCryptoStore(credentials: credentials) else {
+                log.failure("Cannot initialize legacy store")
+                failure(Error.storeNotAvailable)
+                return
+            }
+            
+            legacyStore.open { [weak self] in
+                self?.log.debug("Legacy crypto store opened")
+                success(legacyStore)
+            } failure: { [weak self] error in
+                self?.log.failure("Cannot open legacy crypto store")
+                failure(error ?? Error.storeNotAvailable)
+            }
+            
+        } else {
+            log.debug("Creating new legacy crypto store")
+            
+            guard let legacyStore = MXRealmCryptoStore.createStore(with: credentials) else {
+                log.failure("Cannot create legacy store")
+                failure(Error.storeNotAvailable)
+                return
+            }
+            legacyStore.cryptoVersion = MXCryptoVersion.versionLegacyDeprecated
+            
+            log.debug("Legacy crypto store created")
+            success(legacyStore)
         }
     }
+    
+    private func migrateIfNecessary(legacyStore: MXCryptoStore, updateProgress: @escaping (Double) -> Void) throws {
+        guard legacyStore.cryptoVersion.rawValue < MXCryptoVersion.versionLegacyDeprecated.rawValue else {
+            log.debug("Legacy crypto has already been deprecatd, no need to migrate")
+            return
+        }
+
+        log.debug("Requires migration from legacy crypto")
+        let migration = MXCryptoMigrationV2(legacyStore: legacyStore)
+        try migration.migrateCrypto(updateProgress: updateProgress)
+        
+        log.debug("Marking legacy crypto as deprecated")
+        legacyStore.cryptoVersion = MXCryptoVersion.versionLegacyDeprecated
+    }
 }
-#endif
-
-#if DEBUG
-
-import MatrixSDKCrypto
 
 /// An implementation of `MXCrypto` which uses [matrix-rust-sdk](https://github.com/matrix-org/matrix-rust-sdk/tree/main/crates/matrix-sdk-crypto)
 /// under the hood.
@@ -101,7 +186,7 @@ private class MXCryptoV2: NSObject, MXCrypto {
     let crossSigning: MXCrossSigning
     let recoveryService: MXRecoveryService
     
-    init(session: MXSession) throws {
+    init(session: MXSession, cryptoQueue: DispatchQueue, legacyStore: MXCryptoStore) throws {
         guard
             let restClient = session.matrixRestClient,
             let credentials = session.credentials,
@@ -112,15 +197,8 @@ private class MXCryptoV2: NSObject, MXCrypto {
         }
         
         self.session = session
-        self.cryptoQueue = DispatchQueue(label: "MXCryptoV2-\(userId)")
-        
-        // A few features (global untrusted users blacklist) are not yet implemented in `MatrixSDKCrypto`
-        // so they have to be stored locally. Will be moved to `MatrixSDKCrypto` eventually
-        if MXRealmCryptoStore.hasData(for: credentials) {
-            self.legacyStore = MXRealmCryptoStore(credentials: credentials)
-        } else {
-            self.legacyStore = MXRealmCryptoStore.createStore(with: credentials)
-        }
+        self.cryptoQueue = cryptoQueue
+        self.legacyStore = legacyStore
         
         machine = try MXCryptoMachine(
             userId: userId,
@@ -194,6 +272,7 @@ private class MXCryptoV2: NSObject, MXCrypto {
         _ onComplete: (() -> Void)?,
         failure: ((Swift.Error) -> Void)?
     ) {
+    
         guard startTask == nil else {
             log.error("Crypto module has already been started")
             onComplete?()
@@ -203,8 +282,6 @@ private class MXCryptoV2: NSObject, MXCrypto {
         log.debug("->")
         startTask = Task {
             do {
-                try migrateIfNecessary()
-                
                 try await machine.uploadKeysIfNecessary()
                 crossSigning.refreshState(success: nil)
                 backup?.checkAndStart()
@@ -247,20 +324,6 @@ private class MXCryptoV2: NSObject, MXCrypto {
                 log.failure("Cannot delete crypto store", context: error)
             }
         }
-    }
-    
-    private func migrateIfNecessary() throws {
-        guard legacyStore.cryptoVersion.rawValue < MXCryptoVersion.versionLegacyDeprecated.rawValue else {
-            log.debug("Legacy crypto has already been deprecated, no need to migrate")
-            return
-        }
-
-        log.debug("Requires migration from legacy crypto")
-        let migration = MXCryptoMigrationV2(legacyStore: legacyStore)
-        try migration.migrateCrypto()
-        
-        log.debug("Marking legacy crypto as deprecated")
-        legacyStore.cryptoVersion = MXCryptoVersion.versionLegacyDeprecated
     }
     
     // MARK: - Event Encryption

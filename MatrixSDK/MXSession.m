@@ -398,7 +398,13 @@ typedef void (^MXOnResumeDone)(void);
 
         // Check if the user has enabled crypto
         MXWeakify(self);
-        [MXLegacyCrypto checkCryptoWithMatrixSession:self complete:^(id<MXCrypto> crypto, NSError *error) {
+        [MXLegacyCrypto initializeCryptoWithMatrixSession:self migrationProgress:^(double progress) {
+            if (MXSDKOptions.sharedInstance.enableStartupProgress)
+            {
+                [self.startupProgress updateMigrationProgress:progress];
+            }
+            
+        } complete:^(id<MXCrypto> crypto, NSError *error) {
             MXStrongifyAndReturnIfNil(self);
             
             if (!crypto && error)
