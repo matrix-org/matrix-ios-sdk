@@ -24,7 +24,7 @@ extension MatrixSDKTestsData {
     func startMXSession() async throws -> MXSession {
         return try await withCheckedThrowingContinuation { continuation in
             doMXSessionTest(withAUser: nil) { session, _ in
-                guard let session else {
+                guard let session = session else {
                     continuation.resume(throwing: Error.missingDependencies)
                     return
                 }

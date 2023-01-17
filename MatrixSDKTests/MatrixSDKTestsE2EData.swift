@@ -41,7 +41,7 @@ extension MatrixSDKTestsE2EData {
     func startE2ETest() async throws -> Environment {
         return try await withCheckedThrowingContinuation { continuation in
             doE2ETestWithAlice(inARoom: nil) { session, roomId, _ in
-                guard let session, let roomId else {
+                guard let session = session, let roomId = roomId else {
                     continuation.resume(throwing: Error.missingDependencies)
                     return
                 }

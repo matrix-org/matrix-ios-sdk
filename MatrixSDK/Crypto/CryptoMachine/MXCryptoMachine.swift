@@ -469,7 +469,7 @@ extension MXCryptoMachine: MXCryptoRoomEventDecrypting {
             log.failure("Invalid event")
             throw Error.invalidEvent
         }
-        return try machine.decryptRoomEvent(event: eventString, roomId: roomId)
+        return try machine.decryptRoomEvent(event: eventString, roomId: roomId, handleVerificatonEvents: true)
     }
     
     func requestRoomKey(event: MXEvent) async throws {

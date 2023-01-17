@@ -202,7 +202,7 @@ private extension MXRoom {
             sendTextMessage(text, localEcho: &event, completion: $0)
         }
         
-        guard let event else {
+        guard let event = event else {
             throw Error.cannotSendMessage
         }
         return event
