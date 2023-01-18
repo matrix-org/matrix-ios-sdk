@@ -2194,15 +2194,9 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
     }
     if (eventToReply.eventType == MXEventTypePollEnd)
     {
-        MXEvent* pollStartEvent = [mxSession.store eventWithEventId:eventToReply.relatesTo.eventId inRoom:self.roomId];
-        
-        if (pollStartEvent) {
-            NSString *question = [MXEventContentPollStart modelFromJSON:pollStartEvent.content].question;
-            senderMessageBody = question;
-        } else {
-            // we need a fallback to avoid crashes since the m.poll.start event may be missing.
-            senderMessageBody = eventToReply.relatesTo.eventId;
-        }
+        // The "Ended poll" text is not meant to be localized from the sender side.
+        // This is why here we use a "default localizer" providing the english version of it.
+        senderMessageBody = MXSendReplyEventDefaultStringLocalizer.new.replyToEndedPoll;
     }
     else if (eventToReply.eventType == MXEventTypeBeaconInfo)
     {
