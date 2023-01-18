@@ -2278,8 +2278,7 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
         *replyContentFormattedBody = [self replyMessageFormattedBodyFromEventToReply:eventToReply
                                                           senderMessageFormattedBody:senderMessageFormattedBody
                                                               isSenderMessageAnEmote:isSenderMessageAnEmote
-                                                               replyFormattedMessage:finalFormattedTextMessage
-                                                                     stringLocalizer:stringLocalizer];
+                                                               replyFormattedMessage:finalFormattedTextMessage];
     }
 }
 
@@ -2369,7 +2368,6 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
  @param senderMessageFormattedBody The message body of the sender.
  @param isSenderMessageAnEmote Indicate if the sender message is an emote (/me).
  @param replyFormattedMessage The response for the sender message. HTML formatted string if any otherwise non formatted string as reply formatted body is mandatory.
- @param stringLocalizer string localizations used when building formatted body.
  
  @return reply message body.
  */
@@ -2377,7 +2375,6 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
                             senderMessageFormattedBody:(NSString*)senderMessageFormattedBody
                                 isSenderMessageAnEmote:(BOOL)isSenderMessageAnEmote
                                  replyFormattedMessage:(NSString*)replyFormattedMessage
-                                       stringLocalizer:(id<MXSendReplyEventStringLocalizerProtocol>)stringLocalizer
 {
     NSString *eventId = eventToReply.eventId;
     NSString *roomId = eventToReply.roomId;
@@ -2423,7 +2420,9 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
     [replyMessageFormattedBody appendString:@"<mx-reply><blockquote>"];
     
     // Add event link
-    [replyMessageFormattedBody appendFormat:@"<a href=\"%@\">%@</a> ", eventPermalink, stringLocalizer.messageToReplyToPrefix];
+    // The "In reply to" string is not meant to be localized from the sender side.
+    // This is how here we use the default string localizer to send the english version of it.
+    [replyMessageFormattedBody appendFormat:@"<a href=\"%@\">%@</a> ", eventPermalink, MXSendReplyEventDefaultStringLocalizer.new.messageToReplyToPrefix];
     
     if (isSenderMessageAnEmote)
     {
