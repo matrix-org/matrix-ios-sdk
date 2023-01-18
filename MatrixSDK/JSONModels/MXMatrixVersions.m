@@ -46,6 +46,8 @@ static NSString* const kJSONKeyMSC3881Unstable = @"org.matrix.msc3881";
 static NSString* const kJSONKeyMSC3881 = @"org.matrix.msc3881.stable";
 static NSString* const kJSONKeyMSC3882 = @"org.matrix.msc3882";
 static NSString* const kJSONKeyMSC3773 = @"org.matrix.msc3773";
+static NSString* const kJSONKeyMSC3912Unstable = @"org.matrix.msc3912";
+static NSString* const kJSONKeyMSC3912 = @"org.matrix.msc3912.stable";
 
 @interface MXMatrixVersions ()
 
@@ -131,6 +133,16 @@ static NSString* const kJSONKeyMSC3773 = @"org.matrix.msc3773";
 
 - (BOOL)supportsNotificationsForThreads {
     return [self serverSupportsFeature:kJSONKeyMSC3773];
+}
+
+- (BOOL)supportsRedactionWithRelations
+{
+    return [self serverSupportsFeature:kJSONKeyMSC3912];
+}
+
+- (BOOL)supportsRedactionWithRelationsUnstable
+{
+    return [self serverSupportsFeature:kJSONKeyMSC3912Unstable];
 }
 
 #pragma mark - Private

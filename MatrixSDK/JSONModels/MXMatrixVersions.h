@@ -65,7 +65,7 @@ extern const struct MXMatrixVersionsFeatureStruct MXMatrixVersionsFeature;
 
 /**
  The unstable features supported by the server.
-
+ 
  */
 @property (nonatomic, nullable, readonly) NSDictionary<NSString*, NSNumber*> *unstableFeatures;
 
@@ -112,6 +112,16 @@ extern const struct MXMatrixVersionsFeatureStruct MXMatrixVersionsFeature;
  Indicate if the server supports notifications for threads (MSC3773)
  */
 @property (nonatomic, readonly) BOOL supportsNotificationsForThreads;
+
+/**
+ Indicate if the server supports redactions with relations (MSC3912)
+ */
+@property (nonatomic, readonly) BOOL supportsRedactionWithRelations;
+
+/**
+ Indicate if the server supports redactions with relations (MSC3912 - Unstable)
+ */
+@property (nonatomic, readonly) BOOL supportsRedactionWithRelationsUnstable;
 
 @end
 

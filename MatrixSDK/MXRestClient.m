@@ -3047,6 +3047,53 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
                                  }];
 }
 
+- (MXHTTPOperation*)redactEvent:(NSString*)eventId
+                  withRelations:(NSArray<NSString *>*) relations
+                         inRoom:(NSString*)roomId
+                         reason:(NSString*)reason
+                          txnId:(NSString *)txnId
+                featureIsStable:(BOOL)featureIsStable
+                        success:(void (^)(void))success
+                        failure:(void (^)(NSError *error))failure
+{
+    if (!txnId.length)
+    {
+        // Create a random transaction id to prevent duplicated events
+        txnId = [MXTools generateTransactionId];
+    }
+    
+    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/redact/%@/%@",
+                      kMXAPIPrefixPathV3,
+                      roomId,
+                      [MXTools encodeURIComponent:eventId],
+                      [MXTools encodeURIComponent:txnId]];
+    
+    // All query parameters are optional. Fill the request parameters on demand
+    NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
+    if (reason)
+    {
+        parameters[@"reason"] = reason;
+    }
+    
+    if (relations && [relations count] > 0) {
+        NSString* property = featureIsStable ? @"with_relations" : @"org.matrix.msc3912.with_relations";
+        parameters[property] = relations;
+    }
+
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"PUT"
+                                    path:path
+                              parameters:parameters
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchSuccess:success];
+                                 }
+                                 failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
 -(MXHTTPOperation *)reportEvent:(NSString *)eventId
                          inRoom:(NSString *)roomId
                           score:(NSInteger)score

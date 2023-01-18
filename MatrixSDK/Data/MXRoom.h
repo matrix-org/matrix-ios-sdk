@@ -962,6 +962,24 @@ FOUNDATION_EXPORT NSInteger const kMXRoomInvalidInviteSenderErrorCode;
                         failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
+ Redact an event and all related events in this room.
+ 
+ @param eventId the id of the redacted event.
+ @param relations the list of relation types (optional).
+ @param reason the redaction reason (optional).
+ 
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)redactEvent:(NSString*)eventId
+                  withRelations:(NSArray<NSString *>*)relations
+                         reason:(NSString*)reason
+                        success:(void (^)(void))success
+                        failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
+/**
  Report an event in this room.
 
  @param eventId the id of the event event.
