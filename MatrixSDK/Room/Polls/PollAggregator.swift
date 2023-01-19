@@ -45,6 +45,7 @@ public class PollAggregator {
     private let pollStartEventId: String
     private let pollBuilder: PollBuilder
     
+    private var pollStartedEvent: MXEvent!
     private var pollStartEventContent: MXEventContentPollStart!
     
     private var referenceEventsListener: Any?
@@ -126,11 +127,13 @@ public class PollAggregator {
             throw PollAggregatorError.invalidPollStartEvent
         }
         
+        pollStartedEvent = event
         pollStartEventContent = eventContent
         
         hasBeenEdited = (event.unsignedData.relations?.replace != nil)
         
         poll = pollBuilder.build(pollStartEventContent: eventContent,
+                                 pollStartEvent: pollStartedEvent,
                                  events: events,
                                  currentUserIdentifier: session.myUserId,
                                  hasBeenEdited: hasBeenEdited)
@@ -160,21 +163,25 @@ public class PollAggregator {
             
             let eventTypes = [kMXEventTypeStringPollResponse, kMXEventTypeStringPollResponseMSC3381, kMXEventTypeStringPollEnd, kMXEventTypeStringPollEndMSC3381]
             self.referenceEventsListener = self.room.listen(toEventsOfTypes: eventTypes) { [weak self] event, direction, state in
-                guard let self = self,
-                      let relatedEventId = event.relatesTo?.eventId,
-                      relatedEventId == self.pollStartEventId else {
+                guard
+                    let self = self,
+                    let relatedEventId = event.relatesTo?.eventId,
+                    relatedEventId == self.pollStartEventId
+                else {
                     return
                 }
                 
                 self.events.append(event)
                 
                 self.poll = self.pollBuilder.build(pollStartEventContent: self.pollStartEventContent,
+                                                   pollStartEvent: self.pollStartedEvent,
                                                    events: self.events,
                                                    currentUserIdentifier: self.session.myUserId,
                                                    hasBeenEdited: self.hasBeenEdited)
             } as Any
             
             self.poll = self.pollBuilder.build(pollStartEventContent: self.pollStartEventContent,
+                                               pollStartEvent: self.pollStartedEvent,
                                                events: self.events,
                                                currentUserIdentifier: self.session.myUserId,
                                                hasBeenEdited: self.hasBeenEdited)

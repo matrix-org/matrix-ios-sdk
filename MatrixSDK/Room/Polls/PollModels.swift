@@ -33,6 +33,7 @@ public protocol PollProtocol {
     var text: String { get }
     var answerOptions: [PollAnswerOptionProtocol] { get }
     var kind: PollKind { get }
+    var startDate: Date { get }
     var maxAllowedSelections: UInt { get }
     var isClosed: Bool { get }
     var totalAnswerCount: UInt { get }
@@ -43,7 +44,6 @@ public protocol PollProtocol {
 class PollAnswerOption: PollAnswerOptionProtocol {
     var id: String = ""
     var text: String = ""
-    
     var count: UInt = 0
     var isWinner: Bool = false
     var isCurrentUserSelection: Bool = false
@@ -52,14 +52,14 @@ class PollAnswerOption: PollAnswerOptionProtocol {
 class Poll: PollProtocol {
     var text: String = ""
     var answerOptions: [PollAnswerOptionProtocol] = []
-    
     var kind: PollKind = .disclosed
+    var startDate: Date = .distantPast
     var maxAllowedSelections: UInt = 1
     var isClosed: Bool = false
     var hasBeenEdited: Bool = false
     var hasDecryptionError: Bool = false
     
     var totalAnswerCount: UInt {
-        return self.answerOptions.reduce(0) { $0 + $1.count}
+        answerOptions.reduce(0) { $0 + $1.count }
     }
 }
