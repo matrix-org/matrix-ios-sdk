@@ -71,7 +71,7 @@ public class PollAggregator {
         }
     }
     
-    public convenience init(session: MXSession, room: MXRoom, pollEvent: MXEvent) throws {
+    public convenience init(session: MXSession, room: MXRoom, pollEvent: MXEvent, delegate: PollAggregatorDelegate? = nil) throws {
         var pollStartEventId: String?
         
         switch pollEvent.eventType {
@@ -87,14 +87,15 @@ public class PollAggregator {
             throw PollAggregatorError.invalidPollStartEvent
         }
         
-        try self.init(session: session, room: room, pollStartEventId: pollStartEventId)
+        try self.init(session: session, room: room, pollStartEventId: pollStartEventId, delegate: delegate)
     }
     
-    public init(session: MXSession, room: MXRoom, pollStartEventId: String) throws {
+    public init(session: MXSession, room: MXRoom, pollStartEventId: String, delegate: PollAggregatorDelegate? = nil) throws {
         self.session = session
         self.room = room
         self.pollStartEventId = pollStartEventId
         self.pollBuilder = PollBuilder()
+        self.delegate = delegate
         
         NotificationCenter.default.addObserver(self, selector: #selector(handleRoomDataFlush), name: .mxRoomDidFlushData, object: self.room)
         setupEditListener()
