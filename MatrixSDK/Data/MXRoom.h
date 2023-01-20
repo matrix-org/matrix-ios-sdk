@@ -977,7 +977,7 @@ FOUNDATION_EXPORT NSInteger const kMXRoomInvalidInviteSenderErrorCode;
                   withRelations:(NSArray<NSString *>*)relations
                          reason:(NSString*)reason
                         success:(void (^)(void))success
-                        failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+                        failure:(void (^)(NSError *error))failure;
 
 /**
  Report an event in this room.
