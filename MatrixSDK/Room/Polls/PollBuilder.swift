@@ -29,6 +29,7 @@ struct PollBuilder {
                hasBeenEdited: Bool = false) -> PollProtocol {
         
         let poll = Poll()
+        poll.id = pollStartEvent.eventId
         poll.startDate = Date(timeIntervalSince1970: Double(pollStartEvent.originServerTs) / 1000)
         poll.hasBeenEdited = hasBeenEdited
         poll.hasDecryptionError = events.contains(where: { $0.isEncrypted && $0.clear == nil })

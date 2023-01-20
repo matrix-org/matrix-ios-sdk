@@ -30,6 +30,7 @@ public protocol PollAnswerOptionProtocol {
 }
 
 public protocol PollProtocol {
+    var id: String { get }
     var text: String { get }
     var answerOptions: [PollAnswerOptionProtocol] { get }
     var kind: PollKind { get }
@@ -50,6 +51,7 @@ class PollAnswerOption: PollAnswerOptionProtocol {
 }
 
 class Poll: PollProtocol {
+    var id: String = ""
     var text: String = ""
     var answerOptions: [PollAnswerOptionProtocol] = []
     var kind: PollKind = .disclosed
