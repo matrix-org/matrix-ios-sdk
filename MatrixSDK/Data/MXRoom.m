@@ -2080,9 +2080,12 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
 {
     BOOL isFeatureSupported = (mxSession.store.supportedMatrixVersions.supportsRedactionWithRelations || mxSession.store.supportedMatrixVersions.supportsRedactionWithRelationsUnstable);
     BOOL isFeatureStable = mxSession.store.supportedMatrixVersions.supportsRedactionWithRelations;
-    if (isFeatureSupported) {
+    if (isFeatureSupported)
+    {
         return [mxSession.matrixRestClient redactEvent:eventId withRelations:relations inRoom:self.roomId reason:reason txnId:nil featureIsStable:isFeatureStable success:success failure:failure];
-    } else {
+    }
+    else
+    {
         MXLogDebug(@"[MXRoom] redaction with relations is not supported (MSC3912)");
         return [self redactEvent:eventId reason:reason success:success failure:failure];
     }
