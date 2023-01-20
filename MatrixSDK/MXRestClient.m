@@ -3048,11 +3048,11 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
 }
 
 - (MXHTTPOperation*)redactEvent:(NSString*)eventId
-                  withRelations:(NSArray<NSString *>*) relations
                          inRoom:(NSString*)roomId
                          reason:(NSString*)reason
                           txnId:(NSString *)txnId
-                featureIsStable:(BOOL)featureIsStable
+                  withRelations:(NSArray<NSString *>*) relations
+          withRelationsIsStable:(BOOL)withRelationsIsStable
                         success:(void (^)(void))success
                         failure:(void (^)(NSError *error))failure
 {
@@ -3077,7 +3077,7 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
     
     if (relations && [relations count] > 0)
     {
-        NSString* property = featureIsStable ? @"with_relations" : @"org.matrix.msc3912.with_relations";
+        NSString* property = withRelationsIsStable ? @"with_relations" : @"org.matrix.msc3912.with_relations";
         parameters[property] = relations;
     }
 

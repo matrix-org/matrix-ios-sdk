@@ -2078,30 +2078,22 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
                         success:(void (^)(void))success
                         failure:(void (^)(NSError *error))failure
 {
-    BOOL isFeatureSupported = (mxSession.store.supportedMatrixVersions.supportsRedactionWithRelations || mxSession.store.supportedMatrixVersions.supportsRedactionWithRelationsUnstable);
-    BOOL isFeatureStable = mxSession.store.supportedMatrixVersions.supportsRedactionWithRelations;
-    if (isFeatureSupported)
-    {
-        return [mxSession.matrixRestClient redactEvent:eventId
-                                         withRelations:relations
-                                                inRoom:self.roomId
-                                                reason:reason txnId:nil
-                                       featureIsStable:isFeatureStable
-                                               success:success
-                                               failure:failure];
-    }
-    else
+    BOOL isFeatureWithRelationsSupported = (mxSession.store.supportedMatrixVersions.supportsRedactionWithRelations || mxSession.store.supportedMatrixVersions.supportsRedactionWithRelationsUnstable);
+    BOOL isFeatureWithRelationsStable = mxSession.store.supportedMatrixVersions.supportsRedactionWithRelations;
+
+    if ((relations != nil || [relations count] > 0) && !isFeatureWithRelationsSupported)
     {
         MXLogDebug(@"[MXRoom] redaction with relations is not supported (MSC3912)");
-        return [mxSession.matrixRestClient redactEvent:eventId
-                                         withRelations:nil
-                                                inRoom:self.roomId
-                                                reason:reason
-                                                 txnId:nil
-                                       featureIsStable:YES          // we can pass YES because it concernes the feature adding the relations
-                                               success:success
-                                               failure:failure];
     }
+    
+    return [mxSession.matrixRestClient redactEvent:eventId
+                                            inRoom:self.roomId
+                                            reason:reason
+                                             txnId:nil
+                                     withRelations:isFeatureWithRelationsSupported ? relations : nil
+                             withRelationsIsStable:isFeatureWithRelationsStable
+                                           success:success
+                                           failure:failure];
 }
 
 - (MXHTTPOperation *)reportEvent:(NSString *)eventId
