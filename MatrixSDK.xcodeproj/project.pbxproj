@@ -1841,8 +1841,6 @@
 		ED28068828F06D360070AE9F /* MXQRCodeTransactionV2.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED28068628F06D360070AE9F /* MXQRCodeTransactionV2.swift */; };
 		ED2DD114286C450600F06731 /* MXCryptoMachine.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED2DD111286C450600F06731 /* MXCryptoMachine.swift */; };
 		ED2DD115286C450600F06731 /* MXCryptoMachine.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED2DD111286C450600F06731 /* MXCryptoMachine.swift */; };
-		ED2DD116286C450600F06731 /* MXEventDecryptionResult+DecryptedEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED2DD112286C450600F06731 /* MXEventDecryptionResult+DecryptedEvent.swift */; };
-		ED2DD117286C450600F06731 /* MXEventDecryptionResult+DecryptedEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED2DD112286C450600F06731 /* MXEventDecryptionResult+DecryptedEvent.swift */; };
 		ED2DD118286C450600F06731 /* MXCryptoRequests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED2DD113286C450600F06731 /* MXCryptoRequests.swift */; };
 		ED2DD119286C450600F06731 /* MXCryptoRequests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED2DD113286C450600F06731 /* MXCryptoRequests.swift */; };
 		ED2DD11D286C4F4400F06731 /* MXCryptoRequestsUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED2DD11B286C4F3E00F06731 /* MXCryptoRequestsUnitTests.swift */; };
@@ -1906,6 +1904,18 @@
 		ED5C754928B3E80300D24E85 /* MXLogObjcWrapper.h in Headers */ = {isa = PBXBuildFile; fileRef = ED5C753B28B3E80300D24E85 /* MXLogObjcWrapper.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		ED5C95CE2833E85600843D82 /* MXOlmDeviceUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED5C95CD2833E85600843D82 /* MXOlmDeviceUnitTests.swift */; };
 		ED5C95CF2833E85600843D82 /* MXOlmDeviceUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED5C95CD2833E85600843D82 /* MXOlmDeviceUnitTests.swift */; };
+		ED5EF145297AB1F200A5ADDA /* MXRoomEventEncryption.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED5EF144297AB1F200A5ADDA /* MXRoomEventEncryption.swift */; };
+		ED5EF146297AB1F200A5ADDA /* MXRoomEventEncryption.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED5EF144297AB1F200A5ADDA /* MXRoomEventEncryption.swift */; };
+		ED5EF14B297AB29F00A5ADDA /* MXDeviceVerification+LocalTrust.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED5EF148297AB29F00A5ADDA /* MXDeviceVerification+LocalTrust.swift */; };
+		ED5EF14C297AB29F00A5ADDA /* MXDeviceVerification+LocalTrust.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED5EF148297AB29F00A5ADDA /* MXDeviceVerification+LocalTrust.swift */; };
+		ED5EF14D297AB29F00A5ADDA /* MXRoomHistoryVisibility+HistoryVisibility.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED5EF149297AB29F00A5ADDA /* MXRoomHistoryVisibility+HistoryVisibility.swift */; };
+		ED5EF14E297AB29F00A5ADDA /* MXRoomHistoryVisibility+HistoryVisibility.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED5EF149297AB29F00A5ADDA /* MXRoomHistoryVisibility+HistoryVisibility.swift */; };
+		ED5EF14F297AB29F00A5ADDA /* MXEventDecryptionResult+DecryptedEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED5EF14A297AB29F00A5ADDA /* MXEventDecryptionResult+DecryptedEvent.swift */; };
+		ED5EF150297AB29F00A5ADDA /* MXEventDecryptionResult+DecryptedEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED5EF14A297AB29F00A5ADDA /* MXEventDecryptionResult+DecryptedEvent.swift */; };
+		ED5EF152297AB33E00A5ADDA /* MXCryptoV2Factory.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED5EF151297AB33E00A5ADDA /* MXCryptoV2Factory.swift */; };
+		ED5EF153297AB33E00A5ADDA /* MXCryptoV2Factory.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED5EF151297AB33E00A5ADDA /* MXCryptoV2Factory.swift */; };
+		ED5EF155297AB93800A5ADDA /* MXRoomEventEncryptionUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED5EF154297AB93800A5ADDA /* MXRoomEventEncryptionUnitTests.swift */; };
+		ED5EF156297AB93800A5ADDA /* MXRoomEventEncryptionUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED5EF154297AB93800A5ADDA /* MXRoomEventEncryptionUnitTests.swift */; };
 		ED647E3E292CE64400A47519 /* MXSessionStartupProgress.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED647E3D292CE64400A47519 /* MXSessionStartupProgress.swift */; };
 		ED647E3F292CE64400A47519 /* MXSessionStartupProgress.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED647E3D292CE64400A47519 /* MXSessionStartupProgress.swift */; };
 		ED6DABFC28C7542800ECDCB6 /* MXRoomKeyInfoFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED6DABFB28C7542800ECDCB6 /* MXRoomKeyInfoFactory.swift */; };
@@ -3063,7 +3073,6 @@
 		ED28068328F06C6C0070AE9F /* QrCodeStub.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QrCodeStub.swift; sourceTree = "<group>"; };
 		ED28068628F06D360070AE9F /* MXQRCodeTransactionV2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXQRCodeTransactionV2.swift; sourceTree = "<group>"; };
 		ED2DD111286C450600F06731 /* MXCryptoMachine.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MXCryptoMachine.swift; sourceTree = "<group>"; };
-		ED2DD112286C450600F06731 /* MXEventDecryptionResult+DecryptedEvent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "MXEventDecryptionResult+DecryptedEvent.swift"; sourceTree = "<group>"; };
 		ED2DD113286C450600F06731 /* MXCryptoRequests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MXCryptoRequests.swift; sourceTree = "<group>"; };
 		ED2DD11B286C4F3E00F06731 /* MXCryptoRequestsUnitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXCryptoRequestsUnitTests.swift; sourceTree = "<group>"; };
 		ED35652B281150310002BF6A /* MXOlmInboundGroupSessionUnitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXOlmInboundGroupSessionUnitTests.swift; sourceTree = "<group>"; };
@@ -3098,6 +3107,12 @@
 		ED5C753A28B3E80300D24E85 /* MXLogger.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXLogger.m; sourceTree = "<group>"; };
 		ED5C753B28B3E80300D24E85 /* MXLogObjcWrapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXLogObjcWrapper.h; sourceTree = "<group>"; };
 		ED5C95CD2833E85600843D82 /* MXOlmDeviceUnitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXOlmDeviceUnitTests.swift; sourceTree = "<group>"; };
+		ED5EF144297AB1F200A5ADDA /* MXRoomEventEncryption.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXRoomEventEncryption.swift; sourceTree = "<group>"; };
+		ED5EF148297AB29F00A5ADDA /* MXDeviceVerification+LocalTrust.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "MXDeviceVerification+LocalTrust.swift"; sourceTree = "<group>"; };
+		ED5EF149297AB29F00A5ADDA /* MXRoomHistoryVisibility+HistoryVisibility.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "MXRoomHistoryVisibility+HistoryVisibility.swift"; sourceTree = "<group>"; };
+		ED5EF14A297AB29F00A5ADDA /* MXEventDecryptionResult+DecryptedEvent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "MXEventDecryptionResult+DecryptedEvent.swift"; sourceTree = "<group>"; };
+		ED5EF151297AB33E00A5ADDA /* MXCryptoV2Factory.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MXCryptoV2Factory.swift; sourceTree = "<group>"; };
+		ED5EF154297AB93800A5ADDA /* MXRoomEventEncryptionUnitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXRoomEventEncryptionUnitTests.swift; sourceTree = "<group>"; };
 		ED647E3D292CE64400A47519 /* MXSessionStartupProgress.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXSessionStartupProgress.swift; sourceTree = "<group>"; };
 		ED6DABFB28C7542800ECDCB6 /* MXRoomKeyInfoFactory.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MXRoomKeyInfoFactory.swift; sourceTree = "<group>"; };
 		ED6DAC0128C76F0A00ECDCB6 /* MXRoomKeyInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXRoomKeyInfo.swift; sourceTree = "<group>"; };
@@ -3501,6 +3516,7 @@
 				322A51B41D9AB15900C8536D /* MXCrypto.h */,
 				322A51B51D9AB15900C8536D /* MXCrypto.m */,
 				ED47CB6C28523995004FD755 /* MXCryptoV2.swift */,
+				ED5EF151297AB33E00A5ADDA /* MXCryptoV2Factory.swift */,
 				325D1C251DFECE0D0070B8BF /* MXCrypto_Private.h */,
 				322A51C51D9BBD3C00C8536D /* MXOlmDevice.h */,
 				322A51C61D9BBD3C00C8536D /* MXOlmDevice.m */,
@@ -5363,6 +5379,7 @@
 			isa = PBXGroup;
 			children = (
 				EDCB65E12912AB0C00F55D4D /* MXRoomEventDecryption.swift */,
+				ED5EF144297AB1F200A5ADDA /* MXRoomEventEncryption.swift */,
 			);
 			path = RoomEvent;
 			sourceTree = "<group>";
@@ -5371,6 +5388,7 @@
 			isa = PBXGroup;
 			children = (
 				ED1FE9052912D2EB0046F722 /* MXRoomEventDecryptionUnitTests.swift */,
+				ED5EF154297AB93800A5ADDA /* MXRoomEventEncryptionUnitTests.swift */,
 			);
 			path = RoomEvents;
 			sourceTree = "<group>";
@@ -5426,10 +5444,10 @@
 		ED2DD110286C450600F06731 /* CryptoMachine */ = {
 			isa = PBXGroup;
 			children = (
+				ED5EF147297AB28600A5ADDA /* Extensions */,
 				ED2DD111286C450600F06731 /* MXCryptoMachine.swift */,
 				ED5580722970265A003443E3 /* MXCryptoMachineLogger.swift */,
 				ED8F1D3A2885BB2D00F897E7 /* MXCryptoProtocols.swift */,
-				ED2DD112286C450600F06731 /* MXEventDecryptionResult+DecryptedEvent.swift */,
 				ED2DD113286C450600F06731 /* MXCryptoRequests.swift */,
 				EDC8C4072968A993003792C5 /* MXKeysQueryScheduler.swift */,
 			);
@@ -5550,6 +5568,16 @@
 				ED5C753928B3E80300D24E85 /* MXLogObjcWrapper.m */,
 			);
 			path = Logs;
+			sourceTree = "<group>";
+		};
+		ED5EF147297AB28600A5ADDA /* Extensions */ = {
+			isa = PBXGroup;
+			children = (
+				ED5EF148297AB29F00A5ADDA /* MXDeviceVerification+LocalTrust.swift */,
+				ED5EF14A297AB29F00A5ADDA /* MXEventDecryptionResult+DecryptedEvent.swift */,
+				ED5EF149297AB29F00A5ADDA /* MXRoomHistoryVisibility+HistoryVisibility.swift */,
+			);
+			path = Extensions;
 			sourceTree = "<group>";
 		};
 		ED6DAC0428C771D500ECDCB6 /* RoomKeys */ = {
@@ -7102,6 +7130,7 @@
 				EC2EACFF266625170038B61F /* MXRoomLastMessage.m in Sources */,
 				EDF1B6902876CD2C00BBBCEE /* MXTaskQueue.swift in Sources */,
 				EC8A539525B1BC77004E0802 /* MXUserModel.m in Sources */,
+				ED5EF14F297AB29F00A5ADDA /* MXEventDecryptionResult+DecryptedEvent.swift in Sources */,
 				3252DCAF224BE5D40032264F /* MXKeyVerificationManager.m in Sources */,
 				323E0C5C1A306D7A00A31D73 /* MXEvent.m in Sources */,
 				F03EF5011DF014D9009DF592 /* MXMediaManager.m in Sources */,
@@ -7195,7 +7224,6 @@
 				B19A30A82404257700FB6F35 /* MXSASKeyVerificationStart.m in Sources */,
 				ECCA02BB273485B200B6F34F /* MXThreadingService.swift in Sources */,
 				02CAD439217DD12F0074700B /* MXContentScanResult.m in Sources */,
-				ED2DD116286C450600F06731 /* MXEventDecryptionResult+DecryptedEvent.swift in Sources */,
 				EC60ED9C265CFE1700B39A4E /* MXRoomSyncState.m in Sources */,
 				ED5C754028B3E80300D24E85 /* MXLog.swift in Sources */,
 				32133016228AF4EF0070BA9B /* MXRealmAggregationsStore.m in Sources */,
@@ -7229,6 +7257,7 @@
 				324AAC73239913AD00380A66 /* MXKeyVerificationDone.m in Sources */,
 				ED6DABFC28C7542800ECDCB6 /* MXRoomKeyInfoFactory.swift in Sources */,
 				B11556EE230C45C600B2A2CF /* MXIdentityServerRestClient.swift in Sources */,
+				ED5EF145297AB1F200A5ADDA /* MXRoomEventEncryption.swift in Sources */,
 				EDAAC41F28E30F4C00DD89B5 /* (null) in Sources */,
 				321CFDE722525A49004D31DF /* MXSASTransaction.m in Sources */,
 				EDDBA7F0293F353900AD1480 /* MXToDevicePayload.swift in Sources */,
@@ -7276,12 +7305,14 @@
 				32637ED51E5B00400011E20D /* MXDeviceList.m in Sources */,
 				327A5F55239805F600ED6329 /* MXKeyVerificationMac.m in Sources */,
 				B17982FA2119E4A2001FD722 /* MXRoomCreateContent.m in Sources */,
+				ED5EF14B297AB29F00A5ADDA /* MXDeviceVerification+LocalTrust.swift in Sources */,
 				32A9E8261EF4026E0081358A /* MXUIKitBackgroundModeHandler.m in Sources */,
 				B19A30D024042F0800FB6F35 /* MXSelfVerifyingMasterKeyTrustedQRCodeData.m in Sources */,
 				180F858627A2AF3000F4E5A5 /* MXWellKnownTileServerConfig.m in Sources */,
 				B18B0E6725FBDC3000E32151 /* MXSpace.swift in Sources */,
 				B146D4F721A5BB9F00D8C2C6 /* MXRealmMediaScanStore.m in Sources */,
 				32999DE422DCD1AD004FF987 /* MXPusherData.m in Sources */,
+				ED5EF14D297AB29F00A5ADDA /* MXRoomHistoryVisibility+HistoryVisibility.swift in Sources */,
 				322A51C81D9BBD3C00C8536D /* MXOlmDevice.m in Sources */,
 				EDD578E72881C37C006739DD /* MXCryptoDeviceWrapper.swift in Sources */,
 				EC60ED5F265CFC2C00B39A4E /* MXSyncResponse.m in Sources */,
@@ -7307,6 +7338,7 @@
 				A780624E27B2CE74005780C0 /* FileManager+Backup.swift in Sources */,
 				323547D42226D3F500F15F94 /* MXWellKnown.m in Sources */,
 				320DFDE519DD99B60068622A /* MXRestClient.m in Sources */,
+				ED5EF152297AB33E00A5ADDA /* MXCryptoV2Factory.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -7359,6 +7391,7 @@
 				EC51019D26C41981007D6D88 /* MXSyncResponseUnitTests.swift in Sources */,
 				EDB4209527DF822B0036AF39 /* MXEventsByTypesEnumeratorOnArrayTests.swift in Sources */,
 				EC40385D28A16EDA0067D5B8 /* MXAes256KeyBackupTests.m in Sources */,
+				ED5EF155297AB93800A5ADDA /* MXRoomEventEncryptionUnitTests.swift in Sources */,
 				ED6DAC0728C77E1100ECDCB6 /* MXForwardedRoomKeyEventContentUnitTests.swift in Sources */,
 				ED4368B129784CCE002B6272 /* MXRealmCryptoStoreTests.swift in Sources */,
 				3A9E2B4328EB3960000DB2A7 /* MXMatrixVersionsUnitTests.swift in Sources */,
@@ -7761,6 +7794,7 @@
 				EC8A53D925B1BCC6004E0802 /* MXThirdPartyProtocolInstance.m in Sources */,
 				EDF1B6912876CD2C00BBBCEE /* MXTaskQueue.swift in Sources */,
 				B14EF2422397E90400758AF0 /* MXDeviceInfo.m in Sources */,
+				ED5EF150297AB29F00A5ADDA /* MXEventDecryptionResult+DecryptedEvent.swift in Sources */,
 				B14EF2432397E90400758AF0 /* MXIncomingSASTransaction.m in Sources */,
 				B14EF2442397E90400758AF0 /* NSObject+sortedKeys.m in Sources */,
 				B14EF2452397E90400758AF0 /* MXAggregatedReactionsUpdater.m in Sources */,
@@ -7855,7 +7889,6 @@
 				B14EF2682397E90400758AF0 /* MXFilterJSONModel.m in Sources */,
 				325AD44223BE3E7500FF5277 /* MXCrossSigningInfo.m in Sources */,
 				ECCA02BC273485B200B6F34F /* MXThreadingService.swift in Sources */,
-				ED2DD117286C450600F06731 /* MXEventDecryptionResult+DecryptedEvent.swift in Sources */,
 				B14EF2692397E90400758AF0 /* MXMatrixVersions.m in Sources */,
 				ED5C754128B3E80300D24E85 /* MXLog.swift in Sources */,
 				B14EF26A2397E90400758AF0 /* MXReactionCountChangeListener.m in Sources */,
@@ -7888,6 +7921,7 @@
 				B14EF2772397E90400758AF0 /* MXDecryptionResult.m in Sources */,
 				ED6DABFD28C7542800ECDCB6 /* MXRoomKeyInfoFactory.swift in Sources */,
 				B14EF2782397E90400758AF0 /* MXTransactionCancelCode.m in Sources */,
+				ED5EF146297AB1F200A5ADDA /* MXRoomEventEncryption.swift in Sources */,
 				EDAAC42028E30F4C00DD89B5 /* (null) in Sources */,
 				B14EF2792397E90400758AF0 /* MXEventListener.m in Sources */,
 				EDDBA7F1293F353900AD1480 /* MXToDevicePayload.swift in Sources */,
@@ -7935,12 +7969,14 @@
 				B14EF2872397E90400758AF0 /* MXPusherData.m in Sources */,
 				324DD2A3246AE1EF00377005 /* MXEncryptedSecretContent.m in Sources */,
 				EC8A53B625B1BC77004E0802 /* MXCallHangupEventContent.m in Sources */,
+				ED5EF14C297AB29F00A5ADDA /* MXDeviceVerification+LocalTrust.swift in Sources */,
 				B14EF2882397E90400758AF0 /* MXOlmDevice.m in Sources */,
 				B14766BA23D9D9420091F721 /* MXUsersTrustLevelSummary.m in Sources */,
 				B14EF2892397E90400758AF0 /* MXKeyBackupPassword.m in Sources */,
 				180F858727A2AF3000F4E5A5 /* MXWellKnownTileServerConfig.m in Sources */,
 				3A108A9B25810F62005EEBE9 /* MXAesKeyData.m in Sources */,
 				B14EF28A2397E90400758AF0 /* MXTools.m in Sources */,
+				ED5EF14E297AB29F00A5ADDA /* MXRoomHistoryVisibility+HistoryVisibility.swift in Sources */,
 				B14EF28B2397E90400758AF0 /* MXRoomSummaryUpdater.m in Sources */,
 				EDD578E82881C37C006739DD /* MXCryptoDeviceWrapper.swift in Sources */,
 				B14EF28C2397E90400758AF0 /* MXScanRealmInMemoryProvider.m in Sources */,
@@ -7966,6 +8002,7 @@
 				A780624F27B2CE74005780C0 /* FileManager+Backup.swift in Sources */,
 				B14EF2932397E90400758AF0 /* MXRestClient.m in Sources */,
 				EC60EDD3265CFECC00B39A4E /* MXRoomSyncSummary.m in Sources */,
+				ED5EF153297AB33E00A5ADDA /* MXCryptoV2Factory.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -8018,6 +8055,7 @@
 				EC51019E26C41981007D6D88 /* MXSyncResponseUnitTests.swift in Sources */,
 				EDB4209627DF822B0036AF39 /* MXEventsByTypesEnumeratorOnArrayTests.swift in Sources */,
 				EC40385E28A16EDA0067D5B8 /* MXAes256KeyBackupTests.m in Sources */,
+				ED5EF156297AB93800A5ADDA /* MXRoomEventEncryptionUnitTests.swift in Sources */,
 				ED6DAC0828C77E1100ECDCB6 /* MXForwardedRoomKeyEventContentUnitTests.swift in Sources */,
 				ED4368B229784CCE002B6272 /* MXRealmCryptoStoreTests.swift in Sources */,
 				3A9E2B4428EB3960000DB2A7 /* MXMatrixVersionsUnitTests.swift in Sources */,

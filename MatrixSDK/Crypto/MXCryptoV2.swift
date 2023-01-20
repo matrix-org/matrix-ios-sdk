@@ -20,148 +20,30 @@ import Foundation
 
 import MatrixSDKCrypto
 
-@objc public class MXCryptoV2Factory: NSObject {
-    enum Error: Swift.Error {
-        case cryptoNotAvailable
-        case storeNotAvailable
-    }
-    
-    private let log = MXNamedLog(name: "MXCryptoV2Factory")
-    
-    @objc public func buildCrypto(
-        session: MXSession!,
-        migrationProgress: ((Double) -> Void)?,
-        success: @escaping (MXCrypto?) -> Void,
-        failure: @escaping (Swift.Error) -> Void
-    ) {
-        guard
-            let session = session,
-            let credentials = session.credentials,
-            let userId = credentials.userId
-        else {
-            log.failure("Missing reuired dependencies")
-            failure(Error.cryptoNotAvailable)
-            return
-        }
-        
-        log.debug("Building crypto for \(userId)")
-        let queue = DispatchQueue(label: "MXCryptoV2-\(userId)")
-        queue.async { [weak self] in
-            self?.createOrOpenLegacyStore(credentials: credentials) { legacyStore in
-                guard let self = self else { return }
-                
-                do {
-                    try self.migrateIfNecessary(legacyStore: legacyStore) {
-                        migrationProgress?($0)
-                    }
-                    
-                    let crypto = try MXCryptoV2(
-                        session: session,
-                        cryptoQueue: queue,
-                        legacyStore: legacyStore
-                    )
-                    
-                    DispatchQueue.main.async {
-                        success(crypto)
-                    }
-                } catch {
-                    self.log.failure("Cannot create crypto")
-                    DispatchQueue.main.async {
-                        failure(error)
-                    }
-                }
-                
-            } failure: { error in
-                DispatchQueue.main.async {
-                    failure(error)
-                }
-            }
-        }
-    }
-    
-    // A few features (e.g. global untrusted users blacklist) are not yet implemented in `MatrixSDKCrypto`
-    // so they have to be stored in a legacy database. Will be moved to `MatrixSDKCrypto` eventually
-    private func createOrOpenLegacyStore(
-        credentials: MXCredentials,
-        success: @escaping (MXCryptoStore) -> Void,
-        failure: @escaping (Swift.Error) -> Void
-    ) {
-        MXRealmCryptoStore.deleteReadonlyStore(with: credentials)
-        if MXRealmCryptoStore.hasData(for: credentials) {
-            log.debug("Legacy crypto store exists")
-            
-            guard let legacyStore = MXRealmCryptoStore(credentials: credentials) else {
-                log.failure("Cannot initialize legacy store")
-                failure(Error.storeNotAvailable)
-                return
-            }
-            
-            legacyStore.open { [weak self] in
-                self?.log.debug("Legacy crypto store opened")
-                success(legacyStore)
-            } failure: { [weak self] error in
-                self?.log.failure("Cannot open legacy crypto store")
-                failure(error ?? Error.storeNotAvailable)
-            }
-            
-        } else {
-            log.debug("Creating new legacy crypto store")
-            
-            guard let legacyStore = MXRealmCryptoStore.createStore(with: credentials) else {
-                log.failure("Cannot create legacy store")
-                failure(Error.storeNotAvailable)
-                return
-            }
-            legacyStore.cryptoVersion = MXCryptoVersion.versionLegacyDeprecated
-            
-            log.debug("Legacy crypto store created")
-            success(legacyStore)
-        }
-    }
-    
-    private func migrateIfNecessary(legacyStore: MXCryptoStore, updateProgress: @escaping (Double) -> Void) throws {
-        guard legacyStore.cryptoVersion.rawValue < MXCryptoVersion.versionLegacyDeprecated.rawValue else {
-            log.debug("Legacy crypto has already been deprecatd, no need to migrate")
-            return
-        }
-
-        log.debug("Requires migration from legacy crypto")
-        let migration = MXCryptoMigrationV2(legacyStore: legacyStore)
-        try migration.migrateCrypto(updateProgress: updateProgress)
-        
-        log.debug("Marking legacy crypto as deprecated")
-        legacyStore.cryptoVersion = MXCryptoVersion.versionLegacyDeprecated
-    }
-}
-
 /// An implementation of `MXCrypto` which uses [matrix-rust-sdk](https://github.com/matrix-org/matrix-rust-sdk/tree/main/crates/matrix-sdk-crypto)
 /// under the hood.
-private class MXCryptoV2: NSObject, MXCrypto {
+class MXCryptoV2: NSObject, MXCrypto {
     enum Error: Swift.Error {
-        case missingCredentials
-        case missingRoom
-        case roomNotEncrypted
         case cannotUnsetTrust
         case backupNotEnabled
     }
     
     // MARK: - Private properties
     
-    private static let keyRotationPeriodMsgs: Int = 100
-    private static let keyRotationPeriodSec: Int = 7 * 24 * 3600
-    
     private weak var session: MXSession?
-    private let cryptoQueue: DispatchQueue
     private let legacyStore: MXCryptoStore
+    
     private let machine: MXCryptoMachine
-    private let roomEventDecryptor: MXRoomEventDecrypting
+    private let encryptor: MXRoomEventEncrypting
+    private let decryptor: MXRoomEventDecrypting
     private let deviceInfoSource: MXDeviceInfoSource
     private let trustLevelSource: MXTrustLevelSource
     private let backupEngine: MXCryptoKeyBackupEngine?
+    
     private let keyVerification: MXKeyVerificationManagerV2
     private var startTask: Task<(), Never>?
     private var roomEventObserver: Any?
-    private let cryptoLog = MXCryptoMachineLogger()
+    
     private let log = MXNamedLog(name: "MXCryptoV2")
     
     // MARK: - Public properties
@@ -186,30 +68,34 @@ private class MXCryptoV2: NSObject, MXCrypto {
     let crossSigning: MXCrossSigning
     let recoveryService: MXRecoveryService
     
-    init(session: MXSession, cryptoQueue: DispatchQueue, legacyStore: MXCryptoStore) throws {
-        guard
-            let restClient = session.matrixRestClient,
-            let credentials = session.credentials,
-            let userId = credentials.userId,
-            let deviceId = credentials.deviceId
-        else {
-            throw Error.missingCredentials
-        }
-        
+    @MainActor
+    init(
+        userId: String,
+        deviceId: String,
+        session: MXSession,
+        restClient: MXRestClient,
+        legacyStore: MXCryptoStore
+    ) throws {
         self.session = session
-        self.cryptoQueue = cryptoQueue
         self.legacyStore = legacyStore
+        
+        let getRoomAction: (String) -> MXRoom? = { [weak session] in
+            session?.room(withRoomId: $0)
+        }
         
         machine = try MXCryptoMachine(
             userId: userId,
             deviceId: deviceId,
             restClient: restClient,
-            getRoomAction: { [weak session] roomId in
-                session?.room(withRoomId: roomId)
-            }
+            getRoomAction: getRoomAction
         )
         
-        roomEventDecryptor = MXRoomEventDecryption(handler: machine)
+        encryptor = MXRoomEventEncryption(
+            handler: machine,
+            legacyStore: legacyStore,
+            getRoomAction: getRoomAction
+        )
+        decryptor = MXRoomEventDecryption(handler: machine)
         
         deviceInfoSource = MXDeviceInfoSource(source: machine)
         trustLevelSource = MXTrustLevelSource(
@@ -222,14 +108,18 @@ private class MXCryptoV2: NSObject, MXCrypto {
             handler: machine
         )
         
+        // Some functionality not yet migrated to the rust-sdk (e.g. backup state machine, 4S ...) uses
+        // dispatch queues under the hood. We create one specific to crypto v2.
+        let legacyQueue = DispatchQueue(label: "org.matrix.sdk.MXCryptoV2")
+        
         if MXSDKOptions.sharedInstance().enableKeyBackupWhenStartingMXCrypto {
-            let engine = MXCryptoKeyBackupEngine(backup: machine, roomEventDecryptor: roomEventDecryptor)
+            let engine = MXCryptoKeyBackupEngine(backup: machine, roomEventDecryptor: decryptor)
             backupEngine = engine
             backup = MXKeyBackup(
                 engine: engine,
                 restClient: restClient,
                 secretShareManager: MXSecretShareManager(),
-                queue: cryptoQueue
+                queue: legacyQueue
             )
         } else {
             backupEngine = nil
@@ -250,7 +140,7 @@ private class MXCryptoV2: NSObject, MXCrypto {
                 backup: backup,
                 secretStorage: MXSecretStorage(
                     matrixSession: session,
-                    processingQueue: cryptoQueue
+                    processingQueue: legacyQueue
                 ),
                 secretStore: MXCryptoSecretStoreV2(
                     backup: backup,
@@ -258,7 +148,7 @@ private class MXCryptoV2: NSObject, MXCrypto {
                     crossSigning: machine
                 ),
                 crossSigning: crossSigning,
-                cryptoQueue: cryptoQueue
+                cryptoQueue: legacyQueue
             ),
             delegate: crossSign
         )
@@ -308,7 +198,7 @@ private class MXCryptoV2: NSObject, MXCrypto {
         
         session?.removeListener(roomEventObserver)
         Task {
-            await roomEventDecryptor.resetUndecryptedEvents()
+            await decryptor.resetUndecryptedEvents()
         }
         
         if deleteStore {
@@ -329,13 +219,7 @@ private class MXCryptoV2: NSObject, MXCrypto {
     // MARK: - Event Encryption
     
     public func isRoomEncrypted(_ roomId: String) -> Bool {
-        guard let summary = session?.room(withRoomId: roomId)?.summary else {
-            log.error("Missing room")
-            return false
-        }
-        // State of room encryption is not yet implemented in `MatrixSDKCrypto`
-        // Will be moved to `MatrixSDKCrypto` eventually
-        return summary.isEncrypted
+        return encryptor.isRoomEncrypted(roomId: roomId)
     }
     
     func encryptEventContent(
@@ -351,31 +235,12 @@ private class MXCryptoV2: NSObject, MXCrypto {
         let stopTracking =  MXSDKOptions.sharedInstance().analyticsDelegate?
             .startDurationTracking(forName: "MXCryptoV2", operation: "encryptEventContent")
         
-        guard let roomId = room.roomId else {
-            log.failure("Missing room id")
-            failure?(Error.missingRoom)
-            return nil
-        }
-        
-        guard isRoomEncrypted(roomId) else {
-            log.failure("Attempting to encrypt event in room without encryption")
-            failure?(Error.roomNotEncrypted)
-            return nil
-        }
-        
         Task {
             do {
-                let users = try await getRoomUserIds(for: room)
-                let settings = try encryptionSettings(for: room)
-                try await machine.shareRoomKeysIfNecessary(
-                    roomId: roomId,
-                    users: users,
-                    settings: settings
-                )
-                let result = try machine.encryptRoomEvent(
+                let result = try await encryptor.encrypt(
                     content: eventContent,
-                    roomId: roomId,
-                    eventType: eventType
+                    eventType: eventType,
+                    in: room
                 )
                 
                 stopTracking?()
@@ -409,7 +274,7 @@ private class MXCryptoV2: NSObject, MXCrypto {
         
         Task {
             log.debug("Decrypting \(events.count) event(s) in timeline \(timeline ?? "")")
-            let results = await roomEventDecryptor.decrypt(events: events)
+            let results = await decryptor.decrypt(events: events)
             await MainActor.run {
                 onComplete?(results)
             }
@@ -423,22 +288,9 @@ private class MXCryptoV2: NSObject, MXCrypto {
     ) -> MXHTTPOperation? {
         log.debug("->")
         
-        guard let room = session?.room(withRoomId: roomId) else {
-            log.failure("Missing room")
-            failure?(Error.missingRoom)
-            return nil
-        }
-        
         Task {
             do {
-                let users = try await getRoomUserIds(for: room)
-                let settings = try encryptionSettings(for: room)
-                try await machine.shareRoomKeysIfNecessary(
-                    roomId: roomId,
-                    users: users,
-                    settings: settings
-                )
-                
+                try await encryptor.ensureRoomKeysShared(roomId: roomId)
                 log.debug("Room keys shared when necessary")
                 await MainActor.run {
                     success?()
@@ -476,12 +328,14 @@ private class MXCryptoV2: NSObject, MXCrypto {
     // MARK: - Sync
     
     func handle(_ syncResponse: MXSyncResponse, onComplete: @escaping () -> Void) {
-        let toDeviceCount = syncResponse.toDevice?.events.count ?? 0
-        let devicesChanged = syncResponse.deviceLists?.changed?.count ?? 0
-        let devicesLeft = syncResponse.deviceLists?.left?.count ?? 0
-        
-        MXLog.debug("[MXCryptoV2] --------------------------------")
-        log.debug("Handling new sync response with \(toDeviceCount) to-device event(s), \(devicesChanged) device(s) changed, \(devicesLeft) device(s) left")
+        let syncId = UUID().uuidString
+        let details = """
+        Handling new sync response `\(syncId)`
+          - to-device events : \(syncResponse.toDevice?.events.count ?? 0)
+          - devices changed  : \(syncResponse.deviceLists?.changed?.count ?? 0)
+          - devices left     : \(syncResponse.deviceLists?.left?.count ?? 0)
+        """
+        log.debug(details)
         
         Task {
             do {
@@ -497,8 +351,7 @@ private class MXCryptoV2: NSObject, MXCrypto {
                 log.error("Cannot handle sync", context: error)
             }
             
-            log.debug("Completing sync response")
-            MXLog.debug("[MXCryptoV2] --------------------------------")
+            log.debug("Completed handling sync response `\(syncId)`")
             await MainActor.run {
                 onComplete()
             }
@@ -513,7 +366,7 @@ private class MXCryptoV2: NSObject, MXCrypto {
         for event in toDeviceEvents {
             await keyVerification.handleDeviceEvent(event)
             restoreBackupIfPossible(event: event)
-            await roomEventDecryptor.handlePossibleRoomKeyEvent(event)
+            await decryptor.handlePossibleRoomKeyEvent(event)
         }
         
         if backupEngine?.enabled == true && backupEngine?.hasKeysToBackup() == true {
@@ -808,72 +661,12 @@ private class MXCryptoV2: NSObject, MXCrypto {
         }
     }
     
-    private func getRoomUserIds(for room: MXRoom) async throws -> [String] {
-        return try await room.members()?.members
-            .compactMap(\.userId) ?? []
-    }
-    
     private func crossSigningInfo(userIds: [String]) -> [String: MXCrossSigningInfo] {
         return userIds
             .compactMap(crossSigning.crossSigningKeys(forUser:))
             .reduce(into: [String: MXCrossSigningInfo] ()) { dict, info in
                 return dict[info.userId] = info
             }
-    }
-    
-    private func encryptionSettings(for room: MXRoom) throws -> EncryptionSettings {
-        guard let roomId = room.roomId else {
-            throw Error.missingRoom
-        }
-        
-        let historyVisibility = try HistoryVisibility(identifier: room.summary.historyVisibility)
-        return .init(
-            algorithm: .megolmV1AesSha2,
-            rotationPeriod: UInt64(Self.keyRotationPeriodSec),
-            rotationPeriodMsgs: UInt64(Self.keyRotationPeriodMsgs),
-            historyVisibility: historyVisibility,
-            onlyAllowTrustedDevices: globalBlacklistUnverifiedDevices || isBlacklistUnverifiedDevices(inRoom: roomId)
-        )
-    }
-}
-
-private extension MXDeviceVerification {
-    var localTrust: LocalTrust {
-        switch self {
-        case .unverified:
-            return .unset
-        case .verified:
-            return .verified
-        case .blocked:
-            return .blackListed
-        case .unknown:
-            return .unset
-        @unknown default:
-            MXNamedLog(name: "MXDeviceVerification").failure("Unknown device verification", context: self)
-            return .unset
-        }
-    }
-}
-
-private extension HistoryVisibility {
-    enum Error: Swift.Error {
-        case invalidVisibility
-    }
-    
-    init(identifier: String) throws {
-        guard let visibility = MXRoomHistoryVisibility(identifier: identifier) else {
-            throw Error.invalidVisibility
-        }
-        switch visibility {
-        case .worldReadable:
-            self = .worldReadable
-        case .shared:
-            self = .shared
-        case .invited:
-            self = .invited
-        case .joined:
-            self = .joined
-        }
     }
 }
 
