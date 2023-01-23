@@ -83,7 +83,7 @@ public enum MXBackgroundSyncServiceError: Error {
         
         crypto = {
             #if DEBUG
-            if MXSDKOptions.sharedInstance().enableCryptoV2 {
+            if MXSDKOptions.sharedInstance().isCryptoSDKAvailable && MXSDKOptions.sharedInstance().enableCryptoSDK {
                 // Crypto V2 is currently unable to decrypt notifications due to single-process store,
                 // so it uses dummy background crypto that does not do anything.
                 return MXDummyBackgroundCrypto()

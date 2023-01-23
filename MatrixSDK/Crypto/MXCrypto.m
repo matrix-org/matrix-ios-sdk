@@ -158,7 +158,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 #ifdef MX_CRYPTO
     
     #if DEBUG
-    if (MXSDKOptions.sharedInstance.enableCryptoV2)
+    if (MXSDKOptions.sharedInstance.isCryptoSDKAvailable && MXSDKOptions.sharedInstance.enableCryptoSDK)
     {
         return [self createCryptoV2WithSession:mxSession error:error];
     }
@@ -182,7 +182,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 {
 #ifdef MX_CRYPTO
     #if DEBUG
-    if (MXSDKOptions.sharedInstance.enableCryptoV2)
+    if (MXSDKOptions.sharedInstance.isCryptoSDKAvailable && MXSDKOptions.sharedInstance.enableCryptoSDK)
     {
         NSError *error;
         id<MXCrypto> crypto = [self createCryptoV2WithSession:mxSession error:&error];

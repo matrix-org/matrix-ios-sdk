@@ -457,7 +457,7 @@
                                                                                             success:^(id<MXKeyVerificationRequest> requestFromAliceDevice1POV)
                  {
                      // -> The other device list should have been computed well
-                     if (MXSDKOptions.sharedInstance.enableCryptoV2)
+                     if (MXSDKOptions.sharedInstance.enableCryptoSDK)
                      {
                         XCTFail(@"This test uses `MXKeyVerificationByToDeviceRequest` which is only compatible with Crypto V1. Replace assertions to make it compatible with V2 as well");
                         [expectation fulfill];

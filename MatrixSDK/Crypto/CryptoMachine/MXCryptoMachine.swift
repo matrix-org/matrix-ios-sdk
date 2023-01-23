@@ -94,16 +94,18 @@ class MXCryptoMachine {
             try await requests.queryKeys(users: users)
         }
         self.getRoomAction = getRoomAction
-    }
-    
-    func start() async throws {
+        
         let details = """
-        Starting the crypto machine for \(userId)
+        Initialized the crypto machine for \(userId)
           - device id  : \(deviceId)
           - ed25519    : \(deviceEd25519Key ?? "")
           - curve25519 : \(deviceCurve25519Key ?? "")
         """
         log.debug(details)
+    }
+    
+    func uploadKeysIfNecessary() async throws {
+        log.debug("Checking for keys to upload")
         
         var keysUploadRequest: Request?
         for request in try machine.outgoingRequests() {
@@ -120,7 +122,6 @@ class MXCryptoMachine {
         }
         
         try await handleRequest(request)
-        
         log.debug("Keys successfully uploaded")
     }
     
@@ -468,7 +469,7 @@ extension MXCryptoMachine: MXCryptoRoomEventDecrypting {
             log.failure("Invalid event")
             throw Error.invalidEvent
         }
-        return try machine.decryptRoomEvent(event: eventString, roomId: roomId)
+        return try machine.decryptRoomEvent(event: eventString, roomId: roomId, handleVerificatonEvents: true)
     }
     
     func requestRoomKey(event: MXEvent) async throws {
