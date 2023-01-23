@@ -67,10 +67,11 @@ class MXCryptoMigrationV2: NSObject {
         log.debug("Migrating olm sessions in batches")
         
         // How much does migration of olm vs megolm sessions contribute to the overall progress
-        let olmToMegolmProgressRatio = 0.25
+        let totalSessions = store.olmSessionCount + store.megolmSessionCount
+        let olmToMegolmRatio = totalSessions > 0 ? Double(store.olmSessionCount)/Double(totalSessions) : 0
         
         store.extractSessions(with: key, batchSize: Self.SessionBatchSize) { [weak self] batch, progress in
-            updateProgress(progress * olmToMegolmProgressRatio)
+            updateProgress(progress * olmToMegolmRatio)
             
             do {
                 try self?.migrateSessions(
@@ -86,7 +87,7 @@ class MXCryptoMigrationV2: NSObject {
         log.debug("Migrating megolm sessions in batches")
         
         store.extractGroupSessions(with: key, batchSize: Self.SessionBatchSize) { [weak self] batch, progress in
-            updateProgress(olmToMegolmProgressRatio + progress * (1 - olmToMegolmProgressRatio))
+            updateProgress(olmToMegolmRatio + progress * (1 - olmToMegolmRatio))
             
             do {
                 try self?.migrateSessions(

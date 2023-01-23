@@ -41,7 +41,7 @@ class MXCryptoV2: NSObject, MXCrypto {
     private let backupEngine: MXCryptoKeyBackupEngine?
     
     private let keyVerification: MXKeyVerificationManagerV2
-    private var startTask: Task<(), Never>?
+    private var startTask: Task<(), Swift.Error>?
     private var roomEventObserver: Any?
     
     private let log = MXNamedLog(name: "MXCryptoV2")
@@ -162,19 +162,14 @@ class MXCryptoV2: NSObject, MXCrypto {
         _ onComplete: (() -> Void)?,
         failure: ((Swift.Error) -> Void)?
     ) {
-    
-        guard startTask == nil else {
-            log.error("Crypto module has already been started")
-            onComplete?()
-            return
+        log.debug("->")
+        if startTask != nil {
+            log.warning("Crypto module has already been started")
         }
         
-        log.debug("->")
-        startTask = Task {
+        Task {
             do {
-                try await machine.uploadKeysIfNecessary()
-                crossSigning.refreshState(success: nil)
-                backup?.checkAndStart()
+                try await start()
                 
                 log.debug("Crypto module started")
                 await MainActor.run {
@@ -188,6 +183,16 @@ class MXCryptoV2: NSObject, MXCrypto {
                 }
             }
         }
+    }
+    
+    private func start() async throws {
+        let task = startTask ?? .init {
+            try await machine.uploadKeysIfNecessary()
+            crossSigning.refreshState(success: nil)
+            backup?.checkAndStart()
+        }
+        startTask = task
+        return try await task.value
     }
     
     public func close(_ deleteStore: Bool) {
@@ -339,7 +344,7 @@ class MXCryptoV2: NSObject, MXCrypto {
         
         Task {
             do {
-                let toDevice = try machine.handleSyncResponse(
+                let toDevice = try await machine.handleSyncResponse(
                     toDevice: syncResponse.toDevice,
                     deviceLists: syncResponse.deviceLists,
                     deviceOneTimeKeysCounts: syncResponse.deviceOneTimeKeysCount ?? [:],
@@ -458,11 +463,16 @@ class MXCryptoV2: NSObject, MXCrypto {
         success: ((MXUsersTrustLevelSummary?) -> Void)?,
         failure: ((Swift.Error) -> Void)?
     ) {
-        _ = downloadKeys(userIds, forceDownload: forceDownload, success: { [weak self] _, _ in
-            success?(
-                self?.trustLevelSource.trustLevelSummary(userIds: userIds)
-            )
-        }, failure: failure)
+        _ = downloadKeys(
+            userIds,
+            // Force downloading keys is not recommended in crypto v2, and in particular when calculating
+            // trust level summary, it is not necessary
+            forceDownload: false,
+            success: { [weak self] _, _ in
+                success?(
+                    self?.trustLevelSource.trustLevelSummary(userIds: userIds)
+                )
+            }, failure: failure)
     }
     
     // MARK: - Users keys

@@ -1457,7 +1457,9 @@ typedef void (^MXOnResumeDone)(void);
                       clientTimeout:(NSUInteger)clientTimeout
                         setPresence:(NSString*)setPresence
 {
-    if (MXSDKOptions.sharedInstance.enableStartupProgress)
+    // We only want to report sync progress when doing initial sync
+    BOOL shoulReportStartupProgress = MXSDKOptions.sharedInstance.enableStartupProgress && !self.isEventStreamInitialised;
+    if (shoulReportStartupProgress)
     {
         [self.startupProgress incrementSyncAttempt];
     }
@@ -1562,7 +1564,7 @@ typedef void (^MXOnResumeDone)(void);
         
         [self handleSyncResponse:syncResponse
                         progress:^(CGFloat progress) {
-            if (MXSDKOptions.sharedInstance.enableStartupProgress)
+            if (shoulReportStartupProgress)
             {
                 [self.startupProgress updateProcessingProgress:progress forPhase:MXSessionProcessingResponsePhaseSyncResponse];
             }
@@ -1577,7 +1579,7 @@ typedef void (^MXOnResumeDone)(void);
                 [self fixRoomsSummariesLastMessageWithMaxServerPaginationCount:MXRoomSummaryPaginationChunkSize
                                                                          force:YES
                                                                       progress:^(CGFloat progress) {
-                    if (MXSDKOptions.sharedInstance.enableStartupProgress)
+                    if (shoulReportStartupProgress)
                     {
                         [self.startupProgress updateProcessingProgress:progress forPhase:MXSessionProcessingResponsePhaseRoomSummaries];
                     }
