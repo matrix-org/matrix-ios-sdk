@@ -21,6 +21,9 @@ import Foundation
 /// and used to update the user interface during session loading.
 public enum MXSessionStartupStage {
     
+    /// Migrating data to a new store version
+    case migratingData(progress: Double)
+    
     /// Syncing with the server as Nth attempt
     case serverSyncing(attempt: Int)
     
