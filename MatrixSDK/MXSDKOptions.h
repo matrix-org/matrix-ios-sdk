@@ -241,12 +241,12 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic) BOOL enableNewClientInformationFeature;
 
 /**
- Enable the calculating of progress during sync, incl counting the number
+ Enable the calculating of progress during session startup, incl counting the number
  of attempts to sync with the server and percentage of response data processed.
  
  @remark NO by default
  */
-@property (nonatomic) BOOL enableSyncProgress;
+@property (nonatomic) BOOL enableStartupProgress;
 
 @end
 
