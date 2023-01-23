@@ -34,7 +34,6 @@ typedef NS_ENUM(NSUInteger, MXCallTransferType)
     MXCallTransferTypeLocal
 };
 
-
 #pragma mark - Build time options
 
 /**
@@ -207,12 +206,23 @@ NS_ASSUME_NONNULL_BEGIN
 #if DEBUG
 
 /**
- Enable Crypto module V2, a work-in-progress and NOT production-ready implementation
- of [matrix-rust-sdk](https://github.com/matrix-org/matrix-rust-sdk/tree/main/crates/matrix-sdk-crypto).
+ The state of the rust-based `MatrixCryptoSDK` which replaces `MatrixSDK`'s internal crypto module,
+ and whether it is available to a user as an option.
+ 
+ To control which crypto module is actually used, set `enableCryptoSDK`.
  
  @remark NO by default.
  */
-@property (nonatomic) BOOL enableCryptoV2;
+@property (nonatomic) BOOL isCryptoSDKAvailable;
+
+/**
+ Use the rust-based `MatrixCryptoSDK` instead of `MatrixSDK`'s internal crypto module.
+ 
+ This option should only be enabled if `isCryptoSDKAvailable` is set to YES.
+ 
+ @remark NO by default.
+ */
+@property (nonatomic) BOOL enableCryptoSDK;
 
 #endif
 
@@ -231,12 +241,12 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic) BOOL enableNewClientInformationFeature;
 
 /**
- Enable the calculating of progress during sync, incl counting the number
+ Enable the calculating of progress during session startup, incl counting the number
  of attempts to sync with the server and percentage of response data processed.
  
  @remark NO by default
  */
-@property (nonatomic) BOOL enableSyncProgress;
+@property (nonatomic) BOOL enableStartupProgress;
 
 @end
 

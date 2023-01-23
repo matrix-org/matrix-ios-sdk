@@ -93,7 +93,7 @@
         "MXRoomKeyInfoFactoryUnitTests",
         "MXRoomStateUnitTests",
         "MXSASTransactionV2UnitTests",
-        "MXSessionSyncProgressUnitTests",
+        "MXSessionStartupProgressUnitTests",
         "MXSharedHistoryKeyManagerUnitTests",
         "MXStoreRoomListDataManagerUnitTests",
         "MXSyncResponseUnitTests",
