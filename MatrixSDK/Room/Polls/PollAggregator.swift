@@ -60,7 +60,7 @@ public class PollAggregator {
         }
     }
     
-    public var delegate: PollAggregatorDelegate?
+    public weak var delegate: PollAggregatorDelegate?
     
     deinit {
         if let referenceEventsListener = referenceEventsListener {
