@@ -74,6 +74,11 @@ public protocol MXSessionStartupProgressDelegate: AnyObject {
         }
     }
     
+    /// Update the progress of the `migratingData` stage
+    @objc public func updateMigrationProgress(_ progress: Double) {
+        stage = .migratingData(progress: progress)
+    }
+    
     /// Increment the total number of sync attempts during the `serverSyncing` stage
     @objc public func incrementSyncAttempt() {
         guard stage == nil || stage?.isSyncing == true else {

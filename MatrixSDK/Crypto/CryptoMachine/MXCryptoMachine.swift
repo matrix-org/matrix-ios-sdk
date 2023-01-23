@@ -394,6 +394,10 @@ extension MXCryptoMachine: MXCryptoUserIdentitySource {
 }
 
 extension MXCryptoMachine: MXCryptoRoomEventEncrypting {
+    func addTrackedUsers(_ users: [String]) {
+        machine.updateTrackedUsers(users: users)
+    }
+    
     func shareRoomKeysIfNecessary(
         roomId: String,
         users: [String],

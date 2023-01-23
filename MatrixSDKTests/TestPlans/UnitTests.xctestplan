@@ -80,6 +80,7 @@
         "MXReplyEventParserUnitTests",
         "MXResponseUnitTests",
         "MXRoomEventDecryptionUnitTests",
+        "MXRoomEventEncryptionUnitTests",
         "MXRoomEventFilterUnitTests",
         "MXRoomKeyEventContentUnitTests",
         "MXRoomKeyInfoFactoryUnitTests",

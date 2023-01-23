@@ -61,7 +61,7 @@ class MXCryptoMigrationV2Tests: XCTestCase {
         
         MXKeyProvider.sharedInstance().delegate = KeyProvider()
         let migration = MXCryptoMigrationV2(legacyStore: store)
-        try migration.migrateCrypto()
+        try migration.migrateCrypto { _ in }
         MXKeyProvider.sharedInstance().delegate = nil
         
         return try MXCryptoMachine(

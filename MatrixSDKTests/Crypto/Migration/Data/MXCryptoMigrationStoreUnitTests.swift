@@ -47,6 +47,22 @@ class MXCryptoMigrationStoreUnitTests: XCTestCase {
         try store.extractData(with: pickleKey ?? self.pickleKey)
     }
     
+    func extractSessions(pickleKey: Data? = nil) throws -> [PickledSession] {
+        var sessions = [PickledSession]()
+        store.extractSessions(with: pickleKey ?? self.pickleKey, batchSize: .max) { batch, progress in
+            sessions += batch
+        }
+        return sessions
+    }
+    
+    func extractGroupSessions(pickleKey: Data? = nil) throws -> [PickledInboundGroupSession] {
+        var sessions = [PickledInboundGroupSession]()
+        store.extractGroupSessions(with: pickleKey ?? self.pickleKey, batchSize: .max) { batch, progress in
+            sessions += batch
+        }
+        return sessions
+    }
+    
     @discardableResult
     func storeGroupSession(
         roomId: String = "ABC",
@@ -106,8 +122,11 @@ class MXCryptoMigrationStoreUnitTests: XCTestCase {
         legacyStore.store(session)
         let pickle = try session.session.serializeData(withKey: pickleKey)
         
-        let sessions = try extractData().sessions
+        // There are no sessions in the general migration data
+        XCTAssertTrue(try extractData().sessions.isEmpty)
         
+        // But they can be accumulated by batching
+        let sessions = try extractSessions()
         XCTAssertEqual(sessions.count, 1)
         XCTAssertEqual(sessions[0].pickle, pickle)
         XCTAssertEqual(sessions[0].senderKey, "XYZ")
@@ -116,22 +135,27 @@ class MXCryptoMigrationStoreUnitTests: XCTestCase {
         XCTAssertEqual(sessions[0].lastUseTime, "123")
     }
     
-    func test_extractsMultipleSession() throws {
-        for i in 0 ..< 3 {
+    func test_extractsMultipleSessionsInBatches() throws {
+        for i in 0 ..< 12 {
             legacyStore.store(MXOlmSession(olmSession: OLMSession(), deviceKey: "\(i)"))
         }
         
-        let sessions = try extractData().sessions
-        
-        XCTAssertEqual(sessions.count, 3)
+        // There are no sessions in the general migration data
+        XCTAssertTrue(try extractData().sessions.isEmpty)
+        // But they can be accumulated by batching
+        let sessions = try extractSessions()
+        XCTAssertEqual(sessions.count, 12)
     }
     
     func test_extractsGroupSession() throws {
         let session = storeGroupSession(roomId: "abcd")
         let pickle = try session.session.serializeData(withKey: pickleKey)
         
-        let sessions = try extractData().inboundGroupSessions
+        // There are no sessions in the general migration data
+        XCTAssertTrue(try extractData().inboundGroupSessions.isEmpty)
         
+        // But they can be accumulated by batching
+        let sessions = try extractGroupSessions()
         XCTAssertEqual(sessions.count, 1)
         XCTAssertEqual(sessions[0].pickle, pickle)
         XCTAssertEqual(sessions[0].senderKey, "Bob")
@@ -146,8 +170,11 @@ class MXCryptoMigrationStoreUnitTests: XCTestCase {
             storeGroupSession(senderKey: isValid ? "Bob" : nil)
         }
         
-        let sessions = try extractData().inboundGroupSessions
+        // There are no sessions in the general migration data
+        XCTAssertTrue(try extractData().inboundGroupSessions.isEmpty)
         
+        // But they can be accumulated by batching
+        let sessions = try extractGroupSessions()
         XCTAssertEqual(sessions.count, 2)
     }
     
@@ -156,7 +183,7 @@ class MXCryptoMigrationStoreUnitTests: XCTestCase {
         storeGroupSession(isUntrusted: false)
         storeGroupSession(isUntrusted: false)
         
-        let sessions = try extractData().inboundGroupSessions
+        let sessions = try extractGroupSessions()
         
         XCTAssertEqual(sessions.count, 3)
         XCTAssertTrue(sessions[0].imported)
@@ -169,7 +196,7 @@ class MXCryptoMigrationStoreUnitTests: XCTestCase {
         storeGroupSession(backedUp: true)
         storeGroupSession(backedUp: false)
         
-        let sessions = try extractData().inboundGroupSessions
+        let sessions = try extractGroupSessions()
         
         XCTAssertEqual(sessions.count, 3)
         XCTAssertFalse(sessions[0].backedUp)
