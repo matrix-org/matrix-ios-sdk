@@ -42,11 +42,10 @@ public class PollAggregator {
     
     private let session: MXSession
     private let room: MXRoom
-    private let pollStartEventId: String
     private let pollBuilder: PollBuilder
     
-    private var pollStartedEvent: MXEvent!
-    private var pollStartEventContent: MXEventContentPollStart!
+    private let pollStartedEvent: MXEvent
+    private let pollStartEventContent: MXEventContentPollStart
     
     private var referenceEventsListener: Any?
     private var editEventsListener: Any?
@@ -94,13 +93,22 @@ public class PollAggregator {
     public init(session: MXSession, room: MXRoom, pollStartEventId: String, delegate: PollAggregatorDelegate? = nil) throws {
         self.session = session
         self.room = room
-        self.pollStartEventId = pollStartEventId
         self.pollBuilder = PollBuilder()
         self.delegate = delegate
         
+        guard
+            let event = session.store.event(withEventId: pollStartEventId, inRoom: room.roomId),
+            let eventContent = MXEventContentPollStart(fromJSON: event.content),
+            eventContent.answerOptions.count >= Constants.minAnswerOptionCount
+        else {
+            throw PollAggregatorError.invalidPollStartEvent
+        }
+        
+        pollStartedEvent = event
+        pollStartEventContent = eventContent
         NotificationCenter.default.addObserver(self, selector: #selector(handleRoomDataFlush), name: .mxRoomDidFlushData, object: self.room)
         setupEditListener()
-        try buildPollStartContent()
+        buildPoll()
     }
     
     private func setupEditListener() {
@@ -111,28 +119,18 @@ public class PollAggregator {
                 return
             }
             
-            do {
-                try self.buildPollStartContent()
-            } catch {
-                self.delegate?.pollAggregator(self, didFailWithError: PollAggregatorError.invalidPollStartEvent)
-            }
+            self.buildPoll()
         }
     }
     
-    private func buildPollStartContent() throws {
-        guard let event = session.store.event(withEventId: pollStartEventId, inRoom: room.roomId),
-              let eventContent = MXEventContentPollStart(fromJSON: event.content),
-              eventContent.answerOptions.count >= Constants.minAnswerOptionCount
-        else {
-            throw PollAggregatorError.invalidPollStartEvent
-        }
+    private var pollStartEventId: String {
+        pollStartedEvent.eventId
+    }
+    
+    private func buildPoll() {
+        hasBeenEdited = (pollStartedEvent.unsignedData.relations?.replace != nil)
         
-        pollStartedEvent = event
-        pollStartEventContent = eventContent
-        
-        hasBeenEdited = (event.unsignedData.relations?.replace != nil)
-        
-        poll = pollBuilder.build(pollStartEventContent: eventContent,
+        poll = pollBuilder.build(pollStartEventContent: pollStartEventContent,
                                  pollStartEvent: pollStartedEvent,
                                  events: events,
                                  currentUserIdentifier: session.myUserId,
