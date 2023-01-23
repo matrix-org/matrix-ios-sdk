@@ -58,12 +58,14 @@ class MXPollAggregatorTest: XCTestCase {
             }
             
             dispatchGroup.notify(queue: .main) {
-                self.pollAggregator.delegate = PollAggregatorBlockWrapper(dataUpdateCallback: {
+                let delegate = PollAggregatorBlockWrapper(dataUpdateCallback: {
                     XCTAssertEqual(self.pollAggregator.poll.answerOptions.first!.count, 2)
                     XCTAssertEqual(self.pollAggregator.poll.answerOptions.last!.count, 0)
                     
                     expectation.fulfill()
                 })
+                
+                self.pollAggregator.delegate = delegate
             }
         }
     }
@@ -77,10 +79,12 @@ class MXPollAggregatorTest: XCTestCase {
             
             bobSession.pause()
             
-            self.pollAggregator.delegate = PollAggregatorBlockWrapper(dataUpdateCallback: {
+            let delegate = PollAggregatorBlockWrapper(dataUpdateCallback: {
                 XCTAssertEqual(self.pollAggregator.poll.answerOptions.first!.count, 2)
                 XCTAssertEqual(self.pollAggregator.poll.answerOptions.last!.count, 0)
             })
+            
+            self.pollAggregator.delegate = delegate
             
             bobRoom.sendPollResponse(for: pollStartEvent, withAnswerIdentifiers: ["1"], threadId:nil, localEcho: nil) { _ in
                 bobSession.resume {
@@ -106,11 +110,12 @@ class MXPollAggregatorTest: XCTestCase {
                     aliceRoom.sendPollResponse(for: pollStartEvent, withAnswerIdentifiers: ["1", "2"], threadId:nil, localEcho: nil) { _ in
                         self.matrixSDKTestsData.for(aliceSession.matrixRestClient, andRoom: aliceRoom.roomId, sendMessages: 50, testCase: self) {
                             
-                            self.pollAggregator.delegate = PollAggregatorBlockWrapper(dataUpdateCallback: {
+                            let delegate = PollAggregatorBlockWrapper(dataUpdateCallback: {
                                 XCTAssertEqual(self.pollAggregator.poll.answerOptions.first!.count, 2) // One from Bob and one from Alice
                                 XCTAssertEqual(self.pollAggregator.poll.answerOptions.last!.count, 1) // One from Alice
                                 expectation.fulfill()
                             })
+                            self.pollAggregator.delegate = delegate
                             
                             bobSession.resume {
                                 
@@ -137,7 +142,7 @@ class MXPollAggregatorTest: XCTestCase {
                                                      maxSelections: oldContent.maxSelections,
                                                      answerOptions: [])
             
-            self.pollAggregator.delegate = PollAggregatorBlockWrapper(dataUpdateCallback: {
+            let delegate = PollAggregatorBlockWrapper(dataUpdateCallback: {
                 
                 XCTAssertEqual(self.pollAggregator.poll.text, "Some other question")
                 XCTAssertEqual(self.pollAggregator.poll.answerOptions.count, 0)
@@ -146,6 +151,7 @@ class MXPollAggregatorTest: XCTestCase {
                 expectation.fulfill()
                 self.pollAggregator.delegate = nil
             })
+            self.pollAggregator.delegate = delegate
             
             bobRoom.sendPollUpdate(for: pollStartEvent, oldContent: oldContent, newContent: newContent, localEcho: nil) { result in
                 
