@@ -77,21 +77,18 @@ import Foundation
     private func createOrOpenLegacyStore(credentials: MXCredentials) async throws -> MXCryptoStore {
         MXRealmCryptoStore.deleteReadonlyStore(with: credentials)
         
-        if MXRealmCryptoStore.hasData(for: credentials) {
+        if
+            MXRealmCryptoStore.hasData(for: credentials),
+            let legacyStore = MXRealmCryptoStore(credentials: credentials),
+            legacyStore.account() != nil
+        {
             log.debug("Legacy crypto store exists")
-            
-            guard let legacyStore = MXRealmCryptoStore(credentials: credentials) else {
-                log.failure("Cannot initialize legacy store")
-                throw Error.storeNotAvailable
-            }
-            
-            try await openStore(legacyStore)
-            log.debug("Legacy crypto store opened")
             return legacyStore
             
         } else {
             log.debug("Creating new legacy crypto store")
             
+            MXRealmCryptoStore.delete(with: credentials)
             guard let legacyStore = MXRealmCryptoStore.createStore(with: credentials) else {
                 log.failure("Cannot create legacy store")
                 throw Error.storeNotAvailable
@@ -100,16 +97,6 @@ import Foundation
             
             log.debug("Legacy crypto store created")
             return legacyStore
-        }
-    }
-    
-    private func openStore(_ store: MXCryptoStore) async throws {
-        try await withCheckedThrowingContinuation { cont in
-            store.open {
-                cont.resume(returning: ())
-            } failure: { error in
-                cont.resume(throwing: error ?? Error.storeNotAvailable)
-            }
         }
     }
     

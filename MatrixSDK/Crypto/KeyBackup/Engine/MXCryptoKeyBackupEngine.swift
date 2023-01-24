@@ -284,7 +284,9 @@ class MXCryptoKeyBackupEngine: NSObject, MXKeyBackupEngine {
             return
         }
         
-        Task {
+        Task.detached { [weak self] in
+            guard let self = self else { return }
+            
             let encryptedSessions = keysBackupData.rooms.flatMap { roomId, room in
                 room.sessions.map { sessionId, keyBackup in
                     EncryptedSession(roomId: roomId, sessionId: sessionId, keyBackup: keyBackup)
@@ -292,19 +294,19 @@ class MXCryptoKeyBackupEngine: NSObject, MXKeyBackupEngine {
             }
             
             let count = encryptedSessions.count
-            activeImportProgress = Progress(totalUnitCount: Int64(count))
-            log.debug("Importing \(count) encrypted sessions")
+            self.activeImportProgress = Progress(totalUnitCount: Int64(count))
+            self.log.debug("Importing \(count) encrypted sessions")
             
             let date = Date()
             
             for batchIndex in stride(from: 0, to: count, by: Self.ImportBatchSize) {
-                log.debug("Decrypting and importing batch \(batchIndex)")
+                self.log.debug("Decrypting and importing batch \(batchIndex)")
                 let endIndex = min(batchIndex + Self.ImportBatchSize, count)
                 let batch = encryptedSessions[batchIndex ..< endIndex]
                 
                 autoreleasepool {
                     let sessions = batch.compactMap {
-                        decrypt(
+                        self.decrypt(
                             keyBackupData: $0.keyBackup,
                             keyBackupVersion: keyBackupVersion,
                             recoveryKey: recoveryKey,
@@ -314,19 +316,19 @@ class MXCryptoKeyBackupEngine: NSObject, MXKeyBackupEngine {
                     }
                     
                     do {
-                        let result = try backup.importDecryptedKeys(roomKeys: sessions, progressListener: self)
-                        activeImportProgress?.completedUnitCount += Int64(result.imported)
+                        let result = try self.backup.importDecryptedKeys(roomKeys: sessions, progressListener: self)
+                        self.activeImportProgress?.completedUnitCount += Int64(result.imported)
                     } catch {
-                        log.error("Failed importing batch of sessions", context: error)
+                        self.log.error("Failed importing batch of sessions", context: error)
                     }
                 }
-                await roomEventDecryptor.retryUndecryptedEvents(sessionIds: batch.map(\.sessionId))
+                await self.roomEventDecryptor.retryUndecryptedEvents(sessionIds: batch.map(\.sessionId))
             }
             
-            let imported = activeImportProgress?.completedUnitCount ?? 0
+            let imported = self.activeImportProgress?.completedUnitCount ?? 0
             let duration = Date().timeIntervalSince(date) * 1000
-            log.debug("Successfully imported \(imported) out of \(count) sessions in \(duration) ms")
-            activeImportProgress = nil
+            self.log.debug("Successfully imported \(imported) out of \(count) sessions in \(duration) ms")
+            self.activeImportProgress = nil
             
             await MainActor.run {
                 success(UInt(count), UInt(imported))
