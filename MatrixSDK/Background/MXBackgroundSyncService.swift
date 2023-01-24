@@ -391,16 +391,18 @@ public enum MXBackgroundSyncServiceError: Error {
                     return
                 }
 
-                self.handleSyncResponse(syncResponse, syncToken: eventStreamToken)
-                
-                if let event = self.syncResponseStoreManager.event(withEventId: eventId, inRoom: roomId),
-                    !self.crypto.canDecryptEvent(event),
-                    (syncResponse.toDevice?.events ?? []).count > 0 {
-                    //  we got the event but not the keys to decrypt it. continue to sync
-                    self.launchBackgroundSync(forEventId: eventId, roomId: roomId, completion: completion)
-                } else {
-                    //  do not allow to sync anymore
-                    self._event(withEventId: eventId, inRoom: roomId, allowSync: false, completion: completion)
+                Task {
+                    await self.handleSyncResponse(syncResponse, syncToken: eventStreamToken)
+                    
+                    if let event = self.syncResponseStoreManager.event(withEventId: eventId, inRoom: roomId),
+                       !self.crypto.canDecryptEvent(event),
+                       (syncResponse.toDevice?.events ?? []).count > 0 {
+                        //  we got the event but not the keys to decrypt it. continue to sync
+                        self.launchBackgroundSync(forEventId: eventId, roomId: roomId, completion: completion)
+                    } else {
+                        //  do not allow to sync anymore
+                        self._event(withEventId: eventId, inRoom: roomId, allowSync: false, completion: completion)
+                    }
                 }
             case .failure(let error):
                 guard let _ = self else {
@@ -418,7 +420,7 @@ public enum MXBackgroundSyncServiceError: Error {
         }
     }
     
-    private func handleSyncResponse(_ syncResponse: MXSyncResponse, syncToken: String) {
+    private func handleSyncResponse(_ syncResponse: MXSyncResponse, syncToken: String) async {
         MXLog.debug("""
             [MXBackgroundSyncService] handleSyncResponse: \
             Received \(syncResponse.rooms?.join?.count ?? 0) joined rooms, \
@@ -432,7 +434,7 @@ public enum MXBackgroundSyncServiceError: Error {
         }
         syncResponseStoreManager.updateStore(with: syncResponse, syncToken: syncToken)
         
-        crypto.handleSyncResponse(syncResponse)
+        await crypto.handleSyncResponse(syncResponse)
         
         if MXSDKOptions.sharedInstance().autoAcceptRoomInvites,
            let invitedRooms = syncResponse.rooms?.invite {

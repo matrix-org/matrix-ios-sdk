@@ -189,6 +189,8 @@ extension MXCryptoMachine: MXCryptoIdentity {
 }
 
 extension MXCryptoMachine: MXCryptoSyncing {
+    
+    @MainActor
     func handleSyncResponse(
         toDevice: MXToDeviceSyncResponse?,
         deviceLists: MXDeviceListResponse?,

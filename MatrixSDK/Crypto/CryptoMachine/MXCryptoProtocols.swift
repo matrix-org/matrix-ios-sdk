@@ -32,6 +32,8 @@ protocol MXCryptoIdentity {
 
 /// Handler for cryptographic events in the sync loop
 protocol MXCryptoSyncing: MXCryptoIdentity {
+    
+    @MainActor
     func handleSyncResponse(
         toDevice: MXToDeviceSyncResponse?,
         deviceLists: MXDeviceListResponse?,

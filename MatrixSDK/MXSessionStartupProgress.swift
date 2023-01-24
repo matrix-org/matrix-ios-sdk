@@ -29,13 +29,6 @@ public enum MXSessionStartupStage {
     
     /// Processing server response
     case processingResponse(progress: Double)
-    
-    var isSyncing: Bool {
-        guard case .serverSyncing = self else {
-            return false
-        }
-        return true
-    }
 }
 
 /// Delegate that recieves stage updates
@@ -81,10 +74,6 @@ public protocol MXSessionStartupProgressDelegate: AnyObject {
     
     /// Increment the total number of sync attempts during the `serverSyncing` stage
     @objc public func incrementSyncAttempt() {
-        guard stage == nil || stage?.isSyncing == true else {
-            return
-        }
-        
         syncAttempts += 1
         stage = .serverSyncing(attempt: syncAttempts)
     }

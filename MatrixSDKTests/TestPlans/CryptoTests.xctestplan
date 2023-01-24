@@ -37,6 +37,7 @@
         "MXCryptoSecretStorageTests",
         "MXCryptoShareTests",
         "MXCryptoTests",
+        "MXCryptoV2FactoryTests",
         "MXCurve25519KeyBackupTests",
         "MXMegolmEncryptionTests"
       ],
