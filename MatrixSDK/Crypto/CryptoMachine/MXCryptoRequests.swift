@@ -86,8 +86,15 @@ struct MXCryptoRequests {
     }
     
     func queryKeys(users: [String]) async throws -> MXKeysQueryResponse {
-        return try await performCallbackRequest {
-            restClient.downloadKeys(forUsers: users, completion: $0)
+        return try await performCallbackRequest { completion in
+            _ = restClient.downloadKeysByChunk(
+                forUsers: users,
+                token: nil,
+                success: {
+                    completion(.success($0))
+                }, failure: {
+                    completion(.failure($0 ?? Error.unknownError))
+                })
         }
     }
     

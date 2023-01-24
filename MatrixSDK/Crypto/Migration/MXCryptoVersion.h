@@ -32,8 +32,13 @@ typedef NS_ENUM(NSInteger, MXCryptoVersion)
     // https://github.com/vector-im/element-ios/issues/3818
     MXCryptoVersion2,
     
-    // Keep it at the last position. It is used to compute MXCryptoVersionLast.
+    // Keep it at the last position of valid versions, except for the deprecated variant.
+    // It is used to compute MXCryptoVersionLast.
     MXCryptoVersionCount,
+    
+    // The internal crypto module has been deprecated in favour of `MatrixCryptoSDK`
+    // The value is set manually to leave room for intermediate version 3, 4 ...
+    MXCryptoVersionLegacyDeprecated = 1000,
 };
 
 // The current version of MXCrypto

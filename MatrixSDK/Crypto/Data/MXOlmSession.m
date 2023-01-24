@@ -19,12 +19,13 @@
 
 @implementation MXOlmSession
 
-- (instancetype)initWithOlmSession:(OLMSession *)session
+- (instancetype)initWithOlmSession:(OLMSession *)session deviceKey:(NSString *)deviceKey
 {
     self = [super init];
     if (self)
     {
         _session = session;
+        _deviceKey = deviceKey;
         _lastReceivedMessageTs = 0;
     }
     return self;

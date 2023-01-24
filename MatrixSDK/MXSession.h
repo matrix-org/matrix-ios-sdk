@@ -351,7 +351,7 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
 @class MXCapabilities;
 @class MXEventStreamService;
 @class MXLocationService;
-@class MXSessionSyncProgress;
+@class MXSessionStartupProgress;
 
 #pragma mark - MXSession
 /**
@@ -434,9 +434,9 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
 @property (nonatomic, readonly) BOOL syncWithLazyLoadOfRoomMembers;
 
 /**
- Handler that can compute the overal progress of sync and report it to a delegate
+ Handler that can compute the overal progress of session startup and report it to a delegate
  */
-@property (nonatomic, readonly) MXSessionSyncProgress *syncProgress;
+@property (nonatomic, readonly) MXSessionStartupProgress *startupProgress;
 
 /**
  The profile of the current user.

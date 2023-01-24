@@ -235,6 +235,10 @@ struct MXNamedLog {
         logger.debug(formattedMessage(message, function: function), file, function, line: line)
     }
     
+    func warning(_ message: String, file: String = #file, function: String = #function, line: Int = #line) {
+        logger.warning(formattedMessage(message, function: function), file, function, line: line)
+    }
+    
     /// Logging errors requires a static message, all other details must be sent as additional parameters
     func error(_ message: StaticString, context: Any? = nil, file: String = #file, function: String = #function, line: Int = #line) {
         logger.error(formattedMessage(message, function: function), file, function, line: line, context: context)

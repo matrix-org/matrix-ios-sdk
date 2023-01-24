@@ -51,13 +51,13 @@ class MXBackgroundCryptoV2: MXBackgroundCrypto {
         )
     }
     
-    func handleSyncResponse(_ syncResponse: MXSyncResponse) {
+    func handleSyncResponse(_ syncResponse: MXSyncResponse) async {
         let toDeviceCount = syncResponse.toDevice?.events.count ?? 0
         
         log.debug("Handling new sync response with \(toDeviceCount) to-device event(s)")
         
         do {
-            _ = try machine.handleSyncResponse(
+            _ = try await machine.handleSyncResponse(
                 toDevice: syncResponse.toDevice,
                 deviceLists: syncResponse.deviceLists,
                 deviceOneTimeKeysCounts: syncResponse.deviceOneTimeKeysCount ?? [:],

@@ -80,6 +80,10 @@ class CryptoCrossSigningStub: CryptoIdentityStub, MXCryptoCrossSigning {
         hasSelfSigning: false,
         hasUserSigning: false
     )
+    
+    func refreshCrossSigningStatus() async throws {
+    }
+    
     func crossSigningStatus() -> CrossSigningStatus {
         return stubbedStatus
     }

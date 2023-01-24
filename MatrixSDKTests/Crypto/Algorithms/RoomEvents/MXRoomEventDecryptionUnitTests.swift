@@ -39,12 +39,12 @@ class MXRoomEventDecryptionUnitTests: XCTestCase {
         }
     }
     
-    var decryptor: DecryptorStub!
-    var roomDecryptor: MXRoomEventDecryption!
+    var handler: DecryptorStub!
+    var decryptor: MXRoomEventDecryption!
     
     override func setUp() {
-        decryptor = DecryptorStub()
-        roomDecryptor = MXRoomEventDecryption(handler: decryptor)
+        handler = DecryptorStub()
+        decryptor = MXRoomEventDecryption(handler: handler)
     }
     
     // MARK: - Decrypt
@@ -57,11 +57,11 @@ class MXRoomEventDecryptionUnitTests: XCTestCase {
             id: "1",
             sessionId: "123"
         )
-        decryptor.stubbedEvents = [
+        handler.stubbedEvents = [
             "1": .stub(clearEvent: plain)
         ]
         
-        let results = await roomDecryptor.decrypt(events: [event])
+        let results = await decryptor.decrypt(events: [event])
         
         XCTAssertEqual(results.first?.clearEvent as? [String: String], plain)
     }
@@ -85,11 +85,11 @@ class MXRoomEventDecryptionUnitTests: XCTestCase {
             )
         ]
         
-        decryptor.stubbedEvents = [
+        handler.stubbedEvents = [
             "2": .stub(clearEvent: plain)
         ]
         
-        let results = await roomDecryptor.decrypt(events: events)
+        let results = await decryptor.decrypt(events: events)
         
         XCTAssertEqual(results.count, 3)
         XCTAssertNotNil(results[0].error)
@@ -103,7 +103,7 @@ class MXRoomEventDecryptionUnitTests: XCTestCase {
         let events = await prepareEventsForRedecryption()
         let invalidEvent = MXEvent.fixture(id: 123)
         
-        await roomDecryptor.handlePossibleRoomKeyEvent(invalidEvent)
+        await decryptor.handlePossibleRoomKeyEvent(invalidEvent)
         await waitForDecryption()
         
         XCTAssertNil(events[0].clear)
@@ -115,7 +115,7 @@ class MXRoomEventDecryptionUnitTests: XCTestCase {
         let events = await prepareEventsForRedecryption()
         let roomKey = MXEvent.roomKeyFixture(sessionId: "123")
         
-        await roomDecryptor.handlePossibleRoomKeyEvent(roomKey)
+        await decryptor.handlePossibleRoomKeyEvent(roomKey)
         await waitForDecryption()
 
         XCTAssertNotNil(events[0].clear)
@@ -127,7 +127,7 @@ class MXRoomEventDecryptionUnitTests: XCTestCase {
         let events = await prepareEventsForRedecryption()
         let roomKey = MXEvent.forwardedRoomKeyFixture(sessionId: "123")
         
-        await roomDecryptor.handlePossibleRoomKeyEvent(roomKey)
+        await decryptor.handlePossibleRoomKeyEvent(roomKey)
         await waitForDecryption()
 
         XCTAssertNotNil(events[0].clear)
@@ -140,7 +140,7 @@ class MXRoomEventDecryptionUnitTests: XCTestCase {
     func test_retryUndecryptedEvents() async {
         let events = await prepareEventsForRedecryption()
         
-        await roomDecryptor.retryUndecryptedEvents(sessionIds: ["123", "456"])
+        await decryptor.retryUndecryptedEvents(sessionIds: ["123", "456"])
         await waitForDecryption()
         
         XCTAssertNotNil(events[0].clear)
@@ -173,7 +173,7 @@ class MXRoomEventDecryptionUnitTests: XCTestCase {
         
         // Attempt to decrypt these events, which will produce errors
         // and add them to an internal undecrypted events cache
-        let results = await roomDecryptor.decrypt(events: events)
+        let results = await decryptor.decrypt(events: events)
         for (event, result) in zip(events, results) {
             event.setClearData(result)
         }
@@ -181,7 +181,7 @@ class MXRoomEventDecryptionUnitTests: XCTestCase {
         // Now stub out decryption result so that if these events are decrypted again
         // we get the correct result
         let decrypted = DecryptedEvent.stub(clearEvent: ["type": "m.decrypted"])
-        decryptor.stubbedEvents = [
+        handler.stubbedEvents = [
             "1": decrypted,
             "2": decrypted,
             "3": decrypted
