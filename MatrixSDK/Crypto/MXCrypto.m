@@ -234,27 +234,16 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
         {
             MXLogDebug(@"[MXCrypto] checkCryptoWithMatrixSession: Crypto store exists");
 
-            // If it already exists, open and init crypto
+            // If it already exists, init store and crypto
             MXCryptoStoreClass *cryptoStore = [[MXCryptoStoreClass alloc] initWithCredentials:mxSession.matrixRestClient.credentials];
 
-            [cryptoStore open:^{
+            MXLogDebug(@"[MXCrypto] checkCryptoWithMatrixSession: Crypto store initialized");
 
-                MXLogDebug(@"[MXCrypto] checkCryptoWithMatrixSession: Crypto store opened");
+            id<MXCrypto> crypto = [[MXLegacyCrypto alloc] initWithMatrixSession:mxSession cryptoQueue:cryptoQueue andStore:cryptoStore];
 
-                id<MXCrypto> crypto = [[MXLegacyCrypto alloc] initWithMatrixSession:mxSession cryptoQueue:cryptoQueue andStore:cryptoStore];
-
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    complete(crypto, nil);
-                });
-
-            } failure:^(NSError *error) {
-
-                MXLogDebug(@"[MXCrypto] checkCryptoWithMatrixSession: Crypto store failed to open. Error: %@", error);
-                
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    complete(nil, error);
-                });
-            }];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                complete(crypto, nil);
+            });
         }
         else if ([MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession
                  // Without the device id provided by the hs, the crypto does not work

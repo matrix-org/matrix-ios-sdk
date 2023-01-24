@@ -627,16 +627,10 @@ class MXCryptoV2: NSObject, MXCrypto {
             
             if direction == .forwards && event.sender != session.myUserId {
                 Task {
-                    if let userId = await self.keyVerification.handleRoomEvent(event) {
-                        // If we recieved a verification event from a new user we do not yet track
-                        // we need to download their keys to be able to proceed with the verification flow
-                        try await self.machine.downloadKeysIfNecessary(users: [userId])
-                    }
-                    
                     do {
-                        try await self.machine.processOutgoingRequests()
+                        try await self.keyVerification.handleRoomEvent(event)
                     } catch {
-                        self.log.error("Error processing requests", context: error)
+                        self.log.error("Error handling event", context: error)
                     }
                 }
             }
