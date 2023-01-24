@@ -50,8 +50,8 @@ class MXCryptoMachineUnitTests: XCTestCase {
         }
     }
     
-    func test_handleSyncResponse_canProcessEmptyResponse() throws {
-        let result = try machine.handleSyncResponse(
+    func test_handleSyncResponse_canProcessEmptyResponse() async throws {
+        let result = try await machine.handleSyncResponse(
             toDevice: nil,
             deviceLists: nil,
             deviceOneTimeKeysCounts: [:],
@@ -69,7 +69,7 @@ class MXCryptoMachineUnitTests: XCTestCase {
         deviceList.changed = ["A", "B"]
         deviceList.left = ["C", "D"]
         
-        let result = try machine.handleSyncResponse(
+        let result = try await machine.handleSyncResponse(
             toDevice: toDevice,
             deviceLists: deviceList,
             deviceOneTimeKeysCounts: [:],

@@ -250,6 +250,13 @@ actor MXRoomEventDecryption: MXRoomEventDecrypting {
                 ])
                 return trackedDecryptionResult(for: event, error: error)
             }
+        case .Store(let message):
+            log.error("Failed to decrypt event due to store error", context: [
+                "session_id": sessionId,
+                "message": message,
+                "error": error
+            ])
+            return trackedDecryptionResult(for: event, error: error)
         }
     }
     

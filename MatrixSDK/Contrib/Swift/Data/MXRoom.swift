@@ -20,6 +20,25 @@ import Foundation
 
 public extension MXRoom {
     
+    enum Error: Swift.Error {
+        case missingState
+    }
+    
+    /**
+     The current state of the room.
+     */
+    func state() async throws -> MXRoomState {
+        return try await withCheckedThrowingContinuation { cont in
+            state {
+                if let state = $0 {
+                    cont.resume(returning: state)
+                } else {
+                    cont.resume(throwing: Error.missingState)
+                }
+            }
+        }
+    }
+    
     
     /**
      The current list of members of the room.

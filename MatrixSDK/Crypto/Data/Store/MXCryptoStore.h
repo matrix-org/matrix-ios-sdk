@@ -95,6 +95,11 @@
 - (void)open:(void (^)(void))onComplete failure:(void (^)(NSError *error))failure;
 
 /**
+ The user id.
+ */
+- (NSString*)userId;
+
+/**
  Store the device id.
  */
 - (void)storeDeviceId:(NSString*)deviceId;
@@ -256,10 +261,9 @@
 /**
  Store a session between this device and another device.
 
- @param deviceKey the public key of the other device.
  @param session the end-to-end session.
  */
-- (void)storeSession:(MXOlmSession*)session forDevice:(NSString*)deviceKey;
+- (void)storeSession:(MXOlmSession*)session;
 
 /**
  Retrieve an end-to-end session between this device and another device.
@@ -291,6 +295,23 @@
  */
 - (NSArray<MXOlmSession*>*)sessionsWithDevice:(NSString*)deviceKey;
 
+/**
+ Enumerate all end-to-end sessions in batches of `batchSize`
+ 
+ Each block is internally wrapped in `@autoreleasepool` so that memory footprint remains constant
+ regardless of the number of stored sessions.
+ 
+ @param batchSize the max number of sessions in a single batch
+ @param block function that will be executed with each batch, incl. list of sessions and current progress of batching
+ */
+- (void)enumerateSessionsBy:(NSInteger)batchSize
+                      block:(void (^)(NSArray <MXOlmSession *> *sessions,
+                                      double progress))block;
+
+/**
+ The number of stored end-to-end sessions
+ */
+- (NSUInteger)sessionsCount;
 
 /**
  Store inbound group sessions.
@@ -326,6 +347,19 @@
  */
 - (NSArray<MXOlmInboundGroupSession*> *)inboundGroupSessions;
 
+/**
+ Enumerate all inbound group sessions in batches of `batchSize`
+ 
+ Each block is internally wrapped in `@autoreleasepool` so that memory footprint remains constant
+ regardless of the number of stored sessions.
+ 
+ @param batchSize the max number of sessions in a single batch
+ @param block function that will be executed with each batch, incl. list of sessions and current progress of batching
+ */
+- (void)enumerateInboundGroupSessionsBy:(NSInteger)batchSize
+                                  block:(void (^)(NSArray <MXOlmInboundGroupSession *> *sessions,
+                                                  NSSet <NSString *> *backedUp,
+                                                  double progress))block;
 
 /**
  Store outbound group session.

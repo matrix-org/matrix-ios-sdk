@@ -1557,6 +1557,34 @@ NS_REFINED_FOR_SWIFT;
                         failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
+ Redact an event and all related events in a room.
+ 
+ You can check whether a homeserver supports the redaction with relations via
+ `supportsRedactionWithRelations`.
+ 
+ @param eventId the id of the redacted event.
+ @param roomId the id of the room.
+ @param reason the redaction reason (optional).
+ @param txnId the transaction id to use. If nil, one will be generated.
+ @param relations the list of relation types (optional). If nil or empty, related events will not be redacted.
+ @param withRelationsIsStable whether the feature to redact related event is stable.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)redactEvent:(NSString*)eventId
+                         inRoom:(NSString*)roomId
+                         reason:(NSString*)reason
+                          txnId:(NSString*)txnId
+                  withRelations:(NSArray<NSString *>*)relations
+          withRelationsIsStable:(BOOL)withRelationsIsStable
+                        success:(void (^)(void))success
+                        failure:(void (^)(NSError *error))failure;
+
+
+/**
  Report an event.
 
  @param eventId the id of the event event.
