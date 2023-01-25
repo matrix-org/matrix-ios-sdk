@@ -79,8 +79,7 @@ import Foundation
         
         if
             MXRealmCryptoStore.hasData(for: credentials),
-            let legacyStore = MXRealmCryptoStore(credentials: credentials),
-            legacyStore.account() != nil
+            let legacyStore = MXRealmCryptoStore(credentials: credentials)
         {
             log.debug("Legacy crypto store exists")
             return legacyStore

@@ -287,7 +287,7 @@ class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
             newUserId = nil
         }
 
-        // If we recieved a verification event from a new user we do not yet track
+        // If we received a verification event from a new user we do not yet track
         // we need to download their keys to be able to proceed with the verification flow
         if let userId = newUserId {
             try await self.handler.downloadKeysIfNecessary(users: [userId])
