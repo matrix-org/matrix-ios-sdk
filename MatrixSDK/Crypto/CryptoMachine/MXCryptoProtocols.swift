@@ -32,6 +32,8 @@ protocol MXCryptoIdentity {
 
 /// Handler for cryptographic events in the sync loop
 protocol MXCryptoSyncing: MXCryptoIdentity {
+    
+    @MainActor
     func handleSyncResponse(
         toDevice: MXToDeviceSyncResponse?,
         deviceLists: MXDeviceListResponse?,
@@ -40,6 +42,11 @@ protocol MXCryptoSyncing: MXCryptoIdentity {
     ) throws -> MXToDeviceSyncResponse
     
     func processOutgoingRequests() async throws
+    
+    func downloadKeysIfNecessary(users: [String]) async throws
+    
+    @available(*, deprecated, message: "The application should not manually force reload keys, use `downloadKeysIfNecessary` instead")
+    func reloadKeys(users: [String]) async throws
 }
 
 /// Source of user devices and their cryptographic trust status
@@ -52,8 +59,6 @@ protocol MXCryptoDevicesSource: MXCryptoIdentity {
 protocol MXCryptoUserIdentitySource: MXCryptoIdentity {
     func userIdentity(userId: String) -> UserIdentity?
     func isUserVerified(userId: String) -> Bool
-    func isUserTracked(userId: String) -> Bool
-    func downloadKeys(users: [String]) async throws
     func verifyUser(userId: String) async throws
     func verifyDevice(userId: String, deviceId: String) async throws
     func setLocalTrust(userId: String, deviceId: String, trust: LocalTrust) throws
@@ -61,6 +66,7 @@ protocol MXCryptoUserIdentitySource: MXCryptoIdentity {
 
 /// Room event encryption
 protocol MXCryptoRoomEventEncrypting: MXCryptoIdentity {
+    func addTrackedUsers(_ users: [String])
     func shareRoomKeysIfNecessary(roomId: String, users: [String], settings: EncryptionSettings) async throws
     func encryptRoomEvent(content: [AnyHashable: Any], roomId: String, eventType: String) throws -> [String: Any]
     func discardRoomKey(roomId: String)
@@ -74,6 +80,7 @@ protocol MXCryptoRoomEventDecrypting: MXCryptoIdentity {
 
 /// Cross-signing functionality
 protocol MXCryptoCrossSigning: MXCryptoUserIdentitySource {
+    func refreshCrossSigningStatus() async throws
     func crossSigningStatus() -> CrossSigningStatus
     func bootstrapCrossSigning(authParams: [AnyHashable: Any]) async throws
     func exportCrossSigningKeys() -> CrossSigningKeyExport?

@@ -150,17 +150,33 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 @synthesize keyVerificationManager = _keyVerificationManager;
 @synthesize recoveryService = _recoveryService;
 
+#if DEBUG
+
++ (MXCryptoV2Factory *)sharedCryptoV2Factory
+{
+    static MXCryptoV2Factory *factory = nil;
+    static dispatch_once_t onceToken;
+
+    dispatch_once(&onceToken, ^{
+        factory = [[MXCryptoV2Factory alloc] init];
+    });
+
+    return factory;
+}
+
+#endif
+
 + (id<MXCrypto>)createCryptoWithMatrixSession:(MXSession *)mxSession
                                         error:(NSError **)error
 {
     __block id<MXCrypto> crypto;
 
 #ifdef MX_CRYPTO
-    
     #if DEBUG
-    if (MXSDKOptions.sharedInstance.enableCryptoV2)
+    if (MXSDKOptions.sharedInstance.isCryptoSDKAvailable && MXSDKOptions.sharedInstance.enableCryptoSDK)
     {
-        return [self createCryptoV2WithSession:mxSession error:error];
+        MXLogFailure(@"[MXCrypto] createCryptoWithMatrixSession: Crypto V2 should not be created directly, use initializeCryptoWithMatrixSession instead");
+        return nil;
     }
     #endif
     
@@ -177,27 +193,32 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
     return crypto;
 }
 
-+ (void)checkCryptoWithMatrixSession:(MXSession *)mxSession
-                            complete:(void (^)(id<MXCrypto> crypto, NSError *error))complete
++ (void)initializeCryptoWithMatrixSession:(MXSession *)mxSession
+                        migrationProgress:(void (^)(double))migrationProgress
+                                 complete:(void (^)(id<MXCrypto> crypto, NSError *error))complete
 {
 #ifdef MX_CRYPTO
     #if DEBUG
-    if (MXSDKOptions.sharedInstance.enableCryptoV2)
+    if (MXSDKOptions.sharedInstance.isCryptoSDKAvailable && MXSDKOptions.sharedInstance.enableCryptoSDK)
     {
-        NSError *error;
-        id<MXCrypto> crypto = [self createCryptoV2WithSession:mxSession error:&error];
-        complete(crypto, error);
+        MXCryptoV2Factory *factory = [MXLegacyCrypto sharedCryptoV2Factory];
+        [factory buildCryptoWithSession:mxSession migrationProgress:migrationProgress
+                                success:^(id<MXCrypto> crypto) {
+                                    complete(crypto, nil);
+                                } failure:^(NSError *error) {
+                                    complete(nil, error);
+                                }];
         return;
     }
     #endif
     
-    [self checkLegacyCryptoWithMatrixSession:mxSession complete:complete];
+    [self initalizeLegacyCryptoWithMatrixSession:mxSession complete:complete];
 #else
     complete(nil);
 #endif
 }
 
-+ (void)checkLegacyCryptoWithMatrixSession:(MXSession*)mxSession complete:(void (^)(id<MXCrypto> crypto, NSError *error))complete
++ (void)initalizeLegacyCryptoWithMatrixSession:(MXSession*)mxSession complete:(void (^)(id<MXCrypto> crypto, NSError *error))complete
 {
 #ifdef MX_CRYPTO
 

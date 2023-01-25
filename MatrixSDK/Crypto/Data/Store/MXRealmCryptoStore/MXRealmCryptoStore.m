@@ -478,6 +478,11 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
     onComplete();
 }
 
+- (NSString *)userId
+{
+    return self.accountInCurrentThread.userId;
+}
+
 - (void)storeDeviceId:(NSString*)deviceId
 {
     MXRealmOlmAccount *account = self.accountInCurrentThread;
@@ -821,7 +826,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
 }
 
 
-- (void)storeSession:(MXOlmSession*)session forDevice:(NSString*)deviceKey
+- (void)storeSession:(MXOlmSession*)session
 {
     __block BOOL isNew = NO;
     NSDate *startDate = [NSDate date];
@@ -829,7 +834,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
     RLMRealm *realm = self.realm;
     [realm transactionWithName:@"[MXRealmCryptoStore] storeSession" block:^{
         
-        MXRealmOlmSession *realmOlmSession = [MXRealmOlmSession objectsInRealm:realm where:@"sessionId = %@ AND deviceKey = %@", session.session.sessionIdentifier, deviceKey].firstObject;
+        MXRealmOlmSession *realmOlmSession = [MXRealmOlmSession objectsInRealm:realm where:@"sessionId = %@ AND deviceKey = %@", session.session.sessionIdentifier, session.deviceKey].firstObject;
         if (realmOlmSession)
         {
             // Update the existing one
@@ -841,7 +846,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
             isNew = YES;
             realmOlmSession = [[MXRealmOlmSession alloc] initWithValue:@{
                 @"sessionId": session.session.sessionIdentifier,
-                @"deviceKey": deviceKey,
+                @"deviceKey": session.deviceKey,
                 @"olmSessionData": [NSKeyedArchiver archivedDataWithRootObject:session.session]
             }];
             realmOlmSession.lastReceivedMessageTs = session.lastReceivedMessageTs;
@@ -857,17 +862,7 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
 {
     MXRealmOlmSession *realmOlmSession = [MXRealmOlmSession objectsInRealm:self.realm
                                                                      where:@"sessionId = %@ AND deviceKey = %@", sessionId, deviceKey].firstObject;
-    
-    MXOlmSession *mxOlmSession;
-    if (realmOlmSession.olmSessionData)
-    {
-        OLMSession *olmSession = [NSKeyedUnarchiver unarchiveObjectWithData:realmOlmSession.olmSessionData];
-        
-        mxOlmSession = [[MXOlmSession alloc] initWithOlmSession:olmSession];
-        mxOlmSession.lastReceivedMessageTs = realmOlmSession.lastReceivedMessageTs;
-    }
-    
-    return mxOlmSession;
+    return [self olmSessionForRealmSession:realmOlmSession];
 }
 
 - (void)performSessionOperationWithDevice:(NSString*)deviceKey andSessionId:(NSString*)sessionId block:(void (^)(MXOlmSession *olmSession))block
@@ -875,16 +870,11 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
     [self.realm transactionWithName:@"[MXRealmCryptoStore] performSessionOperationWithDevice" block:^{
         MXRealmOlmSession *realmOlmSession = [MXRealmOlmSession objectsInRealm:self.realm
                                                                          where:@"sessionId = %@ AND deviceKey = %@", sessionId, deviceKey].firstObject;
-        if (realmOlmSession.olmSessionData)
+        MXOlmSession *session = [self olmSessionForRealmSession:realmOlmSession];
+        if (session)
         {
-            OLMSession *olmSession = [NSKeyedUnarchiver unarchiveObjectWithData:realmOlmSession.olmSessionData];
-            
-            MXOlmSession *mxOlmSession = [[MXOlmSession alloc] initWithOlmSession:olmSession];
-            mxOlmSession.lastReceivedMessageTs = realmOlmSession.lastReceivedMessageTs;
-            
-            block(mxOlmSession);
-            
-            realmOlmSession.olmSessionData = [NSKeyedArchiver archivedDataWithRootObject:mxOlmSession.session];
+            block(session);
+            realmOlmSession.olmSessionData = [NSKeyedArchiver archivedDataWithRootObject:session.session];
         }
         else
         {
@@ -910,18 +900,81 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
             sessionsWithDevice = [NSMutableArray array];
         }
         
-        if (realmOlmSession.olmSessionData)
+        MXOlmSession *session = [self olmSessionForRealmSession:realmOlmSession];
+        if (session)
         {
-            OLMSession *olmSession = [NSKeyedUnarchiver unarchiveObjectWithData:realmOlmSession.olmSessionData];
-            
-            MXOlmSession *mxOlmSession = [[MXOlmSession alloc] initWithOlmSession:olmSession];
-            mxOlmSession.lastReceivedMessageTs = realmOlmSession.lastReceivedMessageTs;
-            
-            [sessionsWithDevice addObject:mxOlmSession];
+            [sessionsWithDevice addObject:session];
         }
     }
     
     return sessionsWithDevice;
+}
+
+- (NSArray<MXOlmSession*>*)sessions
+{
+    NSMutableArray<MXOlmSession*> *sessions = [NSMutableArray array];
+    
+    RLMResults<MXRealmOlmSession *> *realmOlmSessions = [MXRealmOlmSession allObjectsInRealm:self.realm];
+    for (MXRealmOlmSession *realmOlmSession in realmOlmSessions)
+    {
+        MXOlmSession *session = [self olmSessionForRealmSession:realmOlmSession];
+        if (session)
+        {
+            [sessions addObject:session];
+        }
+    }
+    
+    return sessions;
+}
+
+- (void)enumerateSessionsBy:(NSInteger)batchSize
+                      block:(void (^)(NSArray<MXOlmSession *> *sessions,
+                                      double progress))block
+{
+    RLMResults<MXRealmOlmSession *> *query = [MXRealmOlmSession allObjectsInRealm:self.realm];
+    for (NSInteger i = 0; i < query.count; i += batchSize)
+    {
+        @autoreleasepool {
+            NSInteger count = MIN(batchSize, query.count - i);
+            NSIndexSet *batchSet = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(i, count)];
+            MXLogDebug(@"[MXRealmCryptoStore] enumerateSessionsBy: Batch %@", batchSet);
+            
+            NSMutableArray *sessions = [NSMutableArray array];
+            for (MXRealmOlmSession *realmOlmSession in [query objectsAtIndexes:batchSet])
+            {
+                MXOlmSession *session = [self olmSessionForRealmSession:realmOlmSession];
+                if (session)
+                {
+                    [sessions addObject:session];
+                }
+            }
+            
+            double progress = (double)(batchSet.lastIndex + 1)/(double)query.count;
+            block(sessions.copy, progress);
+        }
+    }
+}
+
+- (NSUInteger)sessionsCount
+{
+    RLMResults<MXRealmOlmSession *> *sessions = [MXRealmOlmSession allObjectsInRealm:self.realm];
+    return sessions.count;
+}
+
+- (MXOlmSession *)olmSessionForRealmSession:(MXRealmOlmSession *)realmSession
+{
+    if (!realmSession.olmSessionData)
+    {
+        MXLogFailure(@"[MXRealmCryptoStore] olmSessionForRealmSession: Missing olm session data");
+        return nil;
+    }
+    
+    OLMSession *olmSession = [NSKeyedUnarchiver unarchiveObjectWithData:realmSession.olmSessionData];
+    
+    MXOlmSession *session = [[MXOlmSession alloc] initWithOlmSession:olmSession deviceKey:realmSession.deviceKey];
+    session.lastReceivedMessageTs = realmSession.lastReceivedMessageTs;
+    
+    return session;
 }
 
 #pragma mark - MXRealmOlmInboundGroupSession
@@ -1033,6 +1086,36 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
     }
     
     return sessions;
+}
+
+- (void)enumerateInboundGroupSessionsBy:(NSInteger)batchSize
+                                  block:(void (^)(NSArray<MXOlmInboundGroupSession *> *sessions,
+                                                  NSSet<NSString *> *backedUp,
+                                                  double progress))block
+{
+    RLMResults<MXRealmOlmInboundGroupSession *> *query = [MXRealmOlmInboundGroupSession allObjectsInRealm:self.realm];
+    for (NSInteger i = 0; i < query.count; i += batchSize)
+    {
+        @autoreleasepool {
+            NSInteger count = MIN(batchSize, query.count - i);
+            NSIndexSet *batchSet = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(i, count)];
+            MXLogDebug(@"[MXRealmCryptoStore] enumerateInboundGroupSessions: Batch %@", batchSet);
+            
+            NSMutableArray *sessions = [NSMutableArray array];
+            NSMutableSet *backedUp = [NSMutableSet set];
+            for (MXRealmOlmInboundGroupSession *realmSession in [query objectsAtIndexes:batchSet])
+            {
+                [sessions addObject:[NSKeyedUnarchiver unarchiveObjectWithData:realmSession.olmInboundGroupSessionData]];
+                if (realmSession.backedUp)
+                {
+                    [backedUp addObject:realmSession.sessionId];
+                }
+            }
+            
+            double progress = (double)(batchSet.lastIndex + 1)/(double)query.count;
+            block(sessions.copy, backedUp.copy, progress);
+        }
+    }
 }
 
 - (void)removeInboundGroupSessionWithId:(NSString*)sessionId andSenderKey:(NSString*)senderKey

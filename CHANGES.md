@@ -1,3 +1,24 @@
+## Changes in 0.24.8 (2023-01-24)
+
+✨ Features
+
+- Implement MSC3912: Relation-based redactions ([#1688](https://github.com/matrix-org/matrix-ios-sdk/pull/1688))
+
+🙌 Improvements
+
+- CryptoV2: Add keys query scheduler ([#1676](https://github.com/matrix-org/matrix-ios-sdk/pull/1676))
+- CryptoV2: Create crypto migration data ([#1681](https://github.com/matrix-org/matrix-ios-sdk/pull/1681))
+- CryptoSDK: Perform crypto migration if necessary ([#1684](https://github.com/matrix-org/matrix-ios-sdk/pull/1684))
+- Rename MXSessionSyncProgress ([#1686](https://github.com/matrix-org/matrix-ios-sdk/pull/1686))
+- CryptoV2: Batch migrate olm and megolm sessions ([#1687](https://github.com/matrix-org/matrix-ios-sdk/pull/1687))
+- CryptoV2: Extract room event encryption ([#1689](https://github.com/matrix-org/matrix-ios-sdk/pull/1689))
+- CryptoV2: Migration improvements ([#1692](https://github.com/matrix-org/matrix-ios-sdk/pull/1692))
+
+🐛 Bugfixes
+
+- Messages' replies: fix localizations issues. ([#1685](https://github.com/matrix-org/matrix-ios-sdk/pull/1685))
+
+
 ## Changes in 0.24.7 (2023-01-10)
 
 ✨ Features
