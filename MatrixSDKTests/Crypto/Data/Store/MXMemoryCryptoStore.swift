@@ -71,10 +71,6 @@ public class MXMemoryCryptoStore: NSObject, MXCryptoStore {
     public static func deleteReadonlyStore(with credentials: MXCredentials!) {
         // no-op
     }
-
-    public func open(_ onComplete: (() -> Void)!, failure: ((Error?) -> Void)!) {
-        onComplete?()
-    }
     
     // MARK: - User ID
     
@@ -424,6 +420,10 @@ public class MXMemoryCryptoStore: NSObject, MXCryptoStore {
 
     public func storeSecret(_ secret: String, withSecretId secretId: String) {
         secrets[secretId] = secret
+    }
+    
+    public func hasSecret(withSecretId secretId: String) -> Bool {
+        return secrets[secretId] != nil
     }
 
     public func secret(withSecretId secretId: String) -> String? {

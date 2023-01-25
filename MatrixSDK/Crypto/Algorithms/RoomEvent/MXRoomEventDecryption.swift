@@ -81,7 +81,7 @@ actor MXRoomEventDecryption: MXRoomEventDecrypting {
             return
         }
         
-        log.debug("Recieved a new room key as `\(event.type ?? "")` for session \(sessionId)")
+        log.debug("Received a new room key as `\(event.type ?? "")` for session \(sessionId)")
         let events = undecryptedEvents[sessionId]?.map(\.value) ?? []
         retryDecryption(events: events)
     }

@@ -226,16 +226,15 @@ extension MXCryptoMachine: MXCryptoSyncing {
     
     func downloadKeysIfNecessary(users: [String]) async throws {
         machine.updateTrackedUsers(users: users)
-        try await withThrowingTaskGroup(of: Void.self) { [weak self] group in
-            guard let self = self else { return }
 
-            for request in try machine.outgoingRequests() {
-                if case .keysQuery(_, let requestUsers) = request {
-                    let usersInCommon = Set(requestUsers).intersection(users)
-                    if !usersInCommon.isEmpty {
-                        try await self.handleRequest(request)
-                        return
-                    }
+        // Out-of-sync check if there is a pending outgoing request for some of these users
+        // (note that if a request is already in-flight, keys query scheduler will deduplicate them)
+        for request in try machine.outgoingRequests() {
+            if case .keysQuery(_, let requestUsers) = request {
+                let usersInCommon = Set(requestUsers).intersection(users)
+                if !usersInCommon.isEmpty {
+                    try await handleRequest(request)
+                    return
                 }
             }
         }
@@ -523,15 +522,20 @@ extension MXCryptoMachine: MXCryptoCrossSigning {
 }
 
 extension MXCryptoMachine: MXCryptoVerifying {
-    func receiveUnencryptedVerificationEvent(event: MXEvent, roomId: String) {
+    func receiveUnencryptedVerificationEvent(event: MXEvent, roomId: String) async throws {
         guard let string = event.jsonString() else {
-            log.failure("Invalid event")
-            return
+            throw Error.invalidEvent
         }
-        do {
-            try machine.receiveUnencryptedVerificationEvent(event: string, roomId: roomId)
-        } catch {
-            log.error("Error receiving unencrypted event", context: error)
+        
+        try machine.receiveUnencryptedVerificationEvent(event: string, roomId: roomId)
+        
+        // Out-of-sync check if there are any verification events to sent out as a result of
+        // the event just received
+        for request in try machine.outgoingRequests() {
+            if case .roomMessage = request {
+                try await handleRequest(request)
+                return
+            }
         }
     }
     

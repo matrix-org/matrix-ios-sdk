@@ -84,17 +84,6 @@
 - (instancetype)initWithCredentials:(MXCredentials *)credentials;
 
 /**
- Open the store corresponding to the passed account.
-
- The implementation can use a separated thread for loading data but the callback blocks
- must be called from the main thread.
-
- @param onComplete the callback called once the data has been loaded.
- @param failure the callback called in case of error.
- */
-- (void)open:(void (^)(void))onComplete failure:(void (^)(NSError *error))failure;
-
-/**
  The user id.
  */
 - (NSString*)userId;
