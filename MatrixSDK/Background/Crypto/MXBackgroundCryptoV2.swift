@@ -49,11 +49,19 @@ class MXBackgroundCryptoV2: MXBackgroundCrypto {
                 return nil
             }
         )
+        
+        log.debug("Initialized background crypto module")
     }
     
     func handleSyncResponse(_ syncResponse: MXSyncResponse) async {
-        let toDeviceCount = syncResponse.toDevice?.events.count ?? 0
-        log.debug("Handling new sync response with \(toDeviceCount) to-device event(s)")
+        let syncId = UUID().uuidString
+        let details = """
+        Handling new sync response `\(syncId)`
+          - to-device events : \(syncResponse.toDevice?.events.count ?? 0)
+          - devices changed  : \(syncResponse.deviceLists?.changed?.count ?? 0)
+          - devices left     : \(syncResponse.deviceLists?.left?.count ?? 0)
+        """
+        log.debug(details)
         
         do {
             _ = try await machine.handleSyncResponse(
@@ -65,19 +73,25 @@ class MXBackgroundCryptoV2: MXBackgroundCrypto {
         } catch {
             log.error("Failed handling sync response", context: error)
         }
+        
+        log.debug("Completed handling sync response `\(syncId)`")
     }
     
     func canDecryptEvent(_ event: MXEvent) -> Bool {
-        log.debug("->")
+        let eventId = event.eventId ?? ""
         
         if !event.isEncrypted {
+            log.debug("Event \(eventId) is not encrypted")
             return true
         }
         
         guard
             let _ = event.content["sender_key"] as? String,
-            let _ = event.content["session_id"] as? String
+            let sessionId = event.content["session_id"] as? String
         else {
+            log.error("Event does not contain session_id", context: [
+                "event_id": eventId
+            ])
             return false
         }
         
@@ -85,18 +99,31 @@ class MXBackgroundCryptoV2: MXBackgroundCrypto {
             // Rust-sdk does not expose api to see if we have a given session key yet (will be added in the future)
             // so for the time being to find out if we can decrypt we simply perform the (more expensive) decryption
             _ = try machine.decryptRoomEvent(event)
+            log.debug("Event `\(eventId)` can be decrypted with session `\(sessionId)`")
             return true
+        } catch DecryptionError.MissingRoomKey {
+            log.warning("We do not have keys to decrypt event `\(eventId)` with session `\(sessionId)`")
+            return false
         } catch {
+            log.warning("We cannot decrypt event `\(eventId)` with session `\(sessionId)`")
             return false
         }
     }
     
     func decryptEvent(_ event: MXEvent) throws {
-        log.debug("->")
+        let eventId = event.eventId ?? ""
+        log.debug("Decrypting event `\(eventId)`")
         
-        let decrypted = try machine.decryptRoomEvent(event)
-        let result = try MXEventDecryptionResult(event: decrypted)
-        event.setClearData(result)
+        do {
+            let decrypted = try machine.decryptRoomEvent(event)
+            let result = try MXEventDecryptionResult(event: decrypted)
+            event.setClearData(result)
+            
+            log.debug("Successfully decrypted event `\(result.clearEvent["type"] ?? "unknown")` eventId `\(eventId)`")
+        } catch {
+            log.error("Failed to decrypt event", context: error)
+            throw error
+        }
     }
 }
 
