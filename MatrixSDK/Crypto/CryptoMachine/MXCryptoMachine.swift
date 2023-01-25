@@ -530,7 +530,7 @@ extension MXCryptoMachine: MXCryptoVerifying {
         try machine.receiveUnencryptedVerificationEvent(event: string, roomId: roomId)
         
         // Out-of-sync check if there are any verification events to sent out as a result of
-        // the event just recieved
+        // the event just received
         for request in try machine.outgoingRequests() {
             if case .roomMessage = request {
                 try await handleRequest(request)

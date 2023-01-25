@@ -393,7 +393,7 @@ NSInteger const kMXInboundGroupSessionCacheSize = 100;
             }
             else
             {
-                MXLogWarning(@"[MXOlmDevice] addInboundGroupSession: Recieved a safer but disconnected key, which will override the existing unsafe key");
+                MXLogWarning(@"[MXOlmDevice] addInboundGroupSession: Received a safer but disconnected key, which will override the existing unsafe key");
                 existingSession = nil;
             }
         }
