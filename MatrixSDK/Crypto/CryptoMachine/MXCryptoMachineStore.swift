@@ -19,6 +19,7 @@ import Foundation
 struct MXCryptoMachineStore {
     enum Error: Swift.Error {
         case invalidStorage
+        case invalidPassphrase
     }
     
     private static let storeFolder = "MXCryptoStore"
@@ -34,6 +35,21 @@ struct MXCryptoMachineStore {
     static func storeURL(for userId: String) throws -> URL {
         return try storeContainerURL()
             .appendingPathComponent(userId)
+    }
+    
+    static func storePassphrase() throws -> String {
+        let key = MXKeyProvider.sharedInstance()
+            .keyDataForData(
+                ofType: MXCryptoSDKStoreKeyDataType,
+                isMandatory: true,
+                expectedKeyType: .rawData
+            )
+        
+        guard let key = key as? MXRawDataKey else {
+            throw Error.invalidPassphrase
+        }
+        
+        return MXBase64Tools.base64(from: key.key)
     }
     
     private static func storeContainerURL() throws -> URL {
