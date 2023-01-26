@@ -49,10 +49,9 @@ class MXCryptoV2: NSObject, MXCrypto {
     // MARK: - Public properties
     
     var version: String {
-        guard let sdkVersion = Bundle(for: OlmMachine.self).infoDictionary?["CFBundleShortVersionString"] else {
-            return "Matrix SDK Crypto"
-        }
-        return "Matrix SDK Crypto \(sdkVersion)"
+        let sdkVersion = Bundle(for: OlmMachine.self).infoDictionary?["CFBundleShortVersionString"] ?? ""
+        return "Matrix Crypto SDK \(sdkVersion)"
+        
     }
     
     var deviceCurve25519Key: String? {
@@ -173,7 +172,7 @@ class MXCryptoV2: NSObject, MXCrypto {
                 
                 log.debug("Crypto module started")
                 await MainActor.run {
-                    listenToRoomEvents()
+                    registerEventHandlers()
                     onComplete?()
                 }
             } catch {
@@ -624,24 +623,52 @@ class MXCryptoV2: NSObject, MXCrypto {
     
     // MARK: - Private
     
-    private func listenToRoomEvents() {
+    private func registerEventHandlers() {
         guard let session = session else {
             return
         }
         
-        roomEventObserver = session.listenToEvents(Array(MXKeyVerificationManagerV2.dmEventTypes)) { [weak self] event, direction, _ in
-            guard let self = self else { return }
+        let verificationTypes = MXKeyVerificationManagerV2.dmEventTypes
+        let allTypes = verificationTypes + [.roomEncryption, .roomMember]
+        
+        roomEventObserver = session.listenToEvents(allTypes) { [weak self] event, direction, customObject in
+            guard let self = self, direction == .forwards else {
+                return
+            }
             
-            if direction == .forwards && event.sender != session.myUserId {
-                Task {
-                    do {
+            Task {
+                do {
+                    if event.eventType == .roomEncryption {
+                        try await self.encryptor.handleRoomEncryptionEvent(event)
+
+                    } else if event.eventType == .roomMember {
+                        await self.handleRoomMemberEvent(event, roomState: customObject as? MXRoomState)
+                        
+                    } else if verificationTypes.contains(where: { $0.identifier == event.type }) {
                         try await self.keyVerification.handleRoomEvent(event)
-                    } catch {
-                        self.log.error("Error handling event", context: error)
                     }
+                } catch {
+                    self.log.error("Error handling event", context: error)
                 }
             }
         }
+    }
+    
+    private func handleRoomMemberEvent(_ event: MXEvent, roomState: MXRoomState?) async {
+        guard
+            let userId = event.stateKey,
+            let state = roomState,
+            let member = state.members?.member(withUserId: userId)
+        else {
+            return
+        }
+        
+        guard member.membership == .join || (member.membership == .invite && state.historyVisibility != .joined) else {
+            return
+        }
+        
+        log.debug("Tracking new user `\(userId)` due to \(member.membership) event")
+        machine.addTrackedUsers([userId])
     }
     
     private func restoreBackupIfPossible(event: MXEvent) {

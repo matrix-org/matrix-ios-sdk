@@ -268,7 +268,7 @@ class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
     }
     
     func handleRoomEvent(_ event: MXEvent) async throws {
-        guard isRoomVerificationEvent(event) else {
+        guard isIncomingRoomVerificationEvent(event) else {
             return
         }
         
@@ -465,7 +465,13 @@ class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
         return roomId
     }
     
-    private func isRoomVerificationEvent(_ event: MXEvent) -> Bool {
+    private func isIncomingRoomVerificationEvent(_ event: MXEvent) -> Bool {
+        // Only consider events not coming from our own user, because verification events
+        // for the same user are sent as encrypted to-device messages
+        guard event.sender != session?.myUserId else {
+            return false
+        }
+        
         // Filter incoming events by allowed list of event types
         guard Self.dmEventTypes.contains(where: { $0.identifier == event.type }) else {
             return false

@@ -76,13 +76,14 @@ class MXCryptoMachine {
         MXCryptoSDKLogger.shared.log(logLine: "Starting logs")
         
         let url = try MXCryptoMachineStore.createStoreURLIfNecessary(for: userId)
+        let passphrase = try MXCryptoMachineStore.storePassphrase()
         log.debug("Opening crypto store at \(url.path)/matrix-sdk-crypto.sqlite3") // Hardcoding path to db for debugging purpose
         
         machine = try OlmMachine(
             userId: userId,
             deviceId: deviceId,
             path: url.path,
-            passphrase: nil
+            passphrase: passphrase
         )
         
         self.requests = MXCryptoRequests(restClient: restClient)
