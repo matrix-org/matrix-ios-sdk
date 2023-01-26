@@ -66,7 +66,7 @@ Pod::Spec.new do |s|
   
   # Experimental / NOT production-ready Rust-based crypto library
   s.subspec 'CryptoSDK' do |ss|
-    ss.dependency 'MatrixSDKCrypto', '0.1.8', :configurations => ["DEBUG"], :inhibit_warnings => true
+    ss.dependency 'MatrixSDKCrypto', '0.1.9', :configurations => ["DEBUG"], :inhibit_warnings => true
   end
 
 end

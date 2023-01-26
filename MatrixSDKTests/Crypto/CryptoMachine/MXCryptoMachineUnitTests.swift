@@ -40,7 +40,7 @@ class MXCryptoMachineUnitTests: XCTestCase {
     
     override func tearDown() {
         do {
-            let url = try MXCryptoMachine.storeURL(for: userId)
+            let url = try MXCryptoMachineStore.storeURL(for: userId)
             guard FileManager.default.fileExists(atPath: url.path) else {
                 return
             }

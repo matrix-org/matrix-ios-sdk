@@ -35,11 +35,14 @@ class MXCryptoMigrationV2: NSObject {
     
     func migrateCrypto(updateProgress: @escaping (Double) -> Void) throws {
         log.debug("Starting migration")
+        MXCryptoMachineLogger.shared.log(logLine: "Starting logs")
+        
+        let startDate = Date()
         updateProgress(0)
         
         let key = pickleKey()
         let data = try store.extractData(with: key)
-        let url = try MXCryptoMachine.storeURL(for: data.account.userId)
+        let url = try MXCryptoMachineStore.storeURL(for: data.account.userId)
         
         if FileManager.default.fileExists(atPath: url.path) {
             try FileManager.default.removeItem(at: url)
@@ -100,7 +103,8 @@ class MXCryptoMigrationV2: NSObject {
             }
         }
         
-        log.debug("Migration complete")
+        let duration = Date().timeIntervalSince(startDate) * 1000
+        log.debug("Migration completed in \(duration) ms")
         updateProgress(1)
     }
     
