@@ -60,6 +60,8 @@ class MXBackgroundCryptoV2: MXBackgroundCrypto {
           - to-device events : \(syncResponse.toDevice?.events.count ?? 0)
           - devices changed  : \(syncResponse.deviceLists?.changed?.count ?? 0)
           - devices left     : \(syncResponse.deviceLists?.left?.count ?? 0)
+          - one time keys    : \(syncResponse.deviceOneTimeKeysCount?[kMXKeySignedCurve25519Type] ?? 0)
+          - fallback keys    : \(syncResponse.unusedFallbackKeys ?? [])
         """
         log.debug(details)
         

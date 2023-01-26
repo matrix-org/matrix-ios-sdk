@@ -339,6 +339,8 @@ class MXCryptoV2: NSObject, MXCrypto {
           - to-device events : \(syncResponse.toDevice?.events.count ?? 0)
           - devices changed  : \(syncResponse.deviceLists?.changed?.count ?? 0)
           - devices left     : \(syncResponse.deviceLists?.left?.count ?? 0)
+          - one time keys    : \(syncResponse.deviceOneTimeKeysCount?[kMXKeySignedCurve25519Type] ?? 0)
+          - fallback keys    : \(syncResponse.unusedFallbackKeys ?? [])
         """
         log.debug(details)
         
@@ -351,9 +353,14 @@ class MXCryptoV2: NSObject, MXCrypto {
                     unusedFallbackKeys: syncResponse.unusedFallbackKeys
                 )
                 await handle(toDeviceEvents: toDevice.events)
-                try await machine.processOutgoingRequests()
             } catch {
                 log.error("Cannot handle sync", context: error)
+            }
+            
+            do {
+                try await machine.processOutgoingRequests()
+            } catch {
+                log.error("Failed processing outgoing requests", context: error)
             }
             
             log.debug("Completed handling sync response `\(syncId)`")

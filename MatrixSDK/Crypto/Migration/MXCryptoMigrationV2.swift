@@ -35,7 +35,7 @@ class MXCryptoMigrationV2: NSObject {
     
     func migrateCrypto(updateProgress: @escaping (Double) -> Void) throws {
         log.debug("Starting migration")
-        MXCryptoMachineLogger.shared.log(logLine: "Starting logs")
+        MXCryptoSDKLogger.shared.log(logLine: "Starting logs")
         
         let startDate = Date()
         updateProgress(0)
