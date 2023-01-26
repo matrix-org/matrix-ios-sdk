@@ -21,13 +21,11 @@ class MXPollAggregatorTest: XCTestCase {
     private var matrixSDKTestsE2EData: MatrixSDKTestsE2EData!
     private var pollAggregator: PollAggregator!
     private var delegate: PollAggregatorBlockWrapper!
-    private var isFirstDelegateUpdate: Bool = true
     
     override func setUp() {
         super.setUp()
         matrixSDKTestsData = MatrixSDKTestsData()
         matrixSDKTestsE2EData = MatrixSDKTestsE2EData(matrixSDKTestsData: matrixSDKTestsData)
-        isFirstDelegateUpdate = true
     }
     
     override func tearDown() {
@@ -138,15 +136,10 @@ class MXPollAggregatorTest: XCTestCase {
             self.pollAggregator = try! PollAggregator(session: bobSession, room: bobRoom, pollStartEventId: pollStartEvent.eventId)
             
             self.delegate = PollAggregatorBlockWrapper(dataUpdateCallback: { aggregator in
-                defer {
-                    self.isFirstDelegateUpdate = false
-                }
-                guard self.isFirstDelegateUpdate else {
-                    return
-                }
                 XCTAssertEqual(aggregator.poll.text, "Some other question")
                 XCTAssertEqual(aggregator.poll.answerOptions.count, 2)
                 XCTAssertTrue(aggregator.poll.hasBeenEdited)
+                aggregator.delegate = nil
                 expectation.fulfill()
             })
             
