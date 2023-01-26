@@ -95,7 +95,7 @@
 
                               MXError *mxError = [[MXError alloc] initWithNSError:error];
                               XCTAssertNotNil(mxError.httpResponse);
-                              XCTAssertEqual(mxError.httpResponse.statusCode, 400);
+                              XCTAssertEqual(mxError.httpResponse.statusCode, 404);
 
                               [expectation fulfill];
                           }];
