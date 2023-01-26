@@ -47,16 +47,12 @@ class MXCryptoMachine {
         case missingVerificationContent
         case missingVerificationRequest
         case missingVerification
-        case missingEmojis
-        case missingDecimals
-        case cannotCancelVerification
         case cannotExportKeys
         case cannotImportKeys
     }
     
     private let machine: OlmMachine
     private let requests: MXCryptoRequests
-    private let queryScheduler: MXKeysQueryScheduler<MXKeysQueryResponse>
     private let getRoomAction: GetRoomAction
     
     private let sessionsQueue = MXTaskQueue()
@@ -77,7 +73,7 @@ class MXCryptoMachine {
         restClient: MXRestClient,
         getRoomAction: @escaping GetRoomAction
     ) throws {
-        MXCryptoMachineLogger.shared.log(logLine: "Starting logs")
+        MXCryptoSDKLogger.shared.log(logLine: "Starting logs")
         
         let url = try MXCryptoMachineStore.createStoreURLIfNecessary(for: userId)
         log.debug("Opening crypto store at \(url.path)/matrix-sdk-crypto.sqlite3") // Hardcoding path to db for debugging purpose
@@ -89,12 +85,7 @@ class MXCryptoMachine {
             passphrase: nil
         )
         
-        let requests = MXCryptoRequests(restClient: restClient)
-        self.requests = requests
-        
-        queryScheduler = MXKeysQueryScheduler { users in
-            try await requests.queryKeys(users: users)
-        }
+        self.requests = MXCryptoRequests(restClient: restClient)
         self.getRoomAction = getRoomAction
         
         let details = """
@@ -123,6 +114,7 @@ class MXCryptoMachine {
             return
         }
         
+        log.debug("We have some keys to upload")
         try await handleRequest(request)
         log.debug("Keys successfully uploaded")
     }
@@ -228,6 +220,8 @@ extension MXCryptoMachine: MXCryptoSyncing {
     // MARK: - Private
     
     private func handleRequest(_ request: Request) async throws {
+        log.debug("Handling request \(request)")
+        
         switch request {
         case .toDevice(let requestId, let eventType, let body):
             try await requests.sendToDevice(
@@ -242,8 +236,7 @@ extension MXCryptoMachine: MXCryptoSyncing {
             try markRequestAsSent(requestId: requestId, requestType: .keysUpload, response: response.jsonString())
             
         case .keysQuery(let requestId, let users):
-            // Key queries go through a scheduler layer instead of directly through the rest client
-            let response = try await queryScheduler.query(users: Set(users))
+            let response = try await requests.queryKeys(users: users)
             try markRequestAsSent(requestId: requestId, requestType: .keysQuery, response: response.jsonString())
             
         case .keysClaim(let requestId, let oneTimeKeys):
@@ -283,6 +276,8 @@ extension MXCryptoMachine: MXCryptoSyncing {
     }
     
     private func handleOutgoingRequests() async throws {
+        log.debug("->")
+        
         let requests = try machine.outgoingRequests()
         
         try await withThrowingTaskGroup(of: Void.self) { [weak self] group in
