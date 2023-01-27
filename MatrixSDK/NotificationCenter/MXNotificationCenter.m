@@ -444,6 +444,7 @@ NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID = @".m.rule.mess
                        notify:(BOOL)notify
                     soundName:(NSString*)soundName
                     highlight:(BOOL)highlight
+                   completion:(void (^_Nullable)(NSError * _Nullable error))completion
 {
     
     NSArray *actions = [self encodeActionsWithNotify:notify soundName:soundName highlight:highlight];
@@ -455,12 +456,21 @@ NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID = @".m.rule.mess
         // Refresh locally rules
         [self refreshRules:^{
             [[NSNotificationCenter defaultCenter] postNotificationName:kMXNotificationCenterDidUpdateRules object:self userInfo:nil];
+            if (completion) {
+                completion(nil);
+            }
         } failure:^(NSError *error) {
             [[NSNotificationCenter defaultCenter] postNotificationName:kMXNotificationCenterDidFailRulesUpdate object:self userInfo:@{kMXNotificationCenterErrorKey:error}];
+            if (completion) {
+                completion(nil);
+            }
         }];
     }
                                                  failure:^(NSError *error) {
         [[NSNotificationCenter defaultCenter] postNotificationName:kMXNotificationCenterDidFailRulesUpdate object:self userInfo:@{kMXNotificationCenterErrorKey:error}];
+        if (completion) {
+            completion(error);
+        }
     }];
 }
 

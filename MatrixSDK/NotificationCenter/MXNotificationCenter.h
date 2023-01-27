@@ -209,12 +209,14 @@ extern NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID;
  @param notify enable/disable notification.
  @param soundName the name of the sound to apply (`ring`, `default`, etc).
  @param highlight enable/disable highlight option.
+ @param completion an optional completion block for the operation.
  */
 - (void)updatePushRuleActions:(NSString*)ruleId
                          kind:(MXPushRuleKind)kind
                        notify:(BOOL)notify
                     soundName:(NSString*)soundName
-                    highlight:(BOOL)highlight;
+                    highlight:(BOOL)highlight
+                   completion: (void (^_Nullable)(NSError * _Nullable error))completion;
 
 /**
  Create a content push rule, see MXNotificationCenter notifications for operation result.
