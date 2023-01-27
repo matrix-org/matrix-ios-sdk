@@ -21,8 +21,8 @@ import Foundation
 import MatrixSDKCrypto
 
 /// Redirects logs originating in `MatrixSDKCrypto` into `MXLog`
-class MXCryptoMachineLogger: Logger {
-    static let shared = MXCryptoMachineLogger()
+class MXCryptoSDKLogger: Logger {
+    static let shared = MXCryptoSDKLogger()
     
     init() {
         setLogger(logger: self)
@@ -35,7 +35,7 @@ class MXCryptoMachineLogger: Logger {
             return
         }
         
-        MXLog.debug("[MXCryptoMachine] \(logLine)")
+        MXLog.debug("[MXCryptoSDK] \(logLine)")
     }
 }
 

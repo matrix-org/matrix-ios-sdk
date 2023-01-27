@@ -52,6 +52,10 @@ class MXCryptoRequestsUnitTests: XCTestCase {
             "one_time_keys": [
                 "1": "C",
                 "2": "D",
+            ],
+            "fallback_keys": [
+                "3": "E",
+                "4": "F",
             ]
         ]
         
@@ -64,6 +68,10 @@ class MXCryptoRequestsUnitTests: XCTestCase {
             XCTAssertEqual(request.oneTimeKeys as? [String: String], [
                 "1": "C",
                 "2": "D",
+            ])
+            XCTAssertEqual(request.fallbackKeys as? [String: String], [
+                "3": "E",
+                "4": "F",
             ])
             XCTAssertEqual(request.deviceId, "A")
         } catch {
