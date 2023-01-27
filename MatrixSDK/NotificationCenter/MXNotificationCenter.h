@@ -197,8 +197,9 @@ extern NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID;
  
  @param pushRule the push rule to update
  @param enable YES to enable.
+ @param completion an optional completion block for the operation.
  */
-- (void)enableRule:(MXPushRule*)pushRule isEnabled:(BOOL)enable;
+- (void)enableRule:(MXPushRule*)pushRule isEnabled:(BOOL)enable completion:(void (^_Nullable)(NSError * _Nullable error))completion;
 
 /**
  Update the actions for an existing push rule.

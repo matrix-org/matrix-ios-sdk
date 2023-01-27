@@ -397,7 +397,7 @@ NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID = @".m.rule.mess
     }
 }
 
-- (void)enableRule:(MXPushRule*)pushRule isEnabled:(BOOL)enable
+- (void)enableRule:(MXPushRule*)pushRule isEnabled:(BOOL)enable completion:(void (^_Nullable)(NSError * _Nullable error))completion
 {
     if (pushRule)
     {
@@ -426,10 +426,15 @@ NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID = @".m.rule.mess
             
             [[NSNotificationCenter defaultCenter] postNotificationName:kMXNotificationCenterDidUpdateRules object:self userInfo:nil];
             
+            if (completion) {
+                completion(nil);
+            }
         } failure:^(NSError *error) {
-            
             [[NSNotificationCenter defaultCenter] postNotificationName:kMXNotificationCenterDidFailRulesUpdate object:self userInfo:@{kMXNotificationCenterErrorKey:error}];
             
+            if (completion) {
+                completion(error);
+            }
         }];
     }
 }
