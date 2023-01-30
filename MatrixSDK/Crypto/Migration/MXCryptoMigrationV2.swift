@@ -24,7 +24,6 @@ import MatrixSDKCrypto
 class MXCryptoMigrationV2: NSObject {
     enum Error: Swift.Error {
         case unknownPickleKey
-        case missingStorePassphrase
     }
     
     private static let SessionBatchSize = 1000
