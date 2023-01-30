@@ -66,6 +66,7 @@ protocol MXCryptoUserIdentitySource: MXCryptoIdentity {
 
 /// Room event encryption
 protocol MXCryptoRoomEventEncrypting: MXCryptoIdentity {
+    func isUserTracked(userId: String) -> Bool
     func addTrackedUsers(_ users: [String])
     func shareRoomKeysIfNecessary(roomId: String, users: [String], settings: EncryptionSettings) async throws
     func encryptRoomEvent(content: [AnyHashable: Any], roomId: String, eventType: String) throws -> [String: Any]

@@ -24,12 +24,6 @@ class MXCryptoKeyBackupEngine: NSObject, MXKeyBackupEngine {
     // Batch size chosen arbitrarily, will be moved to CryptoSDK
     private static let ImportBatchSize = 1000
     
-    struct EncryptedSession {
-        let roomId: String
-        let sessionId: String
-        let keyBackup: MXKeyBackupData
-    }
-    
     enum Error: Swift.Error {
         case unknownBackupVersion
         case invalidData
@@ -289,19 +283,21 @@ class MXCryptoKeyBackupEngine: NSObject, MXKeyBackupEngine {
             
             let encryptedSessions = keysBackupData.rooms.flatMap { roomId, room in
                 room.sessions.map { sessionId, keyBackup in
-                    EncryptedSession(roomId: roomId, sessionId: sessionId, keyBackup: keyBackup)
+                    MXEncryptedKeyBackup(roomId: roomId, sessionId: sessionId, keyBackup: keyBackup)
                 }
             }
             
-            let count = encryptedSessions.count
-            self.activeImportProgress = Progress(totalUnitCount: Int64(count))
-            self.log.debug("Importing \(count) encrypted sessions")
+            let totalKeysCount = encryptedSessions.count
+            var importedKeysCount: UInt = 0
             
-            let date = Date()
+            self.activeImportProgress = Progress(totalUnitCount: Int64(totalKeysCount))
+            self.log.debug("Importing \(totalKeysCount) encrypted sessions")
             
-            for batchIndex in stride(from: 0, to: count, by: Self.ImportBatchSize) {
+            let startDate = Date()
+            
+            for batchIndex in stride(from: 0, to: totalKeysCount, by: Self.ImportBatchSize) {
                 self.log.debug("Decrypting and importing batch \(batchIndex)")
-                let endIndex = min(batchIndex + Self.ImportBatchSize, count)
+                let endIndex = min(batchIndex + Self.ImportBatchSize, totalKeysCount)
                 let batch = encryptedSessions[batchIndex ..< endIndex]
                 
                 autoreleasepool {
@@ -317,21 +313,23 @@ class MXCryptoKeyBackupEngine: NSObject, MXKeyBackupEngine {
                     
                     do {
                         let result = try self.backup.importDecryptedKeys(roomKeys: sessions, progressListener: self)
-                        self.activeImportProgress?.completedUnitCount += Int64(result.imported)
+                        importedKeysCount += UInt(result.imported)
                     } catch {
                         self.log.error("Failed importing batch of sessions", context: error)
                     }
+                    
+                    self.activeImportProgress?.completedUnitCount += Int64(Self.ImportBatchSize)
                 }
                 await self.roomEventDecryptor.retryUndecryptedEvents(sessionIds: batch.map(\.sessionId))
             }
             
-            let imported = self.activeImportProgress?.completedUnitCount ?? 0
-            let duration = Date().timeIntervalSince(date) * 1000
-            self.log.debug("Successfully imported \(imported) out of \(count) sessions in \(duration) ms")
+            let imported = importedKeysCount
+            let duration = Date().timeIntervalSince(startDate) * 1000
+            self.log.debug("Successfully imported \(imported) out of \(totalKeysCount) sessions in \(duration) ms")
             self.activeImportProgress = nil
             
             await MainActor.run {
-                success(UInt(count), UInt(imported))
+                success(UInt(totalKeysCount), imported)
             }
         }
     }

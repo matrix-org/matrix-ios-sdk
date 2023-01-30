@@ -31,8 +31,15 @@ class MXCryptoSDKLogger: Logger {
     func log(logLine: String) {
         // Excluding some auto-generated logs that are not useful
         // This will be changed in rust-sdk directly
-        guard !logLine.contains("::uniffi_api:") else {
-            return
+        let ignored = [
+            "::uniffi_api:",
+            "::backup_recovery_key: decrypt_v1"
+        ]
+        
+        for ignore in ignored {
+            if logLine.contains(ignore) {
+                return
+            }
         }
         
         MXLog.debug("[MXCryptoSDK] \(logLine)")
