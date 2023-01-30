@@ -74,6 +74,22 @@ class MXCryptoSecretStoreV2: NSObject, MXCryptoSecretStore {
         }
     }
     
+    func hasSecret(withSecretId secretId: String) -> Bool {
+        switch secretId as NSString {
+        case MXSecretId.crossSigningMaster.takeUnretainedValue():
+            return crossSigning.crossSigningStatus().hasMaster
+        case MXSecretId.crossSigningSelfSigning.takeUnretainedValue():
+            return crossSigning.crossSigningStatus().hasSelfSigning
+        case MXSecretId.crossSigningUserSigning.takeUnretainedValue():
+            return crossSigning.crossSigningStatus().hasUserSigning
+        case MXSecretId.keyBackup.takeUnretainedValue():
+            return backupEngine?.privateKey() != nil
+        default:
+            log.error("Unsupported type of secret", context: secretId)
+            return false
+        }
+    }
+    
     func secret(withSecretId secretId: String) -> String? {
         switch secretId as NSString {
         case MXSecretId.crossSigningMaster.takeUnretainedValue():

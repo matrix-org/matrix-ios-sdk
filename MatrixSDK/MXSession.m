@@ -2271,7 +2271,19 @@ typedef void (^MXOnResumeDone)(void);
 {
     MXLogDebug(@"[MXSession] handleOutdatedSyncResponse: %tu joined rooms, %tu invited rooms, %tu left rooms, %tu toDevice events.", syncResponse.rooms.join.count, syncResponse.rooms.invite.count, syncResponse.rooms.leave.count, syncResponse.toDevice.events.count);
     
-    [self handleCryptoSyncResponse:syncResponse onComplete:completion];
+    if (!self.crypto || [self.crypto isKindOfClass:[MXLegacyCrypto class]])
+    {
+        // Legacy crypto requires pre-processed to-device events before everything else to make future decryptions work
+        [self handleToDeviceEvents:syncResponse.toDevice.events onComplete:completion];
+    }
+    else
+    {
+        // Only legacy crypto requires different DBs for foreground and background processes, other crypto modules
+        // write to a single DB in both processes, so there is no need to replay outdated sync response
+        dispatch_async(dispatch_get_main_queue(), ^{
+            completion();
+        });
+    }
 }
 
 - (CGFloat)startupProgressForCompleted:(NSInteger)completed total:(NSInteger)total

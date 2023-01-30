@@ -267,25 +267,30 @@ class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
         }
     }
     
-    @MainActor
-    func handleRoomEvent(_ event: MXEvent) -> String? {
-        guard isRoomVerificationEvent(event) else {
-            return nil
+    func handleRoomEvent(_ event: MXEvent) async throws {
+        guard isIncomingRoomVerificationEvent(event) else {
+            return
         }
         
         if !event.isEncrypted, let roomId = event.roomId {
-            handler.receiveUnencryptedVerificationEvent(event: event, roomId: roomId)
+            try await handler.receiveUnencryptedVerificationEvent(event: event, roomId: roomId)
         }
         
+        let newUserId: String?
         if event.type == kMXEventTypeStringRoomMessage && event.content?[kMXMessageTypeKey] as? String == kMXMessageTypeKeyVerificationRequest {
-            handleIncomingRequest(userId: event.sender, flowId: event.eventId)
-            return event.sender
-            
+            await handleIncomingRequest(userId: event.sender, flowId: event.eventId)
+            newUserId = event.sender
         } else if event.type == kMXEventTypeStringKeyVerificationStart, let flowId = event.relatesTo.eventId {
-            handleIncomingVerification(userId: event.sender, flowId: flowId)
-            return event.sender
+            await handleIncomingVerification(userId: event.sender, flowId: flowId)
+            newUserId = event.sender
         } else {
-            return nil
+            newUserId = nil
+        }
+
+        // If we received a verification event from a new user we do not yet track
+        // we need to download their keys to be able to proceed with the verification flow
+        if let userId = newUserId {
+            try await self.handler.downloadKeysIfNecessary(users: [userId])
         }
     }
     
@@ -460,7 +465,13 @@ class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
         return roomId
     }
     
-    private func isRoomVerificationEvent(_ event: MXEvent) -> Bool {
+    private func isIncomingRoomVerificationEvent(_ event: MXEvent) -> Bool {
+        // Only consider events not coming from our own user, because verification events
+        // for the same user are sent as encrypted to-device messages
+        guard event.sender != session?.myUserId else {
+            return false
+        }
+        
         // Filter incoming events by allowed list of event types
         guard Self.dmEventTypes.contains(where: { $0.identifier == event.type }) else {
             return false

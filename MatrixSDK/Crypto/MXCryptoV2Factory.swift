@@ -25,7 +25,6 @@ import Foundation
     }
     
     private let log = MXNamedLog(name: "MXCryptoV2Factory")
-    private let sdkLog = MXCryptoMachineLogger()
     
     @objc public func buildCrypto(
         session: MXSession!,
@@ -49,7 +48,7 @@ import Foundation
         Task {
             do {
                 let store = try await createOrOpenLegacyStore(credentials: credentials)
-                try self.migrateIfNecessary(legacyStore: store) {
+                migrateIfNecessary(legacyStore: store) {
                     migrationProgress?($0)
                 }
                 
@@ -64,7 +63,7 @@ import Foundation
                     success(crypto)
                 }
             } catch {
-                self.log.failure("Cannot create crypto")
+                log.failure("Cannot create crypto", context: error)
                 await MainActor.run {
                     failure(error)
                 }
@@ -77,21 +76,17 @@ import Foundation
     private func createOrOpenLegacyStore(credentials: MXCredentials) async throws -> MXCryptoStore {
         MXRealmCryptoStore.deleteReadonlyStore(with: credentials)
         
-        if MXRealmCryptoStore.hasData(for: credentials) {
+        if
+            MXRealmCryptoStore.hasData(for: credentials),
+            let legacyStore = MXRealmCryptoStore(credentials: credentials)
+        {
             log.debug("Legacy crypto store exists")
-            
-            guard let legacyStore = MXRealmCryptoStore(credentials: credentials) else {
-                log.failure("Cannot initialize legacy store")
-                throw Error.storeNotAvailable
-            }
-            
-            try await openStore(legacyStore)
-            log.debug("Legacy crypto store opened")
             return legacyStore
             
         } else {
             log.debug("Creating new legacy crypto store")
             
+            MXRealmCryptoStore.delete(with: credentials)
             guard let legacyStore = MXRealmCryptoStore.createStore(with: credentials) else {
                 log.failure("Cannot create legacy store")
                 throw Error.storeNotAvailable
@@ -103,17 +98,7 @@ import Foundation
         }
     }
     
-    private func openStore(_ store: MXCryptoStore) async throws {
-        try await withCheckedThrowingContinuation { cont in
-            store.open {
-                cont.resume(returning: ())
-            } failure: { error in
-                cont.resume(throwing: error ?? Error.storeNotAvailable)
-            }
-        }
-    }
-    
-    private func migrateIfNecessary(legacyStore: MXCryptoStore, updateProgress: @escaping (Double) -> Void) throws {
+    private func migrateIfNecessary(legacyStore: MXCryptoStore, updateProgress: @escaping (Double) -> Void) {
         guard legacyStore.cryptoVersion.rawValue < MXCryptoVersion.versionLegacyDeprecated.rawValue else {
             log.debug("Legacy crypto has already been deprecatd, no need to migrate")
             return
@@ -121,10 +106,14 @@ import Foundation
 
         log.debug("Requires migration from legacy crypto")
         let migration = MXCryptoMigrationV2(legacyStore: legacyStore)
-        try migration.migrateCrypto(updateProgress: updateProgress)
-        
-        log.debug("Marking legacy crypto as deprecated")
-        legacyStore.cryptoVersion = MXCryptoVersion.versionLegacyDeprecated
+        do {
+            try migration.migrateCrypto(updateProgress: updateProgress)
+            log.debug("Marking legacy crypto as deprecated")
+            legacyStore.cryptoVersion = MXCryptoVersion.versionLegacyDeprecated
+        } catch {
+            log.error("Failed to migrate crypto", context: error)
+        }
+            
     }
 }
 
