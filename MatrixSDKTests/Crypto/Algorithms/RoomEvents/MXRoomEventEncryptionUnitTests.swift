@@ -86,6 +86,10 @@ class MXRoomEventEncryptionUnitTests: XCTestCase {
     
     class EncryptorStub: CryptoIdentityStub, MXCryptoRoomEventEncrypting {
         var trackedUsers: Set<String> = []
+        func isUserTracked(userId: String) -> Bool {
+            return trackedUsers.contains(userId)
+        }
+        
         func addTrackedUsers(_ users: [String]) {
             trackedUsers = trackedUsers.union(users)
         }

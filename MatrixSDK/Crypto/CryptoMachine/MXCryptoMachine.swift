@@ -362,6 +362,15 @@ extension MXCryptoMachine: MXCryptoUserIdentitySource {
 }
 
 extension MXCryptoMachine: MXCryptoRoomEventEncrypting {
+    func isUserTracked(userId: String) -> Bool {
+        do {
+            return try machine.isUserTracked(userId: userId)
+        } catch {
+            log.error("Failed getting tracked status", context: error)
+            return false
+        }
+    }
+    
     func addTrackedUsers(_ users: [String]) {
         do {
             try machine.updateTrackedUsers(users: users)
