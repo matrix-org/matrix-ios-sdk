@@ -1012,7 +1012,8 @@ static NSUInteger preloadOptions;
 
 -(void)saveUnreadRooms
 {
-    NSMutableArray* rooms = [roomUnreaded mutableCopy];
+    
+    NSArray<NSString*>* rooms = [roomUnreaded allObjects];
     NSString *roomsFile = [self unreadFileForRoomsForBackup:NO];
     [self saveObject:rooms toFile:roomsFile];
 }
