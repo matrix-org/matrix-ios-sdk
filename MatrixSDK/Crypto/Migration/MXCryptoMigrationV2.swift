@@ -22,27 +22,37 @@ import OLMKit
 import MatrixSDKCrypto
 
 class MXCryptoMigrationV2: NSObject {
+    enum Error: Swift.Error {
+        case unknownPickleKey
+    }
+    
     private static let SessionBatchSize = 1000
     
+    private let legacyDevice: MXOlmDevice
     private let store: MXCryptoMigrationStore
     private let log = MXNamedLog(name: "MXCryptoMachineMigration")
     
     init(legacyStore: MXCryptoStore) {
+        MXCryptoSDKLogger.shared.log(logLine: "Starting logs")
+        
+        // We need to create legacy OlmDevice which sets itself internally as pickle key delegate
+        // Once established we can get the pickleKey from OLMKit which is used to decrypt and migrate
+        // the legacy store data
+        legacyDevice = MXOlmDevice(store: legacyStore)
         store = .init(legacyStore: legacyStore)
-        super.init()
-        OLMKit.sharedInstance().pickleKeyDelegate = self
     }
     
     func migrateCrypto(updateProgress: @escaping (Double) -> Void) throws {
         log.debug("Starting migration")
-        MXCryptoSDKLogger.shared.log(logLine: "Starting logs")
         
         let startDate = Date()
         updateProgress(0)
         
-        let key = pickleKey()
-        let data = try store.extractData(with: key)
+        let pickleKey = try legacyPickleKey()
+        let data = try store.extractData(with: pickleKey)
+        
         let url = try MXCryptoMachineStore.storeURL(for: data.account.userId)
+        let passphrase = try MXCryptoMachineStore.storePassphrase()
         
         if FileManager.default.fileExists(atPath: url.path) {
             try FileManager.default.removeItem(at: url)
@@ -63,7 +73,7 @@ class MXCryptoMigrationV2: NSObject {
         try migrate(
             data: data,
             path: url.path,
-            passphrase: nil,
+            passphrase: passphrase,
             progressListener: self
         )
         
@@ -73,14 +83,15 @@ class MXCryptoMigrationV2: NSObject {
         let totalSessions = store.olmSessionCount + store.megolmSessionCount
         let olmToMegolmRatio = totalSessions > 0 ? Double(store.olmSessionCount)/Double(totalSessions) : 0
         
-        store.extractSessions(with: key, batchSize: Self.SessionBatchSize) { [weak self] batch, progress in
+        store.extractSessions(with: pickleKey, batchSize: Self.SessionBatchSize) { [weak self] batch, progress in
             updateProgress(progress * olmToMegolmRatio)
             
             do {
                 try self?.migrateSessions(
                     data: data,
                     sessions: batch,
-                    url: url
+                    url: url,
+                    passphrase: passphrase
                 )
             } catch {
                 self?.log.error("Error migrating some sessions", context: error)
@@ -89,14 +100,15 @@ class MXCryptoMigrationV2: NSObject {
         
         log.debug("Migrating megolm sessions in batches")
         
-        store.extractGroupSessions(with: key, batchSize: Self.SessionBatchSize) { [weak self] batch, progress in
+        store.extractGroupSessions(with: pickleKey, batchSize: Self.SessionBatchSize) { [weak self] batch, progress in
             updateProgress(olmToMegolmRatio + progress * (1 - olmToMegolmRatio))
             
             do {
                 try self?.migrateSessions(
                     data: data,
                     inboundGroupSessions: batch,
-                    url: url
+                    url: url,
+                    passphrase: passphrase
                 )
             } catch {
                 self?.log.error("Error migrating some sessions", context: error)
@@ -108,6 +120,13 @@ class MXCryptoMigrationV2: NSObject {
         updateProgress(1)
     }
     
+    private func legacyPickleKey() throws -> Data {
+        guard let key = OLMKit.sharedInstance().pickleKeyDelegate?.pickleKey() else {
+            throw Error.unknownPickleKey
+        }
+        return key
+    }
+    
     // To migrate sessions in batches and keep memory under control we are repeatedly calling `migrate`
     // function whilst only passing data for sessions and account, keeping the rest empty.
     // This API will be improved in `MatrixCryptoSDK` in the future.
@@ -115,7 +134,8 @@ class MXCryptoMigrationV2: NSObject {
         data: MigrationData,
         sessions: [PickledSession] = [],
         inboundGroupSessions: [PickledInboundGroupSession] = [],
-        url: URL
+        url: URL,
+        passphrase: String
     ) throws {
         try migrate(
             data: .init(
@@ -129,27 +149,9 @@ class MXCryptoMigrationV2: NSObject {
                 trackedUsers: data.trackedUsers
             ),
             path: url.path,
-            passphrase: nil,
+            passphrase: passphrase,
             progressListener: self
         )
-    }
-}
-
-extension MXCryptoMigrationV2: OLMKitPickleKeyDelegate {
-    public func pickleKey() -> Data {
-        let key = MXKeyProvider.sharedInstance()
-            .keyDataForData(
-                ofType: MXCryptoOlmPickleKeyDataType,
-                isMandatory: true,
-                expectedKeyType: .rawData
-            )
-        
-        guard let key = key as? MXRawDataKey else {
-            log.failure("Wrong key")
-            return Data()
-        }
-        
-        return key.key
     }
 }
 
