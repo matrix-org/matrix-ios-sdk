@@ -894,9 +894,9 @@
             [bobSession start:^{
                 MXRoom *room = [bobSession roomWithRoomId:roomId];
                 XCTAssertNotNil(room, @"the room should not be nil");
-                [room markAsUnread];
+                [room setUnread];
                 XCTAssert([room isMarkedAsUnread], @"the room should be marked as unread");
-                [room unmarkAsUnread];
+                [room resetUnread];
                 XCTAssertFalse([room isMarkedAsUnread], @"the room should not be marked as unread");
                 [expectation fulfill];
             } failure:^(NSError *error) {
@@ -934,7 +934,7 @@
             [bobSession start:^{
                 MXRoom *room = [bobSession roomWithRoomId:roomId];
                 XCTAssertNotNil(room, @"the room should not be nil");
-                [room markAsUnread];
+                [room setUnread];
                 XCTAssert([room isMarkedAsUnread], @"the room should be marked as unread");
                 
                 [room listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent * _Nonnull event, MXTimelineDirection direction, MXRoomState * _Nullable roomState) {

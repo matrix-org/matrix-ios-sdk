@@ -1308,13 +1308,13 @@ Remove a tag applied on an event of the room
  It will set the entire room as unread.
  This is only local since it's not possible to remove from the server the read events.
  */
--(void)markAsUnread;
+-(void)setUnread;
 
 /**
  It will unset the entire room from unread list.
  This is only a local list.
  */
--(void)unmarkAsUnread;
+-(void)resetUnread;
 
 /**
  it will return if the room is marked unread by the user

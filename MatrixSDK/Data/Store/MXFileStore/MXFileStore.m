@@ -261,7 +261,7 @@ static NSUInteger preloadOptions;
                 }
                 [self loadUsers];
                 [self loadGroups];
-
+                [self loadUnreadRooms];
                 taskProfile.units = self.roomSummaryStore.countOfRooms;
                 [MXSDKOptions.sharedInstance.profiler stopMeasuringTaskWithProfile:taskProfile];
                 MXLogDebug(@"[MXFileStore] Data loaded from files in %.0fms", taskProfile.duration * 1000);
@@ -842,6 +842,7 @@ static NSUInteger preloadOptions;
     [self saveUsers];
     [self saveGroupsDeletion];
     [self saveGroups];
+    [self saveUnreadRooms];
     [self saveFilters];
     [self saveMetaData];
 }
@@ -999,21 +1000,29 @@ static NSUInteger preloadOptions;
     return threadedStore;
 }
 
-- (void)setRoomStore:(nonnull NSString*)roomId unread:(BOOL)isUnread
+- (void)setUnreadMarkerForRoom:(nonnull NSString*)roomId;
 {
-    NSMutableArray* rooms = [[self getUnreadRoomStore] mutableCopy];
-    if (isUnread) {
-        if (![rooms containsObject:roomId]) {
-            [rooms addObject:roomId];
-        }
-    } else {
-        [rooms removeObject:roomId];
-    }
+    [super setUnreadMarkerForRoom:roomId];
+}
+
+- (void)resetUnreadMarkerForRoom:(nonnull NSString*)roomId;
+{
+    [super resetUnreadMarkerForRoom:roomId];
+}
+
+-(void)saveUnreadRooms
+{
+    NSMutableArray* rooms = [roomUnreaded mutableCopy];
     NSString *roomsFile = [self unreadFileForRoomsForBackup:NO];
     [self saveObject:rooms toFile:roomsFile];
 }
 
-- (NSArray*)getUnreadRoomStore
+-(void)loadUnreadRooms
+{
+    roomUnreaded = [NSMutableSet setWithArray:[self getUnreadRoomFromStore]];
+}
+
+- (NSArray*)getUnreadRoomFromStore
 {
     NSString *roomsFile = [self unreadFileForRoomsForBackup:NO];
     NSArray *result = [self loadUnreadRoomsStoreFromFileAt:roomsFile];

@@ -181,14 +181,14 @@
  
  @param roomId the id of the room.
  */
-- (void)markRoomAsUnread:(nonnull NSString*)roomId;
+- (void)setUnreadMarkerForRoom:(nonnull NSString*)roomId;
 
 /**
  Remove the room from unread list
  
  @param roomId the id of the room.
  */
-- (void)unmarkRoomAsUnread:(nonnull NSString*)roomId;
+- (void)resetUnreadMarkerForRoom:(nonnull NSString*)roomId;
 
 /**
  Set the room as unread

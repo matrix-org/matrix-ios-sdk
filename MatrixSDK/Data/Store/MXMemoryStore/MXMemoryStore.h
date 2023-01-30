@@ -53,7 +53,7 @@ typedef NSMutableDictionary<NSString*, RoomReceiptsStore*> RoomThreadedReceiptsS
 
     // Set of unreaded rooms
     // The elements are room ids.
-    NSMutableSet <NSString*> *roomUnreadedStores;
+    NSMutableSet <NSString*> *roomUnreaded;
 
     // Matrix filters
     // FilterId -> Filter JSON string
@@ -97,16 +97,4 @@ typedef NSMutableDictionary<NSString*, RoomReceiptsStore*> RoomThreadedReceiptsS
  @return receipts dictionary by thread id.
  */
 - (RoomReceiptsStore*)getOrCreateReceiptsStoreForRoomWithId:(NSString*)roomId threadId:(NSString* _Nullable)threadId;
-
-/**
- Set the room as unread
- 
- @param roomId the id of the room.
- */
-- (void)setRoomStore:(nonnull NSString*)roomId unread:(BOOL)isUnread;
-
-/**
- Get all the unreaded rooms
- */
-- (NSArray*)getUnreadRoomStore;
 @end

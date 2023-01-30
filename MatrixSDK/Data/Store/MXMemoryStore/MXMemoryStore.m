@@ -52,6 +52,7 @@
         roomThreadedReceiptsStores = [NSMutableDictionary dictionary];
         users = [NSMutableDictionary dictionary];
         groups = [NSMutableDictionary dictionary];
+        roomUnreaded = [[NSMutableSet alloc] init];
         roomSummaryStore = [[MXMemoryRoomSummaryStore alloc] init];
         maxUploadSize = -1;
         areAllIdentityServerTermsAgreed = NO;
@@ -311,50 +312,19 @@
     return receiptsData;
 }
 
-- (void)markRoomAsUnread:(nonnull NSString*)roomId;
+- (void)setUnreadMarkerForRoom:(nonnull NSString*)roomId;
 {
-    [self setRoom:roomId unread:YES];
+    [roomUnreaded addObject:roomId];
 }
 
-- (void)unmarkRoomAsUnread:(nonnull NSString*)roomId;
+- (void)resetUnreadMarkerForRoom:(nonnull NSString*)roomId;
 {
-    [self setRoom:roomId unread:NO];
-}
-
-- (void)setRoom:(nonnull NSString*)roomId unread:(BOOL)isUnread
-{
-    // if the memory does not contains the set, it's initialized from FileStore
-    if (nil == roomUnreadedStores)
-    {
-        roomUnreadedStores = [NSMutableSet setWithArray:[self getUnreadRoomStore]];
-    }
-    // in order to not call the FileStore repeatedly it's better to check if the element is already present or already removed
-    if (isUnread)
-    {
-        if (![roomUnreadedStores containsObject:roomId])
-        {
-            [roomUnreadedStores addObject:roomId];
-            [self setRoomStore:roomId unread:isUnread];
-        }
-    }
-    else
-    {
-        if ([roomUnreadedStores containsObject:roomId])
-        {
-            [roomUnreadedStores removeObject:roomId];
-            [self setRoomStore:roomId unread:isUnread];
-        }
-    }
+    [roomUnreaded removeObject:roomId];
 }
 
 - (BOOL)isRoomMarkedAsUnread:(nonnull NSString*)roomId
 {
-    // if the memory does not contains the set, it's initialized from FileStore
-    if (nil == roomUnreadedStores)
-    {
-        roomUnreadedStores = [NSMutableSet setWithArray:[self getUnreadRoomStore]];
-    }
-    return [roomUnreadedStores containsObject:roomId];
+    return [roomUnreaded containsObject:roomId];
 }
 
 - (NSUInteger)localUnreadEventCount:(NSString*)roomId threadId:(NSString *)threadId withTypeIn:(NSArray*)types
