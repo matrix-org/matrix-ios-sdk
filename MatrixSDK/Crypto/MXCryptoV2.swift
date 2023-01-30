@@ -656,7 +656,7 @@ class MXCryptoV2: NSObject, MXCrypto {
     
     private func handleRoomMemberEvent(_ event: MXEvent, roomState: MXRoomState?) async {
         guard
-            let userId = event.stateKey,
+            let userId = event.stateKey, !machine.isUserTracked(userId: userId),
             let state = roomState,
             let member = state.members?.member(withUserId: userId)
         else {
