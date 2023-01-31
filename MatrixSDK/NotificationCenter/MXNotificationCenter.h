@@ -21,8 +21,9 @@
 #import "MXPushRuleConditionChecker.h"
 #import "MXHTTPOperation.h"
 
-
 @class MXSession;
+
+MX_ASSUME_MISSING_NULLABILITY_BEGIN
 
 /**
  Posted when an existing push rule will be modified (pause, resume, delete) or when a new rule will be added.
@@ -199,7 +200,7 @@ extern NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID;
  @param enable YES to enable.
  @param completion an optional completion block for the operation.
  */
-- (void)enableRule:(MXPushRule*)pushRule isEnabled:(BOOL)enable completion:(void (^_Nullable)(NSError * _Nullable error))completion;
+- (void)enableRule:(MXPushRule*)pushRule isEnabled:(BOOL)enable completion:(nullable void (^)(NSError * _Nullable error))completion;
 
 /**
  Update the actions for an existing push rule.
@@ -216,7 +217,7 @@ extern NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID;
                        notify:(BOOL)notify
                     soundName:(NSString*)soundName
                     highlight:(BOOL)highlight
-                   completion: (void (^_Nullable)(NSError * _Nullable error))completion;
+                   completion:(nullable void (^)(NSError * _Nullable error))completion;
 
 /**
  Create a content push rule, see MXNotificationCenter notifications for operation result.

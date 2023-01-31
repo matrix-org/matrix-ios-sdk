@@ -397,7 +397,7 @@ NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID = @".m.rule.mess
     }
 }
 
-- (void)enableRule:(MXPushRule*)pushRule isEnabled:(BOOL)enable completion:(void (^_Nullable)(NSError * _Nullable error))completion
+- (void)enableRule:(MXPushRule*)pushRule isEnabled:(BOOL)enable completion:(nullable void (^)(NSError * _Nullable error))completion;
 {
     if (pushRule)
     {
@@ -444,7 +444,7 @@ NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID = @".m.rule.mess
                        notify:(BOOL)notify
                     soundName:(NSString*)soundName
                     highlight:(BOOL)highlight
-                   completion:(void (^_Nullable)(NSError * _Nullable error))completion
+                   completion:(nullable void (^)(NSError * _Nullable error))completion
 {
     
     NSArray *actions = [self encodeActionsWithNotify:notify soundName:soundName highlight:highlight];
