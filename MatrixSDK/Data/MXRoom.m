@@ -3350,14 +3350,20 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
 
 - (void)setUnread
 {
-    [mxSession.store setUnreadMarkerForRoom:self.roomId];
-    [mxSession.store commit];
+    [mxSession.store setUnreadForRoom:self.roomId];
+    if ([mxSession.store respondsToSelector:@selector(commit)])
+    {
+        [mxSession.store commit];
+    }
 }
 
 - (void)resetUnread
 {
-    [mxSession.store resetUnreadMarkerForRoom:self.roomId];
-    [mxSession.store commit];
+    [mxSession.store resetUnreadForRoom:self.roomId];
+    if ([mxSession.store respondsToSelector:@selector(commit)])
+    {
+        [mxSession.store commit];
+    }
 }
 
 - (BOOL)isMarkedAsUnread

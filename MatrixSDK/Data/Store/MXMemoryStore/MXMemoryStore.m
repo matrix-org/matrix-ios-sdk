@@ -312,12 +312,12 @@
     return receiptsData;
 }
 
-- (void)setUnreadMarkerForRoom:(nonnull NSString*)roomId;
+- (void)setUnreadForRoom:(nonnull NSString*)roomId;
 {
     [roomUnreaded addObject:roomId];
 }
 
-- (void)resetUnreadMarkerForRoom:(nonnull NSString*)roomId;
+- (void)resetUnreadForRoom:(nonnull NSString*)roomId;
 {
     [roomUnreaded removeObject:roomId];
 }

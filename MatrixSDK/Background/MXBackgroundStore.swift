@@ -287,11 +287,11 @@ class MXBackgroundStore: NSObject, MXStore {
         return []
     }
     
-    func setUnreadMarkerForRoom(_ roomId: String) {
+    func setUnreadForRoom(_ roomId: String) {
         //  no-op
     }
     
-    func resetUnreadMarker(forRoom roomId: String) {
+    func resetUnread(forRoom roomId: String) {
         //  no-op
     }
     

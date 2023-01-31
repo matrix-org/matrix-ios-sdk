@@ -1000,16 +1000,6 @@ static NSUInteger preloadOptions;
     return threadedStore;
 }
 
-- (void)setUnreadMarkerForRoom:(nonnull NSString*)roomId;
-{
-    [super setUnreadMarkerForRoom:roomId];
-}
-
-- (void)resetUnreadMarkerForRoom:(nonnull NSString*)roomId;
-{
-    [super resetUnreadMarkerForRoom:roomId];
-}
-
 -(void)saveUnreadRooms
 {
     
