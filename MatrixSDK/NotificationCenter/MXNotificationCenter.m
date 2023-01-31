@@ -397,7 +397,7 @@ NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID = @".m.rule.mess
     }
 }
 
-- (void)enableRule:(MXPushRule*)pushRule isEnabled:(BOOL)enable
+- (void)enableRule:(MXPushRule*)pushRule isEnabled:(BOOL)enable completion:(nullable void (^)(NSError * _Nullable error))completion;
 {
     if (pushRule)
     {
@@ -426,10 +426,15 @@ NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID = @".m.rule.mess
             
             [[NSNotificationCenter defaultCenter] postNotificationName:kMXNotificationCenterDidUpdateRules object:self userInfo:nil];
             
+            if (completion) {
+                completion(nil);
+            }
         } failure:^(NSError *error) {
-            
             [[NSNotificationCenter defaultCenter] postNotificationName:kMXNotificationCenterDidFailRulesUpdate object:self userInfo:@{kMXNotificationCenterErrorKey:error}];
             
+            if (completion) {
+                completion(error);
+            }
         }];
     }
 }
@@ -439,6 +444,7 @@ NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID = @".m.rule.mess
                        notify:(BOOL)notify
                     soundName:(NSString*)soundName
                     highlight:(BOOL)highlight
+                   completion:(nullable void (^)(NSError * _Nullable error))completion
 {
     
     NSArray *actions = [self encodeActionsWithNotify:notify soundName:soundName highlight:highlight];
@@ -450,12 +456,20 @@ NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID = @".m.rule.mess
         // Refresh locally rules
         [self refreshRules:^{
             [[NSNotificationCenter defaultCenter] postNotificationName:kMXNotificationCenterDidUpdateRules object:self userInfo:nil];
+            if (completion) {
+                completion(nil);
+            }
         } failure:^(NSError *error) {
             [[NSNotificationCenter defaultCenter] postNotificationName:kMXNotificationCenterDidFailRulesUpdate object:self userInfo:@{kMXNotificationCenterErrorKey:error}];
+            if (completion) {
+                completion(nil);
+            }
         }];
-    }
-                                                 failure:^(NSError *error) {
+    }  failure:^(NSError *error) {
         [[NSNotificationCenter defaultCenter] postNotificationName:kMXNotificationCenterDidFailRulesUpdate object:self userInfo:@{kMXNotificationCenterErrorKey:error}];
+        if (completion) {
+            completion(error);
+        }
     }];
 }
 
