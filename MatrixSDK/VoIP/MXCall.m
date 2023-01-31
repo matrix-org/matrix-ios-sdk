@@ -1703,25 +1703,12 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
     
     if (inviteExpirationTimer)
     {
+        [inviteExpirationTimer invalidate];
         inviteExpirationTimer = nil;
+    }
 
-        if (!_isIncoming)
-        {
-            // Terminate the call at the stack level we initiated
-            [callStackCall end];
-        }
-
-        // Send the notif that the call expired to the app
-        [self setState:MXCallStateInviteExpired reason:nil];
-        
-        // Set appropriate call end reason
-        _endReason = MXCallEndReasonMissed;
-
-        // And set the final state: MXCallStateEnded
-        [self setState:MXCallStateEnded reason:nil];
-
-        // The call manager can now ignore this call
-        [callManager removeCall:self];
+    if (!_isIncoming) { // hang up on the side of the caller (call initiator)
+      [self hangupWithReason: MXCallHangupReasonInviteTimeout];
     }
 }
 
