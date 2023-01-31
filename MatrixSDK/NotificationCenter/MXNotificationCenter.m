@@ -465,8 +465,7 @@ NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID = @".m.rule.mess
                 completion(nil);
             }
         }];
-    }
-                                                 failure:^(NSError *error) {
+    }  failure:^(NSError *error) {
         [[NSNotificationCenter defaultCenter] postNotificationName:kMXNotificationCenterDidFailRulesUpdate object:self userInfo:@{kMXNotificationCenterErrorKey:error}];
         if (completion) {
             completion(error);
