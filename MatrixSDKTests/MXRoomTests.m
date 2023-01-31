@@ -19,6 +19,7 @@
 #import "MatrixSDKTestsData.h"
 
 #import "MXSession.h"
+#import "MXFileStore.h"
 #import "MXTools.h"
 #import "MXSendReplyEventDefaultStringLocalizer.h"
 
@@ -874,6 +875,101 @@
             
         } failure:^(NSError *error) {
             XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+- (void)testMarkUnread
+{
+    
+    [matrixSDKTestsData doMXRestClientTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
+        
+        MXSession *bobSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [matrixSDKTestsData retain:bobSession];
+        
+        MXFileStore *store = [[MXFileStore alloc] init];
+        
+        [bobSession setStore:store success:^{
+            [bobSession start:^{
+                MXRoom *room = [bobSession roomWithRoomId:roomId];
+                XCTAssertNotNil(room, @"the room should not be nil");
+                [room setUnread];
+                XCTAssert([room isMarkedAsUnread], @"the room should be marked as unread");
+                [room resetUnread];
+                XCTAssertFalse([room isMarkedAsUnread], @"the room should not be marked as unread");
+                [expectation fulfill];
+            } failure:^(NSError *error) {
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
+            }];
+        } failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+/**
+ Check mark unread functionality with a new events
+ 
+ - Have Alice and Bob in a room
+ - Bob mark the room as unread
+ - Alice send a new message to Bob
+ - Bob's room should be unmarked as unread because a new lastmessage is received.
+ */
+- (void)testMarkUnreadWithMessage
+{
+    
+    [matrixSDKTestsData doMXRestClientTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
+        
+        MXSession *bobSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        MXSession *aliceSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+        
+        [matrixSDKTestsData retain:bobSession];
+        
+        MXFileStore *store = [[MXFileStore alloc] init];
+        
+        [bobSession setStore:store success:^{
+            [bobSession start:^{
+                MXRoom *room = [bobSession roomWithRoomId:roomId];
+                XCTAssertNotNil(room, @"the room should not be nil");
+                [room setUnread];
+                XCTAssert([room isMarkedAsUnread], @"the room should be marked as unread");
+                
+                [room listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent * _Nonnull event, MXTimelineDirection direction, MXRoomState * _Nullable roomState) {
+                    
+                    dispatch_time_t delayTime = dispatch_time(DISPATCH_TIME_NOW, 100);
+                    dispatch_after(delayTime, dispatch_get_main_queue(), ^(void) {
+                        XCTAssertFalse([room isMarkedAsUnread], @"the room should not be marked as unread");
+                        [expectation fulfill];
+                    });
+                }];
+
+                MXFileStore *aliceStore = [[MXFileStore alloc] init];
+                [aliceSession setStore:aliceStore success:^{
+                    [aliceSession start:^{
+                        MXRoom *aliceRoom = [aliceSession roomWithRoomId:roomId];
+                        [aliceRoom sendTextMessage:@"Hello" threadId:nil success:^(NSString *eventId) {
+                            [aliceSession close];
+                                                } failure:^(NSError *error) {
+                                                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                                                    [expectation fulfill];
+                                                }];
+                                        } failure:^(NSError *error) {
+                                            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                                            [expectation fulfill];
+                                        }];
+                                } failure:^(NSError *error) {
+                                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                                    [expectation fulfill];
+                                }];
+            } failure:^(NSError *error) {
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
+            }];
+        } failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
             [expectation fulfill];
         }];
     }];
