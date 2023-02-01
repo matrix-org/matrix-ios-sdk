@@ -486,11 +486,11 @@
 {
 }
 
-- (void)markRoomAsUnread:(nonnull NSString*)roomId;
+- (void)setUnreadForRoom:(nonnull NSString *)roomId
 {
 }
 
-- (void)unmarkRoomAsUnread:(nonnull NSString*)roomId;
+- (void)resetUnreadForRoom:(nonnull NSString *)roomId
 {
 }
 
