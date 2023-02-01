@@ -30,11 +30,11 @@ class MXCryptoMigrationV2Tests: XCTestCase {
         func isEncryptionAvailableForData(ofType dataType: String) -> Bool {
             return true
         }
-        
+
         func hasKeyForData(ofType dataType: String) -> Bool {
             return true
         }
-        
+
         func keyDataForData(ofType dataType: String) -> MXKeyData? {
             MXRawDataKey(key: "1234".data(using: .ascii)!)
         }
@@ -45,13 +45,7 @@ class MXCryptoMigrationV2Tests: XCTestCase {
     
     override func setUp() {
         data = MatrixSDKTestsData()
-        MXKeyProvider.sharedInstance().delegate = KeyProvider()
         e2eData = MatrixSDKTestsE2EData(matrixSDKTestsData: data)
-        setLogger(logger: self)
-    }
-    
-    override func tearDown() {
-        MXKeyProvider.sharedInstance().delegate = nil
     }
     
     // MARK: - Helpers
@@ -64,15 +58,18 @@ class MXCryptoMigrationV2Tests: XCTestCase {
             throw Error.missingDependencies
         }
         
+        MXKeyProvider.sharedInstance().delegate = KeyProvider()
         let migration = MXCryptoMigrationV2(legacyStore: store)
         try migration.migrateCrypto { _ in }
-        return try MXCryptoMachine(
+        let machine = try MXCryptoMachine(
             userId: store.userId(),
             deviceId: store.deviceId(),
             restClient: restClient,
             getRoomAction: { _ in
                 return nil
             })
+        MXKeyProvider.sharedInstance().delegate = nil
+        return machine
     }
     
     // MARK: - Tests
@@ -134,7 +131,26 @@ class MXCryptoMigrationV2Tests: XCTestCase {
         // As expected we cannot cross sign in v2 either
         XCTAssertFalse(crossSigningV2.canCrossSign)
         XCTAssertFalse(crossSigningV2.hasAllPrivateKeys)
-    }    
+    }
+    
+    func test_migratesCrossSigningStatus() async throws {
+        let env = try await e2eData.startE2ETest()
+        
+        // We start with user who setup cross-signing with password
+        let legacyCrossSigning = env.session.crypto.crossSigning
+        try await legacyCrossSigning.setup(withPassword: MXTESTS_ALICE_PWD)
+        XCTAssertTrue(legacyCrossSigning.canCrossSign)
+        XCTAssertTrue(legacyCrossSigning.hasAllPrivateKeys)
+        
+        // We now migrate the data into crypto v2
+        let machine = try migratedOlmMachine(session: env.session)
+        let crossSigningV2 = MXCrossSigningV2(crossSigning: machine, restClient: env.session.matrixRestClient)
+        try await crossSigningV2.refreshState()
+
+        // And confirm that cross signing is ready
+        XCTAssertTrue(crossSigningV2.canCrossSign)
+        XCTAssertTrue(crossSigningV2.hasAllPrivateKeys)
+    }
 }
 
 private extension MXCrypto {

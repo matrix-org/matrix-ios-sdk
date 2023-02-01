@@ -16,7 +16,7 @@ abstract_target 'MatrixSDK' do
     
     pod 'Realm', '10.27.0'
     pod 'libbase58', '~> 0.1.4'
-    pod 'MatrixSDKCrypto', "0.1.9", :configurations => ['DEBUG'], :inhibit_warnings => true
+    pod 'MatrixSDKCrypto', "0.1.10", :configurations => ['DEBUG'], :inhibit_warnings => true
     
     target 'MatrixSDK-iOS' do
         platform :ios, '11.0'
