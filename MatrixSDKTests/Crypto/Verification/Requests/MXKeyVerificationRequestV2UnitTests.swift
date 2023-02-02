@@ -16,9 +16,6 @@
 
 import Foundation
 import XCTest
-
-#if DEBUG
-
 import MatrixSDKCrypto
 @testable import MatrixSDK
 
@@ -214,5 +211,3 @@ class MXKeyVerificationRequestV2UnitTests: XCTestCase {
         waitForExpectations(timeout: 1)
     }
 }
-
-#endif

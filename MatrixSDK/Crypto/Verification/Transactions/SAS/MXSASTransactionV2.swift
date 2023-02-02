@@ -15,9 +15,6 @@
 //
 
 import Foundation
-
-#if DEBUG
-
 import MatrixSDKCrypto
 
 /// SAS transaction originating from `MatrixSDKCrypto`
@@ -208,4 +205,3 @@ extension MXSASTransactionState {
     }
 }
 
-#endif

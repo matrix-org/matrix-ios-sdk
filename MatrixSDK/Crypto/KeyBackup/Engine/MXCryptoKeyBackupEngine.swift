@@ -15,9 +15,6 @@
 //
 
 import Foundation
-
-#if DEBUG
-
 import MatrixSDKCrypto
 
 class MXCryptoKeyBackupEngine: NSObject, MXKeyBackupEngine {
@@ -447,5 +444,3 @@ extension MegolmV1BackupKey {
         )
     }
 }
-
-#endif

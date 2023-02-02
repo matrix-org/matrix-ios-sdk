@@ -16,8 +16,6 @@
 
 import Foundation
 
-#if DEBUG
-
 import MatrixSDKCrypto
 
 struct SasStub: SasProtocol {
@@ -96,5 +94,3 @@ struct SasStub: SasProtocol {
         .started
     }
 }
-
-#endif

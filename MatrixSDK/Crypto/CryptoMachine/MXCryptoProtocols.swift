@@ -15,9 +15,6 @@
 //
 
 import Foundation
-
-#if DEBUG
-
 import MatrixSDKCrypto
 
 /// A set of protocols defining the functionality in `MatrixSDKCrypto` and separating them into logical units
@@ -130,4 +127,3 @@ enum MXVerification {
     case qrCode(QrCodeProtocol)
 }
 
-#endif

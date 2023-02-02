@@ -89,11 +89,11 @@ public enum MXBackgroundSyncServiceError: Error {
         let resetBackgroundCryptoStore = syncResponseStoreManager.syncToken() == nil
         
         crypto = {
-            #if DEBUG
             if MXSDKOptions.sharedInstance().isCryptoSDKAvailable && MXSDKOptions.sharedInstance().enableCryptoSDK {
                 return MXBackgroundCryptoV2(credentials: credentials, restClient: restClient)
             }
-            #endif
+            
+            MXLog.debug("[MXBackgroundSyncService] init: constructing legacy crypto \(MXSDKOptions.sharedInstance().isCryptoSDKAvailable) \(MXSDKOptions.sharedInstance().enableCryptoSDK)")
             return MXLegacyBackgroundCrypto(credentials: credentials, resetBackgroundCryptoStore: resetBackgroundCryptoStore)
         }()
         

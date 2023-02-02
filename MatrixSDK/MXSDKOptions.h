@@ -203,8 +203,6 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @property (nonatomic) BOOL enableRoomSharedHistoryOnInvite;
 
-#if DEBUG
-
 /**
  The state of the rust-based `MatrixCryptoSDK` which replaces `MatrixSDK`'s internal crypto module,
  and whether it is available to a user as an option.
@@ -223,8 +221,6 @@ NS_ASSUME_NONNULL_BEGIN
  @remark NO by default.
  */
 @property (nonatomic) BOOL enableCryptoSDK;
-
-#endif
 
 /**
  Enable symmetric room key backups

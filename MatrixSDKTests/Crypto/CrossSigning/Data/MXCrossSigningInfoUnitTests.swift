@@ -17,9 +17,6 @@
 import Foundation
 import XCTest
 @testable import MatrixSDK
-
-#if DEBUG
-
 import MatrixSDKCrypto
 
 class MXCrossSigningInfoUnitTests: XCTestCase {
@@ -92,5 +89,3 @@ class MXCrossSigningInfoUnitTests: XCTestCase {
         XCTAssertEqual(key1?.keys, key2?.keys, file: file, line: line)
     }
 }
-
-#endif

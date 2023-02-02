@@ -17,8 +17,6 @@
 import Foundation
 @testable import MatrixSDK
 
-#if DEBUG
-
 class MXKeysQueryResponseUnitTests: XCTestCase {
     
     private func makeCrossSigningInfo(userId: String) -> MXCrossSigningInfo {
@@ -431,5 +429,3 @@ class MXKeysQueryResponseUnitTests: XCTestCase {
         ])
     }
 }
-
-#endif
