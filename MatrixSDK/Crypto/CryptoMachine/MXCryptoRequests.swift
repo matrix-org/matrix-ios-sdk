@@ -15,17 +15,28 @@
 //
 
 import Foundation
-
-#if DEBUG
-
 import MatrixSDKCrypto
 
 /// Convenience class to delegate network requests originating in Rust crypto module
 /// to the native REST API client
 struct MXCryptoRequests {
     private let restClient: MXRestClient
+    private let queryScheduler: MXKeysQueryScheduler<MXKeysQueryResponse>
+    
     init(restClient: MXRestClient) {
         self.restClient = restClient
+        self.queryScheduler = .init { users in
+            try await performCallbackRequest { completion in
+                _ = restClient.downloadKeysByChunk(
+                    forUsers: users,
+                    token: nil,
+                    success: {
+                        completion(.success($0))
+                    }, failure: {
+                        completion(.failure($0 ?? Error.unknownError))
+                    })
+            }
+        }
     }
     
     func sendToDevice(request: ToDeviceRequest) async throws {
@@ -47,7 +58,7 @@ struct MXCryptoRequests {
             restClient.uploadKeys(
                 request.deviceKeys,
                 oneTimeKeys: request.oneTimeKeys,
-                fallbackKeys: nil,
+                fallbackKeys: request.fallbackKeys,
                 forDevice: request.deviceId,
                 completion: $0
             )
@@ -86,16 +97,7 @@ struct MXCryptoRequests {
     }
     
     func queryKeys(users: [String]) async throws -> MXKeysQueryResponse {
-        return try await performCallbackRequest { completion in
-            _ = restClient.downloadKeysByChunk(
-                forUsers: users,
-                token: nil,
-                success: {
-                    completion(.success($0))
-                }, failure: {
-                    completion(.failure($0 ?? Error.unknownError))
-                })
-        }
+        try await queryScheduler.query(users: Set(users))
     }
     
     func claimKeys(request: ClaimKeysRequest) async throws -> MXKeysClaimResponse {
@@ -160,6 +162,7 @@ extension MXCryptoRequests {
     struct UploadKeysRequest {
         let deviceKeys: [String: Any]?
         let oneTimeKeys: [String: Any]?
+        let fallbackKeys: [String: Any]?
         let deviceId: String
         
         init(body: String, deviceId: String) throws {
@@ -169,6 +172,7 @@ extension MXCryptoRequests {
             
             self.deviceKeys = json["device_keys"] as? [String : Any]
             self.oneTimeKeys = json["one_time_keys"] as? [String : Any]
+            self.fallbackKeys = json["fallback_keys"] as? [String : Any]
             self.deviceId = deviceId
         }
     }
@@ -244,5 +248,3 @@ extension SignatureUploadRequest {
         return signatures
     }
 }
-
-#endif

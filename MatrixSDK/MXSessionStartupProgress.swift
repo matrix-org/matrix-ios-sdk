@@ -31,7 +31,7 @@ public enum MXSessionStartupStage {
     case processingResponse(progress: Double)
 }
 
-/// Delegate that recieves stage updates
+/// Delegate that receives stage updates
 public protocol MXSessionStartupProgressDelegate: AnyObject {
     func sessionDidUpdateStartupStage(_ stage: MXSessionStartupStage)
 }

@@ -15,9 +15,6 @@
 //
 
 import Foundation
-
-#if DEBUG
-
 import MatrixSDKCrypto
 
 /// Object responsible for encrypting room events and ensuring that room keys are distributed to room members
@@ -85,8 +82,10 @@ struct MXRoomEventEncryption: MXRoomEventEncrypting {
         eventType: String,
         in room: MXRoom
     ) async throws -> [AnyHashable: Any] {
+        log.debug("Encrypting content of type `\(eventType)`")
         
         try await ensureEncryptionAndRoomKeys(in: room)
+        log.debug("Encryption and room keys ensured")
         
         let roomId = try roomId(for: room)
         return try handler.encryptRoomEvent(
@@ -128,6 +127,7 @@ struct MXRoomEventEncryption: MXRoomEventEncrypting {
             for: room,
             historyVisibility: state.historyVisibility
         )
+        log.debug("Collected \(users.count) eligible users")
         
         let settings = try encryptionSettings(for: state)
         try await handler.shareRoomKeysIfNecessary(
@@ -135,6 +135,8 @@ struct MXRoomEventEncryption: MXRoomEventEncrypting {
             users: users,
             settings: settings
         )
+        
+        log.debug("Encryption and room keys up to date")
     }
     
     /// Make sure that we recognize (and store if necessary) the claimed room encryption algorithm
@@ -216,5 +218,3 @@ struct MXRoomEventEncryption: MXRoomEventEncrypting {
         return roomId
     }
 }
-
-#endif

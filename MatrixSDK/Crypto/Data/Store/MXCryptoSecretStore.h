@@ -34,6 +34,14 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)storeSecret:(NSString *)secret withSecretId:(NSString *)secretId;
 
 /**
+ Check if a given secret is stored
+ 
+ @param secretId the id of the secret.
+ @return YES if we have secret stored locally
+ */
+- (BOOL)hasSecretWithSecretId:(NSString *)secretId;
+
+/**
  Retrieve a secret.
  
  @param secretId the id of the secret.

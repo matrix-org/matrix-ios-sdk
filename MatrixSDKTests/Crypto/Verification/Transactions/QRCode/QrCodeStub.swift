@@ -16,8 +16,6 @@
 
 import Foundation
 
-#if DEBUG
-
 import MatrixSDKCrypto
 
 struct QrCodeStub: QrCodeProtocol {
@@ -114,7 +112,5 @@ struct QrCodeStub: QrCodeProtocol {
     func state() -> QrCodeState {
         .started
     }
-    
 }
 
-#endif

@@ -109,16 +109,6 @@ NSString *const MXBackgroundCryptoStoreUserIdSuffix = @":bgCryptoStore";
     }
 }
 
-- (void)open:(void (^)(void))onComplete failure:(void (^)(NSError *error))failure
-{
-    MXWeakify(self);
-    [cryptoStore open:^{
-        MXStrongifyAndReturnIfNil(self);
-        
-        [self->bgCryptoStore open:onComplete failure:failure];
-    } failure:failure];
-}
-
 - (instancetype)initWithCredentials:(MXCredentials *)theCredentials
 {
     NSAssert(NO, @"This method should be useless in the context of MXBackgroundCryptoStore");
@@ -529,6 +519,12 @@ NSString *const MXBackgroundCryptoStoreUserIdSuffix = @":bgCryptoStore";
 - (void)storeSecret:(NSString*)secret withSecretId:(NSString*)secretId
 {
     NSAssert(NO, @"This method should be useless in the context of MXBackgroundCryptoStore");
+}
+
+- (BOOL)hasSecretWithSecretId:(NSString *)secretId
+{
+    NSAssert(NO, @"This method should be useless in the context of MXBackgroundCryptoStore");
+    return NO;
 }
 
 - (NSString*)secretWithSecretId:(NSString*)secretId

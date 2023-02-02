@@ -15,9 +15,6 @@
 //
 
 import Foundation
-
-#if DEBUG
-
 import OLMKit
 import MatrixSDKCrypto
 
@@ -200,5 +197,3 @@ private extension PickledInboundGroupSession {
         )
     }
 }
-
-#endif

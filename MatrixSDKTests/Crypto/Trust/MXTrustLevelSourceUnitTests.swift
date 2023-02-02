@@ -17,9 +17,6 @@
 import Foundation
 import XCTest
 @testable import MatrixSDK
-
-#if DEBUG
-
 import MatrixSDKCrypto
 
 class MXTrustLevelSourceUnitTests: XCTestCase {
@@ -72,12 +69,10 @@ class MXTrustLevelSourceUnitTests: XCTestCase {
         
         let summary = source.trustLevelSummary(userIds: ["Alice", "Bob"])
         
-        XCTAssertEqual(summary?.trustedUsersProgress.totalUnitCount, 2)
-        XCTAssertEqual(summary?.trustedUsersProgress.completedUnitCount, 1)
+        XCTAssertEqual(summary.trustedUsersProgress.totalUnitCount, 2)
+        XCTAssertEqual(summary.trustedUsersProgress.completedUnitCount, 1)
         
-        XCTAssertEqual(summary?.trustedDevicesProgress.totalUnitCount, 3)
-        XCTAssertEqual(summary?.trustedDevicesProgress.completedUnitCount, 2)
+        XCTAssertEqual(summary.trustedDevicesProgress.totalUnitCount, 3)
+        XCTAssertEqual(summary.trustedDevicesProgress.completedUnitCount, 2)
     }
 }
-
-#endif

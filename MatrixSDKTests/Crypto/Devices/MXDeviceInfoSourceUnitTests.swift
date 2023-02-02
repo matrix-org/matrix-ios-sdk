@@ -17,9 +17,6 @@
 import Foundation
 import XCTest
 @testable import MatrixSDK
-
-#if DEBUG
-
 import MatrixSDKCrypto
 
 class MXDeviceInfoSourceUnitTests: XCTestCase {
@@ -85,5 +82,3 @@ class MXDeviceInfoSourceUnitTests: XCTestCase {
         XCTAssertEqual(map.objects(forUser: "Bob").count, 1)
     }
 }
-
-#endif

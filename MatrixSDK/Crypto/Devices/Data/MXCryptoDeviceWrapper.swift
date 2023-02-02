@@ -15,9 +15,6 @@
 //
 
 import Foundation
-
-#if DEBUG
-
 import MatrixSDKCrypto
 
 /// Convenience wrapper around `MatrixSDKCrypto`'s `Device`
@@ -62,5 +59,3 @@ import MatrixSDKCrypto
         )
     }
 }
-
-#endif

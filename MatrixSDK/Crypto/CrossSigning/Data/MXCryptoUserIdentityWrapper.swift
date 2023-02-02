@@ -15,9 +15,6 @@
 //
 
 import Foundation
-
-#if DEBUG
-
 import MatrixSDKCrypto
 
 /// Convenience wrapper around `MatrixSDKCrypto`'s `UserIdentity`
@@ -64,5 +61,3 @@ private extension MXCrossSigningKey {
         self.init(fromJSON: json)
     }
 }
-
-#endif

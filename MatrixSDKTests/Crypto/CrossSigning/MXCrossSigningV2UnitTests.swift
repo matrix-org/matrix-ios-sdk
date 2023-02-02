@@ -17,9 +17,6 @@
 import Foundation
 import XCTest
 @testable import MatrixSDK
-
-#if DEBUG
-
 import MatrixSDKCrypto
 
 class MXCrossSigningV2UnitTests: XCTestCase {
@@ -99,5 +96,3 @@ class MXCrossSigningV2UnitTests: XCTestCase {
         waitForExpectations(timeout: 1)
     }
 }
-
-#endif

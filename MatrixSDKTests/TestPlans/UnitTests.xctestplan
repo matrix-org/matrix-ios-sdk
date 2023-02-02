@@ -66,6 +66,7 @@
         "MXKeyVerificationManagerV2UnitTests",
         "MXKeyVerificationRequestV2UnitTests",
         "MXKeyVerificationStateResolverUnitTests",
+        "MXKeysQueryResponseUnitTest",
         "MXKeysQuerySchedulerUnitTests",
         "MXMediaScanStoreUnitTests",
         "MXMegolmDecryptionUnitTests",

@@ -15,13 +15,12 @@
 //
 
 import Foundation
-
-#if DEBUG
-
 import MatrixSDKCrypto
 
 /// Redirects logs originating in `MatrixSDKCrypto` into `MXLog`
-class MXCryptoMachineLogger: Logger {
+class MXCryptoSDKLogger: Logger {
+    static let shared = MXCryptoSDKLogger()
+    
     init() {
         setLogger(logger: self)
     }
@@ -29,12 +28,17 @@ class MXCryptoMachineLogger: Logger {
     func log(logLine: String) {
         // Excluding some auto-generated logs that are not useful
         // This will be changed in rust-sdk directly
-        guard !logLine.contains("::uniffi_api:") else {
-            return
+        let ignored = [
+            "::uniffi_api:",
+            "::backup_recovery_key: decrypt_v1"
+        ]
+        
+        for ignore in ignored {
+            if logLine.contains(ignore) {
+                return
+            }
         }
         
-        MXLog.debug("[MXCryptoMachine] \(logLine)")
+        MXLog.debug("[MXCryptoSDK] \(logLine)")
     }
 }
-
-#endif

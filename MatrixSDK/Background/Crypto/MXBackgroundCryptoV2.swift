@@ -16,8 +16,6 @@
 
 import Foundation
 
-#if DEBUG
-
 import MatrixSDKCrypto
 
 /// An implementation of `MXBackgroundCrypto` which uses [matrix-rust-sdk](https://github.com/matrix-org/matrix-rust-sdk/tree/main/crates/matrix-sdk-crypto)
@@ -27,36 +25,30 @@ class MXBackgroundCryptoV2: MXBackgroundCrypto {
         case missingCredentials
     }
     
-    private let machine: MXCryptoMachine
+    private let credentials: MXCredentials
+    private let restClient: MXRestClient
     private let log = MXNamedLog(name: "MXBackgroundCryptoV2")
     
-    init(credentials: MXCredentials, restClient: MXRestClient) throws {
-        guard
-            let userId = credentials.userId,
-            let deviceId = credentials.deviceId
-        else {
-            throw Error.missingCredentials
-        }
-        
-        // `MXCryptoMachine` will load the same store as the main application meaning that background and foreground
-        // sync services have access to the same data / keys. Possible race conditions are handled internally.
-        machine = try MXCryptoMachine(
-            userId: userId,
-            deviceId: deviceId,
-            restClient: restClient,
-            getRoomAction: { [log] _ in
-                log.error("The background crypto should not be accessing rooms")
-                return nil
-            }
-        )
+    init(credentials: MXCredentials, restClient: MXRestClient) {
+        self.credentials = credentials
+        self.restClient = restClient
+        log.debug("Initialized background crypto module")
     }
     
     func handleSyncResponse(_ syncResponse: MXSyncResponse) async {
-        let toDeviceCount = syncResponse.toDevice?.events.count ?? 0
-        
-        log.debug("Handling new sync response with \(toDeviceCount) to-device event(s)")
+        let syncId = UUID().uuidString
+        let details = """
+        Handling new sync response `\(syncId)`
+          - to-device events : \(syncResponse.toDevice?.events.count ?? 0)
+          - devices changed  : \(syncResponse.deviceLists?.changed?.count ?? 0)
+          - devices left     : \(syncResponse.deviceLists?.left?.count ?? 0)
+          - one time keys    : \(syncResponse.deviceOneTimeKeysCount?[kMXKeySignedCurve25519Type] ?? 0)
+          - fallback keys    : \(syncResponse.unusedFallbackKeys ?? [])
+        """
+        log.debug(details)
         
         do {
+            let machine = try createMachine()
             _ = try await machine.handleSyncResponse(
                 toDevice: syncResponse.toDevice,
                 deviceLists: syncResponse.deviceLists,
@@ -66,35 +58,82 @@ class MXBackgroundCryptoV2: MXBackgroundCrypto {
         } catch {
             log.error("Failed handling sync response", context: error)
         }
+        
+        log.debug("Completed handling sync response `\(syncId)`")
     }
     
     func canDecryptEvent(_ event: MXEvent) -> Bool {
+        let eventId = event.eventId ?? ""
+        
         if !event.isEncrypted {
+            log.debug("Event \(eventId) is not encrypted")
             return true
         }
         
         guard
             let _ = event.content["sender_key"] as? String,
-            let _ = event.content["session_id"] as? String
+            let sessionId = event.content["session_id"] as? String
         else {
+            log.error("Event does not contain session_id", context: [
+                "event_id": eventId
+            ])
             return false
         }
         
         do {
             // Rust-sdk does not expose api to see if we have a given session key yet (will be added in the future)
             // so for the time being to find out if we can decrypt we simply perform the (more expensive) decryption
+            let machine = try createMachine()
             _ = try machine.decryptRoomEvent(event)
+            log.debug("Event `\(eventId)` can be decrypted with session `\(sessionId)`")
             return true
+        } catch DecryptionError.MissingRoomKey {
+            log.warning("We do not have keys to decrypt event `\(eventId)` with session `\(sessionId)`")
+            return false
         } catch {
+            log.warning("We cannot decrypt event `\(eventId)` with session `\(sessionId)`")
             return false
         }
     }
     
     func decryptEvent(_ event: MXEvent) throws {
-        let decrypted = try machine.decryptRoomEvent(event)
-        let result = try MXEventDecryptionResult(event: decrypted)
-        event.setClearData(result)
+        let eventId = event.eventId ?? ""
+        log.debug("Decrypting event `\(eventId)`")
+        
+        do {
+            let machine = try createMachine()
+            let decrypted = try machine.decryptRoomEvent(event)
+            let result = try MXEventDecryptionResult(event: decrypted)
+            event.setClearData(result)
+            
+            log.debug("Successfully decrypted event `\(result.clearEvent["type"] ?? "unknown")` eventId `\(eventId)`")
+        } catch {
+            log.error("Failed to decrypt event", context: error)
+            throw error
+        }
+    }
+    
+    // `MXCryptoMachine` will load the same store as the main application meaning that background and foreground
+    // sync services have access to the same data / keys. The machine is not fully multi-thread and multi-process
+    // safe, and until this is resolved we open a new instance of `MXCryptoMachine` on each background operation
+    // to ensure we are always up-to-date with whatever has been written by the foreground process in the meanwhile.
+    // See https://github.com/matrix-org/matrix-rust-sdk/issues/1415 for more details.
+    private func createMachine() throws -> MXCryptoMachine {
+        guard
+            let userId = credentials.userId,
+            let deviceId = credentials.deviceId
+        else {
+            throw Error.missingCredentials
+        }
+         
+        return try MXCryptoMachine(
+            userId: userId,
+            deviceId: deviceId,
+            restClient: restClient,
+            getRoomAction: { [log] _ in
+                log.error("The background crypto should not be accessing rooms")
+                return nil
+            }
+        )
     }
 }
-
-#endif

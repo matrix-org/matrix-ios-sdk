@@ -16,9 +16,6 @@
 
 import Foundation
 @testable import MatrixSDK
-
-#if DEBUG
-
 import MatrixSDKCrypto
 
 class MXCryptoKeyBackupEngineUnitTests: XCTestCase {
@@ -233,5 +230,3 @@ class MXCryptoKeyBackupEngineUnitTests: XCTestCase {
         waitForExpectations(timeout: 1)
     }
 }
-
-#endif
