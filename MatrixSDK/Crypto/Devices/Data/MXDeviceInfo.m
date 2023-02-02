@@ -144,7 +144,7 @@ NSString *const MXDeviceInfoTrustLevelDidChangeNotification = @"MXDeviceInfoTrus
         JSONDictionary[@"unsigned"] = _unsignedData;
     }
 
-    return JSONDictionary;
+    return JSONDictionary.copy;
 }
 
 - (NSDictionary *)signalableJSONDictionary
@@ -165,7 +165,7 @@ NSString *const MXDeviceInfoTrustLevelDidChangeNotification = @"MXDeviceInfoTrus
         signalableJSONDictionary[@"keys"] = _keys;
     }
 
-    return signalableJSONDictionary;
+    return signalableJSONDictionary.copy;
 }
 
 
