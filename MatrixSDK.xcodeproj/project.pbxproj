@@ -1874,6 +1874,8 @@
 		ED51943A28462D130006EEC6 /* MXRoomStateUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED51943828462D130006EEC6 /* MXRoomStateUnitTests.swift */; };
 		ED51943C284630090006EEC6 /* MXRestClientStub.m in Sources */ = {isa = PBXBuildFile; fileRef = ED51943B284630090006EEC6 /* MXRestClientStub.m */; };
 		ED51943D284630090006EEC6 /* MXRestClientStub.m in Sources */ = {isa = PBXBuildFile; fileRef = ED51943B284630090006EEC6 /* MXRestClientStub.m */; };
+		ED555F59298BB27200C5BD63 /* MXKeysQueryResponseUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED555F58298BB27200C5BD63 /* MXKeysQueryResponseUnitTests.swift */; };
+		ED555F5A298BB27200C5BD63 /* MXKeysQueryResponseUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED555F58298BB27200C5BD63 /* MXKeysQueryResponseUnitTests.swift */; };
 		ED558068296F0361003443E3 /* MXCryptoMigrationStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED558067296F0361003443E3 /* MXCryptoMigrationStore.swift */; };
 		ED558069296F0361003443E3 /* MXCryptoMigrationStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED558067296F0361003443E3 /* MXCryptoMigrationStore.swift */; };
 		ED55806D296F0E3A003443E3 /* MXCryptoMigrationStoreUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED55806C296F0E3A003443E3 /* MXCryptoMigrationStoreUnitTests.swift */; };
@@ -3095,6 +3097,7 @@
 		ED51943828462D130006EEC6 /* MXRoomStateUnitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXRoomStateUnitTests.swift; sourceTree = "<group>"; };
 		ED51943B284630090006EEC6 /* MXRestClientStub.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXRestClientStub.m; sourceTree = "<group>"; };
 		ED51943E284630100006EEC6 /* MXRestClientStub.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXRestClientStub.h; sourceTree = "<group>"; };
+		ED555F58298BB27200C5BD63 /* MXKeysQueryResponseUnitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXKeysQueryResponseUnitTests.swift; sourceTree = "<group>"; };
 		ED558067296F0361003443E3 /* MXCryptoMigrationStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXCryptoMigrationStore.swift; sourceTree = "<group>"; };
 		ED55806C296F0E3A003443E3 /* MXCryptoMigrationStoreUnitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXCryptoMigrationStoreUnitTests.swift; sourceTree = "<group>"; };
 		ED55806F296F1BEE003443E3 /* MXCryptoMigrationV2Tests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXCryptoMigrationV2Tests.swift; sourceTree = "<group>"; };
@@ -5782,6 +5785,7 @@
 			children = (
 				321809B819EEBF3000377451 /* MXEventTests.m */,
 				EDB4209827DF842F0036AF39 /* MXEventFixtures.swift */,
+				ED555F58298BB27200C5BD63 /* MXKeysQueryResponseUnitTests.swift */,
 			);
 			path = JSONModels;
 			sourceTree = "<group>";
@@ -7369,6 +7373,7 @@
 				32B090FD26201C8D002924AA /* MXAsyncTaskQueueUnitTests.swift in Sources */,
 				322A51D81D9E846800C8536D /* MXCryptoTests.m in Sources */,
 				B146D4FF21A5C0BD00D8C2C6 /* MXMediaScanStoreUnitTests.m in Sources */,
+				ED555F59298BB27200C5BD63 /* MXKeysQueryResponseUnitTests.swift in Sources */,
 				32BD34BE1E84134A006EDC0D /* MatrixSDKTestsE2EData.m in Sources */,
 				EDC8C40E2968C37F003792C5 /* MXKeysQuerySchedulerUnitTests.swift in Sources */,
 				ED751DAE28EDEC7E003748C3 /* MXKeyVerificationStateResolverUnitTests.swift in Sources */,
@@ -8035,6 +8040,7 @@
 				32B4778E2638133D00EA5800 /* MXFilterUnitTests.m in Sources */,
 				32B090FE26201C8D002924AA /* MXAsyncTaskQueueUnitTests.swift in Sources */,
 				B1E09A242397FCE90057C069 /* MXPeekingRoomTests.m in Sources */,
+				ED555F5A298BB27200C5BD63 /* MXKeysQueryResponseUnitTests.swift in Sources */,
 				B1E09A452397FD990057C069 /* MXLazyLoadingTests.m in Sources */,
 				EDC8C40D2968C37E003792C5 /* MXKeysQuerySchedulerUnitTests.swift in Sources */,
 				ED751DAF28EDEC7E003748C3 /* MXKeyVerificationStateResolverUnitTests.swift in Sources */,

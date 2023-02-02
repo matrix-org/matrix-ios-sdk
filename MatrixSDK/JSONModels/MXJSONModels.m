@@ -98,7 +98,7 @@ static NSString* const kMXLoginFlowTypeKey = @"type";
     if (_avatarUrl) { jsonDictionary[@"avatar_url"] = _avatarUrl; }
     if (_roomTypeString) { jsonDictionary[@"room_type"] = _roomTypeString; }
 
-    return jsonDictionary;
+    return jsonDictionary.copy;
 }
 
 @end
@@ -1126,11 +1126,6 @@ NSString *const kMXPushRuleScopeStringGlobal = @"global";
 @end
 
 @interface MXKeysQueryResponse ()
-
-/**
- The original JSON used to create the response model
- */
-@property (nonatomic, copy) NSDictionary *responseJSON;
 @end
 
 @implementation MXKeysQueryResponse
@@ -1140,8 +1135,6 @@ NSString *const kMXPushRuleScopeStringGlobal = @"global";
     MXKeysQueryResponse *keysQueryResponse = [[MXKeysQueryResponse alloc] init];
     if (keysQueryResponse)
     {
-        keysQueryResponse.responseJSON = JSONDictionary;
-        
         // Devices keys
         NSMutableDictionary *map = [NSMutableDictionary dictionary];
 
@@ -1225,7 +1218,31 @@ NSString *const kMXPushRuleScopeStringGlobal = @"global";
 
 - (NSDictionary *)JSONDictionary
 {
-    return self.responseJSON;
+    NSMutableDictionary *deviceKeys = [[NSMutableDictionary alloc] init];
+    for (NSString *userId in self.deviceKeys.userIds) {
+        NSMutableDictionary *devices = [[NSMutableDictionary alloc] init];
+        for (NSString *deviceId in [self.deviceKeys deviceIdsForUser:userId]) {
+            devices[deviceId] = [self.deviceKeys objectForDevice:deviceId forUser:userId].JSONDictionary.copy;
+        }
+        deviceKeys[userId] = devices.copy;
+    }
+    
+    NSMutableDictionary *master = [[NSMutableDictionary alloc] init];
+    NSMutableDictionary *selfSigning = [[NSMutableDictionary alloc] init];
+    NSMutableDictionary *userSigning = [[NSMutableDictionary alloc] init];
+    for (NSString *userId in self.crossSigningKeys) {
+        master[userId] = self.crossSigningKeys[userId].masterKeys.JSONDictionary.copy;
+        selfSigning[userId] = self.crossSigningKeys[userId].selfSignedKeys.JSONDictionary.copy;
+        userSigning[userId] = self.crossSigningKeys[userId].userSignedKeys.JSONDictionary.copy;
+    }
+    
+    return @{
+        @"device_keys": deviceKeys.copy ?: @{},
+        @"failures": self.failures.copy ?: @{},
+        @"master_keys": master.copy ?: @{},
+        @"self_signing_keys": selfSigning.copy ?: @{},
+        @"user_signing_keys": userSigning.copy ?: @{}
+    };
 }
 
 @end
@@ -2203,7 +2220,7 @@ NSString *const kMXPushRuleScopeStringGlobal = @"global";
     {
         dictionary[@"passphrase"] = self.passphrase;
     }
-    return dictionary;
+    return dictionary.copy;
 }
 
 @end

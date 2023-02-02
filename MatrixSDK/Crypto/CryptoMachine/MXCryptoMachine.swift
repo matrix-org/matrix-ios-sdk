@@ -189,6 +189,8 @@ extension MXCryptoMachine: MXCryptoSyncing {
     }
     
     func downloadKeysIfNecessary(users: [String]) async throws {
+        log.debug("Checking if keys need to be downloaded for \(users.count) user(s)")
+        
         try machine.updateTrackedUsers(users: users)
 
         // Out-of-sync check if there is a pending outgoing request for some of these users
@@ -384,15 +386,22 @@ extension MXCryptoMachine: MXCryptoRoomEventEncrypting {
         users: [String],
         settings: EncryptionSettings
     ) async throws {
+        log.debug("Checking room keys in room \(roomId)")
+        
         try await sessionsQueue.sync { [weak self] in
-            try await self?.downloadKeysIfNecessary(users: users)
+            self?.log.debug("Fetching missing sessions")
             try await self?.getMissingSessions(users: users)
         }
         
+        log.debug("Acquiring room lock for room \(roomId)")
         let roomQueue = await roomQueues.getQueue(for: roomId)
+        
         try await roomQueue.sync { [weak self] in
+            self?.log.debug("Sharing room keys")
             try await self?.shareRoomKey(roomId: roomId, users: users, settings: settings)
         }
+        
+        log.debug("All room keys have been shared")
     }
     
     func encryptRoomEvent(
@@ -423,13 +432,22 @@ extension MXCryptoMachine: MXCryptoRoomEventEncrypting {
             let request = try machine.getMissingSessions(users: users),
             case .keysClaim = request
         else {
+            log.debug("No sessions are missing")
             return
         }
+        
+        log.debug("Claiming new keys")
         try await handleRequest(request)
     }
     
     private func shareRoomKey(roomId: String, users: [String], settings: EncryptionSettings) async throws {
         let requests = try machine.shareRoomKey(roomId: roomId, users: users, settings: settings)
+        guard !requests.isEmpty else {
+            log.debug("Room keys do not need to be shared")
+            return
+        }
+        
+        log.debug("Sharing room keys via \(requests.count) request(s")
         try await withThrowingTaskGroup(of: Void.self) { [weak self] group in
             guard let self = self else { return }
             
@@ -445,6 +463,8 @@ extension MXCryptoMachine: MXCryptoRoomEventEncrypting {
             
             try await group.waitForAll()
         }
+        
+        log.debug("All room keys have been shared")
     }
 }
 

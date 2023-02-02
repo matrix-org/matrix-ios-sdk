@@ -35,7 +35,7 @@ public extension MXRestClient {
                              failure: @escaping (_ error: NSError?) -> Void) -> MXHTTPOperation {
         
         // Do not chunk if not needed
-        if users.count < chunkSize {
+        if users.count <= chunkSize {
             return self.downloadKeys(forUsers: users, token: token) { response in
                 switch response {
                     case .success(let keysQueryResponse):
