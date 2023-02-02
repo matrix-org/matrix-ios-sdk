@@ -1,5 +1,5 @@
-//
-// Copyright 2022 The Matrix.org Foundation C.I.C
+// 
+// Copyright 2023 The Matrix.org Foundation C.I.C
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,18 +15,16 @@
 //
 
 import Foundation
-import MatrixSDKCrypto
 
-extension DecryptedEvent {
-    static func stub(
-        clearEvent: [AnyHashable: Any]
-    ) -> DecryptedEvent {
-        return .init(
-            clearEvent: MXTools.serialiseJSONObject(clearEvent),
-            senderCurve25519Key: "",
-            claimedEd25519Key: nil,
-            forwardingCurve25519Chain: [],
-            verificationState: .trusted
-        )
+/// Helper class for batch importing key backups
+@objcMembers public class MXEncryptedKeyBackup: NSObject {
+    public let roomId: String
+    public let sessionId: String
+    public let keyBackup: MXKeyBackupData
+    
+    public init(roomId: String, sessionId: String, keyBackup: MXKeyBackupData) {
+        self.roomId = roomId
+        self.sessionId = sessionId
+        self.keyBackup = keyBackup
     }
 }

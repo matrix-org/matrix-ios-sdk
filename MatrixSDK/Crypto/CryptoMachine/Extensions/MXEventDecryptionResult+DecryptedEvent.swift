@@ -15,9 +15,6 @@
 //
 
 import Foundation
-
-#if DEBUG
-
 import MatrixSDKCrypto
 
 extension MXEventDecryptionResult {
@@ -44,5 +41,3 @@ extension MXEventDecryptionResult {
         isUntrusted = false
     }
 }
-
-#endif

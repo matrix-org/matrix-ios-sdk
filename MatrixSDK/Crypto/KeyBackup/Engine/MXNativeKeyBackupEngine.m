@@ -29,6 +29,7 @@
  Maximum number of keys to send at a time to the homeserver.
  */
 NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
+NSUInteger const kMXKeyBackupImportBatchSize = 1000;
 
 static NSDictionary<NSString*, Class<MXKeyBackupAlgorithm>> *AlgorithmClassesByName;
 static Class DefaultAlgorithmClass;
@@ -38,6 +39,8 @@ static Class DefaultAlgorithmClass;
 @property (nonatomic, weak) MXLegacyCrypto *crypto;
 @property (nonatomic, nullable) MXKeyBackupVersion *keyBackupVersion;
 @property (nonatomic, nullable) id<MXKeyBackupAlgorithm> keyBackupAlgorithm;
+@property (nonatomic, nullable) NSProgress *activeImportProgress;
+@property (nonatomic, nullable) dispatch_queue_t importQueue;
 
 @end
 
@@ -67,6 +70,7 @@ static Class DefaultAlgorithmClass;
     if (self)
     {
         _crypto = crypto;
+        _importQueue = dispatch_queue_create(@"MXNativeKeyBackupEngine".UTF8String, DISPATCH_QUEUE_SERIAL);
     }
     return self;
 }
@@ -533,8 +537,7 @@ static Class DefaultAlgorithmClass;
 
 - (NSProgress *)importProgress
 {
-    // Not implemented for legacy backup
-    return nil;
+    return self.activeImportProgress;
 }
 
 - (void)importKeysWithKeysBackupData:(MXKeysBackupData *)keysBackupData
@@ -543,45 +546,104 @@ static Class DefaultAlgorithmClass;
                              success:(void (^)(NSUInteger, NSUInteger))success
                              failure:(void (^)(NSError *))failure
 {
-    id<MXKeyBackupAlgorithm> algorithm = [self getOrCreateKeyBackupAlgorithmFor:keyBackupVersion privateKey:privateKey];
-    
-    NSMutableArray<MXMegolmSessionData*> *sessionDatas = [NSMutableArray array];
-    
-    // Restore that data
-    NSUInteger sessionsFromHSCount = 0;
-    for (NSString *roomId in keysBackupData.rooms)
+    // There is no way to cancel import so we may have one ongoing already
+    if (self.activeImportProgress)
     {
-        for (NSString *sessionId in keysBackupData.rooms[roomId].sessions)
-        {
-            sessionsFromHSCount++;
-            MXKeyBackupData *keyBackupData = keysBackupData.rooms[roomId].sessions[sessionId];
-            MXMegolmSessionData *sessionData = [algorithm decryptKeyBackupData:keyBackupData forSession:sessionId inRoom:roomId];
-            
-            if (sessionData)
-            {
-                [sessionDatas addObject:sessionData];
-            }
-        }
-    }
-    
-    MXLogDebug(@"[MXNativeKeyBackupEngine] importKeysWithKeysBackupData: Decrypted %@ keys out of %@ from the backup store on the homeserver", @(sessionDatas.count), @(sessionsFromHSCount));
-    
-    // Do not trigger a backup for them if they come from the backup version we are using
-    BOOL backUp = ![keyBackupVersion.version isEqualToString:self.keyBackupVersion.version];
-    if (backUp)
-    {
-        MXLogDebug(@"[MXNativeKeyBackupEngine] importKeysWithKeysBackupData: Those keys will be backed up to backup version: %@", self.keyBackupVersion.version);
-    }
-    
-    // Import them into the crypto store
-    [self.crypto importMegolmSessionDatas:sessionDatas backUp:backUp success:success failure:^(NSError *error) {
+        MXLogError(@"[MXNativeKeyBackupEngine] importKeysWithKeysBackupData: Another import is already ongoing");
         if (failure)
         {
+            NSError *error = [NSError errorWithDomain:MXKeyBackupErrorDomain code:MXKeyBackupErrorAlreadyInProgress userInfo:nil];
             dispatch_async(dispatch_get_main_queue(), ^{
                 failure(error);
             });
         }
-    }];
+        return;
+    }
+    
+    id<MXKeyBackupAlgorithm> algorithm = [self getOrCreateKeyBackupAlgorithmFor:keyBackupVersion privateKey:privateKey];
+    
+    // Collect all sessions that we need to decrypt and import
+    NSMutableArray <MXEncryptedKeyBackup *>*encryptedSessions = [[NSMutableArray alloc] init];
+    for (NSString *roomId in keysBackupData.rooms)
+    {
+        for (NSString *sessionId in keysBackupData.rooms[roomId].sessions)
+        {
+            MXKeyBackupData *keyBackupData = keysBackupData.rooms[roomId].sessions[sessionId];
+            MXEncryptedKeyBackup *backup = [[MXEncryptedKeyBackup alloc] initWithRoomId:roomId sessionId:sessionId keyBackup:keyBackupData];
+            [encryptedSessions addObject:backup];
+        }
+    }
+    
+    NSUInteger totalKeysCount = encryptedSessions.count;
+    __block NSUInteger importedKeysCount = 0;
+    
+    self.activeImportProgress = [NSProgress progressWithTotalUnitCount:totalKeysCount];
+    MXLogDebug(@"[MXNativeKeyBackupEngine] importKeysWithKeysBackupData: Importing %lu encrypted sessions", totalKeysCount);
+    
+    NSDate *startDate = [NSDate date];
+    
+    // Ensure we are on a separate queue so that decrypting and importing can happen in parallel
+    dispatch_async(self.importQueue, ^{
+        dispatch_group_t dispatchGroup = dispatch_group_create();
+        
+        // Itterate through the array in memory-isolated batches
+        for (NSInteger batchIndex = 0; batchIndex < totalKeysCount; batchIndex += kMXKeyBackupImportBatchSize)
+        {
+            MXLogDebug(@"[MXNativeKeyBackupEngine] importKeysWithKeysBackupData: Decrypting and importing batch %ld", batchIndex);
+            dispatch_group_enter(dispatchGroup);
+            
+            @autoreleasepool {
+                
+                // Decrypt batch of sessions
+                NSMutableArray<MXMegolmSessionData*> *sessions = [NSMutableArray array];
+                
+                NSInteger endIndex = MIN(batchIndex + kMXKeyBackupImportBatchSize, totalKeysCount);
+                for (NSInteger idx = batchIndex; idx < endIndex; idx++)
+                {
+                    MXEncryptedKeyBackup *session = encryptedSessions[idx];
+                    MXMegolmSessionData *sessionData = [algorithm decryptKeyBackupData:session.keyBackup forSession:session.sessionId inRoom:session.roomId];
+                    if (sessionData)
+                    {
+                        [sessions addObject:sessionData];
+                    }
+                }
+                
+                // Do not trigger a backup for them if they come from the backup version we are using
+                BOOL backUp = ![keyBackupVersion.version isEqualToString:self.keyBackupVersion.version];
+                if (backUp)
+                {
+                    MXLogDebug(@"[MXNativeKeyBackupEngine] importKeysWithKeysBackupData: Those keys will be backed up to backup version: %@", self.keyBackupVersion.version);
+                }
+                
+                // Import them into the crypto store
+                MXWeakify(self);
+                [self.crypto importMegolmSessionDatas:sessions backUp:backUp success:^(NSUInteger total, NSUInteger imported) {
+                    MXStrongifyAndReturnIfNil(self);
+                    MXLogDebug(@"[MXNativeKeyBackupEngine] importKeysWithKeysBackupData: Imported batch %ld", batchIndex);
+                    importedKeysCount += imported;
+                    
+                    self.activeImportProgress.completedUnitCount += kMXKeyBackupImportBatchSize;
+                    dispatch_group_leave(dispatchGroup);
+                } failure:^(NSError *error) {
+                    MXLogErrorDetails(@"[MXNativeKeyBackupEngine] importKeysWithKeysBackupData: Failed importing batch of sessions", error);
+                    
+                    self.activeImportProgress.completedUnitCount += kMXKeyBackupImportBatchSize;
+                    dispatch_group_leave(dispatchGroup);
+                }];
+            }
+        }
+        
+        dispatch_group_notify(dispatchGroup, dispatch_get_main_queue(), ^{
+            NSTimeInterval duration = [[NSDate date] timeIntervalSinceDate:startDate] * 1000;
+            
+            MXLogDebug(@"[MXNativeKeyBackupEngine] importKeysWithKeysBackupData: Successfully imported %ld out of %ld sessions in %f ms", importedKeysCount, totalKeysCount, duration);
+            self.activeImportProgress = nil;
+            
+            if (success) {
+                success(totalKeysCount, importedKeysCount);
+            }
+        });
+    });
 }
 
 #pragma mark - Private methods -

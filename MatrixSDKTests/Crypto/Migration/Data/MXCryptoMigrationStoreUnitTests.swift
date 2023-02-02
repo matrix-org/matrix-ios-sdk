@@ -16,11 +16,8 @@
 
 import Foundation
 import XCTest
-@testable import MatrixSDK
-
-#if DEBUG
-
 import MatrixSDKCrypto
+@testable import MatrixSDK
 
 class MXCryptoMigrationStoreUnitTests: XCTestCase {
     
@@ -254,5 +251,3 @@ class MXCryptoMigrationStoreUnitTests: XCTestCase {
         XCTAssertEqual(Set(trackedUsers), ["Bob", "Carol", "Dave"])
     }
 }
-
-#endif

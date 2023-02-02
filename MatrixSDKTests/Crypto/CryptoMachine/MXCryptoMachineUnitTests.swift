@@ -15,13 +15,23 @@
 //
 
 import Foundation
-
-#if DEBUG && os(iOS)
-
 import MatrixSDKCrypto
 @testable import MatrixSDK
 
 class MXCryptoMachineUnitTests: XCTestCase {
+    class KeyProvider: NSObject, MXKeyProviderDelegate {
+        func isEncryptionAvailableForData(ofType dataType: String) -> Bool {
+            return true
+        }
+        
+        func hasKeyForData(ofType dataType: String) -> Bool {
+            return true
+        }
+        
+        func keyDataForData(ofType dataType: String) -> MXKeyData? {
+            MXRawDataKey(key: "1234".data(using: .ascii)!)
+        }
+    }
     
     var userId = "@alice:matrix.org"
     var restClient: MXRestClient!
@@ -29,6 +39,7 @@ class MXCryptoMachineUnitTests: XCTestCase {
     
     override func setUp() {
         restClient = MXRestClientStub()
+        MXKeyProvider.sharedInstance().delegate = KeyProvider()
         machine = try! MXCryptoMachine(
             userId: userId,
             deviceId: "ABCD",
@@ -36,11 +47,12 @@ class MXCryptoMachineUnitTests: XCTestCase {
             getRoomAction: {
                 MXRoom(roomId: $0, andMatrixSession: nil)
             })
+        MXKeyProvider.sharedInstance().delegate = nil
     }
     
     override func tearDown() {
         do {
-            let url = try MXCryptoMachine.storeURL(for: userId)
+            let url = try MXCryptoMachineStore.storeURL(for: userId)
             guard FileManager.default.fileExists(atPath: url.path) else {
                 return
             }
@@ -78,5 +90,3 @@ class MXCryptoMachineUnitTests: XCTestCase {
         XCTAssertEqual(result.events.count, 1)
     }
 }
-
-#endif

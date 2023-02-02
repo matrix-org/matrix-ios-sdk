@@ -23,7 +23,6 @@ NSString *const MXCrossSigningInfoTrustLevelDidChangeNotification = @"MXCrossSig
 
 @implementation MXCrossSigningInfo
 
-#if DEBUG
 - (instancetype)initWithUserIdentity:(MXCryptoUserIdentityWrapper *)userIdentity
 {
     self = [self init];
@@ -48,7 +47,6 @@ NSString *const MXCrossSigningInfoTrustLevelDidChangeNotification = @"MXCrossSig
     }
     return self;
 }
-#endif
 
 - (MXCrossSigningKey *)masterKeys
 {

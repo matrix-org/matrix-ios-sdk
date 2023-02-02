@@ -16,8 +16,6 @@
 
 import Foundation
 
-#if DEBUG
-
 /// An implementation of `MXCrossSigning` compatible with `MXCryptoV2` and `MatrixSDKCrypto`
 class MXCrossSigningV2: NSObject, MXCrossSigning {
     enum Error: Swift.Error {
@@ -233,5 +231,3 @@ extension MXCrossSigningV2: MXRecoveryServiceDelegate {
         signUser(withUserId: userId, success: success, failure: failure)
     }
 }
-
-#endif

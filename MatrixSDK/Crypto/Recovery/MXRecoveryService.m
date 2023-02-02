@@ -218,7 +218,7 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
 
 - (BOOL)hasSecretLocally:(NSString*)secretId
 {
-    return ([self.dependencies.secretStore secretWithSecretId:secretId] != nil);
+    return ([self.dependencies.secretStore hasSecretWithSecretId:secretId]);
 }
 
 - (NSArray*)secretsStoredLocally

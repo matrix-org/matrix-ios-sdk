@@ -15,9 +15,6 @@
 //
 
 import Foundation
-
-#if DEBUG
-
 import MatrixSDKCrypto
 @testable import MatrixSDK
 
@@ -30,11 +27,11 @@ class MXCryptoMigrationV2Tests: XCTestCase {
         func isEncryptionAvailableForData(ofType dataType: String) -> Bool {
             return true
         }
-        
+
         func hasKeyForData(ofType dataType: String) -> Bool {
             return true
         }
-        
+
         func keyDataForData(ofType dataType: String) -> MXKeyData? {
             MXRawDataKey(key: "1234".data(using: .ascii)!)
         }
@@ -46,7 +43,6 @@ class MXCryptoMigrationV2Tests: XCTestCase {
     override func setUp() {
         data = MatrixSDKTestsData()
         e2eData = MatrixSDKTestsE2EData(matrixSDKTestsData: data)
-        setLogger(logger: self)
     }
     
     // MARK: - Helpers
@@ -62,15 +58,15 @@ class MXCryptoMigrationV2Tests: XCTestCase {
         MXKeyProvider.sharedInstance().delegate = KeyProvider()
         let migration = MXCryptoMigrationV2(legacyStore: store)
         try migration.migrateCrypto { _ in }
-        MXKeyProvider.sharedInstance().delegate = nil
-        
-        return try MXCryptoMachine(
+        let machine = try MXCryptoMachine(
             userId: store.userId(),
             deviceId: store.deviceId(),
             restClient: restClient,
             getRoomAction: { _ in
                 return nil
             })
+        MXKeyProvider.sharedInstance().delegate = nil
+        return machine
     }
     
     // MARK: - Tests
@@ -116,7 +112,7 @@ class MXCryptoMigrationV2Tests: XCTestCase {
         XCTAssertEqual(content?["body"] as? String, "Hi bob")
     }
     
-    func test_migratesCrossSigningStatus() async throws {
+    func test_notCrossSignedAfterMigration() async throws {
         let env = try await e2eData.startE2ETest()
         
         // We start with user who cannot cross-sign (did not setup cross signing keys)
@@ -125,24 +121,29 @@ class MXCryptoMigrationV2Tests: XCTestCase {
         XCTAssertFalse(legacyCrossSigning.hasAllPrivateKeys)
         
         // We then migrate the user into crypto v2
-        var machine = try migratedOlmMachine(session: env.session)
-        var crossSigningV2 = MXCrossSigningV2(crossSigning: machine, restClient: env.session.matrixRestClient)
+        let machine = try migratedOlmMachine(session: env.session)
+        let crossSigningV2 = MXCrossSigningV2(crossSigning: machine, restClient: env.session.matrixRestClient)
         try await crossSigningV2.refreshState()
         
         // As expected we cannot cross sign in v2 either
         XCTAssertFalse(crossSigningV2.canCrossSign)
         XCTAssertFalse(crossSigningV2.hasAllPrivateKeys)
+    }
+    
+    func test_migratesCrossSigningStatus() async throws {
+        let env = try await e2eData.startE2ETest()
         
-        // Now we setup cross-signing with password on the original / legacy session
+        // We start with user who setup cross-signing with password
+        let legacyCrossSigning = env.session.crypto.crossSigning
         try await legacyCrossSigning.setup(withPassword: MXTESTS_ALICE_PWD)
         XCTAssertTrue(legacyCrossSigning.canCrossSign)
         XCTAssertTrue(legacyCrossSigning.hasAllPrivateKeys)
         
-        // We have to migrate the data once again into crypto v2
-        machine = try migratedOlmMachine(session: env.session)
-        crossSigningV2 = MXCrossSigningV2(crossSigning: machine, restClient: env.session.matrixRestClient)
+        // We now migrate the data into crypto v2
+        let machine = try migratedOlmMachine(session: env.session)
+        let crossSigningV2 = MXCrossSigningV2(crossSigning: machine, restClient: env.session.matrixRestClient)
         try await crossSigningV2.refreshState()
-        
+
         // And confirm that cross signing is ready
         XCTAssertTrue(crossSigningV2.canCrossSign)
         XCTAssertTrue(crossSigningV2.hasAllPrivateKeys)
@@ -214,5 +215,3 @@ extension MXCryptoMigrationV2Tests: Logger {
         MXLog.debug("[MXCryptoMigrationV2Tests]: \(logLine)")
     }
 }
-
-#endif

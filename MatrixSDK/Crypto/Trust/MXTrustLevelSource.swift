@@ -16,8 +16,6 @@
 
 import Foundation
 
-#if DEBUG
-
 /// Convenience struct which transforms `MatrixSDKCrypto` trust levels
 /// into `MatrixSDK` `MXUserTrustLevel`, `MXDeviceTrustLevel` and `MXUsersTrustLevelSummary` formats.
 struct MXTrustLevelSource {
@@ -50,14 +48,10 @@ struct MXTrustLevelSource {
         )
     }
     
-    func trustLevelSummary(userIds: [String]) -> MXUsersTrustLevelSummary? {
-        guard let devices = trustedDevices(userIds: userIds) else {
-            return nil
-        }
-        
+    func trustLevelSummary(userIds: [String]) -> MXUsersTrustLevelSummary {
         return .init(
             trustedUsersProgress: trustedUsers(userIds: userIds),
-            andTrustedDevicesProgress: devices
+            andTrustedDevicesProgress: trustedDevices(userIds: userIds)
         )
     }
     
@@ -71,7 +65,7 @@ struct MXTrustLevelSource {
         return progress
     }
     
-    private func trustedDevices(userIds: [String]) -> Progress? {
+    private func trustedDevices(userIds: [String]) -> Progress {
         let devices = userIds.flatMap {
             devicesSource.devices(userId: $0)
         }
@@ -84,5 +78,3 @@ struct MXTrustLevelSource {
         return progress
     }
 }
-
-#endif

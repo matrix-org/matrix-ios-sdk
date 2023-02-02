@@ -16,9 +16,6 @@
 
 import Foundation
 @testable import MatrixSDK
-
-#if DEBUG
-
 @testable import MatrixSDKCrypto
 
 class CryptoIdentityStub: MXCryptoIdentity {
@@ -130,8 +127,10 @@ class CryptoVerificationStub: CryptoIdentityStub {
 }
 
 extension CryptoVerificationStub: MXCryptoVerifying {
+    func downloadKeysIfNecessary(users: [String]) async throws {
+    }
+    
     func receiveUnencryptedVerificationEvent(event: MXEvent, roomId: String) {
-        
     }
     
     func requestSelfVerification(methods: [String]) async throws -> VerificationRequestProtocol {
@@ -212,5 +211,3 @@ class CryptoBackupStub: MXCryptoBackup {
         return KeysImportResult(imported: 0, total: 0, keys: [:])
     }
 }
-
-#endif
