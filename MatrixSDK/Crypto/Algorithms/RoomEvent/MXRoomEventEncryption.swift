@@ -128,6 +128,7 @@ struct MXRoomEventEncryption: MXRoomEventEncrypting {
             for: room,
             historyVisibility: state.historyVisibility
         )
+        log.debug("Collected \(users.count) eligible users")
         
         let settings = try encryptionSettings(for: state)
         try await handler.shareRoomKeysIfNecessary(
@@ -135,6 +136,8 @@ struct MXRoomEventEncryption: MXRoomEventEncrypting {
             users: users,
             settings: settings
         )
+        
+        log.debug("Encryption and room keys up to date")
     }
     
     /// Make sure that we recognize (and store if necessary) the claimed room encryption algorithm
