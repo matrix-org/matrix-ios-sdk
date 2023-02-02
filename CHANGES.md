@@ -1,3 +1,16 @@
+## Changes in 0.25.0 (2023-02-02)
+
+🙌 Improvements
+
+- CryptoV2: Decrypt notifications ([#1695](https://github.com/matrix-org/matrix-ios-sdk/pull/1695))
+- CryptoV2: Upload fallback keys ([#1697](https://github.com/matrix-org/matrix-ios-sdk/pull/1697))
+- CryptoV2: Set passphrase for the crypto store ([#1699](https://github.com/matrix-org/matrix-ios-sdk/pull/1699))
+- Backup: Import legacy backup in batches ([#1701](https://github.com/matrix-org/matrix-ios-sdk/pull/1701))
+- CryptoV2: New CryptoMachine on each background operation ([#1704](https://github.com/matrix-org/matrix-ios-sdk/pull/1704))
+- CryptoV2: Fix JSONDictionary of keys query responses ([#1707](https://github.com/matrix-org/matrix-ios-sdk/pull/1707))
+- CryptoV2: Enable Crypto SDK for production ([#1708](https://github.com/matrix-org/matrix-ios-sdk/pull/1708))
+
+
 ## Changes in 0.24.8 (2023-01-24)
 
 ✨ Features
