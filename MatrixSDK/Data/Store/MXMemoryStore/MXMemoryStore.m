@@ -52,6 +52,7 @@
         roomThreadedReceiptsStores = [NSMutableDictionary dictionary];
         users = [NSMutableDictionary dictionary];
         groups = [NSMutableDictionary dictionary];
+        roomUnreaded = [[NSMutableSet alloc] init];
         roomSummaryStore = [[MXMemoryRoomSummaryStore alloc] init];
         maxUploadSize = -1;
         areAllIdentityServerTermsAgreed = NO;
@@ -309,6 +310,21 @@
     }
     
     return receiptsData;
+}
+
+- (void)setUnreadForRoom:(nonnull NSString*)roomId;
+{
+    [roomUnreaded addObject:roomId];
+}
+
+- (void)resetUnreadForRoom:(nonnull NSString*)roomId;
+{
+    [roomUnreaded removeObject:roomId];
+}
+
+- (BOOL)isRoomMarkedAsUnread:(nonnull NSString*)roomId
+{
+    return [roomUnreaded containsObject:roomId];
 }
 
 - (NSUInteger)localUnreadEventCount:(NSString*)roomId threadId:(NSString *)threadId withTypeIn:(NSArray*)types

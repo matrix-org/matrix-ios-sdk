@@ -2766,6 +2766,11 @@ typedef void (^MXOnResumeDone)(void);
     } failure:failure];
 }
 
+- (BOOL) isRoomMarkedAsUnread:(NSString*)roomId
+{
+    return [[self roomWithRoomId:roomId] isMarkedAsUnread];
+}
+
 - (void)joinPendingRoomInvites
 {
     NSArray<NSString *> *roomIds = [[self.invitedRooms valueForKey:@"roomId"] copy];

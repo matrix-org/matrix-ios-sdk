@@ -22,9 +22,15 @@ struct PollBuilder {
         static let maxAnswerOptionCount = 20
     }
     
-    func build(pollStartEventContent: MXEventContentPollStart, events: [MXEvent], currentUserIdentifier: String, hasBeenEdited: Bool = false) -> PollProtocol {
+    func build(pollStartEventContent: MXEventContentPollStart,
+               pollStartEvent: MXEvent,
+               events: [MXEvent],
+               currentUserIdentifier: String,
+               hasBeenEdited: Bool = false) -> PollProtocol {
         
         let poll = Poll()
+        poll.id = pollStartEvent.eventId
+        poll.startDate = Date(timeIntervalSince1970: Double(pollStartEvent.originServerTs) / 1000)
         poll.hasBeenEdited = hasBeenEdited
         poll.hasDecryptionError = events.contains(where: { $0.isEncrypted && $0.clear == nil })
         
@@ -55,9 +61,11 @@ struct PollBuilder {
         
         var filteredEvents = events.filter { event in
             guard
-                let eventContent = event.content, event.eventType == __MXEventType.pollResponse,
+                let eventContent = event.content,
+                event.eventType == .pollResponse,
                 let response = pollResponseFromEventContent(eventContent),
-                let _ = response[kMXMessageContentKeyExtensiblePollAnswers] else {
+                let _ = response[kMXMessageContentKeyExtensiblePollAnswers]
+            else {
                 return false
             }
             
