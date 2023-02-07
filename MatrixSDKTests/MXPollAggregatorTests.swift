@@ -18,27 +18,35 @@ import Foundation
 
 class MXPollAggregatorTest: XCTestCase {
     private var matrixSDKTestsData: MatrixSDKTestsData!
-        
     private var matrixSDKTestsE2EData: MatrixSDKTestsE2EData!
-
     private var pollAggregator: PollAggregator!
+    private var delegate: PollAggregatorBlockWrapper!
+    private var isFirstDelegateUpdate: Bool = true
     
     override func setUp() {
         super.setUp()
         matrixSDKTestsData = MatrixSDKTestsData()
         matrixSDKTestsE2EData = MatrixSDKTestsE2EData(matrixSDKTestsData: matrixSDKTestsData)
+        isFirstDelegateUpdate = true
     }
     
     override func tearDown() {
         matrixSDKTestsData = nil
         matrixSDKTestsE2EData = nil
+        delegate = nil
         super.tearDown()
     }
         
     func testAggregations() {
         self.createScenarioForBobAndAlice { bobSession, aliceSession, bobRoom, aliceRoom, pollStartEvent, expectation in
-            self.pollAggregator = try! PollAggregator(session: bobSession, room: bobRoom, pollStartEventId: pollStartEvent.eventId)
+            self.delegate = PollAggregatorBlockWrapper(dataUpdateCallback: { pollAggregator in
+                XCTAssertEqual(self.pollAggregator.poll.answerOptions.first!.count, 2)
+                XCTAssertEqual(self.pollAggregator.poll.answerOptions.last!.count, 0)
+                expectation.fulfill()
+            })
             
+            self.pollAggregator = try! PollAggregator(session: bobSession, room: bobRoom, pollStartEventId: pollStartEvent.eventId)
+        
             let dispatchGroup = DispatchGroup()
             
             for _ in 1...5 {
@@ -58,18 +66,18 @@ class MXPollAggregatorTest: XCTestCase {
             }
             
             dispatchGroup.notify(queue: .main) {
-                self.pollAggregator.delegate = PollAggregatorBlockWrapper(dataUpdateCallback: {
-                    XCTAssertEqual(self.pollAggregator.poll.answerOptions.first!.count, 2)
-                    XCTAssertEqual(self.pollAggregator.poll.answerOptions.last!.count, 0)
-                    
-                    expectation.fulfill()
-                })
+                self.pollAggregator.delegate = self.delegate
             }
         }
     }
     
     func testSessionPausing() {
         self.createScenarioForBobAndAlice { bobSession, aliceSession, bobRoom, aliceRoom, pollStartEvent, expectation in
+            let delegate = PollAggregatorBlockWrapper(dataUpdateCallback: { aggregator in
+                XCTAssertEqual(aggregator.poll.answerOptions.first!.count, 2)
+                XCTAssertEqual(aggregator.poll.answerOptions.last!.count, 0)
+            })
+            
             self.pollAggregator = try! PollAggregator(session: bobSession, room: bobRoom, pollStartEventId: pollStartEvent.eventId)
             
             XCTAssertEqual(self.pollAggregator.poll.answerOptions.first!.count, 1) // One from Alice
@@ -77,10 +85,7 @@ class MXPollAggregatorTest: XCTestCase {
             
             bobSession.pause()
             
-            self.pollAggregator.delegate = PollAggregatorBlockWrapper(dataUpdateCallback: {
-                XCTAssertEqual(self.pollAggregator.poll.answerOptions.first!.count, 2)
-                XCTAssertEqual(self.pollAggregator.poll.answerOptions.last!.count, 0)
-            })
+            self.pollAggregator.delegate = delegate
             
             bobRoom.sendPollResponse(for: pollStartEvent, withAnswerIdentifiers: ["1"], threadId:nil, localEcho: nil) { _ in
                 bobSession.resume {
@@ -96,6 +101,12 @@ class MXPollAggregatorTest: XCTestCase {
         self.createScenarioForBobAndAlice { bobSession, aliceSession, bobRoom, aliceRoom, pollStartEvent, expectation in
             self.pollAggregator = try! PollAggregator(session: bobSession, room: bobRoom, pollStartEventId: pollStartEvent.eventId)
             
+            self.delegate = PollAggregatorBlockWrapper(dataUpdateCallback: { aggregator in
+                XCTAssertEqual(aggregator.poll.answerOptions.first!.count, 2) // One from Bob and one from Alice
+                XCTAssertEqual(aggregator.poll.answerOptions.last!.count, 1) // One from Alice
+                expectation.fulfill()
+            })
+            
             XCTAssertEqual(self.pollAggregator.poll.answerOptions.first!.count, 1) // One from Alice
             XCTAssertEqual(self.pollAggregator.poll.answerOptions.last!.count, 0)
             
@@ -105,12 +116,7 @@ class MXPollAggregatorTest: XCTestCase {
                 bobRoom.sendPollResponse(for: pollStartEvent, withAnswerIdentifiers: ["1"], threadId:nil, localEcho: nil) { _ in
                     aliceRoom.sendPollResponse(for: pollStartEvent, withAnswerIdentifiers: ["1", "2"], threadId:nil, localEcho: nil) { _ in
                         self.matrixSDKTestsData.for(aliceSession.matrixRestClient, andRoom: aliceRoom.roomId, sendMessages: 50, testCase: self) {
-                            
-                            self.pollAggregator.delegate = PollAggregatorBlockWrapper(dataUpdateCallback: {
-                                XCTAssertEqual(self.pollAggregator.poll.answerOptions.first!.count, 2) // One from Bob and one from Alice
-                                XCTAssertEqual(self.pollAggregator.poll.answerOptions.last!.count, 1) // One from Alice
-                                expectation.fulfill()
-                            })
+                            self.pollAggregator.delegate = self.delegate
                             
                             bobSession.resume {
                                 
@@ -131,24 +137,28 @@ class MXPollAggregatorTest: XCTestCase {
         self.createScenarioForBobAndAlice { bobSession, aliceSession, bobRoom, aliceRoom, pollStartEvent, expectation in
             self.pollAggregator = try! PollAggregator(session: bobSession, room: bobRoom, pollStartEventId: pollStartEvent.eventId)
             
+            self.delegate = PollAggregatorBlockWrapper(dataUpdateCallback: { aggregator in
+                defer {
+                    self.isFirstDelegateUpdate = false
+                }
+                guard self.isFirstDelegateUpdate else {
+                    return
+                }
+                XCTAssertEqual(aggregator.poll.text, "Some other question")
+                XCTAssertEqual(aggregator.poll.answerOptions.count, 2)
+                XCTAssertTrue(aggregator.poll.hasBeenEdited)
+                expectation.fulfill()
+            })
+            
             let oldContent = MXEventContentPollStart(fromJSON: pollStartEvent.content)!
             let newContent = MXEventContentPollStart(question: "Some other question",
                                                      kind: oldContent.kind,
                                                      maxSelections: oldContent.maxSelections,
-                                                     answerOptions: [])
+                                                     answerOptions: oldContent.answerOptions)
             
-            self.pollAggregator.delegate = PollAggregatorBlockWrapper(dataUpdateCallback: {
-                
-                XCTAssertEqual(self.pollAggregator.poll.text, "Some other question")
-                XCTAssertEqual(self.pollAggregator.poll.answerOptions.count, 0)
-                XCTAssertTrue(self.pollAggregator.poll.hasBeenEdited)
-                
-                expectation.fulfill()
-                self.pollAggregator.delegate = nil
-            })
             
             bobRoom.sendPollUpdate(for: pollStartEvent, oldContent: oldContent, newContent: newContent, localEcho: nil) { result in
-                
+                self.pollAggregator.delegate = self.delegate
             } failure: { error in
                 XCTFail("The operation should not fail - NSError: \(String(describing: error))")
             }
@@ -200,10 +210,9 @@ class MXPollAggregatorTest: XCTestCase {
 }
 
 private class PollAggregatorBlockWrapper: PollAggregatorDelegate {
+    let dataUpdateCallback: (PollAggregator) -> (Void)
     
-    let dataUpdateCallback: ()->(Void)
-    
-    internal init(dataUpdateCallback: @escaping () -> (Void)) {
+    internal init(dataUpdateCallback: @escaping (PollAggregator) -> (Void)) {
         self.dataUpdateCallback = dataUpdateCallback
     }
     
@@ -220,6 +229,6 @@ private class PollAggregatorBlockWrapper: PollAggregatorDelegate {
     }
     
     func pollAggregatorDidUpdateData(_ aggregator: PollAggregator) {
-        dataUpdateCallback()
+        dataUpdateCallback(aggregator)
     }
 }

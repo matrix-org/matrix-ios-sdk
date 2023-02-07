@@ -486,6 +486,19 @@
 {
 }
 
+- (void)setUnreadForRoom:(nonnull NSString *)roomId
+{
+}
+
+- (void)resetUnreadForRoom:(nonnull NSString *)roomId
+{
+}
+
+- (BOOL)isRoomMarkedAsUnread:(nonnull NSString*)roomId
+{
+    return NO;
+}
+
 - (void)close
 {
     [paginationTokens removeAllObjects];

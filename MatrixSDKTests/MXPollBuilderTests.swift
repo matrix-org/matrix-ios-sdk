@@ -25,7 +25,7 @@ class MXPollBuilderTest: XCTestCase {
         events.append(MXEvent(fromJSON: pollResponseEventWithSender("Alice", answerIdentifiers: ["1"]))!)
         events.append(MXEvent(fromJSON: pollResponseEventWithSender("Bob", answerIdentifiers: ["1"]))!)
         
-        let poll = builder.build(pollStartEventContent: pollStartEventContent(maxSelections: 7), events: events, currentUserIdentifier: "")
+        let poll = builder.build(pollStartEventContent: pollStartEventContent(maxSelections: 7), pollStartEvent: pollStartedEvent(), events: events, currentUserIdentifier: "")
         XCTAssertEqual(poll.maxAllowedSelections, 7)
         XCTAssertEqual(poll.text, "Question")
         XCTAssertEqual(poll.kind, .disclosed)
@@ -37,6 +37,9 @@ class MXPollBuilderTest: XCTestCase {
         XCTAssertEqual(poll.answerOptions.last?.id, "2")
         XCTAssertEqual(poll.answerOptions.last?.text, "Second answer")
         XCTAssertEqual(poll.answerOptions.last?.count, 0)
+        
+        XCTAssertEqual(poll.id, "$eventId")
+        XCTAssertEqual(poll.startDate, Date(timeIntervalSince1970: 0))
     }
     
     func testSpoiledResponseEmpty() {
@@ -44,7 +47,7 @@ class MXPollBuilderTest: XCTestCase {
         events.append(MXEvent(fromJSON: pollResponseEventWithSender("Bob", timestamp: 0, answerIdentifiers: ["1"]))!)
         events.append(MXEvent(fromJSON: pollResponseEventWithSender("Bob", timestamp: 1, answerIdentifiers: []))!)
         
-        let poll = builder.build(pollStartEventContent: pollStartEventContent(), events: events, currentUserIdentifier: "")
+        let poll = builder.build(pollStartEventContent: pollStartEventContent(), pollStartEvent: pollStartedEvent(), events: events, currentUserIdentifier: "")
         XCTAssertEqual(poll.answerOptions.first?.count, 0)
         XCTAssertEqual(poll.answerOptions.last?.count, 0)
     }
@@ -54,7 +57,7 @@ class MXPollBuilderTest: XCTestCase {
         events.append(MXEvent(fromJSON: pollResponseEventWithSender("Bob", timestamp: 0, answerIdentifiers: ["1"]))!)
         events.append(MXEvent(fromJSON: pollResponseEventWithSender("Bob", timestamp: 1, answerIdentifiers: ["1", "2"]))!)
         
-        let poll = builder.build(pollStartEventContent: pollStartEventContent(), events: events, currentUserIdentifier: "")
+        let poll = builder.build(pollStartEventContent: pollStartEventContent(), pollStartEvent: pollStartedEvent(), events: events, currentUserIdentifier: "")
         XCTAssertEqual(poll.answerOptions.first?.count, 0)
         XCTAssertEqual(poll.answerOptions.last?.count, 0)
     }
@@ -64,7 +67,7 @@ class MXPollBuilderTest: XCTestCase {
         events.append(MXEvent(fromJSON: pollResponseEventWithSender("Bob", timestamp: 0, answerIdentifiers: ["1"]))!)
         events.append(MXEvent(fromJSON: pollResponseEventWithSender("Bob", timestamp: 1, answerIdentifiers: ["1", "2", "3"]))!)
         
-        let poll = builder.build(pollStartEventContent: pollStartEventContent(), events: events, currentUserIdentifier: "")
+        let poll = builder.build(pollStartEventContent: pollStartEventContent(), pollStartEvent: pollStartedEvent(), events: events, currentUserIdentifier: "")
         XCTAssertEqual(poll.answerOptions.first?.count, 0)
         XCTAssertEqual(poll.answerOptions.last?.count, 0)
     }
@@ -73,7 +76,7 @@ class MXPollBuilderTest: XCTestCase {
         var events = [MXEvent]()
         events.append(MXEvent(fromJSON: pollResponseEventWithSender("Bob", answerIdentifiers: ["1", "1", "1"]))!)
         
-        let poll = builder.build(pollStartEventContent: pollStartEventContent(maxSelections: 100), events: events, currentUserIdentifier: "")
+        let poll = builder.build(pollStartEventContent: pollStartEventContent(maxSelections: 100), pollStartEvent: pollStartedEvent(), events: events, currentUserIdentifier: "")
         XCTAssertEqual(poll.answerOptions.first?.count, 1)
         XCTAssertEqual(poll.answerOptions.last?.count, 0)
     }
@@ -82,7 +85,7 @@ class MXPollBuilderTest: XCTestCase {
         var events = [MXEvent]()
         events.append(MXEvent(fromJSON: pollResponseEventWithSender("Bob", answerIdentifiers: ["1", "1", "2", "1", "2", "2", "1", "2"]))!)
         
-        let poll = builder.build(pollStartEventContent: pollStartEventContent(maxSelections: 100), events: events, currentUserIdentifier: "")
+        let poll = builder.build(pollStartEventContent: pollStartEventContent(maxSelections: 100), pollStartEvent: pollStartedEvent(), events: events, currentUserIdentifier: "")
         XCTAssertEqual(poll.answerOptions.first?.count, 1)
         XCTAssertEqual(poll.answerOptions.last?.count, 1)
     }
@@ -95,7 +98,7 @@ class MXPollBuilderTest: XCTestCase {
         events.append(MXEvent(fromJSON: pollResponseEventWithSender("Bob", timestamp: 1, answerIdentifiers: []))!) // Too few
         events.append(MXEvent(fromJSON: pollResponseEventWithSender("Bob", timestamp: 3, answerIdentifiers: ["1", "2"]))!) // Too many
         
-        let poll = builder.build(pollStartEventContent: pollStartEventContent(), events: events, currentUserIdentifier: "")
+        let poll = builder.build(pollStartEventContent: pollStartEventContent(), pollStartEvent: pollStartedEvent(), events: events, currentUserIdentifier: "")
         XCTAssertEqual(poll.answerOptions.first?.count, 0)
         XCTAssertEqual(poll.answerOptions.last?.count, 1)
     }
@@ -111,7 +114,7 @@ class MXPollBuilderTest: XCTestCase {
         events.append(MXEvent(fromJSON: pollResponseEventWithSender("Bob", timestamp: 10, answerIdentifiers: []))!)
         events.append(MXEvent(fromJSON: pollResponseEventWithSender("Alice", timestamp:10, answerIdentifiers: ["1", "2"]))!)
         
-        let poll = builder.build(pollStartEventContent: pollStartEventContent(maxSelections: 10), events: events, currentUserIdentifier: "")
+        let poll = builder.build(pollStartEventContent: pollStartEventContent(maxSelections: 10), pollStartEvent: pollStartedEvent(), events: events, currentUserIdentifier: "")
         
         XCTAssert(poll.isClosed)
         
@@ -126,7 +129,7 @@ class MXPollBuilderTest: XCTestCase {
         var events = [MXEvent]()
         events.append(MXEvent(fromJSON: pollResponseEventWithSender("Bob", answerIdentifiers: ["1"]))!)
         
-        let poll = builder.build(pollStartEventContent: pollStartEventContent(maxSelections: 7), events: events, currentUserIdentifier: "Bob")
+        let poll = builder.build(pollStartEventContent: pollStartEventContent(maxSelections: 7), pollStartEvent: pollStartedEvent(), events: events, currentUserIdentifier: "Bob")
         XCTAssertEqual(poll.answerOptions.first?.isCurrentUserSelection, true)
         XCTAssertEqual(poll.answerOptions.last?.isCurrentUserSelection, false)
     }
@@ -136,7 +139,7 @@ class MXPollBuilderTest: XCTestCase {
         events.append(MXEvent(fromJSON: pollResponseEventWithSender("Bob", timestamp: 0, answerIdentifiers: ["1"]))!)
         events.append(MXEvent(fromJSON: pollResponseEventWithSender("Bob", timestamp: 1, answerIdentifiers: ["2", "1"]))!)
         
-        let poll = builder.build(pollStartEventContent: pollStartEventContent(maxSelections: 7), events: events, currentUserIdentifier: "Bob")
+        let poll = builder.build(pollStartEventContent: pollStartEventContent(maxSelections: 7), pollStartEvent: pollStartedEvent(), events: events, currentUserIdentifier: "Bob")
         XCTAssertEqual(poll.answerOptions.first?.isCurrentUserSelection, true)
         XCTAssertEqual(poll.answerOptions.last?.isCurrentUserSelection, true)
     }
@@ -151,6 +154,10 @@ class MXPollBuilderTest: XCTestCase {
                                        kind: kMXMessageContentKeyExtensiblePollKindDisclosed,
                                        maxSelections: NSNumber(value: maxSelections),
                                        answerOptions: answerOptions)
+    }
+    
+    private func pollStartedEvent() -> MXEvent {
+        .init(fromJSON: pollResponseEventWithSender("Bob", answerIdentifiers: ["1", "2"]))
     }
     
     private func pollResponseEventWithSender(_ sender: String, timestamp: Int = 0, answerIdentifiers:[String]) -> [String: Any] {
