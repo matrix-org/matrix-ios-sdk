@@ -89,6 +89,19 @@ class MXCryptoMigrationStoreUnitTests: XCTestCase {
     
     // MARK: - Tests
     
+    func test_credentials() {
+        XCTAssertEqual(store.userId, "Alice")
+        XCTAssertEqual(store.deviceId, "ABC")
+    }
+    
+    func test_trustedSettings() {
+        legacyStore.globalBlacklistUnverifiedDevices = false
+        XCTAssertFalse(store.globalSettings.onlyAllowTrustedDevices)
+        
+        legacyStore.globalBlacklistUnverifiedDevices = true
+        XCTAssertTrue(store.globalSettings.onlyAllowTrustedDevices)
+    }
+    
     func test_missingAccountFailsExtraction() {
         legacyStore.setAccount(nil)
         do {
@@ -249,5 +262,23 @@ class MXCryptoMigrationStoreUnitTests: XCTestCase {
         let trackedUsers = try extractData().trackedUsers
         
         XCTAssertEqual(Set(trackedUsers), ["Bob", "Carol", "Dave"])
+    }
+    
+    func test_extractsRoomSettings() throws {
+        legacyStore.storeAlgorithm(forRoom: "room1", algorithm: kMXCryptoOlmAlgorithm)
+        legacyStore.storeBlacklistUnverifiedDevices(inRoom: "room1", blacklist: true)
+        
+        legacyStore.storeAlgorithm(forRoom: "room2", algorithm: kMXCryptoMegolmAlgorithm)
+        legacyStore.storeBlacklistUnverifiedDevices(inRoom: "room2", blacklist: false)
+        
+        legacyStore.storeAlgorithm(forRoom: "room3", algorithm: "something invalid")
+        legacyStore.storeBlacklistUnverifiedDevices(inRoom: "room3", blacklist: true)
+        
+        let settings = try extractData().roomSettings
+        
+        XCTAssertEqual(settings, [
+            "room1": RoomSettings(algorithm: .olmV1Curve25519AesSha2, onlyAllowTrustedDevices: true),
+            "room2": RoomSettings(algorithm: .megolmV1AesSha2, onlyAllowTrustedDevices: false),
+        ])
     }
 }

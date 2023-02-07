@@ -36,12 +36,19 @@ typedef NS_ENUM(NSInteger, MXCryptoVersion)
     // It is used to compute MXCryptoVersionLast.
     MXCryptoVersionCount,
     
+#pragma mark - Deprecated versions
+    
     // The internal crypto module has been deprecated in favour of `MatrixCryptoSDK`
-    // The value is set manually to leave room for intermediate version 3, 4 ...
-    MXCryptoVersionLegacyDeprecated = 1000,
+    // The value is set manually to a large number in order to leave room for possible
+    // intermediate valid version 3, 4 ... with bug fixes of the legacy store
+    MXCryptoDeprecated1 = 1000,
+    
+    // Deprecated version that migrates room settings from the legacy store, which were
+    // not included in the deprecated v1
+    MXCryptoDeprecated2,
 };
 
-// The current version of MXCrypto
+// The current version of non-deprecated MXCrypto
 #define MXCryptoVersionLast (MXCryptoVersionCount - 1)
 
 #endif /* MXCryptoVersion_h */

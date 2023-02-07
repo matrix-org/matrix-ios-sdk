@@ -47,24 +47,19 @@ struct MXRoomEventEncryption: MXRoomEventEncrypting {
     private static let keyRotationPeriodSec: Int = 7 * 24 * 3600 // Rotate room keys each week
     
     private let handler: MXCryptoRoomEventEncrypting
-    private let legacyStore: MXCryptoStore
     private let getRoomAction: GetRoomAction
     private let log = MXNamedLog(name: "MXRoomEventEncryption")
     
     init(
         handler: MXCryptoRoomEventEncrypting,
-        legacyStore: MXCryptoStore,
         getRoomAction: @escaping GetRoomAction
     ) {
         self.handler = handler
-        self.legacyStore = legacyStore
         self.getRoomAction = getRoomAction
     }
     
     func isRoomEncrypted(roomId: String) -> Bool {
-        // State of room encryption is not yet implemented in `MatrixSDKCrypto`
-        // Will be moved to `MatrixSDKCrypto` eventually
-        return legacyStore.algorithm(forRoom: roomId) != nil
+        return handler.roomSettings(roomId: roomId)?.algorithm != nil
     }
     
     func ensureRoomKeysShared(roomId: String) async throws {
@@ -144,37 +139,23 @@ struct MXRoomEventEncryption: MXRoomEventEncrypting {
     
     /// Make sure that we recognize (and store if necessary) the claimed room encryption algorithm
     private func ensureRoomEncryption(roomId: String, algorithm: String?) throws {
-        let existingAlgorithm = legacyStore.algorithm(forRoom: roomId)
-        if existingAlgorithm != nil && existingAlgorithm == algorithm {
-            // Encryption in room is already set to the correct algorithm
-            return
-        }
+        log.debug("Attempting to set algorithm to \(algorithm ?? "empty")")
         
-        guard let algorithm = algorithm else {
-            if existingAlgorithm != nil {
-                log.error("Resetting encryption is not allowed")
-                return
+        do {
+            let algorithm = try EventEncryptionAlgorithm(string: algorithm)
+            try handler.setRoomAlgorithm(roomId: roomId, algorithm: algorithm)
+        } catch {
+            if let existing = handler.roomSettings(roomId: roomId)?.algorithm {
+                log.error("Failed to set algorithm, but another room algorithm already stored", context: [
+                    "existing": existing,
+                    "new": algorithm ?? "empty"
+                ])
             } else {
-                throw Error.invalidEncryptionAlgorithm
+                log.error("Failed to set algorithm", context: error)
+                throw error
             }
         }
         
-        let supportedAlgorithms = Set([kMXCryptoMegolmAlgorithm])
-        guard supportedAlgorithms.contains(algorithm) else {
-            log.error("Ignoring invalid room algorithm", context: [
-                "room_id": roomId,
-                "algorithm": algorithm
-            ])
-            throw Error.invalidEncryptionAlgorithm
-        }
-        
-        if let existing = existingAlgorithm, existing != algorithm {
-            log.warning("New m.room.encryption event in \(roomId) with an algorithm change from \(existing) to \(algorithm)")
-        } else {
-            log.debug("New m.room.encryption event with algorithm \(algorithm)")
-        }
-        
-        legacyStore.storeAlgorithm(forRoom: roomId, algorithm: algorithm)
     }
     
     /// Get user ids for all room members that should be able to decrypt events, based on the history visibility setting
@@ -208,7 +189,7 @@ struct MXRoomEventEncryption: MXRoomEventEncrypting {
     }
     
     private func onlyTrustedDevices(in roomId: String) -> Bool {
-        return legacyStore.globalBlacklistUnverifiedDevices || legacyStore.blacklistUnverifiedDevices(inRoom: roomId)
+        return handler.onlyAllowTrustedDevices || handler.roomSettings(roomId: roomId)?.onlyAllowTrustedDevices == true
     }
     
     private func room(for roomId: String) throws -> MXRoom {

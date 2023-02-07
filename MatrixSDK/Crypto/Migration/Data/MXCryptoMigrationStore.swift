@@ -19,11 +19,23 @@ import OLMKit
 import MatrixSDKCrypto
 
 struct MXCryptoMigrationStore {
+    struct GlobalSettings {
+        let onlyAllowTrustedDevices: Bool
+    }
+    
     enum Error: Swift.Error {
         case missingAccount
     }
     
     let legacyStore: MXCryptoStore
+    
+    var userId: String? {
+        legacyStore.userId()
+    }
+    
+    var deviceId: String? {
+        legacyStore.deviceId()
+    }
     
     var olmSessionCount: UInt {
         legacyStore.sessionsCount()
@@ -31,6 +43,10 @@ struct MXCryptoMigrationStore {
     
     var megolmSessionCount: UInt {
         legacyStore.inboundGroupSessionsCount(false)
+    }
+    
+    var globalSettings: GlobalSettings {
+        .init(onlyAllowTrustedDevices: legacyStore.globalBlacklistUnverifiedDevices)
     }
     
     func extractData(with pickleKey: Data) throws -> MigrationData {
@@ -42,7 +58,8 @@ struct MXCryptoMigrationStore {
             backupRecoveryKey: backupRecoveryKey(),
             pickleKey: [UInt8](pickleKey),
             crossSigning: crossSigning(),
-            trackedUsers: trackedUsers()
+            trackedUsers: trackedUsers(),
+            roomSettings: extractRoomSettings()
         )
     }
     
@@ -85,6 +102,24 @@ struct MXCryptoMigrationStore {
             callback(pickled, progress)
         }
     }
+    
+    func extractRoomSettings() -> [String: RoomSettings] {
+        return legacyStore
+            .roomSettings()
+            .reduce(into: [String: RoomSettings]()) { dict, item in
+                do {
+                    let algorithm = try EventEncryptionAlgorithm(string: item.algorithm)
+                    dict[item.roomId] = RoomSettings(
+                        algorithm: algorithm,
+                        onlyAllowTrustedDevices: item.blacklistUnverifiedDevices
+                    )
+                } catch {
+                    MXLog.error("[MXCryptoMigrationStore] cannot extract room settings", context: error)
+                }
+            }
+    }
+    
+    // MARK: - Private
     
     private func pickledAccount(pickleKey: Data) throws -> PickledAccount {
         guard

@@ -183,6 +183,23 @@ public class MXMemoryCryptoStore: NSObject, MXCryptoStore {
     public func algorithm(forRoom roomId: String!) -> String! {
         algorithms[roomId]?.algorithm
     }
+    
+    // MARK: - Room Settings
+    
+    public func roomSettings() -> [MXRoomSettings]! {
+        return algorithms.compactMap { roomId, item in
+            do {
+                return try MXRoomSettings(
+                    roomId: roomId,
+                    algorithm: item.algorithm,
+                    blacklistUnverifiedDevices: item.blacklistUnverifiedDevices
+                )
+            } catch {
+                MXLog.debug("[MXMemoryCryptoStore] roomSettings: Failed creating algorithm", context: error)
+                return nil
+            }
+        }
+    }
 
     // MARK: - OLM Session
 

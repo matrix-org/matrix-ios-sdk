@@ -35,6 +35,7 @@
 
 @class OLMAccount;
 @class OLMOutboundGroupSession;
+@class MXRoomSettings;
 
 /**
  The `MXCryptoStore` protocol defines an interface that must be implemented in order to store
@@ -246,6 +247,11 @@
  nil if the room is not encrypted.
  */
 - (NSString*)algorithmForRoom:(NSString*)roomId;
+
+/**
+ Fetch all stored room settings, containing room algorithm and other crypto options
+ */
+- (NSArray <MXRoomSettings *> *)roomSettings;
 
 /**
  Store a session between this device and another device.

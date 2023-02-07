@@ -39,6 +39,7 @@
   "testTargets" : [
     {
       "selectedTests" : [
+        "EventEncryptionAlgorithmUnitTests",
         "MXAesUnitTests",
         "MXAggregatedEditsUnitTests",
         "MXAggregatedReferenceUnitTests",
