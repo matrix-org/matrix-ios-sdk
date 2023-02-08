@@ -106,15 +106,22 @@ struct MXCryptoRequests {
         }
     }
     
+    @MainActor
+    // Calling methods on `MXRoom` has various state side effects so should be called on the main thread
     func roomMessage(request: RoomMessageRequest) async throws -> String? {
-        var event: MXEvent?
-        return try await performCallbackRequest {
+        return try await withCheckedThrowingContinuation { cont in
+            var event: MXEvent?
             request.room.sendEvent(
                 MXEventType(identifier: request.eventType),
                 content: request.content,
-                localEcho: &event,
-                completion: $0
-            )
+                localEcho: &event) { response in
+                    switch response {
+                    case .success(let value):
+                        cont.resume(returning: value)
+                    case .failure(let error):
+                        cont.resume(throwing: error)
+                    }
+                }
         }
     }
     
