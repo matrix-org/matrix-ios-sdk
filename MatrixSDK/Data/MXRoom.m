@@ -2583,9 +2583,11 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
     MXEventContentRelatesTo *relatesTo = [[MXEventContentRelatesTo alloc] initWithRelationType:MXEventRelationTypeReference
                                                                                        eventId:pollStartEvent.eventId];
     
+    MXSendReplyEventDefaultStringLocalizer* localizer = MXSendReplyEventDefaultStringLocalizer.new;
     NSDictionary *content = @{
         kMXEventRelationRelatesToKey: relatesTo.JSONDictionary,
-        kMXMessageContentKeyExtensiblePollEndMSC3381: @{}
+        kMXMessageContentKeyExtensiblePollEndMSC3381: @{},
+        kMXMessageContentKeyExtensibleTextMSC1767: localizer.replyToEndedPoll
     };
     
     return [self sendEventOfType:[MXTools eventTypeString:MXEventTypePollEnd] content:content threadId:threadId localEcho:localEcho success:success failure:failure];
