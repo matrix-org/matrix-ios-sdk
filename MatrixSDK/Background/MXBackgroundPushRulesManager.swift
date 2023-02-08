@@ -101,6 +101,9 @@ import Foundation
     public func pushRule(matching event: MXEvent,
                          roomState: MXRoomState,
                          currentUserDisplayName: String?) -> MXPushRule? {
+        // getting the uncrypted event if present or fallback
+        let event = event.clear ?? event
+        
         //  return nil if current user's event
         if event.sender == credentials.userId {
             return nil
