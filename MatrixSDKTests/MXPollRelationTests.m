@@ -66,6 +66,8 @@
                             [mxSession.aggregations referenceEventsForEvent:pollStartEvent.eventId inRoom:room.roomId from:nil limit:-1 success:^(MXAggregationPaginatedResponse *paginatedResponse) {
                                 XCTAssertNil(paginatedResponse.nextBatch);
                                 XCTAssertEqual(paginatedResponse.chunk.count, 2);
+                                MXEvent* pollEndedEvent = paginatedResponse.chunk.lastObject;
+                                XCTAssertTrue([pollEndedEvent.content[kMXMessageContentKeyExtensibleTextMSC1767] isEqual:@"Ended poll"]);
                                 
                                 [expectation fulfill];
                             } failure:^(NSError *error) {
@@ -81,8 +83,6 @@
                     XCTFail(@"The operation should not fail - NSError: %@", error);
                     [expectation fulfill];
                 }];
-                
-                [expectation fulfill];
             } failure:^(NSError *error) {
                 XCTFail(@"The operation should not fail - NSError: %@", error);
                 [expectation fulfill];
