@@ -2220,7 +2220,7 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
     {
         // The "Ended poll" text is not meant to be localized from the sender side.
         // This is why here we use a "default localizer" providing the english version of it.
-        senderMessageBody = MXSendReplyEventDefaultStringLocalizer.new.replyToEndedPoll;
+        senderMessageBody = MXSendReplyEventDefaultStringLocalizer.new.endedPollMessage;
     }
     else if (eventToReply.eventType == MXEventTypeBeaconInfo)
     {
@@ -2587,7 +2587,7 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
     NSDictionary *content = @{
         kMXEventRelationRelatesToKey: relatesTo.JSONDictionary,
         kMXMessageContentKeyExtensiblePollEndMSC3381: @{},
-        kMXMessageContentKeyExtensibleTextMSC1767: localizer.replyToEndedPoll
+        kMXMessageContentKeyExtensibleTextMSC1767: localizer.endedPollMessage
     };
     
     return [self sendEventOfType:[MXTools eventTypeString:MXEventTypePollEnd] content:content threadId:threadId localEcho:localEcho success:success failure:failure];
