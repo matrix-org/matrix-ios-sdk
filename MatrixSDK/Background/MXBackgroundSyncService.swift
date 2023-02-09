@@ -500,5 +500,11 @@ public enum MXBackgroundSyncServiceError: Error {
             MXLog.debug("[MXBackgroundSyncService] updateBackgroundServiceStoresIfNeeded: Reset MXBackgroundCryptoStore")
             crypto.reset()
         }
+        
+        if let accountData = syncResponseStoreManager.syncResponseStore.accountData {
+            pushRulesManager.handleAccountData(accountData)
+        } else if let accountData = store.userAccountData ?? nil {
+            pushRulesManager.handleAccountData(accountData)
+        }
     }
 }
