@@ -707,6 +707,15 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
     {
         [self cancelTransaction:transaction code:cancelCode success:success failure:failure];
     }
+    // If the session is closed, don't try to send a request
+    else if (self.crypto.mxSession.state == MXSessionStateClosed)
+    {
+        // It's not an error, the associated session is simply not valid anymore
+        if (success)
+        {
+            success();
+        }
+    }
     else
     {
         // Else only cancel the request
