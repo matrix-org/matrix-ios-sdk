@@ -104,7 +104,13 @@ actor MXRoomEventDecryption: MXRoomEventDecrypting {
             event.content?["algorithm"] as? String == kMXCryptoMegolmAlgorithm,
             let sessionId = sessionId(for: event)
         else {
-            log.debug("Ignoring unencrypted or non-room event `\(eventId)`")
+            if !event.isEncrypted {
+                log.debug("Ignoring unencrypted event`\(eventId)`")
+            } else if event.clear != nil {
+                log.debug("Ignoring already decrypted event`\(eventId)`")
+            } else {
+                log.debug("Ignoring non-room event `\(eventId)`")
+            }
             
             let result = MXEventDecryptionResult()
             result.clearEvent = event.clear?.jsonDictionary()
