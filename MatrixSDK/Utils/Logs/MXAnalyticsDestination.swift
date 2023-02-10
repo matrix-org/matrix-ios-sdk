@@ -38,10 +38,23 @@ class MXAnalyticsDestination: BaseDestination {
     
     private func shouldTrackIssue(with context: Any?) -> Bool {
         // We will track all issues except for those with a cancellation error
-        guard let error = context as? NSError else {
+        guard let error = errorFromContext(context: context) else {
             return true
         }
         return !error.isCancelledError
+    }
+    
+    private func errorFromContext(context: Any?) -> NSError? {
+        if let error = context as? NSError {
+            return error
+        } else if let dictionary = context as? [AnyHashable: Any] {
+            for (_, value) in dictionary {
+                if let error = value as? NSError {
+                    return error
+                }
+            }
+        }
+        return nil
     }
     
     private func formattedDetails(from context: Any?) -> [String: Any]? {

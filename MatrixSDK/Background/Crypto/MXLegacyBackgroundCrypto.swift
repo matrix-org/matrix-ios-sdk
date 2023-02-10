@@ -71,7 +71,7 @@ class MXLegacyBackgroundCrypto: MXBackgroundCrypto {
             let decryptionResult = MXEventDecryptionResult()
             decryptionResult.clearEvent = olmResult.payload
             decryptionResult.senderCurve25519Key = olmResult.senderKey
-            decryptionResult.claimedEd25519Key = olmResult.keysClaimed["ed25519"] as? String
+            decryptionResult.claimedEd25519Key = olmResult.keysClaimed?["ed25519"] as? String
             decryptionResult.forwardingCurve25519KeyChain = olmResult.forwardingCurve25519KeyChain
             decryptionResult.isUntrusted = olmResult.isUntrusted
             event.setClearData(decryptionResult)
