@@ -98,13 +98,9 @@ public enum MXBackgroundSyncServiceError: Error {
         }()
         
         pushRulesManager = MXBackgroundPushRulesManager(withCredentials: credentials)
-        if let accountData = syncResponseStoreManager.syncResponseStore.accountData {
-            pushRulesManager.handleAccountData(accountData)
-        } else if let accountData = store.userAccountData ?? nil {
-            pushRulesManager.handleAccountData(accountData)
-        }
         MXLog.debug("[MXBackgroundSyncService] init complete")
         super.init()
+        syncPushRuleManagerWithAccountData()
     }
     
     /// Fetch event with given event and room identifiers. It performs a sync if the event not found in session store.
@@ -501,6 +497,10 @@ public enum MXBackgroundSyncServiceError: Error {
             crypto.reset()
         }
         
+        syncPushRuleManagerWithAccountData()
+    }
+    
+    private func syncPushRuleManagerWithAccountData() {
         if let accountData = syncResponseStoreManager.syncResponseStore.accountData {
             pushRulesManager.handleAccountData(accountData)
         } else if let accountData = store.userAccountData ?? nil {
