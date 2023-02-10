@@ -26,7 +26,7 @@
 @property (nonatomic, strong) NSString *senderSentTheirLocation;
 @property (nonatomic, strong) NSString *senderSentTheirLiveLocation;
 @property (nonatomic, strong) NSString *messageToReplyToPrefix;
-@property (nonatomic, strong) NSString *replyToEndedPoll;
+@property (nonatomic, strong) NSString *endedPollMessage;
 
 @end
 
@@ -44,7 +44,7 @@
         _senderSentTheirLocation = @"has shared their location.";
         _senderSentTheirLiveLocation = @"Live location.";
         _messageToReplyToPrefix = @"In reply to";
-        _replyToEndedPoll = @"Ended poll";
+        _endedPollMessage = @"Ended poll";
     }
     return self;
 }

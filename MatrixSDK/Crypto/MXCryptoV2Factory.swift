@@ -100,7 +100,7 @@ import Foundation
     
     private func migrateIfNecessary(legacyStore: MXCryptoStore, updateProgress: @escaping (Double) -> Void) {
         guard legacyStore.cryptoVersion.rawValue < MXCryptoVersion.versionLegacyDeprecated.rawValue else {
-            log.debug("Legacy crypto has already been deprecatd, no need to migrate")
+            log.debug("Legacy crypto has already been deprecated, no need to migrate")
             return
         }
 
