@@ -32,7 +32,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (NSString *)senderSentTheirLocation;
 - (NSString *)senderSentTheirLiveLocation;
 - (NSString *)messageToReplyToPrefix;
-- (NSString *)replyToEndedPoll;
+- (NSString *)endedPollMessage;
 
 @end
 
