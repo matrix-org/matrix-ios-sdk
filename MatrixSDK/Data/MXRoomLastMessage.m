@@ -23,6 +23,7 @@
 
 #import <Security/Security.h>
 #import <CommonCrypto/CommonCryptor.h>
+#import <Foundation/Foundation.h>
 
 NSString *const MXRoomLastMessageDataType = @"org.matrix.sdk.keychain.MXRoomLastMessage";
 
@@ -58,6 +59,19 @@ NSString *const kCodingKeyOthers = @"others";
     return self;
 }
 
+- (nullable NSData*)encryptedAttributedString
+{
+    if (_attributedText)
+    {
+        NSData* archieved = [NSKeyedArchiver archivedDataWithRootObject:_attributedText];
+        return [self encrypt:archieved];
+    }
+    else
+    {
+        return nil;
+    }
+}
+
 - (NSComparisonResult)compareOriginServerTs:(MXRoomLastMessage *)otherMessage
 {
     NSComparisonResult result = NSOrderedAscending;
@@ -87,11 +101,29 @@ NSString *const kCodingKeyOthers = @"others";
         _originServerTs = model.s_originServerTs;
         _isEncrypted = model.s_isEncrypted;
         _sender = model.s_sender;
-        _text = model.s_text;
-        if (model.s_attributedText)
+        
+        NSData* attributedTextData;
+        if (model.s_isEncrypted)
         {
-            _attributedText = [NSKeyedUnarchiver unarchiveObjectWithData:model.s_attributedText];
+            attributedTextData = [self decrypt:model.s_attributedText];
         }
+        else
+        {
+            attributedTextData = model.s_attributedText;
+        }
+        
+        if (attributedTextData)
+        {
+            _attributedText = [NSKeyedUnarchiver unarchiveObjectWithData:attributedTextData];
+        }
+        
+        if (_attributedText == nil && model.s_text)
+        {
+            _attributedText = [[NSAttributedString alloc] initWithString:model.s_text];
+        }
+        
+        _text = model.s_isEncrypted ? _attributedText.string : model.s_text;
+        
         if (model.s_others)
         {
             _others = [NSKeyedUnarchiver unarchiveObjectWithData:model.s_others];

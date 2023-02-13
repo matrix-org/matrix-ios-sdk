@@ -47,19 +47,18 @@ public class MXRoomLastMessageMO: NSManagedObject {
         s_originServerTs = lastMessage.originServerTs
         s_isEncrypted = lastMessage.isEncrypted
         s_sender = lastMessage.sender
-        s_text = lastMessage.text
         
-        if let attributedText = lastMessage.attributedText {
-            s_attributedText = NSKeyedArchiver.archivedData(withRootObject: attributedText)
-        } else {
-            s_attributedText = nil
+        s_text = lastMessage.isEncrypted ? nil : lastMessage.text
+        
+        if lastMessage.isEncrypted
+        {
+            s_attributedText = lastMessage.encryptedAttributedString()
+        }
+        else
+        {
+            s_attributedText = lastMessage.attributedText.map(NSKeyedArchiver.archivedData(withRootObject:))
         }
         
-        if let others = lastMessage.others {
-            s_others = NSKeyedArchiver.archivedData(withRootObject: others)
-        } else {
-            s_others = nil
-        }
+        s_others = lastMessage.others.map(NSKeyedArchiver.archivedData(withRootObject:))
     }
-    
 }

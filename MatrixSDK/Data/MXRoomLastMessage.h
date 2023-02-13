@@ -69,6 +69,8 @@ FOUNDATION_EXPORT NSString *const MXRoomLastMessageDataType;
 
 - (instancetype)initWithEvent:(MXEvent *)event;
 
+- (nullable NSData*)encryptedAttributedString;
+
 #pragma mark - CoreData Model
 
 - (instancetype)initWithManagedObject:(MXRoomLastMessageMO *)model;
