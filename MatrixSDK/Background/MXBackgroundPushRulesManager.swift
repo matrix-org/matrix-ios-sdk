@@ -115,8 +115,8 @@ import Foundation
             .roomMemberCount: memberCountConditionChecker,
             .senderNotificationPermission: permissionConditionChecker
         ]
-        
-        let eventDictionary = event.jsonDictionary()
+        // getting the unencrypted event if present or fallback
+        let eventDictionary = (event.clear ?? event).jsonDictionary()
         let equivalentCondition = MXPushRuleCondition()
         
         for rule in flatRules.filter({ $0.enabled }) {
