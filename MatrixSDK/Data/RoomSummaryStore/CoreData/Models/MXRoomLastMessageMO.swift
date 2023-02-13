@@ -50,12 +50,9 @@ public class MXRoomLastMessageMO: NSManagedObject {
         
         s_text = lastMessage.isEncrypted ? nil : lastMessage.text
         
-        if lastMessage.isEncrypted
-        {
+        if lastMessage.isEncrypted {
             s_attributedText = lastMessage.encryptedAttributedString()
-        }
-        else
-        {
+        } else {
             s_attributedText = lastMessage.attributedText.map(NSKeyedArchiver.archivedData(withRootObject:))
         }
         
