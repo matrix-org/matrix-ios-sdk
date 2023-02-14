@@ -130,7 +130,7 @@ extension CryptoVerificationStub: MXCryptoVerifying {
     func downloadKeysIfNecessary(users: [String]) async throws {
     }
     
-    func receiveUnencryptedVerificationEvent(event: MXEvent, roomId: String) {
+    func receiveVerificationEvent(event: MXEvent, roomId: String) {
     }
     
     func requestSelfVerification(methods: [String]) async throws -> VerificationRequestProtocol {

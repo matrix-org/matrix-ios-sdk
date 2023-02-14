@@ -213,17 +213,26 @@ class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
             log.error("There is no pending verification request")
             return nil
         }
-
-        do {
-            let qr = try activeRequest.startQrVerification()
-            log.debug("Starting new QR verification")
-            return addQrTransaction(for: request, qrCode: qr, isIncoming: false)
-        } catch {
+        
+        let theirMethods = request.theirSupportedMethods() ?? []
+        if theirMethods.contains(MXKeyVerificationMethodQRCodeScan) {
+            do {
+                let qr = try activeRequest.startQrVerification()
+                log.debug("Starting new QR verification")
+                return addQrTransaction(for: request, qrCode: qr, isIncoming: false)
+            } catch {
+                log.error("Cannot start QR verification", context: error)
+                return nil
+            }
+        } else if theirMethods.contains(MXKeyVerificationMethodQRCodeShow) {
             /// Placehoder QR transaction generated in case we cannot start a QR verification flow
             /// (the other device cannot scan our code) but we may be able to scan theirs
             log.debug("Adding placeholder QR verification")
             return addQrTransaction(for: request, qrCode: nil, isIncoming: false)
         }
+        
+        log.debug("No support for QR verification flow")
+        return nil
     }
     
     func removeQRCodeTransaction(withTransactionId transactionId: String) {
@@ -269,8 +278,9 @@ class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
             return
         }
         
-        if !event.isEncrypted, let roomId = event.roomId {
-            try await handler.receiveUnencryptedVerificationEvent(event: event, roomId: roomId)
+        if let roomId = event.roomId {
+            log.debug("Recieved new verification event \(event.eventType)")
+            try await handler.receiveVerificationEvent(event: event, roomId: roomId)
         }
         
         let newUserId: String?
