@@ -623,6 +623,12 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
         [transactionTimeoutTimer invalidate];
         transactionTimeoutTimer = nil;
     }
+    
+    if (requestTimeoutTimer)
+    {
+        [requestTimeoutTimer invalidate];
+        requestTimeoutTimer = nil;
+    }
 }
 
 
@@ -699,17 +705,6 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
                           success:(void(^)(void))success
                           failure:(void(^)(NSError *error))failure
 {
-    // If the session is closed, don't try to send a request
-    if (self.crypto.mxSession.state == MXSessionStateClosed)
-    {
-        // It's not an error, the associated session is simply not valid anymore
-        if (success)
-        {
-            success();
-        }
-        return;
-    }
-
     MXTransactionCancelCode *cancelCode = MXTransactionCancelCode.user;
 
     // If there is transaction in progress, cancel it
@@ -1748,12 +1743,14 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
     {
         NSDate *timeoutDate = [oldestRequestDate dateByAddingTimeInterval:self.requestTimeout];
         MXLogDebug(@"[MXKeyVerificationRequest] scheduleTimeoutTimer: Create timer");
+        MXWeakify(self);
         requestTimeoutTimer = [[NSTimer alloc] initWithFireDate:timeoutDate
-                                                      interval:0
-                                                        target:self
-                                                      selector:@selector(onRequestTimeoutTimer)
-                                                      userInfo:nil
-                                                       repeats:NO];
+                                                       interval:0
+                                                        repeats:NO
+                                                          block:^(NSTimer * _Nonnull timer) {
+            MXStrongifyAndReturnIfNil(self);
+            [self onRequestTimeoutTimer];
+        }];
         [[NSRunLoop mainRunLoop] addTimer:requestTimeoutTimer forMode:NSDefaultRunLoopMode];
     }
 }
@@ -1919,12 +1916,15 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
             MXLogDebug(@"[MXKeyVerification] scheduleTimeoutTimer: Create timer");
 
             NSDate *timeoutDate = [oldestCreationDate dateByAddingTimeInterval:MXTransactionTimeout];
+
+            MXWeakify(self);
             self->transactionTimeoutTimer = [[NSTimer alloc] initWithFireDate:timeoutDate
-                                                          interval:0
-                                                            target:self
-                                                          selector:@selector(onTransactionTimeoutTimer)
-                                                          userInfo:nil
-                                                           repeats:NO];
+                                                                     interval:0
+                                                                      repeats:NO
+                                                                        block:^(NSTimer * _Nonnull timer) {
+                MXStrongifyAndReturnIfNil(self);
+                [self onTransactionTimeoutTimer];
+            }];
             [[NSRunLoop mainRunLoop] addTimer:self->transactionTimeoutTimer forMode:NSDefaultRunLoopMode];
         });
     }
