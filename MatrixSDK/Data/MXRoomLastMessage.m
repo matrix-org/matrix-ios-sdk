@@ -61,10 +61,10 @@ NSString *const kCodingKeyOthers = @"others";
 
 - (nullable NSData*)encryptedAttributedString
 {
-    if (_attributedText)
+    if (self.attributedText)
     {
-        NSData* archieved = [NSKeyedArchiver archivedDataWithRootObject:_attributedText];
-        return [self encrypt:archieved];
+        NSData* archived = [NSKeyedArchiver archivedDataWithRootObject:self.attributedText requiringSecureCoding:NO error:nil];
+        return [self encrypt:archived];
     }
     else
     {
