@@ -220,7 +220,7 @@ extension MXCryptoMachine: MXCryptoSyncing {
     // MARK: - Private
     
     private func handleRequest(_ request: Request) async throws {
-        log.debug("Handling request \(request)")
+        log.debug("Handling request `\(request.type)`")
         
         switch request {
         case .toDevice(let requestId, let eventType, let body):
@@ -276,8 +276,6 @@ extension MXCryptoMachine: MXCryptoSyncing {
     }
     
     private func handleOutgoingRequests() async throws {
-        log.debug("->")
-        
         let requests = try machine.outgoingRequests()
         
         try await withThrowingTaskGroup(of: Void.self) { [weak self] group in
@@ -386,7 +384,6 @@ extension MXCryptoMachine: MXCryptoRoomEventEncrypting {
         log.debug("Checking room keys in room \(roomId)")
         
         try await sessionsQueue.sync { [weak self] in
-            self?.log.debug("Collecting missing sessions")
             try await self?.getMissingSessions(users: users)
         }
         
@@ -397,8 +394,6 @@ extension MXCryptoMachine: MXCryptoRoomEventEncrypting {
             self?.log.debug("Sharing room keys")
             try await self?.shareRoomKey(roomId: roomId, users: users, settings: settings)
         }
-        
-        log.debug("All room keys have been shared")
     }
     
     func encryptRoomEvent(
@@ -779,5 +774,26 @@ extension MXCryptoMachine: MXCryptoBackup {
             cachedRoomKeyCounts = nil
         }
         isComputingRoomKeyCounts = false
+    }
+}
+
+extension Request {
+    var type: RequestType {
+        switch self {
+        case .toDevice:
+            return .toDevice
+        case .keysUpload:
+            return .keysUpload
+        case .keysQuery:
+            return .keysQuery
+        case .keysClaim:
+            return .keysClaim
+        case .keysBackup:
+            return .keysBackup
+        case .roomMessage:
+            return .roomMessage
+        case .signatureUpload:
+            return .signatureUpload
+        }
     }
 }

@@ -30,7 +30,11 @@ class MXCryptoSDKLogger: Logger {
         // This will be changed in rust-sdk directly
         let ignored = [
             "::uniffi_api:",
-            "::backup_recovery_key: decrypt_v1"
+            "::backup_recovery_key: decrypt_v1",
+            "matrix_sdk_crypto_ffi::machine: backup_enabled",
+            "matrix_sdk_crypto_ffi::machine: room_key_counts",
+            "matrix_sdk_crypto_ffi::machine: user_id",
+            "matrix_sdk_crypto_ffi::machine: identity_keys"
         ]
         
         for ignore in ignored {
