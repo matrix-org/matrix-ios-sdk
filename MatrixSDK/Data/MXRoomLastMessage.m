@@ -112,7 +112,7 @@ NSString *const kCodingKeyOthers = @"others";
         }
         else
         {
-            archivedSensitiveData = model.s_attributedText;
+            archivedSensitiveData = model.s_sensitiveData;
         }
         
         if (archivedSensitiveData)
