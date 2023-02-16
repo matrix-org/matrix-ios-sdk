@@ -70,7 +70,7 @@ FOUNDATION_EXPORT NSString *const MXRoomLastMessageDataType;
 - (instancetype)initWithEvent:(MXEvent *)event;
 
 /**
- Returns an archived (possibly encrypted) version of MXRoomLastMessage sensible data.
+ Returns an archived (possibly encrypted) version of MXRoomLastMessage sensitive data.
  These include:
  - `text`
  - `attributedText`
