@@ -117,7 +117,7 @@ NSString *const kCodingKeyOthers = @"others";
         
         if (archivedSensitiveData)
         {
-            NSDictionary* sensitiveDataDictionary = [NSKeyedUnarchiver unarchivedObjectOfClass:NSMutableDictionary.class fromData:archivedSensitiveData error:nil];
+            NSDictionary* sensitiveDataDictionary = [NSKeyedUnarchiver unarchiveObjectWithData:archivedSensitiveData];
             
             _text = sensitiveDataDictionary[kCodingKeyText];
             _attributedText = sensitiveDataDictionary[kCodingKeyAttributedText];
@@ -128,11 +128,11 @@ NSString *const kCodingKeyOthers = @"others";
             _text = model.s_text;
             
             if (model.s_attributedText) {
-                _attributedText = [NSKeyedUnarchiver unarchivedObjectOfClass:NSAttributedString.class fromData:model.s_attributedText error:nil];
+                _attributedText = [NSKeyedUnarchiver unarchiveObjectWithData:model.s_attributedText];
             }
             
             if (model.s_others) {
-                _others = [NSKeyedUnarchiver unarchivedObjectOfClass:NSMutableDictionary.class fromData:model.s_others error:nil];
+                _others = [NSKeyedUnarchiver unarchiveObjectWithData:model.s_others];
             }
         }
     }
