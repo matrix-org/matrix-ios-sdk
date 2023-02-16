@@ -174,20 +174,7 @@ NSString *const kCodingKeyOthers = @"others";
     [coder encodeObject:_sender forKey:kCodingKeySender];
     
     // Build last message sensitive data
-    NSMutableDictionary *lastMessageDictionary = [NSMutableDictionary dictionary];
-    if (_text)
-    {
-        lastMessageDictionary[kCodingKeyText] = _text;
-    }
-    if (_attributedText)
-    {
-        lastMessageDictionary[kCodingKeyAttributedText] = _attributedText;
-    }
-    if (_others)
-    {
-        lastMessageDictionary[kCodingKeyOthers] = _others;
-    }
-    
+    NSDictionary *lastMessageDictionary = [self sensitiveData];
     // And encrypt it if necessary
     if (_isEncrypted)
     {
@@ -203,6 +190,26 @@ NSString *const kCodingKeyOthers = @"others";
     {
         [coder encodeObject:lastMessageDictionary forKey:kCodingKeyData];
     }
+}
+
+-(NSDictionary*)sensitiveData
+{
+    NSMutableDictionary *lastMessageDictionary = [NSMutableDictionary dictionary];
+    
+    if (_text)
+    {
+        lastMessageDictionary[kCodingKeyText] = _text;
+    }
+    if (_attributedText)
+    {
+        lastMessageDictionary[kCodingKeyAttributedText] = _attributedText;
+    }
+    if (_others)
+    {
+        lastMessageDictionary[kCodingKeyOthers] = _others;
+    }
+    
+    return  lastMessageDictionary;
 }
 
 #pragma mark - Data encryption
