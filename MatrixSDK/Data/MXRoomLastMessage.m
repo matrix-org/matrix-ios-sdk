@@ -59,16 +59,19 @@ NSString *const kCodingKeyOthers = @"others";
     return self;
 }
 
-- (nullable NSData*)encryptedAttributedString
+- (nullable NSData*)sensitiveData;
 {
-    if (self.attributedText)
+    NSData* archived = [NSKeyedArchiver archivedDataWithRootObject:[self sensitiveDataDictionary]
+                                             requiringSecureCoding:NO
+                                                             error:nil];
+    
+    if (archived && self.isEncrypted)
     {
-        NSData* archived = [NSKeyedArchiver archivedDataWithRootObject:self.attributedText requiringSecureCoding:NO error:nil];
         return [self encrypt:archived];
     }
     else
     {
-        return nil;
+        return archived;
     }
 }
 
@@ -102,33 +105,38 @@ NSString *const kCodingKeyOthers = @"others";
         _isEncrypted = model.s_isEncrypted;
         _sender = model.s_sender;
         
-        NSData* attributedTextData;
-        if (model.s_isEncrypted)
+        NSData* archivedSensitiveData;
+        if (model.s_sensitiveData && model.s_isEncrypted)
         {
-            attributedTextData = [self decrypt:model.s_attributedText];
+            archivedSensitiveData = [self decrypt:model.s_sensitiveData];
         }
         else
         {
-            attributedTextData = model.s_attributedText;
+            archivedSensitiveData = model.s_attributedText;
         }
         
-        if (attributedTextData)
+        if (archivedSensitiveData)
         {
-            _attributedText = [NSKeyedUnarchiver unarchiveObjectWithData:attributedTextData];
+            NSDictionary* sensitiveDataDictionary = [NSKeyedUnarchiver unarchivedObjectOfClass:NSMutableDictionary.class fromData:archivedSensitiveData error:nil];
+            
+            _text = sensitiveDataDictionary[kCodingKeyText];
+            _attributedText = sensitiveDataDictionary[kCodingKeyAttributedText];
+            _others = sensitiveDataDictionary[kCodingKeyOthers];
         }
-        
-        if (_attributedText == nil && model.s_text)
+        else // fallback logic for old database versions
         {
-            _attributedText = [[NSAttributedString alloc] initWithString:model.s_text];
-        }
-        
-        _text = model.s_isEncrypted ? _attributedText.string : model.s_text;
-        
-        if (model.s_others)
-        {
-            _others = [NSKeyedUnarchiver unarchiveObjectWithData:model.s_others];
+            _text = model.s_text;
+            
+            if (model.s_attributedText) {
+                _attributedText = [NSKeyedUnarchiver unarchivedObjectOfClass:NSAttributedString.class fromData:model.s_attributedText error:nil];
+            }
+            
+            if (model.s_others) {
+                _others = [NSKeyedUnarchiver unarchivedObjectOfClass:NSMutableDictionary.class fromData:model.s_others error:nil];
+            }
         }
     }
+    
     return self;
 }
 
@@ -174,7 +182,7 @@ NSString *const kCodingKeyOthers = @"others";
     [coder encodeObject:_sender forKey:kCodingKeySender];
     
     // Build last message sensitive data
-    NSDictionary *lastMessageDictionary = [self sensitiveData];
+    NSDictionary *lastMessageDictionary = [self sensitiveDataDictionary];
     // And encrypt it if necessary
     if (_isEncrypted)
     {
@@ -192,7 +200,7 @@ NSString *const kCodingKeyOthers = @"others";
     }
 }
 
--(NSDictionary*)sensitiveData
+- (NSDictionary*)sensitiveDataDictionary
 {
     NSMutableDictionary *lastMessageDictionary = [NSMutableDictionary dictionary];
     

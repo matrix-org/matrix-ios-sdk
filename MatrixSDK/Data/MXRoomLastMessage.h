@@ -69,7 +69,14 @@ FOUNDATION_EXPORT NSString *const MXRoomLastMessageDataType;
 
 - (instancetype)initWithEvent:(MXEvent *)event;
 
-- (nullable NSData*)encryptedAttributedString;
+/**
+ Returns an archived (possibly encrypted) version of MXRoomLastMessage data.
+ These include:
+ - `text`
+ - `attributedText`
+ - `others`
+ */
+- (nullable NSData*)sensitiveData;
 
 #pragma mark - CoreData Model
 
