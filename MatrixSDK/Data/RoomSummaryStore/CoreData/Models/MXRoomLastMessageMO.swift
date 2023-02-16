@@ -56,7 +56,7 @@ public class MXRoomLastMessageMO: NSManagedObject {
         s_sender = lastMessage.sender
         s_sensitiveData = lastMessage.sensitiveData()
         
-        // Cleaning up clear data in the database, in the future this property should be deleted from Core Data
+        // Cleaning up unencrypted data in the old database versions. In the future these properties should be deleted from Core Data.
         s_text = nil;
         s_others = nil;
         s_attributedText = nil;
