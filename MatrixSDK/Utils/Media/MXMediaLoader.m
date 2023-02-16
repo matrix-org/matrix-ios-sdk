@@ -147,7 +147,12 @@ NSString *const kMXMediaUploadIdPrefix = @"upload-";
         request.HTTPBody = [NSJSONSerialization dataWithJSONObject:data options:0 error:nil];
     }
     
-    downloadConnection = [[NSURLConnection alloc] initWithRequest:request delegate:self];
+    // if we use the default settings the connection object will be scheduled in the NSDefaultRunLoopMode. That means that the connection is only executing the request when the app’s run loop is in NSDefaultRunLoopMode.
+    // Now, when a user touches the screen (e.g. to scroll a UIScrollView) the run loop’s mode will be switched to NSEventTrackingRunLoopMode. And now, that the run loop is not in NSDefaultRunMode anymore, the connection will not execute. The ugly effect of that is, that the download is blocked whenever the user touches the screen
+    // Setting the mode to NSRunLoopCommonModes allow the request to work in all modes (even NSEventTrackingRunLoopMode)
+    downloadConnection = [[NSURLConnection alloc] initWithRequest:request delegate:self startImmediately:NO];
+    [downloadConnection scheduleInRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
+    [downloadConnection start];
 }
 
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response
