@@ -61,9 +61,14 @@ NSString *const kCodingKeyOthers = @"others";
 
 - (nullable NSData*)sensitiveData;
 {
+    NSError* error;
     NSData* archived = [NSKeyedArchiver archivedDataWithRootObject:[self sensitiveDataDictionary]
                                              requiringSecureCoding:NO
-                                                             error:nil];
+                                                             error:&error];
+    
+    if (error) {
+        MXLogDebug(@"[MXRoomLastMessage] did fail to archive sensitiveDataDictionary. Error: %@", error.description);
+    }
     
     if (archived && self.isEncrypted)
     {
