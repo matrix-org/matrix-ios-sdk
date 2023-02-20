@@ -128,18 +128,6 @@ NSString *const kCodingKeyOthers = @"others";
             _attributedText = sensitiveDataDictionary[kCodingKeyAttributedText];
             _others = sensitiveDataDictionary[kCodingKeyOthers];
         }
-        else // fallback logic for old database versions
-        {
-            _text = model.s_text;
-            
-            if (model.s_attributedText) {
-                _attributedText = [NSKeyedUnarchiver unarchiveObjectWithData:model.s_attributedText];
-            }
-            
-            if (model.s_others) {
-                _others = [NSKeyedUnarchiver unarchiveObjectWithData:model.s_others];
-            }
-        }
     }
     
     return self;

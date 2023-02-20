@@ -30,15 +30,6 @@ public class MXRoomLastMessageMO: NSManagedObject {
     @NSManaged public var s_sender: String
     @NSManaged public var s_sensitiveData: Data?
     
-    @available(*, deprecated, message: "Store sensitive information on s_sensitiveData instead")
-    @NSManaged public var s_text: String?
-    
-    @available(*, deprecated, message: "Store sensitive information on s_sensitiveData instead")
-    @NSManaged public var s_others: Data?
-    
-    @available(*, deprecated, message: "Store sensitive information on s_sensitiveData instead")
-    @NSManaged public var s_attributedText: Data?
-    
     @discardableResult
     internal static func insert(roomLastMessage lastMessage: MXRoomLastMessage,
                                 into moc: NSManagedObjectContext) -> MXRoomLastMessageMO {
@@ -55,10 +46,5 @@ public class MXRoomLastMessageMO: NSManagedObject {
         s_isEncrypted = lastMessage.isEncrypted
         s_sender = lastMessage.sender
         s_sensitiveData = lastMessage.sensitiveData()
-        
-        // Cleaning up unencrypted data in the old database versions. In the future these properties should be deleted from Core Data.
-        s_text = nil;
-        s_others = nil;
-        s_attributedText = nil;
     }
 }
