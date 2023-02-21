@@ -1,2 +1,0 @@
-Encryption: add encryption to rooms' last messages.
-WARNING: the migration to this database version will cause an initial full sync.

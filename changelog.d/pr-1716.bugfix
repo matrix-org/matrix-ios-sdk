@@ -1,2 +1,0 @@
-Avoid sending a verification cancel request while the session is closed
-Fix of some retain cycles

@@ -1,3 +1,21 @@
+## Changes in 0.25.2 (2023-02-21)
+
+🙌 Improvements
+
+- Polls: add fallback text for poll ended events. ([#1713](https://github.com/matrix-org/matrix-ios-sdk/pull/1713))
+- Push Rules: Apply push rules client side for encrypted rooms, including mentions and keywords. ([#1714](https://github.com/matrix-org/matrix-ios-sdk/pull/1714))
+- Typealias MXResponse to Swift.Result ([#1715](https://github.com/matrix-org/matrix-ios-sdk/pull/1715))
+- CryptoV2: Unify verification event processing ([#1717](https://github.com/matrix-org/matrix-ios-sdk/pull/1717))
+- Encryption: add encryption to rooms' last messages.
+  WARNING: the migration to this database version will cause an initial full sync. ([#1718](https://github.com/matrix-org/matrix-ios-sdk/pull/1718))
+
+🐛 Bugfixes
+
+- Avoid sending a verification cancel request while the session is closed
+  Fix of some retain cycles ([#1716](https://github.com/matrix-org/matrix-ios-sdk/pull/1716))
+- Fix an issue where MXMediaLoader would not start downloading until the end of the scroll. ([#1721](https://github.com/matrix-org/matrix-ios-sdk/pull/1721))
+
+
 ## Changes in 0.25.1 (2023-02-07)
 
 ✨ Features
