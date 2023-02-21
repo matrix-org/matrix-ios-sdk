@@ -172,6 +172,18 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
 
 - (void)save:(BOOL)commit
 {
+    if (!NSThread.isMainThread)
+    {
+        // Saving on the main thread is not ideal, but is currently the only safe way, given the mutation
+        // of internal state and posting notifications observed by UI without double-checking which thread
+        // the notification arrives on.
+        MXLogFailure(@"[MXRoomSummary] save: Saving room summary should happen from the main thread")
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self save:commit];
+        });
+        return;
+    }
+    
     _dataTypes = self.calculateDataTypes;
     _sentStatus = self.calculateSentStatus;
     _favoriteTagOrder = self.room.accountData.tags[kMXRoomTagFavourite].order;

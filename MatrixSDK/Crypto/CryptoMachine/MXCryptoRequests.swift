@@ -40,7 +40,7 @@ struct MXCryptoRequests {
     }
     
     func sendToDevice(request: ToDeviceRequest) async throws {
-        return try await performCallbackRequest {
+        try await performCallbackRequest {
             restClient.sendDirectToDevice(
                 payload: .init(
                     eventType: request.eventType,
@@ -54,7 +54,7 @@ struct MXCryptoRequests {
     }
     
     func uploadKeys(request: UploadKeysRequest) async throws -> MXKeysUploadResponse {
-        return try await performCallbackRequest {
+        try await performCallbackRequest {
             restClient.uploadKeys(
                 request.deviceKeys,
                 oneTimeKeys: request.oneTimeKeys,
@@ -101,25 +101,32 @@ struct MXCryptoRequests {
     }
     
     func claimKeys(request: ClaimKeysRequest) async throws -> MXKeysClaimResponse {
-        return try await performCallbackRequest {
+        try await performCallbackRequest {
             restClient.claimOneTimeKeys(for: request.devices, completion: $0)
         }
     }
     
+    @MainActor
+    // Calling methods on `MXRoom` has various state side effects so should be called on the main thread
     func roomMessage(request: RoomMessageRequest) async throws -> String? {
-        var event: MXEvent?
-        return try await performCallbackRequest {
+        try await withCheckedThrowingContinuation { continuation in
+            var event: MXEvent?
             request.room.sendEvent(
                 MXEventType(identifier: request.eventType),
                 content: request.content,
-                localEcho: &event,
-                completion: $0
-            )
+                localEcho: &event) { response in
+                    switch response {
+                    case .success(let value):
+                        continuation.resume(returning: value)
+                    case .failure(let error):
+                        continuation.resume(throwing: error)
+                    }
+                }
         }
     }
     
     func backupKeys(request: KeysBackupRequest) async throws -> [AnyHashable: Any] {
-        return try await performCallbackRequest { continuation in
+        try await performCallbackRequest { continuation in
             restClient.sendKeysBackup(
                 request.keysBackupData,
                 version: request.version,

@@ -473,7 +473,13 @@ extension MXCryptoMachine: MXCryptoRoomEventDecrypting {
             log.failure("Invalid event")
             throw Error.invalidEvent
         }
-        return try machine.decryptRoomEvent(event: eventString, roomId: roomId, handleVerificatonEvents: true)
+        return try machine.decryptRoomEvent(
+            event: eventString,
+            roomId: roomId,
+            // Handling verification events automatically during event decryption is now a deprecated behavior,
+            // all verification events are handled manually via `receiveVerificationEvent`
+            handleVerificatonEvents: false
+        )
     }
     
     func requestRoomKey(event: MXEvent) async throws {
@@ -521,12 +527,9 @@ extension MXCryptoMachine: MXCryptoCrossSigning {
 }
 
 extension MXCryptoMachine: MXCryptoVerifying {
-    func receiveUnencryptedVerificationEvent(event: MXEvent, roomId: String) async throws {
-        guard let string = event.jsonString() else {
-            throw Error.invalidEvent
-        }
-        
-        try machine.receiveUnencryptedVerificationEvent(event: string, roomId: roomId)
+    func receiveVerificationEvent(event: MXEvent, roomId: String) async throws {
+        let event = try verificationEventString(for: event)
+        try machine.receiveVerificationEvent(event: event, roomId: roomId)
         
         // Out-of-sync check if there are any verification events to sent out as a result of
         // the event just received
@@ -640,6 +643,25 @@ extension MXCryptoMachine: MXCryptoVerifying {
             
             try await group.waitForAll()
         }
+    }
+    
+    private func verificationEventString(for event: MXEvent) throws -> String {
+        guard var dictionary = event.jsonDictionary() else {
+            throw Error.invalidEvent
+        }
+        
+        // If this is a decrypted event, we need to swap out `type` and `content` properties
+        // as this is what the crypto machine expects decrypted events to look like
+        if let clear = event.clear {
+            dictionary["type"] = clear.type
+            dictionary["content"] = clear.content
+        }
+
+        guard let string = MXTools.serialiseJSONObject(dictionary) else {
+            throw Error.invalidEvent
+        }
+        
+        return string
     }
 }
 
