@@ -28,9 +28,7 @@ public class MXRoomLastMessageMO: NSManagedObject {
     @NSManaged public var s_originServerTs: UInt64
     @NSManaged public var s_isEncrypted: Bool
     @NSManaged public var s_sender: String
-    @NSManaged public var s_text: String?
-    @NSManaged public var s_attributedText: Data?
-    @NSManaged public var s_others: Data?
+    @NSManaged public var s_sensitiveData: Data?
     
     @discardableResult
     internal static func insert(roomLastMessage lastMessage: MXRoomLastMessage,
@@ -47,19 +45,6 @@ public class MXRoomLastMessageMO: NSManagedObject {
         s_originServerTs = lastMessage.originServerTs
         s_isEncrypted = lastMessage.isEncrypted
         s_sender = lastMessage.sender
-        s_text = lastMessage.text
-        
-        if let attributedText = lastMessage.attributedText {
-            s_attributedText = NSKeyedArchiver.archivedData(withRootObject: attributedText)
-        } else {
-            s_attributedText = nil
-        }
-        
-        if let others = lastMessage.others {
-            s_others = NSKeyedArchiver.archivedData(withRootObject: others)
-        } else {
-            s_others = nil
-        }
+        s_sensitiveData = lastMessage.sensitiveData()
     }
-    
 }
