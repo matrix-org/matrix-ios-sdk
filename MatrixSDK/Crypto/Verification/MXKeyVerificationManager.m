@@ -623,6 +623,12 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
         [transactionTimeoutTimer invalidate];
         transactionTimeoutTimer = nil;
     }
+    
+    if (requestTimeoutTimer)
+    {
+        [requestTimeoutTimer invalidate];
+        requestTimeoutTimer = nil;
+    }
 }
 
 
@@ -1737,12 +1743,14 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
     {
         NSDate *timeoutDate = [oldestRequestDate dateByAddingTimeInterval:self.requestTimeout];
         MXLogDebug(@"[MXKeyVerificationRequest] scheduleTimeoutTimer: Create timer");
+        MXWeakify(self);
         requestTimeoutTimer = [[NSTimer alloc] initWithFireDate:timeoutDate
-                                                      interval:0
-                                                        target:self
-                                                      selector:@selector(onRequestTimeoutTimer)
-                                                      userInfo:nil
-                                                       repeats:NO];
+                                                       interval:0
+                                                        repeats:NO
+                                                          block:^(NSTimer * _Nonnull timer) {
+            MXStrongifyAndReturnIfNil(self);
+            [self onRequestTimeoutTimer];
+        }];
         [[NSRunLoop mainRunLoop] addTimer:requestTimeoutTimer forMode:NSDefaultRunLoopMode];
     }
 }
@@ -1908,12 +1916,15 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
             MXLogDebug(@"[MXKeyVerification] scheduleTimeoutTimer: Create timer");
 
             NSDate *timeoutDate = [oldestCreationDate dateByAddingTimeInterval:MXTransactionTimeout];
+
+            MXWeakify(self);
             self->transactionTimeoutTimer = [[NSTimer alloc] initWithFireDate:timeoutDate
-                                                          interval:0
-                                                            target:self
-                                                          selector:@selector(onTransactionTimeoutTimer)
-                                                          userInfo:nil
-                                                           repeats:NO];
+                                                                     interval:0
+                                                                      repeats:NO
+                                                                        block:^(NSTimer * _Nonnull timer) {
+                MXStrongifyAndReturnIfNil(self);
+                [self onTransactionTimeoutTimer];
+            }];
             [[NSRunLoop mainRunLoop] addTimer:self->transactionTimeoutTimer forMode:NSDefaultRunLoopMode];
         });
     }

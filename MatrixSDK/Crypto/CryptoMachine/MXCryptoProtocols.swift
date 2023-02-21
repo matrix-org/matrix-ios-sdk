@@ -88,7 +88,7 @@ protocol MXCryptoCrossSigning: MXCryptoUserIdentitySource {
 /// Verification functionality
 protocol MXCryptoVerifying: MXCryptoIdentity {
     func downloadKeysIfNecessary(users: [String]) async throws
-    func receiveUnencryptedVerificationEvent(event: MXEvent, roomId: String) async throws
+    func receiveVerificationEvent(event: MXEvent, roomId: String) async throws
     func requestSelfVerification(methods: [String]) async throws -> VerificationRequestProtocol
     func requestVerification(userId: String, roomId: String, methods: [String]) async throws -> VerificationRequestProtocol
     func requestVerification(userId: String, deviceId: String, methods: [String]) async throws -> VerificationRequestProtocol

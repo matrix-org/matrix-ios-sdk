@@ -19,20 +19,19 @@ import Foundation
 /// Class that computes verification state for a request_id by comparing all related events
 /// and taking whichever final event (e.g. cancelled, done), when the request is no longer
 /// active.
-@objcMembers
-public class MXKeyVerificationStateResolver: NSObject {
+actor MXKeyVerificationStateResolver {
     private let myUserId: String
     private let aggregations: MXAggregations
     private var states: [String: MXKeyVerificationState]
     private let log = MXNamedLog(name: "MXKeyVerificationStateResolver")
     
-    public init(myUserId: String, aggregations: MXAggregations) {
+    init(myUserId: String, aggregations: MXAggregations) {
         self.myUserId = myUserId
         self.aggregations = aggregations
         self.states = [:]
     }
     
-    public func verificationState(flowId: String, roomId: String) async throws -> MXKeyVerificationState {
+    func verificationState(flowId: String, roomId: String) async throws -> MXKeyVerificationState {
         log.debug("->")
         
         if let state = states[flowId] {
@@ -67,6 +66,7 @@ public class MXKeyVerificationStateResolver: NSObject {
         }
     }
     
+    nonisolated
     private func resolvedState(for events: [MXEvent]) -> MXKeyVerificationState {
         var defaultState = MXKeyVerificationState.transactionStarted
         for event in events {

@@ -101,7 +101,9 @@ static Class DefaultAlgorithmClass;
     self.crypto.store.backupVersion = keyBackupVersion.version;
     Class algorithmClass = AlgorithmClassesByName[keyBackupVersion.algorithm];
     //  store the desired backup algorithm
+    MXWeakify(self);
     self.keyBackupAlgorithm = [[algorithmClass alloc] initWithCrypto:self.crypto authData:authData keyGetterBlock:^NSData * _Nullable{
+        MXStrongifyAndReturnValueIfNil(self, nil);
         return self.privateKey;
     }];
     MXLogDebug(@"[MXNativeKeyBackupEngine] enableBackupWithVersion: Algorithm set to: %@", self.keyBackupAlgorithm);

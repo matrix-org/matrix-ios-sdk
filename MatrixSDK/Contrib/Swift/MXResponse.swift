@@ -17,9 +17,6 @@
 
 import Foundation
 
-
-
-
 /**
  Captures the result of an API call and it's associated success data.
  
@@ -47,42 +44,44 @@ import Foundation
      }
  
  */
-@frozen public enum MXResponse<T> {
-    case success(T)
-    case failure(Error)
-    // Note: Additional cases break binary compatibility
-    
+public typealias MXResponse<T> = Result<T, Error>
+
+public extension MXResponse {
     /// Indicates whether the API call was successful
-    public var isSuccess: Bool {
+    var isSuccess: Bool {
         switch self {
-        case .success:  return true
-        default:        return false
+        case .success:
+            return true
+        default:
+            return false
         }
     }
     
     /// The response's success value, if applicable
-    public var value: T? {
+    var value: Success? {
         switch self {
-        case .success(let value): return value
-        default: return nil
+        case .success(let value):
+            return value
+        default:
+            return nil
         }
     }
     
     /// Indicates whether the API call failed
-    public var isFailure: Bool {
-        return !isSuccess
+    var isFailure: Bool {
+        !isSuccess
     }
     
     /// The response's error value, if applicable
-    public var error: Error? {
+    var error: Error? {
         switch self {
-        case .failure(let error): return error
-        default: return nil
+        case .failure(let error):
+            return error
+        default:
+            return nil
         }
     }
 }
-
-
 
 /**
  Represents an error that was unexpectedly nil.
@@ -93,13 +92,11 @@ import Foundation
  */
 internal struct _MXUnknownError : Error {
     var localizedDescription: String {
-        return "error object was unexpectedly nil"
+        "error object was unexpectedly nil"
     }
 }
 
-
 private extension MXResponse {
-    
     /**
      Take the value from an optional, if it's available.
      Otherwise, return a failure with _MXUnknownError
@@ -108,8 +105,8 @@ private extension MXResponse {
      
      - returns: `.success(value)` if the value is not `nil`, otherwise `.failure(_MXUnkownError())`
      */
-    static func fromOptional(value: Any?) -> MXResponse<T> {
-        if let value = value as? T {
+    static func fromOptional(value: Any?) -> MXResponse<Success> {
+        if let value = value as? Success {
             return .success(value)
         } else {
             return .failure(_MXUnknownError())
@@ -124,32 +121,24 @@ private extension MXResponse {
      
      - returns: `.failure(error)` if the value is not `nil`, otherwise `.failure(_MXUnkownError())`
      */
-    static func fromOptional(error: Error?) -> MXResponse<T> {
-        return .failure(error ?? _MXUnknownError())
+    static func fromOptional(error: Error?) -> MXResponse<Success> {
+        .failure(error ?? _MXUnknownError())
     }
 }
 
-
-
-public extension MXResponse where T: MXSummable {
-    static func +(lhs: MXResponse<T>, rhs: MXResponse<T>) -> MXResponse<T> {
-        
+public extension MXResponse where Success: MXSummable {
+    static func +(lhs: Self, rhs: Self) -> Self {
         // Once there is an error, the result will be an error
         switch (lhs, rhs) {
-            case (.failure(_), _):
-                return lhs
-            case (_, .failure(_)):
-                return rhs
-            case (.success(let lhsT), .success(let rhsT)):
-                return .success(lhsT + rhsT)
+        case (.failure(_), _):
+            return lhs
+        case (_, .failure(_)):
+            return rhs
+        case (.success(let lhsT), .success(let rhsT)):
+            return .success(lhsT + rhsT)
         }
     }
 }
-
-
-
-
-
 
 /**
  Return a closure that accepts any object, converts it to a MXResponse value, and then
@@ -166,7 +155,6 @@ public extension MXResponse where T: MXSummable {
  - response: The API response wrapped in a `MXResponse` enum.
  
  - returns: a block that accepts an optional value from the API, wraps it in an `MXResponse`, and then passes it to `completion`
- 
  
  ## Usage Example:
  

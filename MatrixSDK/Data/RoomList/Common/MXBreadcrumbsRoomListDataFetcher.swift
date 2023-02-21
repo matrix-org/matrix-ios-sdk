@@ -91,10 +91,10 @@ internal class MXBreadcrumbsRoomListDataFetcher: NSObject, MXRoomListDataFetcher
         
         if let query = fetchOptions.filterOptions.query?.lowercased(), !query.isEmpty {
             recentRoomIds = recentRoomIds.filter({ roomId in
-                guard let summary = session?.roomSummary(withRoomId: roomId) else {
+                guard let displayname = session?.roomSummary(withRoomId: roomId).displayname else {
                     return false
                 }
-                return summary.displayname.lowercased().contains(query)
+                return displayname.lowercased().contains(query)
             })
         }
         
