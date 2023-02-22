@@ -150,25 +150,13 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 @synthesize keyVerificationManager = _keyVerificationManager;
 @synthesize recoveryService = _recoveryService;
 
-+ (MXCryptoV2Factory *)sharedCryptoV2Factory
-{
-    static MXCryptoV2Factory *factory = nil;
-    static dispatch_once_t onceToken;
-
-    dispatch_once(&onceToken, ^{
-        factory = [[MXCryptoV2Factory alloc] init];
-    });
-
-    return factory;
-}
-
 + (id<MXCrypto>)createCryptoWithMatrixSession:(MXSession *)mxSession
                                         error:(NSError **)error
 {
     __block id<MXCrypto> crypto;
 
 #ifdef MX_CRYPTO
-    if (MXSDKOptions.sharedInstance.isCryptoSDKAvailable && MXSDKOptions.sharedInstance.enableCryptoSDK)
+    if (MXSDKOptions.sharedInstance.enableCryptoSDK)
     {
         MXLogFailure(@"[MXCrypto] createCryptoWithMatrixSession: Crypto V2 should not be created directly, use initializeCryptoWithMatrixSession instead");
         return nil;
@@ -192,15 +180,19 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
                                  complete:(void (^)(id<MXCrypto> crypto, NSError *error))complete
 {
 #ifdef MX_CRYPTO
-    if (MXSDKOptions.sharedInstance.isCryptoSDKAvailable && MXSDKOptions.sharedInstance.enableCryptoSDK)
+    
+    // Each time we construct the crypto module (app launch, login etc) we have a chance to try to enable
+    // the newer SDK crypto module, if it is available for this particular user.
+    [MXSDKOptions.sharedInstance.cryptoSDKFeature enableIfAvailableForUserId:mxSession.myUserId];
+    if (MXSDKOptions.sharedInstance.enableCryptoSDK)
     {
-        MXCryptoV2Factory *factory = [MXLegacyCrypto sharedCryptoV2Factory];
-        [factory buildCryptoWithSession:mxSession migrationProgress:migrationProgress
-                                success:^(id<MXCrypto> crypto) {
-                                    complete(crypto, nil);
-                                } failure:^(NSError *error) {
-                                    complete(nil, error);
-                                }];
+        [MXCryptoV2Factory.shared buildCryptoWithSession:mxSession
+                                       migrationProgress:migrationProgress
+                                                 success:^(id<MXCrypto> crypto) {
+                                                    complete(crypto, nil); }
+                                                 failure:^(NSError *error) {
+                                                    complete(nil, error);
+                                                 }];
         return;
     }
     

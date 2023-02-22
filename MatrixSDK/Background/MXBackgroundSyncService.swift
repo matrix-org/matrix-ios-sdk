@@ -65,7 +65,12 @@ public enum MXBackgroundSyncServiceError: Error {
     
     /// Initializer
     /// - Parameter credentials: account credentials
-    public init(withCredentials credentials: MXCredentials, persistTokenDataHandler: MXRestClientPersistTokenDataHandler? = nil, unauthenticatedHandler: MXRestClientUnauthenticatedHandler? = nil) {
+    public init(
+        withCredentials credentials: MXCredentials,
+        isCryptoSDKEnabled: Bool = false,
+        persistTokenDataHandler: MXRestClientPersistTokenDataHandler? = nil,
+        unauthenticatedHandler: MXRestClientUnauthenticatedHandler? = nil
+    ) {
         processingQueue = DispatchQueue(label: "MXBackgroundSyncServiceQueue-" + MXTools.generateSecret())
         self.credentials = credentials
         
@@ -88,14 +93,13 @@ public enum MXBackgroundSyncServiceError: Error {
         // We can flush any crypto data if our sync response store is empty
         let resetBackgroundCryptoStore = syncResponseStoreManager.syncToken() == nil
         
-        crypto = {
-            if MXSDKOptions.sharedInstance().isCryptoSDKAvailable && MXSDKOptions.sharedInstance().enableCryptoSDK {
-                return MXBackgroundCryptoV2(credentials: credentials, restClient: restClient)
-            }
-            
-            MXLog.debug("[MXBackgroundSyncService] init: constructing legacy crypto \(MXSDKOptions.sharedInstance().isCryptoSDKAvailable) \(MXSDKOptions.sharedInstance().enableCryptoSDK)")
-            return MXLegacyBackgroundCrypto(credentials: credentials, resetBackgroundCryptoStore: resetBackgroundCryptoStore)
-        }()
+        if isCryptoSDKEnabled {
+            MXLog.debug("[MXBackgroundSyncService] init: constructing crypto v2")
+            crypto = MXBackgroundCryptoV2(credentials: credentials, restClient: restClient)
+        } else {
+            MXLog.debug("[MXBackgroundSyncService] init: constructing legacy crypto")
+            crypto = MXLegacyBackgroundCrypto(credentials: credentials, resetBackgroundCryptoStore: resetBackgroundCryptoStore)
+        }
         
         pushRulesManager = MXBackgroundPushRulesManager(withCredentials: credentials)
         MXLog.debug("[MXBackgroundSyncService] init complete")

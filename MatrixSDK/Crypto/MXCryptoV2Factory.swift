@@ -22,6 +22,7 @@ import Foundation
         case storeNotAvailable
     }
     
+    @objc public static let shared = MXCryptoV2Factory()
     private let log = MXNamedLog(name: "MXCryptoV2Factory")
     
     @objc public func buildCrypto(
