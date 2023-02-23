@@ -286,12 +286,9 @@ class MXCryptoV2: NSObject, MXCrypto {
         success: (() -> Void)?,
         failure: ((Swift.Error) -> Void)?
     ) -> MXHTTPOperation? {
-        log.debug("->")
-        
         Task {
             do {
                 try await encryptor.ensureRoomKeysShared(roomId: roomId)
-                log.debug("Room keys shared when necessary")
                 await MainActor.run {
                     success?()
                 }

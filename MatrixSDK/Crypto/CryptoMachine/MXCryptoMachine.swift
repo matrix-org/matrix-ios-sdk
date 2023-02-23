@@ -220,7 +220,7 @@ extension MXCryptoMachine: MXCryptoSyncing {
     // MARK: - Private
     
     private func handleRequest(_ request: Request) async throws {
-        log.debug("Handling request `\(request.type)`")
+        log.debug("Handling `\(request.type)` request")
         
         switch request {
         case .toDevice(let requestId, let eventType, let body):
@@ -240,9 +240,14 @@ extension MXCryptoMachine: MXCryptoSyncing {
             try markRequestAsSent(requestId: requestId, requestType: .keysQuery, response: response.jsonString())
             
         case .keysClaim(let requestId, let oneTimeKeys):
+            log.debug("Claiming keys \(oneTimeKeys)")
+            
             let response = try await requests.claimKeys(
                 request: .init(oneTimeKeys: oneTimeKeys)
             )
+            
+            let dictionary = response.jsonDictionary() as? [String: Any] ?? [:]
+            log.debug("Keys claimed\n\(dictionary)")
             try markRequestAsSent(requestId: requestId, requestType: .keysClaim, response: response.jsonString())
 
         case .keysBackup(let requestId, let version, let rooms):
@@ -387,11 +392,9 @@ extension MXCryptoMachine: MXCryptoRoomEventEncrypting {
             try await self?.getMissingSessions(users: users)
         }
         
-        log.debug("Acquiring lock for room \(roomId)")
         let roomQueue = await roomQueues.getQueue(for: roomId)
         
         try await roomQueue.sync { [weak self] in
-            self?.log.debug("Sharing room keys")
             try await self?.shareRoomKey(roomId: roomId, users: users, settings: settings)
         }
     }
@@ -420,13 +423,13 @@ extension MXCryptoMachine: MXCryptoRoomEventEncrypting {
     // MARK: - Private
     
     private func getMissingSessions(users: [String]) async throws {
-        log.debug("Getting missing sessions for \(users.count) user(s)")
+        log.debug("Checking missing olm sessions for \(users.count) user(s): \(users)")
         
         guard
             let request = try machine.getMissingSessions(users: users),
             case .keysClaim = request
         else {
-            log.debug("No sessions are missing")
+            log.debug("No olm sessions are missing")
             return
         }
         
@@ -435,6 +438,8 @@ extension MXCryptoMachine: MXCryptoRoomEventEncrypting {
     }
     
     private func shareRoomKey(roomId: String, users: [String], settings: EncryptionSettings) async throws {
+        log.debug("Checking unshared room keys")
+        
         let requests = try machine.shareRoomKey(roomId: roomId, users: users, settings: settings)
         guard !requests.isEmpty else {
             log.debug("There are no new keys to share")

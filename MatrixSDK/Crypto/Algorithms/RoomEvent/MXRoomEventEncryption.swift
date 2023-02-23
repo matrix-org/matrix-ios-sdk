@@ -140,13 +140,17 @@ struct MXRoomEventEncryption: MXRoomEventEncrypting {
     private func ensureRoomEncryption(roomId: String, algorithm: String?) throws {
         let existingAlgorithm = legacyStore.algorithm(forRoom: roomId)
         if existingAlgorithm != nil && existingAlgorithm == algorithm {
-            log.debug("Encryption in room is already set to the correct algorithm")
+            // Encryption in room is already set to the correct algorithm
             return
         }
         
         guard let algorithm = algorithm else {
-            log.error("Resetting encryption is not allowed")
-            throw Error.invalidEncryptionAlgorithm
+            if existingAlgorithm != nil {
+                log.error("Resetting encryption is not allowed")
+                return
+            } else {
+                throw Error.invalidEncryptionAlgorithm
+            }
         }
         
         let supportedAlgorithms = Set([kMXCryptoMegolmAlgorithm])
