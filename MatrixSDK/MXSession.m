@@ -2509,8 +2509,12 @@ typedef void (^MXOnResumeDone)(void);
         {
             // When the flag isDirect is turned on, only one user id is expected in the inviteArray.
             // The room is considered as direct only for the first mentioned user in case of several user ids.
-            // Note: It is not possible FTM to mark as direct a room with an invited third party.
             NSString *directUserId = (parameters.inviteArray.count ? parameters.inviteArray.firstObject : nil);
+            // Fall back on the first invite3PID address.
+            if (!directUserId && parameters.invite3PIDArray != nil && parameters.invite3PIDArray.count > 0)
+            {
+                directUserId = parameters.invite3PIDArray.firstObject.address;
+            }
             [self onCreatedDirectChat:response withUserId:directUserId success:success];
         }
         else
