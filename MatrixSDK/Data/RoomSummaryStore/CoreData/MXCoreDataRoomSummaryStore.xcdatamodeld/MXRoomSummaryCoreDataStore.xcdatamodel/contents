@@ -3,6 +3,7 @@
     <entity name="MXRoomLastMessage" representedClassName="MXRoomLastMessageMO" syncable="YES">
         <attribute name="s_attributedText" optional="YES" attributeType="Binary" valueTransformerName=""/>
         <attribute name="s_eventId" attributeType="String"/>
+        <attribute name="s_hasDecryptionError" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
         <attribute name="s_isEncrypted" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
         <attribute name="s_originServerTs" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="s_others" optional="YES" attributeType="Binary"/>

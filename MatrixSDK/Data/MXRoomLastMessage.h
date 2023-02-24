@@ -52,6 +52,11 @@ FOUNDATION_EXPORT NSString *const MXRoomLastMessageDataType;
 @property (nonatomic, assign, readonly) BOOL isEncrypted;
 
 /**
+ Indicates if the last message failed to be decrypted.
+ */
+@property (nonatomic, assign, readonly) BOOL hasDecryptionError;
+
+/**
  Sender of the last message.
  */
 @property (nonatomic, copy, readonly) NSString *sender;

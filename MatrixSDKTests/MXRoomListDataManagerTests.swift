@@ -21,6 +21,7 @@ import MatrixSDK
 class MXRoomListDataManagerTests: XCTestCase {
     
     private var testData: MatrixSDKTestsData!
+    private var e2eTestData: MatrixSDKTestsE2EData!
     
     private enum Constants {
         static let messageText: String = "Hello there!"
@@ -29,14 +30,16 @@ class MXRoomListDataManagerTests: XCTestCase {
     override func setUp() {
         MXSDKOptions.sharedInstance().roomListDataManagerClass = MXStoreRoomListDataManager.self
         testData = MatrixSDKTestsData()
+        e2eTestData = MatrixSDKTestsE2EData(matrixSDKTestsData: testData)
     }
 
     override func tearDown() {
         testData = nil
+        e2eTestData = nil
     }
     
     private var basicFetchOptions: MXRoomListDataFetchOptions {
-        let filterOptions = MXRoomListDataFilterOptions(showAllRoomsInHomeSpace: false)
+        let filterOptions = MXRoomListDataFilterOptions(showAllRoomsInHomeSpace: true)
         let sortOptions = MXRoomListDataSortOptions(missedNotificationsFirst: false, unreadMessagesFirst: false)
         return MXRoomListDataFetchOptions(filterOptions: filterOptions,
                                           sortOptions: sortOptions,
@@ -53,6 +56,7 @@ class MXRoomListDataManagerTests: XCTestCase {
         createBasicFetcherWithBob { bobSession, initialRoom, fetcher, expectation in
             guard let summary = fetcher.data?.rooms.first else {
                 XCTFail("Initial room must be available")
+                expectation.fulfill()
                 return
             }
             XCTAssertEqual(summary.roomId, initialRoom.roomId, "Initial room must be fetched")
@@ -249,6 +253,46 @@ class MXRoomListDataManagerTests: XCTestCase {
         }
     }
     
+    /// Test: Expect an e2ee room is added to fetcher's data
+    /// - Create a Bob and Alice session with an encrypted room
+    /// - Create a basic fetcher
+    /// - Alice: Send a message
+    /// - Expect Bob to see the last message end-to-end encrypted
+    func testRoomUpdateWhenReceivingEncryptedEvent() {
+        createBasicFetcherWithE2EBobAndAlice { aliceSession, bobSession, fetcher, expectation in
+            
+            guard let roomSummary = fetcher.data?.rooms.first else {
+                XCTFail("Failed to setup test conditions for Bob and Alice")
+                expectation.fulfill()
+                return
+            }
+            
+            var localEcho: MXEvent?
+            aliceSession.room(withRoomId: roomSummary.roomId).sendTextMessage(Constants.messageText, localEcho: &localEcho) { sendMessageResponse in
+                switch sendMessageResponse {
+                    case .success(let eventId):
+                        self.waitForOneSync(for: bobSession) {
+                            
+                            guard let lastMessage =  fetcher.data?.rooms.first?.lastMessage else {
+                                XCTFail("Failed to setup test conditions for Bob and Alice")
+                                expectation.fulfill()
+                                return
+                            }
+                            XCTAssertEqual(lastMessage.eventId, eventId, "Room's last message should point to new event")
+                            XCTAssertTrue(lastMessage.isEncrypted, "The last message should be encrypted")
+                            XCTAssertFalse(lastMessage.hasDecryptionError, "The last message should be readable")
+                            
+                            expectation.fulfill()
+                        }
+                    case .failure(let error):
+                        XCTFail("Failed to setup test conditions: \(error)")
+                        expectation.fulfill()
+                }
+            }
+        }
+    }
+    
+    
     //  MARK: - Private
     
     private func createBasicFetcherWithBob(_ completion: @escaping (MXSession, MXRoom, MXRoomListDataFetcher, XCTestExpectation) -> Void) {
@@ -287,6 +331,25 @@ class MXRoomListDataManagerTests: XCTestCase {
             let fetcher = manager.fetcher(withOptions: self.basicFetchOptions)
             fetcher.paginate()
             completion(bobSession, aliceRestClient, fetcher, expectation)
+        }
+    }
+    
+    private func createBasicFetcherWithE2EBobAndAlice(_ completion: @escaping (MXSession, MXSession, MXRoomListDataFetcher, XCTestExpectation) -> Void) {
+        e2eTestData.doE2ETestWithAliceAndBob(inARoom: self, cryptedBob: true, warnOnUnknowDevices: false, aliceStore: MXMemoryStore(), bobStore: MXFileStore()) { aliceSession, bobSession, roomId, expectation in
+            guard let bobSession = bobSession,
+                  let aliceSession = aliceSession,
+                  let expectation = expectation else {
+                XCTFail("Failed to setup test conditions for Bob and Alice")
+                return
+            }
+            guard let manager = bobSession.roomListDataManager else {
+                XCTFail("Manager must be created before")
+                return
+            }
+            
+            let fetcher = manager.fetcher(withOptions: self.basicFetchOptions)
+            fetcher.paginate()
+            completion(aliceSession, bobSession, fetcher, expectation)
         }
     }
     
