@@ -564,8 +564,14 @@
     switch (memberNames.count)
     {
         case 0:
+        {
             displayname = _roomNameStringLocalizer.emptyRoom;
-            if (roomState.thirdPartyInvites.firstObject.displayname != nil)
+            NSString *directUserId = [session roomWithRoomId: roomState.roomId].directUserId;
+            if (directUserId != nil && [MXTools isEmailAddress:directUserId])
+            {
+                displayname = directUserId;
+            }
+            else if (roomState.thirdPartyInvites.firstObject.displayname != nil)
             {
                 displayname = roomState.thirdPartyInvites.firstObject.displayname;
             }
@@ -574,7 +580,7 @@
                 MXLogDebug(@"[MXRoomSummaryUpdater] fixUnexpectedEmptyRoomDisplayname: No luck");
             }
             break;
-
+        }
         case 1:
             if (memberCount == 2)
             {
