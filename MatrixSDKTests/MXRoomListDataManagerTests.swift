@@ -17,6 +17,7 @@
 import XCTest
 
 import MatrixSDK
+import OHHTTPStubs
 
 class MXRoomListDataManagerTests: XCTestCase {
     
@@ -292,6 +293,50 @@ class MXRoomListDataManagerTests: XCTestCase {
         }
     }
     
+    /// Test: Expect a last message to report a UTD error if there is one
+    /// - Create a scenario where Bob is getting a UTD from Alice
+    /// - Expect Bob to see the last message unable to decrypt
+    func testRoomUpdateWithUTD() {
+        createFetcherWithBobAndAliceWithUTD { aliceSession, bobSession, fetcher, roomId, eventId, toDevicePayload, expectation in
+            guard let lastMessage =  fetcher.data?.rooms.first?.lastMessage else {
+                XCTFail("Failed to setup test conditions for Bob and Alice")
+                expectation.fulfill()
+                return
+            }
+            
+            XCTAssertEqual(lastMessage.eventId, eventId, "Room's last message should point to new event")
+            XCTAssertTrue(lastMessage.isEncrypted, "The last message should be encrypted")
+            XCTAssertTrue(lastMessage.hasDecryptionError, "We should have a UTD")
+            
+            expectation.fulfill()
+        }
+    }
+    
+    /// Test: Expect a last message to recover after being a UTD
+    /// - Create a scenario where Bob is getting a UTD from Alice
+    /// - Make alice send the blocked to_device event (this simulates a late room key
+    /// - Expect Bob to be able to decrypt the last message
+    func testRoomUpdateWithLateRoomKeyFix() {
+        createFetcherWithBobAndAliceWithUTD { [self] aliceSession, bobSession, fetcher, roomId, eventId, toDevicePayload, expectation in
+
+            aliceSession.matrixRestClient.sendDirectToDevice(payload: toDevicePayload) { response in
+                self.waitForOneSync(for: bobSession) {
+                    guard let lastMessage =  fetcher.data?.rooms.first?.lastMessage else {
+                        XCTFail("Failed to setup test conditions for Bob and Alice")
+                        expectation.fulfill()
+                        return
+                    }
+                    
+                    XCTAssertEqual(lastMessage.eventId, eventId)
+                    XCTAssertFalse(lastMessage.hasDecryptionError, "The last message should be readable now")
+                    
+                    expectation.fulfill()
+                }
+            }
+            
+        }
+    }
+    
     
     //  MARK: - Private
     
@@ -353,6 +398,59 @@ class MXRoomListDataManagerTests: XCTestCase {
         }
     }
     
+    /// Create a scenario with an UTD (Unable To Decrypt) for the last message
+    /// - Parameter closure called when scenario has been created. Among all parameters, it provides the to_device message that has been blocked, creating the UTD.
+    private func createFetcherWithBobAndAliceWithUTD(_ completion: @escaping (MXSession, MXSession, MXRoomListDataFetcher, String, String, MXToDevicePayload, XCTestExpectation) -> Void) {
+        createBasicFetcherWithE2EBobAndAlice { [self] aliceSession, bobSession, fetcher, expectation in
+            
+            guard let roomSummary = fetcher.data?.rooms.first else {
+                XCTFail("Failed to setup test conditions for Bob and Alice")
+                expectation.fulfill()
+                return
+            }
+            
+            // Prevent Alice to send the to_device message that contains the room key
+            var toDevicePayload: MXToDevicePayload?
+            HTTPStubs.stubRequests { request in
+                if request.url?.absoluteString.contains("sendToDevice") ?? false {
+                    guard let httpBodyStream = request.httpBodyStream,
+                          let body = try? JSONSerialization.jsonObject(with: Data(reading: httpBodyStream), options: []) as? [String: Any],
+                          let map = body ["messages"] as? [String : [String : NSDictionary]] else {
+                        return false
+                    }
+
+                    toDevicePayload = MXToDevicePayload(eventType: "m.room.encrypted", contentMap: MXUsersDevicesMap(map: map))
+                    return true
+                }
+                return request.url?.absoluteString.contains("sendToDevice") ?? false
+            } withStubResponse: { request in
+                return HTTPStubsResponse(data: Data(), statusCode: 200, headers: nil)
+            }
+            
+            var localEcho: MXEvent?
+            aliceSession.room(withRoomId: roomSummary.roomId).sendTextMessage(Constants.messageText, localEcho: &localEcho) { sendMessageResponse in
+                HTTPStubs.removeAllStubs()
+                
+                switch sendMessageResponse {
+                    case .success(let eventId):
+                        self.waitForOneSync(for: bobSession) {
+                            
+                            guard let eventId = eventId, let toDevicePayload = toDevicePayload else {
+                                XCTFail("Failed to setup test conditions")
+                                expectation.fulfill()
+                                return
+                            }
+                    
+                            completion(aliceSession, bobSession, fetcher, roomSummary.roomId, eventId, toDevicePayload, expectation)
+                        }
+                    case .failure(let error):
+                        XCTFail("Failed to setup test conditions: \(error)")
+                        expectation.fulfill()
+                }
+            }
+        }
+    }
+    
     private func waitForOneSync(for session: MXSession, completion: @escaping () -> Void) {
         var observer: NSObjectProtocol?
         observer = NotificationCenter.default.addObserver(forName: .mxSessionDidSync, object: session, queue: .main) { [weak self] _ in
@@ -362,5 +460,24 @@ class MXRoomListDataManagerTests: XCTestCase {
             }
             completion()
         }
+    }
+}
+
+// MARK: - Data extension
+
+extension Data {
+    init(reading input: InputStream) {
+        self.init()
+        input.open()
+        
+        let bufferSize = 1024
+        let buffer = UnsafeMutablePointer<UInt8>.allocate(capacity: bufferSize)
+        while input.hasBytesAvailable {
+            let read = input.read(buffer, maxLength: bufferSize)
+            self.append(buffer, count: read)
+        }
+        buffer.deallocate()
+        
+        input.close()
     }
 }
