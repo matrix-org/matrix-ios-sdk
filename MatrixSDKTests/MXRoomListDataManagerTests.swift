@@ -337,6 +337,71 @@ class MXRoomListDataManagerTests: XCTestCase {
         }
     }
     
+    /// Test: Expect a last message to recover after being a UTD
+    /// - Create a scenario where Bob is getting a UTD from Alice
+    /// - Restart Bob session
+    /// - Make alice send the blocked to_device event (this simulates a late room key
+    /// - Expect Bob to be able to decrypt the last message
+    func testRoomUpdateWithLateRoomKeyFixAfterBobRestart() {
+        createFetcherWithBobAndAliceWithUTD { [self] aliceSession, bobSession, fetcher, roomId, eventId, toDevicePayload, expectation in
+            
+            guard let bobCredentials = bobSession.credentials else {
+                XCTFail("Cannot set up initial test conditions")
+                expectation.fulfill()
+                return
+            }
+            
+            // Restart Bob session
+            bobSession.close()
+            let restClient = MXRestClient(credentials: bobCredentials, unrecognizedCertificateHandler: nil)
+            guard let bobSession2 = MXSession(matrixRestClient: restClient) else {
+                XCTFail("The request should not fail");
+                expectation.fulfill()
+                return
+            }
+            self.testData.retain(bobSession2)
+            bobSession2.setStore(MXFileStore(), completion: { _ in
+                bobSession2.start(completion: { (_) in
+                    
+                    guard let manager2 = bobSession2.roomListDataManager else {
+                        XCTFail("Manager must be created before")
+                        return
+                    }
+                    
+                    let fetcher2 = manager2.fetcher(withOptions: self.basicFetchOptions)
+                    fetcher2.paginate()
+                    
+                    guard let lastMessage =  fetcher2.data?.rooms.first?.lastMessage else {
+                        XCTFail("Failed to setup test conditions for Bob and Alice")
+                        expectation.fulfill()
+                        return
+                    }
+                    
+                    // Intermediate checks: we should have a UTD
+                    XCTAssertEqual(lastMessage.eventId, eventId, "Room's last message should point to new event")
+                    XCTAssertTrue(lastMessage.isEncrypted, "The last message should be encrypted")
+                    XCTAssertTrue(lastMessage.hasDecryptionError, "We should have a UTD")
+                    
+                    aliceSession.matrixRestClient.sendDirectToDevice(payload: toDevicePayload) { response in
+                        self.waitForOneSync(for: bobSession2) {
+                            guard let lastMessage =  fetcher2.data?.rooms.first?.lastMessage else {
+                                XCTFail("Failed to setup test conditions for Bob and Alice")
+                                expectation.fulfill()
+                                return
+                            }
+                            
+                            // No more UTD
+                            XCTAssertEqual(lastMessage.eventId, eventId)
+                            XCTAssertFalse(lastMessage.hasDecryptionError, "The last message should be readable now")
+                            
+                            expectation.fulfill()
+                        }
+                    }
+                })
+            })
+        }
+    }
+    
     
     //  MARK: - Private
     
