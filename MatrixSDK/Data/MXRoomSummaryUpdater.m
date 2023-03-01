@@ -516,8 +516,7 @@
             }
         }
 
-        if (memberCount > 1
-            && (!displayName || [displayName isEqualToString:_roomNameStringLocalizer.emptyRoom]))
+        if (!displayName || [displayName isEqualToString:_roomNameStringLocalizer.emptyRoom])
         {
             // Data are missing to compute the display name
             MXLogDebug(@"[MXRoomSummaryUpdater] updateSummaryDisplayname: Warning: Computed an unexpected \"Empty Room\" name. memberCount: %@", @(memberCount));
@@ -565,10 +564,23 @@
     switch (memberNames.count)
     {
         case 0:
-            MXLogDebug(@"[MXRoomSummaryUpdater] fixUnexpectedEmptyRoomDisplayname: No luck");
+        {
             displayname = _roomNameStringLocalizer.emptyRoom;
+            NSString *directUserId = [session roomWithRoomId: roomState.roomId].directUserId;
+            if (directUserId != nil && [MXTools isEmailAddress:directUserId])
+            {
+                displayname = directUserId;
+            }
+            else if (roomState.thirdPartyInvites.firstObject.displayname != nil)
+            {
+                displayname = roomState.thirdPartyInvites.firstObject.displayname;
+            }
+            else
+            {
+                MXLogDebug(@"[MXRoomSummaryUpdater] fixUnexpectedEmptyRoomDisplayname: No luck");
+            }
             break;
-
+        }
         case 1:
             if (memberCount == 2)
             {
