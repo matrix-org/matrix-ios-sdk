@@ -88,6 +88,8 @@ class MXKeysQuerySchedulerUnitTests: XCTestCase {
     
     // MARK: - Tests
     
+    // We assert a query like so:
+    // |-------------| (Alice)
     func test_queryAlice() async {
         let exp = expectation(description: "exp")
         
@@ -102,6 +104,8 @@ class MXKeysQuerySchedulerUnitTests: XCTestCase {
         XCTAssertQueriesCount(1)
     }
     
+    // We assert a query like so:
+    // |-----------------| (Alice, Bob)
     func test_queryAliceAndBob() async {
         let exp = expectation(description: "exp")
         
@@ -117,6 +121,9 @@ class MXKeysQuerySchedulerUnitTests: XCTestCase {
         XCTAssertQueriesCount(1)
     }
 
+    // We assert consecutive queries like so:
+    // |-------------| (Alice)
+    //         |.....--------| (Bob)
     func test_queryBobAfterAlice() async {
         let exp = expectation(description: "exp")
         exp.expectedFulfillmentCount = 2
@@ -139,6 +146,10 @@ class MXKeysQuerySchedulerUnitTests: XCTestCase {
         XCTAssertQueriesCount(2)
     }
 
+    // We assert parallel queries like so:
+    // |-------------| (Alice)
+    //     |---------| (Alice)
+    //          |----| (Alice)
     func test_executeMultipleAliceQueriesOnce() async {
         queryStartSpy = {
             self.stubbedResult = .success([
@@ -178,6 +189,10 @@ class MXKeysQuerySchedulerUnitTests: XCTestCase {
         XCTAssertQueriesCount(1)
     }
 
+    // We assert consecutive queries like so:
+    // |-------------| (Alice)
+    //               |-----------| (Alice)
+    //                           |---------| (Alice)
     func test_executeEachAliceQuerySeparately() async {
         queryStartSpy = {
             self.stubbedResult = .success([
@@ -218,6 +233,9 @@ class MXKeysQuerySchedulerUnitTests: XCTestCase {
         XCTAssertQueriesCount(3)
     }
 
+    // We assert parallel queries like so:
+    // |-------------| (Alice, Bob)
+    //     |---------| (Bob)
     func test_executeMultipleBobQueriesOnce() async {
         queryStartSpy = {
             self.stubbedResult = .success([
@@ -252,6 +270,9 @@ class MXKeysQuerySchedulerUnitTests: XCTestCase {
         XCTAssertQueriesCount(1)
     }
 
+    // We assert consecutive queries like so:
+    // |-------------| (Alice, Bob)
+    //         |.....--------| (Bob, Carol)
     func test_executeSecondBobQuerySeparately() async {
         queryStartSpy = {
             self.stubbedResult = .success([
@@ -287,6 +308,11 @@ class MXKeysQuerySchedulerUnitTests: XCTestCase {
         XCTAssertQueriesCount(2)
     }
 
+    // We assert consecutive queries like so:
+    // |-------------| (Alice)
+    //     |.........--------| + Bob
+    //         |.....--------| + Carol
+    //            |..--------| + David
     func test_nextQueryAggregatesPendingUsers() async {
         let exp = expectation(description: "exp")
         exp.expectedFulfillmentCount = 4
@@ -331,6 +357,11 @@ class MXKeysQuerySchedulerUnitTests: XCTestCase {
         XCTAssertQueriesCount(2)
     }
     
+    // We assert consecutive queries like so:
+    // |-------------| (Alice)
+    //     |.........--------| + Bob
+    //         |.....--------| + Carol
+    //                       |--------| (David)
     func test_pendingUsersResetAfterQuery() async {
         var exp = expectation(description: "exp")
         exp.expectedFulfillmentCount = 3
@@ -383,6 +414,45 @@ class MXKeysQuerySchedulerUnitTests: XCTestCase {
         await waitForExpectations(timeout: 1)
 
         XCTAssertQueriesCount(4)
+    }
+    
+    // We assert consecutive queries like so:
+    // |-------------| (Alice)
+    //     |.........--------| (Bob)
+    //                  |----| (Bob)
+    func test_alreadyRunningQueriesGetUpdated() async {
+        let exp = expectation(description: "exp")
+        exp.expectedFulfillmentCount = 3
+
+        await query(users: ["alice"]) { response in
+            XCTAssertEqual(response, [
+                "alice": ["A"],
+            ])
+            exp.fulfill()
+            
+            // We need to trigger another Bob request after Alice has completed
+            Task.detached {
+                await self.query(users: ["bob"]) { response in
+                    XCTAssertEqual(response, [
+                        "bob": ["B"],
+                    ])
+                    exp.fulfill()
+                }
+            }
+        }
+
+        await query(users: ["bob"]) { response in
+            XCTAssertEqual(response, [
+                "bob": ["B"],
+            ])
+            exp.fulfill()
+        }
+
+        await waitForExpectations(timeout: 1)
+        
+        // At the end of making 3 queries we expect to have executed only
+        // one per each user
+        XCTAssertQueriesCount(2)
     }
     
     func test_queryFail() async {
