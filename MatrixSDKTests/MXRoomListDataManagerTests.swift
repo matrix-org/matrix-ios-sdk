@@ -384,17 +384,20 @@ class MXRoomListDataManagerTests: XCTestCase {
                     
                     aliceSession.matrixRestClient.sendDirectToDevice(payload: toDevicePayload) { response in
                         self.waitForOneSync(for: bobSession2) {
-                            guard let lastMessage =  fetcher2.data?.rooms.first?.lastMessage else {
-                                XCTFail("Failed to setup test conditions for Bob and Alice")
+                            // Add some latency because actions to fix the last message behind the scene happen in an unpredicatble order but they happen
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                guard let lastMessage =  fetcher2.data?.rooms.first?.lastMessage else {
+                                    XCTFail("Failed to setup test conditions for Bob and Alice")
+                                    expectation.fulfill()
+                                    return
+                                }
+                                
+                                // No more UTD
+                                XCTAssertEqual(lastMessage.eventId, eventId)
+                                XCTAssertFalse(lastMessage.hasDecryptionError, "The last message should be readable now")
+                                
                                 expectation.fulfill()
-                                return
                             }
-                            
-                            // No more UTD
-                            XCTAssertEqual(lastMessage.eventId, eventId)
-                            XCTAssertFalse(lastMessage.hasDecryptionError, "The last message should be readable now")
-                            
-                            expectation.fulfill()
                         }
                     }
                 })
