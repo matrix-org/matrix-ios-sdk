@@ -27,6 +27,12 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Warc-retain-cycles"
 
+@interface MXFileStore ()
+- (NSString*)unreadRoomsFile;
+- (NSString*)unreadFileForRoomsForBackup:(BOOL)backup;
+@end
+
+
 @interface MXRoomTests : XCTestCase
 {
     MatrixSDKTestsData *matrixSDKTestsData;
@@ -968,6 +974,47 @@
                 XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                 [expectation fulfill];
             }];
+        } failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+// Test migration of the MXFileStore unread rooms file that was at a bad location.
+// - Have a Bob session with an unread room
+// - Close that session
+// - Reopen a Bob session (it simulates an app restart)
+// -> The room should be still unread, meaning the migration went as expected
+// TODO: Delete this test when removing the unreadFileForRoomsForBackup() method
+- (void)testUnreadRoomsFileMigration
+{
+    // - Have a Bob session with an unread room
+    MXFileStore *store = [MXFileStore new];
+    [matrixSDKTestsData doMXSessionTestWithBobAndARoom:self andStore:store readyToTest:^(MXSession *bobSession, MXRoom *room, XCTestExpectation *expectation) {
+        [room setUnread];
+        
+        // - Close that session
+        NSString *roomId = room.roomId;
+        MXRestClient *bobRestClient = bobSession.matrixRestClient;
+        NSString *wrongFile = [store unreadFileForRoomsForBackup:NO];
+        NSString *goodFile = [store unreadRoomsFile];
+        [bobSession close];
+        
+        // - Move the unread rooms file to the previous wrong location
+        [[NSFileManager defaultManager] moveItemAtPath:goodFile toPath:wrongFile error:nil];
+        
+        // - Reopen a Bob session (it simulates an app restart)
+        MXSession *bobSession2 = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [self->matrixSDKTestsData retain:bobSession2];
+        [bobSession2 setStore:[[MXFileStore alloc] init] success:^{
+            
+            // -> The room should be still unread, meaning the migration went as expected
+            MXRoom *room = [bobSession2 roomWithRoomId:roomId];
+            XCTAssert([room isMarkedAsUnread], @"the room should still be marked as unread");
+            
+            [expectation fulfill];
+            
         } failure:^(NSError *error) {
             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
             [expectation fulfill];
