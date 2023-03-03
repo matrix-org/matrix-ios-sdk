@@ -3320,7 +3320,7 @@ typedef void (^MXOnResumeDone)(void);
 
 
 #pragma mark - Rooms summaries
-- (MXRoomSummary *)roomSummaryWithRoomId:(NSString*)roomId
+- (nullable MXRoomSummary *)roomSummaryWithRoomId:(NSString*)roomId
 {
     MXRoomSummary *roomSummary;
 
