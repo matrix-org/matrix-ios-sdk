@@ -705,7 +705,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
                           success:(void(^)(void))success
                           failure:(void(^)(NSError *error))failure
 {
-    MXTransactionCancelCode *cancelCode = MXTransactionCancelCode.user;
+    MXTransactionCancelCode *cancelCode = request.reasonCancelCode ?: MXTransactionCancelCode.user;
 
     // If there is transaction in progress, cancel it
     id<MXKeyVerificationTransaction> transaction = [self transactionWithTransactionId:request.requestId];

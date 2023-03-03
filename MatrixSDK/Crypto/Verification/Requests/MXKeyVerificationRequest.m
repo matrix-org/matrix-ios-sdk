@@ -144,9 +144,9 @@ NSString * const MXKeyVerificationRequestDidChangeNotification = @"MXKeyVerifica
 
 - (void)cancelWithCancelCode:(MXTransactionCancelCode*)code success:(void(^)(void))success failure:(void(^)(NSError *error))failure
 {
+    self.reasonCancelCode = code;
+
     [self.manager cancelVerificationRequest:self success:^{
-        self.reasonCancelCode = code;
-        
         [self updateState:MXKeyVerificationRequestStateCancelledByMe notifiy:YES];
         [self.manager removePendingRequestWithRequestId:self.requestId];
         
