@@ -104,7 +104,7 @@
 
                     XCTAssertNotNil(peekingRoom.summary);
 
-                    XCTAssertNotNil(peekingRoom.summary.displayname);
+                    XCTAssertNotNil(peekingRoom.summary.displayName);
                     XCTAssertNotNil(peekingRoom.summary.topic);
                     XCTAssertEqual(peekingRoom.summary.membersCount.members, 1, @"The MXPeekingRoom state must be known now");
 
