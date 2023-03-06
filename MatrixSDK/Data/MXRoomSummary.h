@@ -169,7 +169,7 @@ FOUNDATION_EXPORT NSUInteger const MXRoomSummaryPaginationChunkSize;
 /**
  The computed display name of the room.
  */
-@property (nonatomic) NSString *displayname;
+@property (nonatomic) NSString *displayName;
 
 /**
  The topic of the room.

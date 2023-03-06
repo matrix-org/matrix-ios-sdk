@@ -410,7 +410,7 @@ private class RoomSummaryForTotalCounts: NSObject, MXRoomSummaryProtocol {
     var roomTypeString: String?
     var roomType: MXRoomType = .room
     var avatar: String?
-    var displayname: String?
+    var displayName: String?
     var topic: String?
     var creatorUserId: String = ""
     var aliases: [String] = []
@@ -465,7 +465,7 @@ private class RoomSummaryForTotalCounts: NSObject, MXRoomSummaryProtocol {
     }
 
     override var description: String {
-        return "<RoomSummaryForTotalCounts: \(roomId) \(String(describing: displayname))>"
+        return "<RoomSummaryForTotalCounts: \(roomId) \(String(describing: displayName))>"
     }
 
 }

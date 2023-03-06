@@ -25,7 +25,7 @@ internal class MockRoomSummary: NSObject, MXRoomSummaryProtocol {
     
     var avatar: String?
     
-    var displayname: String?
+    var displayName: String?
     
     var topic: String?
     
@@ -124,6 +124,6 @@ internal class MockRoomSummary: NSObject, MXRoomSummaryProtocol {
     }
     
     override var description: String {
-        return "<MockRoomSummary: \(roomId) \(String(describing: displayname))>"
+        return "<MockRoomSummary: \(roomId) \(String(describing: displayName))>"
     }
 }

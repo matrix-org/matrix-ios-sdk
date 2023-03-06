@@ -3870,7 +3870,7 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
 
 - (NSString *)description
 {
-    return [NSString stringWithFormat:@"<MXRoom: %p> %@: %@ - %@", self, self.roomId, self.summary.displayname, self.summary.topic];
+    return [NSString stringWithFormat:@"<MXRoom: %p> %@: %@ - %@", self, self.roomId, self.summary.displayName, self.summary.topic];
 }
 
 - (NSComparisonResult)compareLastMessageEventOriginServerTs:(MXRoom *)otherRoom
