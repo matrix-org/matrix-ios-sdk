@@ -783,7 +783,7 @@ public class MXSpaceService: NSObject {
         membersCount.members = joinedMembersCount
         
         roomSummary.membersCount = membersCount
-        roomSummary.displayname = spaceChildSummaryResponse.name
+        roomSummary.displayName = spaceChildSummaryResponse.name
         roomSummary.topic = spaceChildSummaryResponse.topic
         roomSummary.avatar = spaceChildSummaryResponse.avatarUrl
         roomSummary.isEncrypted = false
