@@ -1,1 +1,0 @@
-Creating a direct room with a third party will now use their email as the m.direct ID and their obfuscated email as the room title.
