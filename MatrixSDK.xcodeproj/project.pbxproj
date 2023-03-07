@@ -2025,6 +2025,8 @@
 		EDC8C4092968A993003792C5 /* MXKeysQueryScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDC8C4072968A993003792C5 /* MXKeysQueryScheduler.swift */; };
 		EDC8C40D2968C37E003792C5 /* MXKeysQuerySchedulerUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDC8C40A2968A9F7003792C5 /* MXKeysQuerySchedulerUnitTests.swift */; };
 		EDC8C40E2968C37F003792C5 /* MXKeysQuerySchedulerUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDC8C40A2968A9F7003792C5 /* MXKeysQuerySchedulerUnitTests.swift */; };
+		EDCAD251299BF7F40088B4DA /* MXCryptoV2Feature.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDCAD250299BF7F40088B4DA /* MXCryptoV2Feature.swift */; };
+		EDCAD252299BF7F40088B4DA /* MXCryptoV2Feature.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDCAD250299BF7F40088B4DA /* MXCryptoV2Feature.swift */; };
 		EDCB65E22912AB0C00F55D4D /* MXRoomEventDecryption.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDCB65E12912AB0C00F55D4D /* MXRoomEventDecryption.swift */; };
 		EDCB65E32912AB0C00F55D4D /* MXRoomEventDecryption.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDCB65E12912AB0C00F55D4D /* MXRoomEventDecryption.swift */; };
 		EDCF802D2941FF220059E774 /* MXCryptoMigrationV2.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDCF802C2941FF220059E774 /* MXCryptoMigrationV2.swift */; };
@@ -3171,6 +3173,7 @@
 		EDC2A0E528369E740039F3D6 /* CryptoTests.xctestplan */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CryptoTests.xctestplan; sourceTree = "<group>"; };
 		EDC8C4072968A993003792C5 /* MXKeysQueryScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXKeysQueryScheduler.swift; sourceTree = "<group>"; };
 		EDC8C40A2968A9F7003792C5 /* MXKeysQuerySchedulerUnitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXKeysQuerySchedulerUnitTests.swift; sourceTree = "<group>"; };
+		EDCAD250299BF7F40088B4DA /* MXCryptoV2Feature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXCryptoV2Feature.swift; sourceTree = "<group>"; };
 		EDCB65E12912AB0C00F55D4D /* MXRoomEventDecryption.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXRoomEventDecryption.swift; sourceTree = "<group>"; };
 		EDCF802C2941FF220059E774 /* MXCryptoMigrationV2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXCryptoMigrationV2.swift; sourceTree = "<group>"; };
 		EDD4197D28DCAA5F007F3757 /* MXNativeKeyBackupEngine.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXNativeKeyBackupEngine.h; sourceTree = "<group>"; };
@@ -3525,6 +3528,7 @@
 				322A51B41D9AB15900C8536D /* MXCrypto.h */,
 				322A51B51D9AB15900C8536D /* MXCrypto.m */,
 				ED47CB6C28523995004FD755 /* MXCryptoV2.swift */,
+				EDCAD250299BF7F40088B4DA /* MXCryptoV2Feature.swift */,
 				ED5EF151297AB33E00A5ADDA /* MXCryptoV2Factory.swift */,
 				325D1C251DFECE0D0070B8BF /* MXCrypto_Private.h */,
 				322A51C51D9BBD3C00C8536D /* MXOlmDevice.h */,
@@ -7142,6 +7146,7 @@
 				EC2EACFF266625170038B61F /* MXRoomLastMessage.m in Sources */,
 				EDF1B6902876CD2C00BBBCEE /* MXTaskQueue.swift in Sources */,
 				EC8A539525B1BC77004E0802 /* MXUserModel.m in Sources */,
+				EDCAD251299BF7F40088B4DA /* MXCryptoV2Feature.swift in Sources */,
 				ED5EF14F297AB29F00A5ADDA /* MXEventDecryptionResult+DecryptedEvent.swift in Sources */,
 				3252DCAF224BE5D40032264F /* MXKeyVerificationManager.m in Sources */,
 				323E0C5C1A306D7A00A31D73 /* MXEvent.m in Sources */,
@@ -7809,6 +7814,7 @@
 				EC8A53D925B1BCC6004E0802 /* MXThirdPartyProtocolInstance.m in Sources */,
 				EDF1B6912876CD2C00BBBCEE /* MXTaskQueue.swift in Sources */,
 				B14EF2422397E90400758AF0 /* MXDeviceInfo.m in Sources */,
+				EDCAD252299BF7F40088B4DA /* MXCryptoV2Feature.swift in Sources */,
 				ED5EF150297AB29F00A5ADDA /* MXEventDecryptionResult+DecryptedEvent.swift in Sources */,
 				B14EF2432397E90400758AF0 /* MXIncomingSASTransaction.m in Sources */,
 				B14EF2442397E90400758AF0 /* NSObject+sortedKeys.m in Sources */,

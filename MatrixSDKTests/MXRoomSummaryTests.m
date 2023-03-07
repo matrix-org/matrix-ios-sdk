@@ -458,7 +458,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
 
         observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
-             XCTAssertEqualObjects(summary.displayname, displayName, @"Room summary must be updated");
+             XCTAssertEqualObjects(summary.displayName, displayName, @"Room summary must be updated");
 
              [expectation fulfill];
          }];
@@ -479,13 +479,13 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
         
         [room state:^(MXRoomState *roomState) {
             // Given a room with two users.
-            XCTAssertEqualObjects(summary.displayname, @"mxAlice", @"A room with one other user should be given the name of that user.");
+            XCTAssertEqualObjects(summary.displayName, @"mxAlice", @"A room with one other user should be given the name of that user.");
             
             // When excluding the other user during a display name update.
             [updater updateSummaryDisplayname:summary session:bobSession withServerRoomSummary:nil roomState:roomState excludingUserIDs: @[aliceRestClient.credentials.userId]];
             
             // Then the name of the room should no longer include the other user.
-            XCTAssertEqualObjects(summary.displayname, @"Empty room", @"The name of the room should not include the other user when they are excluded.");
+            XCTAssertEqualObjects(summary.displayName, @"Empty room", @"The name of the room should not include the other user when they are excluded.");
             [expectation fulfill];
         }];
     }];
@@ -1107,7 +1107,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
             [room state:^(MXRoomState *roomState) {
 
                 XCTAssertEqualObjects(roomState.name, displayName);
-                XCTAssertEqualObjects(summary.displayname, displayName, @"Room summary must be updated");
+                XCTAssertEqualObjects(summary.displayName, displayName, @"Room summary must be updated");
 
                 [expectation fulfill];
             }];

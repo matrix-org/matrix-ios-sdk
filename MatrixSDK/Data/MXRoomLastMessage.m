@@ -30,6 +30,7 @@ NSString *const MXRoomLastMessageDataType = @"org.matrix.sdk.keychain.MXRoomLast
 NSString *const kCodingKeyEventId = @"eventId";
 NSString *const kCodingKeyOriginServerTs = @"originServerTs";
 NSString *const kCodingKeyIsEncrypted = @"isEncrypted";
+NSString *const kCodingKeyHasDecryptionError = @"hasDecryptionError";
 NSString *const kCodingKeySender = @"sender";
 NSString *const kCodingKeyData = @"data";
 NSString *const kCodingKeyEncryptedData = @"encryptedData";
@@ -54,6 +55,7 @@ NSString *const kCodingKeyOthers = @"others";
         _eventId = event.eventId;
         _originServerTs = event.originServerTs;
         _isEncrypted = event.isEncrypted;
+        _hasDecryptionError = event.decryptionError != nil;
         _sender = event.sender;
     }
     return self;
@@ -108,6 +110,7 @@ NSString *const kCodingKeyOthers = @"others";
         _eventId = model.s_eventId;
         _originServerTs = model.s_originServerTs;
         _isEncrypted = model.s_isEncrypted;
+        _hasDecryptionError = model.s_hasDecryptionError;
         _sender = model.s_sender;
         
         NSData* archivedSensitiveData;
@@ -142,6 +145,7 @@ NSString *const kCodingKeyOthers = @"others";
         _eventId = [coder decodeObjectForKey:kCodingKeyEventId];
         _originServerTs = [coder decodeInt64ForKey:kCodingKeyOriginServerTs];
         _isEncrypted = [coder decodeBoolForKey:kCodingKeyIsEncrypted];
+        _hasDecryptionError = [coder decodeBoolForKey:kCodingKeyHasDecryptionError];
         _sender = [coder decodeObjectForKey:kCodingKeySender];
 
         NSDictionary *lastMessageDictionary;
@@ -172,6 +176,7 @@ NSString *const kCodingKeyOthers = @"others";
     [coder encodeObject:_eventId forKey:kCodingKeyEventId];
     [coder encodeInt64:_originServerTs forKey:kCodingKeyOriginServerTs];
     [coder encodeBool:_isEncrypted forKey:kCodingKeyIsEncrypted];
+    [coder encodeBool:_hasDecryptionError forKey:kCodingKeyHasDecryptionError];
     [coder encodeObject:_sender forKey:kCodingKeySender];
     
     // Build last message sensitive data

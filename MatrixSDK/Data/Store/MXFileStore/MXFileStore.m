@@ -29,7 +29,7 @@
 #import "MatrixSDKSwiftHeader.h"
 #import "MXFileRoomSummaryStore.h"
 
-static NSUInteger const kMXFileVersion = 82;
+static NSUInteger const kMXFileVersion = 82;    // Check getUnreadRoomFromStore if you update this value. Delete this comment after
 
 static NSString *const kMXFileStoreFolder = @"MXFileStore";
 static NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
@@ -1004,7 +1004,7 @@ static NSUInteger preloadOptions;
 {
     
     NSArray<NSString*>* rooms = [roomUnreaded allObjects];
-    NSString *roomsFile = [self unreadFileForRoomsForBackup:NO];
+    NSString *roomsFile = [self unreadRoomsFile];
     [self saveObject:rooms toFile:roomsFile];
 }
 
@@ -1015,8 +1015,19 @@ static NSUInteger preloadOptions;
 
 - (NSArray*)getUnreadRoomFromStore
 {
-    NSString *roomsFile = [self unreadFileForRoomsForBackup:NO];
-    NSArray *result = [self loadUnreadRoomsStoreFromFileAt:roomsFile];
+    NSString *unreadRoomsFile = [self unreadRoomsFile];
+    
+    // TODO: Remove this migration code on the next kMXFileVersion update (>82)
+    // The `unreadFileForRoomsForBackup()` method should be removed.
+    // Likewise for the associated test `testUnreadRoomsFileMigration()`
+    NSString *oldUnreadRoomsFile = [self unreadFileForRoomsForBackup:NO];
+    if ([[NSFileManager defaultManager] fileExistsAtPath:oldUnreadRoomsFile])
+    {
+        MXLogDebug(@"[MXFileStore] getUnreadRoomFromStore: Migrate the unread rooms file")
+        [[NSFileManager defaultManager] moveItemAtPath:oldUnreadRoomsFile toPath:unreadRoomsFile error:nil];
+    }
+        
+    NSArray *result = [self loadUnreadRoomsStoreFromFileAt:unreadRoomsFile];
     return result;
 }
 
@@ -1187,6 +1198,13 @@ static NSUInteger preloadOptions;
 {
     return [[self folderForRoom:roomId forBackup:backup] stringByAppendingPathComponent:kMXFileStoreRoomReadReceiptsFile];
 }
+
+- (NSString*)unreadRoomsFile
+{
+    return [storePath stringByAppendingPathComponent:kMXFileStoreRoomUnreadRoomsFile];
+}
+
+// TODO: To delete when kMXFileVersion > 82
 - (NSString*)unreadFileForRoomsForBackup:(BOOL)backup
 {
     return [[self folderForRoomsforBackup:backup] stringByAppendingPathComponent:kMXFileStoreRoomUnreadRoomsFile];

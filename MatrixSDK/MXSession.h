@@ -1087,7 +1087,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 
  @return the MXRoomSummary instance.
  */
-- (MXRoomSummary *)roomSummaryWithRoomId:(NSString*)roomId;
+- (nullable MXRoomSummary *)roomSummaryWithRoomId:(NSString*)roomId;
 
 /**
  Recompute all room summaries last message.

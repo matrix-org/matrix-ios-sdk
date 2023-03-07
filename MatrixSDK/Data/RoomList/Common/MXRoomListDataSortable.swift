@@ -52,7 +52,7 @@ extension MXRoomListDataSortable {
 //        }
         
         if sortOptions.alphabetical {
-            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryProtocol.displayname, ascending: true))
+            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryProtocol.displayName, ascending: true))
         }
         
         if sortOptions.invitesFirst {

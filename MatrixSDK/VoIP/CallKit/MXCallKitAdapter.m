@@ -401,7 +401,7 @@ NSString * const kMXCallKitAdapterAudioSessionDidActive = @"kMXCallKitAdapterAud
 {
     if (call.isConferenceCall)
     {
-        onComplete(call.room.summary.displayname);
+        onComplete(call.room.summary.displayName);
     }
     else
     {

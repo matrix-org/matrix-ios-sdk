@@ -1117,7 +1117,7 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
         }
         else
         {
-            _callerName = nativeRoom.summary.displayname;
+            _callerName = nativeRoom.summary.displayName;
         }
     }
     calleeId = callManager.mxSession.myUserId;

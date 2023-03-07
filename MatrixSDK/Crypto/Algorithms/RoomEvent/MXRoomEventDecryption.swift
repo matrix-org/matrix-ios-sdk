@@ -52,6 +52,7 @@ actor MXRoomEventDecryption: MXRoomEventDecrypting {
     }
     
     func decrypt(events: [MXEvent]) -> [MXEventDecryptionResult] {
+        log.debug("Decrypting \(events.count) event(s)")
         let results = events.map(decrypt(event:))
         
         let undecrypted = results.filter {
@@ -63,8 +64,8 @@ actor MXRoomEventDecryption: MXRoomEventDecrypting {
                 "total": events.count,
                 "undecrypted": undecrypted.count
             ])
-        } else {
-            log.debug("Decrypted all \(events.count) event(s)")
+        } else if events.count > 1 {
+            log.debug("Decrypted all \(events.count) events")
         }
         
         return results
@@ -120,7 +121,7 @@ actor MXRoomEventDecryption: MXRoomEventDecrypting {
         do {
             let decryptedEvent = try handler.decryptRoomEvent(event)
             let result = try MXEventDecryptionResult(event: decryptedEvent)
-            log.debug("Successfully decrypted event `\(result.clearEvent["type"] ?? "unknown")` eventId `\(eventId)`")
+            log.debug("Decrypted event `\(result.clearEvent["type"] ?? "unknown")` eventId `\(eventId)`")
             return result
             
         } catch let error as DecryptionError {

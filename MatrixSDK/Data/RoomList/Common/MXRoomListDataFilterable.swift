@@ -122,7 +122,7 @@ extension MXRoomListDataFilterable {
         
         if let query = filterOptions.query, !query.isEmpty {
             let predicate1 = NSPredicate(format: "%K CONTAINS[cd] %@",
-                                         #keyPath(MXRoomSummaryProtocol.displayname),
+                                         #keyPath(MXRoomSummaryProtocol.displayName),
                                          query)
             let predicate2 = NSPredicate(format: "%K CONTAINS[cd] %@",
                                          #keyPath(MXRoomSummaryProtocol.spaceChildInfo.displayName),

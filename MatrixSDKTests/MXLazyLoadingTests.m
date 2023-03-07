@@ -1041,8 +1041,8 @@ Common initial conditions:
 
             MXRoomSummary *roomSummary = [aliceSession roomSummaryWithRoomId:roomId];
 
-            XCTAssertTrue(roomSummary.displayname.length
-                              && ![roomSummary.displayname isEqualToString:@"Empty room"], @"Unexpected null room name: %@", roomSummary.displayname);
+            XCTAssertTrue(roomSummary.displayName.length
+                              && ![roomSummary.displayName isEqualToString:@"Empty room"], @"Unexpected null room name: %@", roomSummary.displayName);
 
             [expectation fulfill];
         }];
@@ -1079,8 +1079,8 @@ Common initial conditions:
 
                 // -> The room name should be "Bob & 2 others"
                 MXRoomSummary *roomSummary = [aliceSession roomSummaryWithRoomId:roomId];
-                XCTAssertTrue(roomSummary.displayname.length
-                              && ![roomSummary.displayname isEqualToString:@"Empty room"], @"Unexpected null room name: %@", roomSummary.displayname);
+                XCTAssertTrue(roomSummary.displayName.length
+                              && ![roomSummary.displayName isEqualToString:@"Empty room"], @"Unexpected null room name: %@", roomSummary.displayName);
 
 
                  // Make alice do an initial sync
@@ -1100,8 +1100,8 @@ Common initial conditions:
 
                         // -> The room name should be "Bob & 2 others"
                         MXRoomSummary *roomSummary2 = [aliceSession2 roomSummaryWithRoomId:roomId];
-                        XCTAssertTrue(roomSummary2.displayname.length
-                                      && ![roomSummary2.displayname isEqualToString:@"Empty room"], @"Unexpected null room name: %@", roomSummary2.displayname);
+                        XCTAssertTrue(roomSummary2.displayName.length
+                                      && ![roomSummary2.displayName isEqualToString:@"Empty room"], @"Unexpected null room name: %@", roomSummary2.displayName);
 
 
                         [expectation fulfill];
@@ -1145,10 +1145,10 @@ Common initial conditions:
     [self createDirectChatScenarioWithLazyLoading:lazyLoading readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
 
         MXRoomSummary *roomSummary = [aliceSession roomSummaryWithRoomId:roomId];
-        XCTAssertTrue(roomSummary.displayname.length
-                      && ![roomSummary.displayname isEqualToString:@"Empty room"], @"Unexpected null room name: %@", roomSummary.displayname);
+        XCTAssertTrue(roomSummary.displayName.length
+                      && ![roomSummary.displayName isEqualToString:@"Empty room"], @"Unexpected null room name: %@", roomSummary.displayName);
 
-        NSString *roomDisplayName = roomSummary.displayname;
+        NSString *roomDisplayName = roomSummary.displayName;
 
         [aliceSession pause];
 
@@ -1160,7 +1160,7 @@ Common initial conditions:
 
                 // -> The room name should be still the same
                 MXRoomSummary *roomSummary2 = [aliceSession roomSummaryWithRoomId:roomId];
-                XCTAssertEqualObjects(roomSummary2.displayname, roomDisplayName);
+                XCTAssertEqualObjects(roomSummary2.displayName, roomDisplayName);
 
                 [expectation fulfill];
             }];

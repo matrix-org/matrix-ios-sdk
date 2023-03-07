@@ -56,12 +56,12 @@ public actor MXKeysQueryScheduler<Response> {
     private func currentOrNextQuery(users: Set<String>) -> Task<Response, Error> {
         if let currentQuery = currentQuery {
             if currentQuery.contains(users: users) {
-                log("... query already running")
+                log("... query with the same user(s) already running")
                 
                 return currentQuery.task
                 
             } else {
-                log("... queueing users for the next query")
+                log("... queueing user(s) for the next query")
                 
                 nextUsers = nextUsers.union(users)
 
@@ -69,9 +69,9 @@ public actor MXKeysQueryScheduler<Response> {
                     // Next task needs to await to completion of the currently running task
                     let _ = await currentQuery.task.result
 
-                    // Extract and reset next users
-                    let users = nextUsers
-                    nextUsers = []
+                    // At this point the previous query has already changed `self.currentQuery`
+                    // to `next`, so we can extract its users to execute
+                    let users = self.currentQuery?.users ?? []
 
                     // Only then we can execute the actual work
                     return try await executeQuery(users: users)
@@ -81,28 +81,29 @@ public actor MXKeysQueryScheduler<Response> {
             }
 
         } else {
-            log("... query starting")
-            
             let task = Task {
                 // Since we do not have any task running we can execute work right away
                 try await executeQuery(users: users)
             }
-            currentQuery = .init(users: users, task: task)
+            currentQuery = Query(users: users, task: task)
             return task
         }
     }
 
     private func executeQuery(users: Set<String>) async throws -> Response {
         defer {
-            if let next = nextTask {
-                log("... query completed, starting next pending query.")
-                currentQuery = .init(users: users, task: next)
+            if let nextTask = nextTask {
+                log("... query for \(users) completed, starting next pending query.")
+                currentQuery = Query(users: nextUsers, task: nextTask)
             } else {
-                log("... query completed, no other queries scheduled.")
+                log("... query for \(users) completed, no other queries scheduled.")
                 currentQuery = nil
             }
             nextTask = nil
+            nextUsers = []
         }
+        
+        log("... query starting for \(users)")
         return try await queryAction(Array(users))
     }
     

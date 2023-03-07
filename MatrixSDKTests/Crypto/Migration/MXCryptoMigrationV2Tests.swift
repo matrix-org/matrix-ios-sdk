@@ -74,35 +74,36 @@ class MXCryptoMigrationV2Tests: XCTestCase {
     func test_migratesAccountDetails() async throws {
         let env = try await e2eData.startE2ETest()
         let legacySession = env.session
-        
+
         let machine = try self.migratedOlmMachine(session: env.session)
-        
+
         XCTAssertEqual(machine.userId, legacySession.myUserId)
         XCTAssertEqual(machine.deviceId, legacySession.myDeviceId)
         XCTAssertEqual(machine.deviceCurve25519Key, legacySession.crypto.deviceCurve25519Key)
         XCTAssertEqual(machine.deviceEd25519Key, legacySession.crypto.deviceEd25519Key)
+        
+        await env.close()
     }
     
-    // Temporary disable test that fails to run on CI
-    func xtest_canDecryptMegolmMessageAfterMigration() async throws {
+    func test_canDecryptMegolmMessageAfterMigration() async throws {
         let env = try await e2eData.startE2ETest()
         
         guard let room = env.session.room(withRoomId: env.roomId) else {
             throw Error.missingDependencies
         }
-        
+
         // Send a new message in encrypted room
         let event = try await room.sendTextMessage("Hi bob")
-        
+
         // Erase cleartext and make sure the event was indeed encrypted
         event.setClearData(nil)
         XCTAssertTrue(event.isEncrypted)
         XCTAssertEqual(event.content["algorithm"] as? String, kMXCryptoMegolmAlgorithm)
         XCTAssertNotNil(event.content["ciphertext"])
-        
+
         // Migrate the session to crypto v2
         let machine = try self.migratedOlmMachine(session: env.session)
-        
+
         // Decrypt the event using crypto v2
         let decrypted = try machine.decryptRoomEvent(event)
         let result = try MXEventDecryptionResult(event: decrypted)
@@ -111,6 +112,8 @@ class MXCryptoMigrationV2Tests: XCTestCase {
         // At this point we should be able to read back the original message after
         // having decrypted the event with room keys migrated earlier
         XCTAssertEqual(content?["body"] as? String, "Hi bob")
+        
+        await env.close()
     }
     
     func test_notCrossSignedAfterMigration() async throws {
@@ -129,6 +132,8 @@ class MXCryptoMigrationV2Tests: XCTestCase {
         // As expected we cannot cross sign in v2 either
         XCTAssertFalse(crossSigningV2.canCrossSign)
         XCTAssertFalse(crossSigningV2.hasAllPrivateKeys)
+        
+        await env.close()
     }
     
     func test_migratesCrossSigningStatus() async throws {
@@ -148,6 +153,8 @@ class MXCryptoMigrationV2Tests: XCTestCase {
         // And confirm that cross signing is ready
         XCTAssertTrue(crossSigningV2.canCrossSign)
         XCTAssertTrue(crossSigningV2.hasAllPrivateKeys)
+        
+        await env.close()
     }
 }
 

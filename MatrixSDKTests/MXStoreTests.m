@@ -1686,7 +1686,7 @@
 
                             XCTAssert(summary);
 
-                            XCTAssertEqualObjects(summary.displayname, @"A name");
+                            XCTAssertEqualObjects(summary.displayName, @"A name");
                             XCTAssertEqualObjects(summary.topic, @"A topic");
 
                             [expectation fulfill];

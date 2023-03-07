@@ -214,7 +214,7 @@ class MXCoreDataRoomListDataManagerUnitTests: XCTestCase {
         
         //  rename rooms by index
         for (index, summary) in result.enumerated() {
-            summary.displayname = "Room \(index + 1)"
+            summary.displayName = "Room \(index + 1)"
             if let event = MXEvent(fromJSON: [
                 "event_id": MXTools.generateTransactionId() as Any,
                 "room_id": summary.roomId,

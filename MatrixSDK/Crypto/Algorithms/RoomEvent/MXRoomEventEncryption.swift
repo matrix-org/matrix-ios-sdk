@@ -127,7 +127,6 @@ struct MXRoomEventEncryption: MXRoomEventEncrypting {
             for: room,
             historyVisibility: state.historyVisibility
         )
-        log.debug("Collected \(users.count) eligible users")
         
         let settings = try encryptionSettings(for: state)
         try await handler.shareRoomKeysIfNecessary(
@@ -135,21 +134,23 @@ struct MXRoomEventEncryption: MXRoomEventEncrypting {
             users: users,
             settings: settings
         )
-        
-        log.debug("Encryption and room keys up to date")
     }
     
     /// Make sure that we recognize (and store if necessary) the claimed room encryption algorithm
     private func ensureRoomEncryption(roomId: String, algorithm: String?) throws {
         let existingAlgorithm = legacyStore.algorithm(forRoom: roomId)
         if existingAlgorithm != nil && existingAlgorithm == algorithm {
-            log.debug("Encryption in room is already set to the correct algorithm")
+            // Encryption in room is already set to the correct algorithm
             return
         }
         
         guard let algorithm = algorithm else {
-            log.error("Resetting encryption is not allowed")
-            throw Error.invalidEncryptionAlgorithm
+            if existingAlgorithm != nil {
+                log.error("Resetting encryption is not allowed")
+                return
+            } else {
+                throw Error.invalidEncryptionAlgorithm
+            }
         }
         
         let supportedAlgorithms = Set([kMXCryptoMegolmAlgorithm])
