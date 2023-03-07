@@ -391,7 +391,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                                 case .success:
                                     let roomSummary = self.bgSyncService?.roomSummary(forRoomId: roomId)
                                     XCTAssertNotNil(roomSummary, "Room summary should be fetched")
-                                    XCTAssertEqual(roomSummary?.displayname, newName, "Room name change should be reflected")
+                                    XCTAssertEqual(roomSummary?.displayName, newName, "Room name change should be reflected")
                                     expectation?.fulfill()
                                 case .failure(let error):
                                     XCTFail("Cannot fetch the event from background sync service - error: \(error)")

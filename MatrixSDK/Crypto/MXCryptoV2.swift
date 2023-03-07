@@ -267,14 +267,13 @@ class MXCryptoV2: NSObject, MXCrypto {
         onComplete: (([MXEventDecryptionResult]) -> Void)?
     ) {
         guard session?.isEventStreamInitialised == true else {
-            log.debug("Ignoring \(events.count) encrypted event(s) during initial sync in timeline \(timeline ?? "") (we most likely do not have the keys yet)")
+            log.debug("Ignoring \(events.count) encrypted event(s) during initial sync (we most likely do not have the keys yet)")
             let results = events.map { _ in MXEventDecryptionResult() }
             onComplete?(results)
             return
         }
         
         Task {
-            log.debug("Decrypting \(events.count) event(s) in timeline \(timeline ?? "")")
             let results = await decryptor.decrypt(events: events)
             await MainActor.run {
                 onComplete?(results)
@@ -287,12 +286,9 @@ class MXCryptoV2: NSObject, MXCrypto {
         success: (() -> Void)?,
         failure: ((Swift.Error) -> Void)?
     ) -> MXHTTPOperation? {
-        log.debug("->")
-        
         Task {
             do {
                 try await encryptor.ensureRoomKeysShared(roomId: roomId)
-                log.debug("Room keys shared when necessary")
                 await MainActor.run {
                     success?()
                 }

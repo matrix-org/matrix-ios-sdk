@@ -196,7 +196,7 @@ class MXSpaceServiceTest: XCTestCase {
                         
                         XCTAssertTrue(summary.roomType == .space)
                         XCTAssert(summary.membersCount.members == 1, "Bob must be the only one")
-                        XCTAssertTrue(summary.displayname == expectedSpaceName)
+                        XCTAssertTrue(summary.displayName == expectedSpaceName)
                         XCTAssertTrue(summary.topic == expectedSpaceTopic)
                                             
                         guard let room = space.room else {
@@ -381,18 +381,18 @@ class MXSpaceServiceTest: XCTestCase {
                             switch response {
                             case .success(let spaceChildrenSummary):
 
-                                XCTAssert(spaceChildrenSummary.spaceInfo?.displayName == spaceB.summary?.displayname)
+                                XCTAssert(spaceChildrenSummary.spaceInfo?.displayName == spaceB.summary?.displayName)
 
                                 let childInfos = spaceChildrenSummary.childInfos
 
                                 XCTAssert(childInfos.count == 2)
 
                                 let childInfoSpaceC = childInfos.first { (childInfo) -> Bool in
-                                    childInfo.name == spaceC.summary?.displayname
+                                    childInfo.name == spaceC.summary?.displayName
                                 }
 
                                 let childInfoSpaceD = childInfos.first { (childInfo) -> Bool in
-                                    childInfo.name == spaceD.summary?.displayname
+                                    childInfo.name == spaceD.summary?.displayName
                                 }
 
                                 XCTAssertNotNil(childInfoSpaceC)

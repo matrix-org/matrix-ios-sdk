@@ -153,7 +153,7 @@
         switch (event.eventType)
         {
             case MXEventTypeRoomName:
-                summary.displayname = roomState.name;
+                summary.displayName = roomState.name;
                 updated = YES;
                 break;
 
@@ -186,7 +186,7 @@
                 // If m.room.canonical_alias is set, use it if there is no m.room.name
                 if (!roomState.name && roomState.canonicalAlias)
                 {
-                    summary.displayname = roomState.canonicalAlias;
+                    summary.displayName = roomState.canonicalAlias;
                     updated = YES;
                 }
                 //  If canonicalAlias is set, add it to the aliases array
@@ -300,11 +300,11 @@
 
     NSUInteger memberCount = roomState.membersCount.members;
     if (memberCount > 1
-        && (!summary.displayname || [summary.displayname isEqualToString:_roomNameStringLocalizer.emptyRoom]))
+        && (!summary.displayName || [summary.displayName isEqualToString:_roomNameStringLocalizer.emptyRoom]))
     {
         // Data are missing to compute the display name
         MXLogDebug(@"[MXRoomSummaryUpdater] updateRoomSummary: Computed an unexpected \"Empty Room\" name. memberCount: %@", @(memberCount));
-        summary.displayname = [self fixUnexpectedEmptyRoomDisplayname:memberCount
+        summary.displayName = [self fixUnexpectedEmptyRoomDisplayname:memberCount
                                                               session:session
                                                             roomState:roomState];
         updated = YES;
@@ -516,8 +516,7 @@
             }
         }
 
-        if (memberCount > 1
-            && (!displayName || [displayName isEqualToString:_roomNameStringLocalizer.emptyRoom]))
+        if (!displayName || [displayName isEqualToString:_roomNameStringLocalizer.emptyRoom])
         {
             // Data are missing to compute the display name
             MXLogDebug(@"[MXRoomSummaryUpdater] updateSummaryDisplayname: Warning: Computed an unexpected \"Empty Room\" name. memberCount: %@", @(memberCount));
@@ -525,9 +524,9 @@
         }
     }
 
-    if (displayName != summary.displayname || ![displayName isEqualToString:summary.displayname])
+    if (displayName != summary.displayName || ![displayName isEqualToString:summary.displayName])
     {
-        summary.displayname = displayName;
+        summary.displayName = displayName;
         return YES;
     }
 
@@ -565,10 +564,23 @@
     switch (memberNames.count)
     {
         case 0:
-            MXLogDebug(@"[MXRoomSummaryUpdater] fixUnexpectedEmptyRoomDisplayname: No luck");
+        {
             displayname = _roomNameStringLocalizer.emptyRoom;
+            NSString *directUserId = [session roomWithRoomId: roomState.roomId].directUserId;
+            if (directUserId != nil && [MXTools isEmailAddress:directUserId])
+            {
+                displayname = directUserId;
+            }
+            else if (roomState.thirdPartyInvites.firstObject.displayname != nil)
+            {
+                displayname = roomState.thirdPartyInvites.firstObject.displayname;
+            }
+            else
+            {
+                MXLogDebug(@"[MXRoomSummaryUpdater] fixUnexpectedEmptyRoomDisplayname: No luck");
+            }
             break;
-
+        }
         case 1:
             if (memberCount == 2)
             {

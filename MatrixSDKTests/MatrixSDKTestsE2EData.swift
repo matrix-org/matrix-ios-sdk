@@ -30,15 +30,15 @@ extension MatrixSDKTestsE2EData {
             self.roomId = roomId
         }
         
-        deinit {
-            let session = session
-            DispatchQueue.main.async {
-                session.close()
-            }
+        @MainActor
+        func close() {
+            session.close()
         }
     }
 
+    @MainActor
     func startE2ETest() async throws -> Environment {
+        
         return try await withCheckedThrowingContinuation { continuation in
             doE2ETestWithAlice(inARoom: nil) { session, roomId, _ in
                 guard let session = session, let roomId = roomId else {

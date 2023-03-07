@@ -48,7 +48,7 @@ typedef NS_ENUM(NSUInteger, MXCallTransferType)
 
 NS_ASSUME_NONNULL_BEGIN
 
-@protocol MXBackgroundModeHandler;
+@protocol MXBackgroundModeHandler, MXCryptoV2Feature;
 
 /**
  SDK options that can be set at the launch time.
@@ -204,23 +204,18 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic) BOOL enableRoomSharedHistoryOnInvite;
 
 /**
- The state of the rust-based `MatrixCryptoSDK` which replaces `MatrixSDK`'s internal crypto module,
- and whether it is available to a user as an option.
+ An object which controls the availabilty of the rust-based `MatrixCryptoSDK`.
  
- To control which crypto module is actually used, set `enableCryptoSDK`.
- 
- @remark NO by default.
+ @remark nil by default.
  */
-@property (nonatomic) BOOL isCryptoSDKAvailable;
+@property (nonatomic, nullable) id<MXCryptoV2Feature> cryptoSDKFeature;
 
 /**
  Use the rust-based `MatrixCryptoSDK` instead of `MatrixSDK`'s internal crypto module.
  
- This option should only be enabled if `isCryptoSDKAvailable` is set to YES.
- 
- @remark NO by default.
+ @remark this property is a convenience getter for `cryptoSDKFeature.isEnabled`
  */
-@property (nonatomic) BOOL enableCryptoSDK;
+@property (nonatomic, readonly) BOOL enableCryptoSDK;
 
 /**
  Enable symmetric room key backups
@@ -240,9 +235,9 @@ NS_ASSUME_NONNULL_BEGIN
  Enable the calculating of progress during session startup, incl counting the number
  of attempts to sync with the server and percentage of response data processed.
  
- @remark NO by default
+ @remark the value currently depends on `enableCryptoSDK` being `YES`
  */
-@property (nonatomic) BOOL enableStartupProgress;
+@property (nonatomic, readonly) BOOL enableStartupProgress;
 
 @end
 

@@ -203,7 +203,7 @@ NSUInteger const kMXKeyBackupWaitingTimeToSendKeyBackup = 10000;
     }
     else
     {
-        MXLogDebug(@"[MXKeyBackup] maybeSendKeyBackup: Skip it because state: %@", @(_state));
+        MXLogDebug(@"[MXKeyBackup] maybeSendKeyBackup: Skip it because state: %@", [self descriptionForState:_state]);
 
         // If not already done, check for a valid backup version on the homeserver.
         // If one, maybeSendKeyBackup will be called again.
@@ -231,7 +231,7 @@ NSUInteger const kMXKeyBackupWaitingTimeToSendKeyBackup = 10000;
     // Sanity check
     if (!self.enabled || !_keyBackupVersion)
     {
-        MXLogDebug(@"[MXKeyBackup] sendKeyBackup: Invalid state: %@", @(_state));
+        MXLogDebug(@"[MXKeyBackup] sendKeyBackup: Invalid state: %@", [self descriptionForState:_state]);
         if (backupAllGroupSessionsFailure)
         {
             NSError *error = [NSError errorWithDomain:MXKeyBackupErrorDomain
@@ -522,7 +522,7 @@ NSUInteger const kMXKeyBackupWaitingTimeToSendKeyBackup = 10000;
 {
     if (_state == MXKeyBackupStateUnknown || _state == MXKeyBackupStateCheckingBackUpOnHomeserver)
     {
-        MXLogDebug(@"[MXKeyBackup] forceRefresh: Invalid state (%@) to force the refresh", @(_state));
+        MXLogDebug(@"[MXKeyBackup] forceRefresh: Invalid state (%@) to force the refresh", [self descriptionForState:_state]);
         if (failure)
         {
             NSError *error = [NSError errorWithDomain:MXKeyBackupErrorDomain

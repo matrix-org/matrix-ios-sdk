@@ -327,18 +327,18 @@ public class MXSyncResponseStoreManager: NSObject {
         for event in eventsToProcess {
             switch event.eventType {
                 case .roomAliases:
-                    if summary.displayname == nil {
-                        summary.displayname = (event.content["aliases"] as? [String])?.first
+                    if summary.displayName == nil {
+                        summary.displayName = (event.content["aliases"] as? [String])?.first
                     }
                 case .roomCanonicalAlias:
-                    if summary.displayname == nil {
-                        summary.displayname = event.content["alias"] as? String
-                        if summary.displayname == nil {
-                            summary.displayname = (event.content["alt_aliases"] as? [String])?.first
+                    if summary.displayName == nil {
+                        summary.displayName = event.content["alias"] as? String
+                        if summary.displayName == nil {
+                            summary.displayName = (event.content["alt_aliases"] as? [String])?.first
                         }
                     }
                 case .roomName:
-                    summary.displayname = event.content["name"] as? String
+                    summary.displayName = event.content["name"] as? String
                 default:
                     break
             }

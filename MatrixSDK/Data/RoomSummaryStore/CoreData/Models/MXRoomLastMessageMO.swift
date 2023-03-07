@@ -27,6 +27,7 @@ public class MXRoomLastMessageMO: NSManagedObject {
     @NSManaged public var s_eventId: String
     @NSManaged public var s_originServerTs: UInt64
     @NSManaged public var s_isEncrypted: Bool
+    @NSManaged public var s_hasDecryptionError: Bool
     @NSManaged public var s_sender: String
     @NSManaged public var s_sensitiveData: Data?
     
@@ -44,6 +45,7 @@ public class MXRoomLastMessageMO: NSManagedObject {
         s_eventId = lastMessage.eventId
         s_originServerTs = lastMessage.originServerTs
         s_isEncrypted = lastMessage.isEncrypted
+        s_hasDecryptionError = lastMessage.hasDecryptionError
         s_sender = lastMessage.sender
         s_sensitiveData = lastMessage.sensitiveData()
     }
