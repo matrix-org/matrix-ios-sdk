@@ -1,3 +1,24 @@
+## Changes in 0.26.0 (2023-03-07)
+
+🙌 Improvements
+
+- CryptoV2: Control CryptoSDK via feature flag ([#1719](https://github.com/matrix-org/matrix-ios-sdk/pull/1719))
+- Update MatrixSDKCrypto ([#1725](https://github.com/matrix-org/matrix-ios-sdk/pull/1725))
+- Use correct next users with keys query ([#1726](https://github.com/matrix-org/matrix-ios-sdk/pull/1726))
+- Creating a direct room with a third party will now use their email as the m.direct ID and their obfuscated email as the room title. ([#1727](https://github.com/matrix-org/matrix-ios-sdk/pull/1727))
+
+🐛 Bugfixes
+
+- Fixed incorrect filtering of "unread rooms" in the all chats list. ([#1723](https://github.com/matrix-org/matrix-ios-sdk/pull/1723))
+- Unread rooms: Move the storage file to a better location. ([#1730](https://github.com/matrix-org/matrix-ios-sdk/pull/1730))
+- Fixed a crash when roomSummary is nil. ([#1731](https://github.com/matrix-org/matrix-ios-sdk/pull/1731))
+- Fix room list last message when the key comes late. ([#6848](https://github.com/vector-im/element-ios/issues/6848))
+
+⚠️ API Changes
+
+- MXRoomSummary: displayname has been renamed to displayName ([#1731](https://github.com/matrix-org/matrix-ios-sdk/pull/1731))
+
+
 ## Changes in 0.25.2 (2023-02-21)
 
 🙌 Improvements
