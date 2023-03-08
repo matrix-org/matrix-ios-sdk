@@ -401,7 +401,7 @@ typedef void (^MXOnResumeDone)(void);
         [MXLegacyCrypto initializeCryptoWithMatrixSession:self migrationProgress:^(double progress) {
             if (MXSDKOptions.sharedInstance.enableStartupProgress)
             {
-                [self.startupProgress updateMigrationProgress:progress];
+                [self.startupProgress updateProgressForStage:MXSessionStartupStageStoreMigration progress:progress];
             }
             
         } complete:^(id<MXCrypto> crypto, NSError *error) {
@@ -593,8 +593,8 @@ typedef void (^MXOnResumeDone)(void);
             
             if (MXSDKOptions.sharedInstance.enableStartupProgress && progress)
             {
+                progress([self.startupProgress overallProgressForStep:completedRooms totalCount:totalRooms progress:1]);
                 completedRooms += 1;
-                progress([self startupProgressForCompleted:completedRooms total:totalRooms]);
             }
         };
         
@@ -1461,7 +1461,9 @@ typedef void (^MXOnResumeDone)(void);
     BOOL shoulReportStartupProgress = MXSDKOptions.sharedInstance.enableStartupProgress && !self.isEventStreamInitialised;
     if (shoulReportStartupProgress)
     {
-        [self.startupProgress incrementSyncAttempt];
+        // There is no way to track percentage progress when syncing with the server, so we always use 0%
+        // and only care about the `.serverSyncing` stage
+        [self.startupProgress updateProgressForStage:MXSessionStartupStageServerSyncing progress:0];
     }
     
     dispatch_group_t initialSyncDispatchGroup = dispatch_group_create();
@@ -1562,11 +1564,20 @@ typedef void (^MXOnResumeDone)(void);
             nextServerTimeout = 0;
         }
         
+        // A few local constants used to calculate overall progress for a number of different steps
+        // that occur during processing of sync response
+        NSInteger syncResponseStep = 0;
+        NSInteger roomSummariesStep = 1;
+        NSInteger processingStepsCount = 2;
+        
         [self handleSyncResponse:syncResponse
                         progress:^(CGFloat progress) {
             if (shoulReportStartupProgress)
             {
-                [self.startupProgress updateProcessingProgress:progress forPhase:MXSessionProcessingResponsePhaseSyncResponse];
+                double overallProgress = [self.startupProgress overallProgressForStep:syncResponseStep
+                                                                           totalCount:processingStepsCount
+                                                                             progress:progress];
+                [self.startupProgress updateProgressForStage:MXSessionStartupStageProcessingResponse progress:overallProgress];
             }
         }
                       completion:^{
@@ -1581,7 +1592,10 @@ typedef void (^MXOnResumeDone)(void);
                                                                       progress:^(CGFloat progress) {
                     if (shoulReportStartupProgress)
                     {
-                        [self.startupProgress updateProcessingProgress:progress forPhase:MXSessionProcessingResponsePhaseRoomSummaries];
+                        double overallProgress = [self.startupProgress overallProgressForStep:roomSummariesStep
+                                                                                   totalCount:processingStepsCount
+                                                                                     progress:progress];
+                        [self.startupProgress updateProgressForStage:MXSessionStartupStageProcessingResponse progress:overallProgress];
                     }
                 }
                                                                     completion:^{
@@ -2158,7 +2172,7 @@ typedef void (^MXOnResumeDone)(void);
     BOOL isInValidState = _state == MXSessionStateStoreDataReady || _state == MXSessionStatePaused;
     if (!isInValidState) {
         NSString *message = [NSString stringWithFormat:@"[MXSession] handleBackgroundSyncCacheIfRequired: state %@ is not valid to handle background sync cache, investigate why the method was called", [MXTools readableSessionState:_state]];
-        MXLogFailure(message);
+        MXLogError(message);
         if (completion)
         {
             completion();
@@ -2284,11 +2298,6 @@ typedef void (^MXOnResumeDone)(void);
             completion();
         });
     }
-}
-
-- (CGFloat)startupProgressForCompleted:(NSInteger)completed total:(NSInteger)total
-{
-    return total > 0 ? (CGFloat)completed/(CGFloat)total : 0;
 }
 
 #pragma mark - Options
@@ -3408,8 +3417,8 @@ typedef void (^MXOnResumeDone)(void);
         dispatch_group_leave(dispatchGroup);
         if (MXSDKOptions.sharedInstance.enableStartupProgress && progress)
         {
+            progress([self.startupProgress overallProgressForStep:completedRooms totalCount:self.rooms.count progress:1]);
             completedRooms += 1;
-            progress([self startupProgressForCompleted:completedRooms total:self.rooms.count]);
         }
     };
     
@@ -4191,20 +4200,8 @@ typedef void (^MXOnResumeDone)(void);
     NSDictionary *data = @{
                            kMXAccountDataKeyIgnoredUser: ignoredUsersDict
                            };
-//    __weak __typeof(self)weakSelf = self;
     return [self setAccountData:data forType:kMXAccountDataTypeIgnoredUserList success:^{
-
-//        __strong __typeof(weakSelf)strongSelf = weakSelf;
-
-        // Update self.ignoredUsers right now
-// Commented as it created race condition with /sync response handling
-//        NSMutableArray *newIgnoredUsers = [NSMutableArray arrayWithArray:strongSelf->_ignoredUsers];
-//        for (NSString *userId in userIds)
-//        {
-//            [newIgnoredUsers removeObject:userId];
-//        }
-//        strongSelf->_ignoredUsers = newIgnoredUsers;
-
+        
         if (success)
         {
             success();

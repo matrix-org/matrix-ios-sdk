@@ -232,12 +232,12 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic) BOOL enableNewClientInformationFeature;
 
 /**
- Enable the calculating of progress during session startup, incl counting the number
- of attempts to sync with the server and percentage of response data processed.
+ Enable the calculating and display of progress during session startup, incl store migration,
+ syncing and response processing.
  
- @remark the value currently depends on `enableCryptoSDK` being `YES`
+ @remark YES by default
  */
-@property (nonatomic, readonly) BOOL enableStartupProgress;
+@property (nonatomic) BOOL enableStartupProgress;
 
 @end
 
