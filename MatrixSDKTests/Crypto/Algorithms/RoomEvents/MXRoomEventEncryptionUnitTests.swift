@@ -87,7 +87,7 @@ class MXRoomEventEncryptionUnitTests: XCTestCase {
             return trackedUsers.contains(userId)
         }
         
-        func addTrackedUsers(_ users: [String]) {
+        func updateTrackedUsers(_ users: [String]) {
             trackedUsers = trackedUsers.union(users)
         }
         
@@ -254,7 +254,22 @@ class MXRoomEventEncryptionUnitTests: XCTestCase {
         members.eligibleUsers = ["Alice", "Carol"]
         
         try await encryptor.ensureRoomKeysShared(roomId: roomId)
+        
         XCTAssertEqual(handler.sharedUsers, ["Alice", "Carol"])
+    }
+    
+    func test_ensureRoomKeysShared_tracksMissingUsers() async throws {
+        members.stubbedMembers = [
+            .init(userId: "Alice"),
+            .init(userId: "Bob"),
+            .init(userId: "Carol"),
+        ]
+        members.eligibleUsers = ["Alice", "Bob", "Carol"]
+        handler.trackedUsers = ["Alice"]
+        
+        try await encryptor.ensureRoomKeysShared(roomId: roomId)
+        
+        XCTAssertEqual(handler.trackedUsers, ["Alice", "Bob", "Carol"])
     }
     
     // MARK: - Encrypt

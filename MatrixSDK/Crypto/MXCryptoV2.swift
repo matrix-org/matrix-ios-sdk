@@ -661,7 +661,7 @@ class MXCryptoV2: NSObject, MXCrypto {
         }
         
         log.debug("Tracking new user `\(userId)` due to \(member.membership) event")
-        machine.addTrackedUsers([userId])
+        machine.updateTrackedUsers([userId])
     }
     
     private func restoreBackupIfPossible(event: MXEvent) {

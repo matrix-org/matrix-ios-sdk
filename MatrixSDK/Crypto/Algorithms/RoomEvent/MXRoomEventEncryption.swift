@@ -108,7 +108,7 @@ struct MXRoomEventEncryption: MXRoomEventEncrypting {
             for: room,
             historyVisibility: state.historyVisibility
         )
-        handler.addTrackedUsers(users)
+        handler.updateTrackedUsers(users)
     }
     
     // MARK: - Private
@@ -127,6 +127,12 @@ struct MXRoomEventEncryption: MXRoomEventEncrypting {
             for: room,
             historyVisibility: state.historyVisibility
         )
+        
+        // Room membership events should ensure that we are always tracking users as soon as possible,
+        // but there are rare edge-cases where this does not always happen. To add a safety mechanism
+        // we will always update tracked users when sharing keys (which does nothing if a user is
+        // already tracked), triggering a key request for missing users in the next sync loop.
+        handler.updateTrackedUsers(users)
         
         let settings = try encryptionSettings(for: state)
         try await handler.shareRoomKeysIfNecessary(

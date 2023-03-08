@@ -373,7 +373,7 @@ extension MXCryptoMachine: MXCryptoRoomEventEncrypting {
         }
     }
     
-    func addTrackedUsers(_ users: [String]) {
+    func updateTrackedUsers(_ users: [String]) {
         do {
             try machine.updateTrackedUsers(users: users)
         } catch {
