@@ -56,6 +56,7 @@ static MXSDKOptions *sharedOnceInstance = nil;
         _enableRoomSharedHistoryOnInvite = NO;
         _enableSymmetricBackup = NO;
         _enableNewClientInformationFeature = NO;
+        _enableStartupProgress = YES;
     }
     
     return self;
@@ -69,14 +70,6 @@ static MXSDKOptions *sharedOnceInstance = nil;
         return NO;
     }
     return self.cryptoSDKFeature.isEnabled;
-}
-
-- (BOOL)enableStartupProgress
-{
-    // The value of `enableStartupProgress` depends on `enableCryptoSDK` as the latter provides some new UX elements
-    // such as initial data migration. It is a good opportunity to enable startup progress as well, before it becomes
-    // default to all.
-    return self.enableCryptoSDK;
 }
 
 - (void)setRoomListDataManagerClass:(Class)roomListDataManagerClass

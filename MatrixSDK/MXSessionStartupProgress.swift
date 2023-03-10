@@ -19,74 +19,86 @@ import Foundation
 /// Different stages of starting up a session that may complete
 /// in non-trivial amount of time. These stages can be observed
 /// and used to update the user interface during session loading.
-public enum MXSessionStartupStage {
+@objc public enum MXSessionStartupStage: Int, CaseIterable {
     
     /// Migrating data to a new store version
-    case migratingData(progress: Double)
+    case storeMigration
     
-    /// Syncing with the server as Nth attempt
-    case serverSyncing(attempt: Int)
+    /// Syncing with the server
+    case serverSyncing
     
     /// Processing server response
-    case processingResponse(progress: Double)
+    case processingResponse
 }
 
-/// Delegate that receives stage updates
+/// Delegate that receives progress state updates
 public protocol MXSessionStartupProgressDelegate: AnyObject {
-    func sessionDidUpdateStartupStage(_ stage: MXSessionStartupStage)
+    func sessionDidUpdateStartupProgress(state: MXSessionStartupProgress.State)
 }
 
-/// Distinct phases of the `processingResponse` stage that report
-/// their own local progress separately and complete in a given order
-@objc public enum MXSessionProcessingResponsePhase: Int, CaseIterable {
-    
-    /// Processing the response from the server
-    case syncResponse
-    
-    /// Updating room summaries
-    case roomSummaries
-}
-
-/// `MXSessionStartupProgress` tracks individual stages and per-stage progress
-/// during a session startup, where the application may be blocking user interactions.
+/// `MXSessionStartupProgress` tracks progress for individual stages during a session startup,
+///  where the application may be blocking user interactions.
 @objc public class MXSessionStartupProgress: NSObject {
-    private var syncAttempts = 0
-    private var stage: MXSessionStartupStage? {
-        didSet {
-            if let state = stage {
-                delegate?.sessionDidUpdateStartupStage(state)
-            }
-        }
+    public struct State {
+        public let progress: Double
+        public let showDelayWarning: Bool
     }
     
     public weak var delegate: MXSessionStartupProgressDelegate? {
         didSet {
-            if let state = stage {
-                delegate?.sessionDidUpdateStartupStage(state)
+            if let state = state {
+                delegate?.sessionDidUpdateStartupProgress(state: state)
             }
         }
     }
     
-    /// Update the progress of the `migratingData` stage
-    @objc public func updateMigrationProgress(_ progress: Double) {
-        stage = .migratingData(progress: progress)
+    private var updatedStages = Set<MXSessionStartupStage>()
+    private var state: State? {
+        didSet {
+            if let state = state {
+                delegate?.sessionDidUpdateStartupProgress(state: state)
+            }
+        }
     }
     
-    /// Increment the total number of sync attempts during the `serverSyncing` stage
-    @objc public func incrementSyncAttempt() {
-        syncAttempts += 1
-        stage = .serverSyncing(attempt: syncAttempts)
-    }
-    
-    /// Update the local progress of a specific phase within `processingResponse`
+    /// Update progress for a given stage as a number between 0.0-1.0
     ///
-    /// The overal progress will be computed and reported automatically
-    @objc public func updateProcessingProgress(_ progress: Double, forPhase phase: MXSessionProcessingResponsePhase) {
-        let totalPhases = Double(MXSessionProcessingResponsePhase.allCases.count)
-        let currentPhaseProgress = progress / totalPhases
-        let previousPhasesProgress = Double(phase.rawValue) / totalPhases
-        let totalProgress = previousPhasesProgress + currentPhaseProgress
+    /// The update will inform a delegate with a new progress state containing the overall calculated
+    /// progress, depending on total number of startup stages.
+    @objc public func updateProgressForStage(_ stage: MXSessionStartupStage, progress: Double) {
+        switch stage {
+        case .storeMigration:
+            state = State(
+                // Migration contributes to half of the overall progress
+                progress: progress / 2,
+                showDelayWarning: false
+            )
+        case .serverSyncing:
+            state = State(
+                // If we have previously migrated, we start at 0.5, otherwise at 0
+                progress: updatedStages.contains(.storeMigration) ? 0.5 : 0,
+                // We display delay warning if this is second or higher sync attempt
+                showDelayWarning: updatedStages.contains(.serverSyncing)
+            )
+        case .processingResponse:
+            state = State(
+                // If we have previously migrated, we start at 0.5, otherwise we take up the entire progress
+                progress: updatedStages.contains(.storeMigration) ? 0.5 + progress / 2 : progress,
+                showDelayWarning: false
+            )
+        }
         
-        stage = .processingResponse(progress: totalProgress)
+        updatedStages.insert(stage)
+    }
+    
+    /// Calculate the overall progress for a given step out of total steps
+    @objc public func overallProgressForStep(_ currentStep: Int, totalCount: Int, progress: Double) -> Double {
+        guard totalCount > 0 else {
+            return 0
+        }
+        
+        let currentStepProgress = progress / Double(totalCount)
+        let previousStepProgress = Double(currentStep) / Double(totalCount)
+        return previousStepProgress + currentStepProgress
     }
 }

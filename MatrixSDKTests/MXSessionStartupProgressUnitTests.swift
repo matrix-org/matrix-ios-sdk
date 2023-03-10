@@ -19,9 +19,9 @@ import MatrixSDK
 
 class MXSessionStartupProgressUnitTests: XCTestCase {
     class SpyDelegate: MXSessionStartupProgressDelegate {
-        var stage: MXSessionStartupStage?
-        func sessionDidUpdateStartupStage(_ stage: MXSessionStartupStage) {
-            self.stage = stage
+        var state: MXSessionStartupProgress.State!
+        func sessionDidUpdateStartupProgress(state: MXSessionStartupProgress.State) {
+            self.state = state
         }
     }
     
@@ -33,78 +33,98 @@ class MXSessionStartupProgressUnitTests: XCTestCase {
         progress.delegate = delegate
     }
     
-    func testUpdatesMigrationProgress() {
-        XCTAssertNil(delegate.stage)
+    // MARK: - updateProgressForStage
+    
+    func test_updateProgress_storeMigration_isHalfOfTotalProgress() {
+        progress.updateProgressForStage(.storeMigration, progress: 0)
+        XCTAssertEqual(delegate.state.progress, 0)
         
-        progress.updateMigrationProgress(0)
-        XCTAssertMigratingProgress(0, stage: delegate.stage)
+        progress.updateProgressForStage(.storeMigration, progress: 0.5)
+        XCTAssertEqual(delegate.state.progress, 0.25)
         
-        progress.updateMigrationProgress(0.5)
-        XCTAssertMigratingProgress(0.5, stage: delegate.stage)
+        progress.updateProgressForStage(.storeMigration, progress: 1)
+        XCTAssertEqual(delegate.state.progress, 0.5)
     }
     
-    
-    func testIncrementsSyncAttempt() {
-        XCTAssertNil(delegate.stage)
-        
-        progress.incrementSyncAttempt()
-        XCTAssertIsNthSyncingAttempt(1, stage: delegate.stage)
-        
-        progress.incrementSyncAttempt()
-        XCTAssertIsNthSyncingAttempt(2, stage: delegate.stage)
-        
-        progress.incrementSyncAttempt()
-        XCTAssertIsNthSyncingAttempt(3, stage: delegate.stage)
+    func test_updateProgress_serverSyncingWithoutMigration_isZero() {
+        progress.updateProgressForStage(.serverSyncing, progress: 0)
+        XCTAssertEqual(delegate.state.progress, 0)
     }
     
-    func testUpdatesProcessingProgressForMultiplePhases() {
-        XCTAssertNil(delegate.stage)
-        
-        progress.updateProcessingProgress(0, forPhase: .syncResponse)
-        XCTAssertProcessingProgress(0, stage: delegate.stage)
-        
-        // Sync response is one of 2 possible phases, so its progress contributes 50% to the overal progress
-        progress.updateProcessingProgress(0.5, forPhase: .syncResponse)
-        XCTAssertProcessingProgress(0.25, stage: delegate.stage)
-        
-        // Reporting progress for next phase assumes the previous phase has completed,
-        progress.updateProcessingProgress(0.5, forPhase: .roomSummaries)
-        XCTAssertProcessingProgress(0.75, stage: delegate.stage)
-        
-        // Full progress for the last phase means the overal progres is complete as well
-        progress.updateProcessingProgress(1, forPhase: .roomSummaries)
-        XCTAssertProcessingProgress(1, stage: delegate.stage)
+    func test_updateProgress_serverSyncingAfterMigration_isHalfOfTotalProgress() {
+        progress.updateProgressForStage(.storeMigration, progress: 0)
+        progress.updateProgressForStage(.serverSyncing, progress: 0)
+        XCTAssertEqual(delegate.state.progress, 0.5)
     }
     
-    // MARK: - Assertion helpers
-    
-    private func XCTAssertMigratingProgress(_ expectedProgress: Double, stage: MXSessionStartupStage?, file: StaticString = #file, line: UInt = #line) {
-        if case .migratingData(let progress) = stage {
-            XCTAssertEqual(progress, expectedProgress, file: file, line: line)
-        } else if let stage = stage {
-            XCTFail("Unexpected stage \(stage)", file: file, line: line)
-        } else {
-            XCTFail("stage is nil", file: file, line: line)
-        }
+    func test_updateProgress_repeatedServerSyncing_showsDelayWarning() {
+        progress.updateProgressForStage(.serverSyncing, progress: 0)
+        XCTAssertFalse(delegate.state.showDelayWarning)
+        
+        progress.updateProgressForStage(.serverSyncing, progress: 0)
+        XCTAssertTrue(delegate.state.showDelayWarning)
+        
+        progress.updateProgressForStage(.serverSyncing, progress: 0)
+        progress.updateProgressForStage(.serverSyncing, progress: 0)
+        XCTAssertTrue(delegate.state.showDelayWarning)
     }
     
-    private func XCTAssertIsNthSyncingAttempt(_ expectedAttempt: Int, stage: MXSessionStartupStage?, file: StaticString = #file, line: UInt = #line) {
-        if case .serverSyncing(let attempt) = stage {
-            XCTAssertEqual(attempt, expectedAttempt, file: file, line: line)
-        } else if let stage = stage {
-            XCTFail("Unexpected stage \(stage)", file: file, line: line)
-        } else {
-            XCTFail("stage is nil", file: file, line: line)
-        }
+    func test_updateProgress_processingResponseWithoutMigration_isEntireProgress() {
+        progress.updateProgressForStage(.processingResponse, progress: 0)
+        XCTAssertEqual(delegate.state.progress, 0)
+        
+        progress.updateProgressForStage(.processingResponse, progress: 0.5)
+        XCTAssertEqual(delegate.state.progress, 0.5)
+        
+        progress.updateProgressForStage(.processingResponse, progress: 1)
+        XCTAssertEqual(delegate.state.progress, 1)
     }
     
-    private func XCTAssertProcessingProgress(_ expectedProgress: Double, stage: MXSessionStartupStage?, file: StaticString = #file, line: UInt = #line) {
-        if case .processingResponse(let progress) = stage {
-            XCTAssertEqual(progress, expectedProgress, file: file, line: line)
-        } else if let stage = stage {
-            XCTFail("Unexpected stage \(stage)", file: file, line: line)
-        } else {
-            XCTFail("stage is nil", file: file, line: line)
-        }
+    func test_updateProgress_processingResponseAfterMigration_isHalfOfTotalProgress() {
+        progress.updateProgressForStage(.storeMigration, progress: 0)
+        
+        progress.updateProgressForStage(.processingResponse, progress: 0)
+        XCTAssertEqual(delegate.state.progress, 0.5)
+        
+        progress.updateProgressForStage(.processingResponse, progress: 0.5)
+        XCTAssertEqual(delegate.state.progress, 0.75)
+        
+        progress.updateProgressForStage(.processingResponse, progress: 1)
+        XCTAssertEqual(delegate.state.progress, 1)
+    }
+    
+    // MARK: - overalProgressForStep
+    
+    private func overallProgress(step: Int, count: Int, progress: Double) -> Double {
+        self.progress.overallProgressForStep(step, totalCount: count, progress: progress)
+    }
+    
+    func test_overallProgressForStep_oneStep() {
+        XCTAssertEqual(overallProgress(step: 0, count: 1, progress: 0), 0)
+        XCTAssertEqual(overallProgress(step: 0, count: 1, progress: 0.5), 0.5)
+        XCTAssertEqual(overallProgress(step: 0, count: 1, progress: 1), 1)
+    }
+    
+    func test_overallProgress_twoSteps() {
+        XCTAssertEqual(overallProgress(step: 0, count: 2, progress: 0), 0)
+        XCTAssertEqual(overallProgress(step: 0, count: 2, progress: 0.5), 0.25)
+        XCTAssertEqual(overallProgress(step: 0, count: 2, progress: 1), 0.5)
+        
+        XCTAssertEqual(overallProgress(step: 1, count: 2, progress: 0), 0.5)
+        XCTAssertEqual(overallProgress(step: 1, count: 2, progress: 0.5), 0.75)
+        XCTAssertEqual(overallProgress(step: 1, count: 2, progress: 1), 1)
+    }
+    
+    func test_overallProgress_tenSteps() {
+        XCTAssertEqual(overallProgress(step: 0, count: 10, progress: 0), 0)
+        XCTAssertEqual(overallProgress(step: 0, count: 10, progress: 1), 0.1)
+        
+        XCTAssertEqual(overallProgress(step: 3, count: 10, progress: 0.5), 0.35)
+        
+        XCTAssertEqual(overallProgress(step: 4, count: 10, progress: 1), 0.5)
+        
+        XCTAssertEqual(overallProgress(step: 7, count: 10, progress: 0.25), 0.725)
+        
+        XCTAssertEqual(overallProgress(step: 9, count: 10, progress: 1), 1)
     }
 }
