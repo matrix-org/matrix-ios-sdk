@@ -1,3 +1,10 @@
+## Changes in 0.26.1 (2023-03-13)
+
+🐛 Bugfixes
+
+- All chats: revert "Unread" rooms filter behaviour. ([#1736](https://github.com/matrix-org/matrix-ios-sdk/pull/1736))
+
+
 ## Changes in 0.26.0 (2023-03-07)
 
 🙌 Improvements
