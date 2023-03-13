@@ -106,6 +106,7 @@
         "MXToDevicePayloadUnitTests",
         "MXToolsUnitTests",
         "MXTrustLevelSourceUnitTests",
+        "MXTrustSummaryUnitTests",
         "MXUnrequestedForwardedRoomKeyManagerUnitTests"
       ],
       "target" : {

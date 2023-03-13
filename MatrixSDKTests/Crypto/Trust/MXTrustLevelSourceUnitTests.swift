@@ -30,14 +30,14 @@ class MXTrustLevelSourceUnitTests: XCTestCase {
         source = MXTrustLevelSource(userIdentitySource: userIdentitySource, devicesSource: devicesSource)
     }
     
-    func test_userTrustLevel() {
+    func test_isUserVerified() {
         userIdentitySource.verification = [
-            "Alice": true
+            "Alice": true,
+            "Bob": false,
         ]
         
-        let trustLevel = source.userTrustLevel(userId: "Alice")
-        
-        XCTAssertEqual(trustLevel, MXUserTrustLevel(crossSigningVerified: true, locallyVerified: true))
+        XCTAssertTrue(source.isUserVerified(userId: "Alice"))
+        XCTAssertFalse(source.isUserVerified(userId: "Bob"))
     }
     
     func test_deviceTrustLevel() {
@@ -69,10 +69,10 @@ class MXTrustLevelSourceUnitTests: XCTestCase {
         
         let summary = source.trustLevelSummary(userIds: ["Alice", "Bob"])
         
-        XCTAssertEqual(summary.trustedUsersProgress.totalUnitCount, 2)
-        XCTAssertEqual(summary.trustedUsersProgress.completedUnitCount, 1)
+        XCTAssertEqual(summary.usersTrust.totalCount, 2)
+        XCTAssertEqual(summary.usersTrust.trustedCount, 1)
         
-        XCTAssertEqual(summary.trustedDevicesProgress.totalUnitCount, 3)
-        XCTAssertEqual(summary.trustedDevicesProgress.completedUnitCount, 2)
+        XCTAssertEqual(summary.devicesTrust.totalCount, 3)
+        XCTAssertEqual(summary.devicesTrust.trustedCount, 2)
     }
 }
