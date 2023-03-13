@@ -51,6 +51,13 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @property (nonatomic) BOOL supportsVideo;
 
+/**
+ The maximum number of call groups.
+ 
+ Defaults is 1.
+ */
+@property (nonatomic) NSUInteger maximumCallGroups;
+
 
 - (instancetype)initWithName:(NSString *)name
                 ringtoneName:(nullable NSString *)ringtoneName
