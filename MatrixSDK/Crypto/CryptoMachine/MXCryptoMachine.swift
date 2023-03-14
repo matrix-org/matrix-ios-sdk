@@ -364,6 +364,24 @@ extension MXCryptoMachine: MXCryptoUserIdentitySource {
 }
 
 extension MXCryptoMachine: MXCryptoRoomEventEncrypting {
+    var onlyAllowTrustedDevices: Bool {
+        get {
+            do {
+                return try machine.getOnlyAllowTrustedDevices()
+            } catch {
+                log.error("Failed getting value", context: error)
+                return false
+            }
+        }
+        set {
+            do {
+                try machine.setOnlyAllowTrustedDevices(onlyAllowTrustedDevices: newValue)
+            } catch {
+                log.error("Failed setting value", context: error)
+            }
+        }
+    }
+    
     func isUserTracked(userId: String) -> Bool {
         do {
             return try machine.isUserTracked(userId: userId)
@@ -379,6 +397,23 @@ extension MXCryptoMachine: MXCryptoRoomEventEncrypting {
         } catch {
             log.error("Failed updating tracked users", context: error)
         }
+    }
+    
+    func roomSettings(roomId: String) -> RoomSettings? {
+        do {
+            return try machine.getRoomSettings(roomId: roomId)
+        } catch {
+            log.error("Failed getting room settings", context: error)
+            return nil
+        }
+    }
+    
+    func setRoomAlgorithm(roomId: String, algorithm: EventEncryptionAlgorithm) throws {
+        try machine.setRoomAlgorithm(roomId: roomId, algorithm: algorithm)
+    }
+    
+    func setOnlyAllowTrustedDevices(for roomId: String, onlyAllowTrustedDevices: Bool) throws {
+        try machine.setRoomOnlyAllowTrustedDevices(roomId: roomId, onlyAllowTrustedDevices: onlyAllowTrustedDevices)
     }
     
     func shareRoomKeysIfNecessary(
@@ -478,7 +513,7 @@ extension MXCryptoMachine: MXCryptoRoomEventDecrypting {
             roomId: roomId,
             // Handling verification events automatically during event decryption is now a deprecated behavior,
             // all verification events are handled manually via `receiveVerificationEvent`
-            handleVerificatonEvents: false
+            handleVerificationEvents: false
         )
     }
     
