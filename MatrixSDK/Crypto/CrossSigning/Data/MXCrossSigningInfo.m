@@ -31,7 +31,6 @@ NSString *const MXCrossSigningInfoTrustLevelDidChangeNotification = @"MXCrossSig
  */
 @interface MXDeprecatedUserTrustLevel : NSObject <NSCoding>
 @property (nonatomic, readonly) BOOL isCrossSigningVerified;
-@property (nonatomic, readonly) BOOL isLocallyVerified;
 @end
 
 @implementation MXDeprecatedUserTrustLevel
@@ -40,16 +39,15 @@ NSString *const MXCrossSigningInfoTrustLevelDidChangeNotification = @"MXCrossSig
     self = [super init];
     if (self)
     {
+        // We ignore `isLocallyVerified` field and only consider `isCrossSigningVerified`
         _isCrossSigningVerified = [aDecoder decodeBoolForKey:@"isCrossSigningVerified"];
-        _isLocallyVerified = [aDecoder decodeBoolForKey:@"isLocallyVerified"];
     }
     return self;
 }
 
 - (void)encodeWithCoder:(NSCoder *)aCoder
 {
-    [aCoder encodeBool:_isCrossSigningVerified forKey:@"isCrossSigningVerified"];
-    [aCoder encodeBool:_isLocallyVerified forKey:@"isLocallyVerified"];
+    MXLogFailure(@"[MXDeprecatedUserTrustLevel] encode: This model should only be used for decoding existing data, not encoding new data");
 }
 @end
 
@@ -135,7 +133,8 @@ NSString *const MXCrossSigningInfoTrustLevelDidChangeNotification = @"MXCrossSig
         {
             [NSKeyedUnarchiver setClass:MXDeprecatedUserTrustLevel.class forClassName:@"MXUserTrustLevel"];
             MXDeprecatedUserTrustLevel *trust = [aDecoder decodeObjectForKey:@"trustLevel"];
-            _isVerified = trust.isLocallyVerified || trust.isCrossSigningVerified;
+            // Only convert cross-signed verification status, not local verification status
+            _isVerified = trust.isCrossSigningVerified;
         }
         else
         {

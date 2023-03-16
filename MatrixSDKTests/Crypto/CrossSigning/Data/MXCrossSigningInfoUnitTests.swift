@@ -108,9 +108,9 @@ class MXCrossSigningInfoUnitTests: XCTestCase {
         XCTAssertEqual(unarchived[1].userId, "Bob")
         XCTAssertTrue(unarchived[1].isVerified)
         
-        // Carol had crossSigningVerified set to false and locallyVerified set to true => is verified
+        // Carol had crossSigningVerified set to false and locallyVerified set to true => is not verified
         XCTAssertEqual(unarchived[2].userId, "Carol")
-        XCTAssertTrue(unarchived[2].isVerified)
+        XCTAssertFalse(unarchived[2].isVerified)
         
         // Alice had both crossSigningVerified and locallyVerified set to true => is verified
         XCTAssertEqual(unarchived[3].userId, "Dave")
@@ -147,7 +147,7 @@ class MXCrossSigningInfoUnitTests: XCTestCase {
         XCTAssertEqual(unarchived2[1].userId, "Bob")
         XCTAssertTrue(unarchived2[1].isVerified)
         XCTAssertEqual(unarchived2[2].userId, "Carol")
-        XCTAssertTrue(unarchived2[2].isVerified)
+        XCTAssertFalse(unarchived2[2].isVerified)
         XCTAssertEqual(unarchived2[3].userId, "Dave")
         XCTAssertTrue(unarchived2[3].isVerified)
     }

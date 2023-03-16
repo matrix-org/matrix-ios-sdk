@@ -742,42 +742,32 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
     
     NSString *myUserId = _crypto.mxSession.myUserId;
     
-    // Is the master key trusted?
-    MXCrossSigningInfo *myCrossSigningInfo = [_crypto.store crossSigningKeysForUser:myUserId];
-    if (myCrossSigningInfo && myCrossSigningInfo.isVerified)
+    // Is it signed by a locally trusted device?
+    NSDictionary<NSString*, NSString*> *myUserSignatures = myMasterKey.signatures.map[myUserId];
+    for (NSString *publicKeyId in myUserSignatures)
     {
-        isMasterKeyTrusted = YES;
-    }
-    else
-    {
-        // Is it signed by a locally trusted device?
-        NSDictionary<NSString*, NSString*> *myUserSignatures = myMasterKey.signatures.map[myUserId];
-        for (NSString *publicKeyId in myUserSignatures)
+        MXKey *key = [[MXKey alloc] initWithKeyFullId:publicKeyId value:myUserSignatures[publicKeyId]];
+        if ([key.type isEqualToString:kMXKeyEd25519Type])
         {
-            MXKey *key = [[MXKey alloc] initWithKeyFullId:publicKeyId value:myUserSignatures[publicKeyId]];
-            if ([key.type isEqualToString:kMXKeyEd25519Type])
+            MXDeviceInfo *device = [self.crypto.store deviceWithDeviceId:key.keyId forUser:myUserId];
+            if (device && device.trustLevel.isLocallyVerified)
             {
-                MXDeviceInfo *device = [self.crypto.store deviceWithDeviceId:key.keyId forUser:myUserId];
-                if (device && device.trustLevel.isLocallyVerified)
+                // Check signature validity
+                NSError *error;
+                isMasterKeyTrusted = [_crypto.olmDevice verifySignature:device.fingerprint JSON:myMasterKey.signalableJSONDictionary signature:key.value error:&error];
+                
+                if (isMasterKeyTrusted)
                 {
-                    // Check signature validity
-                    NSError *error;
-                    isMasterKeyTrusted = [_crypto.olmDevice verifySignature:device.fingerprint JSON:myMasterKey.signalableJSONDictionary signature:key.value error:&error];
-                    
-                    if (isMasterKeyTrusted)
-                    {
-                        break;
-                    }
+                    break;
                 }
             }
         }
     }
 
-    
     if (!isMasterKeyTrusted)
     {
         MXLogDebug(@"[MXCrossSigning] isSelfTrusted: NO (MSK not trusted). MSK: %@", myMasterKey);
-        MXLogDebug(@"[MXCrossSigning] isSelfTrusted: My cross-signing info: %@", myCrossSigningInfo);
+        MXLogDebug(@"[MXCrossSigning] isSelfTrusted: My cross-signing info: %@", [self.crypto.store crossSigningKeysForUser:myUserId]);
         MXLogDebug(@"[MXCrossSigning] isSelfTrusted: My user devices: %@", [self.crypto.store devicesForUser:myUserId]);
 
         return NO;
