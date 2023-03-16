@@ -122,14 +122,20 @@ extension MXEvent {
     
     static func encryptedFixture(
         id: String = "1",
-        sessionId: String = "123"
+        sender: String = "Alice",
+        sessionId: String = "123",
+        senderKey: String = "456",
+        ciphertext: String = "ABC"
     ) -> MXEvent {
         return MXEvent(fromJSON: [
             "type": "m.room.encrypted",
             "event_id": id,
+            "sender": sender,
             "content": [
                 "algorithm": kMXCryptoMegolmAlgorithm,
-                "session_id": sessionId
+                "session_id": sessionId,
+                "sender_key": senderKey,
+                "ciphertext": ciphertext
             ]
         ])!
     }

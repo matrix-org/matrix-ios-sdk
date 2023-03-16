@@ -513,7 +513,10 @@ extension MXCryptoMachine: MXCryptoRoomEventDecrypting {
             roomId: roomId,
             // Handling verification events automatically during event decryption is now a deprecated behavior,
             // all verification events are handled manually via `receiveVerificationEvent`
-            handleVerificationEvents: false
+            handleVerificationEvents: false,
+            // The app does not use strict shields by default, in the future this will become configurable
+            // per room.
+            strictShields: false
         )
     }
     
