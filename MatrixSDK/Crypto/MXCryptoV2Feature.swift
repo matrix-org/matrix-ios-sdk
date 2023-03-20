@@ -19,6 +19,8 @@ import Foundation
 /// Feature representing the availability of the external rust-based Crypto SDK
 /// whilst it is not fully available to everyone and / or is an optional feature.
 @objc public protocol MXCryptoV2Feature {
+    /// Current version of the rust-based Crypto SDK
+    var version: String { get }
     
     /// Is Crypto SDK currently enabled
     ///

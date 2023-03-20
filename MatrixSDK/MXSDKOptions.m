@@ -72,6 +72,11 @@ static MXSDKOptions *sharedOnceInstance = nil;
     return self.cryptoSDKFeature.isEnabled;
 }
 
+- (NSString *)cryptoModuleId
+{
+    return self.enableCryptoSDK ? @"rust" : @"native";
+}
+
 - (void)setRoomListDataManagerClass:(Class)roomListDataManagerClass
 {
     // Sanity check
