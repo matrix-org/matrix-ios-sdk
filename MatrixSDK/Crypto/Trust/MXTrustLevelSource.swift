@@ -27,15 +27,8 @@ struct MXTrustLevelSource {
         self.devicesSource = devicesSource
     }
     
-    func userTrustLevel(userId: String) -> MXUserTrustLevel {
-        let isVerified = userIdentitySource.isUserVerified(userId: userId)
-        
-        // `MatrixSDKCrypto` does not distinguish local and cross-signed
-        // verification status for users
-        return .init(
-            crossSigningVerified: isVerified,
-            locallyVerified: isVerified
-        )
+    func isUserVerified(userId: String) -> Bool {
+        userIdentitySource.isUserVerified(userId: userId)
     }
     
     func deviceTrustLevel(userId: String, deviceId: String) -> MXDeviceTrustLevel? {
@@ -49,32 +42,34 @@ struct MXTrustLevelSource {
     }
     
     func trustLevelSummary(userIds: [String]) -> MXUsersTrustLevelSummary {
-        return .init(
-            trustedUsersProgress: trustedUsers(userIds: userIds),
-            andTrustedDevicesProgress: trustedDevices(userIds: userIds)
+        .init(
+            usersTrust: usersTrust(userIds: userIds),
+            devicesTrust: devicesTrust(userIds: userIds)
         )
     }
     
-    private func trustedUsers(userIds: [String]) -> Progress {
+    private func usersTrust(userIds: [String]) -> MXTrustSummary {
         let verifiedUsers = userIds.filter {
             userIdentitySource.isUserVerified(userId: $0)
         }
         
-        let progress = Progress(totalUnitCount: Int64(userIds.count))
-        progress.completedUnitCount = Int64(verifiedUsers.count)
-        return progress
+        return .init(
+            trustedCount: verifiedUsers.count,
+            totalCount: userIds.count
+        )
     }
     
-    private func trustedDevices(userIds: [String]) -> Progress {
+    private func devicesTrust(userIds: [String]) -> MXTrustSummary {
         let devices = userIds.flatMap {
             devicesSource.devices(userId: $0)
         }
         let trustedDevices = devices.filter {
             $0.crossSigningTrusted || $0.locallyTrusted
         }
-
-        let progress = Progress(totalUnitCount: Int64(devices.count))
-        progress.completedUnitCount = Int64(trustedDevices.count)
-        return progress
+        
+        return .init(
+            trustedCount: trustedDevices.count,
+            totalCount: devices.count
+        )
     }
 }

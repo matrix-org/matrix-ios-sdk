@@ -19,20 +19,21 @@
 
 @interface MXUsersTrustLevelSummary()
 
-@property (nonatomic, strong, readwrite) NSProgress *trustedUsersProgress;
-@property (nonatomic, strong, readwrite) NSProgress *trustedDevicesProgress;
+@property (nonatomic, strong, readwrite) MXTrustSummary *usersTrust;
+@property (nonatomic, strong, readwrite) MXTrustSummary *devicesTrust;
 
 @end
 
 @implementation MXUsersTrustLevelSummary
 
-- (instancetype)initWithTrustedUsersProgress:(NSProgress*)trustedUsersProgress andTrustedDevicesProgress:(NSProgress*)trustedDevicesProgress
+- (instancetype)initWithUsersTrust:(MXTrustSummary *)usersTrust
+                      devicesTrust:(MXTrustSummary *)devicesTrust
 {
     self = [super init];
     if (self)
     {
-        self.trustedUsersProgress = trustedUsersProgress;
-        self.trustedDevicesProgress = trustedDevicesProgress;
+        self.usersTrust = usersTrust;
+        self.devicesTrust = devicesTrust;
     }
     return self;
 }
@@ -43,11 +44,11 @@
 {
     if (self = [super init])
     {
-        self.trustedUsersProgress = [NSProgress progressWithTotalUnitCount:model.s_usersCount];
-        self.trustedUsersProgress.completedUnitCount = model.s_trustedUsersCount;
+        self.usersTrust = [[MXTrustSummary alloc] initWithTrustedCount:model.s_trustedUsersCount
+                                                            totalCount:model.s_usersCount];
         
-        self.trustedDevicesProgress = [NSProgress progressWithTotalUnitCount:model.s_devicesCount];
-        self.trustedDevicesProgress.completedUnitCount = model.s_trustedDevicesCount;
+        self.devicesTrust = [[MXTrustSummary alloc] initWithTrustedCount:model.s_trustedDevicesCount
+                                                              totalCount:model.s_devicesCount];
     }
     return self;
 }
@@ -61,24 +62,21 @@
     {
         NSUInteger usersCount = [aDecoder decodeIntegerForKey:@"usersCount"];
         NSUInteger trustedUsersCount = [aDecoder decodeIntegerForKey:@"trustedUsersCount"];
+        self.usersTrust = [[MXTrustSummary alloc] initWithTrustedCount:trustedUsersCount totalCount:usersCount];
+        
         NSUInteger devicesCount = [aDecoder decodeIntegerForKey:@"devicesCount"];
         NSUInteger trustedDevicesCount = [aDecoder decodeIntegerForKey:@"trustedDevicesCount"];
-        
-        self.trustedUsersProgress = [NSProgress progressWithTotalUnitCount:usersCount];
-        self.trustedUsersProgress.completedUnitCount = trustedUsersCount;
-        
-        self.trustedDevicesProgress = [NSProgress progressWithTotalUnitCount:devicesCount];
-        self.trustedDevicesProgress.completedUnitCount = trustedDevicesCount;
+        self.devicesTrust = [[MXTrustSummary alloc] initWithTrustedCount:trustedDevicesCount totalCount:devicesCount];
     }
     return self;
 }
 
 - (void)encodeWithCoder:(NSCoder *)aCoder
 {
-    [aCoder encodeInteger:self.trustedUsersProgress.totalUnitCount forKey:@"usersCount"];
-    [aCoder encodeInteger:self.trustedUsersProgress.completedUnitCount forKey:@"trustedUsersCount"];
-    [aCoder encodeInteger:self.trustedDevicesProgress.totalUnitCount forKey:@"devicesCount"];
-    [aCoder encodeInteger:self.trustedDevicesProgress.completedUnitCount forKey:@"trustedDevicesCount"];
+    [aCoder encodeInteger:self.usersTrust.totalCount forKey:@"usersCount"];
+    [aCoder encodeInteger:self.usersTrust.trustedCount forKey:@"trustedUsersCount"];
+    [aCoder encodeInteger:self.devicesTrust.totalCount forKey:@"devicesCount"];
+    [aCoder encodeInteger:self.devicesTrust.trustedCount forKey:@"trustedDevicesCount"];
 }
 
 

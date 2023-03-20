@@ -23,8 +23,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (instancetype)initWithUserId:(NSString *)userId;
 
-- (void)setTrustLevel:(MXUserTrustLevel*)trustLevel;
-- (BOOL)updateTrustLevel:(MXUserTrustLevel*)trustLevel;
+- (void)setIsVerified:(BOOL)isVerified;
 - (void)addCrossSigningKey:(MXCrossSigningKey*)crossSigningKey type:(NSString*)type;
 
 @end
