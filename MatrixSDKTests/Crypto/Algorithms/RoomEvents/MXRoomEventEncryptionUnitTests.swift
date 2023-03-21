@@ -82,13 +82,34 @@ class MXRoomEventEncryptionUnitTests: XCTestCase {
     }
     
     class EncryptorStub: CryptoIdentityStub, MXCryptoRoomEventEncrypting {
+        var onlyAllowTrustedDevices: Bool = false
+        
         var trackedUsers: Set<String> = []
         func isUserTracked(userId: String) -> Bool {
             return trackedUsers.contains(userId)
         }
         
-        func addTrackedUsers(_ users: [String]) {
+        func updateTrackedUsers(_ users: [String]) {
             trackedUsers = trackedUsers.union(users)
+        }
+        
+        var stubbedRoomSettings: [String: RoomSettings] = [:]
+        func roomSettings(roomId: String) -> RoomSettings? {
+            return stubbedRoomSettings[roomId]
+        }
+        
+        func setRoomAlgorithm(roomId: String, algorithm: EventEncryptionAlgorithm) throws {
+            stubbedRoomSettings[roomId] = .init(
+                algorithm: algorithm,
+                onlyAllowTrustedDevices: stubbedRoomSettings[roomId]?.onlyAllowTrustedDevices ?? false
+            )
+        }
+        
+        func setOnlyAllowTrustedDevices(for roomId: String, onlyAllowTrustedDevices: Bool) throws {
+            stubbedRoomSettings[roomId] = .init(
+                algorithm: stubbedRoomSettings[roomId]?.algorithm ?? .megolmV1AesSha2,
+                onlyAllowTrustedDevices: onlyAllowTrustedDevices
+            )
         }
         
         var sharedUsers = [String]()
@@ -110,7 +131,6 @@ class MXRoomEventEncryptionUnitTests: XCTestCase {
     }
     
     var handler: EncryptorStub!
-    var store: MXMemoryCryptoStore!
     var encryptor: MXRoomEventEncryption!
     var roomId = "ABC"
     var room: RoomStub!
@@ -119,7 +139,6 @@ class MXRoomEventEncryptionUnitTests: XCTestCase {
     
     override func setUp() {
         handler = EncryptorStub()
-        store = MXMemoryCryptoStore(credentials: MXCredentials())
         room = .init(roomId: roomId, andMatrixSession: nil)
         state = .init(roomId: roomId, andMatrixSession: nil, andDirection: true)
         members = .init()
@@ -129,7 +148,6 @@ class MXRoomEventEncryptionUnitTests: XCTestCase {
         
         encryptor = MXRoomEventEncryption(
             handler: handler,
-            legacyStore: store,
             getRoomAction: { id in
                 id == self.room.roomId ? self.room : nil
             }
@@ -140,7 +158,12 @@ class MXRoomEventEncryptionUnitTests: XCTestCase {
     
     func test_isRoomEncrypted() {
         XCTAssertFalse(encryptor.isRoomEncrypted(roomId: roomId))
-        store.storeAlgorithm(forRoom: roomId, algorithm: "megolm")
+        
+        handler.stubbedRoomSettings[roomId] = .init(
+            algorithm: .megolmV1AesSha2,
+            onlyAllowTrustedDevices: false
+        )
+        
         XCTAssertTrue(encryptor.isRoomEncrypted(roomId: roomId))
     }
     
@@ -162,7 +185,7 @@ class MXRoomEventEncryptionUnitTests: XCTestCase {
     }
     
     func test_ensureRoomKeysShared_correctEncryptionAlgorithm() async throws {
-        XCTAssertNil(store.algorithm(forRoom: roomId))
+        XCTAssertNil(handler.roomSettings(roomId: roomId))
         
         // No algorithm -> throws + nothing stored
         state.stubbedAlgorithm = nil
@@ -170,7 +193,7 @@ class MXRoomEventEncryptionUnitTests: XCTestCase {
             try await encryptor.ensureRoomKeysShared(roomId: roomId)
             XCTFail("Should not succeed")
         } catch {
-            XCTAssertNil(store.algorithm(forRoom: roomId))
+            XCTAssertNil(handler.roomSettings(roomId: roomId))
         }
         
         // Invalid algorithm -> throws + nothing stored
@@ -179,27 +202,23 @@ class MXRoomEventEncryptionUnitTests: XCTestCase {
             try await encryptor.ensureRoomKeysShared(roomId: roomId)
             XCTFail("Should not succeed")
         } catch {
-            XCTAssertNil(store.algorithm(forRoom: roomId))
+            XCTAssertNil(handler.roomSettings(roomId: roomId))
         }
         
         // Valid -> algorithm stored
         state.stubbedAlgorithm = kMXCryptoMegolmAlgorithm
         try await encryptor.ensureRoomKeysShared(roomId: roomId)
-        XCTAssertEqual(store.algorithm(forRoom: roomId), kMXCryptoMegolmAlgorithm)
+        XCTAssertEqual(handler.roomSettings(roomId: roomId)?.algorithm, .megolmV1AesSha2)
         
-        // Another invalid algorithm -> throws + previous algorithm stored
+        // Another invalid algorithm -> previous algorithm kept without throwing
         state.stubbedAlgorithm = "blabla"
-        do {
-            try await encryptor.ensureRoomKeysShared(roomId: roomId)
-            XCTFail("Should not succeed")
-        } catch {
-            XCTAssertEqual(store.algorithm(forRoom: roomId), kMXCryptoMegolmAlgorithm)
-        }
+        try await encryptor.ensureRoomKeysShared(roomId: roomId)
+        XCTAssertEqual(handler.roomSettings(roomId: roomId)?.algorithm, .megolmV1AesSha2)
         
         // Another valid -> succeeds
-        state.stubbedAlgorithm = kMXCryptoMegolmAlgorithm
+        state.stubbedAlgorithm = kMXCryptoOlmAlgorithm
         try await encryptor.ensureRoomKeysShared(roomId: roomId)
-        XCTAssertEqual(store.algorithm(forRoom: roomId), kMXCryptoMegolmAlgorithm)
+        XCTAssertEqual(handler.roomSettings(roomId: roomId)?.algorithm, .olmV1Curve25519AesSha2)
     }
     
     func test_ensureRoomKeysShared_correctSettings() async throws {
@@ -236,8 +255,11 @@ class MXRoomEventEncryptionUnitTests: XCTestCase {
         ]
         
         for ((global, perRoom), settings) in storeToSettings {
-            store.globalBlacklistUnverifiedDevices = global
-            store.storeBlacklistUnverifiedDevices(inRoom: roomId, blacklist: perRoom)
+            handler.onlyAllowTrustedDevices = global
+            handler.stubbedRoomSettings[roomId] = .init(
+                algorithm: .megolmV1AesSha2,
+                onlyAllowTrustedDevices: perRoom
+            )
             
             try await encryptor.ensureRoomKeysShared(roomId: roomId)
             
@@ -254,7 +276,22 @@ class MXRoomEventEncryptionUnitTests: XCTestCase {
         members.eligibleUsers = ["Alice", "Carol"]
         
         try await encryptor.ensureRoomKeysShared(roomId: roomId)
+        
         XCTAssertEqual(handler.sharedUsers, ["Alice", "Carol"])
+    }
+    
+    func test_ensureRoomKeysShared_tracksMissingUsers() async throws {
+        members.stubbedMembers = [
+            .init(userId: "Alice"),
+            .init(userId: "Bob"),
+            .init(userId: "Carol"),
+        ]
+        members.eligibleUsers = ["Alice", "Bob", "Carol"]
+        handler.trackedUsers = ["Alice"]
+        
+        try await encryptor.ensureRoomKeysShared(roomId: roomId)
+        
+        XCTAssertEqual(handler.trackedUsers, ["Alice", "Bob", "Carol"])
     }
     
     // MARK: - Encrypt
@@ -269,7 +306,7 @@ class MXRoomEventEncryptionUnitTests: XCTestCase {
         )
         
         XCTAssertNotNil(handler.sharedSettings)
-        XCTAssertEqual(store.algorithm(forRoom: roomId), kMXCryptoMegolmAlgorithm)
+        XCTAssertEqual(handler.roomSettings(roomId: roomId)?.algorithm, .megolmV1AesSha2)
     }
     
     func test_encrypt_returnsEncryptedContent() async throws {

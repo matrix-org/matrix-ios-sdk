@@ -27,7 +27,7 @@ import MatrixSDKCrypto
     public let masterKeys: MXCrossSigningKey?
     public let selfSignedKeys: MXCrossSigningKey?
     public let userSignedKeys: MXCrossSigningKey?
-    public let trustLevel: MXUserTrustLevel
+    public let isVerified: Bool
     
     internal init(identity: UserIdentity, isVerified: Bool) {
         switch identity {
@@ -43,13 +43,7 @@ import MatrixSDKCrypto
             self.selfSignedKeys = .init(jsonString: selfSigningKey)
             self.userSignedKeys = nil
         }
-        
-        // `MatrixSDKCrypto` does not distinguish local and cross-signed
-        // verification status for users
-        trustLevel = MXUserTrustLevel(
-            crossSigningVerified: isVerified,
-            locallyVerified: isVerified
-        )
+        self.isVerified = isVerified
     }
 }
 

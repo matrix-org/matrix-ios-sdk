@@ -40,10 +40,10 @@ public class MXUsersTrustLevelSummaryMO: NSManagedObject {
     }
     
     internal func update(withUsersTrustLevelSummary usersTrustLevelSummary: MXUsersTrustLevelSummary) {
-        s_usersCount = Int32(usersTrustLevelSummary.trustedUsersProgress.totalUnitCount)
-        s_trustedUsersCount = Int32(usersTrustLevelSummary.trustedUsersProgress.completedUnitCount)
-        s_devicesCount = Int32(usersTrustLevelSummary.trustedDevicesProgress.totalUnitCount)
-        s_trustedDevicesCount = Int32(usersTrustLevelSummary.trustedDevicesProgress.completedUnitCount)
+        s_usersCount = Int32(usersTrustLevelSummary.usersTrust.totalCount)
+        s_trustedUsersCount = Int32(usersTrustLevelSummary.usersTrust.trustedCount)
+        s_devicesCount = Int32(usersTrustLevelSummary.devicesTrust.totalCount)
+        s_trustedDevicesCount = Int32(usersTrustLevelSummary.devicesTrust.trustedCount)
     }
     
 }

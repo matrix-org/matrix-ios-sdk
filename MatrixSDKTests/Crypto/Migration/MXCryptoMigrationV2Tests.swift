@@ -47,7 +47,7 @@ class MXCryptoMigrationV2Tests: XCTestCase {
     
     // MARK: - Helpers
     
-    private func migratedOlmMachine(session: MXSession) throws -> MXCryptoMachine {
+    private func fullyMigratedOlmMachine(session: MXSession) throws -> MXCryptoMachine {
         guard
             let store = session.legacyCrypto?.store,
             let restClient = session.matrixRestClient
@@ -57,7 +57,29 @@ class MXCryptoMigrationV2Tests: XCTestCase {
         
         MXKeyProvider.sharedInstance().delegate = KeyProvider()
         let migration = MXCryptoMigrationV2(legacyStore: store)
-        try migration.migrateCrypto { _ in }
+        try migration.migrateAllData { _ in }
+        let machine = try MXCryptoMachine(
+            userId: store.userId(),
+            deviceId: store.deviceId(),
+            restClient: restClient,
+            getRoomAction: { _ in
+                return nil
+            })
+        MXKeyProvider.sharedInstance().delegate = nil
+        return machine
+    }
+    
+    private func partiallyMigratedOlmMachine(session: MXSession) throws -> MXCryptoMachine {
+        guard
+            let store = session.legacyCrypto?.store,
+            let restClient = session.matrixRestClient
+        else {
+            throw Error.missingDependencies
+        }
+        
+        MXKeyProvider.sharedInstance().delegate = KeyProvider()
+        let migration = MXCryptoMigrationV2(legacyStore: store)
+        try migration.migrateRoomAndGlobalSettingsOnly { _ in }
         let machine = try MXCryptoMachine(
             userId: store.userId(),
             deviceId: store.deviceId(),
@@ -75,7 +97,7 @@ class MXCryptoMigrationV2Tests: XCTestCase {
         let env = try await e2eData.startE2ETest()
         let legacySession = env.session
 
-        let machine = try self.migratedOlmMachine(session: env.session)
+        let machine = try self.fullyMigratedOlmMachine(session: env.session)
 
         XCTAssertEqual(machine.userId, legacySession.myUserId)
         XCTAssertEqual(machine.deviceId, legacySession.myDeviceId)
@@ -102,7 +124,7 @@ class MXCryptoMigrationV2Tests: XCTestCase {
         XCTAssertNotNil(event.content["ciphertext"])
 
         // Migrate the session to crypto v2
-        let machine = try self.migratedOlmMachine(session: env.session)
+        let machine = try self.fullyMigratedOlmMachine(session: env.session)
 
         // Decrypt the event using crypto v2
         let decrypted = try machine.decryptRoomEvent(event)
@@ -125,7 +147,7 @@ class MXCryptoMigrationV2Tests: XCTestCase {
         XCTAssertFalse(legacyCrossSigning.hasAllPrivateKeys)
         
         // We then migrate the user into crypto v2
-        let machine = try migratedOlmMachine(session: env.session)
+        let machine = try fullyMigratedOlmMachine(session: env.session)
         let crossSigningV2 = MXCrossSigningV2(crossSigning: machine, restClient: env.session.matrixRestClient)
         try await crossSigningV2.refreshState()
         
@@ -146,7 +168,7 @@ class MXCryptoMigrationV2Tests: XCTestCase {
         XCTAssertTrue(legacyCrossSigning.hasAllPrivateKeys)
         
         // We now migrate the data into crypto v2
-        let machine = try migratedOlmMachine(session: env.session)
+        let machine = try fullyMigratedOlmMachine(session: env.session)
         let crossSigningV2 = MXCrossSigningV2(crossSigning: machine, restClient: env.session.matrixRestClient)
         try await crossSigningV2.refreshState()
 
@@ -156,12 +178,88 @@ class MXCryptoMigrationV2Tests: XCTestCase {
         
         await env.close()
     }
+    
+    func test_migratesRoomSettings() async throws {
+        let env = try await e2eData.startE2ETest()
+        
+        // We start with user and encrypted room with some settings
+        let legacyCrypto = env.session.crypto!
+        try await legacyCrypto.ensureEncryption(roomId: env.roomId)
+        legacyCrypto.setBlacklistUnverifiedDevicesInRoom(env.roomId, blacklist: true)
+        XCTAssertTrue(legacyCrypto.isRoomEncrypted(env.roomId))
+        XCTAssertTrue(legacyCrypto.isBlacklistUnverifiedDevices(inRoom: env.roomId))
+
+        // We now migrate the data into crypto v2
+        let machine = try fullyMigratedOlmMachine(session: env.session)
+
+        // And confirm that room settings have been migrated
+        let settings = machine.roomSettings(roomId: env.roomId)
+        XCTAssertEqual(settings, .init(algorithm: .megolmV1AesSha2, onlyAllowTrustedDevices: true))
+        
+        await env.close()
+    }
+    
+    func test_migratesRoomSettingsInPartialMigration() async throws {
+        let env = try await e2eData.startE2ETest()
+        
+        // We start with user and encrypted room with some settings
+        let legacyCrypto = env.session.crypto!
+        try await legacyCrypto.ensureEncryption(roomId: env.roomId)
+        legacyCrypto.setBlacklistUnverifiedDevicesInRoom(env.roomId, blacklist: true)
+        XCTAssertTrue(legacyCrypto.isRoomEncrypted(env.roomId))
+        XCTAssertTrue(legacyCrypto.isBlacklistUnverifiedDevices(inRoom: env.roomId))
+
+        // We now migrate the data into crypto v2
+        let machine = try partiallyMigratedOlmMachine(session: env.session)
+
+        // And confirm that room settings have been migrated
+        let settings = machine.roomSettings(roomId: env.roomId)
+        XCTAssertEqual(settings, .init(algorithm: .megolmV1AesSha2, onlyAllowTrustedDevices: true))
+        
+        await env.close()
+    }
+    
+    func test_migratesGlobalSettings() async throws {
+        let env1 = try await e2eData.startE2ETest()
+        env1.session.crypto.globalBlacklistUnverifiedDevices = true
+        let machine1 = try fullyMigratedOlmMachine(session: env1.session)
+        XCTAssertTrue(machine1.onlyAllowTrustedDevices)
+        await env1.close()
+        
+        let env2 = try await e2eData.startE2ETest()
+        env2.session.crypto.globalBlacklistUnverifiedDevices = false
+        let machine2 = try fullyMigratedOlmMachine(session: env2.session)
+        XCTAssertFalse(machine2.onlyAllowTrustedDevices)
+        await env2.close()
+    }
+    
+    func test_test_migratesGlobalSettingsInPartialMigration() async throws {
+        let env1 = try await e2eData.startE2ETest()
+        env1.session.crypto.globalBlacklistUnverifiedDevices = true
+        let machine1 = try partiallyMigratedOlmMachine(session: env1.session)
+        XCTAssertTrue(machine1.onlyAllowTrustedDevices)
+        await env1.close()
+        
+        let env2 = try await e2eData.startE2ETest()
+        env2.session.crypto.globalBlacklistUnverifiedDevices = false
+        let machine2 = try partiallyMigratedOlmMachine(session: env2.session)
+        XCTAssertFalse(machine2.onlyAllowTrustedDevices)
+        await env2.close()
+    }
 }
 
 private extension MXCrypto {
     func downloadKeys(userIds: [String]) async throws {
         return try await withCheckedThrowingContinuation { continuation in
             downloadKeys(userIds, forceDownload: false) { _, _ in
+                continuation.resume()
+            }
+        }
+    }
+    
+    func ensureEncryption(roomId: String) async throws {
+        return try await withCheckedThrowingContinuation { continuation in
+            ensureEncryption(inRoom: roomId) {
                 continuation.resume()
             }
         }

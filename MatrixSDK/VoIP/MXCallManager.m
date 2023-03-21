@@ -882,36 +882,37 @@ NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
                         //  generate a new call id
                         NSString *newCallId = [[NSUUID UUID] UUIDString];
                         
-                        dispatch_group_t dispatchGroupReplaces = dispatch_group_create();
+                        dispatch_group_t dispatchGroup = dispatch_group_create();
+                        dispatch_group_enter(dispatchGroup);
                         
                         if (callWithTarget)
                         {
                             //  send replaces event to target
-                            dispatch_group_enter(dispatchGroupReplaces);
                             [callWithTarget transferToRoom:nil
                                                       user:transferee
                                                 createCall:nil
                                                  awaitCall:newCallId
                                                    success:^(NSString * _Nonnull eventId) {
-                                dispatch_group_leave(dispatchGroupReplaces);
+                                dispatch_group_leave(dispatchGroup);
                             } failure:failure];
                         }
+                        else
+                        {
+                            dispatch_group_leave(dispatchGroup);
+                        }
                         
-                        dispatch_group_enter(dispatchGroupReplaces);
-                        //  send replaces event to transferee
-                        [callWithTransferee transferToRoom:nil
-                                                      user:target
-                                                createCall:newCallId
-                                                 awaitCall:nil
-                                                   success:^(NSString * _Nonnull eventId) {
-                            dispatch_group_leave(dispatchGroupReplaces);
-                        } failure:failure];
-                        
-                        dispatch_group_notify(dispatchGroupReplaces, dispatch_get_main_queue(), ^{
-                            if (success)
-                            {
-                                success(newCallId);
-                            }
+                        dispatch_group_notify(dispatchGroup, dispatch_get_main_queue(), ^{
+                            //  send replaces event to transferee
+                            [callWithTransferee transferToRoom:nil
+                                                          user:target
+                                                    createCall:newCallId
+                                                     awaitCall:nil
+                                                       success:^(NSString * _Nonnull eventId) {
+                                if (success)
+                                {
+                                    success(newCallId);
+                                }
+                            } failure:failure];
                         });
                     }
                 }
@@ -947,49 +948,50 @@ NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
                             //  generate a new call id
                             NSString *newCallId = [[NSUUID UUID] UUIDString];
                             
-                            dispatch_group_t dispatchGroupReplaces = dispatch_group_create();
-                            
+                            dispatch_group_t dispatchGroup = dispatch_group_create();
+                            dispatch_group_enter(dispatchGroup);
+
                             if (callWithTarget)
                             {
                                 [callWithTarget hangup];
                                 
                                 //  send replaces event to target
-                                dispatch_group_enter(dispatchGroupReplaces);
                                 [callWithTarget transferToRoom:transferRoom.roomId
                                                           user:transferee
                                                     createCall:nil
                                                      awaitCall:newCallId
                                                        success:^(NSString * _Nonnull eventId) {
-                                    dispatch_group_leave(dispatchGroupReplaces);
+                                    dispatch_group_leave(dispatchGroup);
                                 } failure:failure];
                             }
-                            
-                            dispatch_group_enter(dispatchGroupReplaces);
-                            if (callWithTransferee.isOnHold)
+                            else
                             {
-                                [callWithTransferee hold:NO];
+                                dispatch_group_leave(dispatchGroup);
                             }
-                            //  send replaces event to transferee
-                            [callWithTransferee transferToRoom:transferRoom.roomId
-                                                          user:target
-                                                    createCall:newCallId
-                                                     awaitCall:nil
-                                                       success:^(NSString * _Nonnull eventId) {
-                                dispatch_group_leave(dispatchGroupReplaces);
-                            } failure:failure];
                             
-                            dispatch_group_notify(dispatchGroupReplaces, dispatch_get_main_queue(), ^{
-                                if (isNewRoom)
+                            dispatch_group_notify(dispatchGroup, dispatch_get_main_queue(), ^{
+                                if (callWithTransferee.isOnHold)
                                 {
-                                    //  if was a newly created room, send invites after replaces events
-                                    [transferRoom inviteUser:target.userId success:nil failure:failure];
-                                    [transferRoom inviteUser:transferee.userId success:nil failure:failure];
+                                    [callWithTransferee hold:NO];
                                 }
-                                
-                                if (success)
-                                {
-                                    success(newCallId);
-                                }
+                                //  send replaces event to transferee
+                                [callWithTransferee transferToRoom:transferRoom.roomId
+                                                              user:target
+                                                        createCall:newCallId
+                                                         awaitCall:nil
+                                                           success:^(NSString * _Nonnull eventId) {
+                                    if (isNewRoom)
+                                    {
+                                        //  if was a newly created room, send invites after replaces events
+                                        [transferRoom inviteUser:target.userId success:nil failure:failure];
+                                        [transferRoom inviteUser:transferee.userId success:nil failure:failure];
+                                    }
+                                    
+                                    if (success)
+                                    {
+                                        success(newCallId);
+                                    }
+                                } failure:failure];
                             });
                         }
                         

@@ -28,7 +28,6 @@ class MXCryptoV2: NSObject, MXCrypto {
     // MARK: - Private properties
     
     private weak var session: MXSession?
-    private let legacyStore: MXCryptoStore
     
     private let machine: MXCryptoMachine
     private let encryptor: MXRoomEventEncrypting
@@ -46,6 +45,7 @@ class MXCryptoV2: NSObject, MXCrypto {
     // MARK: - Public properties
     
     var version: String {
+        // Will be moved into the olm machine as API
         let sdkVersion = Bundle(for: OlmMachine.self).infoDictionary?["CFBundleShortVersionString"] ?? ""
         return "Matrix Crypto SDK \(sdkVersion)"
         
@@ -69,11 +69,9 @@ class MXCryptoV2: NSObject, MXCrypto {
         userId: String,
         deviceId: String,
         session: MXSession,
-        restClient: MXRestClient,
-        legacyStore: MXCryptoStore
+        restClient: MXRestClient
     ) throws {
         self.session = session
-        self.legacyStore = legacyStore
         
         let getRoomAction: (String) -> MXRoom? = { [weak session] in
             session?.room(withRoomId: $0)
@@ -88,7 +86,6 @@ class MXCryptoV2: NSObject, MXCrypto {
         
         encryptor = MXRoomEventEncryption(
             handler: machine,
-            legacyStore: legacyStore,
             getRoomAction: getRoomAction
         )
         decryptor = MXRoomEventDecryption(handler: machine)
@@ -424,18 +421,11 @@ class MXCryptoV2: NSObject, MXCrypto {
         }
     }
     
-    public func setUserVerification(
-        _ verificationStatus: Bool,
-        forUser userId: String,
+    func setUserVerificationForUserId(
+        _ userId: String,
         success: (() -> Void)?,
-        failure: ((Swift.Error) -> Void)?
-    ) {
-        guard verificationStatus else {
-            log.failure("Cannot unset user trust")
-            failure?(Error.cannotUnsetTrust)
-            return
-        }
-        
+        failure: ((Swift.Error) -> Void)?)
+    {
         log.debug("Signing user")
         crossSigning.signUser(
             withUserId: userId,
@@ -448,8 +438,8 @@ class MXCryptoV2: NSObject, MXCrypto {
         )
     }
     
-    public func trustLevel(forUser userId: String) -> MXUserTrustLevel {
-        return trustLevelSource.userTrustLevel(userId: userId)
+    func isUserVerified(_ userId: String) -> Bool {
+        return trustLevelSource.isUserVerified(userId: userId)
     }
     
     public func deviceTrustLevel(forDevice deviceId: String, ofUser userId: String) -> MXDeviceTrustLevel? {
@@ -599,19 +589,23 @@ class MXCryptoV2: NSObject, MXCrypto {
     
     public var globalBlacklistUnverifiedDevices: Bool {
         get {
-            return legacyStore.globalBlacklistUnverifiedDevices
+            return machine.onlyAllowTrustedDevices
         }
         set {
-            legacyStore.globalBlacklistUnverifiedDevices = newValue
+            machine.onlyAllowTrustedDevices = newValue
         }
     }
     
     public func isBlacklistUnverifiedDevices(inRoom roomId: String) -> Bool {
-        return legacyStore.blacklistUnverifiedDevices(inRoom: roomId)
+        return machine.roomSettings(roomId: roomId)?.onlyAllowTrustedDevices == true
     }
     
     public func setBlacklistUnverifiedDevicesInRoom(_ roomId: String, blacklist: Bool) {
-        legacyStore.storeBlacklistUnverifiedDevices(inRoom: roomId, blacklist: blacklist)
+        do {
+            try machine.setOnlyAllowTrustedDevices(for: roomId, onlyAllowTrustedDevices: blacklist)
+        } catch {
+            log.error("Failed blocking unverified devices", context: error)
+        }
     }
     
     // MARK: - Private
@@ -661,7 +655,7 @@ class MXCryptoV2: NSObject, MXCrypto {
         }
         
         log.debug("Tracking new user `\(userId)` due to \(member.membership) event")
-        machine.addTrackedUsers([userId])
+        machine.updateTrackedUsers([userId])
     }
     
     private func restoreBackupIfPossible(event: MXEvent) {

@@ -38,6 +38,7 @@
         _ringtoneName = [ringtoneName copy];
         _iconName = [iconName copy];
         _supportsVideo = supportsVideo;
+        _maximumCallGroups = 1;
     }
     
     return self;
