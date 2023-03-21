@@ -218,6 +218,11 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly) BOOL enableCryptoSDK;
 
 /**
+ The text-based identifier for the crypto module being used (e.g. native vs rust)
+ */
+@property (nonatomic, readonly) NSString *cryptoModuleId;
+
+/**
  Enable symmetric room key backups
  
  @remark NO by default
