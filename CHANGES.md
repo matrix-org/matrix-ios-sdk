@@ -1,3 +1,19 @@
+## Changes in 0.26.2 (2023-03-21)
+
+🙌 Improvements
+
+- Crypto: Always update tracked users when sharing keys ([#1733](https://github.com/matrix-org/matrix-ios-sdk/pull/1733))
+- CryptoV2: Fully deprecate MXCryptoStore ([#1735](https://github.com/matrix-org/matrix-ios-sdk/pull/1735))
+- Make CallKit maximumCallGroups configurable. ([#1738](https://github.com/matrix-org/matrix-ios-sdk/pull/1738))
+- Crypto: Simplify user verification state ([#1740](https://github.com/matrix-org/matrix-ios-sdk/pull/1740))
+- Rageshakes: Identify crypto module ([#1742](https://github.com/matrix-org/matrix-ios-sdk/pull/1742))
+- Session: Improved session startup progress ([#7417](https://github.com/vector-im/element-ios/issues/7417))
+
+🐛 Bugfixes
+
+- MXCallManager: Make call transfer requests sequential. ([#1739](https://github.com/matrix-org/matrix-ios-sdk/pull/1739))
+
+
 ## Changes in 0.26.1 (2023-03-13)
 
 🐛 Bugfixes
