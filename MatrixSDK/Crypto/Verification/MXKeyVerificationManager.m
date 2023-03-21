@@ -1963,11 +1963,10 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
     MXQRCodeData *qrCodeData;
     
     NSString *currentUserId = self.crypto.mxSession.myUserId;
-    MXUserTrustLevel *currentUserTrustLevel = [self.crypto trustLevelForUser:currentUserId];
     
     if ([otherUserId isEqualToString:currentUserId])
     {
-        if (currentUserTrustLevel.isCrossSigningVerified)
+        if ([self.crypto isUserVerified:currentUserId])
         {
             // This is a self verification and I am the old device (Osborne2)
             qrCodeData = [self createSelfVerifyingMasterKeyTrustedQRCodeDataWithTransactionId:transactionId otherDeviceId:otherDeviceId];

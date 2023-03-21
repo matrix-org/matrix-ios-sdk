@@ -229,19 +229,22 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
                       failure:(nullable void (^)(NSError *error))failure;
 
 /**
- Update the verification state of the given user.
+ Verify the given user via cross-signing
  
- @param verificationStatus the new verification status.
  @param userId the user.
  
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
  */
-- (void)setUserVerification:(BOOL)verificationStatus forUser:(NSString*)userId
-                    success:(nullable void (^)(void))success
-                    failure:(nullable void (^)(NSError *error))failure;
+- (void)setUserVerificationForUserId:(NSString*)userId
+                             success:(nullable void (^)(void))success
+                             failure:(nullable void (^)(NSError *error))failure;
 
-- (MXUserTrustLevel*)trustLevelForUser:(NSString*)userId;
+/**
+ Is the user verified via cross-signing
+ */
+- (BOOL)isUserVerified:(NSString *)userId;
+
 - (nullable MXDeviceTrustLevel*)deviceTrustLevelForDevice:(NSString*)deviceId ofUser:(NSString*)userId;
 
 /**

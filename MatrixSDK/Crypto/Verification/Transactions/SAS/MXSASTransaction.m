@@ -421,7 +421,7 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
                         // Mark user as verified
                         MXLogDebug(@"[MXKeyVerification][MXSASTransaction] verifyMacs: Mark user %@ as verified", self.otherDevice.userId);
                         dispatch_group_enter(group);
-                        [self.manager.crypto setUserVerification:YES forUser:self.otherDevice.userId success:^{
+                        [self.manager.crypto setUserVerificationForUserId:self.otherDevice.userId success:^{
                             dispatch_group_leave(group);
                             
                         } failure:^(NSError *error) {

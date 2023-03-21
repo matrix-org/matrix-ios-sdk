@@ -20,6 +20,7 @@ import MatrixSDKCrypto
 
 class MXCryptoMigrationV2: NSObject {
     enum Error: Swift.Error {
+        case missingCredentials
         case unknownPickleKey
     }
     
@@ -39,7 +40,7 @@ class MXCryptoMigrationV2: NSObject {
         store = .init(legacyStore: legacyStore)
     }
     
-    func migrateCrypto(updateProgress: @escaping (Double) -> Void) throws {
+    func migrateAllData(updateProgress: @escaping (Double) -> Void) throws {
         log.debug("Starting migration")
         
         let startDate = Date()
@@ -64,6 +65,8 @@ class MXCryptoMigrationV2: NSObject {
           - backup_key      : \(data.backupRecoveryKey != nil ? "true" : "false")
           - cross_signing   : \(data.crossSigning.masterKey != nil ? "true" : "false")
           - tracked_users   : \(data.trackedUsers.count)
+          - room_settings   : \(data.roomSettings.count)
+          - global_settings : \(store.globalSettings)
         """
         log.debug(details)
         
@@ -84,7 +87,7 @@ class MXCryptoMigrationV2: NSObject {
             updateProgress(progress * olmToMegolmRatio)
             
             do {
-                try self?.migrateSessions(
+                try self?.migrateSessionsBatch(
                     data: data,
                     sessions: batch,
                     url: url,
@@ -101,7 +104,7 @@ class MXCryptoMigrationV2: NSObject {
             updateProgress(olmToMegolmRatio + progress * (1 - olmToMegolmRatio))
             
             do {
-                try self?.migrateSessions(
+                try self?.migrateSessionsBatch(
                     data: data,
                     inboundGroupSessions: batch,
                     url: url,
@@ -112,8 +115,53 @@ class MXCryptoMigrationV2: NSObject {
             }
         }
         
+        log.debug("Migrating global settings")
+        try migrateGlobalSettings(
+            userId: data.account.userId,
+            deviceId: data.account.deviceId,
+            url: url,
+            passphrase: passphrase
+        )
+        
         let duration = Date().timeIntervalSince(startDate) * 1000
         log.debug("Migration completed in \(duration) ms")
+        updateProgress(1)
+    }
+    
+    func migrateRoomAndGlobalSettingsOnly(updateProgress: @escaping (Double) -> Void) throws {
+        guard let userId = store.userId, let deviceId = store.deviceId else {
+            throw Error.missingCredentials
+        }
+        
+        let url = try MXCryptoMachineStore.storeURL(for: userId)
+        let passphrase = try MXCryptoMachineStore.storePassphrase()
+        let settings = store.extractRoomSettings()
+        
+        let details = """
+        Settings migration summary
+          - user id         : \(userId)
+          - device id       : \(deviceId)
+          - room_settings   : \(settings.count)
+          - global_settings : \(store.globalSettings)
+        """
+        log.debug(details)
+        updateProgress(0)
+        
+        try migrateRoomSettings(
+            roomSettings: settings,
+            path: url.path,
+            passphrase: passphrase
+        )
+        
+        log.debug("Migrating global settings")
+        try migrateGlobalSettings(
+            userId: userId,
+            deviceId: deviceId,
+            url: url,
+            passphrase: passphrase
+        )
+        
+        log.debug("Migration completed")
         updateProgress(1)
     }
     
@@ -124,31 +172,44 @@ class MXCryptoMigrationV2: NSObject {
         return key
     }
     
-    // To migrate sessions in batches and keep memory under control we are repeatedly calling `migrate`
-    // function whilst only passing data for sessions and account, keeping the rest empty.
-    // This API will be improved in `MatrixCryptoSDK` in the future.
-    private func migrateSessions(
+    private func migrateSessionsBatch(
         data: MigrationData,
         sessions: [PickledSession] = [],
         inboundGroupSessions: [PickledInboundGroupSession] = [],
         url: URL,
         passphrase: String
     ) throws {
-        try migrate(
+        try migrateSessions(
             data: .init(
-                account: data.account,
+                userId: data.account.userId,
+                deviceId: data.account.deviceId,
+                curve25519Key: legacyDevice.deviceCurve25519Key,
+                ed25519Key: legacyDevice.deviceEd25519Key,
                 sessions: sessions,
                 inboundGroupSessions: inboundGroupSessions,
-                backupVersion: data.backupVersion,
-                backupRecoveryKey: data.backupRecoveryKey,
-                pickleKey: data.pickleKey,
-                crossSigning: data.crossSigning,
-                trackedUsers: data.trackedUsers
+                pickleKey: data.pickleKey
             ),
             path: url.path,
             passphrase: passphrase,
             progressListener: self
         )
+    }
+    
+    private func migrateGlobalSettings(
+        userId: String,
+        deviceId: String,
+        url: URL,
+        passphrase: String
+    ) throws {
+        let machine = try OlmMachine(
+            userId: userId,
+            deviceId: deviceId,
+            path: url.path,
+            passphrase: passphrase
+        )
+        
+        let onlyTrusted = store.globalSettings.onlyAllowTrustedDevices
+        try machine.setOnlyAllowTrustedDevices(onlyAllowTrustedDevices: onlyTrusted)
     }
 }
 

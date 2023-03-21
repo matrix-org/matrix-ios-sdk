@@ -19,11 +19,14 @@ import Foundation
 @objc public class MXCryptoV2Factory: NSObject {
     enum Error: Swift.Error {
         case cryptoNotAvailable
-        case storeNotAvailable
     }
     
     @objc public static let shared = MXCryptoV2Factory()
     private let log = MXNamedLog(name: "MXCryptoV2Factory")
+    
+    private var lastDeprecatedVersion: MXCryptoVersion {
+        .deprecated2
+    }
     
     @objc public func buildCrypto(
         session: MXSession!,
@@ -48,17 +51,19 @@ import Foundation
             guard let self = self else { return }
             
             do {
-                let store = try await self.createOrOpenLegacyStore(credentials: credentials)
-                self.migrateIfNecessary(legacyStore: store) {
+                try self.deprecateLegacyStoreIfNecessary(credentials: credentials) {
                     migrationProgress?($0)
                 }
-                
+            } catch {
+                self.log.error("Failed to migrate / deprecate legacy store", context: error)
+            }
+            
+            do {
                 let crypto = try await MXCryptoV2(
                     userId: userId,
                     deviceId: deviceId,
                     session: session,
-                    restClient: restClient,
-                    legacyStore: store
+                    restClient: restClient
                 )
                 await MainActor.run {
                     success(crypto)
@@ -72,48 +77,48 @@ import Foundation
         }
     }
     
-    // A few features (e.g. global untrusted users blacklist) are not yet implemented in `MatrixSDKCrypto`
-    // so they have to be stored in a legacy database. Will be moved to `MatrixSDKCrypto` eventually
-    private func createOrOpenLegacyStore(credentials: MXCredentials) async throws -> MXCryptoStore {
-        MXRealmCryptoStore.deleteReadonlyStore(with: credentials)
-        
-        if
+    private func deprecateLegacyStoreIfNecessary(
+        credentials: MXCredentials,
+        updateProgress: @escaping ((Double) -> Void)
+    ) throws {
+        guard
             MXRealmCryptoStore.hasData(for: credentials),
             let legacyStore = MXRealmCryptoStore(credentials: credentials)
-        {
-            log.debug("Legacy crypto store exists")
-            return legacyStore
-            
-        } else {
-            log.debug("Creating new legacy crypto store")
-            
-            MXRealmCryptoStore.delete(with: credentials)
-            guard let legacyStore = MXRealmCryptoStore.createStore(with: credentials) else {
-                log.failure("Cannot create legacy store")
-                throw Error.storeNotAvailable
-            }
-            legacyStore.cryptoVersion = MXCryptoVersion.versionLegacyDeprecated
-            
-            log.debug("Legacy crypto store created")
-            return legacyStore
+        else {
+            log.debug("Legacy crypto store does not exist")
+            return
         }
+        
+        log.debug("Legacy crypto store exists")
+        try migrateIfNecessary(legacyStore: legacyStore, updateProgress: updateProgress)
+        
+        log.debug("Deleting legacy store after successfull migration")
+        MXRealmCryptoStore.delete(with: credentials)
     }
     
-    private func migrateIfNecessary(legacyStore: MXCryptoStore, updateProgress: @escaping (Double) -> Void) {
-        guard legacyStore.cryptoVersion.rawValue < MXCryptoVersion.versionLegacyDeprecated.rawValue else {
+    private func migrateIfNecessary(
+        legacyStore: MXCryptoStore,
+        updateProgress: @escaping (Double) -> Void
+    ) throws {
+        let legacyVersion = legacyStore.cryptoVersion.rawValue
+        guard legacyVersion < lastDeprecatedVersion.rawValue else {
             log.debug("Legacy crypto has already been deprecated, no need to migrate")
             return
         }
 
-        log.debug("Requires migration from legacy crypto")
+        log.debug("Requires migration from legacy crypto version \(legacyVersion) to version \(lastDeprecatedVersion.rawValue)")
         let migration = MXCryptoMigrationV2(legacyStore: legacyStore)
-        do {
-            try migration.migrateCrypto(updateProgress: updateProgress)
-            log.debug("Marking legacy crypto as deprecated")
-            legacyStore.cryptoVersion = MXCryptoVersion.versionLegacyDeprecated
-        } catch {
-            log.error("Failed to migrate crypto", context: error)
-        }
+        
+        if legacyVersion < MXCryptoVersion.deprecated1.rawValue {
+            log.debug("Full migration of crypto data")
+            try migration.migrateAllData(updateProgress: updateProgress)
             
+        } else if legacyVersion < MXCryptoVersion.deprecated2.rawValue {
+            log.debug("Partial migration of room and global settings")
+            try migration.migrateRoomAndGlobalSettingsOnly(updateProgress: updateProgress)
+            
+        } else {
+            log.failure("Unhandled crypto version", context: legacyStore.cryptoVersion.rawValue)
+        }
     }
 }

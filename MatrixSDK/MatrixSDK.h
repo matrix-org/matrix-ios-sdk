@@ -177,6 +177,7 @@ FOUNDATION_EXPORT NSString *MatrixSDKVersion;
 #import "MXCryptoTools.h"
 #import "MXRecoveryKey.h"
 #import "MXSecretShareSend.h"
+#import "MXUsersTrustLevelSummary.h"
 
 //  Sync response models
 #import "MXSyncResponse.h"

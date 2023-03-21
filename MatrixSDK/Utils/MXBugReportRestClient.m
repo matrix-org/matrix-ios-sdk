@@ -21,6 +21,7 @@
 
 #import <AFNetworking/AFNetworking.h>
 #import <GZIP/GZIP.h>
+#import "MatrixSDKSwiftHeader.h"
 
 #if TARGET_OS_IPHONE
 #import <UIKit/UIKit.h>
@@ -207,7 +208,16 @@
         [formData appendPartWithFormData:[MatrixSDKVersion dataUsingEncoding:NSUTF8StringEncoding] name:@"matrix_sdk_version"];
 
 #ifdef MX_CRYPTO
-        [formData appendPartWithFormData:[[OLMKit versionString] dataUsingEncoding:NSUTF8StringEncoding] name:@"olm_kit_version"];
+        [formData appendPartWithFormData:[MXSDKOptions.sharedInstance.cryptoModuleId dataUsingEncoding:NSUTF8StringEncoding] name:@"crypto_module"];
+        if (MXSDKOptions.sharedInstance.enableCryptoSDK)
+        {
+            
+            [formData appendPartWithFormData:[MXSDKOptions.sharedInstance.cryptoSDKFeature.version dataUsingEncoding:NSUTF8StringEncoding] name:@"matrix_sdk_crypto_version"];
+        }
+        else
+        {
+            [formData appendPartWithFormData:[[OLMKit versionString] dataUsingEncoding:NSUTF8StringEncoding] name:@"olm_kit_version"];
+        }
 #endif
 
         if (self.deviceModel)

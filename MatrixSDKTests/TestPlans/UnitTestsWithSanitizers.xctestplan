@@ -39,6 +39,7 @@
   "testTargets" : [
     {
       "selectedTests" : [
+        "EventEncryptionAlgorithmUnitTests",
         "MXAesUnitTests",
         "MXAggregatedEditsUnitTests",
         "MXAggregatedReferenceUnitTests",
@@ -105,6 +106,7 @@
         "MXToDevicePayloadUnitTests",
         "MXToolsUnitTests",
         "MXTrustLevelSourceUnitTests",
+        "MXTrustSummaryUnitTests",
         "MXUnrequestedForwardedRoomKeyManagerUnitTests"
       ],
       "target" : {

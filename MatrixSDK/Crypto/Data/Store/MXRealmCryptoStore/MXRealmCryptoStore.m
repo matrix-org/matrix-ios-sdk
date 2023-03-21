@@ -820,6 +820,23 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
     return [MXRealmRoomAlgorithm objectInRealm:realm forPrimaryKey:roomId];
 }
 
+- (NSArray<MXRealmRoomAlgorithm *> *)roomSettings
+{
+    NSMutableArray *objects = [NSMutableArray array];
+    for (MXRealmRoomAlgorithm *item in [MXRealmRoomAlgorithm allObjectsInRealm:self.realm]) {
+        NSError *error = nil;
+        MXRoomSettings *settings = [[MXRoomSettings alloc] initWithRoomId:item.roomId
+                                                                algorithm:item.algorithm
+                                               blacklistUnverifiedDevices:item.blacklistUnverifiedDevices
+                                                                    error:&error];
+        if (settings) {
+            [objects addObject:settings];
+        } else {
+            MXLogErrorDetails(@"[MXRealmCryptoStore] roomSettings: Cannot create settings", error);
+        }
+    }
+    return objects.copy;
+}
 
 - (void)storeSession:(MXOlmSession*)session
 {
