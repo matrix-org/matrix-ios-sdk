@@ -421,11 +421,18 @@ class MXCryptoV2: NSObject, MXCrypto {
         }
     }
     
-    func setUserVerificationForUserId(
-        _ userId: String,
+    public func setUserVerification(
+        _ verificationStatus: Bool,
+        forUser userId: String,
         success: (() -> Void)?,
-        failure: ((Swift.Error) -> Void)?)
-    {
+        failure: ((Swift.Error) -> Void)?
+    ) {
+        guard verificationStatus else {
+            log.failure("Cannot unset user trust")
+            failure?(Error.cannotUnsetTrust)
+            return
+        }
+        
         log.debug("Signing user")
         crossSigning.signUser(
             withUserId: userId,
@@ -438,8 +445,8 @@ class MXCryptoV2: NSObject, MXCrypto {
         )
     }
     
-    func isUserVerified(_ userId: String) -> Bool {
-        return trustLevelSource.isUserVerified(userId: userId)
+    public func trustLevel(forUser userId: String) -> MXUserTrustLevel {
+        return trustLevelSource.userTrustLevel(userId: userId)
     }
     
     public func deviceTrustLevel(forDevice deviceId: String, ofUser userId: String) -> MXDeviceTrustLevel? {

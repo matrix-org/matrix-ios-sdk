@@ -28,7 +28,7 @@ class MXCrossSigningV2: NSObject, MXCrossSigning {
             return .notBootstrapped
         }
     
-        if info.isVerified {
+        if info.trustLevel.isVerified {
             return hasAllPrivateKeys ? .canCrossSign : .trustCrossSigning
         } else {
             return .crossSigningExists
@@ -217,11 +217,17 @@ class MXCrossSigningV2: NSObject, MXCrossSigning {
 }
 
 extension MXCrossSigningV2: MXRecoveryServiceDelegate {
-    func setUserVerificationForUserId(
-        _ userId: String,
+    func setUserVerification(
+        _ verificationStatus: Bool,
+        forUser userId: String,
         success: @escaping () -> Void,
         failure: @escaping (Swift.Error?) -> Void
     ) {
+        guard verificationStatus else {
+            log.failure("Cannot unset user trust")
+            failure(Error.cannotUnsetTrust)
+            return
+        }
         signUser(withUserId: userId, success: success, failure: failure)
     }
 }

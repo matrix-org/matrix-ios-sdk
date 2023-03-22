@@ -21,38 +21,6 @@
 
 NSString *const MXCrossSigningInfoTrustLevelDidChangeNotification = @"MXCrossSigningInfoTrustLevelDidChangeNotification";
 
-#pragma mark - Deprecated user trust
-
-/**
- Deprecated model of user trust that distinguished local vs cross-signing verification
- 
- This model is no longer used and is replaced by a combined `isVerified` property on `MXCrossSigningInfo`.
- For backwards compatibility (reading archived values) the model needs to be kept around, albeit as private only.
- */
-@interface MXDeprecatedUserTrustLevel : NSObject <NSCoding>
-@property (nonatomic, readonly) BOOL isCrossSigningVerified;
-@end
-
-@implementation MXDeprecatedUserTrustLevel
-- (id)initWithCoder:(NSCoder *)aDecoder
-{
-    self = [super init];
-    if (self)
-    {
-        // We ignore `isLocallyVerified` field and only consider `isCrossSigningVerified`
-        _isCrossSigningVerified = [aDecoder decodeBoolForKey:@"isCrossSigningVerified"];
-    }
-    return self;
-}
-
-- (void)encodeWithCoder:(NSCoder *)aCoder
-{
-    MXLogFailure(@"[MXDeprecatedUserTrustLevel] encode: This model should only be used for decoding existing data, not encoding new data");
-}
-@end
-
-#pragma mark - CrossSigningInfo
-
 @implementation MXCrossSigningInfo
 
 - (instancetype)initWithUserIdentity:(MXCryptoUserIdentityWrapper *)userIdentity
@@ -75,7 +43,7 @@ NSString *const MXCrossSigningInfoTrustLevelDidChangeNotification = @"MXCrossSig
             keys[MXCrossSigningKeyType.userSigning] = userIdentity.userSignedKeys;
         }
         _keys = keys.copy;
-        _isVerified = userIdentity.isVerified;
+        _trustLevel = userIdentity.trustLevel;
     }
     return self;
 }
@@ -124,22 +92,7 @@ NSString *const MXCrossSigningInfoTrustLevelDidChangeNotification = @"MXCrossSig
     {
         _userId = [aDecoder decodeObjectForKey:@"userId"];
         _keys = [aDecoder decodeObjectForKey:@"keys"];
-        
-        // Initial version (i.e. version 0) of the model stored user trust via `MXUserTrustLevel` submodel.
-        // If we are reading this version out we need to decode verification state from this model before
-        // migrating it over to `isVerified`
-        NSInteger version = [aDecoder decodeIntegerForKey:@"version"];
-        if (version == 0)
-        {
-            [NSKeyedUnarchiver setClass:MXDeprecatedUserTrustLevel.class forClassName:@"MXUserTrustLevel"];
-            MXDeprecatedUserTrustLevel *trust = [aDecoder decodeObjectForKey:@"trustLevel"];
-            // Only convert cross-signed verification status, not local verification status
-            _isVerified = trust.isCrossSigningVerified;
-        }
-        else
-        {
-            _isVerified = [aDecoder decodeBoolForKey:@"isVerified"];
-        }
+        _trustLevel = [aDecoder decodeObjectForKey:@"trustLevel"];
     }
     return self;
 }
@@ -148,8 +101,7 @@ NSString *const MXCrossSigningInfoTrustLevelDidChangeNotification = @"MXCrossSig
 {
     [aCoder encodeObject:_userId forKey:@"userId"];
     [aCoder encodeObject:_keys forKey:@"keys"];
-    [aCoder encodeBool:_isVerified forKey:@"isVerified"];
-    [aCoder encodeInteger:1 forKey:@"version"];
+    [aCoder encodeObject:_trustLevel forKey:@"trustLevel"];
 }
 
 
@@ -161,23 +113,31 @@ NSString *const MXCrossSigningInfoTrustLevelDidChangeNotification = @"MXCrossSig
     if (self)
     {
         _userId = userId;
-        _isVerified = NO;
+        _trustLevel = [MXUserTrustLevel new];
     }
     return self;
 }
 
-- (void)setIsVerified:(BOOL)isVerified
+- (void)setTrustLevel:(MXUserTrustLevel*)trustLevel
 {
-    if (_isVerified == isVerified)
-    {
-        return;
-    }
-    
-    _isVerified = isVerified;
-    [self didUpdateVerificationState];
+    _trustLevel = trustLevel;
 }
 
-- (void)didUpdateVerificationState
+- (BOOL)updateTrustLevel:(MXUserTrustLevel*)trustLevel
+{
+    BOOL updated = NO;
+
+    if (![_trustLevel isEqual:trustLevel])
+    {
+        _trustLevel = trustLevel;
+        updated = YES;
+        [self didUpdateTrustLevel];
+    }
+
+    return updated;
+}
+
+- (void)didUpdateTrustLevel
 {
     dispatch_async(dispatch_get_main_queue(),^{
         [[NSNotificationCenter defaultCenter] postNotificationName:MXCrossSigningInfoTrustLevelDidChangeNotification object:self userInfo:nil];
@@ -198,7 +158,7 @@ NSString *const MXCrossSigningInfoTrustLevelDidChangeNotification = @"MXCrossSig
 
 - (NSString *)description
 {
-    return [NSString stringWithFormat:@"<MXCrossSigningInfo: %p> Verified: %@\nMSK: %@\nSSK: %@\nUSK: %@", self, @(self.isVerified), self.masterKeys, self.selfSignedKeys, self.userSignedKeys];
+    return [NSString stringWithFormat:@"<MXCrossSigningInfo: %p> Trusted: %@\nMSK: %@\nSSK: %@\nUSK: %@", self, @(self.trustLevel.isCrossSigningVerified), self.masterKeys, self.selfSignedKeys, self.userSignedKeys];
 }
 
 @end

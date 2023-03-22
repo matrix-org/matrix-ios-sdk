@@ -326,7 +326,7 @@ NSString * const MXKeyVerificationMethodReciprocate = @"m.reciprocate.v1";
     [self.manager.crypto setDeviceVerification:MXDeviceVerified forDevice:otherDeviceId ofUser:otherUserId success:^{
         
         // Mark user as verified
-        [self.manager.crypto setUserVerificationForUserId:otherUserId success:^{
+        [self.manager.crypto setUserVerification:YES forUser:otherUserId success:^{
             [self sendVerified];
             
         } failure:^(NSError *error) {
