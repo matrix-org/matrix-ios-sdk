@@ -58,15 +58,17 @@ class MXCryptoMigrationV2: NSObject {
         
         let details = """
         Migration summary
-          - user id         : \(data.account.userId)
-          - device id       : \(data.account.deviceId)
-          - olm_sessions    : \(store.olmSessionCount)
-          - megolm_sessions : \(store.megolmSessionCount)
-          - backup_key      : \(data.backupRecoveryKey != nil ? "true" : "false")
-          - cross_signing   : \(data.crossSigning.masterKey != nil ? "true" : "false")
-          - tracked_users   : \(data.trackedUsers.count)
-          - room_settings   : \(data.roomSettings.count)
-          - global_settings : \(store.globalSettings)
+          - user id          : \(data.account.userId)
+          - device id        : \(data.account.deviceId)
+          - olm_sessions     : \(store.olmSessionCount)
+          - megolm_sessions  : \(store.megolmSessionCount)
+          - backup_key       : \(data.backupRecoveryKey != nil ? "true" : "false")
+          - master_key       : \(data.crossSigning.masterKey != nil ? "true" : "false")
+          - user_signing_key : \(data.crossSigning.userSigningKey != nil ? "true" : "false")
+          - self_signing_key : \(data.crossSigning.selfSigningKey != nil ? "true" : "false")
+          - tracked_users    : \(data.trackedUsers.count)
+          - room_settings    : \(data.roomSettings.count)
+          - global_settings  : \(store.globalSettings)
         """
         log.debug(details)
         
