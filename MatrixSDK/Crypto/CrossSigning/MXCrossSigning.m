@@ -135,7 +135,7 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
         [self.crypto.matrixRestClient uploadDeviceSigningKeys:signingKeys authParams:authParams success:^{
             
             // Store our user's keys
-            [keys setIsVerified:YES];
+            [keys updateTrustLevel:[MXUserTrustLevel trustLevelWithCrossSigningVerified:YES locallyVerified:YES]];
             [self.crypto.store storeCrossSigningKeys:keys];
             
             // Cross-signing is bootstrapped
@@ -585,7 +585,7 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
     BOOL isDeviceVerified = NO;
 
     MXCrossSigningInfo *userCrossSigning = [self.crypto.store crossSigningKeysForUser:device.userId];
-    BOOL isUserVerified = [self.crypto isUserVerified:device.userId];
+    MXUserTrustLevel *userTrustLevel = [self.crypto trustLevelForUser:device.userId];
 
     MXCrossSigningKey *userSSK = userCrossSigning.selfSignedKeys;
     if (!userSSK)
@@ -610,7 +610,7 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
     // ...then we trust this device as much as far as we trust the user
     if (userSSKVerify && deviceVerify)
     {
-        isDeviceVerified = isUserVerified;
+        isDeviceVerified = userTrustLevel.isCrossSigningVerified;
     }
 
     return isDeviceVerified;
@@ -685,14 +685,17 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
     for (MXCrossSigningInfo *crossSigningInfo in self.crypto.store.crossSigningKeys)
     {
         BOOL isCrossSigningVerified = [self isUserWithCrossSigningKeysVerified:crossSigningInfo];
-        if (crossSigningInfo.isVerified != isCrossSigningVerified)
+        if (crossSigningInfo.trustLevel.isCrossSigningVerified != isCrossSigningVerified)
         {
             MXLogDebug(@"[MXCrossSigning] resetTrust: Change trust for %@: %@ -> %@", crossSigningInfo.userId,
-                  @(crossSigningInfo.isVerified),
+                  @(crossSigningInfo.trustLevel.isCrossSigningVerified),
                   @(isCrossSigningVerified));
             
-            [crossSigningInfo setIsVerified:isCrossSigningVerified];
-            [self.crypto.store storeCrossSigningKeys:crossSigningInfo];
+            MXUserTrustLevel *newTrustLevel = [MXUserTrustLevel trustLevelWithCrossSigningVerified:isCrossSigningVerified locallyVerified:crossSigningInfo.trustLevel.isLocallyVerified];
+            if ([crossSigningInfo updateTrustLevel:newTrustLevel])
+            {
+                [self.crypto.store storeCrossSigningKeys:crossSigningInfo];
+            }
             
             // Update trust on associated devices
             [self checkTrustLevelForDevicesOfUser:crossSigningInfo.userId];
@@ -742,32 +745,46 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
     
     NSString *myUserId = _crypto.mxSession.myUserId;
     
-    // Is it signed by a locally trusted device?
-    NSDictionary<NSString*, NSString*> *myUserSignatures = myMasterKey.signatures.map[myUserId];
-    for (NSString *publicKeyId in myUserSignatures)
+    // Is the master key trusted?
+    MXCrossSigningInfo *myCrossSigningInfo = [_crypto.store crossSigningKeysForUser:myUserId];
+    if (myCrossSigningInfo && myCrossSigningInfo.trustLevel.isLocallyVerified)
     {
-        MXKey *key = [[MXKey alloc] initWithKeyFullId:publicKeyId value:myUserSignatures[publicKeyId]];
-        if ([key.type isEqualToString:kMXKeyEd25519Type])
+        isMasterKeyTrusted = YES;
+    }
+    else if ([self hasMatchingMasterPrivateKeyInCryptoStore:myCrossSigningInfo.masterKeys])
+    {
+        isMasterKeyTrusted = YES;
+    }
+    else
+    {
+        // Is it signed by a locally trusted device?
+        NSDictionary<NSString*, NSString*> *myUserSignatures = myMasterKey.signatures.map[myUserId];
+        for (NSString *publicKeyId in myUserSignatures)
         {
-            MXDeviceInfo *device = [self.crypto.store deviceWithDeviceId:key.keyId forUser:myUserId];
-            if (device && device.trustLevel.isLocallyVerified)
+            MXKey *key = [[MXKey alloc] initWithKeyFullId:publicKeyId value:myUserSignatures[publicKeyId]];
+            if ([key.type isEqualToString:kMXKeyEd25519Type])
             {
-                // Check signature validity
-                NSError *error;
-                isMasterKeyTrusted = [_crypto.olmDevice verifySignature:device.fingerprint JSON:myMasterKey.signalableJSONDictionary signature:key.value error:&error];
-                
-                if (isMasterKeyTrusted)
+                MXDeviceInfo *device = [self.crypto.store deviceWithDeviceId:key.keyId forUser:myUserId];
+                if (device && device.trustLevel.isLocallyVerified)
                 {
-                    break;
+                    // Check signature validity
+                    NSError *error;
+                    isMasterKeyTrusted = [_crypto.olmDevice verifySignature:device.fingerprint JSON:myMasterKey.signalableJSONDictionary signature:key.value error:&error];
+                    
+                    if (isMasterKeyTrusted)
+                    {
+                        break;
+                    }
                 }
             }
         }
     }
 
+    
     if (!isMasterKeyTrusted)
     {
         MXLogDebug(@"[MXCrossSigning] isSelfTrusted: NO (MSK not trusted). MSK: %@", myMasterKey);
-        MXLogDebug(@"[MXCrossSigning] isSelfTrusted: My cross-signing info: %@", [self.crypto.store crossSigningKeysForUser:myUserId]);
+        MXLogDebug(@"[MXCrossSigning] isSelfTrusted: My cross-signing info: %@", myCrossSigningInfo);
         MXLogDebug(@"[MXCrossSigning] isSelfTrusted: My user devices: %@", [self.crypto.store devicesForUser:myUserId]);
 
         return NO;
@@ -955,6 +972,23 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
 
 
 #pragma mark - Private keys storage
+
+- (BOOL)hasMatchingMasterPrivateKeyInCryptoStore:(MXCrossSigningKey *)masterKey
+{
+    NSString *mskPrivateKeyBase64 = [self.crypto.store secretWithSecretId:MXSecretId.crossSigningMaster];
+    // Check it is valid and corresponds to our current master keys
+    if (mskPrivateKeyBase64 && masterKey)
+    {
+        OLMPkSigning *mskPkSigning = [self.crossSigningTools pkSigningFromBase64PrivateKey:mskPrivateKeyBase64
+                                                                     withExpectedPublicKey:masterKey.keys];
+        if (mskPkSigning)
+        {
+            return YES;
+        }
+    }
+    
+    return NO;
+}
 
 - (BOOL)haveCrossSigningPrivateKeysInCryptoStore
 {

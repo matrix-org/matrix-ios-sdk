@@ -16,7 +16,7 @@
 
 #import <Foundation/Foundation.h>
 
-@class MXTrustSummary, MXUsersTrustLevelSummaryMO;
+@class MXUsersTrustLevelSummaryMO;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -25,18 +25,13 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @interface MXUsersTrustLevelSummary : NSObject <NSCoding>
 
-/**
- The summary of trusted users
- */
-@property (nonatomic, strong, readonly) MXTrustSummary *usersTrust;
+// The ratio of trusted users
+@property (nonatomic, strong, readonly) NSProgress *trustedUsersProgress;
 
-/**
- The summary of trusted devices for trusted users
- */
-@property (nonatomic, strong, readonly) MXTrustSummary *devicesTrust;
+// The ratio of trusted devices for trusted users
+@property (nonatomic, strong, readonly) NSProgress *trustedDevicesProgress;
 
-- (instancetype)initWithUsersTrust:(MXTrustSummary *)usersTrust
-                      devicesTrust:(MXTrustSummary *)devicesTrust;
+- (instancetype)initWithTrustedUsersProgress:(NSProgress*)trustedUsersProgress andTrustedDevicesProgress:(NSProgress*)trustedDevicesProgress;
 
 #pragma mark - CoreData Model
 

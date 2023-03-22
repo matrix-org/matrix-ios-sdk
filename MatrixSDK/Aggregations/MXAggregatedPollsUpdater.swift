@@ -34,8 +34,9 @@ public final class MXAggregatedPollsUpdater: NSObject {
         // the poll refresh is meant to be done at the end of a poll
         guard
             event.eventType == .pollEnd,
-            event.relatesTo.relationType == MXEventRelationTypeReference,
-            let pollStartEventId = event.relatesTo.eventId
+            let relatedTo = event.relatesTo,
+            relatedTo.relationType == MXEventRelationTypeReference,
+            let pollStartEventId = relatedTo.eventId
         else {
             return
         }

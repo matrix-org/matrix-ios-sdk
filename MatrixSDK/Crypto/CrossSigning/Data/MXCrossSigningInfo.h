@@ -17,6 +17,7 @@
 #import <Foundation/Foundation.h>
 
 #import "MXCrossSigningKey.h"
+#import "MXUserTrustLevel.h"
 
 @class MXCryptoUserIdentityWrapper;
 
@@ -55,7 +56,7 @@ extern NSString *const MXCrossSigningInfoTrustLevelDidChangeNotification;
 
 #pragma mark - Additional information
 
-@property (nonatomic, readonly) BOOL isVerified;
+@property (nonatomic, readonly) MXUserTrustLevel *trustLevel;
 
 @end
 

@@ -1148,13 +1148,16 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 #endif
 }
 
-- (void)setUserVerificationForUserId:(NSString*)userId
-                             success:(void (^)(void))success
-                             failure:(void (^)(NSError *error))failure
+- (void)setUserVerification:(BOOL)verificationStatus forUser:(NSString*)userId
+                    success:(void (^)(void))success
+                    failure:(void (^)(NSError *error))failure
 {
+    // We cannot remove cross-signing trust for a user in the matrix spec
+    NSParameterAssert(verificationStatus);
+    
 #ifdef MX_CRYPTO
     dispatch_async(_cryptoQueue, ^{
-        [self setUserVerificationForUserId2:userId downloadIfNeeded:YES success:success failure:failure];
+        [self setUserVerification2:verificationStatus forUser:userId downloadIfNeeded:YES success:success failure:failure];
     });
 #else
     if (success)
@@ -1164,10 +1167,10 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 #endif
 }
 
-- (void)setUserVerificationForUserId2:(NSString*)userId
-                     downloadIfNeeded:(BOOL)downloadIfNeeded
-                              success:(void (^)(void))success
-                              failure:(void (^)(NSError *error))failure
+- (void)setUserVerification2:(BOOL)verificationStatus forUser:(NSString*)userId
+            downloadIfNeeded:(BOOL)downloadIfNeeded
+                    success:(void (^)(void))success
+                    failure:(void (^)(NSError *error))failure
 {
 #ifdef MX_CRYPTO
     MXCrossSigningInfo *crossSigningInfo = [self.store crossSigningKeysForUser:userId];
@@ -1179,7 +1182,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
         {
             MXLogDebug(@"[MXCrypto] setUserVerification: Unknown user. Try to download user's keys for %@", userId);
             [self.deviceList downloadKeys:@[userId] forceDownload:YES success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
-                [self setUserVerificationForUserId2:userId downloadIfNeeded:NO success:success failure:failure];
+                [self setUserVerification2:verificationStatus forUser:userId downloadIfNeeded:NO success:success failure:failure];
             } failure:^(NSError *error) {
                 if (failure)
                 {
@@ -1202,8 +1205,17 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
         return;
     }
     
+    // Store information locally
+    if (verificationStatus != crossSigningInfo.trustLevel.isLocallyVerified)
+    {
+        MXUserTrustLevel *newTrustLevel = [MXUserTrustLevel trustLevelWithCrossSigningVerified:crossSigningInfo.trustLevel.isCrossSigningVerified
+                                                                               locallyVerified:verificationStatus];;
+        [crossSigningInfo updateTrustLevel:newTrustLevel];
+        [_store storeCrossSigningKeys:crossSigningInfo];
+    }
+    
     // Cross-sign if possible
-    if (!crossSigningInfo.isVerified)
+    if (verificationStatus != crossSigningInfo.trustLevel.isCrossSigningVerified)
     {
         if (self.crossSigning.canCrossSign)
         {
@@ -1233,9 +1245,9 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 
 #pragma mark - Cross-signing trust
 
-- (BOOL)isUserVerified:(NSString *)userId
+- (MXUserTrustLevel*)trustLevelForUser:(NSString*)userId
 {
-    return [self.store crossSigningKeysForUser:userId].isVerified;
+    return [self.store crossSigningKeysForUser:userId].trustLevel ?: [MXUserTrustLevel new];
 }
 
 - (MXDeviceTrustLevel*)deviceTrustLevelForDevice:(NSString*)deviceId ofUser:(NSString*)userId;
@@ -1275,7 +1287,8 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
         {
             usersCount++;
             
-            if ([self isUserVerified:userId])
+            MXUserTrustLevel *userTrustLevel = [self trustLevelForUser:userId];
+            if (userTrustLevel.isVerified)
             {
                 trustedUsersCount++;
                 
@@ -1290,12 +1303,14 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
             }
         }
         
-        MXTrustSummary *usersTrust = [[MXTrustSummary alloc] initWithTrustedCount:trustedUsersCount
-                                                                       totalCount:usersCount];
-        MXTrustSummary *devicesTrust = [[MXTrustSummary alloc] initWithTrustedCount:trustedDevicesCount
-                                                                         totalCount:devicesCount];
-        MXUsersTrustLevelSummary *trustLevelSummary = [[MXUsersTrustLevelSummary alloc] initWithUsersTrust:usersTrust
-                                                                                              devicesTrust:devicesTrust];
+        NSProgress *trustedUsersProgress = [NSProgress progressWithTotalUnitCount:usersCount];
+        trustedUsersProgress.completedUnitCount = trustedUsersCount;
+        
+        NSProgress *trustedDevicesProgress = [NSProgress progressWithTotalUnitCount:devicesCount];
+        trustedDevicesProgress.completedUnitCount = trustedDevicesCount;
+        
+        MXUsersTrustLevelSummary *trustLevelSummary = [[MXUsersTrustLevelSummary alloc] initWithTrustedUsersProgress:trustedUsersProgress
+                                                                                           andTrustedDevicesProgress:trustedDevicesProgress];
         
         dispatch_async(dispatch_get_main_queue(), ^{
             onComplete(trustLevelSummary);
