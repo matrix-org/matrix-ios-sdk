@@ -77,10 +77,107 @@ class MXCrossSigningInfoUnitTests: XCTestCase {
         XCTAssertKeysEqual(info.masterKeys, masterKeys)
         XCTAssertKeysEqual(info.selfSignedKeys, selfSigningKeys)
         XCTAssertNil(info.userSignedKeys)
-        XCTAssertEqual(
-            info.trustLevel,
-            MXUserTrustLevel(crossSigningVerified: true, locallyVerified: true)
-        )
+        XCTAssertTrue(info.trustLevel.isLocallyVerified)
+        XCTAssertTrue(info.trustLevel.isCrossSigningVerified)
+    }
+    
+    func test_canDecodeModelV0() throws {
+        // Load up previously saved data using version 0 of the model
+        let bundle = Bundle(for: MXCrossSigningInfoUnitTests.self)
+        guard let url = bundle.url(forResource: "MXCrossSigningInfo_v0", withExtension: nil) else {
+            XCTFail("Missing migration data")
+            return
+        }
+        let data = try Data(contentsOf: url)
+        
+        // Unarchive using current model
+        guard let unarchived = NSKeyedUnarchiver.unarchiveObject(with: data) as? [MXCrossSigningInfo] else {
+            XCTFail("Failed to unarchive data")
+            return
+        }
+        
+        // This data should contain 4 cross signing info objects
+        XCTAssertEqual(unarchived.count, 4)
+        
+        XCTAssertEqual(unarchived[0].userId, "Alice")
+        XCTAssertFalse(unarchived[0].trustLevel.isLocallyVerified)
+        XCTAssertFalse(unarchived[0].trustLevel.isCrossSigningVerified)
+        
+        XCTAssertEqual(unarchived[1].userId, "Bob")
+        XCTAssertFalse(unarchived[1].trustLevel.isLocallyVerified)
+        XCTAssertTrue(unarchived[1].trustLevel.isCrossSigningVerified)
+        
+        XCTAssertEqual(unarchived[2].userId, "Carol")
+        XCTAssertTrue(unarchived[2].trustLevel.isLocallyVerified)
+        XCTAssertFalse(unarchived[2].trustLevel.isCrossSigningVerified)
+        
+        XCTAssertEqual(unarchived[3].userId, "Dave")
+        XCTAssertTrue(unarchived[3].trustLevel.isLocallyVerified)
+        XCTAssertTrue(unarchived[3].trustLevel.isCrossSigningVerified)
+    }
+    
+    func test_canDecodeModelV1() throws {
+        // Load up previously saved data using version 1 of the model
+        let bundle = Bundle(for: MXCrossSigningInfoUnitTests.self)
+        guard let url = bundle.url(forResource: "MXCrossSigningInfo_v1", withExtension: nil) else {
+            XCTFail("Missing migration data")
+            return
+        }
+        let data = try Data(contentsOf: url)
+        
+        // Unarchive using current model
+        guard let unarchived = NSKeyedUnarchiver.unarchiveObject(with: data) as? [MXCrossSigningInfo] else {
+            XCTFail("Failed to unarchive data")
+            return
+        }
+        
+        // This data should contain 2 cross signing info objects
+        XCTAssertEqual(unarchived.count, 2)
+        
+        // Alice had both crossSigningVerified and locallyVerified set to false => is not verified
+        XCTAssertEqual(unarchived[0].userId, "Alice")
+        XCTAssertFalse(unarchived[0].trustLevel.isLocallyVerified)
+        XCTAssertFalse(unarchived[0].trustLevel.isCrossSigningVerified)
+        
+        // Bob had crossSigningVerified set to true and locallyVerified set to false => is verified
+        XCTAssertEqual(unarchived[1].userId, "Bob")
+        XCTAssertTrue(unarchived[1].trustLevel.isLocallyVerified)
+        XCTAssertTrue(unarchived[1].trustLevel.isCrossSigningVerified)
+    }
+    
+    func test_canEncodeDeprecatedModel() throws {
+        // In this test we ensure that once unarchived a deprecated model, we can archive it using the current
+        // schema, ie storing the `isLocallyTrusted` and `isCrossSigningTrusted properties, which is asserted
+        // by unarchiving once again.
+
+        // Load up previously saved data using version 0 of the model
+        let bundle = Bundle(for: MXCrossSigningInfoUnitTests.self)
+        guard let url = bundle.url(forResource: "MXCrossSigningInfo_v1", withExtension: nil) else {
+            XCTFail("Missing migration data")
+            return
+        }
+
+        // Unarchive from deprecated to current, re-archive via current model, and then once again unarchive
+        let data = try Data(contentsOf: url)
+        guard let unarchived1 = NSKeyedUnarchiver.unarchiveObject(with: data) as? [MXCrossSigningInfo] else {
+            XCTFail("Failed to unarchive data")
+            return
+        }
+        let archived = NSKeyedArchiver.archivedData(withRootObject: unarchived1)
+        guard let unarchived2 = NSKeyedUnarchiver.unarchiveObject(with: archived) as? [MXCrossSigningInfo] else {
+            XCTFail("Failed to unarchive data")
+            return
+        }
+
+        // We expect all of the values to match the original data
+        XCTAssertEqual(unarchived2.count, 2)
+        XCTAssertEqual(unarchived2[0].userId, "Alice")
+        XCTAssertFalse(unarchived2[0].trustLevel.isLocallyVerified)
+        XCTAssertFalse(unarchived2[0].trustLevel.isCrossSigningVerified)
+        
+        XCTAssertEqual(unarchived2[1].userId, "Bob")
+        XCTAssertTrue(unarchived2[1].trustLevel.isLocallyVerified)
+        XCTAssertTrue(unarchived2[1].trustLevel.isCrossSigningVerified)
     }
     
     private func XCTAssertKeysEqual(_ key1: MXCrossSigningKey?, _ key2: MXCrossSigningKey?, file: StaticString = #file, line: UInt = #line) {

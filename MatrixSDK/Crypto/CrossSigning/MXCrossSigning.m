@@ -751,6 +751,10 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
     {
         isMasterKeyTrusted = YES;
     }
+    else if ([self hasMatchingMasterPrivateKeyInCryptoStore:myCrossSigningInfo.masterKeys])
+    {
+        isMasterKeyTrusted = YES;
+    }
     else
     {
         // Is it signed by a locally trusted device?
@@ -968,6 +972,23 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
 
 
 #pragma mark - Private keys storage
+
+- (BOOL)hasMatchingMasterPrivateKeyInCryptoStore:(MXCrossSigningKey *)masterKey
+{
+    NSString *mskPrivateKeyBase64 = [self.crypto.store secretWithSecretId:MXSecretId.crossSigningMaster];
+    // Check it is valid and corresponds to our current master keys
+    if (mskPrivateKeyBase64 && masterKey)
+    {
+        OLMPkSigning *mskPkSigning = [self.crossSigningTools pkSigningFromBase64PrivateKey:mskPrivateKeyBase64
+                                                                     withExpectedPublicKey:masterKey.keys];
+        if (mskPkSigning)
+        {
+            return YES;
+        }
+    }
+    
+    return NO;
+}
 
 - (BOOL)haveCrossSigningPrivateKeysInCryptoStore
 {
