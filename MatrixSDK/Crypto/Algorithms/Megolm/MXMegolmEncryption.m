@@ -29,11 +29,12 @@
 #import "MXOutboundSessionInfo.h"
 #import <OLMKit/OLMKit.h>
 #import "MXSharedHistoryKeyService.h"
+#import "MatrixSDKSwiftHeader.h"
 
 
 @interface MXMegolmEncryption ()
 {
-    MXCrypto *crypto;
+    MXLegacyCrypto *crypto;
 
     // The id of the room we will be sending to.
     NSString *roomId;
@@ -60,7 +61,7 @@
 
 
 #pragma mark - MXEncrypting
-- (instancetype)initWithCrypto:(MXCrypto *)theCrypto andRoom:(NSString *)theRoomId
+- (instancetype)initWithCrypto:(MXLegacyCrypto *)theCrypto andRoom:(NSString *)theRoomId
 {
     self = [super init];
     if (self)
@@ -422,7 +423,9 @@
             //MXLogDebug(@"[MXMegolmEncryption] shareKey. Actually share with %tu users and %tu devices: %@", contentMap.userIds.count, contentMap.count, contentMap);
             MXLogDebug(@"[MXMegolmEncryption] shareKey: Actually share with %tu users and %tu devices", contentMap.userIds.count, contentMap.count);
 
-            MXHTTPOperation *operation2 = [self->crypto.matrixRestClient sendToDevice:kMXEventTypeStringRoomEncrypted contentMap:contentMap txnId:nil success:^{
+            MXToDevicePayload *payload = [[MXToDevicePayload alloc] initWithEventType:kMXEventTypeStringRoomEncrypted
+                                                                           contentMap:contentMap];
+            MXHTTPOperation *operation2 = [self->crypto.matrixRestClient sendToDevice:payload success:^{
 
                 MXLogDebug(@"[MXMegolmEncryption] shareKey: request succeeded");
 
@@ -541,7 +544,9 @@
                      [contentMap setObject:[self->crypto encryptMessage:payload forDevices:@[deviceInfo]]
                                    forUser:userId andDevice:deviceId];
                      
-                     MXHTTPOperation *operation2 = [self->crypto.matrixRestClient sendToDevice:kMXEventTypeStringRoomEncrypted contentMap:contentMap txnId:nil success:success failure:failure];
+                     MXToDevicePayload *toDevicePayload = [[MXToDevicePayload alloc] initWithEventType:kMXEventTypeStringRoomEncrypted
+                                                                                            contentMap:contentMap];
+                     MXHTTPOperation *operation2 = [self->crypto.matrixRestClient sendToDevice:toDevicePayload success:success failure:failure];
                      [operation mutateTo:operation2];
                      
                  } failure:failure];

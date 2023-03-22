@@ -15,9 +15,6 @@
 //
 
 import Foundation
-
-#if DEBUG && os(iOS)
-
 import MatrixSDKCrypto
 
 typealias GetRoomAction = (String) -> MXRoom?
@@ -27,7 +24,6 @@ typealias GetRoomAction = (String) -> MXRoom?
 /// Two main responsibilities of the `MXCryptoMachine` are:
 /// - mapping to and from raw strings passed into the Rust machine
 /// - performing network requests and marking them as completed on behalf of the Rust machine
-@available(iOS 13.0.0, *)
 class MXCryptoMachine {
     actor RoomQueues {
         private var queues = [String: MXTaskQueue]()
@@ -39,18 +35,17 @@ class MXCryptoMachine {
         }
     }
     
-    private static let storeFolder = "MXCryptoStore"
+    private static let kdfRounds: Int32 = 500_000
     
     enum Error: Swift.Error {
-        case invalidStorage
         case invalidEvent
-        case nothingToEncrypt
+        case cannotSerialize
         case missingRoom
         case missingVerificationContent
         case missingVerificationRequest
         case missingVerification
-        case missingEmojis
-        case cannotCancelVerification
+        case cannotExportKeys
+        case cannotImportKeys
     }
     
     private let machine: OlmMachine
@@ -61,44 +56,73 @@ class MXCryptoMachine {
     private let syncQueue = MXTaskQueue()
     private var roomQueues = RoomQueues()
     
+    // Temporary properties to help with the performance of backup keys checks
+    // until the performance is improved in the rust-sdk
+    private var cachedRoomKeyCounts: RoomKeyCounts?
+    private var isComputingRoomKeyCounts = false
+    private let processingQueue = DispatchQueue(label: "org.matrix.sdk.MXCryptoMachine.processingQueue")
+    
     private let log = MXNamedLog(name: "MXCryptoMachine")
 
-    init(userId: String, deviceId: String, restClient: MXRestClient, getRoomAction: @escaping GetRoomAction) throws {
-        let url = try Self.storeURL(for: userId)
+    init(
+        userId: String,
+        deviceId: String,
+        restClient: MXRestClient,
+        getRoomAction: @escaping GetRoomAction
+    ) throws {
+        MXCryptoSDKLogger.shared.log(logLine: "Starting logs")
+        
+        let url = try MXCryptoMachineStore.createStoreURLIfNecessary(for: userId)
+        let passphrase = try MXCryptoMachineStore.storePassphrase()
+        log.debug("Opening crypto store at \(url.path)/matrix-sdk-crypto.sqlite3") // Hardcoding path to db for debugging purpose
+        
         machine = try OlmMachine(
             userId: userId,
             deviceId: deviceId,
             path: url.path,
-            passphrase: nil
+            passphrase: passphrase
         )
-        requests = MXCryptoRequests(restClient: restClient)
+        
+        self.requests = MXCryptoRequests(restClient: restClient)
         self.getRoomAction = getRoomAction
         
-        setLogger(logger: self)
+        let details = """
+        Initialized the crypto machine for \(userId)
+          - device id  : \(deviceId)
+          - ed25519    : \(deviceEd25519Key ?? "")
+          - curve25519 : \(deviceCurve25519Key ?? "")
+        """
+        log.debug(details)
     }
     
-    private static func storeURL(for userId: String) throws -> URL {
-        let container: URL
-        if let sharedContainerURL = FileManager.default.applicationGroupContainerURL() {
-            container = sharedContainerURL
-        } else if let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first {
-            container = url
-        } else {
-            throw Error.invalidStorage
+    func uploadKeysIfNecessary() async throws {
+        log.debug("Checking for keys to upload")
+        
+        var keysUploadRequest: Request?
+        for request in try machine.outgoingRequests() {
+            guard case .keysUpload = request else {
+                continue
+            }
+            keysUploadRequest = request
+            break
         }
-
-        return container
-            .appendingPathComponent(Self.storeFolder)
-            .appendingPathComponent(userId)
+        
+        guard let request = keysUploadRequest else {
+            log.debug("There are no keys to upload")
+            return
+        }
+        
+        log.debug("We have some keys to upload")
+        try await handleRequest(request)
+        log.debug("Keys successfully uploaded")
     }
     
     func deleteAllData() throws {
-        let url = try Self.storeURL(for: machine.userId())
+        let url = try MXCryptoMachineStore.storeURL(for: userId)
         try FileManager.default.removeItem(at: url)
     }
 }
 
-@available(iOS 13.0.0, *)
 extension MXCryptoMachine: MXCryptoIdentity {
     var userId: String {
         return machine.userId()
@@ -110,7 +134,7 @@ extension MXCryptoMachine: MXCryptoIdentity {
     
     var deviceCurve25519Key: String? {
         guard let key = machine.identityKeys()[kMXKeyCurve25519Type] else {
-            log.error("Cannot get device curve25519 key")
+            log.failure("Cannot get device curve25519 key")
             return nil
         }
         return key
@@ -118,15 +142,16 @@ extension MXCryptoMachine: MXCryptoIdentity {
     
     var deviceEd25519Key: String? {
         guard let key = machine.identityKeys()[kMXKeyEd25519Type] else {
-            log.error("Cannot get device ed25519 key")
+            log.failure("Cannot get device ed25519 key")
             return nil
         }
         return key
     }
 }
 
-@available(iOS 13.0.0, *)
 extension MXCryptoMachine: MXCryptoSyncing {
+    
+    @MainActor
     func handleSyncResponse(
         toDevice: MXToDeviceSyncResponse?,
         deviceLists: MXDeviceListResponse?,
@@ -147,28 +172,60 @@ extension MXCryptoMachine: MXCryptoSyncing {
             unusedFallbackKeys: unusedFallbackKeys
         )
         
-        guard let json = MXTools.deserialiseJSONString(result) as? [AnyHashable: Any] else {
-            log.error("Result cannot be serialized", context: [
+        guard
+            let json = MXTools.deserialiseJSONString(result) as? [Any],
+            let toDevice = MXToDeviceSyncResponse(fromJSON: ["events": json])
+        else {
+            log.failure("Result cannot be serialized", context: [
                 "result": result
             ])
             return MXToDeviceSyncResponse()
         }
-        return MXToDeviceSyncResponse(fromJSON: json)
+        
+        return toDevice
     }
     
-    func completeSync() async throws {
+    func downloadKeysIfNecessary(users: [String]) async throws {
+        log.debug("Checking if keys need to be downloaded for \(users.count) user(s)")
+        
+        try machine.updateTrackedUsers(users: users)
+
+        // Out-of-sync check if there is a pending outgoing request for some of these users
+        // (note that if a request is already in-flight, keys query scheduler will deduplicate them)
+        for request in try machine.outgoingRequests() {
+            if case .keysQuery(_, let requestUsers) = request {
+                let usersInCommon = Set(requestUsers).intersection(users)
+                if !usersInCommon.isEmpty {
+                    try await handleRequest(request)
+                    return
+                }
+            }
+        }
+    }
+    
+    @available(*, deprecated, message: "The application should not manually force reload keys, use `downloadKeysIfNecessary` instead")
+    func reloadKeys(users: [String]) async throws {
+        try machine.updateTrackedUsers(users: users)
+        try await handleRequest(
+            .keysQuery(requestId: UUID().uuidString, users: users)
+        )
+    }
+    
+    func processOutgoingRequests() async throws {
         try await syncQueue.sync { [weak self] in
-            try await self?.processOutgoingRequests()
+            try await self?.handleOutgoingRequests()
         }
     }
     
     // MARK: - Private
     
     private func handleRequest(_ request: Request) async throws {
+        log.debug("Handling `\(request.type)` request")
+        
         switch request {
         case .toDevice(let requestId, let eventType, let body):
             try await requests.sendToDevice(
-                request: .init(eventType: eventType, body: body)
+                request: .init(eventType: eventType, body: body, addMessageId: true)
             )
             try markRequestAsSent(requestId: requestId, requestType: .toDevice)
 
@@ -183,13 +240,21 @@ extension MXCryptoMachine: MXCryptoSyncing {
             try markRequestAsSent(requestId: requestId, requestType: .keysQuery, response: response.jsonString())
             
         case .keysClaim(let requestId, let oneTimeKeys):
+            log.debug("Claiming keys \(oneTimeKeys)")
+            
             let response = try await requests.claimKeys(
                 request: .init(oneTimeKeys: oneTimeKeys)
             )
+            
+            let dictionary = response.jsonDictionary() as? [String: Any] ?? [:]
+            log.debug("Keys claimed\n\(dictionary)")
             try markRequestAsSent(requestId: requestId, requestType: .keysClaim, response: response.jsonString())
 
-        case .keysBackup:
-            assertionFailure("Keys backup not implemented")
+        case .keysBackup(let requestId, let version, let rooms):
+            let response = try await requests.backupKeys(
+                request: .init(version: version, rooms: rooms)
+            )
+            try markRequestAsSent(requestId: requestId, requestType: .keysBackup, response: MXTools.serialiseJSONObject(response))
             
         case .roomMessage(let requestId, let roomId, let eventType, let content):
             guard let eventID = try await sendRoomMessage(roomId: roomId, eventType: eventType, content: content) else {
@@ -215,7 +280,7 @@ extension MXCryptoMachine: MXCryptoSyncing {
         try self.machine.markRequestAsSent(requestId: requestId, requestType: requestType, response: response ?? "")
     }
     
-    private func processOutgoingRequests() async throws {
+    private func handleOutgoingRequests() async throws {
         let requests = try machine.outgoingRequests()
         
         try await withThrowingTaskGroup(of: Void.self) { [weak self] group in
@@ -244,7 +309,6 @@ extension MXCryptoMachine: MXCryptoSyncing {
     }
 }
 
-@available(iOS 13.0.0, *)
 extension MXCryptoMachine: MXCryptoDevicesSource {
     func devices(userId: String) -> [Device] {
         do {
@@ -265,7 +329,6 @@ extension MXCryptoMachine: MXCryptoDevicesSource {
     }
 }
 
-@available(iOS 13.0.0, *)
 extension MXCryptoMachine: MXCryptoUserIdentitySource {
     func isUserVerified(userId: String) -> Bool {
         do {
@@ -285,79 +348,140 @@ extension MXCryptoMachine: MXCryptoUserIdentitySource {
         }
     }
     
-    func downloadKeys(users: [String]) async throws {
-        try await handleRequest(
-            .keysQuery(requestId: UUID().uuidString, users: users)
-        )
+    func verifyUser(userId: String) async throws {
+        let request = try machine.verifyIdentity(userId: userId)
+        try await requests.uploadSignatures(request: request)
+    }
+    
+    func verifyDevice(userId: String, deviceId: String) async throws {
+        let request = try machine.verifyDevice(userId: userId, deviceId: deviceId)
+        try await requests.uploadSignatures(request: request)
+    }
+    
+    func setLocalTrust(userId: String, deviceId: String, trust: LocalTrust) throws {
+        try machine.setLocalTrust(userId: userId, deviceId: deviceId, trustState: trust)
     }
 }
 
-@available(iOS 13.0.0, *)
-extension MXCryptoMachine: MXCryptoEventEncrypting {
-    func shareRoomKeysIfNecessary(roomId: String, users: [String]) async throws {
+extension MXCryptoMachine: MXCryptoRoomEventEncrypting {
+    var onlyAllowTrustedDevices: Bool {
+        get {
+            do {
+                return try machine.getOnlyAllowTrustedDevices()
+            } catch {
+                log.error("Failed getting value", context: error)
+                return false
+            }
+        }
+        set {
+            do {
+                try machine.setOnlyAllowTrustedDevices(onlyAllowTrustedDevices: newValue)
+            } catch {
+                log.error("Failed setting value", context: error)
+            }
+        }
+    }
+    
+    func isUserTracked(userId: String) -> Bool {
+        do {
+            return try machine.isUserTracked(userId: userId)
+        } catch {
+            log.error("Failed getting tracked status", context: error)
+            return false
+        }
+    }
+    
+    func updateTrackedUsers(_ users: [String]) {
+        do {
+            try machine.updateTrackedUsers(users: users)
+        } catch {
+            log.error("Failed updating tracked users", context: error)
+        }
+    }
+    
+    func roomSettings(roomId: String) -> RoomSettings? {
+        do {
+            return try machine.getRoomSettings(roomId: roomId)
+        } catch {
+            log.error("Failed getting room settings", context: error)
+            return nil
+        }
+    }
+    
+    func setRoomAlgorithm(roomId: String, algorithm: EventEncryptionAlgorithm) throws {
+        try machine.setRoomAlgorithm(roomId: roomId, algorithm: algorithm)
+    }
+    
+    func setOnlyAllowTrustedDevices(for roomId: String, onlyAllowTrustedDevices: Bool) throws {
+        try machine.setRoomOnlyAllowTrustedDevices(roomId: roomId, onlyAllowTrustedDevices: onlyAllowTrustedDevices)
+    }
+    
+    func shareRoomKeysIfNecessary(
+        roomId: String,
+        users: [String],
+        settings: EncryptionSettings
+    ) async throws {
+        log.debug("Checking room keys in room \(roomId)")
+        
         try await sessionsQueue.sync { [weak self] in
-            try await self?.updateTrackedUsers(users: users)
             try await self?.getMissingSessions(users: users)
         }
         
         let roomQueue = await roomQueues.getQueue(for: roomId)
+        
         try await roomQueue.sync { [weak self] in
-            try await self?.shareRoomKey(roomId: roomId, users: users)
+            try await self?.shareRoomKey(roomId: roomId, users: users, settings: settings)
         }
     }
     
-    func encrypt(_ content: [AnyHashable: Any], roomId: String, eventType: String, users: [String]) async throws -> [String: Any] {
+    func encryptRoomEvent(
+        content: [AnyHashable : Any],
+        roomId: String,
+        eventType: String
+    ) throws -> [String : Any] {
         guard let content = MXTools.serialiseJSONObject(content) else {
-            throw Error.nothingToEncrypt
+            throw Error.cannotSerialize
         }
         
-        try await shareRoomKeysIfNecessary(roomId: roomId, users: users)
         let event = try machine.encrypt(roomId: roomId, eventType: eventType as String, content: content)
         return MXTools.deserialiseJSONString(event) as? [String: Any] ?? [:]
     }
     
-    func decryptEvent(_ event: MXEvent) throws -> MXEventDecryptionResult {
-        guard let roomId = event.roomId, let event = event.jsonString() else {
-            throw Error.invalidEvent
+    func discardRoomKey(roomId: String) {
+        do {
+            try machine.discardRoomKey(roomId: roomId)
+        } catch {
+            log.error("Cannot discard room key", context: error)
         }
-        
-        let result = try machine.decryptRoomEvent(event: event, roomId: roomId)
-        return try MXEventDecryptionResult(event: result)
     }
     
     // MARK: - Private
     
-    private func updateTrackedUsers(users: [String]) async throws {
-        machine.updateTrackedUsers(users: users)
-        try await withThrowingTaskGroup(of: Void.self) { [weak self] group in
-            guard let self = self else { return }
-            
-            for request in try machine.outgoingRequests() {
-                guard case .keysQuery = request else {
-                    continue
-                }
-                
-                group.addTask {
-                    try await self.handleRequest(request)
-                }
-            }
-            
-            try await group.waitForAll()
-        }
-    }
-    
     private func getMissingSessions(users: [String]) async throws {
+        log.debug("Checking missing olm sessions for \(users.count) user(s): \(users)")
+        
         guard
             let request = try machine.getMissingSessions(users: users),
             case .keysClaim = request
         else {
+            log.debug("No olm sessions are missing")
             return
         }
+        
+        log.debug("Claiming new keys")
         try await handleRequest(request)
     }
     
-    private func shareRoomKey(roomId: String, users: [String]) async throws {
-        let requests = try machine.shareRoomKey(roomId: roomId, users: users)
+    private func shareRoomKey(roomId: String, users: [String], settings: EncryptionSettings) async throws {
+        log.debug("Checking unshared room keys")
+        
+        let requests = try machine.shareRoomKey(roomId: roomId, users: users, settings: settings)
+        guard !requests.isEmpty else {
+            log.debug("There are no new keys to share")
+            return
+        }
+        
+        log.debug("Created \(requests.count) key share requests")
         try await withThrowingTaskGroup(of: Void.self) { [weak self] group in
             guard let self = self else { return }
             
@@ -373,11 +497,45 @@ extension MXCryptoMachine: MXCryptoEventEncrypting {
             
             try await group.waitForAll()
         }
+        
+        log.debug("All room keys have been shared")
     }
 }
 
-@available(iOS 13.0.0, *)
+extension MXCryptoMachine: MXCryptoRoomEventDecrypting {
+    func decryptRoomEvent(_ event: MXEvent) throws -> DecryptedEvent {
+        guard let roomId = event.roomId, let eventString = event.jsonString() else {
+            log.failure("Invalid event")
+            throw Error.invalidEvent
+        }
+        return try machine.decryptRoomEvent(
+            event: eventString,
+            roomId: roomId,
+            // Handling verification events automatically during event decryption is now a deprecated behavior,
+            // all verification events are handled manually via `receiveVerificationEvent`
+            handleVerificationEvents: false
+        )
+    }
+    
+    func requestRoomKey(event: MXEvent) async throws {
+        guard let roomId = event.roomId, let eventString = event.jsonString() else {
+            throw Error.invalidEvent
+        }
+        
+        log.debug("->")
+        let result = try machine.requestRoomKey(event: eventString, roomId: roomId)
+        if let cancellation = result.cancellation {
+            try await handleRequest(cancellation)
+        }
+        try await handleRequest(result.keyRequest)
+    }
+}
+
 extension MXCryptoMachine: MXCryptoCrossSigning {
+    func refreshCrossSigningStatus() async throws {
+        try await reloadKeys(users: [userId])
+    }
+    
     func crossSigningStatus() -> CrossSigningStatus {
         return machine.crossSigningStatus()
     }
@@ -389,11 +547,36 @@ extension MXCryptoMachine: MXCryptoCrossSigning {
             requests.uploadSignatures(request: result.signatureRequest)
         ]
     }
+    
+    func exportCrossSigningKeys() -> CrossSigningKeyExport? {
+        machine.exportCrossSigningKeys()
+    }
+    
+    func importCrossSigningKeys(export: CrossSigningKeyExport) {
+        do {
+            try machine.importCrossSigningKeys(export: export)
+        } catch {
+            log.error("Failed importing cross signing keys", context: error)
+        }
+    }
 }
 
-@available(iOS 13.0.0, *)
-extension MXCryptoMachine: MXCryptoVerificationRequesting {
-    func requestSelfVerification(methods: [String]) async throws -> VerificationRequest {
+extension MXCryptoMachine: MXCryptoVerifying {
+    func receiveVerificationEvent(event: MXEvent, roomId: String) async throws {
+        let event = try verificationEventString(for: event)
+        try machine.receiveVerificationEvent(event: event, roomId: roomId)
+        
+        // Out-of-sync check if there are any verification events to sent out as a result of
+        // the event just received
+        for request in try machine.outgoingRequests() {
+            if case .roomMessage = request {
+                try await handleRequest(request)
+                return
+            }
+        }
+    }
+    
+    func requestSelfVerification(methods: [String]) async throws -> VerificationRequestProtocol {
         guard let result = try machine.requestSelfVerification(methods: methods) else {
             throw Error.missingVerification
         }
@@ -401,7 +584,7 @@ extension MXCryptoMachine: MXCryptoVerificationRequesting {
         return result.verification
     }
     
-    func requestVerification(userId: String, roomId: String, methods: [String]) async throws -> VerificationRequest {
+    func requestVerification(userId: String, roomId: String, methods: [String]) async throws -> VerificationRequestProtocol {
         guard let content = try machine.verificationRequestContent(userId: userId, methods: methods) else {
             throw Error.missingVerificationContent
         }
@@ -428,33 +611,46 @@ extension MXCryptoMachine: MXCryptoVerificationRequesting {
         return request
     }
     
-    func verificationRequest(userId: String, flowId: String) -> VerificationRequest? {
+    func requestVerification(userId: String, deviceId: String, methods: [String]) async throws -> VerificationRequestProtocol {
+        guard let result = try machine.requestVerificationWithDevice(userId: userId, deviceId: deviceId, methods: methods) else {
+            throw Error.missingVerificationRequest
+        }
+        try await handleOutgoingVerificationRequest(result.request)
+        return result.verification
+    }
+    
+    func verificationRequests(userId: String) -> [VerificationRequestProtocol] {
+        return machine.getVerificationRequests(userId: userId)
+    }
+    
+    func verificationRequest(userId: String, flowId: String) -> VerificationRequestProtocol? {
         return machine.getVerificationRequest(userId: userId, flowId: flowId)
     }
     
-    func acceptVerificationRequest(userId: String, flowId: String, methods: [String]) async throws {
-        guard let request = machine.acceptVerificationRequest(userId: userId, flowId: flowId, methods: methods) else {
-            throw Error.missingVerificationRequest
+    func verification(userId: String, flowId: String) -> MXVerification? {
+        guard let verification = machine.getVerification(userId: userId, flowId: flowId) else {
+            return nil
         }
-        try await handleOutgoingVerificationRequest(request)
+        
+        if let sas = verification.asSas() {
+            return .sas(sas)
+        } else if let qrCode = verification.asQr() {
+            return .qrCode(qrCode)
+        } else {
+            log.failure("Invalid state of verification")
+            return nil
+        }
     }
     
-    func cancelVerification(userId: String, flowId: String, cancelCode: String) async throws {
-        guard let request = machine.cancelVerification(userId: userId, flowId: flowId, cancelCode: cancelCode) else {
-            throw Error.cannotCancelVerification
-        }
-        try await handleOutgoingVerificationRequest(request)
-    }
-    
-    // MARK: - Private
-    
-    private func handleOutgoingVerificationRequest(_ request: OutgoingVerificationRequest) async throws {
+    func handleOutgoingVerificationRequest(_ request: OutgoingVerificationRequest) async throws {
         switch request {
         case .toDevice(_, let eventType, let body):
             try await requests.sendToDevice(
                 request: .init(
                     eventType: eventType,
-                    body: body
+                    body: body,
+                    // Should not add anything for verification events as it would break their signatures
+                    addMessageId: false
                 )
             )
         case .inRoom(_, let roomId, let eventType, let content):
@@ -464,21 +660,11 @@ extension MXCryptoMachine: MXCryptoVerificationRequesting {
                 content: content
             )
         }
-    }
-}
-
-@available(iOS 13.0.0, *)
-extension MXCryptoMachine: MXCryptoVerifying {
-    func verification(userId: String, flowId: String) -> Verification? {
-        return machine.getVerification(userId: userId, flowId: flowId)
+        
+        try await processOutgoingRequests()
     }
     
-    func confirmVerification(userId: String, flowId: String) async throws {
-        let result = try machine.confirmVerification(userId: userId, flowId: flowId)
-        guard let result = result else {
-            throw Error.missingVerification
-        }
-        
+    func handleVerificationConfirmation(_ result: ConfirmVerificationResult) async throws {
         if let request = result.signatureRequest {
             try await requests.uploadSignatures(request: request)
         }
@@ -493,44 +679,161 @@ extension MXCryptoMachine: MXCryptoVerifying {
             try await group.waitForAll()
         }
     }
+    
+    private func verificationEventString(for event: MXEvent) throws -> String {
+        guard var dictionary = event.jsonDictionary() else {
+            throw Error.invalidEvent
+        }
+        
+        // If this is a decrypted event, we need to swap out `type` and `content` properties
+        // as this is what the crypto machine expects decrypted events to look like
+        if let clear = event.clear {
+            dictionary["type"] = clear.type
+            dictionary["content"] = clear.content
+        }
+
+        guard let string = MXTools.serialiseJSONObject(dictionary) else {
+            throw Error.invalidEvent
+        }
+        
+        return string
+    }
 }
 
-@available(iOS 13.0.0, *)
-extension MXCryptoMachine: MXCryptoSASVerifying {
-    func startSasVerification(userId: String, flowId: String) async throws -> Sas {
-        guard let result = try machine.startSasVerification(userId: userId, flowId: flowId) else {
-            throw Error.missingVerification
-        }
-        try await handleOutgoingVerificationRequest(result.request)
-        return result.sas
+extension MXCryptoMachine: MXCryptoBackup {
+    var isBackupEnabled: Bool {
+        return machine.backupEnabled()
     }
     
-    func acceptSasVerification(userId: String, flowId: String) async throws {
-        guard let request = machine.acceptSasVerification(userId: userId, flowId: flowId) else {
-            throw Error.missingVerification
+    var backupKeys: BackupKeys? {
+        do {
+            return try machine.getBackupKeys()
+        } catch {
+            log.error("Failed fetching backup keys", context: error)
+            return nil
         }
-        try await handleOutgoingVerificationRequest(request)
-    }
-
-    func emojiIndexes(sas: Sas) throws -> [Int] {
-        guard let indexes = machine.getEmojiIndex(userId: sas.otherUserId, flowId: sas.flowId) else {
-            throw Error.missingEmojis
-        }
-        return indexes.map(Int.init)
-    }
-}
-
-@available(iOS 13.0.0, *)
-extension MXCryptoMachine: Logger {
-    func log(logLine: String) {
-        MXLog.debug("[MXCryptoMachine] \(logLine)")
     }
     
-    func log(error: String) {
-        MXLog.error("[MXCryptoMachine] Error", context: [
-            "error": error
-        ])
+    var roomKeyCounts: RoomKeyCounts? {
+        // Checking the number of backed-up keys is currently very compute-heavy
+        // and blocks the main thread for large accounts. A light-weight `hasKeysToBackup`
+        // method will be added into rust-sdk and for the time-being we return cached counts
+        // on the main thread and compute new value on separate queue
+        if !isComputingRoomKeyCounts {
+            processingQueue.async { [weak self] in
+                self?.updateRoomKeyCounts()
+            }
+        }
+        return cachedRoomKeyCounts
+    }
+    
+    func enableBackup(key: MegolmV1BackupKey, version: String) throws {
+        try machine.enableBackupV1(key: key, version: version)
+    }
+    
+    func disableBackup() {
+        do {
+            try machine.disableBackup()
+        } catch {
+            log.error("Failed disabling backup", context: error)
+        }
+    }
+    
+    func saveRecoveryKey(key: BackupRecoveryKey, version: String?) throws {
+        try machine.saveRecoveryKey(key: key, version: version)
+    }
+    
+    func verifyBackup(version: MXKeyBackupVersion) -> Bool {
+        guard let string = version.jsonString() else {
+            log.error("Cannot serialize backup version")
+            return false
+        }
+        
+        do {
+            let verification = try machine.verifyBackup(authData: string)
+            return verification.trusted
+        } catch {
+            log.error("Failed verifying backup", context: error)
+            return false
+        }
+    }
+    
+    func sign(object: [AnyHashable: Any]) throws -> [String: [String: String]] {
+        guard let message = MXCryptoTools.canonicalJSONString(forJSON: object) else {
+            throw Error.cannotSerialize
+        }
+        return machine.sign(message: message)
+    }
+    
+    func backupRoomKeys() async throws {
+        guard
+            let request = try machine.backupRoomKeys(),
+            case .keysBackup = request
+        else {
+            return
+        }
+        try await handleRequest(request)
+    }
+    
+    func importDecryptedKeys(roomKeys: [MXMegolmSessionData], progressListener: ProgressListener) throws -> KeysImportResult {
+        let jsonKeys = roomKeys.compactMap { $0.jsonDictionary() }
+        guard let json = MXTools.serialiseJSONObject(jsonKeys) else {
+            throw Error.cannotSerialize
+        }
+        return try machine.importDecryptedRoomKeys(keys: json, progressListener: progressListener)
+    }
+    
+    func exportRoomKeys(passphrase: String) throws -> Data {
+        let string = try machine.exportRoomKeys(passphrase: passphrase, rounds: Self.kdfRounds)
+        guard let data = string.data(using: .utf8) else {
+            throw Error.cannotExportKeys
+        }
+        return data
+    }
+    
+    func importRoomKeys(_ data: Data, passphrase: String, progressListener: ProgressListener) throws -> KeysImportResult {
+        guard let string = String(data: data, encoding: .utf8) else {
+            throw Error.cannotImportKeys
+        }
+        return try machine.importRoomKeys(keys: string, passphrase: passphrase, progressListener: progressListener)
+    }
+    
+    // MARK: - Private
+    
+    private func updateRoomKeyCounts() {
+        // Checking condition again for safety as we are on another thread
+        guard !isComputingRoomKeyCounts else {
+            return
+        }
+        
+        isComputingRoomKeyCounts = true
+        do {
+            cachedRoomKeyCounts = try machine.roomKeyCounts()
+        } catch {
+            log.error("Cannot get room key counts", context: error)
+            cachedRoomKeyCounts = nil
+        }
+        isComputingRoomKeyCounts = false
     }
 }
 
-#endif
+extension Request {
+    var type: RequestType {
+        switch self {
+        case .toDevice:
+            return .toDevice
+        case .keysUpload:
+            return .keysUpload
+        case .keysQuery:
+            return .keysQuery
+        case .keysClaim:
+            return .keysClaim
+        case .keysBackup:
+            return .keysBackup
+        case .roomMessage:
+            return .roomMessage
+        case .signatureUpload:
+            return .signatureUpload
+        }
+    }
+}

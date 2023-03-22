@@ -215,8 +215,11 @@ private var logger: SwiftyBeaver.Type = {
         }
         logger.addDestination(consoleDestination)
         
+        #if !DEBUG
+        // Non-debug builds will log fatal issues to analytics if tracking consent provided
         let analytics = MXAnalyticsDestination()
         logger.addDestination(analytics)
+        #endif
     }
 }
 
@@ -230,6 +233,10 @@ struct MXNamedLog {
     
     func debug(_ message: String, file: String = #file, function: String = #function, line: Int = #line) {
         logger.debug(formattedMessage(message, function: function), file, function, line: line)
+    }
+    
+    func warning(_ message: String, file: String = #file, function: String = #function, line: Int = #line) {
+        logger.warning(formattedMessage(message, function: function), file, function, line: line)
     }
     
     /// Logging errors requires a static message, all other details must be sent as additional parameters

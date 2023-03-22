@@ -72,7 +72,7 @@ class MXMegolmDecryptionUnitTests: XCTestCase {
     }
     
     /// Stub of crypto which connects various other stubbed objects (device, session)
-    class CryptoStub: MXCrypto {
+    class CryptoStub: MXLegacyCrypto {
         private let device: MXOlmDevice
         private let cryptoStore: MXCryptoStore
         private let session: MXSession

@@ -52,9 +52,21 @@
 
 - (NSDictionary *)JSONDictionary
 {
+    if (!_senderKey || !_roomId || !_sessionId || !_sessionKey || !_algorithm)
+    {
+        NSDictionary *details = @{
+            @"sender_key": _senderKey ?: @"unknown",
+            @"room_id": _roomId ?: @"unknown",
+            @"session_id": _sessionId ?: @"unknown",
+            @"algorithm": _algorithm ?: @"unknown",
+        };
+        MXLogErrorDetails(@"[MXMegolmSessionData] JSONDictionary: some properties are missing", details);
+        return nil;
+    }
+    
     return @{
       @"sender_key": _senderKey,
-      @"sender_claimed_keys": _senderClaimedKeys,
+      @"sender_claimed_keys": _senderClaimedKeys ?: @[],
       @"room_id": _roomId,
       @"session_id": _sessionId,
       @"session_key":_sessionKey,

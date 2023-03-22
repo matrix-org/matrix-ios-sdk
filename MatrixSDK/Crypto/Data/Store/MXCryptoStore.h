@@ -31,15 +31,17 @@
 #import "MXCrossSigningInfo.h"
 #import "MXOutgoingRoomKeyRequest.h"
 #import "MXIncomingRoomKeyRequest.h"
+#import "MXCryptoSecretStore.h"
 
 @class OLMAccount;
 @class OLMOutboundGroupSession;
+@class MXRoomSettings;
 
 /**
  The `MXCryptoStore` protocol defines an interface that must be implemented in order to store
  crypto data for a matrix account.
  */
-@protocol MXCryptoStore <NSObject>
+@protocol MXCryptoStore <NSObject, MXCryptoSecretStore>
 
 /**
  Indicate if the store contains data for the passed account.
@@ -83,15 +85,9 @@
 - (instancetype)initWithCredentials:(MXCredentials *)credentials;
 
 /**
- Open the store corresponding to the passed account.
-
- The implementation can use a separated thread for loading data but the callback blocks
- must be called from the main thread.
-
- @param onComplete the callback called once the data has been loaded.
- @param failure the callback called in case of error.
+ The user id.
  */
-- (void)open:(void (^)(void))onComplete failure:(void (^)(NSError *error))failure;
+- (NSString*)userId;
 
 /**
  Store the device id.
@@ -227,6 +223,14 @@
  */
 - (NSArray<MXCrossSigningInfo*> *)crossSigningKeys;
 
+#pragma mark - Secrets
+
+/**
+ Delete a secret.
+ 
+ @param secretId the id of the secret.
+ */
+- (void)deleteSecretWithSecretId:(NSString *)secretId;
 
 #pragma mark - Message keys
 
@@ -245,12 +249,16 @@
 - (NSString*)algorithmForRoom:(NSString*)roomId;
 
 /**
+ Fetch all stored room settings, containing room algorithm and other crypto options
+ */
+- (NSArray <MXRoomSettings *> *)roomSettings;
+
+/**
  Store a session between this device and another device.
 
- @param deviceKey the public key of the other device.
  @param session the end-to-end session.
  */
-- (void)storeSession:(MXOlmSession*)session forDevice:(NSString*)deviceKey;
+- (void)storeSession:(MXOlmSession*)session;
 
 /**
  Retrieve an end-to-end session between this device and another device.
@@ -282,6 +290,23 @@
  */
 - (NSArray<MXOlmSession*>*)sessionsWithDevice:(NSString*)deviceKey;
 
+/**
+ Enumerate all end-to-end sessions in batches of `batchSize`
+ 
+ Each block is internally wrapped in `@autoreleasepool` so that memory footprint remains constant
+ regardless of the number of stored sessions.
+ 
+ @param batchSize the max number of sessions in a single batch
+ @param block function that will be executed with each batch, incl. list of sessions and current progress of batching
+ */
+- (void)enumerateSessionsBy:(NSInteger)batchSize
+                      block:(void (^)(NSArray <MXOlmSession *> *sessions,
+                                      double progress))block;
+
+/**
+ The number of stored end-to-end sessions
+ */
+- (NSUInteger)sessionsCount;
 
 /**
  Store inbound group sessions.
@@ -317,6 +342,19 @@
  */
 - (NSArray<MXOlmInboundGroupSession*> *)inboundGroupSessions;
 
+/**
+ Enumerate all inbound group sessions in batches of `batchSize`
+ 
+ Each block is internally wrapped in `@autoreleasepool` so that memory footprint remains constant
+ regardless of the number of stored sessions.
+ 
+ @param batchSize the max number of sessions in a single batch
+ @param block function that will be executed with each batch, incl. list of sessions and current progress of batching
+ */
+- (void)enumerateInboundGroupSessionsBy:(NSInteger)batchSize
+                                  block:(void (^)(NSArray <MXOlmInboundGroupSession *> *sessions,
+                                                  NSSet <NSString *> *backedUp,
+                                                  double progress))block;
 
 /**
  Store outbound group session.
@@ -501,34 +539,6 @@
  @return a map userId -> deviceId -> [MXIncomingRoomKeyRequest*].
  */
 - (MXUsersDevicesMap<NSArray<MXIncomingRoomKeyRequest *> *> *)incomingRoomKeyRequests;
-
-
-#pragma mark - Secret storage
-
-/**
- Store a secret.
- 
- @param secret the secret.
- @param secretId the id of the secret.
- */
-- (void)storeSecret:(NSString*)secret withSecretId:(NSString*)secretId;
-
-/**
- Retrieve a secret.
- 
- @param secretId the id of the secret.
- @return the secret. Nil if the secret does not exist.
- */
-- (NSString*)secretWithSecretId:(NSString*)secretId;
-
-
-/**
- Delete a secret.
- 
- @param secretId the id of the secret.
- */
-- (void)deleteSecretWithSecretId:(NSString*)secretId;
-
 
 #pragma mark - Crypto settings
 

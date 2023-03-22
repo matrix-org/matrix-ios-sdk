@@ -106,7 +106,7 @@ typedef NS_ENUM(NSInteger, MXKeyVerificationTransport) {
 /**
  Default implementation of verification transaction used by the SDK
  */
-@interface MXDefaultKeyVerificationTransaction: NSObject <MXKeyVerificationTransaction>
+@interface MXLegacyKeyVerificationTransaction: NSObject <MXKeyVerificationTransaction>
 
 /**
  The creation date.

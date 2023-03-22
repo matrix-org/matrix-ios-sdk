@@ -17,7 +17,6 @@
 import Foundation
 
 /// Audio output router delegate
-@available(iOS 10.0, *)
 @objc
 public protocol MXiOSAudioOutputRouterDelegate: AnyObject {
     /// Delegate method to be called when output route changes, for both user actions and system changes

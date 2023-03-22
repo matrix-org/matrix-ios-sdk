@@ -44,6 +44,10 @@ typedef NS_ENUM(NSInteger, MXCrossSigningToolsErrorCode)
 
 - (BOOL)pkVerifyKey:(MXCrossSigningKey*)crossSigningKey userId:(NSString*)userId publicKey:(NSString*)publicKey error:(NSError**)error;
 
+- (BOOL)isSecretValid:(NSString*)secret forPublicKeys:(NSString*)keys;
+
+- (nullable OLMPkSigning*)pkSigningFromBase64PrivateKey:(NSString*)base64PrivateKey withExpectedPublicKey:(NSString*)expectedPublicKey;
+
 @end
 
 NS_ASSUME_NONNULL_END

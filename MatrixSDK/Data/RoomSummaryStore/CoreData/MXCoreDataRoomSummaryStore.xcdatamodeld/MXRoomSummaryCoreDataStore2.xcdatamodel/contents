@@ -1,13 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="20086" systemVersion="21E258" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="21513" systemVersion="22C65" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
     <entity name="MXRoomLastMessage" representedClassName="MXRoomLastMessageMO" syncable="YES">
-        <attribute name="s_attributedText" optional="YES" attributeType="Binary" valueTransformerName=""/>
         <attribute name="s_eventId" attributeType="String"/>
+        <attribute name="s_hasDecryptionError" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
         <attribute name="s_isEncrypted" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
         <attribute name="s_originServerTs" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
-        <attribute name="s_others" optional="YES" attributeType="Binary"/>
         <attribute name="s_sender" attributeType="String"/>
-        <attribute name="s_text" optional="YES" attributeType="String"/>
+        <attribute name="s_sensitiveData" optional="YES" attributeType="Binary"/>
         <relationship name="s_ofRoom" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="MXRoomSummary" inverseName="s_lastMessage" inverseEntity="MXRoomSummary"/>
     </entity>
     <entity name="MXRoomMembersCount" representedClassName="MXRoomMembersCountMO" syncable="YES">
@@ -62,10 +61,4 @@
         <attribute name="s_usersCount" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <relationship name="s_ofRoom" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="MXRoomSummary" inverseName="s_trust" inverseEntity="MXRoomSummary"/>
     </entity>
-    <elements>
-        <element name="MXRoomLastMessage" positionX="117" positionY="90" width="128" height="149"/>
-        <element name="MXRoomMembersCount" positionX="297.1484375" positionY="-66.14453125" width="128" height="89"/>
-        <element name="MXRoomSummary" positionX="-63" positionY="-18" width="128" height="509"/>
-        <element name="MXUsersTrustLevelSummary" positionX="236.4921875" positionY="519.4296875" width="128" height="104"/>
-    </elements>
 </model>

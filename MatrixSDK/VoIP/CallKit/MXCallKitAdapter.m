@@ -52,7 +52,7 @@ NSString * const kMXCallKitAdapterAudioSessionDidActive = @"kMXCallKitAdapterAud
     {
         CXProviderConfiguration *providerConfiguration = [[CXProviderConfiguration alloc] initWithLocalizedName:configuration.name];
         providerConfiguration.ringtoneSound = configuration.ringtoneName;
-        providerConfiguration.maximumCallGroups = 1;
+        providerConfiguration.maximumCallGroups = configuration.maximumCallGroups;
         providerConfiguration.maximumCallsPerCallGroup = 1;
         providerConfiguration.supportedHandleTypes = [NSSet setWithObject:@(CXHandleTypeGeneric)];
         providerConfiguration.supportsVideo = configuration.supportsVideo;
@@ -401,7 +401,7 @@ NSString * const kMXCallKitAdapterAudioSessionDidActive = @"kMXCallKitAdapterAud
 {
     if (call.isConferenceCall)
     {
-        onComplete(call.room.summary.displayname);
+        onComplete(call.room.summary.displayName);
     }
     else
     {

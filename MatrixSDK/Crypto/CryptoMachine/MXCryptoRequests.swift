@@ -15,37 +15,50 @@
 //
 
 import Foundation
-
-#if DEBUG && os(iOS)
-
 import MatrixSDKCrypto
 
 /// Convenience class to delegate network requests originating in Rust crypto module
 /// to the native REST API client
-@available(iOS 13.0.0, *)
 struct MXCryptoRequests {
     private let restClient: MXRestClient
+    private let queryScheduler: MXKeysQueryScheduler<MXKeysQueryResponse>
+    
     init(restClient: MXRestClient) {
         self.restClient = restClient
+        self.queryScheduler = .init { users in
+            try await performCallbackRequest { completion in
+                _ = restClient.downloadKeysByChunk(
+                    forUsers: users,
+                    token: nil,
+                    success: {
+                        completion(.success($0))
+                    }, failure: {
+                        completion(.failure($0 ?? Error.unknownError))
+                    })
+            }
+        }
     }
     
     func sendToDevice(request: ToDeviceRequest) async throws {
-        return try await performCallbackRequest {
+        try await performCallbackRequest {
             restClient.sendDirectToDevice(
-                eventType: request.eventType,
-                contentMap: request.contentMap,
-                txnId: nil,
+                payload: .init(
+                    eventType: request.eventType,
+                    contentMap: request.contentMap,
+                    transactionId: nil,
+                    addMessageId: request.addMessageId
+                ),
                 completion: $0
             )
         }
     }
     
     func uploadKeys(request: UploadKeysRequest) async throws -> MXKeysUploadResponse {
-        return try await performCallbackRequest {
+        try await performCallbackRequest {
             restClient.uploadKeys(
                 request.deviceKeys,
                 oneTimeKeys: request.oneTimeKeys,
-                fallbackKeys: nil,
+                fallbackKeys: request.fallbackKeys,
                 forDevice: request.deviceId,
                 completion: $0
             )
@@ -84,32 +97,50 @@ struct MXCryptoRequests {
     }
     
     func queryKeys(users: [String]) async throws -> MXKeysQueryResponse {
-        return try await performCallbackRequest {
-            restClient.downloadKeys(forUsers: users, completion: $0)
-        }
+        try await queryScheduler.query(users: Set(users))
     }
     
     func claimKeys(request: ClaimKeysRequest) async throws -> MXKeysClaimResponse {
-        return try await performCallbackRequest {
+        try await performCallbackRequest {
             restClient.claimOneTimeKeys(for: request.devices, completion: $0)
         }
     }
     
+    @MainActor
+    // Calling methods on `MXRoom` has various state side effects so should be called on the main thread
     func roomMessage(request: RoomMessageRequest) async throws -> String? {
-        var event: MXEvent?
-        return try await performCallbackRequest {
+        try await withCheckedThrowingContinuation { continuation in
+            var event: MXEvent?
             request.room.sendEvent(
                 MXEventType(identifier: request.eventType),
                 content: request.content,
-                localEcho: &event,
-                completion: $0
+                localEcho: &event) { response in
+                    switch response {
+                    case .success(let value):
+                        continuation.resume(returning: value)
+                    case .failure(let error):
+                        continuation.resume(throwing: error)
+                    }
+                }
+        }
+    }
+    
+    func backupKeys(request: KeysBackupRequest) async throws -> [AnyHashable: Any] {
+        try await performCallbackRequest { continuation in
+            restClient.sendKeysBackup(
+                request.keysBackupData,
+                version: request.version,
+                success: {
+                    continuation(.success($0 ?? [:]))
+                }, failure: {
+                    continuation(.failure($0 ?? Error.unknownError))
+                }
             )
         }
     }
 }
 
 /// Convenience structs mapping Rust requests to data for native REST API requests
-@available(iOS 13.0.0, *)
 extension MXCryptoRequests {
     enum Error: Swift.Error {
         case cannotCreateRequest
@@ -119,8 +150,9 @@ extension MXCryptoRequests {
     struct ToDeviceRequest {
         let eventType: String
         let contentMap: MXUsersDevicesMap<NSDictionary>
+        let addMessageId: Bool
         
-        init(eventType: String, body: String) throws {
+        init(eventType: String, body: String, addMessageId: Bool) throws {
             guard
                 let json = MXTools.deserialiseJSONString(body) as? [String: [String: NSDictionary]],
                 let contentMap = MXUsersDevicesMap<NSDictionary>(map: json)
@@ -130,12 +162,14 @@ extension MXCryptoRequests {
             
             self.eventType = eventType
             self.contentMap = contentMap
+            self.addMessageId = addMessageId
         }
     }
     
     struct UploadKeysRequest {
         let deviceKeys: [String: Any]?
         let oneTimeKeys: [String: Any]?
+        let fallbackKeys: [String: Any]?
         let deviceId: String
         
         init(body: String, deviceId: String) throws {
@@ -145,6 +179,7 @@ extension MXCryptoRequests {
             
             self.deviceKeys = json["device_keys"] as? [String : Any]
             self.oneTimeKeys = json["one_time_keys"] as? [String : Any]
+            self.fallbackKeys = json["fallback_keys"] as? [String : Any]
             self.deviceId = deviceId
         }
     }
@@ -176,9 +211,24 @@ extension MXCryptoRequests {
             self.content = json
         }
     }
+    
+    struct KeysBackupRequest {
+        let version: String
+        let keysBackupData: MXKeysBackupData
+        
+        init(version: String, rooms: String) throws {
+            self.version = version
+            guard
+                let json = MXTools.deserialiseJSONString(rooms),
+                let data = MXKeysBackupData(fromJSON: ["rooms": json])
+            else {
+                throw Error.cannotCreateRequest
+            }
+            self.keysBackupData = data
+        }
+    }
 }
 
-@available(iOS 13.0.0, *)
 extension UploadSigningKeysRequest {
     func jsonKeys() throws -> [AnyHashable: Any] {
         guard
@@ -197,7 +247,6 @@ extension UploadSigningKeysRequest {
     }
 }
 
-@available(iOS 13.0.0, *)
 extension SignatureUploadRequest {
     func jsonSignature() throws -> [AnyHashable: Any] {
         guard let signatures = MXTools.deserialiseJSONString(body) as? [AnyHashable: Any] else {
@@ -206,5 +255,3 @@ extension SignatureUploadRequest {
         return signatures
     }
 }
-
-#endif

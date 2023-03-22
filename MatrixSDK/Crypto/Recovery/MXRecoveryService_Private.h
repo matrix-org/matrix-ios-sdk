@@ -22,13 +22,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface MXRecoveryService ()
 
-/**
- Constructor.
- 
- @param crypto the related 'MXCrypto' instance.
- */
-- (instancetype)initWithCrypto:(MXCrypto *)crypto;
-
 @end
 
 NS_ASSUME_NONNULL_END

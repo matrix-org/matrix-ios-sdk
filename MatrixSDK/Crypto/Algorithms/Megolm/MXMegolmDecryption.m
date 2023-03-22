@@ -31,7 +31,7 @@
 @interface MXMegolmDecryption ()
 {
     // The crypto module
-    MXCrypto *crypto;
+    MXLegacyCrypto *crypto;
 
     // The olm device interface
     MXOlmDevice *olmDevice;
@@ -57,7 +57,7 @@
 }
 
 #pragma mark - MXDecrypting
-- (instancetype)initWithCrypto:(MXCrypto *)theCrypto
+- (instancetype)initWithCrypto:(MXLegacyCrypto *)theCrypto
 {
     self = [super init];
     if (self)
@@ -366,10 +366,10 @@
         }
 
         MXLogDebug(@"[MXMegolmDecryption] shareKeysWithDevices: sharing keys for session %@|%@ with devices of user %@", senderKey, sessionId, userId);
-
-         MXHTTPOperation *operation2 = [self->crypto.matrixRestClient sendToDevice:kMXEventTypeStringRoomEncrypted
-                                                                        contentMap:contentMap
-                                                                             txnId:nil
+        
+         MXToDevicePayload *toDevicePayload = [[MXToDevicePayload alloc] initWithEventType:kMXEventTypeStringRoomEncrypted
+                                                                                contentMap:contentMap];
+         MXHTTPOperation *operation2 = [self->crypto.matrixRestClient sendToDevice:toDevicePayload
                                                                            success:success
                                                                            failure:failure];
          [operation mutateTo:operation2];

@@ -17,12 +17,8 @@
 import Foundation
 import XCTest
 @testable import MatrixSDK
-
-#if DEBUG && os(iOS)
-
 import MatrixSDKCrypto
 
-@available(iOS 13.0.0, *)
 class MXTrustLevelSourceUnitTests: XCTestCase {
     var userIdentitySource: UserIdentitySourceStub!
     var devicesSource: DevicesSourceStub!
@@ -41,7 +37,7 @@ class MXTrustLevelSourceUnitTests: XCTestCase {
         
         let trustLevel = source.userTrustLevel(userId: "Alice")
         
-        XCTAssertEqual(trustLevel, MXUserTrustLevel(crossSigningVerified: true, locallyVerified: false))
+        XCTAssertEqual(trustLevel, MXUserTrustLevel(crossSigningVerified: true, locallyVerified: true))
     }
     
     func test_deviceTrustLevel() {
@@ -73,12 +69,10 @@ class MXTrustLevelSourceUnitTests: XCTestCase {
         
         let summary = source.trustLevelSummary(userIds: ["Alice", "Bob"])
         
-        XCTAssertEqual(summary?.trustedUsersProgress.totalUnitCount, 2)
-        XCTAssertEqual(summary?.trustedUsersProgress.completedUnitCount, 1)
+        XCTAssertEqual(summary.trustedUsersProgress.totalUnitCount, 2)
+        XCTAssertEqual(summary.trustedUsersProgress.completedUnitCount, 1)
         
-        XCTAssertEqual(summary?.trustedDevicesProgress.totalUnitCount, 3)
-        XCTAssertEqual(summary?.trustedDevicesProgress.completedUnitCount, 2)
+        XCTAssertEqual(summary.trustedDevicesProgress.totalUnitCount, 3)
+        XCTAssertEqual(summary.trustedDevicesProgress.completedUnitCount, 2)
     }
 }
-
-#endif

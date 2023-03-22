@@ -15,120 +15,76 @@
 //
 
 import Foundation
-
-#if DEBUG && os(iOS)
-
 import MatrixSDKCrypto
 
 /// SAS transaction originating from `MatrixSDKCrypto`
-@available(iOS 13.0.0, *)
 class MXSASTransactionV2: NSObject, MXSASTransaction {
-    
-    var state: MXSASTransactionState {
-        // State as enum will be moved to MatrixSDKCrypto in the future
-        // to avoid the mapping of booleans into state
-        if sas.isDone {
-            return MXSASTransactionStateVerified
-        } else if sas.isCancelled {
-            return MXSASTransactionStateCancelled
-        } else if sas.canBePresented {
-            return MXSASTransactionStateShowSAS
-        } else if sas.hasBeenAccepted && !sas.haveWeConfirmed {
-            return MXSASTransactionStateIncomingShowAccept
-        } else if sas.haveWeConfirmed {
-            return MXSASTransactionStateOutgoingWaitForPartnerToAccept
-        }
-        return MXSASTransactionStateUnknown
+    enum Error: Swift.Error {
+        case cannotCancel
     }
     
-    var sasEmoji: [MXEmojiRepresentation]? {
-        do {
-            let indices = try handler.emojiIndexes(sas: sas)
-            let emojis = MXDefaultSASTransaction.allEmojiRepresentations()
-            return indices.compactMap { idx in
-                idx < emojis.count ? emojis[idx] : nil
+    private(set) var state: MXSASTransactionState = MXSASTransactionStateUnknown {
+        didSet {
+            guard state != oldValue else {
+                return
             }
-        } catch {
-            log.error("Cannot get emoji indices", context: error)
-            return nil
+            
+            log.debug("\(oldValue.description) -> \(state.description)")
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(name: .MXKeyVerificationTransactionDidChange, object: self)
+            }
         }
     }
     
-    var sasDecimal: String? {
-        log.debug("Not implemented")
-        return nil
-    }
-    
-    var transactionId: String {
-        return sas.flowId
-    }
-    
+    let transactionId: String
     let transport: MXKeyVerificationTransport
+    let isIncoming: Bool
     
-    var isIncoming: Bool {
-        return !sas.weStarted
-    }
+    let otherUserId: String
+    let otherDeviceId: String
     
-    var otherUserId: String {
-        return sas.otherUserId
-    }
+    private(set) var sasEmoji: [MXEmojiRepresentation]?
+    private(set) var sasDecimal: String?
     
-    var otherDeviceId: String {
-        return sas.otherDeviceId
-    }
+    private(set) var reasonCancelCode: MXTransactionCancelCode?
+    let error: Swift.Error?
     
-    var reasonCancelCode: MXTransactionCancelCode? {
-        guard let info = sas.cancelInfo else {
-            return nil
-        }
-        return MXTransactionCancelCode(
-            value: info.cancelCode,
-            humanReadable: info.reason
-        )
-    }
+    let dmRoomId: String?
+    let dmEventId: String?
     
-    var error: Error? {
-        return nil
-    }
-
-    var dmRoomId: String? {
-        return sas.roomId
-    }
-
-    var dmEventId: String? {
-        return transactionId
-    }
-    
-    private var sas: Sas
-    private let handler: MXCryptoSASVerifying
-
+    private let sas: SasProtocol
+    private let handler: MXCryptoVerifying
     private let log = MXNamedLog(name: "MXSASTransactionV2")
     
-    init(sas: Sas, transport: MXKeyVerificationTransport, handler: MXCryptoSASVerifying) {
+    init(sas: SasProtocol, isIncoming: Bool, handler: MXCryptoVerifying) {
         self.sas = sas
-        self.transport = transport
         self.handler = handler
-    }
-    
-    func processUpdates() -> MXKeyVerificationUpdateResult {
-        guard
-            let verification = handler.verification(userId: otherUserId, flowId: transactionId),
-            case .sasV1(let sas) = verification
-        else {
-            return .removed
-        }
         
-        guard self.sas != sas else {
-            return .noUpdates
-        }
-        self.sas = sas
-        return .updated
+        self.transactionId = sas.flowId()
+        self.transport = sas.roomId() != nil ?.directMessage : .toDevice
+        self.isIncoming = isIncoming
+        self.otherUserId = sas.otherUserId()
+        self.otherDeviceId = sas.otherDeviceId()
+        self.error = nil
+        self.dmRoomId = sas.roomId()
+        self.dmEventId = sas.roomId() != nil ? sas.flowId() : nil
+        
+        super.init()
+        
+        sas.setChangesListener(listener: self)
     }
     
     func accept() {
+        log.debug("->")
+        guard let outgoingRequest = sas.accept() else {
+            log.error("Cannot accept transaction")
+            return 
+        }
+        
         Task {
             do {
-                try await handler.acceptSasVerification(userId: otherUserId, flowId: transactionId)
+                try await handler.handleOutgoingVerificationRequest(outgoingRequest)
+                log.debug("Accepted transaction")
             } catch {
                 log.error("Cannot accept transaction", context: error)
             }
@@ -136,9 +92,15 @@ class MXSASTransactionV2: NSObject, MXSASTransaction {
     }
     
     func confirmSASMatch() {
+        log.debug("->")
         Task {
             do {
-                try await handler.confirmVerification(userId: otherUserId, flowId: transactionId)
+                guard let result = try sas.confirm() else {
+                    log.error("Cannot confirm transaction")
+                    return
+                }
+                try await handler.handleVerificationConfirmation(result)
+                log.debug("Confirmed transaction match")
             } catch {
                 log.error("Cannot confirm transaction", context: error)
             }
@@ -153,14 +115,27 @@ class MXSASTransactionV2: NSObject, MXSASTransaction {
         }
     }
     
-    func cancel(with code: MXTransactionCancelCode, success: @escaping () -> Void, failure: @escaping (Error) -> Void) {
+    func cancel(
+        with code: MXTransactionCancelCode,
+        success: @escaping () -> Void,
+        failure: @escaping (Swift.Error) -> Void
+    ) {
+        log.debug("->")
+        guard let outgoingRequest = sas.cancel(cancelCode: code.value) else {
+            log.error("Cannot cancel")
+            failure(Error.cannotCancel)
+            return
+        }
+        
         Task {
             do {
-                try await handler.cancelVerification(userId: otherUserId, flowId: transactionId, cancelCode: code.value)
+                try await handler.handleOutgoingVerificationRequest(outgoingRequest)
+                log.debug("Cancelled transaction")
                 await MainActor.run {
                     success()
                 }
             } catch {
+                log.error("Failed cancelling transaction", context: error)
                 await MainActor.run {
                     failure(error)
                 }
@@ -169,4 +144,64 @@ class MXSASTransactionV2: NSObject, MXSASTransaction {
     }
 }
 
-#endif
+extension MXSASTransactionV2: SasListener {
+    func onChange(state: SasState) {
+        log.debug("\(state)")
+        
+        switch state {
+        case .started:
+            self.state = isIncoming ? MXSASTransactionStateIncomingShowAccept : MXSASTransactionStateOutgoingWaitForPartnerToAccept
+        case .accepted:
+            self.state = MXSASTransactionStateWaitForPartnerKey
+        case .keysExchanged(let emojis, let decimals):
+            let representations = MXLegacySASTransaction.allEmojiRepresentations()
+            sasEmoji = emojis?.compactMap { idx in
+                idx < representations.count ? representations[Int(idx)] : nil
+            }
+            sasDecimal = decimals.map(String.init).joined(separator: " ")
+            
+            self.state = MXSASTransactionStateShowSAS
+            
+        case .confirmed:
+            self.state = MXSASTransactionStateWaitForPartnerToConfirm
+        case .done:
+            self.state = MXSASTransactionStateVerified
+        case .cancelled(let cancelInfo):
+            reasonCancelCode = MXTransactionCancelCode(
+                value: cancelInfo.cancelCode,
+                humanReadable: cancelInfo.reason
+            )
+            self.state = cancelInfo.cancelledByUs == true ? MXSASTransactionStateCancelledByMe : MXSASTransactionStateCancelled
+        }
+    }
+}
+
+extension MXSASTransactionState {
+    var description: String {
+        switch self {
+        case MXSASTransactionStateUnknown:
+            return "unknown"
+        case MXSASTransactionStateIncomingShowAccept:
+            return "incomingShowAccept"
+        case MXSASTransactionStateOutgoingWaitForPartnerToAccept:
+            return "outgoingWaitForPartnerToAccept"
+        case MXSASTransactionStateWaitForPartnerKey:
+            return "waitForPartnerKey"
+        case MXSASTransactionStateShowSAS:
+            return "showSAS"
+        case MXSASTransactionStateWaitForPartnerToConfirm:
+            return "waitForPartnerToConfirm"
+        case MXSASTransactionStateVerified:
+            return "verified"
+        case MXSASTransactionStateCancelled:
+            return "cancelled"
+        case MXSASTransactionStateCancelledByMe:
+            return "cancelledByMe"
+        case MXSASTransactionStateError:
+            return "error"
+        default:
+            return "unknown"
+        }
+    }
+}
+

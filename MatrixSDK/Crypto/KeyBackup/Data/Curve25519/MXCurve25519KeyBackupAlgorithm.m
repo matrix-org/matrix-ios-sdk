@@ -27,7 +27,7 @@
 
 @interface MXCurve25519KeyBackupAlgorithm ()
 
-@property (nonatomic, strong) MXCrypto *crypto;
+@property (nonatomic, strong) MXLegacyCrypto *crypto;
 
 /**
  The backup key being used.
@@ -47,7 +47,7 @@
     return kMXCryptoCurve25519KeyBackupAlgorithm;
 }
 
-- (instancetype)initWithCrypto:(nonnull MXCrypto *)crypto
+- (instancetype)initWithCrypto:(nonnull MXLegacyCrypto *)crypto
                       authData:(nonnull id<MXBaseKeyBackupAuthData>)authData
                 keyGetterBlock:(nonnull MXKeyBackupPrivateKeyGetterBlock)keyGetterBlock
 {

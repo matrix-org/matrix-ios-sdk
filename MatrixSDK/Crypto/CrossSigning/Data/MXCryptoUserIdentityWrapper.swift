@@ -15,9 +15,6 @@
 //
 
 import Foundation
-
-#if DEBUG && os(iOS)
-
 import MatrixSDKCrypto
 
 /// Convenience wrapper around `MatrixSDKCrypto`'s `UserIdentity`
@@ -46,9 +43,12 @@ import MatrixSDKCrypto
             self.selfSignedKeys = .init(jsonString: selfSigningKey)
             self.userSignedKeys = nil
         }
+        
+        // `MatrixSDKCrypto` does not distinguish local and cross-signed
+        // verification status for users
         trustLevel = MXUserTrustLevel(
             crossSigningVerified: isVerified,
-            locallyVerified: false // Note: Local verification not yet implemented
+            locallyVerified: isVerified
         )
     }
 }
@@ -61,5 +61,3 @@ private extension MXCrossSigningKey {
         self.init(fromJSON: json)
     }
 }
-
-#endif

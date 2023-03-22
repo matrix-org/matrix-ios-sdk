@@ -71,7 +71,7 @@ class MXMegolmSessionDataUnitTests: XCTestCase {
         data.algorithm = "G"
         data.forwardingCurve25519KeyChain = ["H", "I"]
         
-        let json = data.jsonDictionary() as NSDictionary
+        let json = data.jsonDictionary() as? NSDictionary
         
         XCTAssertEqual(json, [
             "sender_key": "A",
@@ -84,5 +84,20 @@ class MXMegolmSessionDataUnitTests: XCTestCase {
             "forwarding_curve25519_key_chain": ["H", "I"],
             "untrusted": false
         ])
+    }
+    
+    func testInvalidJsonDictionary() {
+        let data = MXMegolmSessionData()
+        data.senderKey = nil
+        data.senderClaimedKeys = nil
+        data.roomId = nil
+        data.sessionId = nil
+        data.sessionKey = nil
+        data.algorithm = nil
+        data.forwardingCurve25519KeyChain = nil
+        
+        let json = data.jsonDictionary() as? NSDictionary
+        
+        XCTAssertNil(json)
     }
 }

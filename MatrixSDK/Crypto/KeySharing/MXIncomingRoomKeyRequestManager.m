@@ -28,7 +28,7 @@ NSTimeInterval kFixMissingUserInRoomRateLimit = 3600;
 
 @interface MXIncomingRoomKeyRequestManager ()
 {
-    __weak MXCrypto *crypto;
+    __weak MXLegacyCrypto *crypto;
 
     // The list of MXIncomingRoomKeyRequests/MXIncomingRoomKeyRequestCancellations
     // we received in the current sync.
@@ -44,7 +44,7 @@ NSTimeInterval kFixMissingUserInRoomRateLimit = 3600;
 
 @implementation MXIncomingRoomKeyRequestManager
 
-- (instancetype)initWithCrypto:(MXCrypto*)theCrypto
+- (instancetype)initWithCrypto:(MXLegacyCrypto*)theCrypto
 {
     self = [super init];
     if (self)

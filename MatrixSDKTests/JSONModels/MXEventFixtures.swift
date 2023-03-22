@@ -35,6 +35,23 @@ extension MXEvent {
         ])!
     }
     
+    static func fixture(
+        type: String,
+        sender: String = "",
+        content: [String: Any] = [:]
+    ) -> MXEvent {
+        let result = MXEventDecryptionResult()
+        result.clearEvent = [
+            "type": type,
+            "content": content
+        ]
+        
+        let event = MXEvent(fromJSON: [:])!
+        event.sender = sender
+        event.setClearData(result)
+        return event
+    }
+    
     static func roomKeyFixture(
         algorithm: String = "megolm",
         roomId: String = "!123:matrix.org",
@@ -101,5 +118,19 @@ extension MXEvent {
         let event = MXEvent(fromJSON: [:])!
         event.setClearData(result)
         return event
+    }
+    
+    static func encryptedFixture(
+        id: String = "1",
+        sessionId: String = "123"
+    ) -> MXEvent {
+        return MXEvent(fromJSON: [
+            "type": "m.room.encrypted",
+            "event_id": id,
+            "content": [
+                "algorithm": kMXCryptoMegolmAlgorithm,
+                "session_id": sessionId
+            ]
+        ])!
     }
 }

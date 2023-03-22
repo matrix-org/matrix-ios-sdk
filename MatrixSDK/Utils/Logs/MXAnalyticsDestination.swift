@@ -30,10 +30,31 @@ class MXAnalyticsDestination: BaseDestination {
     
     override func send(_ level: SwiftyBeaver.Level, msg: String, thread: String, file: String, function: String, line: Int, context: Any? = nil) -> String? {
         let message = super.send(level, msg: msg, thread: thread, file: file, function: function, line: line, context: context)
-        #if !DEBUG
-        MXSDKOptions.sharedInstance().analyticsDelegate?.trackNonFatalIssue(msg, details: formattedDetails(from: context))
-        #endif
+        if shouldTrackIssue(with: context) {
+            MXSDKOptions.sharedInstance().analyticsDelegate?.trackNonFatalIssue(msg, details: formattedDetails(from: context))
+        }
         return message
+    }
+    
+    private func shouldTrackIssue(with context: Any?) -> Bool {
+        // We will track all issues except for those with a cancellation error
+        guard let error = errorFromContext(context: context) else {
+            return true
+        }
+        return !error.isCancelledError
+    }
+    
+    private func errorFromContext(context: Any?) -> NSError? {
+        if let error = context as? NSError {
+            return error
+        } else if let dictionary = context as? [AnyHashable: Any] {
+            for (_, value) in dictionary {
+                if let error = value as? NSError {
+                    return error
+                }
+            }
+        }
+        return nil
     }
     
     private func formattedDetails(from context: Any?) -> [String: Any]? {
@@ -45,12 +66,18 @@ class MXAnalyticsDestination: BaseDestination {
             return dictionary
         } else if let error = context as? Error {
             return [
-                "error": error.localizedDescription
+                "error": error
             ]
         } else {
             return [
                 "context": String(describing: context)
             ]
         }
+    }
+}
+
+private extension NSError {
+    var isCancelledError: Bool {
+        domain == NSURLErrorDomain && code == NSURLErrorCancelled
     }
 }

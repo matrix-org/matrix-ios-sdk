@@ -22,6 +22,7 @@
 
 #import "MatrixSDKTestsData.h"
 #import "MatrixSDKTestsE2EData.h"
+#import "MatrixSDKTestsSwiftHeader.h"
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Warc-retain-cycles"
@@ -176,7 +177,7 @@ UInt8 privateKeyBytes[] = {
     [matrixSDKTestsE2EData doE2ETestWithAliceInARoom:self readyToTest:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
         
         // - Create a new secret storage key
-        MXSecretStorage *secretStorage = aliceSession.crypto.secretStorage;
+        MXSecretStorage *secretStorage = aliceSession.legacyCrypto.secretStorage;
         [secretStorage createKeyWithKeyId:nil keyName:nil passphrase:nil success:^(MXSecretStorageKeyCreationInfo * _Nonnull keyCreationInfo) {
             
             // -> MXSecretStorageKeyCreationInfo must be filled as expected
@@ -226,7 +227,7 @@ UInt8 privateKeyBytes[] = {
 
         
         // - Create a new secret storage key
-        MXSecretStorage *secretStorage = aliceSession.crypto.secretStorage;
+        MXSecretStorage *secretStorage = aliceSession.legacyCrypto.secretStorage;
         [secretStorage createKeyWithKeyId:KEY_ID keyName:KEY_NAME passphrase:PASSPHRASE success:^(MXSecretStorageKeyCreationInfo * _Nonnull keyCreationInfo) {
             
             // -> MXSecretStorageKeyCreationInfo must be filled as expected
@@ -278,7 +279,7 @@ UInt8 privateKeyBytes[] = {
     [matrixSDKTestsE2EData doE2ETestWithAliceInARoom:self readyToTest:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
         
         // - Create a new secret storage key
-        __weak MXSecretStorage *secretStorage = aliceSession.crypto.secretStorage;
+        __weak MXSecretStorage *secretStorage = aliceSession.legacyCrypto.secretStorage;
         [secretStorage createKeyWithKeyId:nil keyName:nil passphrase:nil success:^(MXSecretStorageKeyCreationInfo * _Nonnull keyCreationInfo) {
             
             // - Set it as default
@@ -328,7 +329,7 @@ UInt8 privateKeyBytes[] = {
     [matrixSDKTestsE2EData doE2ETestWithAliceInARoom:self readyToTest:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
         
         // - Create a secret storage key
-        MXSecretStorage *secretStorage = aliceSession.crypto.secretStorage;
+        MXSecretStorage *secretStorage = aliceSession.legacyCrypto.secretStorage;
         [secretStorage createKeyWithKeyId:nil keyName:nil passphrase:nil success:^(MXSecretStorageKeyCreationInfo * _Nonnull keyCreationInfo) {
             
             // - Set it as default
@@ -364,7 +365,7 @@ UInt8 privateKeyBytes[] = {
     // - Have Alice with SSSS bootstrapped
     [self createScenarioWithMatrixJsSDKData:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
         
-        MXSecretStorage *secretStorage = aliceSession.crypto.secretStorage;
+        MXSecretStorage *secretStorage = aliceSession.legacyCrypto.secretStorage;
         
         NSError *error;
         NSData *privateKey = [MXRecoveryKey decode:jsSDKDataRecoveryKey error:&error];
@@ -406,7 +407,7 @@ UInt8 privateKeyBytes[] = {
     [self createScenarioWithMatrixJsSDKData:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
         
         // -> Should only have one SSSS key
-        MXSecretStorage *secretStorage = aliceSession.crypto.secretStorage;
+        MXSecretStorage *secretStorage = aliceSession.legacyCrypto.secretStorage;
         XCTAssertEqual(secretStorage.numberOfValidKeys, 1);
         
         // - Add two more SSSS without deleting previous ones
@@ -414,7 +415,7 @@ UInt8 privateKeyBytes[] = {
             [aliceSession setAccountData:ssssKeyContent forType:@"m.secret_storage.key.BBBB" success:^{
                 
                 // -> Should now have 3 SSSS keys
-                MXSecretStorage *secretStorage = aliceSession.crypto.secretStorage;
+                MXSecretStorage *secretStorage = aliceSession.legacyCrypto.secretStorage;
                 XCTAssertEqual(secretStorage.numberOfValidKeys, 3);
                 [expectation fulfill];
                         
@@ -441,7 +442,7 @@ UInt8 privateKeyBytes[] = {
     // - Have Alice with SSSS bootstrapped
     [self createScenarioWithMatrixJsSDKData:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
         
-        MXSecretStorage *secretStorage = aliceSession.crypto.secretStorage;
+        MXSecretStorage *secretStorage = aliceSession.legacyCrypto.secretStorage;
         
         // Test scenario creation
         MXSecretStorageKeyContent *defaultKey = secretStorage.defaultKey;
@@ -468,7 +469,7 @@ UInt8 privateKeyBytes[] = {
     // - Have Alice with SSSS bootstrapped
     [self createScenarioWithMatrixJsSDKData:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
         
-        MXSecretStorage *secretStorage = aliceSession.crypto.secretStorage;
+        MXSecretStorage *secretStorage = aliceSession.legacyCrypto.secretStorage;
         
         NSError *error;
         NSData *privateKey = [MXRecoveryKey decode:jsSDKDataRecoveryKey error:&error];
@@ -512,7 +513,7 @@ UInt8 privateKeyBytes[] = {
                    
         NSString *theSecretId = @"theSecretId";
 
-        MXSecretStorage *secretStorage = aliceSession.crypto.secretStorage;
+        MXSecretStorage *secretStorage = aliceSession.legacyCrypto.secretStorage;
 
         NSError *error;
         NSData *privateKey = [MXRecoveryKey decode:jsSDKDataRecoveryKey error:&error];
@@ -570,7 +571,7 @@ UInt8 privateKeyBytes[] = {
         
         NSString *theSecretId = @"theSecretId";
         
-        MXSecretStorage *secretStorage = aliceSession.crypto.secretStorage;
+        MXSecretStorage *secretStorage = aliceSession.legacyCrypto.secretStorage;
         
         NSError *error;
         NSData *privateKey = [MXRecoveryKey decode:jsSDKDataRecoveryKey error:&error];

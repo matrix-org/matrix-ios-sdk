@@ -32,8 +32,6 @@
         self.hasReachedHomeServerPaginationEnd = [aDecoder decodeBoolForKey:@"hasReachedHomeServerPaginationEnd"];
         self.hasLoadedAllRoomMembersForRoom = [aDecoder decodeBoolForKey:@"hasLoadedAllRoomMembersForRoom"];
 
-        self.partialTextMessage = [aDecoder decodeObjectForKey:@"partialTextMessage"];
-
         self.partialAttributedTextMessage = [aDecoder decodeObjectForKey:@"partialAttributedTextMessage"];
 
         // Rebuild the messagesByEventIds cache
@@ -67,10 +65,6 @@
     [aCoder encodeBool:self.hasReachedHomeServerPaginationEnd forKey:@"hasReachedHomeServerPaginationEnd"];
     [aCoder encodeBool:self.hasLoadedAllRoomMembersForRoom forKey:@"hasLoadedAllRoomMembersForRoom"];
 
-    if (self.partialTextMessage)
-    {
-        [aCoder encodeObject:self.partialTextMessage forKey:@"partialTextMessage"];
-    }
     if (self.partialAttributedTextMessage)
     {
         [aCoder encodeObject:self.partialAttributedTextMessage forKey:@"partialAttributedTextMessage"];

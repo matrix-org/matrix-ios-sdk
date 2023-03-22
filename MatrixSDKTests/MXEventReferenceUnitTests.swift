@@ -65,7 +65,6 @@ class MXEventReferenceUnitTests: XCTestCase {
         }
     }
 
-    @available(iOS 9.0, OSX 10.11, *)
     func testNSCoding() {
         let event = MXEvent(fromJSON: eventJSON)
 

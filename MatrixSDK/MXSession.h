@@ -339,7 +339,6 @@ FOUNDATION_EXPORT NSString *const kMXSessionNotificationErrorKey;
  */
 FOUNDATION_EXPORT NSString *const kMXSessionNotificationUserIdsArrayKey;
 
-
 #pragma mark - Other constants
 /**
  Fake tag used to identify rooms that do not have tags in `roomsWithTag` and `roomsByTags` methods.
@@ -352,6 +351,7 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
 @class MXCapabilities;
 @class MXEventStreamService;
 @class MXLocationService;
+@class MXSessionStartupProgress;
 
 #pragma mark - MXSession
 /**
@@ -434,6 +434,11 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
 @property (nonatomic, readonly) BOOL syncWithLazyLoadOfRoomMembers;
 
 /**
+ Handler that can compute the overal progress of session startup and report it to a delegate
+ */
+@property (nonatomic, readonly) MXSessionStartupProgress *startupProgress;
+
+/**
  The profile of the current user.
  It is available only after the `onStoreDataReady` callback of `start` is called.
  */
@@ -469,7 +474,7 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
  The module that manages E2E encryption.
  Nil if the feature is not enabled ('cryptoEnabled' property).
  */
-@property (nonatomic, readonly) MXCrypto *crypto;
+@property (nonatomic, readonly) id<MXCrypto> crypto;
 
 /**
  Antivirus scanner used to scan medias.
@@ -602,6 +607,11 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
                    calling this block. It SHOULD not be modified by this block.
  */
 - (void)resume:(void (^)(void))resumeDone;
+
+/**
+Update client information without waiting for sync to happen.
+ */
+- (void)updateClientInformation;
 
 typedef void (^MXOnBackgroundSyncDone)(void);
 typedef void (^MXOnBackgroundSyncFail)(NSError *error);
@@ -915,6 +925,11 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
                                                     success:(void (^)(BOOL canEnableE2E))success
                                                     failure:(void (^)(NSError *error))failure;
 
+/**
+ it will return if the room is marked unread by the user
+ */
+- (BOOL)isRoomMarkedAsUnread:(NSString*)roomId;
+
 #pragma mark - The user's rooms
 /**
  Check if the user is in a room
@@ -975,6 +990,14 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  @return the MXRoom instance (nil if no room exists yet).
  */
 - (MXRoom *)directJoinedRoomWithUserId:(NSString*)userId;
+
+/**
+ Return the first joined direct chat listed in account data for this user,
+ or it will create one if no room exists yet.
+ */
+- (MXHTTPOperation *)getOrCreateDirectJoinedRoomWithUserId:(NSString*)userId
+                                                   success:(void (^)(MXRoom *))success
+                                                   failure:(void (^)(NSError *error))failure;
 
 /**
  Get the direct user id of a room.
@@ -1064,7 +1087,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 
  @return the MXRoomSummary instance.
  */
-- (MXRoomSummary *)roomSummaryWithRoomId:(NSString*)roomId;
+- (nullable MXRoomSummary *)roomSummaryWithRoomId:(NSString*)roomId;
 
 /**
  Recompute all room summaries last message.
@@ -1439,6 +1462,20 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
                            failure:(void (^)(NSError *error))failure;
 
 /**
+ Delete an account_data event for the client.
+ 
+ @param type The event type of the account_data to delete (@see kMXAccountDataType* strings)
+ Custom types should be namespaced to avoid clashes.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)deleteAccountDataWithType:(NSString*)type
+                                      success:(void (^)(void))success
+                                      failure:(void (^)(NSError *error))failure;
+
+/**
  Set the identity server in the user's account data.
 
  `kMXSessionAccountDataDidChangeIdentityServerNotification` will be sent once the
@@ -1546,17 +1583,6 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 
 
 #pragma mark - Crypto
-/**
- Decrypt an event and update its data.
-
- @warning This method is deprecated, use -[MXSession decryptEvents:inTimeline:onComplete:] instead.
- 
- @param event the event to decrypt.
- @param timeline the id of the timeline where the event is decrypted. It is used
-        to prevent replay attack.
- @return YES if decryption is successful.
- */
-- (BOOL)decryptEvent:(MXEvent*)event inTimeline:(NSString*)timeline __attribute__((deprecated("use -[MXSession decryptEvents:inTimeline:onComplete:] instead")));
 
 /**
  Decrypt events asynchronously and update their data.

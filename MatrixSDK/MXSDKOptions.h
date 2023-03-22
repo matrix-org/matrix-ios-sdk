@@ -34,7 +34,6 @@ typedef NS_ENUM(NSUInteger, MXCallTransferType)
     MXCallTransferTypeLocal
 };
 
-
 #pragma mark - Build time options
 
 /**
@@ -49,7 +48,7 @@ typedef NS_ENUM(NSUInteger, MXCallTransferType)
 
 NS_ASSUME_NONNULL_BEGIN
 
-@protocol MXBackgroundModeHandler;
+@protocol MXBackgroundModeHandler, MXCryptoV2Feature;
 
 /**
  SDK options that can be set at the launch time.
@@ -204,25 +203,24 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @property (nonatomic) BOOL enableRoomSharedHistoryOnInvite;
 
-#if DEBUG
+/**
+ An object which controls the availabilty of the rust-based `MatrixCryptoSDK`.
+ 
+ @remark nil by default.
+ */
+@property (nonatomic, nullable) id<MXCryptoV2Feature> cryptoSDKFeature;
 
 /**
- Enable Crypto module V2, a work-in-progress and NOT production-ready implementation
- of [matrix-rust-sdk](https://github.com/matrix-org/matrix-rust-sdk/tree/main/crates/matrix-sdk-crypto).
+ Use the rust-based `MatrixCryptoSDK` instead of `MatrixSDK`'s internal crypto module.
  
- @remark NO by default.
+ @remark this property is a convenience getter for `cryptoSDKFeature.isEnabled`
  */
-@property (nonatomic) BOOL enableCryptoV2;
-
-#endif
+@property (nonatomic, readonly) BOOL enableCryptoSDK;
 
 /**
- Enable performance optimization where inbound group sessions are cached between decryption of events
- rather than fetched from the store every time.
- 
- @remark By default, the value is set randomly between YES / NO to perform a very basic A/B test
+ The text-based identifier for the crypto module being used (e.g. native vs rust)
  */
-@property (nonatomic) BOOL enableGroupSessionCache;
+@property (nonatomic, readonly) NSString *cryptoModuleId;
 
 /**
  Enable symmetric room key backups
@@ -230,6 +228,21 @@ NS_ASSUME_NONNULL_BEGIN
  @remark NO by default
  */
 @property (nonatomic) BOOL enableSymmetricBackup;
+
+/**
+ Enable new client information feature. (https://github.com/vector-im/element-meta/pull/656)
+
+ @remark NO by default
+ */
+@property (nonatomic) BOOL enableNewClientInformationFeature;
+
+/**
+ Enable the calculating and display of progress during session startup, incl store migration,
+ syncing and response processing.
+ 
+ @remark YES by default
+ */
+@property (nonatomic) BOOL enableStartupProgress;
 
 @end
 

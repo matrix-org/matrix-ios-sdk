@@ -43,7 +43,7 @@
 
 
 #pragma mark - MXDecrypting
-- (instancetype)initWithCrypto:(MXCrypto *)crypto
+- (instancetype)initWithCrypto:(MXLegacyCrypto *)crypto
 {
     self = [super init];
     if (self)
@@ -228,6 +228,11 @@
     // No impact for olm
 }
 
+- (void)onRoomKey:(MXRoomKeyResult *)key
+{
+    // No impact for olm
+}
+
 - (void)didImportRoomKey:(MXOlmInboundGroupSession *)session
 {
     // No impact for olm
@@ -261,6 +266,14 @@
     NSArray<NSString *> *sessionIds = [olmDevice sessionIdsForDevice:theirDeviceIdentityKey];
     
     NSString *messageBody = message[kMXMessageBodyKey];
+    if (![message[@"type"] isKindOfClass:NSNumber.class])
+    {
+        MXLogFailureDetails(@"[MXOlmDecryption] decryptMessage: Invalid type of message", @{
+            @"type": message[@"type"] ?: @"unknown"
+        })
+        return nil;
+    }
+    
     NSUInteger messageType = [((NSNumber*)message[@"type"]) unsignedIntegerValue];
     
     // Try each session in turn

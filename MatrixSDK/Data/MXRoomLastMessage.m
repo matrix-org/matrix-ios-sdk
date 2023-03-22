@@ -23,12 +23,14 @@
 
 #import <Security/Security.h>
 #import <CommonCrypto/CommonCryptor.h>
+#import <Foundation/Foundation.h>
 
 NSString *const MXRoomLastMessageDataType = @"org.matrix.sdk.keychain.MXRoomLastMessage";
 
 NSString *const kCodingKeyEventId = @"eventId";
 NSString *const kCodingKeyOriginServerTs = @"originServerTs";
 NSString *const kCodingKeyIsEncrypted = @"isEncrypted";
+NSString *const kCodingKeyHasDecryptionError = @"hasDecryptionError";
 NSString *const kCodingKeySender = @"sender";
 NSString *const kCodingKeyData = @"data";
 NSString *const kCodingKeyEncryptedData = @"encryptedData";
@@ -53,9 +55,31 @@ NSString *const kCodingKeyOthers = @"others";
         _eventId = event.eventId;
         _originServerTs = event.originServerTs;
         _isEncrypted = event.isEncrypted;
+        _hasDecryptionError = event.decryptionError != nil;
         _sender = event.sender;
     }
     return self;
+}
+
+- (nullable NSData*)sensitiveData;
+{
+    NSError* error;
+    NSData* archived = [NSKeyedArchiver archivedDataWithRootObject:[self sensitiveDataDictionary]
+                                             requiringSecureCoding:NO
+                                                             error:&error];
+    
+    if (error) {
+        MXLogDebug(@"[MXRoomLastMessage] did fail to archive sensitiveDataDictionary. Error: %@", error.description);
+    }
+    
+    if (archived && self.isEncrypted)
+    {
+        return [self encrypt:archived];
+    }
+    else
+    {
+        return archived;
+    }
 }
 
 - (NSComparisonResult)compareOriginServerTs:(MXRoomLastMessage *)otherMessage
@@ -86,17 +110,29 @@ NSString *const kCodingKeyOthers = @"others";
         _eventId = model.s_eventId;
         _originServerTs = model.s_originServerTs;
         _isEncrypted = model.s_isEncrypted;
+        _hasDecryptionError = model.s_hasDecryptionError;
         _sender = model.s_sender;
-        _text = model.s_text;
-        if (model.s_attributedText)
+        
+        NSData* archivedSensitiveData;
+        if (model.s_sensitiveData && model.s_isEncrypted)
         {
-            _attributedText = [NSKeyedUnarchiver unarchiveObjectWithData:model.s_attributedText];
+            archivedSensitiveData = [self decrypt:model.s_sensitiveData];
         }
-        if (model.s_others)
+        else
         {
-            _others = [NSKeyedUnarchiver unarchiveObjectWithData:model.s_others];
+            archivedSensitiveData = model.s_sensitiveData;
+        }
+        
+        if (archivedSensitiveData)
+        {
+            NSDictionary* sensitiveDataDictionary = [NSKeyedUnarchiver unarchiveObjectWithData:archivedSensitiveData];
+            
+            _text = sensitiveDataDictionary[kCodingKeyText];
+            _attributedText = sensitiveDataDictionary[kCodingKeyAttributedText];
+            _others = sensitiveDataDictionary[kCodingKeyOthers];
         }
     }
+    
     return self;
 }
 
@@ -109,6 +145,7 @@ NSString *const kCodingKeyOthers = @"others";
         _eventId = [coder decodeObjectForKey:kCodingKeyEventId];
         _originServerTs = [coder decodeInt64ForKey:kCodingKeyOriginServerTs];
         _isEncrypted = [coder decodeBoolForKey:kCodingKeyIsEncrypted];
+        _hasDecryptionError = [coder decodeBoolForKey:kCodingKeyHasDecryptionError];
         _sender = [coder decodeObjectForKey:kCodingKeySender];
 
         NSDictionary *lastMessageDictionary;
@@ -139,23 +176,11 @@ NSString *const kCodingKeyOthers = @"others";
     [coder encodeObject:_eventId forKey:kCodingKeyEventId];
     [coder encodeInt64:_originServerTs forKey:kCodingKeyOriginServerTs];
     [coder encodeBool:_isEncrypted forKey:kCodingKeyIsEncrypted];
+    [coder encodeBool:_hasDecryptionError forKey:kCodingKeyHasDecryptionError];
     [coder encodeObject:_sender forKey:kCodingKeySender];
     
     // Build last message sensitive data
-    NSMutableDictionary *lastMessageDictionary = [NSMutableDictionary dictionary];
-    if (_text)
-    {
-        lastMessageDictionary[kCodingKeyText] = _text;
-    }
-    if (_attributedText)
-    {
-        lastMessageDictionary[kCodingKeyAttributedText] = _attributedText;
-    }
-    if (_others)
-    {
-        lastMessageDictionary[kCodingKeyOthers] = _others;
-    }
-    
+    NSDictionary *lastMessageDictionary = [self sensitiveDataDictionary];
     // And encrypt it if necessary
     if (_isEncrypted)
     {
@@ -171,6 +196,26 @@ NSString *const kCodingKeyOthers = @"others";
     {
         [coder encodeObject:lastMessageDictionary forKey:kCodingKeyData];
     }
+}
+
+- (NSDictionary*)sensitiveDataDictionary
+{
+    NSMutableDictionary *lastMessageDictionary = [NSMutableDictionary dictionary];
+    
+    if (_text)
+    {
+        lastMessageDictionary[kCodingKeyText] = _text;
+    }
+    if (_attributedText)
+    {
+        lastMessageDictionary[kCodingKeyAttributedText] = _attributedText;
+    }
+    if (_others)
+    {
+        lastMessageDictionary[kCodingKeyOthers] = _others;
+    }
+    
+    return  lastMessageDictionary;
 }
 
 #pragma mark - Data encryption

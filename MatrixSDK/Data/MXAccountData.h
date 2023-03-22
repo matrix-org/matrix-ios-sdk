@@ -16,6 +16,9 @@
  */
 
 #import <Foundation/Foundation.h>
+#import "MXWarnings.h"
+
+MX_ASSUME_MISSING_NULLABILITY_BEGIN
 
 /**
  `MXAccountData` holds the user account data.
@@ -54,6 +57,15 @@
 - (void)updateDataWithType:(NSString*)type data:(NSDictionary*)data;
 
 /**
+ Delete the account data with the a given type.
+ 
+ For internal use only. Use [MXSession deleteAccountDataWithType:] to delete account data.
+ 
+ @param type the event type in the account data.
+ */
+- (void)deleteDataWithType:(NSString*)type;
+
+/**
  Get account data event by event type.
 
  @param eventType The event type being queried.
@@ -73,4 +85,9 @@
  */
 @property (nonatomic, readonly) NSDictionary<NSString *, id> *accountData;
 
++ (nonnull NSString *)localNotificationSettingsKeyForDeviceWithId:(nonnull NSString*)deviceId;
+- (nullable NSDictionary <NSString *, id>*)localNotificationSettingsForDeviceWithId:(nonnull NSString*)deviceId;
+
 @end
+
+MX_ASSUME_MISSING_NULLABILITY_END

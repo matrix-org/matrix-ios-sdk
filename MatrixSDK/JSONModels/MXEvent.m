@@ -129,6 +129,8 @@ NSString *const kMXMessageContentKeyNewContent       = @"m.new_content";
 //  https://github.com/matrix-org/matrix-doc/pull/3440
 NSString *const MXEventRelationTypeThread            = @"m.thread";
 
+NSString *const kMXToDeviceMessageId                 = @"org.matrix.msgid";
+
 NSString *const kMXEventLocalEventIdPrefix           = @"kMXEventLocalId_";
 
 uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
@@ -203,6 +205,11 @@ NSString *const kMXMessageContentKeyExtensibleAssetTypePin = @"m.pin";
 NSString *const kMXJoinRulesContentKeyAllow = @"allow";
 NSString *const kMXJoinRulesContentKeyType = @"type";
 NSString *const kMXJoinRulesContentKeyRoomId = @"room_id";
+
+// Threads support
+
+NSString *const kMXEventTimelineMain = @"main";
+NSString *const kMXEventUnthreaded = @"unthreaded";
 
 #pragma mark - MXEvent
 @interface MXEvent ()
@@ -567,6 +574,42 @@ NSString *const kMXJoinRulesContentKeyRoomId = @"room_id";
             if (readDict)
             {
                 [list addObject:eventId];
+            }
+        }
+    }
+    
+    return list;
+}
+
+- (NSArray *)readReceiptThreadIds
+{
+    NSMutableArray* list = nil;
+    
+    if (_wireEventType == MXEventTypeReceipt)
+    {
+        NSArray* eventIds = [_wireContent allKeys];
+        list = [[NSMutableArray alloc] initWithCapacity:eventIds.count];
+        
+        for (NSString* eventId in eventIds)
+        {
+            NSDictionary* eventDict = [_wireContent objectForKey:eventId];
+            NSDictionary* readDict = [eventDict objectForKey:kMXEventTypeStringRead];
+            
+            if (readDict)
+            {
+                NSArray<NSDictionary *>* userDicts = [readDict allValues];
+                
+                NSString *threadId;
+                for (NSDictionary *userDict in userDicts)
+                {
+                    threadId = userDict[@"thread_id"];
+                    if (threadId)
+                    {
+                        break;
+                    }
+                }
+                
+                [list addObject:threadId ?: kMXEventUnthreaded];
             }
         }
     }

@@ -22,6 +22,12 @@ public enum MXThreadingServiceError: Int, Error {
     case unknown
 }
 
+/// MXThreadingService allThreads response
+public struct MXThreadingServiceResponse {
+    public let threads: [MXThreadProtocol]
+    public let nextBatch: String?
+}
+
 // MARK: - MXThreadingService errors
 extension MXThreadingServiceError: CustomNSError {
     public static let errorDomain = "org.matrix.sdk.threadingservice"
@@ -130,10 +136,17 @@ public class MXThreadingService: NSObject {
     /// - Parameter roomId: Room identifier
     /// - Returns: Notifications count
     public func notificationsCount(forRoom roomId: String) -> MXThreadNotificationsCount {
-        let notified = unsortedParticipatedThreads(inRoom: roomId).filter { $0.notificationCount > 0 }.count
-        let highlighted = unsortedThreads(inRoom: roomId).filter { $0.highlightCount > 0 }.count
-        return MXThreadNotificationsCount(numberOfNotifiedThreads: UInt(notified),
-                                          numberOfHighlightedThreads: UInt(highlighted))
+        var notified: UInt = 0
+        var highlighted: UInt = 0
+        var notificationsNumber: UInt = 0
+        for thread in unsortedThreads(inRoom: roomId) {
+            notified += thread.notificationCount > 0 ? 1 : 0
+            highlighted += thread.highlightCount > 0 ? 1 : 0
+            notificationsNumber += thread.notificationCount
+        }
+        return MXThreadNotificationsCount(numberOfNotifiedThreads: notified,
+                                          numberOfHighlightedThreads: highlighted,
+                                          notificationsNumber: notificationsNumber)
     }
     
     /// Method to check an event is a thread root or not
@@ -168,11 +181,27 @@ public class MXThreadingService: NSObject {
         thread.markAsRead()
         notifyDidUpdateThreads()
     }
-
+    
+    @discardableResult
+    public func allThreads(inRoomWithId roomId: String,
+                           onlyParticipated: Bool,
+                           completion: @escaping ([MXThreadProtocol]) -> Void) -> MXHTTPOperation? {
+        return allThreads(inRoom: roomId, onlyParticipated: onlyParticipated) { response in
+            switch response {
+            case .success(let threads):
+                completion(threads)
+            case .failure(let error):
+                MXLog.warning("[MXThreadingService] allThreads failed with error: \(error)")
+                completion([])
+            }
+        }
+    }
+    
     @discardableResult
     public func allThreads(inRoom roomId: String,
-                           onlyParticipated: Bool = false,
-                           completion: @escaping (MXResponse<[MXThreadProtocol]>) -> Void) -> MXHTTPOperation? {
+                           from: String?,
+                           onlyParticipated: Bool,
+                           completion: @escaping (MXResponse<MXThreadingServiceResponse>) -> Void) -> MXHTTPOperation? {
         guard let session = session else {
             DispatchQueue.main.async {
                 completion(.failure(MXThreadingServiceError.sessionNotFound))
@@ -196,23 +225,10 @@ public class MXThreadingService: NSObject {
 
         dispatchGroup.notify(queue: .main) {
             if serverSupportThreads {
-                //  homeserver supports threads
-                let filter = MXRoomEventFilter()
-                filter.relatedByTypes = [MXEventRelationTypeThread]
-                if onlyParticipated {
-                    filter.relatedBySenders = [session.myUserId]
-                }
-                let newOperation = session.matrixRestClient.messages(forRoom: roomId,
-                                                                     from: "",
-                                                                     direction: .backwards,
-                                                                     limit: nil,
-                                                                     filter: filter) { response in
+                let newOperation = session.matrixRestClient.threadsInRoomWithId(roomId, include: onlyParticipated ? .participated : .all, from: from) { response in
                     switch response {
                     case .success(let paginationResponse):
-                        guard let rootEvents = paginationResponse.chunk else {
-                            completion(.success([]))
-                            return
-                        }
+                        let rootEvents = paginationResponse.chunk
 
                         session.decryptEvents(rootEvents, inTimeline: nil) { _ in
                             let threads = rootEvents.map { self.thread(forRootEvent: $0, session: session) }.sorted(by: <)
@@ -251,9 +267,10 @@ public class MXThreadingService: NSObject {
                             }
 
                             decryptionGroup.notify(queue: .main) {
-                                completion(.success(threads))
+                                completion(.success(MXThreadingServiceResponse(threads: threads, nextBatch: paginationResponse.nextBatch)))
                             }
                         }
+
                     case .failure(let error):
                         completion(.failure(error))
                     }
@@ -263,13 +280,38 @@ public class MXThreadingService: NSObject {
             } else {
                 //  use local implementation
                 if onlyParticipated {
-                    completion(.success(self.localParticipatedThreads(inRoom: roomId)))
+                    completion(.success(MXThreadingServiceResponse(threads: self.localParticipatedThreads(inRoom: roomId), nextBatch: nil)))
                 } else {
-                    completion(.success(self.localThreads(inRoom: roomId)))
+                    completion(.success(MXThreadingServiceResponse(threads: self.localThreads(inRoom: roomId), nextBatch: nil)))
                 }
             }
         }
 
+        return operation
+    }
+
+    @discardableResult
+    public func allThreads(inRoom roomId: String,
+                           onlyParticipated: Bool = false,
+                           completion: @escaping (MXResponse<[MXThreadProtocol]>) -> Void) -> MXHTTPOperation? {
+        var operation: MXHTTPOperation? = nil
+        operation = allThreads(inRoom: roomId, from: nil, onlyParticipated: onlyParticipated) { response in
+            guard let mainOperation = operation else {
+                return
+            }
+            
+            switch response {
+            case .success(let value):
+                if let nextBatch = value.nextBatch {
+                    self.allThreads(inRoom: roomId, from: nextBatch, operation: mainOperation, onlyParticipated: onlyParticipated, threads: value.threads, completion: completion)
+                } else {
+                    completion(.success(value.threads))
+                }
+            case .failure(let error):
+                completion(.failure(error))
+            }
+        }
+        
         return operation
     }
 
@@ -435,6 +477,36 @@ public class MXThreadingService: NSObject {
         threads[thread.id] = thread
     }
     
+    // This method calls recursively the `allThreads` method until no next batch token is returned by the server
+    // in order to aggregate all the threads of a room.
+    private func allThreads(inRoom roomId: String,
+                            from: String?,
+                            operation: MXHTTPOperation,
+                            onlyParticipated: Bool,
+                            threads: [MXThreadProtocol],
+                            completion: @escaping (MXResponse<[MXThreadProtocol]>) -> Void) {
+        var newOperation: MXHTTPOperation? = nil
+        newOperation = allThreads(inRoom: roomId, from: from, onlyParticipated: onlyParticipated, completion: { response in
+            switch response {
+            case .success(let value):
+                let threads = threads + value.threads
+                if let nextBatch = value.nextBatch {
+                    self.allThreads(inRoom: roomId, from: nextBatch, operation: operation, onlyParticipated: onlyParticipated, threads: threads, completion: completion)
+                } else {
+                    completion(.success(threads))
+                }
+            case .failure(let error):
+                completion(.failure(error))
+            }
+        })
+        
+        guard let currentOperation = newOperation else {
+            return
+        }
+        
+        operation.mutate(to: currentOperation)
+    }
+
     //  MARK: - Delegate
     
     /// Add delegate instance

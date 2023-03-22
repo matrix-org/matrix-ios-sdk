@@ -34,13 +34,13 @@ static NSUInteger const kMXDeviceListOperationsPoolKeyQueryLimit = 250;
 
 @interface MXDeviceListOperationsPool ()
 {
-    __weak MXCrypto *crypto;
+    __weak MXLegacyCrypto *crypto;
 }
 @end
 
 @implementation MXDeviceListOperationsPool
 
-- (id)initWithCrypto:(MXCrypto *)theCrypto
+- (id)initWithCrypto:(MXLegacyCrypto *)theCrypto
 {
     self = [super init];
     if (self)
@@ -150,7 +150,7 @@ static NSUInteger const kMXDeviceListOperationsPoolKeyQueryLimit = 250;
 
                 // Compute trust on this user
                 // Note this overwrites the previous value
-                BOOL isCrossSigningVerified = [self->crypto.crossSigning isUserWithCrossSigningKeysVerified:crossSigningKeys];
+                BOOL isCrossSigningVerified = [self.crossSigning isUserWithCrossSigningKeysVerified:crossSigningKeys];
                 MXUserTrustLevel *newTrustLevel = [MXUserTrustLevel trustLevelWithCrossSigningVerified:isCrossSigningVerified
                                                                                        locallyVerified:oldTrustLevel.isLocallyVerified];
                 
@@ -212,7 +212,7 @@ static NSUInteger const kMXDeviceListOperationsPoolKeyQueryLimit = 250;
                     [mutabledevices[deviceId] setTrustLevel:oldTrustLevel];
                     
                     
-                    BOOL crossSigningVerified = [self->crypto.crossSigning isDeviceVerified:mutabledevices[deviceId]];
+                    BOOL crossSigningVerified = [self.crossSigning isDeviceVerified:mutabledevices[deviceId]];
                     MXDeviceTrustLevel *trustLevel = [MXDeviceTrustLevel trustLevelWithLocalVerificationStatus:previousLocalState
                                                                                           crossSigningVerified:crossSigningVerified];
                     
@@ -388,6 +388,16 @@ static NSUInteger const kMXDeviceListOperationsPoolKeyQueryLimit = 250;
     }
     
     return YES;
+}
+
+- (MXLegacyCrossSigning *)crossSigning
+{
+    if (![self->crypto.crossSigning isKindOfClass:[MXLegacyCrossSigning class]])
+    {
+        MXLogFailure(@"[MXDeviceListOperationsPool] Using incompatible cross signing implementation, can only use legacy");
+        return nil;
+    }
+    return (MXLegacyCrossSigning *)self->crypto.crossSigning;
 }
 
 @end

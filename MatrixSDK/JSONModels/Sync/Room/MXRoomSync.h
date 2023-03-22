@@ -56,6 +56,11 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic) MXRoomSyncUnreadNotifications *unreadNotifications;
 
 /**
+ The notification counts per thread as per MSC3773.
+ */
+@property (nonatomic) NSDictionary<NSString *, MXRoomSyncUnreadNotifications *> *unreadNotificationsPerThread;
+
+/**
  The room summary. Sent in case of lazy-loading of members.
  */
 @property (nonatomic) MXRoomSyncSummary *summary;

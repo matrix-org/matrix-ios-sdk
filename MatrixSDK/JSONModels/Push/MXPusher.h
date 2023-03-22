@@ -21,6 +21,9 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+FOUNDATION_EXPORT NSString *const kMXPusherEnabledKey;
+FOUNDATION_EXPORT NSString *const kMXPusherDeviceIdKey;
+
 @interface MXPusher : MXJSONModel
 
 /**
@@ -62,6 +65,16 @@ NS_ASSUME_NONNULL_BEGIN
  A dictionary of information for the pusher implementation itself.
  */
 @property (nonatomic, readonly) MXPusherData *data;
+
+/**
+ Optional: Whether the pusher should actively create push notifications. default YES if `nil`
+ */
+@property (nonatomic, nullable, readonly) NSNumber *enabled;
+
+/**
+ Optional: The device_id of the session that registered the pusher.
+ */
+@property (nonatomic, nullable, readonly) NSString *deviceId;
 
 @end
 

@@ -28,7 +28,6 @@
 #import "MXAggregatedEditsUpdater.h"
 #import "MXAggregatedReferencesUpdater.h"
 #import "MXEventEditsListener.h"
-#import "MXAggregationPaginatedResponse_Private.h"
 
 #import "MatrixSDKSwiftHeader.h"
 
@@ -39,6 +38,7 @@
 @property (nonatomic) MXAggregatedReactionsUpdater *aggregatedReactionsUpdater;
 @property (nonatomic) MXAggregatedEditsUpdater *aggregatedEditsUpdater;
 @property (nonatomic) MXAggregatedReferencesUpdater *aggregatedReferencesUpdater;
+@property (nonatomic) MXAggregatedPollsUpdater *aggregatedPollsUpdater;
 
 @property (nonatomic, strong, readwrite) MXBeaconAggregations *beaconAggregations;
 @property (nonatomic, strong) id<MXBeaconInfoSummaryStoreProtocol> beaconInfoSummaryStore;
@@ -251,6 +251,8 @@
                                                                                   matrixStore:mxSession.store];
         self.aggregatedReferencesUpdater = [[MXAggregatedReferencesUpdater alloc] initWithMatrixSession:self.mxSession
                                                                                            matrixStore:mxSession.store];
+        self.aggregatedPollsUpdater = [[MXAggregatedPollsUpdater alloc] initWithSession:self.mxSession
+                                                                                  store:self.mxSession.store];
         
         id<MXBeaconInfoSummaryStoreProtocol> beaconInfoSummaryStore = [[MXBeaconInfoSummaryRealmStore alloc] initWithSession:self.mxSession];
         
@@ -313,6 +315,8 @@
                     [self.beaconAggregations handleBeaconWithEvent:event];
                 }
                 break;
+            case MXEventTypePollEnd:
+                [self.aggregatedPollsUpdater refreshPollAfter:event];
             default:
                 break;
         }

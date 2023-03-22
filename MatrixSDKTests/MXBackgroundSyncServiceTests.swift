@@ -267,7 +267,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                     return
                 }
                 
-                newAliceSession?.crypto.warnOnUnknowDevices = warnOnUnknownDevices
+                newAliceSession?.legacyCrypto?.warnOnUnknowDevices = warnOnUnknownDevices
                 
                 // - Alice sends a message
                 var localEcho: MXEvent?
@@ -391,7 +391,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                                 case .success:
                                     let roomSummary = self.bgSyncService?.roomSummary(forRoomId: roomId)
                                     XCTAssertNotNil(roomSummary, "Room summary should be fetched")
-                                    XCTAssertEqual(roomSummary?.displayname, newName, "Room name change should be reflected")
+                                    XCTAssertEqual(roomSummary?.displayName, newName, "Room name change should be reflected")
                                     expectation?.fulfill()
                                 case .failure(let error):
                                     XCTFail("Cannot fetch the event from background sync service - error: \(error)")
@@ -1636,7 +1636,7 @@ extension MXBackgroundSyncServiceTests {
 
             } failure: { (error) in
                 XCTFail("Cannot set up initial test conditions")
-                completion(.failure(error ?? MXBackgroundSyncServiceError.unknown))
+                completion(.failure(error))
             }
         }
     }

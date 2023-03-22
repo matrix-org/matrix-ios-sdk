@@ -26,6 +26,7 @@
 #import "MXTools.h"
 #import "MXEventRelations.h"
 #import "MXEventReplace.h"
+#import "MXRoomSyncUnreadNotifications.h"
 
 #import "MXRoomSync.h"
 #import "MatrixSDKSwiftHeader.h"
@@ -171,6 +172,18 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
 
 - (void)save:(BOOL)commit
 {
+    if (!NSThread.isMainThread)
+    {
+        // Saving on the main thread is not ideal, but is currently the only safe way, given the mutation
+        // of internal state and posting notifications observed by UI without double-checking which thread
+        // the notification arrives on.
+        MXLogFailure(@"[MXRoomSummary] save: Saving room summary should happen from the main thread")
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self save:commit];
+        });
+        return;
+    }
+    
     _dataTypes = self.calculateDataTypes;
     _sentStatus = self.calculateSentStatus;
     _favoriteTagOrder = self.room.accountData.tags[kMXRoomTagFavourite].order;
@@ -221,11 +234,16 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     {
         return;
     }
+    // if there is a new LastMessage then it's better to unmark the room as unread
+    if (nil != _lastMessage && ![_lastMessage.eventId isEqualToString:summary.lastMessage.eventId])
+    {
+        [self.room resetUnread];
+    }
     
     _roomTypeString = summary.roomTypeString;
     _roomType = summary.roomType;
     _avatar = summary.avatar;
-    _displayname = summary.displayname;
+    _displayName = summary.displayName;
     _topic = summary.topic;
     _creatorUserId = summary.creatorUserId;
     _aliases = summary.aliases;
@@ -268,7 +286,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     MXRoom *room = self.room;
 
     _avatar = nil;
-    _displayname = nil;
+    _displayName = nil;
     _topic = nil;
     _aliases = nil;
 
@@ -278,7 +296,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
 
         BOOL updated = [self.mxSession.roomSummaryUpdateDelegate session:self.mxSession updateRoomSummary:self withStateEvents:roomState.stateEvents roomState:roomState];
 
-        if (self.displayname == nil || self.avatar == nil)
+        if (self.displayName == nil || self.avatar == nil)
         {
             // Avatar and displayname may not be recomputed from the state event list if
             // the latter does not contain any `name` or `avatar` event. So, in this case,
@@ -298,6 +316,11 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
 
 - (void)updateLastMessage:(MXRoomLastMessage *)message
 {
+    // if there is a new LastMessage then it's better to unmark the room as unread
+    if (![_lastMessage.eventId isEqualToString:message.eventId])
+    {
+        [self.room resetUnread];
+    }
     _lastMessage = message;
 }
 
@@ -769,9 +792,12 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
 {
     BOOL updated = NO;
 
-    NSUInteger localUnreadEventCount = [self.mxSession.store localUnreadEventCount:self.roomId
-                                                                          threadId:nil
-                                                                        withTypeIn:self.mxSession.unreadEventTypes];
+    NSDictionary <NSString *, NSNumber *> *localUnreadEventCountPerThread = [self.mxSession.store localUnreadEventCountPerThread:self.roomId withTypeIn:self.mxSession.unreadEventTypes];
+    NSUInteger localUnreadEventCount = 0;
+    for (NSNumber *unreadCount in localUnreadEventCountPerThread.allValues)
+    {
+        localUnreadEventCount += unreadCount.unsignedIntValue;
+    }
     
     if (self.localUnreadEventCount != localUnreadEventCount)
     {
@@ -861,26 +887,23 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
         // Check for unread events in store and update the localUnreadEventCount value if needed
         updated |= [self updateLocalUnreadEventCount];
 
-        // Store notification counts from unreadNotifications field in /sync response
-        if (roomSync.unreadNotifications)
+        // Store notification counts from unreadNotifications and unreadNotificationsPerThread fields in /sync response
+        if (roomSync.unreadNotifications || roomSync.unreadNotificationsPerThread)
         {
-            // Caution: the server may provide a not null count whereas we know locally the user has read all room messages
-            // (see for example this issue https://github.com/matrix-org/synapse/issues/2193).
-            // Patch: Ignore the server information when the user has read all messages.
-            if (roomSync.unreadNotifications.notificationCount && self.localUnreadEventCount == 0)
+            // compute the notification counts from unreadNotifications and unreadNotificationsPerThread fields in /sync response
+            NSUInteger notificationCount = roomSync.unreadNotifications.notificationCount;
+            NSUInteger highlightCount = roomSync.unreadNotifications.highlightCount;
+            for (MXRoomSyncUnreadNotifications *unreadNotifications in roomSync.unreadNotificationsPerThread.allValues)
             {
-                if (self.notificationCount != 0)
-                {
-                    self->_notificationCount = 0;
-                    self->_highlightCount = 0;
-                    updated = YES;
-                }
+                notificationCount += unreadNotifications.notificationCount;
+                highlightCount += unreadNotifications.highlightCount;
             }
-            else if (self.notificationCount != roomSync.unreadNotifications.notificationCount
-                     || self.highlightCount != roomSync.unreadNotifications.highlightCount)
+
+            // store the new notification counts
+            if (self.notificationCount != notificationCount || self.highlightCount != highlightCount)
             {
-                self->_notificationCount = roomSync.unreadNotifications.notificationCount;
-                self->_highlightCount = roomSync.unreadNotifications.highlightCount;
+                self->_notificationCount = notificationCount;
+                self->_highlightCount = highlightCount;
                 updated = YES;
             }
         }
@@ -948,7 +971,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
         _roomTypeString = [aDecoder decodeObjectForKey:@"roomTypeString"];
         _roomType = [aDecoder decodeIntegerForKey:@"roomType"];
         _avatar = [aDecoder decodeObjectForKey:@"avatar"];
-        _displayname = [aDecoder decodeObjectForKey:@"displayname"];
+        _displayName = [aDecoder decodeObjectForKey:@"displayname"];
         _topic = [aDecoder decodeObjectForKey:@"topic"];
         _creatorUserId = [aDecoder decodeObjectForKey:@"creatorUserId"];
         _aliases = [aDecoder decodeObjectForKey:@"aliases"];
@@ -998,7 +1021,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     [aCoder encodeObject:_roomTypeString forKey:@"roomTypeString"];
     [aCoder encodeInteger:_roomType forKey:@"roomType"];
     [aCoder encodeObject:_avatar forKey:@"avatar"];
-    [aCoder encodeObject:_displayname forKey:@"displayname"];
+    [aCoder encodeObject:_displayName forKey:@"displayname"];
     [aCoder encodeObject:_topic forKey:@"topic"];
     [aCoder encodeObject:_creatorUserId forKey:@"creatorUserId"];    
     [aCoder encodeObject:_aliases forKey:@"aliases"];
@@ -1036,7 +1059,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
 
 - (NSString *)description
 {
-    return [NSString stringWithFormat:@"%@ %@: %@ - %@", super.description, _roomId, _displayname, _lastMessage.eventId];
+    return [NSString stringWithFormat:@"%@ %@: %@ - %@", super.description, _roomId, _displayName, _lastMessage.eventId];
 }
 
 - (NSUInteger)hash
@@ -1047,7 +1070,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     result = prime * result + [_roomId hash];
     result = prime * result + [_roomTypeString hash];
     result = prime * result + [_avatar hash];
-    result = prime * result + [_displayname hash];
+    result = prime * result + [_displayName hash];
     result = prime * result + [_topic hash];
     result = prime * result + [_creatorUserId hash];
     result = prime * result + [_aliases hash];

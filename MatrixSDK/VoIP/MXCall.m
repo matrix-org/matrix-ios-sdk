@@ -835,13 +835,7 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
     else if (MXCallStateInviteSent == state)
     {
         // Start the life expiration timer for the sent invitation
-        inviteExpirationTimer = [[NSTimer alloc] initWithFireDate:[NSDate dateWithTimeIntervalSinceNow:callManager.inviteLifetime / 1000]
-                                                         interval:0
-                                                           target:self
-                                                         selector:@selector(expireCallInvite)
-                                                         userInfo:nil
-                                                          repeats:NO];
-        [[NSRunLoop mainRunLoop] addTimer:inviteExpirationTimer forMode:NSDefaultRunLoopMode];
+        [self startInviteExpirationTimer];
     }
 
     _state = state;
@@ -1123,7 +1117,7 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
         }
         else
         {
-            _callerName = nativeRoom.summary.displayname;
+            _callerName = nativeRoom.summary.displayName;
         }
     }
     calleeId = callManager.mxSession.myUserId;
@@ -1180,15 +1174,33 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
             [self didEncounterError:error reason:MXCallHangupReasonUserMediaFailed];
         }];
 
-        // Start expiration timer
-        self->inviteExpirationTimer = [[NSTimer alloc] initWithFireDate:[NSDate dateWithTimeIntervalSinceNow:self->callInviteEventContent.lifetime / 1000]
-                                                         interval:0
-                                                           target:self
-                                                         selector:@selector(expireCallInvite)
-                                                         userInfo:nil
-                                                          repeats:NO];
-        [[NSRunLoop mainRunLoop] addTimer:self->inviteExpirationTimer forMode:NSDefaultRunLoopMode];
+        // Start an expiration timer
+        [self startInviteExpirationTimer];
     }];
+}
+
+- (void)startInviteExpirationTimer {
+    if (inviteExpirationTimer)
+    {
+        return;
+    }
+    
+    // Start expiration timer
+    inviteExpirationTimer = [[NSTimer alloc] initWithFireDate:[NSDate dateWithTimeIntervalSinceNow:callInviteEventContent.lifetime / 1000]
+                                                     interval:0
+                                                       target:self
+                                                     selector:@selector(expireCallInvite)
+                                                     userInfo:nil
+                                                      repeats:NO];
+    [[NSRunLoop mainRunLoop] addTimer:inviteExpirationTimer forMode:NSDefaultRunLoopMode];
+}
+
+- (void)invalidateInviteExpirationTimer {
+    if (inviteExpirationTimer)
+    {
+        [inviteExpirationTimer invalidate];
+        inviteExpirationTimer = nil;
+    }
 }
 
 - (void)handleCallAnswer:(MXEvent *)event
@@ -1197,6 +1209,12 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
     
     if ([self isMyEvent:event])
     {
+        return;
+    }
+    
+    if (_state == MXCallStateEnded) {
+        // this call is already ended
+        MXLogDebug(@"[MXCall][%@] handleCallAnswer: this call is already ended", _callId);
         return;
     }
     
@@ -1213,11 +1231,7 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
         MXCallAnswerEventContent *content = [MXCallAnswerEventContent modelFromJSON:event.content];
 
         // The peer accepted our outgoing call
-        if (inviteExpirationTimer)
-        {
-            [inviteExpirationTimer invalidate];
-            inviteExpirationTimer = nil;
-        }
+        [self invalidateInviteExpirationTimer];
         
         //  mark this as the selected one
         self.selectedAnswer = event;
@@ -1287,6 +1301,12 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
         return;
     }
     
+    if (_state == MXCallStateEnded) {
+        // this call is already ended
+        MXLogDebug(@"[MXCall][%@] handleCallAnswer: this call is already ended", _callId);
+        return;
+    }
+    
     if (_isIncoming)
     {
         MXCallSelectAnswerEventContent *content = [MXCallSelectAnswerEventContent modelFromJSON:event.content];
@@ -1353,11 +1373,7 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
         }
         
         // The peer rejected our outgoing call
-        if (inviteExpirationTimer)
-        {
-            [inviteExpirationTimer invalidate];
-            inviteExpirationTimer = nil;
-        }
+        [self invalidateInviteExpirationTimer];
         
         if (_state != MXCallStateEnded)
         {
@@ -1598,11 +1614,7 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
 
 - (void)terminateWithReason:(MXEvent *)event
 {
-    if (inviteExpirationTimer)
-    {
-        [inviteExpirationTimer invalidate];
-        inviteExpirationTimer = nil;
-    }
+    [self invalidateInviteExpirationTimer];
 
     // Do not refresh TURN servers config anymore
     [localIceGatheringTimer invalidate];
@@ -1711,14 +1723,17 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
             [callStackCall end];
         }
 
-        // Send the notif that the call expired to the app
-        [self setState:MXCallStateInviteExpired reason:nil];
-        
-        // Set appropriate call end reason
-        _endReason = MXCallEndReasonMissed;
-
-        // And set the final state: MXCallStateEnded
-        [self setState:MXCallStateEnded reason:nil];
+        // If the call is not aleady ended
+        if (_state != MXCallStateEnded) {
+            // Send the notif that the call expired to the app
+            [self setState:MXCallStateInviteExpired reason:nil];
+            
+            // Set appropriate call end reason
+            _endReason = MXCallEndReasonMissed;
+            
+            // And set the final state: MXCallStateEnded
+            [self setState:MXCallStateEnded reason:nil];
+        }
 
         // The call manager can now ignore this call
         [callManager removeCall:self];
@@ -1728,6 +1743,9 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
 - (void)onCallAnsweredElsewhere
 {
     MXLogDebug(@"[MXCall][%@] onCallAnsweredElsewhere", _callId)
+    
+    // The call has been accepted elsewhere
+    [self invalidateInviteExpirationTimer];
     
     // Send the notif that the call has been answered from another device to the app
     [self setState:MXCallStateAnsweredElseWhere reason:nil];
@@ -1746,7 +1764,10 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
 {
     MXLogDebug(@"[MXCall][%@] onCallDeclinedElsewhere", _callId)
     
-    // Send the notif that the call has been answered from another device to the app
+    // The call has been declined from another device
+    [self invalidateInviteExpirationTimer];
+    
+    // Send the notif that the call has been declined from another device to the app
     [self setState:MXCallStateAnsweredElseWhere reason:nil];
     
     // Set appropriate call end reason

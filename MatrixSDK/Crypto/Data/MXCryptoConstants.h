@@ -50,6 +50,10 @@ FOUNDATION_EXPORT NSString *const kMXCryptoAes256KeyBackupAlgorithm;
  */
 FOUNDATION_EXPORT NSString *const MXCryptoOlmPickleKeyDataType;
 
+/**
+ MXKeyProvider identifier for a 32 bytes long key to a store managed by the Crypto SDK.
+ */
+FOUNDATION_EXPORT NSString *const MXCryptoSDKStoreKeyDataType;
 
 #pragma mark - Encrypting error
 
@@ -85,6 +89,7 @@ typedef enum : NSUInteger
     MXKeyBackupErrorMissingPrivateKeySaltCode,
     MXKeyBackupErrorMissingAuthDataCode,
     MXKeyBackupErrorInvalidOrMissingLocalPrivateKey,
-    MXKeyBackupErrorUnknownAlgorithm
+    MXKeyBackupErrorUnknownAlgorithm,
+    MXKeyBackupErrorAlreadyInProgress,
 
 } MXKeyBackupErrorCode;

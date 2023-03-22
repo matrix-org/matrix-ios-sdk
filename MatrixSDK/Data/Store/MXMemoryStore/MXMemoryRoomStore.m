@@ -104,12 +104,50 @@
     return [[MXEventsByTypesEnumeratorOnArray alloc] initWithEventIds:[self allEventIds] andTypesIn:types dataSource:self];
 }
 
+- (NSArray<MXEvent*>*)eventsInThreadWithThreadId:(NSString *)threadId except:(NSString *)userId withTypeIn:(NSSet<MXEventTypeString>*)types
+{
+    NSMutableArray* list = [[NSMutableArray alloc] init];
+    
+    if (threadId == nil || [threadId isEqualToString:kMXEventTimelineMain])
+    {
+        MXLogWarning(@"[MXMemoryRoomStore] eventsInThreadWithThreadId: invalid thread ID %@", threadId);
+        return list;
+    }
+
+    // Check messages from the most recent
+    for (NSInteger i = messages.count - 1; i >= 0 ; i--)
+    {
+        MXEvent *event = messages[i];
+
+        // Check if the event is the root event of the thread
+        if (NO == [event.eventId isEqualToString:threadId])
+        {
+            // Keep events matching filters
+            BOOL typeAllowed = !types || [types containsObject:event.type];
+            BOOL threadAllowed = [event.threadId isEqualToString:threadId];
+            BOOL senderAllowed = ![event.sender isEqualToString:userId];
+            if (typeAllowed && threadAllowed && senderAllowed)
+            {
+                [list insertObject:event atIndex:0];
+            }
+        }
+        else
+        {
+            // We are done
+            break;
+        }
+    }
+
+    return list;
+}
+
 - (NSArray<MXEvent*>*)eventsAfter:(NSString *)eventId threadId:(NSString *)threadId except:(NSString *)userId withTypeIn:(NSSet<MXEventTypeString>*)types
 {
     NSMutableArray* list = [[NSMutableArray alloc] init];
 
     if (eventId)
     {
+        NSString *_threadId = ![threadId isEqualToString:kMXEventTimelineMain] ? threadId : nil;
         // Check messages from the most recent
         for (NSInteger i = messages.count - 1; i >= 0 ; i--)
         {
@@ -119,7 +157,7 @@
             {
                 // Keep events matching filters
                 BOOL typeAllowed = !types || [types containsObject:event.type];
-                BOOL threadAllowed = !threadId || [event.threadId isEqualToString:threadId];
+                BOOL threadAllowed = (!_threadId && !event.isInThread) || [event.threadId isEqualToString:_threadId];
                 BOOL senderAllowed = ![event.sender isEqualToString:userId];
                 if (typeAllowed && threadAllowed && senderAllowed)
                 {

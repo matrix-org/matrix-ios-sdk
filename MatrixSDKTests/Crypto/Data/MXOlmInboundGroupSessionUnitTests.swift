@@ -35,7 +35,6 @@ class MXOlmInboundGroupSessionUnitTests: XCTestCase {
         XCTAssert(data?.sharedHistory == true)
     }
     
-    @available(iOS 11.0, *)
     func testCanEncodeAndDecodeObject() {
         let session = MXOlmInboundGroupSession()
         session.senderKey = "A"

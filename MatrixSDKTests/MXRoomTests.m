@@ -19,12 +19,19 @@
 #import "MatrixSDKTestsData.h"
 
 #import "MXSession.h"
+#import "MXFileStore.h"
 #import "MXTools.h"
 #import "MXSendReplyEventDefaultStringLocalizer.h"
 
 // Do not bother with retain cycles warnings in tests
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Warc-retain-cycles"
+
+@interface MXFileStore ()
+- (NSString*)unreadRoomsFile;
+- (NSString*)unreadFileForRoomsForBackup:(BOOL)backup;
+@end
+
 
 @interface MXRoomTests : XCTestCase
 {
@@ -874,6 +881,142 @@
             
         } failure:^(NSError *error) {
             XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+- (void)testMarkUnread
+{
+    
+    [matrixSDKTestsData doMXRestClientTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
+        
+        MXSession *bobSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [matrixSDKTestsData retain:bobSession];
+        
+        MXFileStore *store = [[MXFileStore alloc] init];
+        
+        [bobSession setStore:store success:^{
+            [bobSession start:^{
+                MXRoom *room = [bobSession roomWithRoomId:roomId];
+                XCTAssertNotNil(room, @"the room should not be nil");
+                [room setUnread];
+                XCTAssert([room isMarkedAsUnread], @"the room should be marked as unread");
+                [room resetUnread];
+                XCTAssertFalse([room isMarkedAsUnread], @"the room should not be marked as unread");
+                [expectation fulfill];
+            } failure:^(NSError *error) {
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
+            }];
+        } failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+/**
+ Check mark unread functionality with a new events
+ 
+ - Have Alice and Bob in a room
+ - Bob mark the room as unread
+ - Alice send a new message to Bob
+ - Bob's room should be unmarked as unread because a new lastmessage is received.
+ */
+- (void)testMarkUnreadWithMessage
+{
+    
+    [matrixSDKTestsData doMXRestClientTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
+        
+        MXSession *bobSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        MXSession *aliceSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+        
+        [matrixSDKTestsData retain:bobSession];
+        
+        MXFileStore *store = [[MXFileStore alloc] init];
+        
+        [bobSession setStore:store success:^{
+            [bobSession start:^{
+                MXRoom *room = [bobSession roomWithRoomId:roomId];
+                XCTAssertNotNil(room, @"the room should not be nil");
+                [room setUnread];
+                XCTAssert([room isMarkedAsUnread], @"the room should be marked as unread");
+                
+                [room listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent * _Nonnull event, MXTimelineDirection direction, MXRoomState * _Nullable roomState) {
+                    
+                    dispatch_time_t delayTime = dispatch_time(DISPATCH_TIME_NOW, 100);
+                    dispatch_after(delayTime, dispatch_get_main_queue(), ^(void) {
+                        XCTAssertFalse([room isMarkedAsUnread], @"the room should not be marked as unread");
+                        [expectation fulfill];
+                    });
+                }];
+
+                MXFileStore *aliceStore = [[MXFileStore alloc] init];
+                [aliceSession setStore:aliceStore success:^{
+                    [aliceSession start:^{
+                        MXRoom *aliceRoom = [aliceSession roomWithRoomId:roomId];
+                        [aliceRoom sendTextMessage:@"Hello" threadId:nil success:^(NSString *eventId) {
+                            [aliceSession close];
+                                                } failure:^(NSError *error) {
+                                                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                                                    [expectation fulfill];
+                                                }];
+                                        } failure:^(NSError *error) {
+                                            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                                            [expectation fulfill];
+                                        }];
+                                } failure:^(NSError *error) {
+                                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                                    [expectation fulfill];
+                                }];
+            } failure:^(NSError *error) {
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
+            }];
+        } failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+// Test migration of the MXFileStore unread rooms file that was at a bad location.
+// - Have a Bob session with an unread room
+// - Close that session
+// - Reopen a Bob session (it simulates an app restart)
+// -> The room should be still unread, meaning the migration went as expected
+// TODO: Delete this test when removing the unreadFileForRoomsForBackup() method
+- (void)testUnreadRoomsFileMigration
+{
+    // - Have a Bob session with an unread room
+    MXFileStore *store = [MXFileStore new];
+    [matrixSDKTestsData doMXSessionTestWithBobAndARoom:self andStore:store readyToTest:^(MXSession *bobSession, MXRoom *room, XCTestExpectation *expectation) {
+        [room setUnread];
+        
+        // - Close that session
+        NSString *roomId = room.roomId;
+        MXRestClient *bobRestClient = bobSession.matrixRestClient;
+        NSString *wrongFile = [store unreadFileForRoomsForBackup:NO];
+        NSString *goodFile = [store unreadRoomsFile];
+        [bobSession close];
+        
+        // - Move the unread rooms file to the previous wrong location
+        [[NSFileManager defaultManager] moveItemAtPath:goodFile toPath:wrongFile error:nil];
+        
+        // - Reopen a Bob session (it simulates an app restart)
+        MXSession *bobSession2 = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [self->matrixSDKTestsData retain:bobSession2];
+        [bobSession2 setStore:[[MXFileStore alloc] init] success:^{
+            
+            // -> The room should be still unread, meaning the migration went as expected
+            MXRoom *room = [bobSession2 roomWithRoomId:roomId];
+            XCTAssert([room isMarkedAsUnread], @"the room should still be marked as unread");
+            
+            [expectation fulfill];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
             [expectation fulfill];
         }];
     }];

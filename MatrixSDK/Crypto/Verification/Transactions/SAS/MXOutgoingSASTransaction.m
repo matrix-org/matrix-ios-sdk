@@ -77,7 +77,7 @@
 
 #pragma mark - SDK-Private methods -
 
-- (instancetype)initWithOtherDevice:(MXDeviceInfo *)otherDevice andManager:(MXKeyVerificationManager *)manager
+- (instancetype)initWithOtherDevice:(MXDeviceInfo *)otherDevice andManager:(MXLegacyKeyVerificationManager *)manager
 {
     self = [super initWithOtherDevice:otherDevice andManager:manager];
     if (self)

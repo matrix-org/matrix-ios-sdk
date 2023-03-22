@@ -25,7 +25,7 @@
 
 #import "MXRestClient.h"
 
-@class MXCrypto;
+@class MXLegacyCrypto;
 
 
 /**
@@ -81,7 +81,7 @@ typedef enum : NSUInteger
  @param crypto the MXCrypto instance.
  @return a new MXDeviceList instance.
  */
-- (id)initWithCrypto:(MXCrypto*)crypto;
+- (id)initWithCrypto:(MXLegacyCrypto*)crypto;
 
 /**
  Called when the client is stopped.

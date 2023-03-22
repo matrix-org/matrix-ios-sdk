@@ -82,7 +82,7 @@
 
 #pragma mark - SDK-Private methods -
 
-- (nullable instancetype)initWithOtherDevice:(MXDeviceInfo *)otherDevice startEvent:(MXEvent *)event andManager:(MXKeyVerificationManager *)manager
+- (nullable instancetype)initWithOtherDevice:(MXDeviceInfo *)otherDevice startEvent:(MXEvent *)event andManager:(MXLegacyKeyVerificationManager *)manager
 {
     MXSASKeyVerificationStart *startContent;
     MXJSONModelSetMXJSONModel(startContent, MXSASKeyVerificationStart, event.content);

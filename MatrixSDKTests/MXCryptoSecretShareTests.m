@@ -23,6 +23,7 @@
 
 #import "MatrixSDKTestsData.h"
 #import "MatrixSDKTestsE2EData.h"
+#import "MatrixSDKTestsSwiftHeader.h"
 
 
 @interface MXCryptoSecretShareTests : XCTestCase
@@ -62,16 +63,16 @@
         NSString *secret = @"A secret";
         NSString *secret2 = @"A secret2";
 
-        XCTAssertNil([aliceSession.crypto.store secretWithSecretId:secretId]);
+        XCTAssertNil([aliceSession.legacyCrypto.store secretWithSecretId:secretId]);
         
-        [aliceSession.crypto.store storeSecret:secret withSecretId:secretId];
-        XCTAssertEqualObjects([aliceSession.crypto.store secretWithSecretId:secretId], secret);
+        [aliceSession.legacyCrypto.store storeSecret:secret withSecretId:secretId];
+        XCTAssertEqualObjects([aliceSession.legacyCrypto.store secretWithSecretId:secretId], secret);
         
-        [aliceSession.crypto.store storeSecret:secret2 withSecretId:secretId];
-        XCTAssertEqualObjects([aliceSession.crypto.store secretWithSecretId:secretId], secret2);
+        [aliceSession.legacyCrypto.store storeSecret:secret2 withSecretId:secretId];
+        XCTAssertEqualObjects([aliceSession.legacyCrypto.store secretWithSecretId:secretId], secret2);
         
-        [aliceSession.crypto.store deleteSecretWithSecretId:secretId];
-        XCTAssertNil([aliceSession.crypto.store secretWithSecretId:secretId]);
+        [aliceSession.legacyCrypto.store deleteSecretWithSecretId:secretId];
+        XCTAssertNil([aliceSession.legacyCrypto.store secretWithSecretId:secretId]);
         
         [expectation fulfill];
     }];
@@ -94,7 +95,7 @@
         NSString *secret = @"A secret";
 
         // - Alice has a secret on her 1st device
-        [aliceSession.crypto.store storeSecret:secret withSecretId:secretId];
+        [aliceSession.legacyCrypto.store storeSecret:secret withSecretId:secretId];
         
         // - Alice logs in on a new device
         [matrixSDKTestsE2EData loginUserOnANewDevice:self credentials:aliceSession.matrixRestClient.credentials withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *newAliceSession) {
@@ -106,7 +107,7 @@
             [newAliceSession.crypto setDeviceVerification:MXDeviceVerified forDevice:aliceSession.myDeviceId ofUser:aliceSession.myUserId success:nil failure:nil];
             
             // - Alice requests the secret from the new device
-            [newAliceSession.crypto.secretShareManager requestSecret:secretId toDeviceIds:nil success:^(NSString * _Nonnull requestId) {
+            [newAliceSession.legacyCrypto.secretShareManager requestSecret:secretId toDeviceIds:nil success:^(NSString * _Nonnull requestId) {
                 XCTAssertNotNil(requestId);
             } onSecretReceived:^BOOL(NSString * _Nonnull sharedSecret) {
                 
@@ -142,7 +143,7 @@
         NSString *secret = @"A secret";
         
         // - Alice has a secret on her 1st device
-        [aliceSession.crypto.store storeSecret:secret withSecretId:secretId];
+        [aliceSession.legacyCrypto.store storeSecret:secret withSecretId:secretId];
         
         // - Alice logs in on a new device
         [matrixSDKTestsE2EData loginUserOnANewDevice:self credentials:aliceSession.matrixRestClient.credentials withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *newAliceSession) {
@@ -156,10 +157,10 @@
             [aliceSession pause];
             
             // - Alice requests the secret from the new device
-            [newAliceSession.crypto.secretShareManager requestSecret:secretId toDeviceIds:nil success:^(NSString * _Nonnull requestId) {
+            [newAliceSession.legacyCrypto.secretShareManager requestSecret:secretId toDeviceIds:nil success:^(NSString * _Nonnull requestId) {
                 
                 // - Alice cancels the request
-                [newAliceSession.crypto.secretShareManager cancelRequestWithRequestId:requestId success:^{
+                [newAliceSession.legacyCrypto.secretShareManager cancelRequestWithRequestId:requestId success:^{
                 } failure:^(NSError * _Nonnull error) {
                     XCTFail(@"The operation should not fail - NSError: %@", error);
                     [expectation fulfill];

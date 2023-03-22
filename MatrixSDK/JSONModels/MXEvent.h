@@ -231,6 +231,11 @@ FOUNDATION_EXPORT NSString *const kMXMessageContentKeyNewContent;   // Edited co
 FOUNDATION_EXPORT NSString *const MXEventRelationTypeThread;        // Thread
 
 /**
+ To-device messages
+ */
+FOUNDATION_EXPORT NSString *const kMXToDeviceMessageId;
+
+/**
  Prefix used for id of temporary local event.
  */
 FOUNDATION_EXPORT NSString *const kMXEventLocalEventIdPrefix;
@@ -303,6 +308,11 @@ FOUNDATION_EXPORT NSString *const kMXMessageContentKeyExtensibleAssetTypePin;
 FOUNDATION_EXPORT NSString *const kMXJoinRulesContentKeyAllow;
 FOUNDATION_EXPORT NSString *const kMXJoinRulesContentKeyType;
 FOUNDATION_EXPORT NSString *const kMXJoinRulesContentKeyRoomId;
+
+// Threads support
+
+FOUNDATION_EXPORT NSString *const kMXEventTimelineMain;
+FOUNDATION_EXPORT NSString *const kMXEventUnthreaded;
 
 /**
  The internal event state used to handle the different steps of the event sending.
@@ -580,6 +590,13 @@ extern NSString *const kMXEventIdentifierKey;
 - (NSArray *)readReceiptEventIds;
 
 /**
+ Returns the thread IDs for which a read receipt is defined in this event.
+ 
+ This property is relevant only for events with 'kMXEventTypeStringReceipt' type.
+ */
+- (NSArray *)readReceiptThreadIds;
+
+/**
  Returns the fully-qualified IDs of the users who sent read receipts with this event.
  
  This property is relevant only for events with 'kMXEventTypeStringReceipt' type.
@@ -645,7 +662,7 @@ extern NSString *const kMXEventIdentifierKey;
  Thread id for the event. This is actually the eventId of the thread's root event.
  nil if the event is not in a thread.
  */
-@property (nonatomic, readonly) NSString *threadId;
+@property (nonatomic, readonly, nullable) NSString *threadId;
 
 #pragma mark - Crypto
 

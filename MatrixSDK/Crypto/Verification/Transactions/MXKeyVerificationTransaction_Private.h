@@ -24,7 +24,7 @@
 #import "MXKeyVerificationDone.h"
 
 
-@class MXKeyVerificationManager, MXHTTPOperation, MXEvent;
+@class MXLegacyKeyVerificationManager, MXHTTPOperation, MXEvent;
 
 
 NS_ASSUME_NONNULL_BEGIN
@@ -32,12 +32,12 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  The `MXKeyVerificationTransaction` extension exposes internal operations.
  */
-@interface MXDefaultKeyVerificationTransaction ()
+@interface MXLegacyKeyVerificationTransaction ()
 
-@property (nonatomic, readonly, weak) MXKeyVerificationManager *manager;
+@property (nonatomic, readonly, weak) MXLegacyKeyVerificationManager *manager;
 @property (nonatomic, readwrite) NSString *transactionId;
 
-- (instancetype)initWithOtherDevice:(MXDeviceInfo*)otherDevice andManager:(MXKeyVerificationManager*)manager;
+- (instancetype)initWithOtherDevice:(MXDeviceInfo*)otherDevice andManager:(MXLegacyKeyVerificationManager*)manager;
 
 - (void)setDirectMessageTransportInRoom:(NSString*)roomId originalEvent:(NSString*)eventId;
 

@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
 
   s.name         = "MatrixSDK"
-  s.version      = "0.23.19"
+  s.version      = "0.26.3"
   s.summary      = "The iOS SDK to build apps compatible with Matrix (https://www.matrix.org)"
 
   s.description  = <<-DESC
@@ -22,13 +22,13 @@ Pod::Spec.new do |s|
   s.requires_arc  = true
   s.swift_versions = ['5.1', '5.2']
   
-  s.ios.deployment_target = "11.0"
-  s.osx.deployment_target = "10.12"
+  s.ios.deployment_target = "13.0"
+  s.osx.deployment_target = "10.15"
   
   s.default_subspec = 'Core'
   s.subspec 'Core' do |ss|
-      ss.ios.deployment_target = "11.0"
-      ss.osx.deployment_target = "10.12"
+      ss.ios.deployment_target = "13.0"
+      ss.osx.deployment_target = "10.15"
       
       ss.source_files = "MatrixSDK", "MatrixSDK/**/*.{h,m}", "MatrixSDK/**/*.{swift}"
       ss.osx.exclude_files = "MatrixSDK/VoIP/MXiOSAudioOutputRoute*.swift"
@@ -45,11 +45,11 @@ Pod::Spec.new do |s|
       ss.dependency 'OLMKit', '~> 3.2.5'
       ss.dependency 'Realm', '10.27.0'
       ss.dependency 'libbase58', '~> 0.1.4'
-      ss.ios.dependency 'MatrixSDK/CryptoSDK'
+      ss.dependency 'MatrixSDKCrypto', '0.3.0', :configurations => ["DEBUG", "RELEASE"], :inhibit_warnings => true
   end
 
   s.subspec 'JingleCallStack' do |ss|
-    ss.ios.deployment_target = "12.0"
+    ss.ios.deployment_target = "13.0"
     
     ss.source_files  = "MatrixSDKExtensions/VoIP/Jingle/**/*.{h,m}"
     
@@ -62,12 +62,6 @@ Pod::Spec.new do |s|
     
     # Use WebRTC framework included in Jitsi Meet SDK
     ss.ios.dependency 'JitsiMeetSDK', '5.0.2'
-  end
-  
-  # Experimental / NOT production-ready Rust-based crypto library, iOS-only
-  s.subspec 'CryptoSDK' do |ss|
-    ss.platform = :ios
-    ss.dependency 'MatrixSDKCrypto', '0.1.0', :configurations => ["DEBUG"]
   end
 
 end

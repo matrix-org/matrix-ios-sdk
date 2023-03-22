@@ -19,7 +19,7 @@
 #import "MXCrossSigningInfo.h"
 #import "MXCrossSigningKey.h"
 
-@class MXCrypto;
+@class MXLegacyCrypto;
 
 
 NS_ASSUME_NONNULL_BEGIN
@@ -86,18 +86,13 @@ typedef NS_ENUM(NSInteger, MXCrossSigningErrorCode)
     MXCrossSigningUnknownDeviceIdErrorCode,
 };
 
-
-@interface MXCrossSigning : NSObject
-
-/**
- The Matrix crypto.
- */
-@property (nonatomic, readonly, weak) MXCrypto *crypto;
+@protocol MXCrossSigning <NSObject>
 
 /**
  Cross-signing state for this account and this device.
  */
 @property (nonatomic, readonly) MXCrossSigningState state;
+@property (nonatomic, nullable, readonly) MXCrossSigningInfo *myUserCrossSigningKeys;
 @property (nonatomic, readonly) BOOL canTrustCrossSigning;
 @property (nonatomic, readonly) BOOL canCrossSign;
 @property (nonatomic, readonly) BOOL hasAllPrivateKeys;
@@ -164,6 +159,22 @@ typedef NS_ENUM(NSInteger, MXCrossSigningErrorCode)
                    success:(void (^)(void))success
                    failure:(void (^)(NSError *error))failure;
 
+/**
+ Get the stored cross-siging information of a user.
+
+ @param userId The user.
+ @return the cross-signing information if any.
+ */
+- (nullable MXCrossSigningInfo *)crossSigningKeysForUser:(NSString*)userId;
+
+@end
+
+@interface MXLegacyCrossSigning : NSObject <MXCrossSigning>
+
+/**
+ The Matrix crypto.
+ */
+@property (nonatomic, readonly, weak) MXLegacyCrypto *crypto;
 
 /**
  Request private keys for cross-signing from other devices.

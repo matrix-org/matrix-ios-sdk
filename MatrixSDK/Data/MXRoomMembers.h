@@ -38,6 +38,17 @@
  @return The newly-initialized MXRoomMembers.
  */
 - (instancetype)initWithRoomState:(MXRoomState*)state andMatrixSession:(MXSession*)matrixSession;
+
+/**
+ Create a `MXRoomMembers` instance.
+
+ @param members The members the created instance will be copied from.
+ @param isLive Indicate if this instance is used to store the live state of the room or the state of the room in the history.
+
+ @return The newly-initialized MXRoomMembers.
+ */
+- (instancetype)initWithMembers:(MXRoomMembers*)members isLive:(BOOL)isLive;
+
 /**
  A copy of the list of room members.
  */

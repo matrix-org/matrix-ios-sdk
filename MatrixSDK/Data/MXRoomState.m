@@ -154,6 +154,7 @@
     if (self)
     {
         _isLive = NO;
+        _members = [[MXRoomMembers alloc] initWithMembers:_members isLive:NO];
 
         // At the beginning of pagination, the back room state must be the same
         // as the current current room state.

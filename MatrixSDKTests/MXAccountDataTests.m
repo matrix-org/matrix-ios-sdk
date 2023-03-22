@@ -205,6 +205,98 @@
 }
 
 
+// Test the capability to read or write `m.local_notification_settings.<device-id>`
+// events in account data.
+- (void)testReadWriteLocalNotificationSettings
+{
+    [matrixSDKTestsData doMXSessionTestWithBob:self readyToTest:^(MXSession *mxSession, XCTestExpectation *expectation) {
+        XCTAssertNotNil(mxSession.accountData, @"account data shouldn't be nil.");
+        XCTAssertNil([mxSession.accountData localNotificationSettingsForDeviceWithId:mxSession.myDeviceId], @"account local notification settings should be nil.");
+        
+        NSDictionary *localNotificationSettings = @{
+            kMXAccountDataIsSilencedKey: @(YES)
+        };
+        
+        [mxSession setAccountData:localNotificationSettings forType:[MXAccountData localNotificationSettingsKeyForDeviceWithId:mxSession.myDeviceId] success:^{
+            NSDictionary *localNotificationSettings = [mxSession.accountData localNotificationSettingsForDeviceWithId:mxSession.myDeviceId];
+            XCTAssertNotNil(localNotificationSettings, @"account local notification settings shouldn't be nil.");
+            NSNumber *isSilenced = localNotificationSettings[kMXAccountDataIsSilencedKey];
+            XCTAssertNotNil(isSilenced, @"account local notification is_silenced settings shouldn't be nil.");
+            XCTAssertTrue(isSilenced.boolValue, @"is_silenced settings should be set to true.");
+            
+            localNotificationSettings = @{
+                kMXAccountDataIsSilencedKey: @(NO)
+            };
+            
+            [mxSession setAccountData:localNotificationSettings forType:[MXAccountData localNotificationSettingsKeyForDeviceWithId:mxSession.myDeviceId] success:^{
+                NSDictionary *localNotificationSettings = [mxSession.accountData localNotificationSettingsForDeviceWithId:mxSession.myDeviceId];
+                XCTAssertNotNil(localNotificationSettings, @"account local notification settings shouldn't be nil.");
+                NSNumber *isSilenced = localNotificationSettings[kMXAccountDataIsSilencedKey];
+                XCTAssertNotNil(isSilenced, @"account local notification is_silenced settings shouldn't be nil.");
+                XCTAssertFalse(isSilenced.boolValue, @"is_silenced settings should be set to false.");
+                [expectation fulfill];
+            } failure:^(NSError *error) {
+                XCTFail(@"MXSession setAccountData failed due to error %@", error);
+                [expectation fulfill];
+            }];
+        } failure:^(NSError *error) {
+            XCTFail(@"MXSession setAccountData failed due to error %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+- (void)testEmptyAccountDataEventsAreDeleted
+{
+    [matrixSDKTestsData doMXSessionTestWithBob:self readyToTest:^(MXSession *mxSession, XCTestExpectation *expectation) {
+        [mxSession setAccountData:@{} forType:@"test" success:^{
+            XCTAssertEqual(mxSession.accountData.allAccountDataEvents.count, 2);
+            
+            [NSNotificationCenter.defaultCenter addObserverForName:kMXSessionAccountDataDidChangeNotification
+                                                            object:mxSession
+                                                             queue:nil
+                                                        usingBlock:^(NSNotification * _Nonnull note) {
+                // after the sync the empty account data has been removed
+                XCTAssertEqual(mxSession.accountData.allAccountDataEvents.count, 1);
+                [expectation fulfill];
+            }];
+        } failure:^(NSError *error) {
+            XCTFail();
+        }];
+    }];
+}
+
+- (void)testOtherAccountDataEventsArentDeleted
+{
+    [matrixSDKTestsData doMXSessionTestWithBob:self readyToTest:^(MXSession *mxSession, XCTestExpectation *expectation) {
+        [mxSession setAccountData:@{@"key": @"value"} forType:@"test" success:^{
+            XCTAssertEqual(mxSession.accountData.allAccountDataEvents.count, 2);
+            
+            [NSNotificationCenter.defaultCenter addObserverForName:kMXSessionAccountDataDidChangeNotification
+                                                            object:mxSession
+                                                             queue:nil
+                                                        usingBlock:^(NSNotification * _Nonnull note) {
+                // after the sync the new account data is there
+                XCTAssertEqual(mxSession.accountData.allAccountDataEvents.count, 2);
+                [expectation fulfill];
+            }];
+        } failure:^(NSError *error) {
+            XCTFail();
+        }];
+    }];
+}
+
+- (void)testDeletionOfAccountData {
+    NSString* accountDataType = @"foo";
+    MXAccountData* data = MXAccountData.new;
+    
+    [data updateDataWithType:accountDataType data:NSDictionary.new];
+    XCTAssertNotNil([data accountDataForEventType:accountDataType]);
+    
+    [data deleteDataWithType:accountDataType];
+    XCTAssertNil([data accountDataForEventType:accountDataType]);
+}
+
 @end
 
 #pragma clang diagnostic pop

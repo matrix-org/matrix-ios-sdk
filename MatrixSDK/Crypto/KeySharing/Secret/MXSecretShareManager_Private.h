@@ -16,7 +16,7 @@
 
 #import "MXSecretShareManager.h"
 
-@class MXCrypto;
+@class MXLegacyCrypto;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -27,7 +27,7 @@ NS_ASSUME_NONNULL_BEGIN
  
  @param crypto the related 'MXCrypto' instance.
  */
-- (instancetype)initWithCrypto:(MXCrypto *)crypto;
+- (instancetype)initWithCrypto:(MXLegacyCrypto *)crypto;
 
 @end
 

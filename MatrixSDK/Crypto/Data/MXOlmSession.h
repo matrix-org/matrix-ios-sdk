@@ -30,7 +30,13 @@ NS_ASSUME_NONNULL_BEGIN
 @interface MXOlmSession : NSObject
 
 
-- (instancetype)initWithOlmSession:(OLMSession*)session;
+- (instancetype)initWithOlmSession:(OLMSession*)session
+                         deviceKey:(NSString*)deviceKey;
+
+/**
+ The curve25519 key of the other user that we share this session with.
+ */
+@property (nonatomic, readonly) NSString *deviceKey;
 
 /**
  The associated olm session.

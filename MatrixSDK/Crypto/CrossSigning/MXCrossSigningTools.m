@@ -19,7 +19,7 @@
 #import "MXCryptoTools.h"
 #import "MXKey.h"
 #import "MXCryptoConstants.h"
-
+#import "MXBase64Tools.h"
 
 #pragma mark - Constants
 
@@ -124,5 +124,43 @@ NSString *const MXCrossSigningToolsErrorDomain = @"org.matrix.sdk.crosssigning.t
     return [olmUtility verifyEd25519Signature:signature key:publicKey message:message error:error];
 }
 
+- (BOOL)isSecretValid:(NSString*)secret forPublicKeys:(NSString*)keys
+{
+    return (nil != [self pkSigningFromBase64PrivateKey:secret
+                                 withExpectedPublicKey:keys]);
+}
+
+- (nullable OLMPkSigning*)pkSigningFromBase64PrivateKey:(NSString*)base64PrivateKey withExpectedPublicKey:(NSString*)expectedPublicKey
+{
+    OLMPkSigning *pkSigning;
+    
+    NSData *privateKey = [MXBase64Tools dataFromBase64:base64PrivateKey];
+    if (privateKey)
+    {
+        pkSigning = [self pkSigningFromPrivateKey:privateKey withExpectedPublicKey:expectedPublicKey];
+    }
+    
+    return pkSigning;
+}
+
+- (nullable OLMPkSigning*)pkSigningFromPrivateKey:(NSData*)privateKey withExpectedPublicKey:(NSString*)expectedPublicKey
+{
+    NSError *error;
+    OLMPkSigning *pkSigning = [[OLMPkSigning alloc] init];
+    NSString *gotPublicKey = [pkSigning doInitWithSeed:privateKey error:&error];
+    if (error)
+    {
+        MXLogDebug(@"[MXCrossSigningTools] pkSigningFromPrivateKey failed to build PK signing. Error: %@", error);
+        return nil;
+    }
+    
+    if (![gotPublicKey isEqualToString:expectedPublicKey])
+    {
+        MXLogDebug(@"[MXCrossSigningTools] pkSigningFromPrivateKey failed. Keys do not match: %@ vs %@", gotPublicKey, expectedPublicKey);
+        return nil;
+    }
+    
+    return pkSigning;
+}
 
 @end

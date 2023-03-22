@@ -62,6 +62,15 @@
     return self;
 }
 
+- (instancetype)initWithMembers:(MXRoomMembers *)members isLive:(BOOL)isLive
+{
+    self = [members copy];
+    if (self) {
+        self->isLive = isLive;
+    }
+    return self;
+}
+
 - (NSArray<MXRoomMember *> *)members
 {
     return [members allValues];

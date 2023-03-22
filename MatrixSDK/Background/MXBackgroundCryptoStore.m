@@ -109,16 +109,6 @@ NSString *const MXBackgroundCryptoStoreUserIdSuffix = @":bgCryptoStore";
     }
 }
 
-- (void)open:(void (^)(void))onComplete failure:(void (^)(NSError *error))failure
-{
-    MXWeakify(self);
-    [cryptoStore open:^{
-        MXStrongifyAndReturnIfNil(self);
-        
-        [self->bgCryptoStore open:onComplete failure:failure];
-    } failure:failure];
-}
-
 - (instancetype)initWithCredentials:(MXCredentials *)theCredentials
 {
     NSAssert(NO, @"This method should be useless in the context of MXBackgroundCryptoStore");
@@ -180,7 +170,7 @@ NSString *const MXBackgroundCryptoStoreUserIdSuffix = @":bgCryptoStore";
         if (olmSession)
         {
             MXLogDebug(@"[MXBackgroundCryptoStore] performSessionOperationWithDevice: Transfer data for %@ from cryptoStore to bgCryptoStore", sessionId);
-            [bgCryptoStore storeSession:olmSession forDevice:deviceKey];
+            [bgCryptoStore storeSession:olmSession];
         }
     }
     
@@ -209,9 +199,9 @@ NSString *const MXBackgroundCryptoStoreUserIdSuffix = @":bgCryptoStore";
     return sessions;
 }
 
-- (void)storeSession:(MXOlmSession*)session forDevice:(NSString*)deviceKey
+- (void)storeSession:(MXOlmSession*)session
 {
-    [bgCryptoStore storeSession:session forDevice:deviceKey];
+    [bgCryptoStore storeSession:session];
 }
 
 
@@ -322,6 +312,12 @@ NSString *const MXBackgroundCryptoStoreUserIdSuffix = @":bgCryptoStore";
     NSAssert(NO, @"This method should be useless in the context of MXBackgroundCryptoStore");
 }
 
+- (NSString *)userId
+{
+    NSAssert(NO, @"This method should be useless in the context of MXBackgroundCryptoStore");
+    return nil;
+}
+
 - (void)storeDeviceId:(NSString*)deviceId
 {
     NSAssert(NO, @"This method should be useless in the context of MXBackgroundCryptoStore");
@@ -336,6 +332,22 @@ NSString *const MXBackgroundCryptoStoreUserIdSuffix = @":bgCryptoStore";
 - (void)storeDeviceSyncToken:(NSString*)deviceSyncToken
 {
     NSAssert(NO, @"This method should be useless in the context of MXBackgroundCryptoStore");
+}
+
+- (void)enumerateSessionsBy:(NSInteger)batchSize block:(void (^)(NSArray<MXOlmSession *> *, double))block
+{
+    NSAssert(NO, @"This method should be useless in the context of MXBackgroundCryptoStore");
+}
+
+- (void)enumerateInboundGroupSessionsBy:(NSInteger)batchSize block:(void (^)(NSArray<MXOlmInboundGroupSession *> *, NSSet<NSString *> *, double))block
+{
+    NSAssert(NO, @"This method should be useless in the context of MXBackgroundCryptoStore");
+}
+
+- (NSUInteger)sessionsCount
+{
+    NSAssert(NO, @"This method should be useless in the context of MXBackgroundCryptoStore");
+    return 0;
 }
 
 - (NSArray<MXOlmInboundGroupSession*> *)inboundGroupSessions
@@ -507,6 +519,12 @@ NSString *const MXBackgroundCryptoStoreUserIdSuffix = @":bgCryptoStore";
 - (void)storeSecret:(NSString*)secret withSecretId:(NSString*)secretId
 {
     NSAssert(NO, @"This method should be useless in the context of MXBackgroundCryptoStore");
+}
+
+- (BOOL)hasSecretWithSecretId:(NSString *)secretId
+{
+    NSAssert(NO, @"This method should be useless in the context of MXBackgroundCryptoStore");
+    return NO;
 }
 
 - (NSString*)secretWithSecretId:(NSString*)secretId

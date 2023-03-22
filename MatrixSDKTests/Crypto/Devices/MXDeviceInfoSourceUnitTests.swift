@@ -17,12 +17,8 @@
 import Foundation
 import XCTest
 @testable import MatrixSDK
-
-#if DEBUG && os(iOS)
-
 import MatrixSDKCrypto
 
-@available(iOS 13.0.0, *)
 class MXDeviceInfoSourceUnitTests: XCTestCase {
     var cryptoSource: DevicesSourceStub!
     var source: MXDeviceInfoSource!
@@ -86,5 +82,3 @@ class MXDeviceInfoSourceUnitTests: XCTestCase {
         XCTAssertEqual(map.objects(forUser: "Bob").count, 1)
     }
 }
-
-#endif

@@ -25,6 +25,7 @@
 #import "MXFileStore.h"
 #import "MXNoStore.h"
 #import "MXTools.h"
+#import "MatrixSDKTestsSwiftHeader.h"
 
 @interface MatrixSDKTestsE2EData ()
 
@@ -132,8 +133,8 @@
 
             [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
 
-            aliceSession.crypto.warnOnUnknowDevices = warnOnUnknowDevices;
-            bobSession.crypto.warnOnUnknowDevices = warnOnUnknowDevices;
+            aliceSession.legacyCrypto.warnOnUnknowDevices = warnOnUnknowDevices;
+            bobSession.legacyCrypto.warnOnUnknowDevices = warnOnUnknowDevices;
 
             // Listen to Bob MXSessionNewRoomNotification event
             __block __weak id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionNewRoomNotification object:bobSession queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
@@ -184,8 +185,8 @@
             
             [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
             
-            aliceSession.crypto.warnOnUnknowDevices = warnOnUnknowDevices;
-            bobSession.crypto.warnOnUnknowDevices = warnOnUnknowDevices;
+            aliceSession.legacyCrypto.warnOnUnknowDevices = warnOnUnknowDevices;
+            bobSession.legacyCrypto.warnOnUnknowDevices = warnOnUnknowDevices;
             
             [room inviteUser:bobSession.myUser.userId success:^{
                 readyToTest(aliceSession, bobSession, room.roomId, expectation);
@@ -262,9 +263,9 @@
 
             [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
 
-            aliceSession.crypto.warnOnUnknowDevices = warnOnUnknowDevices;
-            bobSession.crypto.warnOnUnknowDevices = warnOnUnknowDevices;
-            samSession.crypto.warnOnUnknowDevices = warnOnUnknowDevices;
+            aliceSession.legacyCrypto.warnOnUnknowDevices = warnOnUnknowDevices;
+            bobSession.legacyCrypto.warnOnUnknowDevices = warnOnUnknowDevices;
+            samSession.legacyCrypto.warnOnUnknowDevices = warnOnUnknowDevices;
 
             // Listen to Sam MXSessionNewRoomNotification event
             __block __weak id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionNewRoomNotification object:samSession queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
@@ -432,11 +433,11 @@
 
 - (void)outgoingRoomKeyRequestInSession:(MXSession*)session complete:(void (^)(MXOutgoingRoomKeyRequest*))complete
 {
-    dispatch_async(session.crypto.cryptoQueue, ^{
-        MXOutgoingRoomKeyRequest *outgoingRoomKeyRequest = [session.crypto.store outgoingRoomKeyRequestWithState:MXRoomKeyRequestStateUnsent];
+    dispatch_async(session.legacyCrypto.cryptoQueue, ^{
+        MXOutgoingRoomKeyRequest *outgoingRoomKeyRequest = [session.legacyCrypto.store outgoingRoomKeyRequestWithState:MXRoomKeyRequestStateUnsent];
         if (!outgoingRoomKeyRequest)
         {
-            outgoingRoomKeyRequest = [session.crypto.store outgoingRoomKeyRequestWithState:MXRoomKeyRequestStateSent];
+            outgoingRoomKeyRequest = [session.legacyCrypto.store outgoingRoomKeyRequestWithState:MXRoomKeyRequestStateSent];
         }
 
         dispatch_async(dispatch_get_main_queue(), ^{

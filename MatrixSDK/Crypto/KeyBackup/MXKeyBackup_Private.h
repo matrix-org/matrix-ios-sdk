@@ -15,6 +15,8 @@
  */
 
 #import "MXKeyBackup.h"
+#import "MXKeyBackupEngine.h"
+#import "MXSecretShareManager.h"
 
 @class MXCrypto;
 
@@ -26,29 +28,9 @@ NS_ASSUME_NONNULL_BEGIN
 @interface MXKeyBackup ()
 
 /**
- Constructor.
-
- @param crypto the related 'MXCrypto'.
- */
-- (instancetype)initWithCrypto:(MXCrypto *)crypto;
-
-/**
- Check the server for an active key backup.
-
- If one is present and has a valid signature from one of the user's verified
- devices, start backing up to it.
- */
-- (void)checkAndStartKeyBackup;
-
-/**
  * Reset all local key backup data.
  */
 - (void)resetKeyBackupData;
-
-/**
- Do a backup if there are new keys.
- */
-- (void)maybeSendKeyBackup;
 
 - (void)requestPrivateKeys:(void (^)(void))onComplete;
 

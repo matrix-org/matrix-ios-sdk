@@ -98,7 +98,7 @@ static NSString* const kMXLoginFlowTypeKey = @"type";
     if (_avatarUrl) { jsonDictionary[@"avatar_url"] = _avatarUrl; }
     if (_roomTypeString) { jsonDictionary[@"room_type"] = _roomTypeString; }
 
-    return jsonDictionary;
+    return jsonDictionary.copy;
 }
 
 @end
@@ -582,6 +582,35 @@ NSString *const kMXPresenceOffline = @"offline";
 
 @end
 
+@interface MXLoginToken()
+
+@property (nonatomic) NSDictionary *json;
+
+@end
+
+@implementation MXLoginToken
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXLoginToken *loginToken = [[MXLoginToken alloc] init];
+    if (loginToken)
+    {
+        MXJSONModelSetString(loginToken.token, JSONDictionary[@"login_token"]);
+        MXJSONModelSetUInt64(loginToken.expiresIn, JSONDictionary[@"expires_in"]);
+
+        MXJSONModelSetDictionary(loginToken.json, JSONDictionary);
+    }
+    return loginToken;
+}
+
+- (NSDictionary *)JSONDictionary
+{
+    return _json;
+}
+
+@end
+
+
 
 NSString *const kMXPushRuleActionStringNotify       = @"notify";
 NSString *const kMXPushRuleActionStringDontNotify   = @"dont_notify";
@@ -804,7 +833,6 @@ NSString *const kMXPushRuleConditionStringSenderNotificationPermission  = @"send
 @implementation MXPushRulesResponse
 
 NSString *const kMXPushRuleScopeStringGlobal = @"global";
-NSString *const kMXPushRuleScopeStringDevice = @"device";
 
 + (id)modelFromJSON:(NSDictionary *)JSONDictionary
 {
@@ -815,8 +843,6 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
         {
             pushRulesResponse.global = [MXPushRulesSet modelFromJSON:JSONDictionary[kMXPushRuleScopeStringGlobal] withScope:kMXPushRuleScopeStringGlobal];
         }
-
-        // TODO support device rules
 
         pushRulesResponse->JSONDictionary = JSONDictionary;
     }
@@ -1100,11 +1126,6 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
 @end
 
 @interface MXKeysQueryResponse ()
-
-/**
- The original JSON used to create the response model
- */
-@property (nonatomic, copy) NSDictionary *responseJSON;
 @end
 
 @implementation MXKeysQueryResponse
@@ -1114,8 +1135,6 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     MXKeysQueryResponse *keysQueryResponse = [[MXKeysQueryResponse alloc] init];
     if (keysQueryResponse)
     {
-        keysQueryResponse.responseJSON = JSONDictionary;
-        
         // Devices keys
         NSMutableDictionary *map = [NSMutableDictionary dictionary];
 
@@ -1199,7 +1218,31 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
 
 - (NSDictionary *)JSONDictionary
 {
-    return self.responseJSON;
+    NSMutableDictionary *deviceKeys = [[NSMutableDictionary alloc] init];
+    for (NSString *userId in self.deviceKeys.userIds) {
+        NSMutableDictionary *devices = [[NSMutableDictionary alloc] init];
+        for (NSString *deviceId in [self.deviceKeys deviceIdsForUser:userId]) {
+            devices[deviceId] = [self.deviceKeys objectForDevice:deviceId forUser:userId].JSONDictionary.copy;
+        }
+        deviceKeys[userId] = devices.copy;
+    }
+    
+    NSMutableDictionary *master = [[NSMutableDictionary alloc] init];
+    NSMutableDictionary *selfSigning = [[NSMutableDictionary alloc] init];
+    NSMutableDictionary *userSigning = [[NSMutableDictionary alloc] init];
+    for (NSString *userId in self.crossSigningKeys) {
+        master[userId] = self.crossSigningKeys[userId].masterKeys.JSONDictionary.copy;
+        selfSigning[userId] = self.crossSigningKeys[userId].selfSignedKeys.JSONDictionary.copy;
+        userSigning[userId] = self.crossSigningKeys[userId].userSignedKeys.JSONDictionary.copy;
+    }
+    
+    return @{
+        @"device_keys": deviceKeys.copy ?: @{},
+        @"failures": self.failures.copy ?: @{},
+        @"master_keys": master.copy ?: @{},
+        @"self_signing_keys": selfSigning.copy ?: @{},
+        @"user_signing_keys": userSigning.copy ?: @{}
+    };
 }
 
 @end
@@ -1254,51 +1297,12 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
 
 - (NSDictionary *)JSONDictionary
 {
-    return self.responseJSON;
-}
-
-@end
-
-#pragma mark - Device Management
-
-@implementation MXDevice
-
-+ (id)modelFromJSON:(NSDictionary *)JSONDictionary
-{
-    MXDevice *device = [[MXDevice alloc] init];
-    if (device)
+    NSMutableDictionary *dictionary = [self.responseJSON mutableCopy];
+    if (!dictionary[@"failures"])
     {
-        MXJSONModelSetString(device.deviceId, JSONDictionary[@"device_id"]);
-        MXJSONModelSetString(device.displayName, JSONDictionary[@"display_name"]);
-        MXJSONModelSetString(device.lastSeenIp, JSONDictionary[@"last_seen_ip"]);
-        MXJSONModelSetUInt64(device.lastSeenTs, JSONDictionary[@"last_seen_ts"]);
+        dictionary[@"failures"] = @{};
     }
-    
-    return device;
-}
-
-- (instancetype)initWithCoder:(NSCoder *)aDecoder
-{
-    self = [super init];
-    if (self)
-    {
-        _deviceId = [aDecoder decodeObjectForKey:@"device_id"];
-        _displayName = [aDecoder decodeObjectForKey:@"display_name"];
-        _lastSeenIp = [aDecoder decodeObjectForKey:@"last_seen_ip"];
-        _lastSeenTs = [((NSNumber*)[aDecoder decodeObjectForKey:@"last_seen_ts"]) unsignedLongLongValue];
-    }
-    return self;
-}
-
-- (void)encodeWithCoder:(NSCoder *)aCoder
-{
-    [aCoder encodeObject:_deviceId forKey:@"device_id"];
-    if (_displayName)
-    {
-        [aCoder encodeObject:_displayName forKey:@"display_name"];
-    }
-    [aCoder encodeObject:_lastSeenIp forKey:@"last_seen_ip"];
-    [aCoder encodeObject:@(_lastSeenTs) forKey:@"last_seen_ts"];
+    return dictionary.copy;
 }
 
 @end
@@ -2216,7 +2220,7 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     {
         dictionary[@"passphrase"] = self.passphrase;
     }
-    return dictionary;
+    return dictionary.copy;
 }
 
 @end

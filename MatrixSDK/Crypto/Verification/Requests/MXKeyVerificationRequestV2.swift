@@ -15,112 +15,96 @@
 //
 
 import Foundation
-
-#if DEBUG && os(iOS)
-
 import MatrixSDKCrypto
 
 /// Verification request originating from `MatrixSDKCrypto`
-@available(iOS 13.0.0, *)
-class MXKeyVerificationRequestV2: NSObject, MXKeyVerificationRequest {
-    var state: MXKeyVerificationRequestState {
-        // State as enum will be moved to MatrixSDKCrypto in the future
-        // to avoid the mapping of booleans into state
-        if request.isDone {
-            return MXKeyVerificationRequestStateAccepted
-        } else if request.isCancelled {
-            return MXKeyVerificationRequestStateCancelled
-        } else if request.isReady {
-            return MXKeyVerificationRequestStateReady
-        } else if request.isPassive {
-            return MXKeyVerificationRequestStatePending
+class MXKeyVerificationRequestV2: NSObject, MXKeyVerificationRequest { 
+    enum Error: Swift.Error {
+        case cannotAccept
+        case cannotCancel
+        case cannotStartSasVerification
+        case cannotStartQrVerification
+    }
+    
+    private(set) var state: MXKeyVerificationRequestState = MXKeyVerificationRequestStatePending {
+        didSet {
+            guard state != oldValue else {
+                return
+            }
+            
+            log.debug("\(oldValue.description) -> \(state.description)")
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(name: .MXKeyVerificationRequestDidChange, object: self)
+            }
         }
-        return MXKeyVerificationRequestStatePending
     }
     
-    var reasonCancelCode: MXTransactionCancelCode? {
-        guard let info = request.cancelInfo else {
-            return nil
-        }
-        return .init(
-            value: info.cancelCode,
-            humanReadable: info.reason
-        )
-    }
-    
-    var isFromMyUser: Bool {
-        return otherUser == handler.userId
-    }
-    
-    var isFromMyDevice: Bool {
-        return request.weStarted
-    }
-    
-    var requestId: String {
-        return request.flowId
-    }
-    
+    let requestId: String
     let transport: MXKeyVerificationTransport
     
-    var otherUser: String {
-        return request.otherUserId
-    }
+    let myUserId: String
+    let otherUser: String
+    let otherDevice: String?
     
-    var otherDevice: String? {
-        return request.otherDeviceId
-    }
+    let isFromMyUser: Bool
+    let isFromMyDevice: Bool
+    
+    let roomId: String?
     
     var methods: [String] {
-        return (isFromMyDevice ? myMethods : otherMethods) ?? []
+        (isFromMyDevice ? myMethods : otherMethods) ?? []
     }
+    private (set) var myMethods: [String]?
+    private (set) var otherMethods: [String]?
     
-    var myMethods: [String]? {
-        return request.ourMethods
-    }
-    
-    var otherMethods: [String]? {
-        return request.theirMethods
-    }
-    
-    private var request: VerificationRequest
-    private let handler: MXCryptoVerificationRequesting
-    
+    private (set) var reasonCancelCode: MXTransactionCancelCode?
+
+    private let request: VerificationRequestProtocol
+    private let handler: MXCryptoVerifying
     private let log = MXNamedLog(name: "MXKeyVerificationRequestV2")
     
-    init(request: VerificationRequest, transport: MXKeyVerificationTransport, handler: MXCryptoVerificationRequesting) {
+    init(request: VerificationRequestProtocol, handler: MXCryptoVerifying) {
         self.request = request
-        self.transport = transport
         self.handler = handler
-    }
-    
-    func processUpdates() -> MXKeyVerificationUpdateResult {
-        guard let request = handler.verificationRequest(userId: otherUser, flowId: requestId) else {
-            return .removed
-        }
         
-        guard self.request != request else {
-            return .noUpdates
-        }
-        self.request = request
-        return .updated
+        self.requestId = request.flowId()
+        self.transport = request.roomId() != nil ?.directMessage : .toDevice
+        
+        self.myUserId = handler.userId
+        self.otherUser = request.otherUserId()
+        self.otherDevice = request.otherDeviceId()
+        self.isFromMyUser = otherUser == myUserId
+        self.isFromMyDevice = request.weStarted()
+        self.roomId = request.roomId()
+        self.myMethods = request.ourSupportedMethods()
+        self.otherMethods = request.theirSupportedMethods()
+        
+        super.init()
+        
+        request.setChangesListener(listener: self)
     }
     
     func accept(
         withMethods methods: [String],
         success: @escaping () -> Void,
-        failure: @escaping (Error) -> Void
+        failure: @escaping (Swift.Error) -> Void
     ) {
+        log.debug("->")
+        guard let outgoingRequest = request.accept(methods: methods) else {
+            log.error("Cannot accept request")
+            failure(Error.cannotAccept)
+            return
+        }
+        
         Task {
             do {
-                try await handler.acceptVerificationRequest(
-                    userId: otherUser,
-                    flowId: requestId,
-                    methods: methods
-                )
+                try await handler.handleOutgoingVerificationRequest(outgoingRequest)
+                log.debug("Accepted request")
                 await MainActor.run {
                     success()
                 }
             } catch {
+                log.error("Failed accepting request", context: error)
                 await MainActor.run {
                     failure(error)
                 }
@@ -131,25 +115,91 @@ class MXKeyVerificationRequestV2: NSObject, MXKeyVerificationRequest {
     func cancel(
         with code: MXTransactionCancelCode,
         success: (() -> Void)?,
-        failure: ((Error) -> Void)? = nil
+        failure: ((Swift.Error) -> Void)? = nil
     ) {
+        log.debug("->")
+        guard let outgoingRequest = request.cancel() else {
+            log.error("Cannot cancel request")
+            failure?(Error.cannotCancel)
+            return
+        }
+        
         Task {
             do {
-                try await handler.cancelVerification(
-                    userId: otherUser,
-                    flowId: requestId,
-                    cancelCode: code.value
-                )
+                try await handler.handleOutgoingVerificationRequest(outgoingRequest)
+                log.debug("Cancelled request")
                 await MainActor.run {
                     success?()
                 }
             } catch {
+                log.error("Failed cancelling request", context: error)
                 await MainActor.run {
                     failure?(error)
                 }
             }
         }
     }
+    
+    func startSasVerification() async throws -> SasProtocol {
+        guard let result = try request.startSasVerification() else {
+            log.failure("Cannot start Sas")
+            throw Error.cannotStartSasVerification
+        }
+        
+        try await handler.handleOutgoingVerificationRequest(result.request)
+        return result.sas
+    }
+    
+    func startQrVerification() throws -> QrCodeProtocol {
+        guard let qrCode = try request.startQrVerification() else {
+            log.error("Cannot start QrCode")
+            throw Error.cannotStartQrVerification
+        }
+        return qrCode
+    }
 }
 
-#endif
+extension MXKeyVerificationRequestV2: VerificationRequestListener {
+    func onChange(state: VerificationRequestState) {
+        log.debug("\(state)")
+        
+        switch state {
+        case .requested:
+            self.state = MXKeyVerificationRequestStatePending
+        case .ready(let theirMethods, let ourMethods):
+            self.myMethods = ourMethods
+            self.otherMethods = theirMethods
+            self.state = MXKeyVerificationRequestStateReady
+        case .done:
+            self.state = MXKeyVerificationRequestStateAccepted
+        case .cancelled(let cancelInfo):
+            reasonCancelCode = MXTransactionCancelCode(
+                value: cancelInfo.cancelCode,
+                humanReadable: cancelInfo.reason
+            )
+            self.state = cancelInfo.cancelledByUs ? MXKeyVerificationRequestStateCancelledByMe : MXKeyVerificationRequestStateCancelled
+        }
+    }
+}
+
+private extension MXKeyVerificationRequestState {
+    var description: String {
+        switch self {
+        case MXKeyVerificationRequestStatePending:
+            return "pending"
+        case MXKeyVerificationRequestStateExpired:
+            return "expired"
+        case MXKeyVerificationRequestStateCancelled:
+            return "cancelled"
+        case MXKeyVerificationRequestStateCancelledByMe:
+            return "cancelledByMe"
+        case MXKeyVerificationRequestStateReady:
+            return "ready"
+        case MXKeyVerificationRequestStateAccepted:
+            return "accepted"
+        default:
+            return "unknown"
+        }
+    }
+}
+

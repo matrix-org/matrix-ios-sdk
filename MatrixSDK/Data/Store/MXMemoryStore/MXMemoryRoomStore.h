@@ -93,6 +93,15 @@
 - (id<MXEventsEnumerator>)enumeratorForMessagesWithTypeIn:(NSArray*)types;
 
 /**
+ Get all events in thread since the root message event.
+
+ @param threadId the thread id to find events in.
+ @param types a set of event types strings (MXEventTypeString).
+ @return the messages events after an event Id
+ */
+- (NSArray<MXEvent*>*)eventsInThreadWithThreadId:(NSString *)threadId except:(NSString *)userId withTypeIn:(NSSet<MXEventTypeString>*)types;
+
+/**
  Get all events newer than the event with the passed id.
 
  @param eventId the event id to find.
@@ -110,13 +119,6 @@
  @return An array of events related to the given event id.
  */
 - (NSArray<MXEvent*>*)relationsForEvent:(NSString*)eventId relationType:(NSString*)relationType;
-
-/**
- The text message partially typed by the user but not yet sent in the room.
-
- @deprecated use partialAttributedTextMessage
- */
-@property (nonatomic) NSString *partialTextMessage __deprecated_msg("use partialAttributedTextMessage");
 
 /**
  The text message partially typed by the user but not yet sent in the room.

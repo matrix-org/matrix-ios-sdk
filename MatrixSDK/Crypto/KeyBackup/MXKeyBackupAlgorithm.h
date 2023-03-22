@@ -20,7 +20,7 @@
 @class MXKeyBackupData;
 @class MXOlmInboundGroupSession;
 @class MXMegolmSessionData;
-@class MXCrypto;
+@class MXLegacyCrypto;
 @class MXKeyBackupVersion;
 
 #ifndef MXKeyBackupAlgorithm_h
@@ -45,7 +45,7 @@ typedef NSData* _Nullable (^MXKeyBackupPrivateKeyGetterBlock)(void);
 /// @param crypto crypto instance
 /// @param authData auth data instance
 /// @param keyGetterBlock block to be called when private key is required.
-- (nullable instancetype)initWithCrypto:(MXCrypto*)crypto
+- (nullable instancetype)initWithCrypto:(MXLegacyCrypto*)crypto
                                authData:(id<MXBaseKeyBackupAuthData>)authData
                          keyGetterBlock:(MXKeyBackupPrivateKeyGetterBlock)keyGetterBlock;
 

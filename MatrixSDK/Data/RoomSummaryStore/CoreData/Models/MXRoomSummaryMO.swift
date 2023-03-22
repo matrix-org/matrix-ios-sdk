@@ -83,7 +83,7 @@ public class MXRoomSummaryMO: NSManagedObject {
         s_typeString = summary.roomTypeString
         s_typeInt = Int16(summary.roomType.rawValue)
         s_avatar = summary.avatar
-        s_displayName = summary.displayname
+        s_displayName = summary.displayName
         s_topic = summary.topic
         s_creatorUserId = summary.creatorUserId
         s_aliases = summary.aliases.joined(separator: StringArrayDelimiter)
@@ -186,7 +186,7 @@ extension MXRoomSummaryMO: MXRoomSummaryProtocol {
         return s_avatar
     }
     
-    public var displayname: String? {
+    public var displayName: String? {
         return s_displayName
     }
     

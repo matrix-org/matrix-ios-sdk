@@ -19,7 +19,7 @@
 #import "MXKeyVerificationRequest.h"
 #import "MXKeyVerificationRequestByDMJSONModel.h"
 
-@class MXEvent, MXKeyVerificationManager;
+@class MXEvent;
 
 
 NS_ASSUME_NONNULL_BEGIN
@@ -27,9 +27,8 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  An handler on an interactive request for verification by Direct Message.
  */
-@interface MXKeyVerificationByDMRequest : MXDefaultKeyVerificationRequest
+@interface MXKeyVerificationByDMRequest : MXLegacyKeyVerificationRequest
 
-@property (nonatomic, readonly) NSString *roomId;
 @property (nonatomic, readonly) NSString *eventId;
 
 @property (nonatomic, readonly) MXKeyVerificationRequestByDMJSONModel *request;

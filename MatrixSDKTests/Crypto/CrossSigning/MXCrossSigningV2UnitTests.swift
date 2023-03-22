@@ -17,12 +17,8 @@
 import Foundation
 import XCTest
 @testable import MatrixSDK
-
-#if os(iOS)
-
 import MatrixSDKCrypto
 
-@available(iOS 13.0.0, *)
 class MXCrossSigningV2UnitTests: XCTestCase {
     
     var crypto: CryptoCrossSigningStub!
@@ -40,11 +36,6 @@ class MXCrossSigningV2UnitTests: XCTestCase {
     
     func test_state_notBootstrapped() {
         XCTAssertEqual(crossSigning.state, .notBootstrapped)
-    }
-    
-    func test_state_canCrossSign() {
-        crypto.stubbedStatus = CrossSigningStatus(hasMaster: true, hasSelfSigning: true, hasUserSigning: true)
-        XCTAssertEqual(crossSigning.state, .canCrossSign)
     }
     
     func test_state_crossSigningExists() {
@@ -84,6 +75,24 @@ class MXCrossSigningV2UnitTests: XCTestCase {
         }
         waitForExpectations(timeout: 1)
     }
+    
+    func test_state_canCrossSign() {
+        let exp = expectation(description: "exp")
+        crypto.stubbedStatus = CrossSigningStatus(hasMaster: true, hasSelfSigning: true, hasUserSigning: true)
+        crypto.stubbedVerifiedUsers = ["Alice"]
+        crypto.stubbedIdentities = [
+            "Alice": .own(
+                userId: "Alice",
+                trustsOurOwnDevice: true,
+                masterKey: "",
+                selfSigningKey: "",
+                userSigningKey: ""
+            )
+        ]
+        crossSigning.refreshState { _ in
+            XCTAssertEqual(self.crossSigning.state, .canCrossSign)
+            exp.fulfill()
+        }
+        waitForExpectations(timeout: 1)
+    }
 }
-
-#endif

@@ -27,7 +27,6 @@ public typealias Block<T> = () async throws -> T
 ///
 /// The solution to this problem is using serial task queues where work is scheduled, but only executed once all of the previously
 /// scheduled tasks have completed. This is an analogous mechanism to using serial `DispatchQueue`s.
-@available(iOS 13.0.0, macOS 10.15.0, *)
 public actor MXTaskQueue {
     public enum Error: Swift.Error {
         case valueUnavailable
@@ -49,6 +48,7 @@ public actor MXTaskQueue {
             assertionFailure("Failing to get value of the correct type should not be possible")
             throw Error.valueUnavailable
         }
+        previousTask = nil
         return value
     }
 

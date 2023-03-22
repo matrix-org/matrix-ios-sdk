@@ -16,192 +16,121 @@
 
 import Foundation
 import XCTest
-
-#if os(iOS)
-
 import MatrixSDKCrypto
 @testable import MatrixSDK
 
-@available(iOS 13.0.0, *)
 class MXSASTransactionV2UnitTests: XCTestCase {
     var verification: CryptoVerificationStub!
     override func setUp() {
         verification = CryptoVerificationStub()
     }
-    
-    func makeTransaction(for sas: Sas = .stub()) -> MXSASTransactionV2 {
+
+    func makeTransaction(for sas: SasStub = .init(), isIncoming: Bool = true) -> MXSASTransactionV2 {
         .init(
             sas: sas,
-            transport: .directMessage,
+            isIncoming: isIncoming,
             handler: verification
         )
     }
-    
+
     // MARK: - Test Properties
-    
+
     func test_usesCorrectProperties() {
-        let stub = Sas.stub(
+        let stub = SasStub(
             otherUserId: "Bob",
             otherDeviceId: "Device2",
             flowId: "123",
             roomId: "ABC",
-            weStarted: true,
-            supportsEmoji: true
+            weStarted: true
         )
-        
-        let transaction = makeTransaction(for: stub)
-        
+
+        let transaction = makeTransaction(for: stub, isIncoming: true)
+
+        XCTAssertEqual(transaction.state, MXSASTransactionStateUnknown)
         XCTAssertEqual(transaction.transactionId, "123")
-        XCTAssertEqual(transaction.transport, MXKeyVerificationTransport.directMessage)
-        XCTAssertFalse(transaction.isIncoming)
+        XCTAssertTrue(transaction.isIncoming)
         XCTAssertEqual(transaction.otherUserId, "Bob")
         XCTAssertEqual(transaction.otherDeviceId, "Device2")
+        XCTAssertNil(transaction.sasEmoji)
+        XCTAssertNil(transaction.sasDecimal)
+        XCTAssertNil(transaction.reasonCancelCode)
+        XCTAssertNil(transaction.error)
         XCTAssertEqual(transaction.dmRoomId, "ABC")
         XCTAssertEqual(transaction.dmEventId, "123")
     }
     
-    func test_sasEmoji() {
+    func test_usesCorrectTransport() {
+        let transaction1 = makeTransaction(for: .init(roomId: "ABC"))
+        XCTAssertEqual(transaction1.transport, .directMessage)
+        XCTAssertEqual(transaction1.dmEventId, "123")
+        
+        let transaction2 = makeTransaction(for: .init(roomId: nil))
+        XCTAssertEqual(transaction2.transport, .toDevice)
+        XCTAssertNil(transaction2.dmEventId)
+    }
+    
+    // MARK: - Test State
+    
+    func test_startedState() {
+        let incoming = makeTransaction(isIncoming: true)
+        incoming.onChange(state: .started)
+        XCTAssertEqual(incoming.state, MXSASTransactionStateIncomingShowAccept)
+        
+        let outgoing = makeTransaction(isIncoming: false)
+        outgoing.onChange(state: .started)
+        XCTAssertEqual(outgoing.state, MXSASTransactionStateOutgoingWaitForPartnerToAccept)
+    }
+    
+    func test_acceptedState() {
+        let transaction = makeTransaction()
+        transaction.onChange(state: .accepted)
+        XCTAssertEqual(transaction.state, MXSASTransactionStateWaitForPartnerKey)
+    }
+    
+    func test_keysExchangedState() {
         // Index-to-emoji mapping specified in
         // https://spec.matrix.org/v1.3/client-server-api/#sas-method-emoji
-        verification.stubbedEmojis = [
-            "123": [1, 3, 10, 20]
-        ]
+        let indices: [Int32] = [1, 3, 10, 20]
         let expectedEmojis = ["🐱", "🐎", "🐧", "🌙"]
+        let transaction = makeTransaction()
         
-        let transaction = makeTransaction(for: .stub(
-            flowId: "123"
-        ))
+        transaction.onChange(state: .keysExchanged(emojis: indices, decimals: indices))
         
         let emoji = transaction.sasEmoji?.map { $0.emoji }
         XCTAssertEqual(emoji, expectedEmojis)
+        XCTAssertEqual(transaction.sasDecimal, "1 3 10 20")
+        XCTAssertEqual(transaction.state, MXSASTransactionStateShowSAS)
     }
     
-    func test_state() {
-        let testCases: [(Sas, MXSASTransactionState)] = [
-            (.stub(
-                hasBeenAccepted: false,
-                canBePresented: false,
-                haveWeConfirmed: false,
-                isDone: false,
-                isCancelled: false
-            ), MXSASTransactionStateUnknown),
-            (.stub(
-                hasBeenAccepted: false,
-                canBePresented: false,
-                haveWeConfirmed: false,
-                isDone: true,
-                isCancelled: false
-            ), MXSASTransactionStateVerified),
-            (.stub(
-                hasBeenAccepted: false,
-                canBePresented: false,
-                haveWeConfirmed: false,
-                isDone: false,
-                isCancelled: true
-            ), MXSASTransactionStateCancelled),
-            (.stub(
-                hasBeenAccepted: false,
-                canBePresented: true,
-                haveWeConfirmed: false,
-                isDone: false,
-                isCancelled: false
-            ), MXSASTransactionStateShowSAS),
-            (.stub(
-                hasBeenAccepted: true,
-                canBePresented: false,
-                haveWeConfirmed: false,
-                isDone: false,
-                isCancelled: false
-            ), MXSASTransactionStateIncomingShowAccept),
-            (.stub(
-                hasBeenAccepted: false,
-                canBePresented: false,
-                haveWeConfirmed: true,
-                isDone: false,
-                isCancelled: false
-            ), MXSASTransactionStateOutgoingWaitForPartnerToAccept),
-        ]
-
-        for (stub, state) in testCases {
-            let transaction = MXSASTransactionV2(
-                sas: stub,
-                transport: .directMessage,
-                handler: verification
-            )
-            XCTAssertEqual(transaction.state, state)
-        }
-    }
-    
-    func test_isIncomingIfWeStarted() {
-        let transaction1 = makeTransaction(for: .stub(
-            weStarted: true
-        ))
-        XCTAssertFalse(transaction1.isIncoming)
-        
-        let transaction2 = makeTransaction(for: .stub(
-            weStarted: true
-        ))
-        XCTAssertFalse(transaction2.isIncoming)
-    }
-
-    func test_reasonCancelCode() {
-        let cancelInfo = CancelInfo(
-            cancelCode: "123",
-            reason: "Changed mind",
-            cancelledByUs: true
-        )
-
-        let transaction = MXSASTransactionV2(
-            sas: .stub(cancelInfo: cancelInfo),
-            transport: .directMessage,
-            handler: verification
-        )
-
-        XCTAssertEqual(transaction.reasonCancelCode?.value, "123")
-        XCTAssertEqual(transaction.reasonCancelCode?.humanReadable, "Changed mind")
-    }
-    
-    // MARK: - Test Updates
-    
-    func test_processUpdated_removedIfNoMatchingRequest() {
-        verification.stubbedTransactions = [:]
+    func test_confirmedState() {
         let transaction = makeTransaction()
-        
-        let result = transaction.processUpdates()
-        
-        XCTAssertEqual(result, MXKeyVerificationUpdateResult.removed)
+        transaction.onChange(state: .confirmed)
+        XCTAssertEqual(transaction.state, MXSASTransactionStateWaitForPartnerToConfirm)
     }
     
-    func test_processUpdated_noUpdatesIfRequestUnchanged() {
-        let stub = Sas.stub(
-            flowId: "ABC",
-            isDone: false
-        )
-        verification.stubbedTransactions = [stub.flowId: .sasV1(sas: stub)]
-        let transaction = makeTransaction(for: stub)
-        
-        let result = transaction.processUpdates()
-
-        XCTAssertEqual(result, MXKeyVerificationUpdateResult.noUpdates)
-    }
-    
-    func test_processUpdated_updatedIfRequestChanged() {
-        let stub = Sas.stub(
-            flowId: "ABC",
-            isDone: false
-        )
-        verification.stubbedTransactions = [stub.flowId: .sasV1(sas: stub)]
-        let transaction = makeTransaction(for: stub)
-        verification.stubbedTransactions = [stub.flowId: .sasV1(sas: .stub(
-            flowId: "ABC",
-            isDone: true
-        ))]
-        
-        let result = transaction.processUpdates()
-
-        XCTAssertEqual(result, MXKeyVerificationUpdateResult.updated)
+    func test_doneState() {
+        let transaction = makeTransaction()
+        transaction.onChange(state: .done)
         XCTAssertEqual(transaction.state, MXSASTransactionStateVerified)
     }
+    
+    func test_cancelledByMeState() {
+        let transaction = makeTransaction()
+        
+        transaction.onChange(state: .cancelled(cancelInfo: .init(cancelCode: "123", reason: "Changed mind", cancelledByUs: true)))
+        
+        XCTAssertEqual(transaction.reasonCancelCode?.value, "123")
+        XCTAssertEqual(transaction.reasonCancelCode?.humanReadable, "Changed mind")
+        XCTAssertEqual(transaction.state, MXSASTransactionStateCancelledByMe)
+    }
+    
+    func test_cancelledByThemState() {
+        let transaction = makeTransaction()
+        
+        transaction.onChange(state: .cancelled(cancelInfo: .init(cancelCode: "123", reason: "Changed mind", cancelledByUs: false)))
+        
+        XCTAssertEqual(transaction.reasonCancelCode?.value, "123")
+        XCTAssertEqual(transaction.reasonCancelCode?.humanReadable, "Changed mind")
+        XCTAssertEqual(transaction.state, MXSASTransactionStateCancelled)
+    }
 }
-
-#endif

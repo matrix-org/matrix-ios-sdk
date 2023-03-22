@@ -143,6 +143,18 @@ NSString *const kMXRoomEventFilterKeyRelatedBySenders = @"related_by_senders";
     return lazyLoadMembers;
 }
 
+- (void)setUnreadThreadNotifications:(BOOL)unreadThreadNotifications
+{
+    dictionary[@"unread_thread_notifications"] = @(unreadThreadNotifications);
+}
+
+- (BOOL)unreadThreadNotifications
+{
+    BOOL unreadThreadNotifications = NO; // Basic default value used by homeservers
+    MXJSONModelSetBoolean(unreadThreadNotifications, dictionary[@"unread_thread_notifications"]);
+    return unreadThreadNotifications;
+}
+
 - (void)setRelatedByTypes:(NSArray<NSString *> *)relatedByTypes
 {
     dictionary[kMXRoomEventFilterKeyRelatedByTypes] = relatedByTypes;

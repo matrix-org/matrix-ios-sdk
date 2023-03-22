@@ -466,26 +466,29 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     uint64_t timestamp = 0;
     if (isRoomInitialSync && !_initialEventId)
     {
-        MXReceiptData *lastUserReadReceipt = [store getReceiptInRoom:_state.roomId forUserId:room.mxSession.myUserId];
-        if (lastUserReadReceipt)
+        NSDictionary<NSString *, MXReceiptData *> *lastUserReadReceiptList = [store getReceiptsInRoom:_state.roomId forUserId:room.mxSession.myUserId];
+        for (MXReceiptData *lastUserReadReceipt in [lastUserReadReceiptList allValues])
         {
-            timestamp = lastUserReadReceipt.ts;
-            
-            //  find the last encrypted event in the events
-            __block MXEvent *lastEncryptedEvent = nil;
-            [roomSync.timeline.events enumerateObjectsWithOptions:NSEnumerationReverse
-                                                       usingBlock:^(MXEvent * _Nonnull event, NSUInteger idx, BOOL * _Nonnull stop) {
-                if ([event.type isEqualToString:kMXEventTypeStringRoomEncrypted])
-                {
-                    *stop = YES;
-                    lastEncryptedEvent = event;
-                }
-            }];
-            
-            if (timestamp > lastEncryptedEvent.originServerTs)
+            if (lastUserReadReceipt)
             {
-                //  we should at least decrypt the last encrypted event for the rooms whose read markers passed the last encrypted event
-                timestamp = lastEncryptedEvent.originServerTs;
+                timestamp = lastUserReadReceipt.ts;
+                
+                //  find the last encrypted event in the events
+                __block MXEvent *lastEncryptedEvent = nil;
+                [roomSync.timeline.events enumerateObjectsWithOptions:NSEnumerationReverse
+                                                           usingBlock:^(MXEvent * _Nonnull event, NSUInteger idx, BOOL * _Nonnull stop) {
+                    if ([event.type isEqualToString:kMXEventTypeStringRoomEncrypted])
+                    {
+                        *stop = YES;
+                        lastEncryptedEvent = event;
+                    }
+                }];
+                
+                if (timestamp > lastEncryptedEvent.originServerTs)
+                {
+                    //  we should at least decrypt the last encrypted event for the rooms whose read markers passed the last encrypted event
+                    timestamp = lastEncryptedEvent.originServerTs;
+                }
             }
         }
     }
@@ -703,7 +706,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         }
 
         // Consider that a message sent by a user has been read by him
-        [room storeLocalReceipt:kMXEventTypeStringRead eventId:event.eventId userId:event.sender ts:event.originServerTs];
+        [room storeLocalReceipt:kMXEventTypeStringRead eventId:event.eventId threadId:event.threadId ?: kMXEventTimelineMain userId:event.sender ts:event.originServerTs];
     }
 
     // Store the event

@@ -48,7 +48,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly) NSString * _Nullable avatar;
 
 /// The computed display name of the room.
-@property (nonatomic, readonly) NSString * _Nullable displayname;
+@property (nonatomic, readonly) NSString * _Nullable displayName;
 
 /// The topic of the room.
 @property (nonatomic, readonly) NSString * _Nullable topic;

@@ -16,7 +16,7 @@
 
 #import <Foundation/Foundation.h>
 
-@class MXCrypto;
+@class MXLegacyCrypto;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -35,7 +35,7 @@ typedef NS_ENUM(NSInteger, MXCryptoMigrationErrorCode)
  */
 @interface MXCryptoMigration : NSObject
 
-- (instancetype)initWithCrypto:(MXCrypto *)crypto;
+- (instancetype)initWithCrypto:(MXLegacyCrypto *)crypto;
 
 /**
  Indicate if the data must be updated.

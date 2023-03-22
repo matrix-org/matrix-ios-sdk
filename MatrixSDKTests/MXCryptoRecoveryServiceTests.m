@@ -21,6 +21,7 @@
 
 #import "MatrixSDKTestsData.h"
 #import "MatrixSDKTestsE2EData.h"
+#import "MatrixSDKTestsSwiftHeader.h"
 
 @interface MXCryptoRecoveryServiceTests : XCTestCase
 {
@@ -130,7 +131,7 @@
     // - Have Alice with cross-signing bootstrapped
     [self doTestWithAliceWithCrossSigning:self readyToTest:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
         
-        NSString *msk = [aliceSession.crypto.store secretWithSecretId:MXSecretId.crossSigningMaster];
+        NSString *msk = [aliceSession.legacyCrypto.store secretWithSecretId:MXSecretId.crossSigningMaster];
 
         MXRecoveryService *recoveryService = aliceSession.crypto.recoveryService;
         XCTAssertNotNil(recoveryService);
@@ -160,10 +161,10 @@
             
             
             // Forget all secrets for the test
-            [aliceSession.crypto.store deleteSecretWithSecretId:MXSecretId.crossSigningMaster];
-            [aliceSession.crypto.store deleteSecretWithSecretId:MXSecretId.crossSigningSelfSigning];
-            [aliceSession.crypto.store deleteSecretWithSecretId:MXSecretId.crossSigningUserSigning];
-            [aliceSession.crypto.store deleteSecretWithSecretId:MXSecretId.keyBackup];
+            [aliceSession.legacyCrypto.store deleteSecretWithSecretId:MXSecretId.crossSigningMaster];
+            [aliceSession.legacyCrypto.store deleteSecretWithSecretId:MXSecretId.crossSigningSelfSigning];
+            [aliceSession.legacyCrypto.store deleteSecretWithSecretId:MXSecretId.crossSigningUserSigning];
+            [aliceSession.legacyCrypto.store deleteSecretWithSecretId:MXSecretId.keyBackup];
 
 
             // Recover all secrets
@@ -176,7 +177,7 @@
                     XCTAssertEqual(recoveryResult.invalidSecrets.count, 0);
                     
                     // -> Make sure the secret is still correct
-                    NSString *msk2 = [aliceSession.crypto.store secretWithSecretId:MXSecretId.crossSigningMaster];
+                    NSString *msk2 = [aliceSession.legacyCrypto.store secretWithSecretId:MXSecretId.crossSigningMaster];
                     XCTAssertEqualObjects(msk, msk2);
                     
                     [expectation fulfill];
@@ -354,7 +355,7 @@
     [self doTestWithAliceWithCrossSigningAndKeyBackup:self readyToTest:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
         
         // - Forget the key backup private key (this micmics key backup created from another device)
-        [aliceSession.crypto.store deleteSecretWithSecretId:MXSecretId.keyBackup];
+        [aliceSession.legacyCrypto.store deleteSecretWithSecretId:MXSecretId.keyBackup];
         
         // - Create a recovery with createServicesBackup:YES
         [aliceSession.crypto.recoveryService createRecoveryForSecrets:nil withPassphrase:nil createServicesBackups:YES success:^(MXSecretStorageKeyCreationInfo * _Nonnull keyCreationInfo) {
@@ -404,7 +405,7 @@
                     
                     XCTAssertNotNil(aliceSession2.crypto.backup.keyBackupVersion);
                     XCTAssertFalse(aliceSession2.crypto.backup.enabled);
-                    XCTAssertEqual(aliceSession2.crypto.store.inboundGroupSessions.count, 0);
+                    XCTAssertEqual(aliceSession2.legacyCrypto.store.inboundGroupSessions.count, 0);
                     
                     
                     // - Recover secrets and services
@@ -423,7 +424,7 @@
                         XCTAssertTrue(aliceSession2.crypto.backup.enabled);
                         
                         // -> The new device should have restore keys from the backup
-                        XCTAssertEqual(aliceSession2.crypto.store.inboundGroupSessions.count, 1);
+                        XCTAssertEqual(aliceSession2.legacyCrypto.store.inboundGroupSessions.count, 1);
                         
                         
                         [expectation fulfill];
@@ -480,7 +481,7 @@
                 XCTAssertEqual(recoveryService.secretsStoredLocally.count, 3);
                 
                 // -> No more underlying SSSS
-                MXSecretStorage *secretStorage = aliceSession.crypto.secretStorage;
+                MXSecretStorage *secretStorage = aliceSession.legacyCrypto.secretStorage;
                 XCTAssertNil(secretStorage.defaultKey);
                 XCTAssertFalse([secretStorage hasSecretWithSecretId:MXSecretId.crossSigningMaster withSecretStorageKeyId:ssssKeyId]);
                 XCTAssertFalse([secretStorage hasSecretWithSecretId:MXSecretId.crossSigningSelfSigning withSecretStorageKeyId:ssssKeyId]);

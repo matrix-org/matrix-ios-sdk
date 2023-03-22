@@ -29,7 +29,7 @@
 #import "MatrixSDKSwiftHeader.h"
 #import "MXFileRoomSummaryStore.h"
 
-static NSUInteger const kMXFileVersion = 81;
+static NSUInteger const kMXFileVersion = 82;    // Check getUnreadRoomFromStore if you update this value. Delete this comment after
 
 static NSString *const kMXFileStoreFolder = @"MXFileStore";
 static NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
@@ -46,6 +46,8 @@ static NSString *const kMXFileStoreRoomOutgoingMessagesFile = @"outgoingMessages
 static NSString *const kMXFileStoreRoomStateFile = @"state";
 static NSString *const kMXFileStoreRoomAccountDataFile = @"accountData";
 static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
+static NSString *const kMXFileStoreRoomUnreadRoomsFile = @"unreadRooms";
+static NSString *const kMXFileStoreRoomThreadedReadReceiptsFile = @"threadedReadReceipts";
 
 static NSUInteger preloadOptions;
 
@@ -259,7 +261,7 @@ static NSUInteger preloadOptions;
                 }
                 [self loadUsers];
                 [self loadGroups];
-
+                [self loadUnreadRooms];
                 taskProfile.units = self.roomSummaryStore.countOfRooms;
                 [MXSDKOptions.sharedInstance.profiler stopMeasuringTaskWithProfile:taskProfile];
                 MXLogDebug(@"[MXFileStore] Data loaded from files in %.0fms", taskProfile.duration * 1000);
@@ -434,16 +436,6 @@ static NSUInteger preloadOptions;
 {
     [super storeHasReachedHomeServerPaginationEndForRoom:roomId andValue:value];
 
-    if (NSNotFound == [roomsToCommitForMessages indexOfObject:roomId])
-    {
-        [roomsToCommitForMessages addObject:roomId];
-    }
-}
-
-- (void)storePartialTextMessageForRoom:(NSString *)roomId partialTextMessage:(NSString *)partialTextMessage
-{
-    [super storePartialTextMessageForRoom:roomId partialTextMessage:partialTextMessage];
-    
     if (NSNotFound == [roomsToCommitForMessages indexOfObject:roomId])
     {
         [roomsToCommitForMessages addObject:roomId];
@@ -850,6 +842,7 @@ static NSUInteger preloadOptions;
     [self saveUsers];
     [self saveGroupsDeletion];
     [self saveGroups];
+    [self saveUnreadRooms];
     [self saveFilters];
     [self saveMetaData];
 }
@@ -966,57 +959,143 @@ static NSUInteger preloadOptions;
     return store;
 }
 
-- (RoomReceiptsStore*)getOrCreateRoomReceiptsStore:(NSString *)roomId
+- (RoomThreadedReceiptsStore*)getOrCreateRoomThreadedReceiptsStore:(NSString*)roomId
 {
-    RoomReceiptsStore *receiptsStore = roomReceiptsStores[roomId];
-    if (nil == receiptsStore)
+    RoomThreadedReceiptsStore *threadedStore = roomThreadedReceiptsStores[roomId];
+    if (nil == threadedStore)
     {
         //  This object is global, which means that we will be able to open only one room at a time.
         //  A per-room lock might be better.
-        @synchronized (roomReceiptsStores) {
+        @synchronized (roomThreadedReceiptsStores) {
             NSString *roomFile = [self readReceiptsFileForRoom:roomId forBackup:NO];
-            if ([[NSFileManager defaultManager] fileExistsAtPath:roomFile])
+            RoomReceiptsStore *receiptsStore = [self loadReceiptsStoreFromFileAt:roomFile forRoomWithId:roomId];
+            
+            if (receiptsStore)
             {
-                @try
+                // if an old version of the receipts store exists we need first to port it to new version.
+                threadedStore = [RoomThreadedReceiptsStore new];
+                threadedStore[kMXEventTimelineMain] = receiptsStore;
+                
+                // then save the new version of the receipts
+                NSString *newFile = [self threadedReadReceiptsFileForRoom:roomId forBackup:NO];
+                if ([NSKeyedArchiver archiveRootObject:threadedStore toFile:newFile])
                 {
-                    NSDate *startDate = [NSDate date];
-                    receiptsStore = [NSKeyedUnarchiver unarchiveObjectWithFile:roomFile];
-                    roomReceiptsStores[roomId] = receiptsStore;
-                    if ([NSThread isMainThread])
-                    {
-                        MXLogWarning(@"[MXFileStore] Loaded read receipts of room: %@ in %.0fms, in main thread", roomId, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
-                    }
-                }
-                @catch (NSException *exception)
-                {
-                    NSDictionary *logDetails = @{
-                        @"roomId": roomId ?: @"",
-                        @"exception": exception
-                    };
-                    MXLogErrorDetails(@"[MXFileStore] Warning: loadReceipts file for room as been corrupted", logDetails);
-                    
-                    // We used to reset the store and force a full initial sync but this makes the app
-                    // start very slowly.
-                    // So, avoid this reset by considering there is no read receipts for this room which
-                    // is not probably true.
-                    // TODO: Can we live with that?
-                    //[self deleteAllData];
-                    
-                    receiptsStore = [RoomReceiptsStore new];
-                    roomReceiptsStores[roomId] = receiptsStore;
+                    // this file is not needed anymore
+                    [[NSFileManager defaultManager] removeItemAtPath:roomFile error:nil];
                 }
             }
             else
             {
-                receiptsStore = [RoomReceiptsStore new];
-                roomReceiptsStores[roomId] = receiptsStore;
+                roomFile = [self threadedReadReceiptsFileForRoom:roomId forBackup:NO];
+                threadedStore = [self loadReceiptsStoreFromFileAt:roomFile forRoomWithId:roomId];
+                if (!threadedStore)
+                {
+                    threadedStore = [RoomThreadedReceiptsStore new];
+                }
             }
+            roomThreadedReceiptsStores[roomId] = threadedStore;
         }
     }
     
-    return receiptsStore;
+    return threadedStore;
 }
 
+-(void)saveUnreadRooms
+{
+    
+    NSArray<NSString*>* rooms = [roomUnreaded allObjects];
+    NSString *roomsFile = [self unreadRoomsFile];
+    [self saveObject:rooms toFile:roomsFile];
+}
+
+-(void)loadUnreadRooms
+{
+    roomUnreaded = [NSMutableSet setWithArray:[self getUnreadRoomFromStore]];
+}
+
+- (NSArray*)getUnreadRoomFromStore
+{
+    NSString *unreadRoomsFile = [self unreadRoomsFile];
+    
+    // TODO: Remove this migration code on the next kMXFileVersion update (>82)
+    // The `unreadFileForRoomsForBackup()` method should be removed.
+    // Likewise for the associated test `testUnreadRoomsFileMigration()`
+    NSString *oldUnreadRoomsFile = [self unreadFileForRoomsForBackup:NO];
+    if ([[NSFileManager defaultManager] fileExistsAtPath:oldUnreadRoomsFile])
+    {
+        MXLogDebug(@"[MXFileStore] getUnreadRoomFromStore: Migrate the unread rooms file")
+        [[NSFileManager defaultManager] moveItemAtPath:oldUnreadRoomsFile toPath:unreadRoomsFile error:nil];
+    }
+        
+    NSArray *result = [self loadUnreadRoomsStoreFromFileAt:unreadRoomsFile];
+    return result;
+}
+
+- (NSMutableDictionary*)loadReceiptsStoreFromFileAt:(NSString*)filePath forRoomWithId:(NSString*)roomId
+{
+    NSMutableDictionary *store;
+    
+    if ([[NSFileManager defaultManager] fileExistsAtPath:filePath])
+    {
+        @try
+        {
+            NSDate *startDate = [NSDate date];
+            store = [NSKeyedUnarchiver unarchiveObjectWithFile:filePath];
+            if ([NSThread isMainThread])
+            {
+                MXLogWarning(@"[MXFileStore] Loaded read receipts of room: %@ in %.0fms, in main thread", roomId, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+            }
+        }
+        @catch (NSException *exception)
+        {
+            NSDictionary *logDetails = @{
+                @"roomId": roomId ?: @"",
+                @"exception": exception
+            };
+            MXLogErrorDetails(@"[MXFileStore] Warning: loadReceipts file for room as been corrupted", logDetails);
+            
+            // We used to reset the store and force a full initial sync but this makes the app
+            // start very slowly.
+            // So, avoid this reset by considering there is no read receipts for this room which
+            // is not probably true.
+            // TODO: Can we live with that?
+            //[self deleteAllData];
+        }
+    }
+    
+    return store;
+}
+- (NSArray*)loadUnreadRoomsStoreFromFileAt:(NSString*)filePath
+{
+    NSArray *store = [NSArray new];
+    
+    if ([[NSFileManager defaultManager] fileExistsAtPath:filePath])
+    {
+        @try
+        {
+            NSDate *startDate = [NSDate date];
+            NSData *dataOfFile = [NSData dataWithContentsOfFile:filePath];
+            NSError* error;
+            NSArray *result = [NSKeyedUnarchiver unarchivedArrayOfObjectsOfClass:[NSString class] fromData:dataOfFile error:&error];
+            if (nil != result) {
+                store = result;
+            }
+            if ([NSThread isMainThread])
+            {
+                MXLogWarning(@"[MXFileStore] Loaded unread rooms: %.0fms, in main thread", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+            }
+        }
+        @catch (NSException *exception)
+        {
+            NSDictionary *logDetails = @{
+                @"exception": exception
+            };
+            MXLogErrorDetails(@"[MXFileStore] Warning: loadReceipts file for room as been corrupted", logDetails);
+        }
+    }
+    
+    return store;
+}
 #pragma mark - File paths
 - (void)setUpStoragePaths
 {
@@ -1058,6 +1137,18 @@ static NSUInteger preloadOptions;
     else
     {
         return [self.storeBackupRoomsPath stringByAppendingPathComponent:roomId];
+    }
+}
+
+- (NSString*)folderForRoomsforBackup:(BOOL)backup
+{
+    if (!backup)
+    {
+        return storeRoomsPath;
+    }
+    else
+    {
+        return self.storeBackupRoomsPath;
     }
 }
 
@@ -1106,6 +1197,22 @@ static NSUInteger preloadOptions;
 - (NSString*)readReceiptsFileForRoom:(NSString*)roomId forBackup:(BOOL)backup
 {
     return [[self folderForRoom:roomId forBackup:backup] stringByAppendingPathComponent:kMXFileStoreRoomReadReceiptsFile];
+}
+
+- (NSString*)unreadRoomsFile
+{
+    return [storePath stringByAppendingPathComponent:kMXFileStoreRoomUnreadRoomsFile];
+}
+
+// TODO: To delete when kMXFileVersion > 82
+- (NSString*)unreadFileForRoomsForBackup:(BOOL)backup
+{
+    return [[self folderForRoomsforBackup:backup] stringByAppendingPathComponent:kMXFileStoreRoomUnreadRoomsFile];
+}
+
+- (NSString*)threadedReadReceiptsFileForRoom:(NSString*)roomId forBackup:(BOOL)backup
+{
+    return [[self folderForRoom:roomId forBackup:backup] stringByAppendingPathComponent:kMXFileStoreRoomThreadedReadReceiptsFile];
 }
 
 - (NSString*)metaDataFileForBackup:(BOOL)backup
@@ -2019,7 +2126,7 @@ static NSUInteger preloadOptions;
 - (void)loadReceiptsForRoom:(NSString *)roomId completion:(void (^)(void))completion
 {
     dispatch_async(dispatchQueue, ^{
-        [self getOrCreateRoomReceiptsStore:roomId];
+        [self getOrCreateRoomThreadedReceiptsStore:roomId];
         
         if (completion)
         {
@@ -2059,39 +2166,10 @@ static NSUInteger preloadOptions;
     
     for (NSString *roomId in roomIDs)
     {
-        NSString *roomFile = [self readReceiptsFileForRoom:roomId forBackup:NO];
-
-        RoomReceiptsStore *receiptsStore;
-        @try
-        {
-            receiptsStore = [NSKeyedUnarchiver unarchiveObjectWithFile:roomFile];
-        }
-        @catch (NSException *exception)
-        {
-            MXLogDebug(@"[MXFileStore] Warning: loadReceipts file for room %@ has been corrupted", roomId);
-        }
-
-        if (receiptsStore)
-        {
-            //MXLogDebug(@"   - %@: %tu", roomId, receiptsDict.count);
-            roomReceiptsStores[roomId] = receiptsStore;
-        }
-        else
-        {
-            MXLogDebug(@"[MXFileStore] Warning: MXFileStore has no receipts file for room %@", roomId);
-
-            // We used to reset the store and force a full initial sync but this makes the app
-            // start very slowly.
-            // So, avoid this reset by considering there is no read receipts for this room which
-            // is not probably true.
-            // TODO: Can we live with that?
-            //[self deleteAllData];
-
-            roomReceiptsStores[roomId] = [RoomReceiptsStore new];
-        }
+        roomThreadedReceiptsStores[roomId] = [self getOrCreateRoomThreadedReceiptsStore:roomId];
     }
 
-    MXLogDebug(@"[MXFileStore] Loaded read receipts of %tu rooms in %.0fms", roomReceiptsStores.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+    MXLogDebug(@"[MXFileStore] Loaded read receipts of %tu rooms in %.0fms", roomThreadedReceiptsStores.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
 
 - (void)saveReceipts
@@ -2114,13 +2192,13 @@ static NSUInteger preloadOptions;
             // Save rooms where there was changes
             for (NSString *roomId in roomsToCommit)
             {
-                RoomReceiptsStore *receiptsStore = self->roomReceiptsStores[roomId];
+                RoomThreadedReceiptsStore *receiptsStore =  self->roomThreadedReceiptsStores[roomId];
                 if (receiptsStore)
                 {
                     @synchronized (receiptsStore)
                     {
-                        NSString *file = [self readReceiptsFileForRoom:roomId forBackup:NO];
-                        NSString *backupFile = [self readReceiptsFileForRoom:roomId forBackup:YES];
+                        NSString *file = [self threadedReadReceiptsFileForRoom:roomId forBackup:NO];
+                        NSString *backupFile = [self threadedReadReceiptsFileForRoom:roomId forBackup:YES];
 
                         // Backup the file
                         if (backupFile && [[NSFileManager defaultManager] fileExistsAtPath:file])
@@ -2227,29 +2305,22 @@ static NSUInteger preloadOptions;
  */
 - (void)saveObject:(id)object toFile:(NSString *)file
 {
-    if (@available(iOS 11.0, *))
+    NSError *error;
+    NSData *data = [NSKeyedArchiver archivedDataWithRootObject:object requiringSecureCoding:NO error:&error];
+    if (error)
     {
-        NSError *error;
-        NSData *data = [NSKeyedArchiver archivedDataWithRootObject:object requiringSecureCoding:NO error:&error];
-        if (error)
-        {
-            MXLogFailureDetails(@"[MXFileStore] Failed archiving root object", error);
-            return;
-        }
-        
-        BOOL success = [data writeToFile:file options:0 error:&error];
-        if (success)
-        {
-            MXLogDebug(@"[MXFileStore] Saved data successfully");
-        }
-        else
-        {
-            MXLogFailureDetails(@"[MXFileStore] Failed saving data", error);
-        }
+        MXLogFailureDetails(@"[MXFileStore] Failed archiving root object", error);
+        return;
+    }
+    
+    BOOL success = [data writeToFile:file options:0 error:&error];
+    if (success)
+    {
+        MXLogDebug(@"[MXFileStore] Saved data successfully");
     }
     else
     {
-        [NSKeyedArchiver archiveRootObject:object toFile:file];
+        MXLogFailureDetails(@"[MXFileStore] Failed saving data", error);
     }
 }
 
@@ -2262,30 +2333,23 @@ static NSUInteger preloadOptions;
  */
 - (id)loadObjectOfClasses:(NSSet<Class> *)classes fromFile:(NSString *)file
 {
-    if (@available(iOS 11.0, *))
+    NSError *error;
+    NSData *data = [NSData dataWithContentsOfFile:file];
+    if (!data)
     {
-        NSError *error;
-        NSData *data = [NSData dataWithContentsOfFile:file];
-        if (!data)
-        {
-            MXLogDebug(@"[MXFileStore] No data to load at file %@", file);
-            return nil;
-        }
-        
-        id object = [NSKeyedUnarchiver unarchivedObjectOfClasses:classes fromData:data error:&error];
-        if (object && !error)
-        {
-            return object;
-        }
-        else
-        {
-            MXLogFailureDetails(@"[MXFileStore] Failed loading object from class", error);
-            return nil;
-        }
+        MXLogDebug(@"[MXFileStore] No data to load at file %@", file);
+        return nil;
+    }
+    
+    id object = [NSKeyedUnarchiver unarchivedObjectOfClasses:classes fromData:data error:&error];
+    if (object && !error)
+    {
+        return object;
     }
     else
     {
-        return [NSKeyedUnarchiver unarchiveObjectWithFile:file];
+        MXLogFailureDetails(@"[MXFileStore] Failed loading object from class", error);
+        return nil;
     }
 }
 
@@ -2299,38 +2363,31 @@ static NSUInteger preloadOptions;
  */
 - (id)loadRootObjectWithoutSecureCodingFromFile:(NSString *)file
 {
-    if (@available(iOS 11.0, *))
+    NSError *error;
+    NSData *data = [NSData dataWithContentsOfFile:file];
+    if (!data)
     {
-        NSError *error;
-        NSData *data = [NSData dataWithContentsOfFile:file];
-        if (!data)
-        {
-            MXLogDebug(@"[MXFileStore] No data to load at file %@", file);
-            return nil;
-        }
-        NSKeyedUnarchiver *unarchiver = [[NSKeyedUnarchiver alloc] initForReadingFromData:data error:&error];
-        if (error && !unarchiver)
-        {
-            MXLogFailureDetails(@"[MXFileStore] Cannot create unarchiver", error);
-            return nil;
-        }
-        unarchiver.requiresSecureCoding = NO;
-        
-        // Seems to be an implementation detaul
-        id object = [unarchiver decodeTopLevelObjectForKey:NSKeyedArchiveRootObjectKey error:&error];
-        if (object && !error)
-        {
-            return object;
-        }
-        else
-        {
-            MXLogFailureDetails(@"[MXFileStore] Failed loading object from class", error);
-            return nil;
-        }
+        MXLogDebug(@"[MXFileStore] No data to load at file %@", file);
+        return nil;
+    }
+    NSKeyedUnarchiver *unarchiver = [[NSKeyedUnarchiver alloc] initForReadingFromData:data error:&error];
+    if (error && !unarchiver)
+    {
+        MXLogFailureDetails(@"[MXFileStore] Cannot create unarchiver", error);
+        return nil;
+    }
+    unarchiver.requiresSecureCoding = NO;
+    
+    // Seems to be an implementation detaul
+    id object = [unarchiver decodeTopLevelObjectForKey:NSKeyedArchiveRootObjectKey error:&error];
+    if (object && !error)
+    {
+        return object;
     }
     else
     {
-        return [NSKeyedUnarchiver unarchiveObjectWithFile:file];
+        MXLogFailureDetails(@"[MXFileStore] Failed loading object from class", error);
+        return nil;
     }
 }
 

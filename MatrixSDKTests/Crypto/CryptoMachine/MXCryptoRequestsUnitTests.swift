@@ -16,12 +16,8 @@
 
 import Foundation
 @testable import MatrixSDK
-
-#if DEBUG && os(iOS)
-
 import MatrixSDKCrypto
 
-@available(iOS 13.0.0, *)
 class MXCryptoRequestsUnitTests: XCTestCase {
     func test_canCreateToDeviceRequest() {
         let body: [String: [String: NSDictionary]] = [
@@ -35,9 +31,10 @@ class MXCryptoRequestsUnitTests: XCTestCase {
         ]
         
         do {
-            let request = try MXCryptoRequests.ToDeviceRequest(eventType: "A", body: MXTools.serialiseJSONObject(body))
+            let request = try MXCryptoRequests.ToDeviceRequest(eventType: "A", body: MXTools.serialiseJSONObject(body), addMessageId: true)
             XCTAssertEqual(request.eventType, "A")
             XCTAssertEqual(request.contentMap.map, body)
+            XCTAssertTrue(request.addMessageId)
         } catch {
             XCTFail("Failed creating to device request with error - \(error)")
         }
@@ -52,6 +49,10 @@ class MXCryptoRequestsUnitTests: XCTestCase {
             "one_time_keys": [
                 "1": "C",
                 "2": "D",
+            ],
+            "fallback_keys": [
+                "3": "E",
+                "4": "F",
             ]
         ]
         
@@ -64,6 +65,10 @@ class MXCryptoRequestsUnitTests: XCTestCase {
             XCTAssertEqual(request.oneTimeKeys as? [String: String], [
                 "1": "C",
                 "2": "D",
+            ])
+            XCTAssertEqual(request.fallbackKeys as? [String: String], [
+                "3": "E",
+                "4": "F",
             ])
             XCTAssertEqual(request.deviceId, "A")
         } catch {
@@ -86,6 +91,31 @@ class MXCryptoRequestsUnitTests: XCTestCase {
         XCTAssertEqual(request.devices.map as? [String: [String: String]], keys)
     }
     
+    func test_canCreateKeysBackupRequest() {
+        let rooms: [String: Any] = [
+            "A": [
+                "sessions": [
+                    "1": [
+                        "first_message_index": 1,
+                        "forwarded_count": 0,
+                        "is_verified": true,
+                    ],
+                ]
+            ],
+        ]
+        let string = MXTools.serialiseJSONObject(rooms)
+        
+        do {
+            let request = try MXCryptoRequests.KeysBackupRequest(version: "2", rooms: string ?? "")
+            XCTAssertEqual(request.version, "2")
+            XCTAssertEqual(request.keysBackupData.jsonDictionary() as NSDictionary, [
+                "rooms": rooms
+            ])
+        } catch {
+            XCTFail("Failed creating keys backup request with error - \(error)")
+        }
+    }
+    
     func test_uploadSignatureKeysRequest_canGetJsonKeys() throws {
         let request = UploadSigningKeysRequest(
             masterKey: MXTools.serialiseJSONObject(["key": "A"]),
@@ -101,5 +131,3 @@ class MXCryptoRequestsUnitTests: XCTestCase {
         XCTAssertEqual(keys["user_signing_key"] as? [String: String], ["key": "C"])
     }
 }
-
-#endif
