@@ -115,14 +115,14 @@ class MXCrossSigningV2: NSObject, MXCrossSigning {
         success: ((Bool) -> Void)?,
         failure: ((Swift.Error) -> Void)? = nil
     ) {
-        log.debug("->")
+        log.debug("Refreshing cross signing state, current state: \(state)")
         
         Task {
             do {
                 try await crossSigning.refreshCrossSigningStatus()
                 myUserCrossSigningKeys = infoSource.crossSigningInfo(userId: crossSigning.userId)
                 
-                log.debug("Cross signing state refreshed")
+                log.debug("Cross signing state refreshed, new state: \(state)")
                 await MainActor.run {
                     success?(true)
                 }
@@ -229,5 +229,22 @@ extension MXCrossSigningV2: MXRecoveryServiceDelegate {
             return
         }
         signUser(withUserId: userId, success: success, failure: failure)
+    }
+}
+
+extension MXCrossSigningState: CustomStringConvertible {
+    public var description: String {
+        switch self {
+        case .notBootstrapped:
+            return "notBootstrapped"
+        case .crossSigningExists:
+            return "crossSigningExists"
+        case .trustCrossSigning:
+            return "trustCrossSigning"
+        case .canCrossSign:
+            return "canCrossSign"
+        @unknown default:
+            return "unknown"
+        }
     }
 }

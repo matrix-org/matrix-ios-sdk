@@ -520,7 +520,7 @@ extern NSString *const kMXEventIdentifierKey;
 /**
  If the event relates to another one, some data about the relation.
  */
-@property (nonatomic) MXEventContentRelatesTo *relatesTo;
+@property (nonatomic, nullable) MXEventContentRelatesTo *relatesTo;
 
 /**
  In case of sending failure (MXEventSentStateFailed), the error that occured.
