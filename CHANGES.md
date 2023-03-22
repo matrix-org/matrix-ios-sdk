@@ -1,3 +1,8 @@
+## Changes in 0.26.3 (2023-03-22)
+
+No significant changes.
+
+
 ## Changes in 0.26.2 (2023-03-21)
 
 🙌 Improvements

@@ -16,7 +16,6 @@
 
 #import <XCTest/XCTest.h>
 
-#import "MatrixSDKTestsSwiftHeader.h"
 #import "MatrixSDKTestsData.h"
 #import "MatrixSDKTestsE2EData.h"
 
@@ -82,11 +81,13 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
             MXUsersTrustLevelSummary *trust = roomFromAlicePOV.summary.trust;
             
             XCTAssertNotNil(trust);
-            XCTAssertEqual(trust.usersTrust.totalCount, 2);
-            XCTAssertEqual(trust.usersTrust.trustedCount, 0);
+            XCTAssertEqual(trust.trustedUsersProgress.totalUnitCount, 2);
+            XCTAssertEqual(trust.trustedUsersProgress.completedUnitCount, 0);
+            XCTAssertEqual(trust.trustedUsersProgress.fractionCompleted, 0);
             
-            XCTAssertEqual(trust.devicesTrust.totalCount, 0);
-            XCTAssertEqual(trust.devicesTrust.trustedCount, 0);
+            XCTAssertEqual(trust.trustedDevicesProgress.totalUnitCount, 0);
+            XCTAssertEqual(trust.trustedDevicesProgress.completedUnitCount, 0);
+            XCTAssertEqual(trust.trustedDevicesProgress.fractionCompleted, 0);
 
             [expectation fulfill];
         });
@@ -109,11 +110,13 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
             MXUsersTrustLevelSummary *trust = roomFromAlicePOV.summary.trust;
             
             XCTAssertNotNil(trust);
-            XCTAssertEqual(trust.usersTrust.totalCount, 2);
-            XCTAssertEqual(trust.usersTrust.trustedCount, 2);
+            XCTAssertEqual(trust.trustedUsersProgress.totalUnitCount, 2);
+            XCTAssertEqual(trust.trustedUsersProgress.completedUnitCount, 2);
+            XCTAssertEqual(trust.trustedUsersProgress.fractionCompleted, 1);
 
-            XCTAssertEqual(trust.devicesTrust.totalCount, 3);
-            XCTAssertEqual(trust.devicesTrust.trustedCount, 3);
+            XCTAssertEqual(trust.trustedDevicesProgress.totalUnitCount, 3);
+            XCTAssertEqual(trust.trustedDevicesProgress.completedUnitCount, 3);
+            XCTAssertEqual(trust.trustedDevicesProgress.fractionCompleted, 1);
 
             [expectation fulfill];
         });
@@ -139,11 +142,13 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
                 MXUsersTrustLevelSummary *trust = roomFromAlicePOV.summary.trust;
                 
                 XCTAssertNotNil(trust);
-                XCTAssertEqual(trust.usersTrust.totalCount, 2);
-                XCTAssertEqual(trust.usersTrust.trustedCount, 2);
+                XCTAssertEqual(trust.trustedUsersProgress.totalUnitCount, 2);
+                XCTAssertEqual(trust.trustedUsersProgress.completedUnitCount, 2);
+                XCTAssertEqual(trust.trustedUsersProgress.fractionCompleted, 1);
                 
-                XCTAssertEqual(trust.devicesTrust.totalCount, 4);
-                XCTAssertEqual(trust.devicesTrust.trustedCount, 3);
+                XCTAssertEqual(trust.trustedDevicesProgress.totalUnitCount, 4);
+                XCTAssertEqual(trust.trustedDevicesProgress.completedUnitCount, 3);
+                XCTAssertNotEqual(trust.trustedDevicesProgress.fractionCompleted, 1);
 
                 [expectation fulfill];
             });
@@ -168,8 +173,8 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
             // -> All must be trusted
             MXRoom *roomFromAlicePOV = [aliceSession1 roomWithRoomId:roomId];
             MXUsersTrustLevelSummary *trust = roomFromAlicePOV.summary.trust;
-            XCTAssertTrue(trust.usersTrust.areAllTrusted);
-            XCTAssertTrue(trust.devicesTrust.areAllTrusted);
+            XCTAssertEqual(trust.trustedUsersProgress.fractionCompleted, 1);
+            XCTAssertEqual(trust.trustedDevicesProgress.fractionCompleted, 1);
             
             // - Bob signs in on a new device
             [matrixSDKTestsE2EData loginUserOnANewDevice:self credentials:bobSession1.matrixRestClient.credentials withPassword:MXTESTS_BOB_PWD onComplete:^(MXSession *bobSession2) {
@@ -179,8 +184,8 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
             id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:roomFromAlicePOV.summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
                 
                 MXUsersTrustLevelSummary *trust = roomFromAlicePOV.summary.trust;
-                XCTAssertTrue(trust.usersTrust.areAllTrusted);
-                XCTAssertFalse(trust.devicesTrust.areAllTrusted);
+                XCTAssertEqual(trust.trustedUsersProgress.fractionCompleted, 1);
+                XCTAssertNotEqual(trust.trustedDevicesProgress.fractionCompleted, 1);
                 
                 [expectation fulfill];
             }];
@@ -209,8 +214,8 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
                 // -> Not all must be trusted
                 MXRoom *roomFromAlicePOV = [aliceSession1 roomWithRoomId:roomId];
                 MXUsersTrustLevelSummary *trust = roomFromAlicePOV.summary.trust;
-                XCTAssertTrue(trust.usersTrust.areAllTrusted);
-                XCTAssertFalse(trust.devicesTrust.areAllTrusted);
+                XCTAssertEqual(trust.trustedUsersProgress.fractionCompleted, 1);
+                XCTAssertNotEqual(trust.trustedDevicesProgress.fractionCompleted, 1);
                 
                 // - Bob trusts the new device
                 [bobSession1.crypto setDeviceVerification:MXDeviceVerified forDevice:bobSession2.myDeviceId ofUser:bobSession2.myUserId success:^{
@@ -223,10 +228,10 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
                 id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:roomFromAlicePOV.summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
                     
                     MXUsersTrustLevelSummary *trust = roomFromAlicePOV.summary.trust;
-                    if (trust.devicesTrust.areAllTrusted)   // It could take for the SDK to update the trust right
+                    if (trust.trustedDevicesProgress.fractionCompleted == 1)   // It could take for the SDK to update the trust right
                     {
-                        XCTAssertTrue(trust.usersTrust.areAllTrusted);
-                        XCTAssertTrue(trust.devicesTrust.areAllTrusted);
+                        XCTAssertEqual(trust.trustedUsersProgress.fractionCompleted, 1);
+                        XCTAssertEqual(trust.trustedDevicesProgress.fractionCompleted, 1);
                         [expectation fulfill];
                     }
                 }];
@@ -253,8 +258,8 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
             // -> All must be trusted
             MXRoom *roomFromAlicePOV = [aliceSession1 roomWithRoomId:roomId];
             MXUsersTrustLevelSummary *trust = roomFromAlicePOV.summary.trust;
-            XCTAssertTrue(trust.usersTrust.areAllTrusted);
-            XCTAssertTrue(trust.devicesTrust.areAllTrusted);
+            XCTAssertEqual(trust.trustedUsersProgress.fractionCompleted, 1);
+            XCTAssertEqual(trust.trustedDevicesProgress.fractionCompleted, 1);
             
             // - Bob rotates their cross-signing
             [bobSession1.crypto.crossSigning setupWithPassword:MXTESTS_BOB_PWD success:^{
@@ -267,8 +272,8 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
             id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:roomFromAlicePOV.summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
                 
                 MXUsersTrustLevelSummary *trust = roomFromAlicePOV.summary.trust;
-                XCTAssertFalse(trust.usersTrust.areAllTrusted);
-                XCTAssertTrue(trust.devicesTrust.areAllTrusted);      // 100% Because all devices of trusted users are verified
+                XCTAssertNotEqual(trust.trustedUsersProgress.fractionCompleted, 1);
+                XCTAssertEqual(trust.trustedDevicesProgress.fractionCompleted, 1);      // 100% Because all devices of trusted users are verified
                 
                 [expectation fulfill];
             }];
@@ -350,8 +355,8 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
                 
                 // -> Trust be available and everything should be green
                 MXUsersTrustLevelSummary *trust = roomSummaryFromAlicePOV.trust;
-                XCTAssertTrue(trust.usersTrust.areAllTrusted);
-                XCTAssertTrue(trust.devicesTrust.areAllTrusted);
+                XCTAssertEqual(trust.trustedUsersProgress.fractionCompleted, 1);
+                XCTAssertEqual(trust.trustedDevicesProgress.fractionCompleted, 1);
                 
                 [expectation fulfill];
             }];
