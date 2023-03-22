@@ -137,11 +137,24 @@ static NSUInteger const kMXDeviceListOperationsPoolKeyQueryLimit = 250;
                     MXLogDebug(@"[MXDeviceListOperationsPool] doKeyDownloadForUsers: Detected cross-signing keys rotation");
                     myUserCrossSigningKeysChanged = YES;
                 }
+                
+                // Use current trust level
+                MXUserTrustLevel *oldTrustLevel = storedCrossSigningKeys.trustLevel;
+                if (myUserCrossSigningKeysChanged)
+                {
+                    // Except if we cannot trust it anymore
+                    oldTrustLevel = [MXUserTrustLevel new];
+                }
+                
+                [crossSigningKeys setTrustLevel:oldTrustLevel];
 
                 // Compute trust on this user
                 // Note this overwrites the previous value
                 BOOL isCrossSigningVerified = [self.crossSigning isUserWithCrossSigningKeysVerified:crossSigningKeys];
-                [crossSigningKeys setIsVerified:isCrossSigningVerified];
+                MXUserTrustLevel *newTrustLevel = [MXUserTrustLevel trustLevelWithCrossSigningVerified:isCrossSigningVerified
+                                                                                       locallyVerified:oldTrustLevel.isLocallyVerified];
+                
+                [crossSigningKeys updateTrustLevel:newTrustLevel];
                 
                 // Note that keys which aren't in the response will be removed from the store
                 [self->crypto.store storeCrossSigningKeys:crossSigningKeys];

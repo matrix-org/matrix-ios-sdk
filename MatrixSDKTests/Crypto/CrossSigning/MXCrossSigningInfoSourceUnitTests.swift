@@ -50,6 +50,6 @@ class MXCrossSigningInfoSourceUnitTests: XCTestCase {
         let info = source.crossSigningInfo(userId: "Alice")
         
         XCTAssertEqual(info?.userId, "Alice")
-        XCTAssertEqual(info?.isVerified, true)
+        XCTAssertEqual(info?.trustLevel.isVerified, true)
     }
 }

@@ -277,8 +277,10 @@
                             MXCrossSigningInfo *aliceFromAlice1POV = [aliceSession1.legacyCrypto.store crossSigningKeysForUser:alice.userId];
                             MXCrossSigningInfo *aliceFromAlice2POV = [aliceSession2.legacyCrypto.store crossSigningKeysForUser:alice.userId];
 
-                            XCTAssertTrue(aliceFromAlice1POV.isVerified);
-                            XCTAssertTrue(aliceFromAlice2POV.isVerified);
+                            XCTAssertTrue(aliceFromAlice1POV.trustLevel.isCrossSigningVerified);
+                            XCTAssertTrue(aliceFromAlice1POV.trustLevel.isLocallyVerified);
+                            XCTAssertTrue(aliceFromAlice2POV.trustLevel.isCrossSigningVerified);
+                            XCTAssertTrue(aliceFromAlice2POV.trustLevel.isLocallyVerified);
                             
                             // -> Transaction must not be listed anymore
                             XCTAssertNil([(MXLegacyKeyVerificationManager *)aliceSession1.crypto.keyVerificationManager transactionWithTransactionId:sasTransactionFromAlicePOV.transactionId]);
@@ -482,8 +484,10 @@
                             MXCrossSigningInfo *bobFromAlicePOV = [aliceSession.legacyCrypto.store crossSigningKeysForUser:bob.userId];
                             MXCrossSigningInfo *aliceFromBobPOV = [bobSession.legacyCrypto.store crossSigningKeysForUser:alice.userId];
                             
-                            XCTAssertTrue(bobFromAlicePOV.isVerified);
-                            XCTAssertTrue(aliceFromBobPOV.isVerified);
+                            XCTAssertTrue(bobFromAlicePOV.trustLevel.isCrossSigningVerified);
+                            XCTAssertTrue(bobFromAlicePOV.trustLevel.isLocallyVerified);
+                            XCTAssertTrue(aliceFromBobPOV.trustLevel.isCrossSigningVerified);
+                            XCTAssertTrue(aliceFromBobPOV.trustLevel.isLocallyVerified);
                             
                             // -> Transaction must not be listed anymore
                             XCTAssertNil([(MXLegacyKeyVerificationManager *)aliceSession.crypto.keyVerificationManager transactionWithTransactionId:sasTransactionFromAlicePOV.transactionId]);
@@ -707,8 +711,10 @@
                             MXCrossSigningInfo *bobFromAlicePOV = [aliceSession.legacyCrypto.store crossSigningKeysForUser:bob.userId];
                             MXCrossSigningInfo *aliceFromBobPOV = [bobSession.legacyCrypto.store crossSigningKeysForUser:alice.userId];
                             
-                            XCTAssertTrue(bobFromAlicePOV.isVerified);
-                            XCTAssertTrue(aliceFromBobPOV.isVerified);
+                            XCTAssertTrue(bobFromAlicePOV.trustLevel.isCrossSigningVerified);
+                            XCTAssertTrue(bobFromAlicePOV.trustLevel.isLocallyVerified);
+                            XCTAssertTrue(aliceFromBobPOV.trustLevel.isCrossSigningVerified);
+                            XCTAssertTrue(aliceFromBobPOV.trustLevel.isLocallyVerified);
                             
                             // -> Transaction must not be listed anymore
                             XCTAssertNil([(MXLegacyKeyVerificationManager *)aliceSession.crypto.keyVerificationManager transactionWithTransactionId:qrCodeTransactionFromAlicePOV.transactionId]);

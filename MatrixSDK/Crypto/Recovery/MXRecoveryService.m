@@ -748,8 +748,8 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
             return;
         }
 
-        // Mark our user MSK as verified
-        [self.delegate setUserVerificationForUserId:self.dependencies.credentials.userId success:^{
+        // Mark our user MSK as verified locally
+        [self.delegate setUserVerification:YES forUser:self.dependencies.credentials.userId success:^{
             
             // Cross sign our current device
             [self.dependencies.crossSigning crossSignDeviceWithDeviceId:self.dependencies.credentials.deviceId success:^{
