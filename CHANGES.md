@@ -1,6 +1,8 @@
 ## Changes in 0.26.4 (2023-03-22)
 
-No significant changes.
+🐛 Bugfixes
+
+- Crypto: Do not show current session as unverified ([#7446](https://github.com/vector-im/element-ios/issues/7446))
 
 
 ## Changes in 0.26.3 (2023-03-22)
