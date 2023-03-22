@@ -266,7 +266,7 @@ private extension MXCrypto {
     }
 }
 
-private extension MXCrossSigning {
+extension MXCrossSigning {
     func refreshState() async throws {
         return try await withCheckedThrowingContinuation { continuation in
             refreshState { _ in

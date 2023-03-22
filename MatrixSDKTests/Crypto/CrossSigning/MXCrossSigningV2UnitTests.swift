@@ -76,23 +76,31 @@ class MXCrossSigningV2UnitTests: XCTestCase {
         waitForExpectations(timeout: 1)
     }
     
-    func test_state_canCrossSign() {
-        let exp = expectation(description: "exp")
-        crypto.stubbedStatus = CrossSigningStatus(hasMaster: true, hasSelfSigning: true, hasUserSigning: true)
-        crypto.stubbedVerifiedUsers = ["Alice"]
-        crypto.stubbedIdentities = [
-            "Alice": .own(
-                userId: "Alice",
-                trustsOurOwnDevice: true,
-                masterKey: "",
-                selfSigningKey: "",
-                userSigningKey: ""
-            )
+    func test_state_canCrossSign() async throws {
+        let statusToState: [(CrossSigningStatus, MXCrossSigningState)] = [
+            (.init(hasMaster: false, hasSelfSigning: false, hasUserSigning: false), .trustCrossSigning),
+            (.init(hasMaster: true, hasSelfSigning: false, hasUserSigning: false), .trustCrossSigning),
+            (.init(hasMaster: false, hasSelfSigning: true, hasUserSigning: false), .trustCrossSigning),
+            (.init(hasMaster: false, hasSelfSigning: false, hasUserSigning: true), .trustCrossSigning),
+            (.init(hasMaster: false, hasSelfSigning: true, hasUserSigning: true), .canCrossSign),
+            (.init(hasMaster: true, hasSelfSigning: true, hasUserSigning: true), .canCrossSign),
         ]
-        crossSigning.refreshState { _ in
-            XCTAssertEqual(self.crossSigning.state, .canCrossSign)
-            exp.fulfill()
+        
+        for (status, state) in statusToState {
+            crypto.stubbedStatus = status
+            crypto.stubbedVerifiedUsers = ["Alice"]
+            crypto.stubbedIdentities = [
+                "Alice": .own(
+                    userId: "Alice",
+                    trustsOurOwnDevice: true,
+                    masterKey: "",
+                    selfSigningKey: "",
+                    userSigningKey: ""
+                )
+            ]
+            
+            try await crossSigning.refreshState()
+            XCTAssertEqual(self.crossSigning.state, state, "Status: \(status)")
         }
-        waitForExpectations(timeout: 1)
     }
 }
