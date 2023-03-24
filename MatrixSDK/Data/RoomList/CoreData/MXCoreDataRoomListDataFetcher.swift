@@ -98,14 +98,11 @@ internal class MXCoreDataRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
             properties.append(property)
         }
         request.propertiesToFetch = properties
-        //  when specific properties set, use dictionary result type for issues seen mostly on iOS 12 devices
-        request.resultType = .dictionaryResultType
-        var result: MXRoomListDataCounts? = nil
+        var result: MXRoomListDataCounts?
         do {
-            if let dictionaries = try store.mainManagedObjectContext.fetch(request) as? [[String: Any]] {
-                let summaries = dictionaries.map { RoomSummaryForTotalCounts(withDictionary: $0) }
-                result = MXStoreRoomListDataCounts(withRooms: summaries,
-                                                   total: nil)
+            let summaries = try store.mainManagedObjectContext.fetch(request) as? [MXRoomSummaryMO]
+            result = summaries.map {
+                MXStoreRoomListDataCounts(withRooms: $0, total: nil)
             }
         } catch let error {
             MXLog.error("[MXCoreDataRoomListDataFetcher] failed to calculate total counts", context: error)
