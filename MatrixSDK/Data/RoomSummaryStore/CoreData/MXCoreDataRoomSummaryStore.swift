@@ -46,6 +46,7 @@ public class MXCoreDataRoomSummaryStore: NSObject {
         }
         return result
     }()
+    
     private lazy var storeURL: URL = {
         guard let userId = credentials.userId else {
             fatalError("[MXCoreDataRoomSummaryStore] Credentials must provide a user identifier")
@@ -61,6 +62,7 @@ public class MXCoreDataRoomSummaryStore: NSObject {
         try? FileManager.default.createDirectoryExcludedFromBackup(at: folderUrl)
         return folderUrl.appendingPathComponent(Constants.storeFileName)
     }()
+    
     private static var managedObjectModel: NSManagedObjectModel = {
         guard let url = Bundle(for: MXCoreDataRoomSummaryStore.self).url(forResource: Constants.modelName,
                                                                          withExtension: "momd") else {
@@ -78,6 +80,7 @@ public class MXCoreDataRoomSummaryStore: NSObject {
         result.parent = mainMoc
         return result
     }()
+    
     /// Managed object context to be used on main thread for fetching data, whose parent context is `persistentMoc`.
     private lazy var mainMoc: NSManagedObjectContext = {
         let result = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
