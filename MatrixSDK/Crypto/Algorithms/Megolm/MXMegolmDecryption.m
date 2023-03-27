@@ -122,7 +122,9 @@
         result.senderCurve25519Key = olmResult.senderKey;
         result.claimedEd25519Key = olmResult.keysClaimed[@"ed25519"];
         result.forwardingCurve25519KeyChain = olmResult.forwardingCurve25519KeyChain;
-        result.untrusted = olmResult.isUntrusted;
+        
+        MXEventDecryptionDecorationColor decryptionColor = [self decryptionColorForEvent:event decryptionResult:olmResult];
+        result.decoration = [[MXEventDecryptionDecoration alloc] initWithColor:decryptionColor message:nil];
     }
     else
     {
@@ -158,6 +160,21 @@
     
     [crypto.mxSession.eventStreamService dispatchLiveEventDecryptionAttemptedWithEvent:event result:result];
     return result;
+}
+
+- (MXEventDecryptionDecorationColor)decryptionColorForEvent:(MXEvent *)event
+                                           decryptionResult:(MXDecryptionResult *)decryptionResult
+{
+    if (event.sender && [crypto trustLevelForUser:event.sender].isVerified)
+    {
+        MXDeviceInfo *deviceInfo = [crypto eventDeviceInfo:event];
+        if (!deviceInfo.trustLevel.isVerified)
+        {
+            return MXEventDecryptionDecorationColorRed;
+        }
+    }
+    
+    return decryptionResult.isUntrusted ? MXEventDecryptionDecorationColorGrey : MXEventDecryptionDecorationColorNone;
 }
 
 /**

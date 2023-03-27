@@ -113,9 +113,7 @@ actor MXRoomEventDecryption: MXRoomEventDecrypting {
                 log.debug("Ignoring non-room event `\(eventId)`")
             }
             
-            let result = MXEventDecryptionResult()
-            result.clearEvent = event.clear?.jsonDictionary()
-            return result
+            return event.decryptionResult
         }
         
         do {
