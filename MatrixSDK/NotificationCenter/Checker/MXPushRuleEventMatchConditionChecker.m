@@ -28,14 +28,22 @@
 {
     BOOL isSatisfied = NO;
     
-    // Retrieve the value
-    NSObject *value = [contentAsJsonDict valueForKeyPath:condition.parameters[@"key"]];
+    NSString *key = (NSString *)condition.parameters[@"key"];
+    NSString *pattern = (NSString *)condition.parameters[@"pattern"];
+    
+    // Use the decrypted body when searching for @room.
+    if ([key isEqualToString:@"content.body"] && [pattern isEqualToString:@"@room"])
+    {
+        return [self decryptedBodyOfEvent:event containsString:pattern];
+    }
+    
+    // Otherwise retrieve the value from the original JSON.
+    NSObject *value = [contentAsJsonDict valueForKeyPath:key];
     
     if (value && [value isKindOfClass:[NSString class]])
     {
         // If it exists, compare it to the regular expression in condition.parameter.pattern
         NSString *stringValue = (NSString *)value;
-        NSString* pattern = (NSString*)condition.parameters[@"pattern"];
         
         // if there is no pattern
         if (!pattern || !pattern.length)
@@ -81,6 +89,23 @@
     res = [NSString stringWithFormat:@"(^|\\W)%@($|\\W)", res];
 
     return res;
+}
+
+- (BOOL)decryptedBodyOfEvent:(MXEvent *)event
+             containsString:(NSString *)pattern
+{
+    if (!event.content)
+    {
+        return NO;
+    }
+    
+    if (![event.content[kMXMessageBodyKey] isKindOfClass:NSString.class])
+    {
+        return NO;
+    }
+    
+    NSString *body = (NSString *)event.content[kMXMessageBodyKey];
+    return [body containsString:pattern];
 }
 
 @end
