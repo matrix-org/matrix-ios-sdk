@@ -20,6 +20,9 @@
 
 NSInteger const MXRoomPowerLevelUndefined = -1;
 
+NSString *const kMXRoomPowerLevelNotificationsRoomKey = @"room";
+NSInteger const kMXRoomPowerLevelNotificationsRoomDefault = 50;
+
 @implementation MXRoomPowerLevels
 
 + (id)modelFromJSON:(NSDictionary *)JSONDictionary
