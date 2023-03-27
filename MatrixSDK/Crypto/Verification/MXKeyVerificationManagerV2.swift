@@ -287,7 +287,7 @@ class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
         if event.type == kMXEventTypeStringRoomMessage && event.content?[kMXMessageTypeKey] as? String == kMXMessageTypeKeyVerificationRequest {
             await handleIncomingRequest(userId: event.sender, flowId: event.eventId)
             newUserId = event.sender
-        } else if event.type == kMXEventTypeStringKeyVerificationStart, let flowId = event.relatesTo.eventId {
+        } else if event.type == kMXEventTypeStringKeyVerificationStart, let flowId = event.relatesTo?.eventId {
             await handleIncomingVerification(userId: event.sender, flowId: flowId)
             newUserId = event.sender
         } else {
