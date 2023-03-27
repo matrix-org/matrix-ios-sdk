@@ -233,7 +233,7 @@ class MXCryptoMigrationV2Tests: XCTestCase {
         await env2.close()
     }
     
-    func test_test_migratesGlobalSettingsInPartialMigration() async throws {
+    func test_migratesGlobalSettingsInPartialMigration() async throws {
         let env1 = try await e2eData.startE2ETest()
         env1.session.crypto.globalBlacklistUnverifiedDevices = true
         let machine1 = try partiallyMigratedOlmMachine(session: env1.session)
