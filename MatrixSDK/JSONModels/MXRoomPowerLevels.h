@@ -22,6 +22,9 @@
  */
 extern NSInteger const MXRoomPowerLevelUndefined;
 
+extern NSString *const kMXRoomPowerLevelNotificationsRoomKey;
+extern NSInteger const kMXRoomPowerLevelNotificationsRoomDefault;
+
 /**
  `MXRoomPowerLevels` represents the content of a m.room.power_levels event.
 
