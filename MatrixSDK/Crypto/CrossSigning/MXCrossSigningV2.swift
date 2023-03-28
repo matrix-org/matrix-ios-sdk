@@ -123,6 +123,12 @@ class MXCrossSigningV2: NSObject, MXCrossSigning {
                 try await crossSigning.refreshCrossSigningStatus()
                 myUserCrossSigningKeys = infoSource.crossSigningInfo(userId: crossSigning.userId)
                 
+                // If we are considered verified, there is no need for a verification upgrade
+                // after migrating from legacy crypto
+                if myUserCrossSigningKeys?.trustLevel.isVerified == true {
+                    MXSDKOptions.sharedInstance().cryptoSDKFeature?.needsVerificationUpgrade = false
+                }
+                
                 log.debug("Cross signing state refreshed, new state: \(state)")
                 await MainActor.run {
                     success?(true)
