@@ -1,3 +1,10 @@
+## Changes in 0.26.5 (2023-03-28)
+
+🙌 Improvements
+
+- Crypto: Upgrade verification if necessary ([#1751](https://github.com/matrix-org/matrix-ios-sdk/pull/1751))
+
+
 ## Changes in 0.26.4 (2023-03-22)
 
 🐛 Bugfixes
