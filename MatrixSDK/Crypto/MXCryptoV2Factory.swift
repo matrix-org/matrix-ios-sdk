@@ -25,7 +25,7 @@ import Foundation
     private let log = MXNamedLog(name: "MXCryptoV2Factory")
     
     private var lastDeprecatedVersion: MXCryptoVersion {
-        .deprecated2
+        .deprecated3
     }
     
     @objc public func buildCrypto(
@@ -91,9 +91,6 @@ import Foundation
         
         log.debug("Legacy crypto store exists")
         try migrateIfNecessary(legacyStore: legacyStore, updateProgress: updateProgress)
-        
-        log.debug("Deleting legacy store after successfull migration")
-        MXRealmCryptoStore.delete(with: credentials)
     }
     
     private func migrateIfNecessary(
@@ -109,6 +106,7 @@ import Foundation
         log.debug("Requires migration from legacy crypto version \(legacyVersion) to version \(lastDeprecatedVersion.rawValue)")
         let migration = MXCryptoMigrationV2(legacyStore: legacyStore)
         
+        // Full vs partial/room migration are mutually exclusive, only one should be run
         if legacyVersion < MXCryptoVersion.deprecated1.rawValue {
             log.debug("Full migration of crypto data")
             try migration.migrateAllData(updateProgress: updateProgress)
@@ -116,9 +114,17 @@ import Foundation
         } else if legacyVersion < MXCryptoVersion.deprecated2.rawValue {
             log.debug("Partial migration of room and global settings")
             try migration.migrateRoomAndGlobalSettingsOnly(updateProgress: updateProgress)
-            
-        } else {
-            log.failure("Unhandled crypto version", context: legacyStore.cryptoVersion.rawValue)
         }
+        
+        if legacyVersion < MXCryptoVersion.deprecated3.rawValue {
+            // The following flag will result in displaying a different UX when verifying current session,
+            // unless the rust-based crypto already considers the current session to be verified given
+            // the migration data
+            log.debug("Needs verification upgrade")
+            MXSDKOptions.sharedInstance().cryptoSDKFeature?.needsVerificationUpgrade = true
+        }
+        
+        log.debug("Setting the latest deprecated version of legacy store")
+        legacyStore.cryptoVersion = lastDeprecatedVersion
     }
 }
