@@ -45,10 +45,7 @@ class MXCryptoV2: NSObject, MXCrypto {
     // MARK: - Public properties
     
     var version: String {
-        // Will be moved into the olm machine as API
-        let sdkVersion = Bundle(for: OlmMachine.self).infoDictionary?["CFBundleShortVersionString"] ?? ""
-        return "Matrix Crypto SDK \(sdkVersion)"
-        
+        return "Rust Crypto SDK \(MatrixSDKCrypto.version()) (Vodozemac \(MatrixSDKCrypto.vodozemacVersion()))"
     }
     
     var deviceCurve25519Key: String? {
