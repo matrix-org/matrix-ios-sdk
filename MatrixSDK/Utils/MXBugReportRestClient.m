@@ -201,25 +201,6 @@
             [formData appendPartWithFormData:[self.build dataUsingEncoding:NSUTF8StringEncoding] name:@"build"];
         }
 
-#if __has_include(<MatrixKit/MatrixKit.h>)
-        [formData appendPartWithFormData:[MatrixKitVersion dataUsingEncoding:NSUTF8StringEncoding] name:@"matrix_kit_version"];
-#endif
-
-        [formData appendPartWithFormData:[MatrixSDKVersion dataUsingEncoding:NSUTF8StringEncoding] name:@"matrix_sdk_version"];
-
-#ifdef MX_CRYPTO
-        [formData appendPartWithFormData:[MXSDKOptions.sharedInstance.cryptoModuleId dataUsingEncoding:NSUTF8StringEncoding] name:@"crypto_module"];
-        if (MXSDKOptions.sharedInstance.enableCryptoSDK)
-        {
-            
-            [formData appendPartWithFormData:[MXSDKOptions.sharedInstance.cryptoSDKFeature.version dataUsingEncoding:NSUTF8StringEncoding] name:@"matrix_sdk_crypto_version"];
-        }
-        else
-        {
-            [formData appendPartWithFormData:[[OLMKit versionString] dataUsingEncoding:NSUTF8StringEncoding] name:@"olm_kit_version"];
-        }
-#endif
-
         if (self.deviceModel)
         {
             [formData appendPartWithFormData:[self.deviceModel dataUsingEncoding:NSUTF8StringEncoding] name:@"device"];
