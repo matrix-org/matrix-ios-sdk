@@ -25,6 +25,12 @@ import Foundation
     /// as there is no way to migrate from from Crypto SDK back to legacy crypto.
     var isEnabled: Bool { get }
     
+    /// Flag indicating whether this account requires a re-verification after migrating to Crypto SDK
+    ///
+    /// This flag is set to true if the legacy account is considered verified but the rust account
+    /// does not consider the migrated data secure enough, as it applies stricter security conditions.
+    var needsVerificationUpgrade: Bool { get set }
+    
     /// Manually enable the feature
     ///
     /// This is typically triggered by some user settings / Labs as an experimental feature. Once called
