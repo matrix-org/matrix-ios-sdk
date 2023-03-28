@@ -46,6 +46,10 @@ typedef NS_ENUM(NSInteger, MXCryptoVersion)
     // Deprecated version that migrates room settings from the legacy store, which were
     // not included in the deprecated v1
     MXCryptoDeprecated2,
+    
+    // Deprecated version that checks whether the verification state of the rust crypto
+    // needs to be upgraded after migrating from legacy crypto
+    MXCryptoDeprecated3,
 };
 
 // The current version of non-deprecated MXCrypto
