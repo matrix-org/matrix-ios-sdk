@@ -219,7 +219,7 @@ class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
             do {
                 let qr = try activeRequest.startQrVerification()
                 log.debug("Starting new QR verification")
-                return addQrTransaction(for: request, qrCode: qr, isIncoming: false)
+                return addQrTransaction(for: request, qr: .code(qr), isIncoming: false)
             } catch {
                 log.error("Cannot start QR verification", context: error)
                 return nil
@@ -228,7 +228,7 @@ class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
             /// Placehoder QR transaction generated in case we cannot start a QR verification flow
             /// (the other device cannot scan our code) but we may be able to scan theirs
             log.debug("Adding placeholder QR verification")
-            return addQrTransaction(for: request, qrCode: nil, isIncoming: false)
+            return addQrTransaction(for: request, qr: .placeholder, isIncoming: false)
         }
         
         log.debug("No support for QR verification flow")
@@ -438,7 +438,7 @@ class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
                 log.debug("Updating existing QR verification transaction")
             } else {
                 log.debug("Tracking new QR verification transaction")
-                _ = addQrTransaction(for: request, qrCode: qrCode, isIncoming: true)
+                _ = addQrTransaction(for: request, qr: .code(qrCode), isIncoming: true)
             }
         }
     }
@@ -451,8 +451,8 @@ class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
     }
     
     @MainActor
-    private func addQrTransaction(for request: VerificationRequestProtocol, qrCode: QrCodeProtocol?, isIncoming: Bool) -> MXQRCodeTransactionV2 {
-        let transaction = MXQRCodeTransactionV2(request: request, qrCode: qrCode, isIncoming: isIncoming, handler: handler)
+    private func addQrTransaction(for request: VerificationRequestProtocol, qr: MXQRCodeTransactionV2.QrKind, isIncoming: Bool) -> MXQRCodeTransactionV2 {
+        let transaction = MXQRCodeTransactionV2(request: request, qr: qr, isIncoming: isIncoming, handler: handler)
         activeTransactions[transaction.transactionId] = transaction
         return transaction
     }

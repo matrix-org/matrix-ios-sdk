@@ -19,6 +19,11 @@ import MatrixSDKCrypto
 
 /// QR transaction originating from `MatrixSDKCrypto`
 class MXQRCodeTransactionV2: NSObject, MXQRCodeTransaction {
+    enum QrKind {
+        case placeholder
+        case code(QrCodeProtocol)
+    }
+    
     enum Error: Swift.Error {
         case cannotCancel
     }
@@ -44,7 +49,12 @@ class MXQRCodeTransactionV2: NSObject, MXQRCodeTransaction {
     let otherDeviceId: String
     
     var qrCodeData: MXQRCodeData? {
-        guard let code = qrCode?.generateQrCode() else {
+        guard case .code(let qrCode) = qr else {
+            log.debug("We do not have QR code, awaiting theirs")
+            return nil
+        }
+        
+        guard let code = qrCode.generateQrCode() else {
             log.error("Cannot generate QR code")
             return nil
         }
@@ -59,18 +69,18 @@ class MXQRCodeTransactionV2: NSObject, MXQRCodeTransaction {
     let dmEventId: String?
 
     private let request: VerificationRequestProtocol
-    private var qrCode: QrCodeProtocol?
+    private var qr: QrKind
     private let handler: MXCryptoVerifying
     private let log = MXNamedLog(name: "MXQRCodeTransactionV2")
 
     init(
         request: VerificationRequestProtocol,
-        qrCode: QrCodeProtocol?,
+        qr: QrKind,
         isIncoming: Bool,
         handler: MXCryptoVerifying
     ) {
         self.request = request
-        self.qrCode = qrCode
+        self.qr = qr
         self.handler = handler
         
         self.transactionId = request.flowId()
@@ -84,7 +94,9 @@ class MXQRCodeTransactionV2: NSObject, MXQRCodeTransaction {
         
         super.init()
         
-        qrCode?.setChangesListener(listener: self)
+        if case .code(let code) = self.qr {
+            code.setChangesListener(listener: self)
+        }
     }
 
     func userHasScannedOtherQrCodeData(_ otherQRCodeData: MXQRCodeData) {
@@ -102,8 +114,8 @@ class MXQRCodeTransactionV2: NSObject, MXQRCodeTransaction {
                 try await handler.handleOutgoingVerificationRequest(result.request)
                 log.debug("Scanned QR code")
                 await MainActor.run {
-                    self.qrCode = result.qr
-                    self.qrCode?.setChangesListener(listener: self)
+                    self.qr = .code(result.qr)
+                    result.qr.setChangesListener(listener: self)
                 }
             } catch {
                 log.error("Failed scanning QR code", context: error)
@@ -112,8 +124,8 @@ class MXQRCodeTransactionV2: NSObject, MXQRCodeTransaction {
     }
 
     func otherUserScannedMyQrCode(_ otherUserScanned: Bool) {
-        guard let qrCode = qrCode else {
-            log.failure("No QR code")
+        guard case .code(let qrCode) = qr else {
+            log.failure("Incorrect kind of QR")
             return
         }
         
@@ -154,14 +166,8 @@ class MXQRCodeTransactionV2: NSObject, MXQRCodeTransaction {
             return
         }
         
-        guard let qrCode = qrCode else {
-            log.failure("No QR code")
-            failure(Error.cannotCancel)
-            return
-        }
-        
         log.debug("->")
-        guard let result = qrCode.cancel(cancelCode: code.value) else {
+        guard let result = cancellationRequest(with: code) else {
             log.error("Cannot cancel transcation")
             failure(Error.cannotCancel)
             return
@@ -180,6 +186,15 @@ class MXQRCodeTransactionV2: NSObject, MXQRCodeTransaction {
                     failure(error)
                 }
             }
+        }
+    }
+    
+    private func cancellationRequest(with code: MXTransactionCancelCode) -> OutgoingVerificationRequest? {
+        switch qr {
+        case .code(let qrCode):
+            return qrCode.cancel(cancelCode: code.value)
+        case .placeholder:
+            return request.cancel()
         }
     }
 }
