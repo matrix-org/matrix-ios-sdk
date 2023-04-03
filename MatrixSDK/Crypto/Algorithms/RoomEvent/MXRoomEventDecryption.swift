@@ -60,10 +60,7 @@ actor MXRoomEventDecryption: MXRoomEventDecrypting {
         }
         
         if !undecrypted.isEmpty {
-            log.error("Unable to decrypt some event(s)", context: [
-                "total": events.count,
-                "undecrypted": undecrypted.count
-            ])
+            log.warning("Unable to decrypt \(undecrypted.count) out of \(events.count) event(s)")
         } else if events.count > 1 {
             log.debug("Decrypted all \(events.count) events")
         }
