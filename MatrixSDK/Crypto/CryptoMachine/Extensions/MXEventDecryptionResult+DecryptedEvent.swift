@@ -50,12 +50,12 @@ extension MXEventDecryptionDecoration {
 extension MXEventDecryptionDecorationColor {
     init(color: ShieldColor) {
         switch color {
-        case .red:
-            self = .red
-        case .grey:
-            self = .grey
         case .none:
             self = .none
+        case .grey:
+            self = .grey
+        case .red:
+            self = .red
         }
     }
 }

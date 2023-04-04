@@ -18,9 +18,9 @@ import Foundation
 
 /// Recommended color to represent message's authenticity properties
 @objc public enum MXEventDecryptionDecorationColor: Int {
-    case red
-    case grey
     case none
+    case grey
+    case red
 }
 
 /// Recommended visual decorations for decrypted messages, representing the message's authenticity properties
