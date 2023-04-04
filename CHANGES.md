@@ -1,3 +1,24 @@
+## Changes in 0.26.6 (2023-04-04)
+
+🙌 Improvements
+
+- Bugfix: Ensure related event nullability ([#1746](https://github.com/matrix-org/matrix-ios-sdk/pull/1746))
+- Add constants for mention room power levels and check decrypted event content for @room mentions. ([#1750](https://github.com/matrix-org/matrix-ios-sdk/pull/1750))
+- Crypto: Display correct SDK version ([#7457](https://github.com/vector-im/element-ios/issues/7457))
+
+🐛 Bugfixes
+
+- Fix invitations count in all chats list. ([#6871](https://github.com/vector-im/element-ios/issues/6871))
+
+⚠️ API Changes
+
+- Crypto: Add event decryption decoration instead of untrusted property ([#1743](https://github.com/matrix-org/matrix-ios-sdk/pull/1743))
+
+🧱 Build
+
+- Upgrade JitsiMeetSDK to 7.0.1-lite. ([#1754](https://github.com/matrix-org/matrix-ios-sdk/pull/1754))
+
+
 ## Changes in 0.26.5 (2023-03-28)
 
 🙌 Improvements

@@ -15,6 +15,7 @@
 //
 
 import Foundation
+import MatrixSDKCrypto
 @testable import MatrixSDK
 
 class MXMegolmDecryptionUnitTests: XCTestCase {
@@ -24,7 +25,7 @@ class MXMegolmDecryptionUnitTests: XCTestCase {
     }
     
     /// Spy olm device used to collect spy sessions for the purpose of test assertions
-    class SpyDevice: MXOlmDevice {
+    class DeviceStub: MXOlmDevice {
         var sessions: [SpySession] = []
         
         override func addInboundGroupSession(
@@ -42,6 +43,19 @@ class MXMegolmDecryptionUnitTests: XCTestCase {
                 .init(sharedHistory: sharedHistory)
             )
             return true
+        }
+        
+        var stubbedResult: MXDecryptionResult?
+        
+        override func decryptGroupMessage(
+            _ body: String!,
+            isEditEvent: Bool,
+            roomId: String!,
+            inTimeline timeline: String!,
+            sessionId: String!,
+            senderKey: String!
+        ) throws -> MXDecryptionResult {
+            stubbedResult ?? MXDecryptionResult()
         }
     }
     
@@ -98,6 +112,18 @@ class MXMegolmDecryptionUnitTests: XCTestCase {
         override var mxSession: MXSession! {
             return session
         }
+        
+        override func trustLevel(forUser userId: String) -> MXUserTrustLevel {
+            return MXUserTrustLevel(crossSigningVerified: true, locallyVerified: true)
+        }
+        
+        var stubbedDeviceInfo: Device?
+        override func eventDeviceInfo(_ event: MXEvent) -> MXDeviceInfo? {
+            guard let device = stubbedDeviceInfo else {
+                return nil
+            }
+            return .init(device: .init(device: device))
+        }
     }
     
     let roomId1 = "ABC"
@@ -106,18 +132,19 @@ class MXMegolmDecryptionUnitTests: XCTestCase {
     let sessionId2 = "999"
     let senderKey = "456"
     
-    var device: SpyDevice!
+    var device: DeviceStub!
     var store: CryptoStoreStub!
     var session: SessionStub!
+    var crypto: CryptoStub!
     var decryption: MXMegolmDecryption!
     
     override func setUp() {
         super.setUp()
         
-        device = SpyDevice()
+        device = DeviceStub()
         store = CryptoStoreStub()
         session = SessionStub()
-        let crypto = CryptoStub(device: device, store: store, session: session)
+        crypto = CryptoStub(device: device, store: store, session: session)
         decryption = MXMegolmDecryption(crypto: crypto)
     }
     
@@ -215,5 +242,41 @@ class MXMegolmDecryptionUnitTests: XCTestCase {
             let hasSharedHistory = decryption.hasSharedHistory(forRoomId: roomId1, sessionId: sessionId1, senderKey: senderKey)
             XCTAssertEqual(hasSharedHistory, expectedValue)
         }
+    }
+    
+    func test_decryptEvent_untrustedResult() {
+        let event = MXEvent.encryptedFixture()
+        device.stubbedResult = MXDecryptionResult()
+        crypto.stubbedDeviceInfo = Device.stub(
+            locallyTrusted: false,
+            crossSigningTrusted: true
+        )
+        
+        device.stubbedResult?.isUntrusted = true
+        let result1 = decryption.decryptEvent(event, inTimeline: nil)
+        XCTAssertEqual(result1?.decoration.color, .grey)
+        
+        device.stubbedResult?.isUntrusted = false
+        let result2 = decryption.decryptEvent(event, inTimeline: nil)
+        XCTAssertEqual(result2?.decoration.color, MXEventDecryptionDecorationColor.none)
+    }
+    
+    func test_decryptEvent_untrustedDevice() {
+        let event = MXEvent.encryptedFixture()
+        device.stubbedResult = MXDecryptionResult()
+        
+        crypto.stubbedDeviceInfo = Device.stub(
+            locallyTrusted: false,
+            crossSigningTrusted: false
+        )
+        let result1 = decryption.decryptEvent(event, inTimeline: nil)
+        XCTAssertEqual(result1?.decoration.color, .red)
+        
+        crypto.stubbedDeviceInfo = Device.stub(
+            locallyTrusted: false,
+            crossSigningTrusted: true
+        )
+        let result2 = decryption.decryptEvent(event, inTimeline: nil)
+        XCTAssertEqual(result2?.decoration.color, MXEventDecryptionDecorationColor.none)
     }
 }

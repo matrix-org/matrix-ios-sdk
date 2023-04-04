@@ -79,7 +79,7 @@ public class PollAggregator {
         case .pollStart:
             pollStartEventId = pollEvent.eventId
         case .pollEnd:
-            pollStartEventId = pollEvent.relatesTo.eventId
+            pollStartEventId = pollEvent.relatesTo?.eventId
         default:
             pollStartEventId = nil
         }
@@ -106,7 +106,7 @@ public class PollAggregator {
     private func setupEditListener() {
         editEventsListener = session.aggregations.listenToEditsUpdate(inRoom: self.room.roomId) { [weak self] event in
             guard let self = self,
-                  self.pollStartEventId == event.relatesTo.eventId
+                  self.pollStartEventId == event.relatesTo?.eventId
             else {
                 return
             }

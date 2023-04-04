@@ -26,7 +26,10 @@ extension DecryptedEvent {
             senderCurve25519Key: "",
             claimedEd25519Key: nil,
             forwardingCurve25519Chain: [],
-            verificationState: .trusted
+            shieldState: .init(
+                color: .none,
+                message: nil
+            )
         )
     }
 }
