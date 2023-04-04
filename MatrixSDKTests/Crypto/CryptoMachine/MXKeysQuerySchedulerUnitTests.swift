@@ -56,13 +56,17 @@ class MXKeysQuerySchedulerUnitTests: XCTestCase {
             }
             
             queryStartSpy?()
-            try await Task.sleep(nanoseconds: 1_000_000)
+            
+            // Wait long enough to simulate expensive work
+            try await Task.sleep(nanoseconds: 100_000_000)
             
             return res
             
         case .failure(let error):
             queryStartSpy?()
-            try await Task.sleep(nanoseconds: 1_000_000)
+            
+            // Wait long enough to simulate expensive work
+            try await Task.sleep(nanoseconds: 100_000_000)
             throw error
         }
     }
@@ -504,6 +508,6 @@ class MXKeysQuerySchedulerUnitTests: XCTestCase {
     // MARK: - Helpers
     
     private func XCTAssertQueriesCount(_ count: Int, file: StaticString = #file, line: UInt = #line) {
-        XCTAssertEqual(count, queryCounter, file: file, line: line)
+        XCTAssertEqual(queryCounter, count, file: file, line: line)
     }
 }
