@@ -24,6 +24,7 @@
 @class MXEventDecryptionResult;
 @class MXEncryptedContentFile;
 @class MXEventContentLocation;
+@class MXEventDecryptionDecoration;
 
 MX_ASSUME_MISSING_NULLABILITY_BEGIN
 
@@ -520,7 +521,7 @@ extern NSString *const kMXEventIdentifierKey;
 /**
  If the event relates to another one, some data about the relation.
  */
-@property (nonatomic) MXEventContentRelatesTo *relatesTo;
+@property (nonatomic, nullable) MXEventContentRelatesTo *relatesTo;
 
 /**
  In case of sending failure (MXEventSentStateFailed), the error that occured.
@@ -688,12 +689,6 @@ extern NSString *const kMXEventIdentifierKey;
 @property (nonatomic, readonly) MXEvent *clearEvent;
 
 /**
- Flag indicating the event was decrypted with an untrusted key.
- If the event cannot be decrypted yet or the event not encrypted at all, this flag would be NO.
- */
-@property (nonatomic, readonly, getter=isUntrusted) BOOL untrusted;
-
-/**
  The curve25519 key for the device that we think sent this event.
 
  For an Olm-encrypted event, this is inferred directly from the DH
@@ -744,6 +739,16 @@ extern NSString *const kMXEventIdentifierKey;
  @return base64-encoded curve25519 keys, from oldest to newest.
  */
 @property (nonatomic, readonly) NSArray<NSString *> *forwardingCurve25519KeyChain;
+
+/**
+ Extract the decryption result that allowed to decrypt the event
+ */
+@property (nonatomic, strong, readonly) MXEventDecryptionResult *decryptionResult;
+
+/**
+ Decoration representing the authenticity of the decrypted message
+ */
+@property (nonatomic, strong, readonly) MXEventDecryptionDecoration *decryptionDecoration;
 
 /**
  If any, the error that occured during decryption.

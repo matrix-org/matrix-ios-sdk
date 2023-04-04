@@ -73,7 +73,10 @@ class MXLegacyBackgroundCrypto: MXBackgroundCrypto {
             decryptionResult.senderCurve25519Key = olmResult.senderKey
             decryptionResult.claimedEd25519Key = olmResult.keysClaimed?["ed25519"] as? String
             decryptionResult.forwardingCurve25519KeyChain = olmResult.forwardingCurve25519KeyChain
-            decryptionResult.isUntrusted = olmResult.isUntrusted
+            decryptionResult.decoration = MXEventDecryptionDecoration(
+                color: olmResult.isUntrusted ? .grey : .none,
+                message: nil
+            )
             event.setClearData(decryptionResult)
         } else if decryptorClass == MXOlmDecryption.self {
             guard let ciphertextDict = event.content["ciphertext"] as? [AnyHashable: Any],
