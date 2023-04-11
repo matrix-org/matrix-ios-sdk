@@ -36,6 +36,8 @@ class MXCryptoMachine {
     }
     
     private static let kdfRounds: Int32 = 500_000
+    // Error type will be moved to rust sdk
+    private static let MismatchedAccountError = "the account in the store doesn't match the account in the constructor"
     
     enum Error: Swift.Error {
         case invalidEvent
@@ -72,17 +74,7 @@ class MXCryptoMachine {
     ) throws {
         MXCryptoSDKLogger.shared.log(logLine: "Starting logs")
         
-        let url = try MXCryptoMachineStore.createStoreURLIfNecessary(for: userId)
-        let passphrase = try MXCryptoMachineStore.storePassphrase()
-        log.debug("Opening crypto store at \(url.path)/matrix-sdk-crypto.sqlite3") // Hardcoding path to db for debugging purpose
-        
-        machine = try OlmMachine(
-            userId: userId,
-            deviceId: deviceId,
-            path: url.path,
-            passphrase: passphrase
-        )
-        
+        self.machine = try Self.createMachine(userId: userId, deviceId: deviceId, log: log)
         self.requests = MXCryptoRequests(restClient: restClient)
         self.getRoomAction = getRoomAction
         
@@ -119,7 +111,46 @@ class MXCryptoMachine {
     
     func deleteAllData() throws {
         let url = try MXCryptoMachineStore.storeURL(for: userId)
-        try FileManager.default.removeItem(at: url)
+        if FileManager.default.fileExists(atPath: url.path) {
+            try FileManager.default.removeItem(at: url)
+        }
+    }
+    
+    // MARK: - Private
+    
+    private static func createMachine(userId: String, deviceId: String, log: MXNamedLog) throws -> OlmMachine {
+        let url = try MXCryptoMachineStore.createStoreURLIfNecessary(for: userId)
+        let passphrase = try MXCryptoMachineStore.storePassphrase()
+        
+        log.debug("Opening crypto store at \(url.path)/matrix-sdk-crypto.sqlite3") // Hardcoding full path to db for debugging purposes
+        
+        do {
+            return try OlmMachine(
+                userId: userId,
+                deviceId: deviceId,
+                path: url.path,
+                passphrase: passphrase
+            )
+        } catch {
+            // If we cannot open machine due to a mismatched account, delete previous data and try again
+            if case CryptoStoreError.CryptoStore(let message) = error,
+               message.contains(Self.MismatchedAccountError) {
+                log.error("Credentials of the account do not match, deleting previous data", context: [
+                    "error": message
+                ])
+                try FileManager.default.removeItem(at: url)
+                return try OlmMachine(
+                    userId: userId,
+                    deviceId: deviceId,
+                    path: url.path,
+                    passphrase: passphrase
+                )
+
+            // Otherwise re-throw the error
+            } else {
+                throw error
+            }
+        }
     }
 }
 
