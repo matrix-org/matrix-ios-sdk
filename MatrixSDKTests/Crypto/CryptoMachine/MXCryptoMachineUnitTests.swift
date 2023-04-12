@@ -38,6 +38,7 @@ class MXCryptoMachineUnitTests: XCTestCase {
     }
     
     var myUserId = "@alice:localhost"
+    var myDeviceId = "ABCD"
     var otherUserId = "@bob:localhost"
     var roomId = "!1234:localhost"
     var verificationRequestId = "$12345"
@@ -46,27 +47,106 @@ class MXCryptoMachineUnitTests: XCTestCase {
     
     override func setUp() {
         restClient = MXRestClientStub()
+        machine = try! createMachine()
+    }
+    
+    override func tearDown() {
+        do {
+            try deleteData(userId: myUserId)
+        } catch {
+            XCTFail("Cannot tear down test - \(error)")
+        }
+    }
+    
+    // MARK: - Helpers
+    
+    private func createMachine(userId: String? = nil, deviceId: String? = nil) throws -> MXCryptoMachine {
         MXKeyProvider.sharedInstance().delegate = KeyProvider()
-        machine = try! MXCryptoMachine(
-            userId: myUserId,
-            deviceId: "ABCD",
+        let machine = try MXCryptoMachine(
+            userId: userId ?? myUserId,
+            deviceId: deviceId ?? myDeviceId,
             restClient: restClient,
             getRoomAction: {
                 MXRoom(roomId: $0, andMatrixSession: nil)
             })
         MXKeyProvider.sharedInstance().delegate = nil
+        return machine
     }
     
-    override func tearDown() {
-        do {
-            let url = try MXCryptoMachineStore.storeURL(for: myUserId)
-            guard FileManager.default.fileExists(atPath: url.path) else {
-                return
-            }
-            try FileManager.default.removeItem(at: url)
-        } catch {
-            XCTFail("Cannot tear down test - \(error)")
+    private func deleteData(userId: String) throws {
+        let url = try MXCryptoMachineStore.storeURL(for: userId)
+        guard FileManager.default.fileExists(atPath: url.path) else {
+            return
         }
+        try FileManager.default.removeItem(at: url)
+    }
+    
+    // MARK: - Init
+    
+    func test_init_createsMachine() throws {
+        let machine = try createMachine(userId: myUserId, deviceId: myDeviceId)
+        
+        XCTAssertEqual(machine.userId, myUserId)
+        XCTAssertEqual(machine.deviceId, myDeviceId)
+    }
+    
+    func test_init_createsMachinesWithDifferentDeviceIds() throws {
+        let machine1 = try createMachine(deviceId: "Device1")
+        XCTAssertEqual(machine1.userId, myUserId)
+        XCTAssertEqual(machine1.deviceId, "Device1")
+        
+        let machine2 = try createMachine(deviceId: "Device2")
+        XCTAssertEqual(machine2.userId, myUserId)
+        XCTAssertEqual(machine2.deviceId, "Device2")
+        
+        let machine3 = try createMachine(deviceId: "Device3")
+        XCTAssertEqual(machine3.userId, myUserId)
+        XCTAssertEqual(machine3.deviceId, "Device3")
+    }
+    
+    func test_init_loadsExistingData() throws {
+        let machine1 = try createMachine()
+        try machine1.setRoomAlgorithm(roomId: roomId, algorithm: .megolmV1AesSha2)
+        
+        let machine2 = try createMachine()
+        let settings = machine2.roomSettings(roomId: roomId)
+        XCTAssertEqual(settings?.algorithm, .megolmV1AesSha2)
+    }
+    
+    func test_init_differentDeviceDeletesExistingData() throws {
+        let device1 = "Device1"
+        let device2 = "Device2"
+        
+        // Create a machine with some data
+        let machine1 = try createMachine(deviceId: device1)
+        try machine1.setRoomAlgorithm(roomId: roomId, algorithm: .megolmV1AesSha2)
+
+        // Create another machine with different device ID, which will delete existing data
+        let machine2 = try createMachine(deviceId: device2)
+        XCTAssertNil(machine2.roomSettings(roomId: roomId))
+        
+        // Now opening the first machine again shows data has been removed
+        let machine3 = try createMachine(deviceId: device1)
+        XCTAssertNil(machine3.roomSettings(roomId: roomId))
+    }
+    
+    func test_init_differentUserPreservesExistingData() throws {
+        let user1 = "@User1:localhost"
+        let user2 = "@User2:localhost"
+        
+        let machine1 = try createMachine(userId: user1)
+        try machine1.setRoomAlgorithm(roomId: roomId, algorithm: .megolmV1AesSha2)
+
+        let machine2 = try createMachine(userId: user2)
+        try machine2.setRoomAlgorithm(roomId: roomId, algorithm: .olmV1Curve25519AesSha2)
+        
+        // Loading up machine1 again will have previous data unchanged
+        let machine3 = try createMachine(userId: user1)
+        let settings = machine3.roomSettings(roomId: roomId)
+        XCTAssertEqual(settings?.algorithm, .megolmV1AesSha2)
+        
+        try deleteData(userId: user1)
+        try deleteData(userId: user2)
     }
     
     // MARK: - Sync response

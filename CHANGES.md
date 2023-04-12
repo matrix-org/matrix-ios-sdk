@@ -1,3 +1,14 @@
+## Changes in 0.26.7 (2023-04-12)
+
+🙌 Improvements
+
+- Crypto: Upgrade Crypto SDK ([#1765](https://github.com/matrix-org/matrix-ios-sdk/pull/1765))
+
+🐛 Bugfixes
+
+- Crypto: Delete data for mismatched accounts ([#1763](https://github.com/matrix-org/matrix-ios-sdk/pull/1763))
+
+
 ## Changes in 0.26.6 (2023-04-04)
 
 🙌 Improvements
