@@ -167,13 +167,14 @@
 {
     if (event.sender && [crypto trustLevelForUser:event.sender].isVerified)
     {
-        MXDeviceInfo *deviceInfo = [crypto eventDeviceInfo:event];
+        NSString *algorithm = event.wireContent[@"algorithm"];
+        MXDeviceInfo *deviceInfo = [crypto.deviceList deviceWithIdentityKey:decryptionResult.senderKey andAlgorithm:algorithm];
         if (!deviceInfo.trustLevel.isVerified)
         {
             return MXEventDecryptionDecorationColorRed;
         }
     }
-    
+
     return decryptionResult.isUntrusted ? MXEventDecryptionDecorationColorGrey : MXEventDecryptionDecorationColorNone;
 }
 
