@@ -197,7 +197,8 @@ class MXCryptoV2: NSObject, MXCrypto {
         }
         
         if deleteStore {
-            if let credentials = session?.credentials {
+            if let credentials = session?.credentials,
+               MXRealmCryptoStore.hasData(for: credentials) {
                 MXRealmCryptoStore.delete(with: credentials)
             } else {
                 log.failure("Missing credentials, cannot delete store")
