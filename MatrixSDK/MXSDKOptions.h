@@ -204,18 +204,21 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic) BOOL enableRoomSharedHistoryOnInvite;
 
 /**
- An object which controls the availabilty of the rust-based `MatrixCryptoSDK`.
+ Use the newer rust-based `MatrixCryptoSDK` instead of the legacy `MatrixSDK`'s internal crypto module.
  
- @remark nil by default.
+ @remark YES by default
  */
-@property (nonatomic, nullable) id<MXCryptoV2Feature> cryptoSDKFeature;
+@property (nonatomic) BOOL enableCryptoSDK;
 
 /**
- Use the rust-based `MatrixCryptoSDK` instead of `MatrixSDK`'s internal crypto module.
+ Flag indicating whether this account requires a re-verification after migrating to Crypto SDK
  
- @remark this property is a convenience getter for `cryptoSDKFeature.isEnabled`
+ This flag is set to true if the legacy account is considered verified but the rust account
+ does not consider the migrated data secure enough, as it applies stricter security conditions.
+ 
+ @remark NO by default.
  */
-@property (nonatomic, readonly) BOOL enableCryptoSDK;
+@property (nonatomic) BOOL needsVerificationUpgrade;
 
 /**
  The text-based identifier for the crypto module being used (e.g. native vs rust)

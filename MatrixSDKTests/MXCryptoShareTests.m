@@ -142,8 +142,7 @@
  -> Key share requests must be pending
  -> Then, they must have been sent
  */
-// TODO: Test currently broken
-- (void)xtestKeyShareRequestFromNewDevice
+- (void)testKeyShareRequestFromNewDevice
 {
     //  - Have Alice and Bob in e2ee room with messages
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession1, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
@@ -194,8 +193,7 @@
 -> After a bit, Alice2 should have received all keys
  -> Key share requests should have complete
  */
-// TODO: test is currently broken
-- (void)xtestNominalCase
+- (void)testNominalCase
 {
     //  - Have Alice and Bob in e2ee room with messages
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession1, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
@@ -271,8 +269,7 @@
  - Enable key share requests on Alice2
  -> Key share requests should have complete
  */
-// TODO: test currently broken
-- (void)xtestDisableKeyShareRequest
+- (void)testDisableKeyShareRequest
 {
     //  - Have Alice and Bob in e2ee room with messages
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession1, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
@@ -354,8 +351,7 @@
  -> key share requests on Alice2 are enabled again
  -> No m.room_key_request have been made
  */
-// TODO: Test currently broken
-- (void)xtestNoKeyShareRequestIfThereIsABackup
+- (void)testNoKeyShareRequestIfThereIsABackup
 {
     //  - Have Alice and Bob in e2ee room with messages
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession1, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
@@ -676,8 +672,7 @@
  - Alice invites Bob into the room from her second device
  -> Bob has recieved only 2 session keys, namely those with `sharedHistory` set to true
  */
-// TODO: test is currently broken
-- (void)xtestSharedHistoryPreservedWhenForwardingKeys
+- (void)testSharedHistoryPreservedWhenForwardingKeys
 {
     [matrixSDKTestsE2EData doE2ETestWithAliceInARoom:self
                                             andStore:[[MXMemoryStore alloc] init]

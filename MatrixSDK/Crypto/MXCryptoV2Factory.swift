@@ -28,6 +28,21 @@ import Foundation
         .deprecated3
     }
     
+    @objc public func hasCryptoData(for session: MXSession!) -> Bool {
+        guard let userId = session?.myUserId else {
+            log.error("Missing required dependencies")
+            return false
+        }
+        
+        do {
+            let url = try MXCryptoMachineStore.storeURL(for: userId)
+            return FileManager.default.fileExists(atPath: url.path)
+        } catch {
+            log.error("Failed creating url for user", context: error)
+            return false
+        }
+    }
+    
     @objc public func buildCrypto(
         session: MXSession!,
         migrationProgress: ((Double) -> Void)?,
@@ -124,7 +139,7 @@ import Foundation
             // unless the rust-based crypto already considers the current session to be verified given
             // the migration data
             log.debug("Needs verification upgrade")
-            MXSDKOptions.sharedInstance().cryptoSDKFeature?.needsVerificationUpgrade = true
+            MXSDKOptions.sharedInstance().needsVerificationUpgrade = true
         }
     }
 }

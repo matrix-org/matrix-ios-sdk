@@ -180,19 +180,26 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
                                  complete:(void (^)(id<MXCrypto> crypto, NSError *error))complete
 {
 #ifdef MX_CRYPTO
-    
-    // Each time we construct the crypto module (app launch, login etc) we have a chance to try to enable
-    // the newer SDK crypto module, if it is available for this particular user.
-    [MXSDKOptions.sharedInstance.cryptoSDKFeature enableIfAvailableForUserId:mxSession.myUserId];
+
     if (MXSDKOptions.sharedInstance.enableCryptoSDK)
     {
-        [MXCryptoV2Factory.shared buildCryptoWithSession:mxSession
-                                       migrationProgress:migrationProgress
-                                                 success:^(id<MXCrypto> crypto) {
-                                                    complete(crypto, nil); }
-                                                 failure:^(NSError *error) {
-                                                    complete(nil, error);
-                                                 }];
+        BOOL enableCrypto = [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession || [MXCryptoV2Factory.shared hasCryptoDataFor:mxSession];
+        if (enableCrypto)
+        {
+            [MXCryptoV2Factory.shared buildCryptoWithSession:mxSession
+                                           migrationProgress:migrationProgress
+                                                     success:^(id<MXCrypto> crypto) {
+                complete(crypto, nil); }
+                                                     failure:^(NSError *error) {
+                complete(nil, error);
+            }];
+        }
+        else
+        {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                complete(nil, nil);
+            });
+        }
         return;
     }
     
