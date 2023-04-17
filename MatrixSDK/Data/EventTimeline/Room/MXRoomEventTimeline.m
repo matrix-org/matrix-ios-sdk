@@ -142,8 +142,6 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 
 - (void)destroy
 {
-    [room.mxSession resetReplayAttackCheckInTimeline:_timelineId];
-
     if (httpOperation)
     {
         // Cancel the current server request
@@ -190,8 +188,6 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 
 - (void)resetPagination
 {
-    [room.mxSession resetReplayAttackCheckInTimeline:_timelineId];
-
     // Reset the back state to the current room state
     backState = [[MXRoomState alloc] initBackStateWith:_state];
 
@@ -203,8 +199,6 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 {
     NSParameterAssert(success);
     NSAssert(_initialEventId, @"[MXRoomEventTimeline] resetPaginationAroundInitialEventWithLimit cannot be called on live timeline");
-
-    [room.mxSession resetReplayAttackCheckInTimeline:_timelineId];
     
     // Reset the store
     if (!store.isPermanent)

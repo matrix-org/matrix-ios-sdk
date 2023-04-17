@@ -204,13 +204,6 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic) BOOL enableRoomSharedHistoryOnInvite;
 
 /**
- Use the newer rust-based `MatrixCryptoSDK` instead of the legacy `MatrixSDK`'s internal crypto module.
- 
- @remark YES by default
- */
-@property (nonatomic) BOOL enableCryptoSDK;
-
-/**
  Flag indicating whether this account requires a re-verification after migrating to Crypto SDK
  
  This flag is set to true if the legacy account is considered verified but the rust account
@@ -219,11 +212,6 @@ NS_ASSUME_NONNULL_BEGIN
  @remark NO by default.
  */
 @property (nonatomic) BOOL needsVerificationUpgrade;
-
-/**
- The text-based identifier for the crypto module being used (e.g. native vs rust)
- */
-@property (nonatomic, readonly) NSString *cryptoModuleId;
 
 /**
  Enable symmetric room key backups
@@ -238,14 +226,6 @@ NS_ASSUME_NONNULL_BEGIN
  @remark NO by default
  */
 @property (nonatomic) BOOL enableNewClientInformationFeature;
-
-/**
- Enable the calculating and display of progress during session startup, incl store migration,
- syncing and response processing.
- 
- @remark YES by default
- */
-@property (nonatomic) BOOL enableStartupProgress;
 
 @end
 

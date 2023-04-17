@@ -776,17 +776,9 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 - (void)enableVoIPWithCallStack:(id<MXCallStack>)callStack;
 
 /**
- Enable End-to-End encryption.
- 
- In case of enabling, the operation will complete when the session will be ready
- to make encrytion with other users devices
-
- @param enableCrypto NO stops crypto and erases crypto data.
-
- @param success A block object called when the operation succeeds.
- @param failure A block object called when the operation fails.
+ Disable End-to-End encryption.
  */
-- (void)enableCrypto:(BOOL)enableCrypto success:(void (^)(void))success failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+- (void)disableCrypto;
 
 /**
  Get the versions of the specification supported by the server.
@@ -1595,14 +1587,6 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 - (void)decryptEvents:(NSArray<MXEvent*> *)events
            inTimeline:(NSString*)timeline
            onComplete:(void (^)(NSArray<MXEvent*> *failedEvents))onComplete;
-
-/**
- Reset replay attack data for the given timeline.
-
- @param timeline the id of the timeline.
- */
-- (void)resetReplayAttackCheckInTimeline:(NSString*)timeline;
-
 
 #pragma mark - Global events listeners
 /**

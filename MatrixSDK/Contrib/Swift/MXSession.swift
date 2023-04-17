@@ -127,24 +127,6 @@ public extension MXSession {
         __setStore(store, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
-    
-    /**
-     Enable End-to-End encryption.
-     
-     In case of enabling, the operation will complete when the session will be ready
-     to make encrytion with other users devices
-     
-     - parameters:
-        - isEnabled: `false` stops crypto and erases crypto data.
-        - completion: A block called when the SDK has completed a catchup, or times out.
-        - response: Indicates whether the sync was successful.
-     */
-    @nonobjc func enableCrypto(_ isEnabled: Bool, completion: @escaping (_ response: MXResponse<Void>) -> Void) {
-        __enableCrypto(isEnabled, success: currySuccess(completion), failure: curryFailure(completion))
-    }
-    
-    
-    
     /// Create a new room with the given parameters.
     /// - Parameters:
     ///   - name: Name of the room

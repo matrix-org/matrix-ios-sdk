@@ -901,35 +901,32 @@ onUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecogn
 {
     NSString *userId = session.matrixRestClient.credentials.userId;
 
-    [session enableCrypto:NO success:^{
+    [session disableCrypto];
 
-        [session close];
+    [session close];
 
-        MXRestClient *mxRestClient = [[MXRestClient alloc] initWithHomeServer:kMXTestsHomeServerURL
-                                            andOnUnrecognizedCertificateBlock:nil];
-        [self retain:mxRestClient];
+    MXRestClient *mxRestClient = [[MXRestClient alloc] initWithHomeServer:kMXTestsHomeServerURL
+                                        andOnUnrecognizedCertificateBlock:nil];
+    [self retain:mxRestClient];
 
-        [mxRestClient loginWithLoginType:kMXLoginFlowTypePassword username:userId password:password success:^(MXCredentials *credentials) {
+    [mxRestClient loginWithLoginType:kMXLoginFlowTypePassword username:userId password:password success:^(MXCredentials *credentials) {
 
-            MXRestClient *mxRestClient2 = [[MXRestClient alloc] initWithCredentials:credentials andOnUnrecognizedCertificateBlock:nil];
-            [self retain:mxRestClient2];
+        MXRestClient *mxRestClient2 = [[MXRestClient alloc] initWithCredentials:credentials andOnUnrecognizedCertificateBlock:nil];
+        [self retain:mxRestClient2];
 
-            MXSession *newSession = [[MXSession alloc] initWithMatrixRestClient:mxRestClient2];
-            [self retain:newSession];
+        MXSession *newSession = [[MXSession alloc] initWithMatrixRestClient:mxRestClient2];
+        [self retain:newSession];
 
-            [newSession start:^{
+        [newSession start:^{
 
-                onComplete(newSession);
-
-            } failure:^(NSError *error) {
-                [self breakTestCase:testCase reason:@"Cannot set up intial test conditions - error: %@", error];
-            }];
+            onComplete(newSession);
 
         } failure:^(NSError *error) {
-            [self breakTestCase:testCase reason:@"Cannot relog %@. Error: %@", userId, error];
+            [self breakTestCase:testCase reason:@"Cannot set up intial test conditions - error: %@", error];
         }];
+
     } failure:^(NSError *error) {
-        [self breakTestCase:testCase reason:@"Cannot logout %@. Error: %@", userId, error];
+        [self breakTestCase:testCase reason:@"Cannot relog %@. Error: %@", userId, error];
     }];
 }
 

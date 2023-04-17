@@ -54,19 +54,12 @@ static MXSDKOptions *sharedOnceInstance = nil;
         _authEnableRefreshTokens = NO;
         _enableThreads = NO;
         _enableRoomSharedHistoryOnInvite = NO;
-        _enableCryptoSDK = YES;
         _needsVerificationUpgrade = NO;
         _enableSymmetricBackup = NO;
         _enableNewClientInformationFeature = NO;
-        _enableStartupProgress = YES;
     }
     
     return self;
-}
-
-- (NSString *)cryptoModuleId
-{
-    return self.enableCryptoSDK ? @"rust" : @"native";
 }
 
 - (void)setRoomListDataManagerClass:(Class)roomListDataManagerClass
