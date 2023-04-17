@@ -91,7 +91,7 @@ Rust crate, which replaces all previous obj-c / Swift implementation that used t
 `MatrixSDK` integrates this crate via `pod MatrixSDKCrypto` published `separately <https://github.com/matrix-org/matrix-rust-sdk/tree/main/bindings/apple#publishing-matrixsdkcrypto>`_.
 
 Code in `MatrixSDK` consists mostly of wrappers, networking logic and glue code connecting encryption with
-general app functionality, sync loops and and session state. Some of the notable classes include:
+general app functionality, sync loops and session state. Some of the notable classes include:
 
 :``MXCrypto``:
     Main entry-point into all cryptographic functionality, such as encrypting/decrypting
