@@ -142,7 +142,7 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
             // Refresh our state so that we can cross-sign
             [self refreshStateWithSuccess:^(BOOL stateUpdated) {
                 // Expose this device to other users as signed by me
-                [self crossSignDeviceWithDeviceId:myCreds.deviceId success:^{
+                [self crossSignDeviceWithDeviceId:myCreds.deviceId userId:myCreds.userId success:^{
                     success();
                 } failure:failureBlock];
             } failure:failureBlock];
@@ -218,6 +218,7 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
 }
 
 - (void)crossSignDeviceWithDeviceId:(NSString*)deviceId
+                            userId:(NSString *)userId
                             success:(void (^)(void))success
                             failure:(void (^)(NSError *error))failure
 {

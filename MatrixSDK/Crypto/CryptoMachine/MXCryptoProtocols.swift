@@ -82,7 +82,7 @@ protocol MXCryptoRoomEventDecrypting: MXCryptoIdentity {
 }
 
 /// Cross-signing functionality
-protocol MXCryptoCrossSigning: MXCryptoUserIdentitySource {
+protocol MXCryptoCrossSigning: MXCryptoUserIdentitySource, MXCryptoDevicesSource {
     func refreshCrossSigningStatus() async throws
     func crossSigningStatus() -> CrossSigningStatus
     func bootstrapCrossSigning(authParams: [AnyHashable: Any]) async throws
