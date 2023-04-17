@@ -91,6 +91,9 @@ import Foundation
         
         log.debug("Legacy crypto store exists")
         try migrateIfNecessary(legacyStore: legacyStore, updateProgress: updateProgress)
+        
+        log.debug("Removing legacy crypto store entirely")
+        MXRealmCryptoStore.delete(with: credentials)
     }
     
     private func migrateIfNecessary(
@@ -123,8 +126,5 @@ import Foundation
             log.debug("Needs verification upgrade")
             MXSDKOptions.sharedInstance().cryptoSDKFeature?.needsVerificationUpgrade = true
         }
-        
-        log.debug("Setting the latest deprecated version of legacy store")
-        legacyStore.cryptoVersion = lastDeprecatedVersion
     }
 }
