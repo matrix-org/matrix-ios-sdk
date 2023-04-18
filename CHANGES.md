@@ -1,3 +1,10 @@
+## Changes in 0.26.9 (2023-04-18)
+
+🐛 Bugfixes
+
+- Cross-signing: Setup cross-signing with empty auth session ([#1774](https://github.com/matrix-org/matrix-ios-sdk/pull/1774))
+
+
 ## Changes in 0.26.8 (2023-04-18)
 
 🙌 Improvements
