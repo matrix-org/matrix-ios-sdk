@@ -1092,7 +1092,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
             {
                 // Cross-sign our own device
                 MXLogDebug(@"[MXCrypto] setDeviceVerificationForDevice: Mark device %@ as self verified", deviceId);
-                [self.crossSigning crossSignDeviceWithDeviceId:deviceId success:success failure:failure];
+                [self.crossSigning crossSignDeviceWithDeviceId:deviceId userId:userId success:success failure:failure];
                 
                 // Wait the end of cross-sign before returning
                 return;

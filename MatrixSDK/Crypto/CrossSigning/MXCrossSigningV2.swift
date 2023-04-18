@@ -144,10 +144,17 @@ class MXCrossSigningV2: NSObject, MXCrossSigning {
 
     func crossSignDevice(
         withDeviceId deviceId: String,
+        userId: String,
         success: @escaping () -> Void,
         failure: @escaping (Swift.Error) -> Void
     ) {
-        log.debug("->")
+        log.debug("Attempting to cross sign a device \(deviceId)")
+        
+        if let device = crossSigning.device(userId: userId, deviceId: deviceId), device.crossSigningTrusted {
+            log.debug("Device is already cross-signing trusted, no need to verify")
+            success()
+            return
+        }
         
         Task {
             do {

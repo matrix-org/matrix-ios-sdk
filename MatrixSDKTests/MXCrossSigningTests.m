@@ -1175,7 +1175,7 @@
             newDeviceId = newAliceSession.matrixRestClient.credentials.deviceId;
             
             // - Cross-sign this new device
-            [aliceSession.crypto.crossSigning crossSignDeviceWithDeviceId:newDeviceId success:^{
+            [aliceSession.crypto.crossSigning crossSignDeviceWithDeviceId:newDeviceId userId:newAliceSession.matrixRestClient.credentials.userId success:^{
                 
                 // Intermediate check
                 MXDeviceTrustLevel *aliceDevice2Trust = [aliceSession.crypto deviceTrustLevelForDevice:newDeviceId ofUser:aliceSession.myUserId];

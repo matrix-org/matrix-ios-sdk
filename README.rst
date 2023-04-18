@@ -84,6 +84,35 @@ They contain logic to maintain consistent chat room data.
      room. MXSession exposes and maintains the list of MXUsers. It provides
      the user id, displayname and the current presence state.
 
+End-to-end Encryption
+---------------------
+All core E2EE functionality is implemented in an external `matrix-sdk-crypto <https://github.com/matrix-org/matrix-rust-sdk/tree/main/crates/matrix-sdk-crypto>`_
+Rust crate, which replaces all previous obj-c / Swift implementation that used to exist in this repository.
+`MatrixSDK` integrates this crate via `pod MatrixSDKCrypto` published `separately <https://github.com/matrix-org/matrix-rust-sdk/tree/main/bindings/apple#publishing-matrixsdkcrypto>`_.
+
+Code in `MatrixSDK` consists mostly of wrappers, networking logic and glue code connecting encryption with
+general app functionality, sync loops and session state. Some of the notable classes include:
+
+:``MXCrypto``:
+    Main entry-point into all cryptographic functionality, such as encrypting/decrypting
+    events, cross-signing users, or managing room key backups. It is owned by the current
+    session and therefore specific to the current user. 
+
+:``MXRoomEventEncryption``/``MXRoomEventDecryption``:
+    Two classes responsible for encrypting and decrypting message events and tasks that
+    are closely dependent, such as sharing room keys, reacting to late key-shares etc.
+
+:``MXCryptoMachine``:
+    Wrapper around Rust-based `OlmMachine`, providing a more convenient API. Its three main
+    responsibilities are:
+    - adding a layer of abstraction between `MatrixSDK` and `MatrixSDKCrypto`
+    - mapping to and from raw strings passed into the Rust machine
+    - performing network requests and marking them as completed on behalf of the Rust machine
+
+To publish a new version of `MatrixSDKCrypto` follow a `separate process <https://github.com/matrix-org/matrix-rust-sdk/tree/main/bindings/apple#publishing-matrixsdkcrypto>`_.
+To test local / unpublished changes in `MatrixSDKCrypto`, `build the framework <https://github.com/matrix-org/matrix-rust-sdk/tree/main/bindings/apple#building-only-the-crypto-sdk>`_
+and re-direct the pod in your `Podfile` to `pod MatrixSDKCrypto, :path => your/local/rust-crypto-sdk/MatrixSDKCrypto.podspec`
+
 Usage
 =====
 
