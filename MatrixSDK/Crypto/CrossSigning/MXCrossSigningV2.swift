@@ -217,8 +217,9 @@ class MXCrossSigningV2: NSObject, MXCrossSigning {
             let session = authSession.session,
             let userId = restClient.credentials?.userId
         else {
-            log.error("Missing parameters")
-            throw Error.missingAuthSession
+            // Try to setup cross-signing without authentication parameters in case if a grace period is enabled
+            log.warning("Setting up cross-signing without authentication parameters")
+            return [:]
         }
 
         return [

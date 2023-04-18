@@ -89,7 +89,9 @@ class CryptoCrossSigningStub: CryptoIdentityStub, MXCryptoCrossSigning {
         return stubbedStatus
     }
     
+    var spyAuthParams: [AnyHashable: Any]?
     func bootstrapCrossSigning(authParams: [AnyHashable : Any]) async throws {
+        self.spyAuthParams = authParams
     }
     
     func exportCrossSigningKeys() -> CrossSigningKeyExport? {
