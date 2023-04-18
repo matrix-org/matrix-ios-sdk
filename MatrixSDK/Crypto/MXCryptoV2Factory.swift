@@ -16,6 +16,16 @@
 
 import Foundation
 
+/// Delegate for migrating account data from legacy crypto to rust-based Crypto SDK
+@objc public protocol MXCryptoV2MigrationDelegate {
+    
+    /// Flag indicating whether this account requires a re-verification after migrating to Crypto SDK
+    ///
+    /// This flag is set to true if the legacy account is considered verified but the rust account
+    /// does not consider the migrated data secure enough, as it applies stricter security conditions.
+    var needsVerificationUpgrade: Bool { get set }
+}
+
 @objc public class MXCryptoV2Factory: NSObject {
     enum Error: Swift.Error {
         case cryptoNotAvailable
@@ -139,7 +149,7 @@ import Foundation
             // unless the rust-based crypto already considers the current session to be verified given
             // the migration data
             log.debug("Needs verification upgrade")
-            MXSDKOptions.sharedInstance().needsVerificationUpgrade = true
+            MXSDKOptions.sharedInstance().cryptoMigrationDelegate?.needsVerificationUpgrade = true
         }
     }
 }

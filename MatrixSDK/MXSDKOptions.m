@@ -54,9 +54,9 @@ static MXSDKOptions *sharedOnceInstance = nil;
         _authEnableRefreshTokens = NO;
         _enableThreads = NO;
         _enableRoomSharedHistoryOnInvite = NO;
-        _needsVerificationUpgrade = NO;
         _enableSymmetricBackup = NO;
         _enableNewClientInformationFeature = NO;
+        _cryptoMigrationDelegate = nil;
     }
     
     return self;

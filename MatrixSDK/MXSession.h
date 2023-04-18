@@ -776,9 +776,17 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 - (void)enableVoIPWithCallStack:(id<MXCallStack>)callStack;
 
 /**
- Disable End-to-End encryption.
+ Enable End-to-End encryption.
+ 
+ In case of enabling, the operation will complete when the session will be ready
+ to make encrytion with other users devices
+
+ @param enableCrypto NO stops crypto and erases crypto data.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
  */
-- (void)disableCrypto;
+- (void)enableCrypto:(BOOL)enableCrypto success:(void (^)(void))success failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Get the versions of the specification supported by the server.

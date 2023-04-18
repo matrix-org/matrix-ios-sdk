@@ -48,7 +48,7 @@ typedef NS_ENUM(NSUInteger, MXCallTransferType)
 
 NS_ASSUME_NONNULL_BEGIN
 
-@protocol MXBackgroundModeHandler, MXCryptoV2Feature;
+@protocol MXBackgroundModeHandler, MXCryptoV2MigrationDelegate;
 
 /**
  SDK options that can be set at the launch time.
@@ -204,14 +204,11 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic) BOOL enableRoomSharedHistoryOnInvite;
 
 /**
- Flag indicating whether this account requires a re-verification after migrating to Crypto SDK
+ The delegate for migrating account data from legacy crypto to rust-based Crypto SDK
  
- This flag is set to true if the legacy account is considered verified but the rust account
- does not consider the migrated data secure enough, as it applies stricter security conditions.
- 
- @remark NO by default.
+ By default, nil.
  */
-@property (nonatomic) BOOL needsVerificationUpgrade;
+@property (nonatomic, nullable, weak) id<MXCryptoV2MigrationDelegate> cryptoMigrationDelegate;
 
 /**
  Enable symmetric room key backups

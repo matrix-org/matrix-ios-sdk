@@ -1351,12 +1351,25 @@ typedef void (^MXOnResumeDone)(void);
 - (MXHTTPOperation*)logout:(void (^)(void))success
                    failure:(void (^)(NSError *error))failure
 {
+    // Create an empty operation that will be mutated later
+    MXHTTPOperation *operation = [[MXHTTPOperation alloc] init];
+
     // Clear crypto data
     // For security and because it will be no more useful as we will get a new device id
     // on the next log in
-    [self disableCrypto];
-    
-    return [self.matrixRestClient logout:success failure:failure];
+    MXWeakify(self);
+    [self enableCrypto:NO success:^{
+        MXStrongifyAndReturnIfNil(self);
+
+        if (!operation.isCancelled)
+        {
+            MXHTTPOperation *operation2 = [self.matrixRestClient logout:success failure:failure];
+            [operation mutateTo:operation2];
+        }
+
+    } failure:nil];
+
+    return operation;
 }
 
 - (MXHTTPOperation*)deactivateAccountWithAuthParameters:(NSDictionary*)authParameters
@@ -2161,15 +2174,62 @@ typedef void (^MXOnResumeDone)(void);
     _callManager = [[MXCallManager alloc] initWithMatrixSession:self andCallStack:callStack];
 }
 
-- (void)disableCrypto
+- (void)enableCrypto:(BOOL)enableCrypto success:(void (^)(void))success failure:(void (^)(NSError *))failure
 {
-    MXLogDebug(@"[MXSesion] disableCrypto");
+    MXLogDebug(@"[MXSesion] enableCrypto: %@", @(enableCrypto));
 
-    if (_crypto)
+    if (enableCrypto && !_crypto)
+    {
+        MXWeakify(self);
+        [MXCryptoV2Factory.shared buildCryptoWithSession:self
+                                       migrationProgress:nil
+                                                 success:^(id<MXCrypto> crypto) {
+            
+            MXLogDebug(@"[MXSession] enableCrypto: Successfully initialized crypto module");
+            MXStrongifyAndReturnIfNil(self);
+            self->_crypto = crypto;
+            
+            if (self->_state == MXSessionStateRunning)
+            {
+                [self startCrypto:success failure:failure];
+            }
+            else
+            {
+                MXLogDebug(@"[MXSesion] enableCrypto: crypto module will be start later (MXSession.state: %@)", [MXTools readableSessionState:self->_state]);
+
+                if (success)
+                {
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        success();
+                    });
+                }
+            }
+            
+        } failure:^(NSError *error) {
+            MXLogErrorDetails(@"[MXSession] enableCrypto: Error initialized crypto module", error);
+            if (failure)
+            {
+                failure(error);
+            }
+        }];
+    }
+    else if (!enableCrypto && _crypto)
     {
         // Erase all crypto data of this user
         [_crypto close:YES];
         _crypto = nil;
+
+        if (success)
+        {
+            success();
+        }
+    }
+    else
+    {
+        if (success)
+        {
+            success();
+        }
     }
 }
 
