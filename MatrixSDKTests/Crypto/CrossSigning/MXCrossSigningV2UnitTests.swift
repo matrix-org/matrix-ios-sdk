@@ -103,4 +103,60 @@ class MXCrossSigningV2UnitTests: XCTestCase {
             XCTAssertEqual(self.crossSigning.state, state, "Status: \(status)")
         }
     }
+    
+    func test_crossSignDevice_verifiesUntrustedDevice() async throws {
+        let userId = "Alice"
+        let deviceId = "ABCD"
+        crypto.devices = [
+            userId: [
+                deviceId: .stub(crossSigningTrusted: false)
+            ]
+        ]
+        
+        let before = crypto.device(userId: userId, deviceId: deviceId)
+        XCTAssertNotNil(before)
+        XCTAssertFalse(before!.crossSigningTrusted)
+        XCTAssertFalse(crypto.verifiedDevicesSpy.contains(deviceId))
+        
+        try await crossSigning.crossSignDevice(deviceId: deviceId, userId: userId)
+        
+        let after = crypto.device(userId: userId, deviceId: deviceId)
+        XCTAssertNotNil(after)
+        XCTAssertTrue(after!.crossSigningTrusted)
+        XCTAssertTrue(crypto.verifiedDevicesSpy.contains(deviceId))
+    }
+    
+    func test_crossSignDevice_doesNotReverifyAlreadyTrustedDevice() async throws {
+        let userId = "Alice"
+        let deviceId = "ABCD"
+        crypto.devices = [
+            userId: [
+                deviceId: .stub(crossSigningTrusted: true)
+            ]
+        ]
+        
+        let before = crypto.device(userId: userId, deviceId: deviceId)
+        XCTAssertNotNil(before)
+        XCTAssertTrue(before!.crossSigningTrusted)
+        XCTAssertFalse(crypto.verifiedDevicesSpy.contains(deviceId))
+        
+        try await crossSigning.crossSignDevice(deviceId: deviceId, userId: userId)
+        
+        let after = crypto.device(userId: userId, deviceId: deviceId)
+        XCTAssertNotNil(after)
+        XCTAssertTrue(after!.crossSigningTrusted)
+        XCTAssertFalse(crypto.verifiedDevicesSpy.contains(deviceId))
+    }
+}
+
+private extension MXCrossSigningV2 {
+    func crossSignDevice(deviceId: String, userId: String) async throws {
+        return try await withCheckedThrowingContinuation { continuation in
+            self.crossSignDevice(withDeviceId: deviceId, userId: userId) {
+                continuation.resume()
+            } failure: { error in
+                continuation.resume(throwing: error)
+            }
+        }
+    }
 }

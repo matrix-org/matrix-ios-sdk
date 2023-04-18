@@ -82,7 +82,7 @@ class MXCryptoV2FactoryTests: XCTestCase {
     func test_fullyMigratesLegacyUser() async throws {
         let env = try await e2eData.startE2ETest()
         let session = env.session
-        let legacyStore = session.legacyCrypto?.store
+        var legacyStore = session.legacyCrypto?.store
         
         // Assert that we have a legacy store that has not yet been deprecated
         XCTAssertNotNil(legacyStore)
@@ -93,9 +93,9 @@ class MXCryptoV2FactoryTests: XCTestCase {
         XCTAssertNotNil(crypto)
         XCTAssertTrue(hasMigrated)
         
-        // Assert we still have legacy store but it is now marked as deprecated
-        XCTAssertNotNil(legacyStore)
-        XCTAssertEqual(legacyStore?.cryptoVersion, .deprecated3)
+        // Assert that we no longer have a legacy store for this user
+        legacyStore = MXRealmCryptoStore(credentials: session.credentials)
+        XCTAssertNil(legacyStore)
         
         await env.close()
     }
@@ -105,7 +105,7 @@ class MXCryptoV2FactoryTests: XCTestCase {
         let session = env.session
         
         // We set the legacy store as partially deprecated
-        let legacyStore = session.legacyCrypto?.store
+        var legacyStore = session.legacyCrypto?.store
         XCTAssertNotNil(legacyStore)
         legacyStore?.cryptoVersion = .deprecated1
         
@@ -114,9 +114,9 @@ class MXCryptoV2FactoryTests: XCTestCase {
         XCTAssertNotNil(crypto)
         XCTAssertTrue(hasMigrated)
         
-        // Assert we still have legacy store but it is now marked as deprecated
-        XCTAssertNotNil(legacyStore)
-        XCTAssertEqual(legacyStore?.cryptoVersion, .deprecated3)
+        // Assert that we no longer have a legacy store for this user
+        legacyStore = MXRealmCryptoStore(credentials: session.credentials)
+        XCTAssertNil(legacyStore)
         
         await env.close()
     }
@@ -126,7 +126,7 @@ class MXCryptoV2FactoryTests: XCTestCase {
         let session = env.session
         
         // We set the legacy store as fully deprecated
-        let legacyStore = session.legacyCrypto?.store
+        var legacyStore = session.legacyCrypto?.store
         XCTAssertNotNil(legacyStore)
         legacyStore?.cryptoVersion = .deprecated3
         
@@ -135,9 +135,9 @@ class MXCryptoV2FactoryTests: XCTestCase {
         XCTAssertNotNil(crypto)
         XCTAssertFalse(hasMigrated)
         
-        // Assert we still have legacy store which is still marked as deprecated
-        XCTAssertNotNil(legacyStore)
-        XCTAssertEqual(legacyStore?.cryptoVersion, .deprecated3)
+        // Assert that we no longer have a legacy store for this user
+        legacyStore = MXRealmCryptoStore(credentials: session.credentials)
+        XCTAssertNil(legacyStore)
         
         await env.close()
     }

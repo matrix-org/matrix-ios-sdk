@@ -1,3 +1,12 @@
+## Changes in 0.26.8 (2023-04-18)
+
+🙌 Improvements
+
+- Crypto: Update Crypto SDK ([#1767](https://github.com/matrix-org/matrix-ios-sdk/pull/1767))
+- Cross-signing: Ensure device signed after restoring cross-signing keys ([#1768](https://github.com/matrix-org/matrix-ios-sdk/pull/1768))
+- Crypto: Remove legacy crypto store ([#1769](https://github.com/matrix-org/matrix-ios-sdk/pull/1769))
+
+
 ## Changes in 0.26.7 (2023-04-12)
 
 🙌 Improvements

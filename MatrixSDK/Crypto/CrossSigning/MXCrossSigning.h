@@ -137,11 +137,13 @@ typedef NS_ENUM(NSInteger, MXCrossSigningErrorCode)
  The operation requires to have the Self Signing Key in the local secret storage.
 
  @param deviceId the id of the device to cross-sign.
+ @param userId the user that owns the device.
 
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
  */
 - (void)crossSignDeviceWithDeviceId:(NSString*)deviceId
+                             userId:(NSString*)userId
                             success:(void (^)(void))success
                             failure:(void (^)(NSError *error))failure;
 
