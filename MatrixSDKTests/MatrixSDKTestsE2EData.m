@@ -63,12 +63,14 @@
                      readyToTest:(void (^)(MXSession *bobSession, MXSession *aliceSession, XCTestExpectation *expectation))readyToTest
 {
     [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
+    MXKeyProvider.sharedInstance.delegate = [[MXKeyProviderStub alloc] init];
 
     [matrixSDKTestsData doMXSessionTestWithBob:testCase readyToTest:^(MXSession *bobSession, XCTestExpectation *expectation) {
 
         [matrixSDKTestsData doMXSessionTestWithAlice:nil readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation2) {
 
             [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
+            MXKeyProvider.sharedInstance.delegate = nil;
 
             readyToTest(bobSession, aliceSession, expectation);
 
@@ -85,11 +87,13 @@
 - (void)doE2ETestWithAliceInARoom:(XCTestCase *)testCase andStore:(id<MXStore>)store readyToTest:(void (^)(MXSession *, NSString *, XCTestExpectation *))readyToTest
 {
     [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
+    MXKeyProvider.sharedInstance.delegate = [[MXKeyProviderStub alloc] init];
 
     [matrixSDKTestsData doMXSessionTestWithAlice:testCase andStore:store
                                      readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation) {
 
         [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
+        MXKeyProvider.sharedInstance.delegate = nil;
 
         [aliceSession createRoom:nil visibility:kMXRoomDirectoryVisibilityPrivate roomAlias:nil topic:nil success:^(MXRoom *room) {
 
@@ -128,10 +132,15 @@
         MXRoom *room = [aliceSession roomWithRoomId:roomId];
 
         [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = cryptedBob;
+        if (cryptedBob)
+        {
+            MXKeyProvider.sharedInstance.delegate = [[MXKeyProviderStub alloc] init];
+        }
 
         [matrixSDKTestsData doMXSessionTestWithBob:nil andStore:bobStore readyToTest:^(MXSession *bobSession, XCTestExpectation *expectation2) {
 
             [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
+            MXKeyProvider.sharedInstance.delegate = nil;
 
             aliceSession.legacyCrypto.warnOnUnknowDevices = warnOnUnknowDevices;
             bobSession.legacyCrypto.warnOnUnknowDevices = warnOnUnknowDevices;
@@ -180,10 +189,15 @@
         MXRoom *room = [aliceSession roomWithRoomId:roomId];
         
         [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = cryptedBob;
+        if (cryptedBob)
+        {
+            MXKeyProvider.sharedInstance.delegate = [[MXKeyProviderStub alloc] init];
+        }
         
         [matrixSDKTestsData doMXSessionTestWithBob:nil andStore:bobStore readyToTest:^(MXSession *bobSession, XCTestExpectation *expectation2) {
             
             [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
+            MXKeyProvider.sharedInstance.delegate = nil;
             
             aliceSession.legacyCrypto.warnOnUnknowDevices = warnOnUnknowDevices;
             bobSession.legacyCrypto.warnOnUnknowDevices = warnOnUnknowDevices;
@@ -256,12 +270,17 @@
         MXRoom *room = [aliceSession roomWithRoomId:roomId];
 
         [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = cryptedSam;
+        if (cryptedSam)
+        {
+            MXKeyProvider.sharedInstance.delegate = [[MXKeyProviderStub alloc] init];
+        }
 
         // Ugly hack: Create a bob from another MatrixSDKTestsData instance and call him Sam...
         MatrixSDKTestsData *matrixSDKTestsData2 = [[MatrixSDKTestsData alloc] init];
         [matrixSDKTestsData2 doMXSessionTestWithBob:nil readyToTest:^(MXSession *samSession, XCTestExpectation *expectation2) {
 
             [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
+            MXKeyProvider.sharedInstance.delegate = nil;
 
             aliceSession.legacyCrypto.warnOnUnknowDevices = warnOnUnknowDevices;
             bobSession.legacyCrypto.warnOnUnknowDevices = warnOnUnknowDevices;
@@ -309,6 +328,7 @@
                    onComplete:(void (^)(MXSession *newSession))onComplete
 {
     [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
+    MXKeyProvider.sharedInstance.delegate = [[MXKeyProviderStub alloc] init];
     
     MXRestClient *mxRestClient = [[MXRestClient alloc] initWithHomeServer:credentials.homeServer
                                         andOnUnrecognizedCertificateBlock:nil];
@@ -327,6 +347,7 @@
             MXStrongifyAndReturnIfNil(newSession);
             [newSession start:^{
                 [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
+                MXKeyProvider.sharedInstance.delegate = nil;
                 
                 onComplete(newSession);
                 

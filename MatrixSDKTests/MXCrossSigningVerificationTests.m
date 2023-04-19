@@ -383,8 +383,7 @@
  -> Both ends must get a done message
  - Then, test MXKeyVerification
  */
-// TODO: test is currently broken
-- (void)xtestVerificationByDMFullFlow
+- (void)testVerificationByDMFullFlow
 {
     // - Alice and Bob are in a room
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:YES aliceStore:[[MXMemoryStore alloc] init] bobStore:[[MXMemoryStore alloc] init] readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
@@ -616,8 +615,7 @@
  -> Both ends must get a done message
  - Then, test MXKeyVerification
  */
-// TODO: test is currently broken
-- (void)xtestVerifyingAnotherUserQRCodeVerificationFullFlow
+- (void)testVerifyingAnotherUserQRCodeVerificationFullFlow
 {
     // - Alice and Bob are in a room
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:YES aliceStore:[[MXMemoryStore alloc] init] bobStore:[[MXMemoryStore alloc] init] readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {

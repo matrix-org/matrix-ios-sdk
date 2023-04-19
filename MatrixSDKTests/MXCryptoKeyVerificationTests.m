@@ -369,8 +369,7 @@
     }];
 }
 
-// TODO: test is currently broken
-- (void)xtestVerificationByToDeviceFullFlow
+- (void)testVerificationByToDeviceFullFlow
 {
     // - Alice and Bob are in a room
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:YES aliceStore:[[MXMemoryStore alloc] init] bobStore:[[MXMemoryStore alloc] init] readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
@@ -412,8 +411,7 @@
 /**
  Same tests as testVerificationByToDeviceFullFlow but with only alice verifying her 2 devices.
  */
-// TODO: test is currently broken
-- (void)xtestVerificationByToDeviceSelfVerificationFullFlow
+- (void)testVerificationByToDeviceSelfVerificationFullFlow
 {
     // - Alice and Bob are in a room
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:YES aliceStore:[[MXMemoryStore alloc] init] bobStore:[[MXMemoryStore alloc] init] readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
@@ -457,12 +455,6 @@
                                                                                             success:^(id<MXKeyVerificationRequest> requestFromAliceDevice1POV)
                  {
                      // -> The other device list should have been computed well
-                     if (MXSDKOptions.sharedInstance.enableCryptoSDK)
-                     {
-                        XCTFail(@"This test uses `MXKeyVerificationByToDeviceRequest` which is only compatible with Crypto V1. Replace assertions to make it compatible with V2 as well");
-                        [expectation fulfill];
-                        return;
-                     }
                      MXKeyVerificationByToDeviceRequest *toDeviceRequestFromAliceDevice1POV = (MXKeyVerificationByToDeviceRequest*)requestFromAliceDevice1POV;
                      XCTAssertNotNil(toDeviceRequestFromAliceDevice1POV.requestedOtherDeviceIds);
                      NSSet *expectedRequestedDevices = [NSSet setWithArray:@[aliceSession2DeviceId, aliceSession3DeviceId]];
@@ -563,8 +555,7 @@
  -> Alice gets the requests notification
  -> They both have it in their pending requests
  */
-// TODO: test is currently broken
-- (void)xtestVerificationByDMRequests
+- (void)testVerificationByDMRequests
 {
     // - Alice and Bob are in a room
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
@@ -611,8 +602,7 @@
 /**
  Nomical case: The full flow
  */
-// TODO: test is currently broken
-- (void)xtestVerificationByDMFullFlow
+- (void)testVerificationByDMFullFlow
 {
     // - Alice and Bob are in a room
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:YES aliceStore:[[MXMemoryStore alloc] init] bobStore:[[MXMemoryStore alloc] init] readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
@@ -1016,8 +1006,7 @@
  -> Alice gets the requests notification
  -> They both have it in their pending requests
  */
-// TODO: test is currently broken
-- (void)xtestVerificationByDMWithNoRoom
+- (void)testVerificationByDMWithNoRoom
 {
     // - Alice and Bob are in a room
     [matrixSDKTestsE2EData doE2ETestWithBobAndAlice:self readyToTest:^(MXSession *aliceSession, MXSession *bobSession, XCTestExpectation *expectation) {
@@ -1075,8 +1064,7 @@
 /**
  Same tests as testVerificationByDMFullFlow but with alice with 2 sessions
  */
-// TODO: test is currently broken
-- (void)xtestVerificationByDMWithAliceWith2Devices
+- (void)testVerificationByDMWithAliceWith2Devices
 {
     // - Alice and Bob are in a room
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:YES aliceStore:[[MXMemoryStore alloc] init] bobStore:[[MXMemoryStore alloc] init] readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
@@ -1091,8 +1079,7 @@
 /**
  Same tests as testVerificationByDMFullFlow but with bob with 2 sessions
  */
-// TODO: test is currently broken
-- (void)xtestVerificationByDMWithAUserWith2Devices
+- (void)testVerificationByDMWithAUserWith2Devices
 {
     // - Alice and Bob are in a room
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:YES aliceStore:[[MXMemoryStore alloc] init] bobStore:[[MXMemoryStore alloc] init] readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {

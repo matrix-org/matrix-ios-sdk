@@ -28,7 +28,6 @@ import Foundation
         }
         
         guard let legacy = crypto as? MXLegacyCrypto else {
-            assertionFailure("Legacy crypto is not available, adjust test to not depend on legacy APIs")
             return nil
         }
         return legacy
