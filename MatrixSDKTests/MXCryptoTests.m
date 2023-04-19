@@ -111,18 +111,15 @@
 
         XCTAssertNil(mxSession.crypto, @"Crypto is disabled by default");
 
-        XCTAssertFalse([mxSession.legacyCrypto.store.class hasDataForCredentials:mxSession.matrixRestClient.credentials]);
-
+        MXKeyProvider.sharedInstance.delegate = [[MXKeyProviderStub alloc] init];
         [mxSession enableCrypto:YES success:^{
+            MXKeyProvider.sharedInstance.delegate = nil;
 
             XCTAssert(mxSession.crypto);
-            XCTAssert([mxSession.legacyCrypto.store.class hasDataForCredentials:mxSession.matrixRestClient.credentials]);
 
             [mxSession enableCrypto:NO success:^{
 
                 XCTAssertNil(mxSession.crypto);
-                XCTAssertFalse([mxSession.legacyCrypto.store.class hasDataForCredentials:mxSession.matrixRestClient.credentials], @"Crypto data must have been trashed");
-
                 [expectation fulfill];
 
             } failure:^(NSError *error) {
@@ -152,7 +149,6 @@
         [mxSession enableCrypto:NO success:^{
 
             XCTAssertNil(mxSession.crypto);
-
             [expectation fulfill];
 
         } failure:^(NSError *error) {

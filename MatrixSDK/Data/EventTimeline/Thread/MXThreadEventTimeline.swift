@@ -99,8 +99,6 @@ public class MXThreadEventTimeline: NSObject, MXEventTimeline {
     }
     
     public func destroy() {
-        thread.session?.resetReplayAttackCheck(inTimeline: timelineId)
-        
         removeAllListeners()
         
         currentHttpOperation?.cancel()
@@ -132,8 +130,6 @@ public class MXThreadEventTimeline: NSObject, MXEventTimeline {
     }
     
     public func resetPagination() {
-        thread.session?.resetReplayAttackCheck(inTimeline: timelineId)
-        
         // Reset store pagination
         storeMessagesEnumerator = store.messagesEnumerator(forRoom: thread.roomId)
 
@@ -149,8 +145,6 @@ public class MXThreadEventTimeline: NSObject, MXEventTimeline {
         guard let initialEventId = initialEventId else {
             fatalError("[MXThreadEventTimeline][\(timelineId)] resetPaginationAroundInitialEventWithLimit cannot be called on live timeline")
         }
-        
-        thread.session?.resetReplayAttackCheck(inTimeline: timelineId)
         
         // Reset the store
         if !store.isPermanent {
