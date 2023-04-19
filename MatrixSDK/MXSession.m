@@ -3199,8 +3199,8 @@ typedef void (^MXOnResumeDone)(void);
         // And remove the room and its summary from the list
         [rooms removeObjectForKey:roomId];
         [roomSummaries removeObjectForKey:roomId];
-        // remove room from breadcrub list
-        [self removeBreadcrumbWithRoomId: roomId];
+        // Remove room from breadcrub list
+        [self removeBreadcrumbWithRoomWithId: roomId];
 
         // Broadcast the left room
         [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDidLeaveRoomNotification
@@ -4760,8 +4760,8 @@ typedef void (^MXOnResumeDone)(void);
     }];
 }
 
-// update breadcrub list when leaving a room
-- (void)removeBreadcrumbWithRoomId:(NSString *)roomId
+// Update breadcrub list when leaving a room
+- (void)removeBreadcrumbWithRoomWithId:(NSString *)roomId
 {
     NSDictionary<NSString *, NSArray *> *breadcrumbs = [self.accountData accountDataForEventType:kMXAccountDataTypeBreadcrumbs];
     
