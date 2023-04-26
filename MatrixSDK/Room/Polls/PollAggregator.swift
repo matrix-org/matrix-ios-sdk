@@ -54,7 +54,7 @@ public class PollAggregator {
     private var events: [MXEvent] = []
     private var hasBeenEdited = false
     
-    public private(set) var poll: PollProtocol! {
+    public private(set) var poll: PollProtocol? {
         didSet {
             delegate?.pollAggregatorDidUpdateData(self)
         }
@@ -100,7 +100,9 @@ public class PollAggregator {
         
         NotificationCenter.default.addObserver(self, selector: #selector(handleRoomDataFlush), name: .mxRoomDidFlushData, object: self.room)
         setupEditListener()
-        buildPollStartContent()
+        try? buildPollStartContent()
+        
+        reloadPollData()
     }
         
     private func setupEditListener() {
@@ -111,18 +113,16 @@ public class PollAggregator {
                 return
             }
             
-            self.buildPollStartContent()
+            try? self.buildPollStartContent()
         }
     }
     
-    private func buildPollStartContent() {
+    private func buildPollStartContent() throws {
         guard let event = session.store.event(withEventId: pollStartEventId, inRoom: room.roomId),
               let eventContent = MXEventContentPollStart(fromJSON: event.content),
               eventContent.answerOptions.count >= Constants.minAnswerOptionCount
         else {
-            // Build a temporary poll without a start event which will be fetched on next reload
-            buildPollWithoutStartEvent()
-            return
+            throw PollAggregatorError.invalidPollStartEvent
         }
         
         pollStartedEvent = event
@@ -136,24 +136,7 @@ public class PollAggregator {
                                  currentUserIdentifier: session.myUserId,
                                  hasBeenEdited: hasBeenEdited)
     }
-    
-    
-    /// Creates a temporary poll without having the start event yet
-    private func buildPollWithoutStartEvent() {
-        let tempPoll = Poll()
-        tempPoll.id = pollStartEventId
-        tempPoll.startDate = Date(timeIntervalSince1970: 0)
-        tempPoll.hasBeenEdited = false
-        tempPoll.hasDecryptionError = false
-        tempPoll.text = ""
-        tempPoll.maxAllowedSelections = 1
-        tempPoll.kind = .undisclosed
-        tempPoll.answerOptions = []
-        tempPoll.isClosed = false
         
-        poll = tempPoll
-    }
-    
     @objc private func handleRoomDataFlush(sender: Notification) {
         guard let room = sender.object as? MXRoom, room == self.room else {
             return
@@ -162,7 +145,7 @@ public class PollAggregator {
         reloadPollData()
     }
     
-    public func reloadPollData() {
+    private func reloadPollData() {
         delegate?.pollAggregatorDidStartLoading(self)
         
         session.aggregations.referenceEvents(forEvent: pollStartEventId, inRoom: room.roomId, from: nil, limit: -1) { [weak self] response in
@@ -176,17 +159,14 @@ public class PollAggregator {
                 return
             }
             
-            // if we don't already have a pollStartedEvent, update it
-            if pollStartedEvent == nil {
-                if let pollStartEventContent = MXEventContentPollStart(fromJSON: event.content) {
-                    pollStartedEvent = event
-                    self.pollStartEventContent = pollStartEventContent
-                    hasBeenEdited = (event.unsignedData.relations?.replace != nil)
-                } else {
-                    // we were not able to decrypt the start event content
-                    self.delegate?.pollAggregator(self, didFailWithError: PollAggregatorError.invalidPollStartEvent)
-                    return
-                }
+            if let pollStartEventContent = MXEventContentPollStart(fromJSON: event.content), pollStartEventContent.answerOptions.count >= Constants.minAnswerOptionCount {
+                pollStartedEvent = event
+                self.pollStartEventContent = pollStartEventContent
+                hasBeenEdited = (event.unsignedData.relations?.replace != nil)
+            } else {
+                // we were not able to decrypt the start event content
+                self.delegate?.pollAggregator(self, didFailWithError: PollAggregatorError.invalidPollStartEvent)
+                return
             }
             
             self.events.removeAll()
