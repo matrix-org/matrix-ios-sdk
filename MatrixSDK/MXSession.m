@@ -4773,21 +4773,26 @@ typedef void (^MXOnResumeDone)(void);
     if (index != NSNotFound)
     {
         [recentRoomIds removeObjectAtIndex:index];
+       
+        [self setAccountData:@{kMXAccountDataTypeRecentRoomsKey : recentRoomIds}
+                     forType:kMXAccountDataTypeBreadcrumbs
+                      success:^{
+             if (success)
+             {
+                 success();
+             }
+         } failure:^(NSError *error) {
+             if (failure)
+             {
+                 failure(error);
+             }
+         }];
+    } else {
+        if (success)
+        {
+            success();
+        }
     }
-    
-    [self setAccountData:@{kMXAccountDataTypeRecentRoomsKey : recentRoomIds}
-                 forType:kMXAccountDataTypeBreadcrumbs
-                  success:^{
-         if (success)
-         {
-             success();
-         }
-     } failure:^(NSError *error) {
-         if (failure)
-         {
-             failure(error);
-         }
-     }];
 }
 
 #pragma mark - Homeserver information
