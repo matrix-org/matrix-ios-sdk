@@ -114,7 +114,7 @@
                 // -> She gets the secret
                 XCTAssertEqualObjects(sharedSecret, secret);
                 [expectation fulfill];
-                
+                return YES;
             } failure:^(NSError * _Nonnull error) {
                 XCTFail(@"The operation should not fail - NSError: %@", error);
                 [expectation fulfill];
