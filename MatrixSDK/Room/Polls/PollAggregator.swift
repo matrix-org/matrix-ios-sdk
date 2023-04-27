@@ -100,11 +100,11 @@ public class PollAggregator {
         
         NotificationCenter.default.addObserver(self, selector: #selector(handleRoomDataFlush), name: .mxRoomDidFlushData, object: self.room)
         setupEditListener()
-        try? buildPollStartContent()
+        buildPollStartContent()
         
         reloadPollData()
     }
-        
+    
     private func setupEditListener() {
         editEventsListener = session.aggregations.listenToEditsUpdate(inRoom: self.room.roomId) { [weak self] event in
             guard let self = self,
@@ -113,30 +113,37 @@ public class PollAggregator {
                 return
             }
             
-            try? self.buildPollStartContent()
+            self.buildPollStartContent()
         }
     }
     
-    private func buildPollStartContent() throws {
-        guard let event = session.store.event(withEventId: pollStartEventId, inRoom: room.roomId),
-              let eventContent = MXEventContentPollStart(fromJSON: event.content),
-              eventContent.answerOptions.count >= Constants.minAnswerOptionCount
+    private func buildPollStartContent() {
+        let event = session.store.event(withEventId: pollStartEventId, inRoom: room.roomId)
+        tryUpdatePollStartedEvent(with: event)
+        if let pollStartedEvent {
+            poll = pollBuilder.build(pollStartEventContent: pollStartEventContent,
+                                     pollStartEvent: pollStartedEvent,
+                                     events: events,
+                                     currentUserIdentifier: session.myUserId,
+                                     hasBeenEdited: hasBeenEdited)
+        }
+    }
+
+    private func tryUpdatePollStartedEvent(with event: MXEvent?) {
+        guard
+            let event = event,
+            let eventContent = MXEventContentPollStart(fromJSON: event.content),
+            eventContent.answerOptions.count >= Constants.minAnswerOptionCount
         else {
-            throw PollAggregatorError.invalidPollStartEvent
+            delegate?.pollAggregator(self, didFailWithError: PollAggregatorError.invalidPollStartEvent)
+            return
         }
         
         pollStartedEvent = event
         pollStartEventContent = eventContent
-        
         hasBeenEdited = (event.unsignedData.relations?.replace != nil)
-        
-        poll = pollBuilder.build(pollStartEventContent: eventContent,
-                                 pollStartEvent: pollStartedEvent,
-                                 events: events,
-                                 currentUserIdentifier: session.myUserId,
-                                 hasBeenEdited: hasBeenEdited)
     }
-        
+    
     @objc private func handleRoomDataFlush(sender: Notification) {
         guard let room = sender.object as? MXRoom, room == self.room else {
             return
@@ -153,24 +160,12 @@ public class PollAggregator {
                 return
             }
             
-            guard let event = response.originalEvent else {
-                // we didn't found the start event
-                self.delegate?.pollAggregator(self, didFailWithError: PollAggregatorError.invalidPollStartEvent)
-                return
-            }
-            
-            if let pollStartEventContent = MXEventContentPollStart(fromJSON: event.content), pollStartEventContent.answerOptions.count >= Constants.minAnswerOptionCount {
-                pollStartedEvent = event
-                self.pollStartEventContent = pollStartEventContent
-                hasBeenEdited = (event.unsignedData.relations?.replace != nil)
-            } else {
-                // we were not able to decrypt the start event content
-                self.delegate?.pollAggregator(self, didFailWithError: PollAggregatorError.invalidPollStartEvent)
+            self.tryUpdatePollStartedEvent(with: response.originalEvent)
+            if self.pollStartedEvent == nil {
                 return
             }
             
             self.events.removeAll()
-            
             self.events.append(contentsOf: response.chunk)
             
             let eventTypes = [kMXEventTypeStringPollResponse, kMXEventTypeStringPollResponseMSC3381, kMXEventTypeStringPollEnd, kMXEventTypeStringPollEndMSC3381]
