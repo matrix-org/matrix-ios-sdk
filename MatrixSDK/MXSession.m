@@ -4787,7 +4787,9 @@ typedef void (^MXOnResumeDone)(void);
                  failure(error);
              }
          }];
-    } else {
+    } 
+    else 
+    {
         if (success)
         {
             success();
