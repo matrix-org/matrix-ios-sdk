@@ -120,7 +120,7 @@ public class PollAggregator {
     private func buildPollStartContent() {
         let event = session.store.event(withEventId: pollStartEventId, inRoom: room.roomId)
         tryUpdatePollStartedEvent(with: event)
-        if let pollStartedEvent {
+        if let pollStartedEvent = pollStartedEvent {
             poll = pollBuilder.build(pollStartEventContent: pollStartEventContent,
                                      pollStartEvent: pollStartedEvent,
                                      events: events,
@@ -156,7 +156,7 @@ public class PollAggregator {
         delegate?.pollAggregatorDidStartLoading(self)
         
         session.aggregations.referenceEvents(forEvent: pollStartEventId, inRoom: room.roomId, from: nil, limit: -1) { [weak self] response in
-            guard let self else {
+            guard let self = self else {
                 return
             }
             
