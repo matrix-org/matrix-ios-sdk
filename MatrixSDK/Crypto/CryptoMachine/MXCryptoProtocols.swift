@@ -15,7 +15,7 @@
 //
 
 import Foundation
-import MatrixSDKCrypto
+@_implementationOnly import MatrixSDKCrypto
 
 /// A set of protocols defining the functionality in `MatrixSDKCrypto` and separating them into logical units
 

@@ -16,7 +16,7 @@
 
 import Foundation
 import XCTest
-import MatrixSDKCrypto
+@_implementationOnly import MatrixSDKCrypto
 @testable import MatrixSDK
 
 class MXSASTransactionV2UnitTests: XCTestCase {

@@ -16,7 +16,7 @@
 
 import Foundation
 
-import MatrixSDKCrypto
+@_implementationOnly import MatrixSDKCrypto
 
 class VerificationRequestStub: VerificationRequestProtocol {
     

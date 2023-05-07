@@ -15,7 +15,7 @@
 //
 
 import Foundation
-import MatrixSDKCrypto
+@_implementationOnly import MatrixSDKCrypto
 
 extension EventEncryptionAlgorithm {
     enum Error: Swift.Error {

@@ -17,7 +17,7 @@
 import Foundation
 @testable import MatrixSDK
 
-import MatrixSDKCrypto
+@_implementationOnly import MatrixSDKCrypto
 
 class MXRoomEventDecryptionUnitTests: XCTestCase {
     class DecryptorStub: CryptoIdentityStub, MXCryptoRoomEventDecrypting {

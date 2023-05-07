@@ -15,7 +15,7 @@
 //
 
 import Foundation
-import MatrixSDKCrypto
+@_implementationOnly import MatrixSDKCrypto
 
 class MXCryptoKeyBackupEngine: NSObject, MXKeyBackupEngine {
     // Batch size chosen arbitrarily, will be moved to CryptoSDK

@@ -15,7 +15,7 @@
 //
 
 import Foundation
-import MatrixSDKCrypto
+@_implementationOnly import MatrixSDKCrypto
 
 /// An implementation of `MXCrypto` which uses [matrix-rust-sdk](https://github.com/matrix-org/matrix-rust-sdk/tree/main/crates/matrix-sdk-crypto)
 /// under the hood.
