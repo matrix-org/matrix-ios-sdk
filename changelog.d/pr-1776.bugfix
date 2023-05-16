@@ -1,1 +1,0 @@
-Poll: Refreshing the poll when receiving pollEnd can break the chronological order in the store.
