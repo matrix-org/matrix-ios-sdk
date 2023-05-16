@@ -757,8 +757,7 @@
  - Try to restore the e2e backup with a wrong recovery key
  - It must fail
  */
-// TODO: test is currently broken
-- (void)xtestRestoreKeyBackupWithAWrongRecoveryKey
+- (void)testRestoreKeyBackupWithAWrongRecoveryKey
 {
     // - Do an e2e backup to the homeserver with a recovery key
     // - Log Alice on a new device
@@ -824,8 +823,7 @@
  - Try to restore the e2e backup with a wrong password
  - It must fail
  */
-// TODO: test is currently broken
-- (void)xtestRestoreKeyBackupWithAWrongPassword
+- (void)testRestoreKeyBackupWithAWrongPassword
 {
     // - Do an e2e backup to the homeserver with a password
     // - Log Alice on a new device
@@ -891,8 +889,7 @@
  - Try to restore the e2e backup with a password
  - It must fail
  */
-// TODO: test is currently broken
-- (void)xtestUsePasswordToRestoreARecoveryKeyKeyBackup
+- (void)testUsePasswordToRestoreARecoveryKeyKeyBackup
 {
     // - Do an e2e backup to the homeserver with a recovery key
     // - And log Alice on a new device
@@ -927,8 +924,7 @@
  - Restart alice session
  -> The new alice session must back up to the same version
  */
-// TODO: test is currently broken
-- (void)xtestCheckAndStartKeyBackupWhenRestartingAMatrixSession
+- (void)testCheckAndStartKeyBackupWhenRestartingAMatrixSession
 {
     // - Create a backup version
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
@@ -1296,8 +1292,7 @@
  - It must fail
  - The backup must still be untrusted and disabled
  */
-// TODO: test is currently broken
-- (void)xtestTrustKeyBackupVersionWithWrongRecoveryKey
+- (void)testTrustKeyBackupVersionWithWrongRecoveryKey
 {
     // - Do an e2e backup to the homeserver with a recovery key
     // - And log Alice on a new device
@@ -1390,8 +1385,7 @@
  - It must fail
  - The backup must still be untrusted and disabled
  */
-// TODO: test is currently broken
-- (void)xtestTrustKeyBackupVersionWithWrongPassword
+- (void)testTrustKeyBackupVersionWithWrongPassword
 {
     NSString *password = @"password";
 

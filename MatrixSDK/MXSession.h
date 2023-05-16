@@ -1596,14 +1596,6 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
            inTimeline:(NSString*)timeline
            onComplete:(void (^)(NSArray<MXEvent*> *failedEvents))onComplete;
 
-/**
- Reset replay attack data for the given timeline.
-
- @param timeline the id of the timeline.
- */
-- (void)resetReplayAttackCheckInTimeline:(NSString*)timeline;
-
-
 #pragma mark - Global events listeners
 /**
  Register a global listener to events related to the current session.

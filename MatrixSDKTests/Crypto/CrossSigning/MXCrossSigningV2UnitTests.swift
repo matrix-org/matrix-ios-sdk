@@ -217,3 +217,15 @@ private extension MXCrossSigningV2 {
         }
     }
 }
+
+private extension MXCrossSigning {
+    func refreshState() async throws {
+        return try await withCheckedThrowingContinuation { continuation in
+            refreshState { _ in
+                continuation.resume()
+            } failure: { error in
+                continuation.resume(throwing: error)
+            }
+        }
+    }
+}

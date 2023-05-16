@@ -312,10 +312,7 @@ typedef void (^MXOnResumeDone)(void);
         _homeserverCapabilitiesService = [[MXHomeserverCapabilitiesService alloc] initWithSession: self];
         [_homeserverCapabilitiesService updateWithCompletion:nil];
         
-        if (MXSDKOptions.sharedInstance.enableStartupProgress)
-        {
-            _startupProgress = [[MXSessionStartupProgress alloc] init];
-        }
+        _startupProgress = [[MXSessionStartupProgress alloc] init];
 
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onDidDecryptEvent:) name:kMXEventDidDecryptNotification object:nil];
 
@@ -398,23 +395,11 @@ typedef void (^MXOnResumeDone)(void);
 
         // Check if the user has enabled crypto
         MXWeakify(self);
-        [MXLegacyCrypto initializeCryptoWithMatrixSession:self migrationProgress:^(double progress) {
-            if (MXSDKOptions.sharedInstance.enableStartupProgress)
-            {
-                [self.startupProgress updateProgressForStage:MXSessionStartupStageStoreMigration progress:progress];
-            }
+        [self initializeCryptoWithProgress:^(double progress) {
+            [self.startupProgress updateProgressForStage:MXSessionStartupStageStoreMigration progress:progress];
             
-        } complete:^(id<MXCrypto> crypto, NSError *error) {
+        } success:^(id<MXCrypto> crypto) {
             MXStrongifyAndReturnIfNil(self);
-            
-            if (!crypto && error)
-            {
-                if (failure)
-                {
-                    failure(error);
-                }
-                return;
-            }
             
             self->_crypto = crypto;
 
@@ -539,6 +524,11 @@ typedef void (^MXOnResumeDone)(void);
                 // The SDK client can use this data
                 onStoreDataReady();
             }
+        } failure:^(NSError *error) {
+            if (failure)
+            {
+                failure(error);
+            }
         }];
 
     } failure:^(NSError *error) {
@@ -548,6 +538,34 @@ typedef void (^MXOnResumeDone)(void);
         {
             failure(error);
         }
+    }];
+}
+
+- (void)initializeCryptoWithProgress:(void (^)(double))progress
+                             success:(void (^)(id<MXCrypto> crypto))success
+                             failure:(void (^)(NSError *error))failure
+{
+    BOOL enableCrypto = [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession || [MXCryptoV2Factory.shared hasCryptoDataFor:self];
+    if (!enableCrypto)
+    {
+        MXLogWarning(@"[MXSession] initializeCrypto: Not starting crypto automatically due to SDK settings");
+        dispatch_async(dispatch_get_main_queue(), ^{
+            success(nil);
+        });
+        return;
+    }
+    
+    [MXCryptoV2Factory.shared buildCryptoWithSession:self
+                                   migrationProgress:progress
+                                             success:^(id<MXCrypto> crypto) {
+        
+        MXLogDebug(@"[MXSession] initializeCrypto: Successfully initialized crypto module");
+        success(crypto);
+        
+    } failure:^(NSError *error) {
+        
+        MXLogErrorDetails(@"[MXSession] initializeCrypto: Error initialized crypto module", error);
+        failure(error);
     }];
 }
 
@@ -574,7 +592,7 @@ typedef void (^MXOnResumeDone)(void);
     // Check whether this is the initial sync
     BOOL isInitialSync = !self.isEventStreamInitialised;
 
-    [self handleCryptoSyncResponse:syncResponse onComplete:^{
+    [self handleCryptoEventsInSyncResponse:syncResponse onComplete:^{
         
         dispatch_group_t dispatchGroup = dispatch_group_create();
         
@@ -591,7 +609,7 @@ typedef void (^MXOnResumeDone)(void);
         void(^dispatch_group_leave_with_progress)(dispatch_group_t) = ^(dispatch_group_t dispatchGroup) {
             dispatch_group_leave(dispatchGroup);
             
-            if (MXSDKOptions.sharedInstance.enableStartupProgress && progress)
+            if (progress)
             {
                 progress([self.startupProgress overallProgressForStep:completedRooms totalCount:totalRooms progress:1]);
                 completedRooms += 1;
@@ -778,30 +796,6 @@ typedef void (^MXOnResumeDone)(void);
         // Sync point: wait that all rooms in the /sync response have been loaded
         // and their /sync response has been processed
         dispatch_group_notify(dispatchGroup, dispatch_get_main_queue(), ^{
-            
-            // Legacy crypto requires that we deal with device list changes, OTKs etc at the end of the sync loop.
-            // This will be removed altogether with `MXLegacyCrypto`
-            if ([self.crypto isKindOfClass:[MXLegacyCrypto class]])
-            {
-                // Handle device list updates
-                if (syncResponse.deviceLists)
-                {
-                    [(MXLegacyCrypto *)self.crypto handleDeviceListsChanges:syncResponse.deviceLists];
-                }
-                
-                // Handle one_time_keys_count
-                if (syncResponse.deviceOneTimeKeysCount)
-                {
-                    [(MXLegacyCrypto *)self.crypto handleDeviceOneTimeKeysCount:syncResponse.deviceOneTimeKeysCount];
-                }
-                
-                [(MXLegacyCrypto *)self.crypto handleDeviceUnusedFallbackKeys:syncResponse.unusedFallbackKeys];
-                
-                // Tell the crypto module to do its processing
-                [(MXLegacyCrypto *)self.crypto onSyncCompleted:self.store.eventStreamToken
-                                                 nextSyncToken:syncResponse.nextBatch
-                                                    catchingUp:self.catchingUp];
-            }
 
             // Update live event stream token
             MXLogDebug(@"[MXSession] Next sync token: %@", syncResponse.nextBatch);
@@ -1458,7 +1452,7 @@ typedef void (^MXOnResumeDone)(void);
                         setPresence:(NSString*)setPresence
 {
     // We only want to report sync progress when doing initial sync
-    BOOL shoulReportStartupProgress = MXSDKOptions.sharedInstance.enableStartupProgress && !self.isEventStreamInitialised;
+    BOOL shoulReportStartupProgress = !self.isEventStreamInitialised;
     if (shoulReportStartupProgress)
     {
         // There is no way to track percentage progress when syncing with the server, so we always use 0%
@@ -1994,7 +1988,6 @@ typedef void (^MXOnResumeDone)(void);
             }
         }
 
-        [self validateAccountData];
         self.store.userAccountData = _accountData.accountData;
         
         // Trigger a global notification for the account data update
@@ -2004,27 +1997,6 @@ typedef void (^MXOnResumeDone)(void);
                                                                 object:self
                                                               userInfo:nil];
         }
-    }
-}
-
-/**
- Private method to validate local account data and report any potential state corruption
- */
-- (void)validateAccountData
-{
-    if (![self.crypto isKindOfClass:[MXLegacyCrypto class]])
-    {
-        return;
-    }
-    
-    // Detecting an issue in legacy crypto where more than one valid SSSS key is present on the client
-    // https://github.com/vector-im/element-ios/issues/4569
-    NSInteger keysCount = ((MXLegacyCrypto *)self.crypto).secretStorage.numberOfValidKeys;
-    if (keysCount > 1)
-    {
-        MXLogErrorDetails(@"[MXSession] validateAccountData: Detected multiple valid SSSS keys, should only have one at most", @{
-            @"count": @(keysCount)
-        });
     }
 }
 
@@ -2052,95 +2024,15 @@ typedef void (^MXOnResumeDone)(void);
     }
 }
 
-// Temporary junction to deal with sync response depending on the variant of crypto
-// that cannot be easily hidden behind a protocol. Legacy implementation will eventually
-// be fully removed.
-- (void)handleCryptoSyncResponse:(MXSyncResponse *)syncResponse
-                      onComplete:(void (^)(void))onComplete
+- (void)handleCryptoEventsInSyncResponse:(MXSyncResponse *)syncResponse onComplete:(void (^)(void))onComplete
 {
-    if (!self.crypto || [self.crypto isKindOfClass:[MXLegacyCrypto class]])
-    {
-        // Legacy crypto requires pre-processed to-device events before everything else to make future decryptions work
-        [self handleToDeviceEvents:syncResponse.toDevice.events onComplete:onComplete];
-    }
-    else
-    {
-        // New and all future crypto modules can handle the entire sync response in full
-        [self.crypto handleSyncResponse:syncResponse onComplete:onComplete];
-    }
-}
-
-- (void)handleToDeviceEvents:(NSArray<MXEvent *> *)events onComplete:(void (^)(void))onComplete
-{
-    NSMutableArray *supportedEvents = [NSMutableArray arrayWithCapacity:events.count];
-    for (MXEvent *event in events)
-    {
-        if ([MXTools isSupportedToDeviceEvent:event])
-        {
-            MXLogDebug(@"[MXSession] handleToDeviceEvents: Processing new to-device event msgid: %@", event.content[kMXToDeviceMessageId])
-            [supportedEvents addObject:event];
-        }
-    }
-
-    if (supportedEvents.count == 0)
+    if (!self.crypto)
     {
         onComplete();
         return;
     }
     
-    [self decryptEvents:supportedEvents inTimeline:nil onComplete:^(NSArray<MXEvent *> *failedEvents) {
-        dispatch_group_t dispatchGroup = dispatch_group_create();
-        
-        for (MXEvent *event in supportedEvents)
-        {
-            if (!event.decryptionError)
-            {
-                MXLogDebug(@"[MXSession] handleToDeviceEvents: Received new to-device event `%@` from `%@` msgid: %@", event.type, event.sender, event.wireContent[kMXToDeviceMessageId])
-                dispatch_group_enter(dispatchGroup);
-                [self handleToDeviceEvent:event onComplete:^{
-                    dispatch_group_leave(dispatchGroup);
-                }];
-            }
-            else
-            {
-                MXLogDebug(@"[MXSession] handleToDeviceEvents: Warning: Unable to decrypt to-device event: %@\nError: %@", event.wireContent[kMXMessageBodyKey], event.decryptionError);
-            }
-        }
-        
-        dispatch_group_notify(dispatchGroup, dispatch_get_main_queue(), ^{
-            onComplete();
-        });
-    }];
-}
-
-- (void)handleToDeviceEvent:(MXEvent *)event onComplete:(void (^)(void))onComplete
-{
-    void (^onHandleToDeviceEventDone)(void) = ^(void) {
-        [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionOnToDeviceEventNotification
-                                                            object:self
-                                                          userInfo:@{
-                                                              kMXSessionNotificationEventKey: event
-                                                          }];
-        
-        onComplete();
-    };
-    
-    switch (event.eventType)
-    {
-        case MXEventTypeRoomKey:
-        {
-            if ([_crypto isKindOfClass:[MXLegacyCrypto class]])
-            {
-                [(MXLegacyCrypto *)_crypto handleRoomKeyEvent:event onComplete:onHandleToDeviceEventDone];
-            }
-            break;
-        }
-
-        default:
-            onHandleToDeviceEventDone();
-            break;
-    }
-    [_eventStreamService dispatchOnLiveToDeviceWithEvent:event];
+    [self.crypto handleSyncResponse:syncResponse onComplete:onComplete];
 }
 
 /**
@@ -2221,17 +2113,10 @@ typedef void (^MXOnResumeDone)(void);
     [asyncTaskQueue asyncWithExecute:^(void (^ taskCompleted)(void)) {
         [syncResponseStoreManager mergedSyncResponseFromSyncResponseIds:outdatedSyncResponseIds
                                                              completion:^(MXCachedSyncResponse * _Nullable outdatedCachedSyncResponse) {
-            if (outdatedCachedSyncResponse)
-            {
-                [self handleOutdatedSyncResponse:outdatedCachedSyncResponse.syncResponse
-                                      completion:^{
-                    taskCompleted();
-                }];
-            }
-            else
-            {
+            // There is no need to handle `outdatedCachedSyncResponse` manually anymore, ignoring the result
+            dispatch_async(dispatch_get_main_queue(), ^{
                 taskCompleted();
-            }
+            });
         }];
     }];
     
@@ -2280,26 +2165,6 @@ typedef void (^MXOnResumeDone)(void);
     }];
 }
 
-- (void)handleOutdatedSyncResponse:(MXSyncResponse *)syncResponse
-                        completion:(void (^)(void))completion
-{
-    MXLogDebug(@"[MXSession] handleOutdatedSyncResponse: %tu joined rooms, %tu invited rooms, %tu left rooms, %tu toDevice events.", syncResponse.rooms.join.count, syncResponse.rooms.invite.count, syncResponse.rooms.leave.count, syncResponse.toDevice.events.count);
-    
-    if (!self.crypto || [self.crypto isKindOfClass:[MXLegacyCrypto class]])
-    {
-        // Legacy crypto requires pre-processed to-device events before everything else to make future decryptions work
-        [self handleToDeviceEvents:syncResponse.toDevice.events onComplete:completion];
-    }
-    else
-    {
-        // Only legacy crypto requires different DBs for foreground and background processes, other crypto modules
-        // write to a single DB in both processes, so there is no need to replay outdated sync response
-        dispatch_async(dispatch_get_main_queue(), ^{
-            completion();
-        });
-    }
-}
-
 #pragma mark - Options
 - (void)enableVoIPWithCallStack:(id<MXCallStack>)callStack
 {
@@ -2315,32 +2180,38 @@ typedef void (^MXOnResumeDone)(void);
 
     if (enableCrypto && !_crypto)
     {
-        NSError *error;
-        _crypto = [MXLegacyCrypto createCryptoWithMatrixSession:self error:&error];
-        if (!_crypto && error)
-        {
+        MXWeakify(self);
+        [MXCryptoV2Factory.shared buildCryptoWithSession:self
+                                       migrationProgress:nil
+                                                 success:^(id<MXCrypto> crypto) {
+            
+            MXLogDebug(@"[MXSession] enableCrypto: Successfully initialized crypto module");
+            MXStrongifyAndReturnIfNil(self);
+            self->_crypto = crypto;
+            
+            if (self->_state == MXSessionStateRunning)
+            {
+                [self startCrypto:success failure:failure];
+            }
+            else
+            {
+                MXLogDebug(@"[MXSesion] enableCrypto: crypto module will be start later (MXSession.state: %@)", [MXTools readableSessionState:self->_state]);
+
+                if (success)
+                {
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        success();
+                    });
+                }
+            }
+            
+        } failure:^(NSError *error) {
+            MXLogErrorDetails(@"[MXSession] enableCrypto: Error initialized crypto module", error);
             if (failure)
             {
                 failure(error);
             }
-            return;
-        }
-
-        if (_state == MXSessionStateRunning)
-        {
-            [self startCrypto:success failure:failure];
-        }
-        else
-        {
-            MXLogDebug(@"[MXSesion] enableCrypto: crypto module will be start later (MXSession.state: %@)", [MXTools readableSessionState:_state]);
-
-            if (success)
-            {
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    success();
-                });
-            }
-        }
+        }];
     }
     else if (!enableCrypto && _crypto)
     {
@@ -3199,6 +3070,8 @@ typedef void (^MXOnResumeDone)(void);
         // And remove the room and its summary from the list
         [rooms removeObjectForKey:roomId];
         [roomSummaries removeObjectForKey:roomId];
+        // Remove room from breadcrub list
+        [self removeBreadcrumbWithRoomWithId:roomId success:nil failure:nil];
 
         // Broadcast the left room
         [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDidLeaveRoomNotification
@@ -3415,7 +3288,7 @@ typedef void (^MXOnResumeDone)(void);
     __block NSInteger completedRooms = 0;
     void(^dispatch_group_leave_with_progress)(dispatch_group_t) = ^(dispatch_group_t dispatchGroup) {
         dispatch_group_leave(dispatchGroup);
-        if (MXSDKOptions.sharedInstance.enableStartupProgress && progress)
+        if (progress)
         {
             progress([self.startupProgress overallProgressForStep:completedRooms totalCount:self.rooms.count progress:1]);
             completedRooms += 1;
@@ -4758,6 +4631,43 @@ typedef void (^MXOnResumeDone)(void);
     }];
 }
 
+// Update breadcrub list when leaving a room
+- (void)removeBreadcrumbWithRoomWithId:(NSString *)roomId
+                               success:(void (^)(void))success
+                               failure:(void (^)(NSError *error))failure
+{
+    NSDictionary<NSString *, NSArray *> *breadcrumbs = [self.accountData accountDataForEventType:kMXAccountDataTypeBreadcrumbs];
+    
+    NSMutableArray<NSString *> *recentRoomIds = breadcrumbs[kMXAccountDataTypeRecentRoomsKey] ? [NSMutableArray arrayWithArray:breadcrumbs[kMXAccountDataTypeRecentRoomsKey]] : [NSMutableArray array];
+    
+    NSInteger index = [recentRoomIds indexOfObject:roomId];
+    if (index != NSNotFound)
+    {
+        [recentRoomIds removeObjectAtIndex:index];
+       
+        [self setAccountData:@{kMXAccountDataTypeRecentRoomsKey : recentRoomIds}
+                     forType:kMXAccountDataTypeBreadcrumbs
+                      success:^{
+             if (success)
+             {
+                 success();
+             }
+         } failure:^(NSError *error) {
+             if (failure)
+             {
+                 failure(error);
+             }
+         }];
+    } 
+    else 
+    {
+        if (success)
+        {
+            success();
+        }
+    }
+}
+
 #pragma mark - Homeserver information
 - (MXWellKnown *)homeserverWellknown
 {
@@ -5053,14 +4963,6 @@ typedef void (^MXOnResumeDone)(void);
             [event setClearData:result];
         }
         onComplete(eventsToDecrypt);
-    }
-}
-
-- (void)resetReplayAttackCheckInTimeline:(NSString*)timeline
-{
-    if ([_crypto isKindOfClass:[MXLegacyCrypto class]])
-    {
-        [(MXLegacyCrypto *)_crypto resetReplayAttackCheckInTimeline:timeline];
     }
 }
 

@@ -48,7 +48,7 @@ typedef NS_ENUM(NSUInteger, MXCallTransferType)
 
 NS_ASSUME_NONNULL_BEGIN
 
-@protocol MXBackgroundModeHandler, MXCryptoV2Feature;
+@protocol MXBackgroundModeHandler, MXCryptoV2MigrationDelegate;
 
 /**
  SDK options that can be set at the launch time.
@@ -204,23 +204,11 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic) BOOL enableRoomSharedHistoryOnInvite;
 
 /**
- An object which controls the availabilty of the rust-based `MatrixCryptoSDK`.
+ The delegate for migrating account data from legacy crypto to rust-based Crypto SDK
  
- @remark nil by default.
+ By default, nil.
  */
-@property (nonatomic, nullable) id<MXCryptoV2Feature> cryptoSDKFeature;
-
-/**
- Use the rust-based `MatrixCryptoSDK` instead of `MatrixSDK`'s internal crypto module.
- 
- @remark this property is a convenience getter for `cryptoSDKFeature.isEnabled`
- */
-@property (nonatomic, readonly) BOOL enableCryptoSDK;
-
-/**
- The text-based identifier for the crypto module being used (e.g. native vs rust)
- */
-@property (nonatomic, readonly) NSString *cryptoModuleId;
+@property (nonatomic, nullable, weak) id<MXCryptoV2MigrationDelegate> cryptoMigrationDelegate;
 
 /**
  Enable symmetric room key backups
@@ -235,14 +223,6 @@ NS_ASSUME_NONNULL_BEGIN
  @remark NO by default
  */
 @property (nonatomic) BOOL enableNewClientInformationFeature;
-
-/**
- Enable the calculating and display of progress during session startup, incl store migration,
- syncing and response processing.
- 
- @remark YES by default
- */
-@property (nonatomic) BOOL enableStartupProgress;
 
 @end
 

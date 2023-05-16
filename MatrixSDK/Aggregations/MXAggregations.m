@@ -315,8 +315,6 @@
                     [self.beaconAggregations handleBeaconWithEvent:event];
                 }
                 break;
-            case MXEventTypePollEnd:
-                [self.aggregatedPollsUpdater refreshPollAfter:event];
             default:
                 break;
         }

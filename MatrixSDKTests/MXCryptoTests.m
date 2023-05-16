@@ -111,18 +111,15 @@
 
         XCTAssertNil(mxSession.crypto, @"Crypto is disabled by default");
 
-        XCTAssertFalse([mxSession.legacyCrypto.store.class hasDataForCredentials:mxSession.matrixRestClient.credentials]);
-
+        MXKeyProvider.sharedInstance.delegate = [[MXKeyProviderStub alloc] init];
         [mxSession enableCrypto:YES success:^{
+            MXKeyProvider.sharedInstance.delegate = nil;
 
             XCTAssert(mxSession.crypto);
-            XCTAssert([mxSession.legacyCrypto.store.class hasDataForCredentials:mxSession.matrixRestClient.credentials]);
 
             [mxSession enableCrypto:NO success:^{
 
                 XCTAssertNil(mxSession.crypto);
-                XCTAssertFalse([mxSession.legacyCrypto.store.class hasDataForCredentials:mxSession.matrixRestClient.credentials], @"Crypto data must have been trashed");
-
                 [expectation fulfill];
 
             } failure:^(NSError *error) {
@@ -140,19 +137,18 @@
 - (void)testMXSDKOptionsEnableCryptoWhenOpeningMXSession
 {
     [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
+    MXKeyProvider.sharedInstance.delegate = [[MXKeyProviderStub alloc] init];
 
     [matrixSDKTestsData doMXSessionTestWithBob:self readyToTest:^(MXSession *mxSession, XCTestExpectation *expectation) {
         // Reset the option to not disturb other tests
         [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
+        MXKeyProvider.sharedInstance.delegate = nil;
 
         XCTAssert(mxSession.crypto);
-        XCTAssert([mxSession.legacyCrypto.store.class hasDataForCredentials:mxSession.matrixRestClient.credentials]);
 
         [mxSession enableCrypto:NO success:^{
 
             XCTAssertNil(mxSession.crypto);
-            XCTAssertFalse([mxSession.legacyCrypto.store.class hasDataForCredentials:mxSession.matrixRestClient.credentials], @"Crypto data must have been trashed");
-
             [expectation fulfill];
 
         } failure:^(NSError *error) {
@@ -237,8 +233,7 @@
     }];
 }
 
-// TODO: Test currently broken
-- (void)xtestMultipleDownloadKeys
+- (void)testMultipleDownloadKeys
 {
     [matrixSDKTestsE2EData doE2ETestWithBobAndAlice:self readyToTest:^(MXSession *bobSession, MXSession *aliceSession, XCTestExpectation *expectation) {
 
@@ -882,8 +877,7 @@
     }];
 }
 
-// TODO: Test currently broken
-- (void)xtestAliceAndBobInACryptedRoomBackPaginationFromHomeServer
+- (void)testAliceAndBobInACryptedRoomBackPaginationFromHomeServer
 {
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
 
@@ -1323,8 +1317,7 @@
 // Alice sends a message #5
 // Check that the message can be decrypted by the Bob's device and the Sam's device
 
-// TODO: Test currently broken
-- (void)xtestBlackListUnverifiedDevices
+- (void)testBlackListUnverifiedDevices
 {
     NSArray *aliceMessages = @[
                                @"0",
@@ -2056,8 +2049,7 @@
     }];
 }
 
-// TODO: Test currently broken
-- (void)xtestLateRoomKey
+- (void)testLateRoomKey
 {
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:NO readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
 
@@ -2133,8 +2125,7 @@
 // -> The third event must fail to decrypt at first because Bob the olm session is wedged
 // -> This is automatically fixed after SDKs restarted the olm session
 
-// TODO: Test currently broken
-- (void)xtestOlmSessionUnwedging
+- (void)testOlmSessionUnwedging
 {
     // - Alice & Bob have messages in a room
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:NO aliceStore:[[MXFileStore alloc] init] bobStore:[[MXFileStore alloc] init] readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
@@ -2948,8 +2939,7 @@
  - 3- Alice sends a second message
  -> 4- It must be sent (it was never sent before the fix)
  */
-// TODO: test is currently broken
-- (void)xtestDeviceInvalidationWhileSending
+- (void)testDeviceInvalidationWhileSending
 {
     [matrixSDKTestsE2EData doE2ETestWithAliceInARoom:self readyToTest:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
 
@@ -3079,8 +3069,7 @@
  - close current session and open a new session
  - Restore the outbound group session for the current room and check it exists and contains the new key
 */
-// TODO: test is currently broken
-- (void)xtestDiscardAndRestoreOlmOutboundKey
+- (void)testDiscardAndRestoreOlmOutboundKey
 {
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
         MXOlmOutboundGroupSession *outboundSession = [aliceSession.legacyCrypto.store outboundGroupSessionWithRoomId:roomId];
