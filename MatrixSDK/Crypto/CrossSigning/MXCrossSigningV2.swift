@@ -126,7 +126,7 @@ class MXCrossSigningV2: NSObject, MXCrossSigning {
                 // If we are considered verified, there is no need for a verification upgrade
                 // after migrating from legacy crypto
                 if myUserCrossSigningKeys?.trustLevel.isVerified == true {
-                    MXSDKOptions.sharedInstance().cryptoSDKFeature?.needsVerificationUpgrade = false
+                    MXSDKOptions.sharedInstance().cryptoMigrationDelegate?.needsVerificationUpgrade = false
                 }
                 
                 log.debug("Cross signing state refreshed, new state: \(state)")

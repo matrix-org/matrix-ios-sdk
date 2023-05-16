@@ -67,7 +67,6 @@ public enum MXBackgroundSyncServiceError: Error {
     /// - Parameter credentials: account credentials
     public init(
         withCredentials credentials: MXCredentials,
-        isCryptoSDKEnabled: Bool = false,
         persistTokenDataHandler: MXRestClientPersistTokenDataHandler? = nil,
         unauthenticatedHandler: MXRestClientUnauthenticatedHandler? = nil
     ) {
@@ -90,16 +89,9 @@ public enum MXBackgroundSyncServiceError: Error {
         self.restClient = restClient
         
         store = MXBackgroundStore(withCredentials: credentials)
-        // We can flush any crypto data if our sync response store is empty
-        let resetBackgroundCryptoStore = syncResponseStoreManager.syncToken() == nil
         
-        if isCryptoSDKEnabled {
-            MXLog.debug("[MXBackgroundSyncService] init: constructing crypto v2")
-            crypto = MXBackgroundCryptoV2(credentials: credentials, restClient: restClient)
-        } else {
-            MXLog.debug("[MXBackgroundSyncService] init: constructing legacy crypto")
-            crypto = MXLegacyBackgroundCrypto(credentials: credentials, resetBackgroundCryptoStore: resetBackgroundCryptoStore)
-        }
+        MXLog.debug("[MXBackgroundSyncService] init: constructing crypto")
+        crypto = MXBackgroundCryptoV2(credentials: credentials, restClient: restClient)
         
         pushRulesManager = MXBackgroundPushRulesManager(withCredentials: credentials)
         MXLog.debug("[MXBackgroundSyncService] init complete")
