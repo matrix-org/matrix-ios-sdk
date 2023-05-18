@@ -1,0 +1,1 @@
+Fixes a bug where an unhelpful message is shown rather than the threads empty state.
