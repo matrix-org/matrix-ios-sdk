@@ -35,12 +35,18 @@
     MXAggregationPaginatedResponse *paginatedResponse;
 
     NSArray<MXEvent*> *chunk;
-    MXJSONModelSetMXJSONModelArray(chunk, MXEvent.class, JSONDictionary[@"chunk"])
-
+    NSArray *chunkJson = JSONDictionary[@"chunk"];
+    MXJSONModelSetMXJSONModelArray(chunk, MXEvent.class, chunkJson)
+    // For some reason modelsFromJSON returns nil if you pass it an empty array.
+    // In this case we want an empty array or we get an error.
+    if(!chunk && [chunkJson isKindOfClass:NSArray.class])
+    {
+        chunk = @[];
+    }
+    
     if (chunk)
     {
         paginatedResponse = [MXAggregationPaginatedResponse new];
-
         paginatedResponse->_chunk = chunk;
         MXJSONModelSetString(paginatedResponse->_nextBatch, JSONDictionary[@"next_batch"])
 
