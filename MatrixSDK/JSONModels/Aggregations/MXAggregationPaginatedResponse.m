@@ -36,12 +36,14 @@
 
     NSArray<MXEvent*> *chunk;
     NSArray *chunkJson = JSONDictionary[@"chunk"];
-    MXJSONModelSetMXJSONModelArray(chunk, MXEvent.class, chunkJson)
+    
     // For some reason modelsFromJSON returns nil if you pass it an empty array.
     // In this case we want an empty array or we get an error.
-    if(!chunk && [chunkJson isKindOfClass:NSArray.class])
+    if([chunkJson isKindOfClass:NSArray.class] && chunkJson.count == 0)
     {
         chunk = @[];
+    } else {
+        MXJSONModelSetMXJSONModelArray(chunk, MXEvent.class, chunkJson)
     }
     
     if (chunk)
