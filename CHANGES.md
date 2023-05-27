@@ -1,3 +1,16 @@
+## Changes in 0.26.10 (2023-05-16)
+
+🙌 Improvements
+
+- Crypto: Enable Crypto SDK by default ([#1770](https://github.com/matrix-org/matrix-ios-sdk/pull/1770))
+- Crypto: Deprecate MXLegacyCrypto ([#1772](https://github.com/matrix-org/matrix-ios-sdk/pull/1772))
+
+🐛 Bugfixes
+
+- Poll: Refreshing the poll when receiving pollEnd can break the chronological order in the store. ([#1776](https://github.com/matrix-org/matrix-ios-sdk/pull/1776))
+- Fix breadcrumb list not updating when leaving a room. Contributed by @JanNikGra. ([#1777](https://github.com/vector-im/element-ios/issues/1777))
+
+
 ## Changes in 0.26.9 (2023-04-18)
 
 🐛 Bugfixes
