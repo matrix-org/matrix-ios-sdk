@@ -39,7 +39,7 @@
 /**
  Prefix used in path of home server API requests.
  */
-NSString *const kmXAPIPrefixPathV3 = @"_matrix/client/r0";
+NSString *const kmXAPIPrefixPathR0 = @"_matrix/client/r0";
 NSString *const kMXAPIPrefixPathV1 = @"_matrix/client/v1";
 NSString *const kMXAPIPrefixPathV3 = @"_matrix/client/v3";
 NSString *const kMXAPIPrefixPathUnstable = @"_matrix/client/unstable";
