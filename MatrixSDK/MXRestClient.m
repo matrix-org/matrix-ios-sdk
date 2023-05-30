@@ -4817,7 +4817,7 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
                        success:(void (^)(MXKeysUploadResponse *keysUploadResponse))success
                        failure:(void (^)(NSError *error))failure
 {
-    NSString *path = deviceId ? [NSString stringWithFormat:@"%@/keys/upload/%@", kmXAPIPrefixPathV3, [deviceId stringByAddingPercentEncodingWithAllowedCharacters:[NSCharacterSet URLHostAllowedCharacterSet]]] : [NSString stringWithFormat:@"%@/keys/upload", kmXAPIPrefixPathV3];
+    NSString *path = deviceId ? [NSString stringWithFormat:@"%@/keys/upload/%@", kMXAPIPrefixPathV3, [deviceId stringByAddingPercentEncodingWithAllowedCharacters:[NSCharacterSet URLHostAllowedCharacterSet]]] : [NSString stringWithFormat:@"%@/keys/upload", kMXAPIPrefixPathV3];
 
     NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
     if (deviceKeys)
@@ -4862,7 +4862,7 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
 {
     MXWeakify(self);
     return [httpClient requestWithMethod:@"POST"
-                                    path:[NSString stringWithFormat:@"%@/keys/signatures/upload", kmXAPIPrefixPathV3]
+                                    path:[NSString stringWithFormat:@"%@/keys/signatures/upload", kMXAPIPrefixPathV3]
                               parameters:signatures
                                  success:^(NSDictionary *JSONResponse) {
                                      MXStrongifyAndReturnIfNil(self);
@@ -4885,7 +4885,7 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
                                  success:(void (^)(MXKeysQueryResponse *keysQueryResponse))success
                                  failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"%@/keys/query", kmXAPIPrefixPathV3];
+    NSString *path = [NSString stringWithFormat:@"%@/keys/query", kMXAPIPrefixPathV3];
 
     NSMutableDictionary *downloadQuery = [NSMutableDictionary dictionary];
     for (NSString *userID in userIds)
@@ -4927,7 +4927,7 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
 
 - (MXHTTPOperation *)claimOneTimeKeysForUsersDevices:(MXUsersDevicesMap<NSString *> *)usersDevicesKeyTypesMap success:(void (^)(MXKeysClaimResponse *))success failure:(void (^)(NSError *))failure
 {
-    NSString *path = [NSString stringWithFormat:@"%@/keys/claim", kmXAPIPrefixPathV3];
+    NSString *path = [NSString stringWithFormat:@"%@/keys/claim", kMXAPIPrefixPathV3];
 
     NSDictionary *parameters = @{
                                  @"one_time_keys": usersDevicesKeyTypesMap.map
@@ -4963,7 +4963,7 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
 {
     MXWeakify(self);
     return [httpClient requestWithMethod:@"GET"
-                                    path:[NSString stringWithFormat:@"%@/keys/changes", kmXAPIPrefixPathV3]
+                                    path:[NSString stringWithFormat:@"%@/keys/changes", kMXAPIPrefixPathV3]
                               parameters:@{
                                            @"from": fromToken,
                                            @"to": toToken
@@ -5065,7 +5065,7 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
 {
     MXWeakify(self);
     return [httpClient requestWithMethod:@"POST"
-                                    path:[NSString stringWithFormat:@"%@/room_keys/version", kmXAPIPrefixPathV3]
+                                    path:[NSString stringWithFormat:@"%@/room_keys/version", kMXAPIPrefixPathV3]
                               parameters:keyBackupVersion.JSONDictionary
                                  success:^(NSDictionary *JSONResponse) {
                                      MXStrongifyAndReturnIfNil(self);
@@ -5089,7 +5089,7 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
                                    success:(void (^)(void))success
                                    failure:(void (^)(NSError *error))failure
 {
-    return [self updateKeyBackupVersion:keyBackupVersion withPath:kmXAPIPrefixPathV3 success:success failure:failure];
+    return [self updateKeyBackupVersion:keyBackupVersion withPath:kMXAPIPrefixPathV3 success:success failure:failure];
 }
 
 - (MXHTTPOperation*)updateKeyBackupVersion:(MXKeyBackupVersion*)keyBackupVersion
@@ -5121,7 +5121,7 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
                                    success:(void (^)(void))success
                                    failure:(void (^)(NSError *error))failure
 {
-    NSMutableString *path = [NSMutableString stringWithFormat:@"%@/room_keys/version", kmXAPIPrefixPathV3];
+    NSMutableString *path = [NSMutableString stringWithFormat:@"%@/room_keys/version", kMXAPIPrefixPathV3];
     if (version)
     {
         [path appendFormat:@"/%@", version];
@@ -5151,7 +5151,7 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
                              success:(void (^)(MXKeyBackupVersion *keyBackupVersion))success
                              failure:(void (^)(NSError *error))failure;
 {
-    NSMutableString *path = [NSMutableString stringWithFormat:@"%@/room_keys/version", kmXAPIPrefixPathV3];
+    NSMutableString *path = [NSMutableString stringWithFormat:@"%@/room_keys/version", kMXAPIPrefixPathV3];
     if (version)
     {
         [path appendFormat:@"/%@", version];
@@ -5470,7 +5470,7 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
         return nil;
     }
 
-    NSMutableString *path = [NSMutableString stringWithFormat:@"%@/room_keys/keys", kmXAPIPrefixPathV3];
+    NSMutableString *path = [NSMutableString stringWithFormat:@"%@/room_keys/keys", kMXAPIPrefixPathV3];
 
     if (sessionId)
     {
@@ -5504,7 +5504,7 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
 {
     
     // Prepare the path by adding a random transaction id (This id is used to prevent duplicated event).
-    NSString *path = [NSString stringWithFormat:@"%@/sendToDevice/%@/%@", kmXAPIPrefixPathV3, payload.eventType, payload.transactionId];
+    NSString *path = [NSString stringWithFormat:@"%@/sendToDevice/%@/%@", kMXAPIPrefixPathV3, payload.eventType, payload.transactionId];
 
     NSDictionary *content = @{
                               @"messages": payload.messages
@@ -5530,7 +5530,7 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
 {
     MXWeakify(self);
     return [httpClient requestWithMethod:@"GET"
-                                    path:[NSString stringWithFormat:@"%@/devices", kmXAPIPrefixPathV3]
+                                    path:[NSString stringWithFormat:@"%@/devices", kMXAPIPrefixPathV3]
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
                                      MXStrongifyAndReturnIfNil(self);
@@ -5556,7 +5556,7 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
 {
     MXWeakify(self);
     return [httpClient requestWithMethod:@"GET"
-                                    path:[NSString stringWithFormat:@"%@/devices/%@", kmXAPIPrefixPathV3, deviceId]
+                                    path:[NSString stringWithFormat:@"%@/devices/%@", kMXAPIPrefixPathV3, deviceId]
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
                                      MXStrongifyAndReturnIfNil(self);
@@ -5589,7 +5589,7 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
 
     MXWeakify(self);
     return [httpClient requestWithMethod:@"PUT"
-                                    path:[NSString stringWithFormat:@"%@/devices/%@", kmXAPIPrefixPathV3, deviceId]
+                                    path:[NSString stringWithFormat:@"%@/devices/%@", kMXAPIPrefixPathV3, deviceId]
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
                                      MXStrongifyAndReturnIfNil(self);
@@ -5608,7 +5608,7 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
     // The request will fail with Unauthorized status code, but the auth session will be available in response data.
     MXWeakify(self);
     return [httpClient requestWithMethod:@"DELETE"
-                                    path:[NSString stringWithFormat:@"%@/devices/%@", kmXAPIPrefixPathV3, [MXTools encodeURIComponent:deviceId]]
+                                    path:[NSString stringWithFormat:@"%@/devices/%@", kMXAPIPrefixPathV3, [MXTools encodeURIComponent:deviceId]]
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
                                      MXStrongifyAndReturnIfNil(self);
@@ -5665,7 +5665,7 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
 
     MXWeakify(self);
     return [httpClient requestWithMethod:@"DELETE"
-                                    path:[NSString stringWithFormat:@"%@/devices/%@", kmXAPIPrefixPathV3, [MXTools encodeURIComponent:deviceId]]
+                                    path:[NSString stringWithFormat:@"%@/devices/%@", kMXAPIPrefixPathV3, [MXTools encodeURIComponent:deviceId]]
                               parameters:nil
                                     data:payloadData
                                  headers:@{@"Content-Type": @"application/json"}
@@ -5693,7 +5693,7 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
     
     MXWeakify(self);
     return [httpClient requestWithMethod:@"POST"
-                                    path:[NSString stringWithFormat:@"%@/delete_devices", kmXAPIPrefixPathV3]
+                                    path:[NSString stringWithFormat:@"%@/delete_devices", kMXAPIPrefixPathV3]
                               parameters:nil
                                     data:payloadData
                                  headers:@{@"Content-Type": @"application/json"}
@@ -6266,7 +6266,7 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
 - (MXHTTPOperation*)homeServerCapabilitiesWithSuccess:(void (^)(MXHomeserverCapabilities *capabilities))success
                                               failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"%@/capabilities", kmXAPIPrefixPathV3];
+    NSString *path = [NSString stringWithFormat:@"%@/capabilities", kMXAPIPrefixPathV3];
 
     MXWeakify(self);
     return [httpClient requestWithMethod:@"GET"
