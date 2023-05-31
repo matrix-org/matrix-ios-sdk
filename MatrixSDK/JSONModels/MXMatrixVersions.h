@@ -105,8 +105,9 @@ extern const struct MXMatrixVersionsFeatureStruct MXMatrixVersionsFeature;
 
 /**
  Indicate if the server supports logging in via a QR
+ @deprecated The availability of get_login_token/MSC3882 is now exposed as a capability and/or part of login flow in stable 1.7
  */
-@property (nonatomic, readonly) BOOL supportsQRLogin;
+@property (nonatomic, readonly) BOOL supportsQRLogin __deprecated_msg("Use capability and/or login flow instead");
 
 /**
  Indicate if the server supports notifications for threads (MSC3773)

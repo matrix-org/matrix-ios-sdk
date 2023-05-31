@@ -23,6 +23,7 @@ static NSString* const kJSONKeyRoomVersions = @"m.room_versions";
 static NSString* const kJSONKeySetDisplayName = @"m.set_displayname";
 static NSString* const kJSONKeySetAvatarUrl = @"m.set_avatar_url";
 static NSString* const kJSONKeyThreePidChanges = @"m.3pid_changes";
+static NSString* const kJSONKeyGetLoginToken = @"m.get_login_token";
 
 @interface MXCapabilities ()
 
@@ -33,6 +34,7 @@ static NSString* const kJSONKeyThreePidChanges = @"m.3pid_changes";
 @property (nonatomic, readwrite, nullable) MXBooleanCapability *setDisplayName;
 @property (nonatomic, readwrite, nullable) MXBooleanCapability *setAvatarUrl;
 @property (nonatomic, readwrite, nullable) MXBooleanCapability *threePidChanges;
+@property (nonatomic, readwrite, nullable) MXBooleanCapability *getLoginToken;
 
 @end
 
@@ -52,6 +54,7 @@ static NSString* const kJSONKeyThreePidChanges = @"m.3pid_changes";
         MXJSONModelSetMXJSONModel(result.setDisplayName, MXBooleanCapability, capabilities[kJSONKeySetDisplayName]);
         MXJSONModelSetMXJSONModel(result.setAvatarUrl, MXBooleanCapability, capabilities[kJSONKeySetAvatarUrl]);
         MXJSONModelSetMXJSONModel(result.threePidChanges, MXBooleanCapability, capabilities[kJSONKeyThreePidChanges]);
+        MXJSONModelSetMXJSONModel(result.getLoginToken, MXBooleanCapability, capabilities[kJSONKeyGetLoginToken]);
 
         return result;
     }
@@ -79,6 +82,7 @@ static NSString* const kJSONKeyThreePidChanges = @"m.3pid_changes";
         MXJSONModelSetMXJSONModel(self.setDisplayName, MXBooleanCapability, self.allCapabilities[kJSONKeySetDisplayName]);
         MXJSONModelSetMXJSONModel(self.setAvatarUrl, MXBooleanCapability, self.allCapabilities[kJSONKeySetAvatarUrl]);
         MXJSONModelSetMXJSONModel(self.threePidChanges, MXBooleanCapability, self.allCapabilities[kJSONKeyThreePidChanges]);
+        MXJSONModelSetMXJSONModel(self.getLoginToken, MXBooleanCapability, self.allCapabilities[kJSONKeyGetLoginToken]);
     }
     return self;
 }

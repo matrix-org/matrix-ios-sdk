@@ -25,6 +25,7 @@
 #import "MXCrossSigningInfo_Private.h"
 #import "MXKey.h"
 #import "MXLoginSSOFlow.h"
+#import "MXLoginTokenFlow.h"
 
 #pragma mark - Local constants
 
@@ -202,6 +203,10 @@ NSString *const kMXLoginIdentifierTypePhone = @"m.id.phone";
         if ([type isEqualToString:kMXLoginFlowTypeSSO] || [type isEqualToString:kMXLoginFlowTypeCAS])
         {
             loginFlow = [MXLoginSSOFlow modelFromJSON:JSONDictionary];
+        }
+        else if ([type isEqualToString:kMXLoginFlowTypeToken])
+        {
+            loginFlow = [MXLoginTokenFlow modelFromJSON:JSONDictionary];
         }
         else
         {
