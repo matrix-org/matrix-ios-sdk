@@ -3077,7 +3077,7 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
     
     if (relations && [relations count] > 0)
     {
-        NSString* property = withRelationsIsStable ? @"with_relations" : @"org.matrix.msc3912.with_relations";
+        NSString* property = withRelationsIsStable ? @"with_rel_types" : @"org.matrix.msc3912.with_relations";
         parameters[property] = relations;
     }
 
