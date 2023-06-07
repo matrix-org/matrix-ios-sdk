@@ -1816,43 +1816,43 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
     {
         case MXPushRuleKindOverride:
             kindString = @"override";
-            if (conditions.count && actions.count)
+            if (conditions.count && actions)
             {
                 content = @{@"conditions": conditions, @"actions": actions};
             }
-            else if (actions.count)
+            else if (actions)
             {
                 content = @{@"actions": actions};
             }
             break;
         case MXPushRuleKindContent:
             kindString = @"content";
-            if (pattern.length && actions.count)
+            if (pattern.length && actions)
             {
                 content = @{@"pattern": pattern, @"actions": actions};
             }
             break;
         case MXPushRuleKindRoom:
             kindString = @"room";
-            if (actions.count)
+            if (actions)
             {
                 content = @{@"actions": actions};
             }
             break;
         case MXPushRuleKindSender:
             kindString = @"sender";
-            if (actions.count)
+            if (actions)
             {
                 content = @{@"actions": actions};
             }
             break;
         case MXPushRuleKindUnderride:
             kindString = @"underride";
-            if (conditions.count && actions.count)
+            if (conditions.count && actions)
             {
                 content = @{@"conditions": conditions, @"actions": actions};
             }
-            else if (actions.count)
+            else if (actions)
             {
                 content = @{@"actions": actions};
             }
