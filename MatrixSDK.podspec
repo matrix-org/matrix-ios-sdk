@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
 
   s.name         = "MatrixSDK"
-  s.version      = "0.26.10"
+  s.version      = "0.26.11"
   s.summary      = "The iOS SDK to build apps compatible with Matrix (https://www.matrix.org)"
 
   s.description  = <<-DESC
@@ -62,7 +62,7 @@ Pod::Spec.new do |s|
     
     # Use WebRTC framework included in Jitsi Meet SDK
     # Use the lite version so we don't add a dependency on Giphy.
-    ss.ios.dependency 'JitsiMeetSDKLite', '7.0.1-lite'
+    ss.ios.dependency 'JitsiMeetSDKLite', '8.1.2-lite'
   end
 
 end
