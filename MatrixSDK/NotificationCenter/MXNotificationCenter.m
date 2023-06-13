@@ -579,6 +579,7 @@ NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID = @".m.rule.mess
                           highlight:(BOOL)highlight
 {
     NSMutableArray *actions = [NSMutableArray array];
+    // Support for MSC3987: The dont_notify push rule action is deprecated and replaced by an empty actions list.
     if (notify)
     {
         [actions addObject:@"notify"];
@@ -597,10 +598,6 @@ NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID = @".m.rule.mess
             [actions addObject:@{@"set_tweak": @"highlight", @"value": @NO}];
         }
     }
-    else
-    {
-        [actions addObject:@"dont_notify"];
-    }
     return actions;
 }
 
@@ -615,7 +612,8 @@ NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID = @".m.rule.mess
         if (rule)
         {
             // Make sure this is not a rule to prevent from generating a notification
-            BOOL actionNotify = YES;
+            // Support for MSC3987: The dont_notify push rule action is deprecated and replaced by an empty actions list.
+            BOOL actionNotify = (rule.actions.count > 0);
             if (1 == rule.actions.count)
             {
                 MXPushRuleAction *action = rule.actions[0];

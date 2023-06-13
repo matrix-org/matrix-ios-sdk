@@ -1,3 +1,16 @@
+## Changes in 0.26.11 (2023-06-13)
+
+🙌 Improvements
+
+- MSC3912 implementation: the stable property with_relations has been renamed with_rel_types ([#7563](https://github.com/vector-im/element-ios/issues/7563))
+- Updated Jitsi meet sdk to 8.1.2-lite. ([#7565](https://github.com/vector-im/element-ios/issues/7565))
+- MSC3987 implementation: the 'dont_notify' action for a push_rule is now deprecated and replaced by an empty action list. ([#7576](https://github.com/vector-im/element-ios/issues/7576))
+
+🐛 Bugfixes
+
+- Fixes a bug where an unhelpful message is shown rather than the threads empty state. ([#7551](https://github.com/vector-im/element-ios/issues/7551))
+
+
 ## Changes in 0.26.10 (2023-05-16)
 
 🙌 Improvements

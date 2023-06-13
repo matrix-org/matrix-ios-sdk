@@ -82,6 +82,12 @@ import Foundation
             return false
         }
         
+        // Support for MSC3987: The dont_notify push rule action is deprecated.
+        if rule.actions.isEmpty {
+            return rule.enabled
+        }
+        
+        // Compatibility support.
         for ruleAction in rule.actions {
             guard let action = ruleAction as? MXPushRuleAction else { continue }
             if action.actionType == MXPushRuleActionTypeDontNotify {
