@@ -207,6 +207,7 @@ NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID = @".m.rule.mess
                             {
                                 MXLogDebug(@"[MXNotificationCenter] Warning: There is no MXPushRuleConditionChecker to check condition of kind: %@", condition.kind);
                                 conditionsOk = NO;
+                                break; // Don't go further as we cannot guarantee that this rule matches
                             }
                         }
                         break;
