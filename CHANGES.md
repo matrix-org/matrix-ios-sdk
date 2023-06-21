@@ -1,3 +1,10 @@
+## Changes in 0.26.12 (2023-06-21)
+
+🐛 Bugfixes
+
+- Ignore push rules with unknown condition kinds ([#7601](https://github.com/vector-im/element-ios/issues/7601))
+
+
 ## Changes in 0.26.11 (2023-06-13)
 
 🙌 Improvements
