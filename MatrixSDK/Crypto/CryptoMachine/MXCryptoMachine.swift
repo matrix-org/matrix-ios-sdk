@@ -308,7 +308,7 @@ extension MXCryptoMachine: MXCryptoSyncing {
     }
     
     private func markRequestAsSent(requestId: String, requestType: RequestType, response: String? = nil) throws {
-        try self.machine.markRequestAsSent(requestId: requestId, requestType: requestType, response: response ?? "")
+        try self.machine.markRequestAsSent(requestId: requestId, requestType: requestType, responseBody: response ?? "")
     }
     
     private func handleOutgoingRequests() async throws {
@@ -583,7 +583,12 @@ extension MXCryptoMachine: MXCryptoCrossSigning {
     }
     
     func exportCrossSigningKeys() -> CrossSigningKeyExport? {
-        machine.exportCrossSigningKeys()
+        do {
+            return try machine.exportCrossSigningKeys()
+        } catch {
+            log.error("Failed exporting cross signing keys", context: error)
+            return nil
+        }
     }
     
     func importCrossSigningKeys(export: CrossSigningKeyExport) {
@@ -784,7 +789,7 @@ extension MXCryptoMachine: MXCryptoBackup {
         }
         
         do {
-            let verification = try machine.verifyBackup(authData: string)
+            let verification = try machine.verifyBackup(backupInfo: string)
             return verification.trusted
         } catch {
             log.error("Failed verifying backup", context: error)

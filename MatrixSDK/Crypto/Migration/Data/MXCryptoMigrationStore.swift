@@ -54,9 +54,9 @@ struct MXCryptoMigrationStore {
             account: try pickledAccount(pickleKey: pickleKey),
             sessions: [], // Sessions are extracted in batches separately
             inboundGroupSessions: [], // Group sessions are extracted in batches separately
+            pickleKey: [UInt8](pickleKey),
             backupVersion: legacyStore.backupVersion,
             backupRecoveryKey: backupRecoveryKey(),
-            pickleKey: [UInt8](pickleKey),
             crossSigning: crossSigning(),
             trackedUsers: trackedUsers(),
             roomSettings: extractRoomSettings()
