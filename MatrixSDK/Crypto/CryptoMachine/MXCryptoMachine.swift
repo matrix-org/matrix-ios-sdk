@@ -204,8 +204,9 @@ extension MXCryptoMachine: MXCryptoSyncing {
         )
         
         guard
-            let json = MXTools.deserialiseJSONString(result) as? [Any],
-            let toDevice = MXToDeviceSyncResponse(fromJSON: ["events": json])
+            let deserialisedResult = MXTools.deserialiseJSONString(result) as? [Any],
+            let deserialisedToDeviceEvents = deserialisedResult.first,
+            let toDevice = MXToDeviceSyncResponse(fromJSON: ["events": deserialisedToDeviceEvents])
         else {
             log.failure("Result cannot be serialized", context: [
                 "result": result
