@@ -203,18 +203,26 @@ extension MXCryptoMachine: MXCryptoSyncing {
             unusedFallbackKeys: unusedFallbackKeys
         )
         
-        guard
-            let deserialisedResult = MXTools.deserialiseJSONString(result) as? [Any],
-            let deserialisedToDeviceEvents = deserialisedResult.first,
-            let toDevice = MXToDeviceSyncResponse(fromJSON: ["events": deserialisedToDeviceEvents])
-        else {
+        var deserialisedToDeviceEvents = [Any]()
+        for toDeviceEvent in result.toDeviceEvents {
+            guard let deserialisedToDeviceEvent = MXTools.deserialiseJSONString(toDeviceEvent) else {
+                log.failure("Failed deserialising to device event", context: [
+                    "result": result
+                ])
+                return MXToDeviceSyncResponse()
+            }
+            
+            deserialisedToDeviceEvents.append(deserialisedToDeviceEvent)
+        }
+        
+        guard let toDeviceSyncResponse = MXToDeviceSyncResponse(fromJSON: ["events": deserialisedToDeviceEvents]) else {
             log.failure("Result cannot be serialized", context: [
                 "result": result
             ])
             return MXToDeviceSyncResponse()
         }
         
-        return toDevice
+        return toDeviceSyncResponse
     }
     
     func downloadKeysIfNecessary(users: [String]) async throws {
