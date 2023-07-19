@@ -31,7 +31,7 @@ import MatrixSDKCrypto
     
     internal init(identity: UserIdentity, isVerified: Bool) {
         switch identity {
-        case .own(let userId, _, let masterKey, let selfSigningKey, let userSigningKey):
+        case .own(let userId, _, let masterKey, let userSigningKey, let selfSigningKey):
             self.userId = userId
             // Note: `trustsOurOwnDevice` is not currently used, instead using second `isVerified` parameter
             self.masterKeys = .init(jsonString: masterKey)
