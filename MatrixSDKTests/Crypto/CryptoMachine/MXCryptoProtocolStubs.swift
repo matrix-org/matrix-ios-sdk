@@ -138,7 +138,8 @@ class CryptoCrossSigningStub: CryptoIdentityStub, MXCryptoCrossSigning {
             isBlocked: device.isBlocked,
             locallyTrusted: device.locallyTrusted,
             // Modify cross signing trusted
-            crossSigningTrusted: true
+            crossSigningTrusted: true,
+            firstTimeSeenTs: 0
         )
     }
     

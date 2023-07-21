@@ -204,8 +204,8 @@ class MXCryptoMachineUnitTests: XCTestCase {
         
         XCTAssertEqual(request?.state(), .cancelled(
             cancelInfo: .init(
-                cancelCode: "m.user",
                 reason: "The user cancelled the verification.",
+                cancelCode: "m.user",
                 cancelledByUs: false
             )
         ))
