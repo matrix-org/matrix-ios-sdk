@@ -2516,47 +2516,22 @@ Note: Clients should consider avoiding this endpoint for URLs posted in encrypte
                            success:(void (^)(MXDeviceListResponse *deviceLists))success
                            failure:(void (^)(NSError *error))failure;
 
+#pragma mark - Device Dehydration
 
-#pragma mark - Crypto: Dehydration
+- (MXHTTPOperation*)createDehydratedDevice:(MXDehydratedDeviceCreationParameters *)parameters
+                                   success:(void (^)(NSString * _Nonnull deviceId))success
+                                   failure:(void (^)(NSError * _Nonnull error))failure;
 
-/**
- Get the dehydrated device of the current account.
+- (MXHTTPOperation*)retrieveDehydratedDeviceWithSuccess:(void (^)(MXDehydratedDeviceResponse * _Nonnull dehydratedDevice))success
+                                                failure:(void (^)(NSError * _Nonnull error))failure;
 
- @param success A block object called when the operation succeeds. It provides a `MXDehydratedDevice` instance of the current account.
- @param failure A block object called when the operation fails.
+- (MXHTTPOperation*)deleteDehydratedDeviceWithSuccess:(void (^)(void))success
+                                              failure:(void (^)(NSError * _Nonnull error))failure;
 
- @return a MXHTTPOperation instance.
- */
-- (MXHTTPOperation*)getDehydratedDeviceWithSuccess:(void (^)(MXDehydratedDevice *device))success
-                                           failure:(void (^)(NSError *error))failure;
-
-/**
- Set a given device as the dehydrated device of the current account.
-
- @param device data of the dehydrated device
- @param deviceDisplayName display name of the dehydrated device
- @param success A block object called when the operation succeeds. It provides the ID of the newly dehydrated device.
- @param failure A block object called when the operation fails.
-
- @return a MXHTTPOperation instance.
- */
-- (MXHTTPOperation*)setDehydratedDevice:(MXDehydratedDevice *)device
-                        withDisplayName:(NSString *)deviceDisplayName
-                                success:(void (^)(NSString *deviceId))success
-                                failure:(void (^)(NSError *error))failure;
-
-/**
- Claim the dehydrated device of the current account.
-
- @param deviceId ID of the dehydrated to be claimed.
- @param success A block object called when the operation succeeds.
- @param failure A block object called when the operation fails.
-
- @return a MXHTTPOperation instance.
- */
-- (MXHTTPOperation*)claimDehydratedDeviceWithId:(NSString*)deviceId
-                                        Success:(void (^)(BOOL success))success
-                                        failure:(void (^)(NSError *error))failure;
+- (MXHTTPOperation*)retrieveDehydratedDeviceEventsForDeviceId:(NSString *)deviceId
+                                                    nextBatch:(NSString *)nextBatch
+                                                      success:(void (^)(MXDehydratedDeviceEventsResponse * _Nonnull dehydratedDeviceEventsResponse))success
+                                                      failure:(void (^)(NSError * _Nonnull error))failure;
 
 #pragma mark - Crypto: e2e keys backup
 

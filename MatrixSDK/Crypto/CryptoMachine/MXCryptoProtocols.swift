@@ -50,6 +50,7 @@ protocol MXCryptoSyncing: MXCryptoIdentity {
 protocol MXCryptoDevicesSource: MXCryptoIdentity {
     func device(userId: String, deviceId: String) -> Device?
     func devices(userId: String) -> [Device]
+    func dehydratedDevices() -> DehydratedDevicesProtocol
 }
 
 /// Source of user identities and their cryptographic trust status

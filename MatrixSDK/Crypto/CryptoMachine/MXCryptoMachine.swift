@@ -367,6 +367,10 @@ extension MXCryptoMachine: MXCryptoDevicesSource {
             return nil
         }
     }
+    
+    func dehydratedDevices() -> DehydratedDevicesProtocol {
+        machine.dehydratedDevices()
+    }
 }
 
 extension MXCryptoMachine: MXCryptoUserIdentitySource {
