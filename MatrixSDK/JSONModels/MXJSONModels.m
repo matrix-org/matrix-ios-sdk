@@ -2181,8 +2181,8 @@ NSString *const kMXPushRuleScopeStringGlobal = @"global";
 + (instancetype)modelFromJSON:(NSDictionary *)JSONDictionary
 {
     MXDehydratedDeviceResponse *dehydratedDevice = [[MXDehydratedDeviceResponse alloc] init];
-    dehydratedDevice.deviceId = JSONDictionary[@"device_id"];
-    dehydratedDevice.deviceData = JSONDictionary[@"device_data"];
+    MXJSONModelSetString(dehydratedDevice.deviceId, JSONDictionary[@"device_id"]);
+    MXJSONModelSetDictionary(dehydratedDevice.deviceData, JSONDictionary[@"device_data"]);
     return dehydratedDevice;
 }
 
@@ -2193,8 +2193,8 @@ NSString *const kMXPushRuleScopeStringGlobal = @"global";
 + (instancetype)modelFromJSON:(NSDictionary *)JSONDictionary
 {
     MXDehydratedDeviceEventsResponse *dehydratedDevice = [[MXDehydratedDeviceEventsResponse alloc] init];
-    dehydratedDevice.events = JSONDictionary[@"events"];
-    dehydratedDevice.nextBatch = JSONDictionary[@"next_batch"];
+    MXJSONModelSetArray(dehydratedDevice.events, JSONDictionary[@"events"]);
+    MXJSONModelSetString(dehydratedDevice.nextBatch, JSONDictionary[@"next_batch"]);
     return dehydratedDevice;
 }
 

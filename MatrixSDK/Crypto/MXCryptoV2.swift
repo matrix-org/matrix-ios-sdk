@@ -144,8 +144,8 @@ class MXCryptoV2: NSObject, MXCrypto {
         )
         
         dehydrationService = DehydrationService(restClient: restClient,
-                                                  secretStorage: secretStorage,
-                                                  dehydratedDevices: machine.dehydratedDevices())
+                                                secretStorage: secretStorage,
+                                                dehydratedDevices: machine.dehydratedDevices())
         
         log.debug("Initialized Crypto module")
     }

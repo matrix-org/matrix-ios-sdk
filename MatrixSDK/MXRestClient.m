@@ -4999,7 +4999,7 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
                                  success:^(NSDictionary *JSONResponse) {
         __block NSString *deviceId;
         [self dispatchProcessing:^{
-            deviceId = JSONResponse[@"device_id"];
+            MXJSONModelSetString(deviceId, JSONResponse[@"device_id"])
         } andCompletion:^{
             success(deviceId);
         }];

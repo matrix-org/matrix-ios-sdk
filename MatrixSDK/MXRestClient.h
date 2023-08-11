@@ -2518,16 +2518,43 @@ Note: Clients should consider avoiding this endpoint for URLs posted in encrypte
 
 #pragma mark - Device Dehydration
 
+/**
+ Creates a new dehydrated device on the current user's account with the given parameters, coming out of the RustCryptoSDK
+ @param parameters the device data as received from the RustCryptoSDK
+ @param success A block object called when the operation succeeds. It provides the ID of the newly dehydrated device.
+ @param failure A block object called when the operation fails.
+ @return a MXHTTPOperation instance.
+ */
 - (MXHTTPOperation*)createDehydratedDevice:(MXDehydratedDeviceCreationParameters *)parameters
                                    success:(void (^)(NSString * _Nonnull deviceId))success
                                    failure:(void (^)(NSError * _Nonnull error))failure;
 
+/**
+ Get the dehydrated device of the current account.
+ @param success A block object called when the operation succeeds. It provides a `MXDehydratedDeviceResponse` instance of the current account.
+ @param failure A block object called when the operation fails.
+ @return a MXHTTPOperation instance.
+  */
 - (MXHTTPOperation*)retrieveDehydratedDeviceWithSuccess:(void (^)(MXDehydratedDeviceResponse * _Nonnull dehydratedDevice))success
                                                 failure:(void (^)(NSError * _Nonnull error))failure;
 
+/**
+ Delete the current dehydrated device
+ @param success A block object called when the operation succeeds
+ @param failure A block object called when the operation fails.
+ @return a MXHTTPOperation instance.
+  */
 - (MXHTTPOperation*)deleteDehydratedDeviceWithSuccess:(void (^)(void))success
                                               failure:(void (^)(NSError * _Nonnull error))failure;
 
+/**
+ Retrieves the to device events stored on the backend for the given dehydrated device. Results are batched so multiple invocations might be necessary
+ @param deviceId The dehydrated device id in question
+ @param nextBatch Pagination token for retrieving more events
+ @param success A block object called when the operation succeeds. It provides the events and a next batch token
+ @param failure A block object called when the operation fails.
+ @return a MXHTTPOperation instance.
+  */
 - (MXHTTPOperation*)retrieveDehydratedDeviceEventsForDeviceId:(NSString *)deviceId
                                                     nextBatch:(NSString *)nextBatch
                                                       success:(void (^)(MXDehydratedDeviceEventsResponse * _Nonnull dehydratedDeviceEventsResponse))success

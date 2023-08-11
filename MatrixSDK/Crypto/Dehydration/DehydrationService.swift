@@ -77,7 +77,7 @@ public class DehydrationService: NSObject {
                 // And attempt to delete the dehydrated device but ignore failures
                 try? await deleteDehydratedDevice(deviceId: deviceId)
             case .failure(let error):
-                // If not dehydrated devices are available just continue and create a new one
+                // If no dehydrated devices are available just continue and create a new one
                 if case .noDehydratedDeviceAvailable = error {
                     break
                 } else {
@@ -152,7 +152,9 @@ public class DehydrationService: NSObject {
     
     private func rehydrateDevice(pickleKeyData: [UInt8]) async -> Result<(deviceId: String, rehydratedDevice: RehydratedDeviceProtocol), DehydrationServiceError>  {
         await withCheckedContinuation { continuation in
-            self.restClient.retrieveDehydratedDevice { dehydratedDevice in
+            self.restClient.retrieveDehydratedDevice { [weak self] dehydratedDevice in
+                guard let self else { return }
+                
                 MXLog.info("Successfully retrieved dehydrated device with id: \(dehydratedDevice.deviceId)")
                                 
                 guard let deviceDataJSON = MXTools.serialiseJSONObject(dehydratedDevice.deviceData) else {
