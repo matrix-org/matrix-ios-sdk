@@ -334,7 +334,8 @@ class MXCryptoV2: NSObject, MXCrypto {
                     toDevice: syncResponse.toDevice,
                     deviceLists: syncResponse.deviceLists,
                     deviceOneTimeKeysCounts: syncResponse.deviceOneTimeKeysCount ?? [:],
-                    unusedFallbackKeys: syncResponse.unusedFallbackKeys
+                    unusedFallbackKeys: syncResponse.unusedFallbackKeys,
+                    nextBatchToken: syncResponse.nextBatch
                 )
                 await handle(toDeviceEvents: toDevice.events)
             } catch {

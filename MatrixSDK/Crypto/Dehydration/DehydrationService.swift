@@ -134,7 +134,7 @@ public class DehydrationService: NSObject {
     private func dehydrateDevice(pickleKeyData: [UInt8]) async throws {
         let dehydratedDevice = dehydratedDevices.create()
 
-        let requestDetails = dehydratedDevice.keysForUpload(deviceDisplayName: deviceDisplayName, pickleKey: [UInt8](pickleKeyData))
+        let requestDetails = try dehydratedDevice.keysForUpload(deviceDisplayName: deviceDisplayName, pickleKey: [UInt8](pickleKeyData))
         
         let parameters = MXDehydratedDeviceCreationParameters()
         parameters.body = requestDetails.body
@@ -160,9 +160,12 @@ public class DehydrationService: NSObject {
                     return
                 }
                 
-                let rehydratedDevice = self.dehydratedDevices.rehydrate(pickleKey: [UInt8](pickleKeyData), deviceId: dehydratedDevice.deviceId, deviceData: deviceDataJSON)
-                
-                continuation.resume(returning: .success((dehydratedDevice.deviceId, rehydratedDevice)))
+                do {
+                    let rehydratedDevice = try self.dehydratedDevices.rehydrate(pickleKey: [UInt8](pickleKeyData), deviceId: dehydratedDevice.deviceId, deviceData: deviceDataJSON)
+                    continuation.resume(returning: .success((dehydratedDevice.deviceId, rehydratedDevice)))
+                } catch {
+                    continuation.resume(returning: .failure(DehydrationServiceError.failedRehydration(error)))
+                }
             } failure: { error in
                 MXLog.error("Failed retrieving dehidrated device", context: error)
                 if let mxError = MXError(nsError: error),
@@ -194,7 +197,7 @@ public class DehydrationService: NSObject {
         
         repeat {
             let response = try await retrieveToDeviceEvents(deviceId: deviceId, nextBatch: dehydratedDeviceEventsResponse?.nextBatch)
-            rehydratedDevice.receiveEvents(events: MXTools.serialiseJSONObject(response.events))
+            try rehydratedDevice.receiveEvents(events: MXTools.serialiseJSONObject(response.events))
             dehydratedDeviceEventsResponse = response
             
         } while !(dehydratedDeviceEventsResponse?.events.isEmpty ?? true)

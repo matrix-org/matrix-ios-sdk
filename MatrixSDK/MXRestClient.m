@@ -5056,7 +5056,7 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
     
     MXWeakify(self);
     return [httpClient requestWithMethod:@"POST"
-                                    path:[NSString stringWithFormat:@"%@/%@/org.matrix.msc3814.v1/dehydrated_device/%@/events", credentials.homeServer, kMXAPIPrefixPathUnstable, deviceId]
+                                    path:[NSString stringWithFormat:@"%@/%@/org.matrix.msc3814.v1/dehydrated_device/%@/events", credentials.homeServer, kMXAPIPrefixPathUnstable, [MXTools encodeURIComponent:deviceId]]
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
         __block MXDehydratedDeviceEventsResponse *dehydratedDeviceEventsResponse;

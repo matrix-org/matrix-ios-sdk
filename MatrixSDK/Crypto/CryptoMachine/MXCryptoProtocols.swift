@@ -35,7 +35,8 @@ protocol MXCryptoSyncing: MXCryptoIdentity {
         toDevice: MXToDeviceSyncResponse?,
         deviceLists: MXDeviceListResponse?,
         deviceOneTimeKeysCounts: [String: NSNumber],
-        unusedFallbackKeys: [String]?
+        unusedFallbackKeys: [String]?,
+        nextBatchToken: String
     ) throws -> MXToDeviceSyncResponse
     
     func processOutgoingRequests() async throws
