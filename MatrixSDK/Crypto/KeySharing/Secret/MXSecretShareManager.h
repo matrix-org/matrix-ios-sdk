@@ -31,7 +31,7 @@ extern const struct MXSecretId {
     __unsafe_unretained NSString *crossSigningSelfSigning;
     __unsafe_unretained NSString *crossSigningUserSigning;
     __unsafe_unretained NSString *keyBackup;
-
+    __unsafe_unretained NSString *dehydratedDevice;
 } MXSecretId;
 
 

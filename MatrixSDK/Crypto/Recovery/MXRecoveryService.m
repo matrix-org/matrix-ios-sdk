@@ -58,8 +58,10 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
                               MXSecretId.crossSigningSelfSigning,
                               MXSecretId.crossSigningUserSigning,
                               MXSecretId.keyBackup,
+                              MXSecretId.dehydratedDevice
                               ];
     }
+    
     return self;
 }
 
@@ -689,7 +691,6 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
         }
     });
 }
-
 
 - (void)recoverKeyBackupWithSuccess:(void (^)(void))success
                             failure:(void (^)(NSError *error))failure

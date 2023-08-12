@@ -187,7 +187,8 @@ extension MXCryptoMachine: MXCryptoSyncing {
         toDevice: MXToDeviceSyncResponse?,
         deviceLists: MXDeviceListResponse?,
         deviceOneTimeKeysCounts: [String: NSNumber],
-        unusedFallbackKeys: [String]?
+        unusedFallbackKeys: [String]?,
+        nextBatchToken: String
     ) throws -> MXToDeviceSyncResponse {
         let events = toDevice?.jsonString() ?? "[]"
         let deviceChanges = DeviceLists(
@@ -200,7 +201,8 @@ extension MXCryptoMachine: MXCryptoSyncing {
             events: events,
             deviceChanges: deviceChanges,
             keyCounts: keyCounts,
-            unusedFallbackKeys: unusedFallbackKeys
+            unusedFallbackKeys: unusedFallbackKeys,
+            nextBatchToken: nextBatchToken
         )
         
         var deserialisedToDeviceEvents = [Any]()
@@ -366,6 +368,10 @@ extension MXCryptoMachine: MXCryptoDevicesSource {
             log.error("Cannot fetch device", context: error)
             return nil
         }
+    }
+    
+    func dehydratedDevices() -> DehydratedDevicesProtocol {
+        machine.dehydratedDevices()
     }
 }
 
