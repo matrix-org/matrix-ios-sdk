@@ -111,7 +111,8 @@
         }
         
         finalLocationDictionary = @{
-            kMXMessageGeoURIKey: geoURIString
+            // The parsing logic inside `[MXLocation modelFromJSON:]` expects the geo URI to be at "uri" and not at "geo_uri"
+            kMXMessageContentKeyExtensibleLocationURI: geoURIString
         };
     }
     else

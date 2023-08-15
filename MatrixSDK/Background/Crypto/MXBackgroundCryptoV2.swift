@@ -53,7 +53,8 @@ class MXBackgroundCryptoV2: MXBackgroundCrypto {
                 toDevice: syncResponse.toDevice,
                 deviceLists: syncResponse.deviceLists,
                 deviceOneTimeKeysCounts: syncResponse.deviceOneTimeKeysCount ?? [:],
-                unusedFallbackKeys: syncResponse.unusedFallbackKeys
+                unusedFallbackKeys: syncResponse.unusedFallbackKeys,
+                nextBatchToken: syncResponse.nextBatch
             )
         } catch {
             log.error("Failed handling sync response", context: error)

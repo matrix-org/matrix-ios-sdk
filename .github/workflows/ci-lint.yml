@@ -12,7 +12,7 @@ on:
 jobs:
   lint:
     name: pod lib lint
-    runs-on: macos-11
+    runs-on: macos-13
 
     concurrency:
       # When running on develop, use the sha to allow all runs of this workflow to run concurrently.

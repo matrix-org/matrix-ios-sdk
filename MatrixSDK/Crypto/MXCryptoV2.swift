@@ -60,6 +60,7 @@ class MXCryptoV2: NSObject, MXCrypto {
     let keyVerificationManager: MXKeyVerificationManager
     let crossSigning: MXCrossSigning
     let recoveryService: MXRecoveryService
+    let dehydrationService: DehydrationService
     
     @MainActor
     init(
@@ -124,14 +125,13 @@ class MXCryptoV2: NSObject, MXCrypto {
         )
         crossSigning = crossSign
         
+        let secretStorage = MXSecretStorage(matrixSession: session, processingQueue: legacyQueue)
+        
         recoveryService = MXRecoveryService(
             dependencies: .init(
                 credentials: restClient.credentials,
                 backup: backup,
-                secretStorage: MXSecretStorage(
-                    matrixSession: session,
-                    processingQueue: legacyQueue
-                ),
+                secretStorage: secretStorage,
                 secretStore: MXCryptoSecretStoreV2(
                     backup: backup,
                     backupEngine: backupEngine,
@@ -142,6 +142,10 @@ class MXCryptoV2: NSObject, MXCrypto {
             ),
             delegate: crossSign
         )
+        
+        dehydrationService = DehydrationService(restClient: restClient,
+                                                secretStorage: secretStorage,
+                                                dehydratedDevices: machine.dehydratedDevices())
         
         log.debug("Initialized Crypto module")
     }
@@ -330,7 +334,8 @@ class MXCryptoV2: NSObject, MXCrypto {
                     toDevice: syncResponse.toDevice,
                     deviceLists: syncResponse.deviceLists,
                     deviceOneTimeKeysCounts: syncResponse.deviceOneTimeKeysCount ?? [:],
-                    unusedFallbackKeys: syncResponse.unusedFallbackKeys
+                    unusedFallbackKeys: syncResponse.unusedFallbackKeys,
+                    nextBatchToken: syncResponse.nextBatch
                 )
                 await handle(toDeviceEvents: toDevice.events)
             } catch {

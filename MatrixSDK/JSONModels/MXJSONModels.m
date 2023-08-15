@@ -2165,62 +2165,37 @@ NSString *const kMXPushRuleScopeStringGlobal = @"global";
 
 @end
 
-#pragma mark - Dehydration
+#pragma mark - Device Dehydration
 
-@implementation MXDehydratedDevice
-
-+ (id)modelFromJSON:(NSDictionary *)JSONDictionary
-{
-    MXDehydratedDevice *device = [[MXDehydratedDevice alloc] init];
-    if (device)
-    {
-        MXJSONModelSetString(device.deviceId, JSONDictionary[@"device_id"]);
-        NSDictionary *deviceData = nil;
-        MXJSONModelSetDictionary(deviceData, JSONDictionary[@"device_data"]);
-        MXJSONModelSetString(device.account, deviceData[@"account"]);
-        MXJSONModelSetString(device.algorithm, deviceData[@"algorithm"]);
-        MXJSONModelSetString(device.passphrase, deviceData[@"passphrase"]);
-    }
-    
-    return device;
-}
-
-- (instancetype)initWithCoder:(NSCoder *)aDecoder
-{
-    self = [super init];
-    if (self)
-    {
-        _deviceId = [aDecoder decodeObjectForKey:@"device_id"];
-        _account = [aDecoder decodeObjectForKey:@"account"];
-        _algorithm = [aDecoder decodeObjectForKey:@"algorithm"];
-        _passphrase = [aDecoder decodeObjectForKey:@"passphrase"];
-    }
-    return self;
-}
-
-- (void)encodeWithCoder:(NSCoder *)aCoder
-{
-    [aCoder encodeObject:_deviceId forKey:@"device_id"];
-    [aCoder encodeObject:_account forKey:@"account"];
-    [aCoder encodeObject:_algorithm forKey:@"algorithm"];
-    if (_passphrase)
-    {
-        [aCoder encodeObject:_passphrase forKey:@"passphrase"];
-    }
-}
+@implementation MXDehydratedDeviceCreationParameters : MXJSONModel
 
 - (NSDictionary *)JSONDictionary
 {
-    NSMutableDictionary *dictionary = [[NSMutableDictionary alloc] initWithDictionary:@{
-        @"algorithm": self.algorithm,
-        @"account": self.account
-    }];
-    
-    if (self.passphrase)
-    {
-        dictionary[@"passphrase"] = self.passphrase;
-    }
-    return dictionary.copy;
+    return [MXTools deserialiseJSONString:self.body];
+}
+
+@end
+
+@implementation MXDehydratedDeviceResponse
+
++ (instancetype)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXDehydratedDeviceResponse *dehydratedDevice = [[MXDehydratedDeviceResponse alloc] init];
+    MXJSONModelSetString(dehydratedDevice.deviceId, JSONDictionary[@"device_id"]);
+    MXJSONModelSetDictionary(dehydratedDevice.deviceData, JSONDictionary[@"device_data"]);
+    return dehydratedDevice;
+}
+
+@end
+
+@implementation MXDehydratedDeviceEventsResponse
+
++ (instancetype)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXDehydratedDeviceEventsResponse *dehydratedDevice = [[MXDehydratedDeviceEventsResponse alloc] init];
+    MXJSONModelSetArray(dehydratedDevice.events, JSONDictionary[@"events"]);
+    MXJSONModelSetString(dehydratedDevice.nextBatch, JSONDictionary[@"next_batch"]);
+    return dehydratedDevice;
 }
 
 @end

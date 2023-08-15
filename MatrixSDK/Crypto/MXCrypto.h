@@ -40,6 +40,7 @@
 
 @class MXSession;
 @class MXRoom;
+@class DehydrationService;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -113,6 +114,8 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
  Service to manage backup of private keys on the homeserver.
  */
 @property (nonatomic, readonly) MXRecoveryService *recoveryService;
+
+@property (nonatomic, readonly) DehydrationService *dehydrationService;
 
 #pragma mark - Crypto start / close
 
