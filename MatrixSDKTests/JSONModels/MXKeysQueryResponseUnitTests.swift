@@ -51,15 +51,15 @@ class MXKeysQueryResponseUnitTests: XCTestCase {
                         usage: ["master"],
                         keys: "\(userId)-MSK"
                     ).jsonString(),
-                    selfSigningKey: MXCrossSigningKey(
-                        userId: userId,
-                        usage: ["self_signing"],
-                        keys: "\(userId)-SSK"
-                    ).jsonString(),
                     userSigningKey: MXCrossSigningKey(
                         userId: userId,
                         usage: ["user_signing"],
                         keys: "\(userId)-USK"
+                    ).jsonString(),
+                    selfSigningKey: MXCrossSigningKey(
+                        userId: userId,
+                        usage: ["self_signing"],
+                        keys: "\(userId)-SSK"
                     ).jsonString()
                 ),
                 isVerified: true

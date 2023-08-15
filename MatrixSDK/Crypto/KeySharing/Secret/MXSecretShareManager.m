@@ -30,7 +30,8 @@ const struct MXSecretId MXSecretId = {
     .crossSigningMaster = @"m.cross_signing.master",
     .crossSigningSelfSigning = @"m.cross_signing.self_signing",
     .crossSigningUserSigning = @"m.cross_signing.user_signing",
-    .keyBackup = @"m.megolm_backup.v1"
+    .keyBackup = @"m.megolm_backup.v1",
+    .dehydratedDevice = @"org.matrix.msc3814" // @"m.dehydrated_device"
 };
 
 

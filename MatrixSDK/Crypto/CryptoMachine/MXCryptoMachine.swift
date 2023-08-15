@@ -187,7 +187,8 @@ extension MXCryptoMachine: MXCryptoSyncing {
         toDevice: MXToDeviceSyncResponse?,
         deviceLists: MXDeviceListResponse?,
         deviceOneTimeKeysCounts: [String: NSNumber],
-        unusedFallbackKeys: [String]?
+        unusedFallbackKeys: [String]?,
+        nextBatchToken: String
     ) throws -> MXToDeviceSyncResponse {
         let events = toDevice?.jsonString() ?? "[]"
         let deviceChanges = DeviceLists(
@@ -200,20 +201,30 @@ extension MXCryptoMachine: MXCryptoSyncing {
             events: events,
             deviceChanges: deviceChanges,
             keyCounts: keyCounts,
-            unusedFallbackKeys: unusedFallbackKeys
+            unusedFallbackKeys: unusedFallbackKeys,
+            nextBatchToken: nextBatchToken
         )
         
-        guard
-            let json = MXTools.deserialiseJSONString(result) as? [Any],
-            let toDevice = MXToDeviceSyncResponse(fromJSON: ["events": json])
-        else {
+        var deserialisedToDeviceEvents = [Any]()
+        for toDeviceEvent in result.toDeviceEvents {
+            guard let deserialisedToDeviceEvent = MXTools.deserialiseJSONString(toDeviceEvent) else {
+                log.failure("Failed deserialising to device event", context: [
+                    "result": result
+                ])
+                return MXToDeviceSyncResponse()
+            }
+            
+            deserialisedToDeviceEvents.append(deserialisedToDeviceEvent)
+        }
+        
+        guard let toDeviceSyncResponse = MXToDeviceSyncResponse(fromJSON: ["events": deserialisedToDeviceEvents]) else {
             log.failure("Result cannot be serialized", context: [
                 "result": result
             ])
             return MXToDeviceSyncResponse()
         }
         
-        return toDevice
+        return toDeviceSyncResponse
     }
     
     func downloadKeysIfNecessary(users: [String]) async throws {
@@ -308,7 +319,7 @@ extension MXCryptoMachine: MXCryptoSyncing {
     }
     
     private func markRequestAsSent(requestId: String, requestType: RequestType, response: String? = nil) throws {
-        try self.machine.markRequestAsSent(requestId: requestId, requestType: requestType, response: response ?? "")
+        try self.machine.markRequestAsSent(requestId: requestId, requestType: requestType, responseBody: response ?? "")
     }
     
     private func handleOutgoingRequests() async throws {
@@ -357,6 +368,10 @@ extension MXCryptoMachine: MXCryptoDevicesSource {
             log.error("Cannot fetch device", context: error)
             return nil
         }
+    }
+    
+    func dehydratedDevices() -> DehydratedDevicesProtocol {
+        machine.dehydratedDevices()
     }
 }
 
@@ -583,7 +598,12 @@ extension MXCryptoMachine: MXCryptoCrossSigning {
     }
     
     func exportCrossSigningKeys() -> CrossSigningKeyExport? {
-        machine.exportCrossSigningKeys()
+        do {
+            return try machine.exportCrossSigningKeys()
+        } catch {
+            log.error("Failed exporting cross signing keys", context: error)
+            return nil
+        }
     }
     
     func importCrossSigningKeys(export: CrossSigningKeyExport) {
@@ -784,7 +804,7 @@ extension MXCryptoMachine: MXCryptoBackup {
         }
         
         do {
-            let verification = try machine.verifyBackup(authData: string)
+            let verification = try machine.verifyBackup(backupInfo: string)
             return verification.trusted
         } catch {
             log.error("Failed verifying backup", context: error)

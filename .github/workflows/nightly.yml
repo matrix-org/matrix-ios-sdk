@@ -10,7 +10,7 @@ jobs:
 
   unit-tests:
     name: Unit Tests with sanitizer checks
-    runs-on: macos-11
+    runs-on: macos-13
 
     steps:
       - uses: actions/checkout@v2
