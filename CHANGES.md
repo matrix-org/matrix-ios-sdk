@@ -1,3 +1,10 @@
+## Changes in 0.27.0 (2023-08-15)
+
+🐛 Bugfixes
+
+- Fix parsing logic for legacy location events ([#1801](https://github.com/matrix-org/matrix-ios-sdk/pull/1801))
+
+
 ## Changes in 0.26.12 (2023-06-21)
 
 🐛 Bugfixes
