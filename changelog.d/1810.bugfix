@@ -1,0 +1,1 @@
+Prevent keyed archiver encoding crashes when writing read receipts to the file store
