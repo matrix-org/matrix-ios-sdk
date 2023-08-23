@@ -31,6 +31,7 @@ extern NSString *const MXLoginSSOFlowIdentityProvidersKey;
  List of all SSO Identity Providers supported
  */
 @property (nonatomic, readonly) NSArray<MXLoginSSOIdentityProvider*> *identityProviders;
+@property (atomic, readonly) BOOL delegatedOIDCCompatibility;
 
 @end
 

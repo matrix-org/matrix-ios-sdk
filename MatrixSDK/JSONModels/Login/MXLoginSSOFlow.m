@@ -17,10 +17,12 @@
 #import "MXLoginSSOFlow.h"
 
 NSString *const MXLoginSSOFlowIdentityProvidersKey = @"identity_providers";
+NSString *const MXLoginSSOFlowDelegatedOIDCCompatibilityKey = @"org.matrix.msc3824.delegated_oidc_compatibility";
 
 @interface MXLoginSSOFlow()
 
 @property (nonatomic, readwrite) NSArray<MXLoginSSOIdentityProvider*> *identityProviders;
+@property (atomic, readwrite) BOOL delegatedOIDCCompatibility;
 
 @end
 
@@ -50,6 +52,7 @@ NSString *const MXLoginSSOFlowIdentityProvidersKey = @"identity_providers";
         
         loginFlow.identityProviders = identityProviders;
         
+        MXJSONModelSetBoolean(loginFlow.delegatedOIDCCompatibility, JSONDictionary[MXLoginSSOFlowDelegatedOIDCCompatibilityKey]);
     }
     
     return loginFlow;
