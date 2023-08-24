@@ -744,6 +744,10 @@
 		A0A2397A295202930001F722 /* MXAggregatedPollsUpdater.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0A23978295202930001F722 /* MXAggregatedPollsUpdater.swift */; };
 		A0B1217F295306F700E704C2 /* MXAggregatedPollsUpdaterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0B1217E295306F700E704C2 /* MXAggregatedPollsUpdaterTests.swift */; };
 		A0B12180295306F700E704C2 /* MXAggregatedPollsUpdaterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0B1217E295306F700E704C2 /* MXAggregatedPollsUpdaterTests.swift */; };
+		A75CAD692A9796DE00F06072 /* MXWellKnownAuthentication.m in Sources */ = {isa = PBXBuildFile; fileRef = A75CAD682A9796DE00F06072 /* MXWellKnownAuthentication.m */; };
+		A75CAD6A2A9796DE00F06072 /* MXWellKnownAuthentication.m in Sources */ = {isa = PBXBuildFile; fileRef = A75CAD682A9796DE00F06072 /* MXWellKnownAuthentication.m */; };
+		A75CAD6C2A979AC500F06072 /* MXWellKnownAuthentication.h in Headers */ = {isa = PBXBuildFile; fileRef = A75CAD6B2A97970500F06072 /* MXWellKnownAuthentication.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A75CAD6D2A979AC600F06072 /* MXWellKnownAuthentication.h in Headers */ = {isa = PBXBuildFile; fileRef = A75CAD6B2A97970500F06072 /* MXWellKnownAuthentication.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		A780624E27B2CE74005780C0 /* FileManager+Backup.swift in Sources */ = {isa = PBXBuildFile; fileRef = A780624C27B2CE74005780C0 /* FileManager+Backup.swift */; };
 		A780624F27B2CE74005780C0 /* FileManager+Backup.swift in Sources */ = {isa = PBXBuildFile; fileRef = A780624C27B2CE74005780C0 /* FileManager+Backup.swift */; };
 		A780625027B2CE74005780C0 /* FileManager+AppGroupContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A780624D27B2CE74005780C0 /* FileManager+AppGroupContainer.swift */; };
@@ -2705,6 +2709,8 @@
 		9274AFE71EE580240009BEB6 /* MXCallKitAdapter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXCallKitAdapter.m; sourceTree = "<group>"; };
 		A0A23978295202930001F722 /* MXAggregatedPollsUpdater.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXAggregatedPollsUpdater.swift; sourceTree = "<group>"; };
 		A0B1217E295306F700E704C2 /* MXAggregatedPollsUpdaterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXAggregatedPollsUpdaterTests.swift; sourceTree = "<group>"; };
+		A75CAD682A9796DE00F06072 /* MXWellKnownAuthentication.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXWellKnownAuthentication.m; sourceTree = "<group>"; };
+		A75CAD6B2A97970500F06072 /* MXWellKnownAuthentication.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXWellKnownAuthentication.h; sourceTree = "<group>"; };
 		A780624C27B2CE74005780C0 /* FileManager+Backup.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "FileManager+Backup.swift"; sourceTree = "<group>"; };
 		A780624D27B2CE74005780C0 /* FileManager+AppGroupContainer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "FileManager+AppGroupContainer.swift"; sourceTree = "<group>"; };
 		A816247B25F60C7700A46F05 /* MXDeviceListOperationsPoolUnitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXDeviceListOperationsPoolUnitTests.swift; sourceTree = "<group>"; };
@@ -3608,6 +3614,8 @@
 				32CF439C2371AF9500907C56 /* MXWellknownIntegrations.m */,
 				180F858227A2AF3000F4E5A5 /* MXWellKnownTileServerConfig.h */,
 				180F858327A2AF3000F4E5A5 /* MXWellKnownTileServerConfig.m */,
+				A75CAD682A9796DE00F06072 /* MXWellKnownAuthentication.m */,
+				A75CAD6B2A97970500F06072 /* MXWellKnownAuthentication.h */,
 			);
 			path = AutoDiscovery;
 			sourceTree = "<group>";
@@ -6152,6 +6160,7 @@
 				3287164F23C4C11F00D720CA /* MXKeyVerificationManager_Private.h in Headers */,
 				32F634AB1FC5E3480054EF49 /* MXEventDecryptionResult.h in Headers */,
 				32999DE322DCD1AD004FF987 /* MXPusherData.h in Headers */,
+				A75CAD6C2A979AC500F06072 /* MXWellKnownAuthentication.h in Headers */,
 				3284A5A01DB7C00600A09972 /* MXCryptoStore.h in Headers */,
 				32442FB121EDD21300D2411B /* MXKeyBackupPassword.h in Headers */,
 				3259CD531DF860C300186944 /* MXRealmCryptoStore.h in Headers */,
@@ -6518,6 +6527,7 @@
 				EC8A53DD25B1BCC6004E0802 /* MXThirdPartyProtocol.h in Headers */,
 				ECF29BDF264195320053E6D6 /* MXAssertedIdentityModel.h in Headers */,
 				B14EF31A2397E90400758AF0 /* MXScanRealmProvider.h in Headers */,
+				A75CAD6D2A979AC600F06072 /* MXWellKnownAuthentication.h in Headers */,
 				32549AFA23F2E2790002576B /* MXKeyVerificationReady.h in Headers */,
 				B14EF31B2397E90400758AF0 /* MXEventUnsignedData.h in Headers */,
 				B14EF31C2397E90400758AF0 /* MXEventEditsListener.h in Headers */,
@@ -7191,6 +7201,7 @@
 				A780625027B2CE74005780C0 /* FileManager+AppGroupContainer.swift in Sources */,
 				9274AFE91EE580240009BEB6 /* MXCallKitAdapter.m in Sources */,
 				3274538C23FD918800438328 /* MXKeyVerificationByToDeviceRequest.m in Sources */,
+				A75CAD692A9796DE00F06072 /* MXWellKnownAuthentication.m in Sources */,
 				ED6DAC1828C799E300ECDCB6 /* MXRoomKeyResult.swift in Sources */,
 				ECB6FA952683811800A941E4 /* MXiOSAudioOutputRouter.swift in Sources */,
 				EC131B0A2758D56600712964 /* MXThreadNotificationsCount.swift in Sources */,
@@ -7862,6 +7873,7 @@
 				A780625127B2CE74005780C0 /* FileManager+AppGroupContainer.swift in Sources */,
 				B14EF23B2397E90400758AF0 /* MXKeyBackupData.m in Sources */,
 				B14EF23C2397E90400758AF0 /* MXJSONModels.m in Sources */,
+				A75CAD6A2A9796DE00F06072 /* MXWellKnownAuthentication.m in Sources */,
 				EC8A538E25B1BC77004E0802 /* MXCallSessionDescription.m in Sources */,
 				ED6DAC1928C799E300ECDCB6 /* MXRoomKeyResult.swift in Sources */,
 				EC131B0B2758D56600712964 /* MXThreadNotificationsCount.swift in Sources */,
