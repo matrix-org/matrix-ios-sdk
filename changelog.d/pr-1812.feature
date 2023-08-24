@@ -1,0 +1,1 @@
+Added the authentication property to the well known.
