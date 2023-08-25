@@ -1,0 +1,1 @@
+Function that allows to generate from the well known authentication, a logout mas URL given the device ID.
