@@ -45,21 +45,18 @@ static NSString *const kMXAccount = @"account";
     return wellKnownAuthentication;
 }
 
--(NSURL * _Nullable) getMasLogoutDeviceURLFromDeviceID: (NSString * ) deviceID
+-(NSURL * _Nullable) getLogoutDeviceURLFromID: (NSString * ) deviceID
 {
-    if (_account)
-    {
-        NSURLComponents *components = [NSURLComponents componentsWithString:_account];
-        components.queryItems = @[
-            [NSURLQueryItem queryItemWithName:@"device_id" value:deviceID],
-            [NSURLQueryItem queryItemWithName:@"action" value:@"session_end"]
-        ];
-        return components.URL;
-    }
-    else
+    if (!_account)
     {
         return nil;
     }
+    NSURLComponents *components = [NSURLComponents componentsWithString:_account];
+    components.queryItems = @[
+        [NSURLQueryItem queryItemWithName:@"device_id" value:deviceID],
+        [NSURLQueryItem queryItemWithName:@"action" value:@"session_end"]
+    ];
+    return components.URL;
 }
 
 
