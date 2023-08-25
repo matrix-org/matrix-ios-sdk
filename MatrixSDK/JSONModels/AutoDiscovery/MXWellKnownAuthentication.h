@@ -33,6 +33,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly) NSString *issuer;
 @property (nonatomic, readonly, nullable) NSString *account;
 
+-(NSURL * _Nullable) getMasLogoutDeviceURLFromDeviceID: (NSString * ) deviceID;
+
 @end
 
 NS_ASSUME_NONNULL_END
