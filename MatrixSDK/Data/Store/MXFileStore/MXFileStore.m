@@ -2209,7 +2209,23 @@ static NSUInteger preloadOptions;
 
                         // Store new data
                         [self checkFolderExistenceForRoom:roomId forBackup:NO];
-                        [NSKeyedArchiver archiveRootObject:receiptsStore toFile:file];
+                        
+                        NSError *error = nil;
+                        NSData *result = [NSKeyedArchiver archivedDataWithRootObject:receiptsStore requiringSecureCoding:false error:&error];
+                        
+                        if (error != nil)
+                        {
+                            MXLogErrorDetails(@"Failed archiving receipts store", error);
+                            continue;
+                        }
+                        
+                        [result writeToURL:[NSURL fileURLWithPath:file] options: NSDataWritingAtomic error: &error];
+                        
+                        if (error != nil)
+                        {
+                            MXLogErrorDetails(@"Failed writing receipts store to file", error);
+                            continue;
+                        }
                     }
                 }
             }

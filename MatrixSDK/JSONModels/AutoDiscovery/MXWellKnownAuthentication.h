@@ -1,5 +1,5 @@
 // 
-// Copyright 2020 The Matrix.org Foundation C.I.C
+// Copyright 2023 The Matrix.org Foundation C.I.C
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,23 +15,25 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "MXJSONModels.h"
-#import "MXLoginSSOIdentityProvider.h"
+
+#import "MXJSONModel.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-extern NSString *const MXLoginSSOFlowIdentityProvidersKey;
-
 /**
- `MXLoginSSOFlow` represents a SSO login or a register flow supported by the home server (See MSC2858 https://github.com/matrix-org/matrix-doc/pull/2858).
+ MSC2965: OIDC Authentication
+ "org.matrix.msc2965.authentication": {
+    "issuer": "https://example.com/",
+    "account": "https://example.com/account"
+ }
  */
-@interface MXLoginSSOFlow : MXLoginFlow
 
-/**
- List of all SSO Identity Providers supported
- */
-@property (nonatomic, readonly) NSArray<MXLoginSSOIdentityProvider*> *identityProviders;
-@property (atomic, readonly) BOOL delegatedOIDCCompatibility;
+@interface MXWellKnownAuthentication : MXJSONModel<NSCoding>
+
+@property (nonatomic, readonly) NSString *issuer;
+@property (nonatomic, readonly, nullable) NSString *account;
+
+-(NSURL * _Nullable) getLogoutDeviceURLFromID: (NSString * ) deviceID;
 
 @end
 

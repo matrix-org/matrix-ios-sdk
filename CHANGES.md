@@ -1,3 +1,18 @@
+## Changes in 0.27.1 (2023-08-29)
+
+✨ Features
+
+- Delegate OIDC compatibility flag added. ([#1811](https://github.com/matrix-org/matrix-ios-sdk/pull/1811))
+- Added the authentication property to the well known. ([#1812](https://github.com/matrix-org/matrix-ios-sdk/pull/1812))
+- Function that allows to generate from the well known authentication, a logout mas URL given the device ID. ([#1813](https://github.com/matrix-org/matrix-ios-sdk/pull/1813))
+
+🐛 Bugfixes
+
+- Fixes power level events force unwrap crash ([#1809](https://github.com/matrix-org/matrix-ios-sdk/pull/1809))
+- Prevent keyed archiver encoding crashes when writing read receipts to the file store ([#1810](https://github.com/vector-im/element-ios/issues/1810))
+- Fix incoming push notifications not triggering sounds ([#7636](https://github.com/vector-im/element-ios/issues/7636))
+
+
 ## Changes in 0.27.0 (2023-08-15)
 
 ✨ Features
