@@ -42,7 +42,9 @@ import Foundation
                 }
             }
             
-            flatRules = tmpRules
+            // vector-im/element-ios/issues/7636
+            // Intentionally disable new backend push rules as they're not handle properly and break notification sounds
+            flatRules = tmpRules.filter { $0.ruleId != ".m.rule.is_user_mention" && $0.ruleId != ".m.rule.is_room_mention" }
         }
     }
     private var flatRules: [MXPushRule] = []
@@ -129,7 +131,9 @@ import Foundation
             var conditionsOk: Bool = true
             var runEquivalent: Bool = false
             
-            guard let kind = MXPushRuleKind(identifier: rule.kind) else { continue }
+            guard let kind = MXPushRuleKind(identifier: rule.kind) else {
+                continue
+            }
             
             switch kind {
             case .override, .underride:

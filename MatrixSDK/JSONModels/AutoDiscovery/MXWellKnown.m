@@ -23,6 +23,8 @@ static NSString *const kMXIntegrationsKey = @"m.integrations";
 static NSString *const kMXTileServerKey = @"m.tile_server";
 static NSString *const kMXTileServerMSC3488Key = @"org.matrix.msc3488.tile_server";
 
+static NSString *const kMXAuthenticationKey = @"org.matrix.msc2965.authentication";
+
 @interface MXWellKnown()
 {
     // The original dictionary to store extented data
@@ -46,6 +48,7 @@ static NSString *const kMXTileServerMSC3488Key = @"org.matrix.msc3488.tile_serve
 
         MXJSONModelSetMXJSONModel(wellknown.identityServer, MXWellKnownBaseConfig, JSONDictionary[kMXIdentityServerKey]);
         MXJSONModelSetMXJSONModel(wellknown.integrations, MXWellknownIntegrations, JSONDictionary[kMXIntegrationsKey]);
+        MXJSONModelSetMXJSONModel(wellknown.authentication, MXWellKnownAuthentication, JSONDictionary[kMXAuthenticationKey])
         
         if (JSONDictionary[kMXTileServerKey])
         {
@@ -84,6 +87,7 @@ static NSString *const kMXTileServerMSC3488Key = @"org.matrix.msc3488.tile_serve
         _identityServer = [aDecoder decodeObjectForKey:kMXIdentityServerKey];
         _integrations = [aDecoder decodeObjectForKey:kMXIntegrationsKey];
         _tileServer = [aDecoder decodeObjectForKey:kMXTileServerKey];
+        _authentication = [aDecoder decodeObjectForKey:kMXAuthenticationKey];
         JSONDictionary = [aDecoder decodeObjectForKey:@"JSONDictionary"];
     }
     return self;
@@ -95,6 +99,7 @@ static NSString *const kMXTileServerMSC3488Key = @"org.matrix.msc3488.tile_serve
     [aCoder encodeObject:_identityServer forKey:kMXIdentityServerKey];
     [aCoder encodeObject:_integrations forKey:kMXIntegrationsKey];
     [aCoder encodeObject:_tileServer forKey:kMXTileServerKey];
+    [aCoder encodeObject:_authentication forKey:kMXAuthenticationKey];
     [aCoder encodeObject:JSONDictionary forKey:@"JSONDictionary"];
 }
 
