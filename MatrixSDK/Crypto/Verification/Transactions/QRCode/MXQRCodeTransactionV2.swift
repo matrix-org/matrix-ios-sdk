@@ -103,7 +103,7 @@ class MXQRCodeTransactionV2: NSObject, MXQRCodeTransaction {
         log.debug("->")
         
         let data = MXQRCodeDataCoder().encode(otherQRCodeData)
-        let string = MXBase64Tools.base64(from: data)
+        let string = MXBase64Tools.unpaddedBase64(from: data)
         guard let result = request.scanQrCode(data: string) else {
             log.failure("Failed scanning QR code")
             return

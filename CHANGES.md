@@ -1,3 +1,10 @@
+## Changes in 0.27.2 (2023-09-12)
+
+🐛 Bugfixes
+
+- Fix | QR code verification failing due to incorrect encoding padding ([#1816](https://github.com/vector-im/element-ios/issues/1816))
+
+
 ## Changes in 0.27.1 (2023-08-29)
 
 ✨ Features
