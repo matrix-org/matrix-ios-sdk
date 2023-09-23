@@ -346,7 +346,11 @@ public class MXSpace: NSObject {
     ///
     /// - Returns: the mimnimum power level required to add a room to this space
     public func minimumPowerLevelForAddingRoom(with powerLevels: MXRoomPowerLevels) -> Int {
-        return powerLevels.events["m.space.child"] as? Int ?? powerLevels.stateDefault
+        guard let events = powerLevels.events else {
+            return powerLevels.stateDefault
+        }
+        
+        return events["m.space.child"] as? Int ?? powerLevels.stateDefault
     }
     
     // MARK: - Private

@@ -156,7 +156,8 @@ class MXCryptoMachineUnitTests: XCTestCase {
             toDevice: nil,
             deviceLists: nil,
             deviceOneTimeKeysCounts: [:],
-            unusedFallbackKeys: nil
+            unusedFallbackKeys: nil,
+            nextBatchToken: ""
         )
         XCTAssertEqual(result.events.count, 0)
     }
@@ -174,7 +175,8 @@ class MXCryptoMachineUnitTests: XCTestCase {
             toDevice: toDevice,
             deviceLists: deviceList,
             deviceOneTimeKeysCounts: [:],
-            unusedFallbackKeys: nil
+            unusedFallbackKeys: nil,
+            nextBatchToken: ""
         )
         XCTAssertEqual(result.events.count, 1)
     }
@@ -204,8 +206,8 @@ class MXCryptoMachineUnitTests: XCTestCase {
         
         XCTAssertEqual(request?.state(), .cancelled(
             cancelInfo: .init(
-                cancelCode: "m.user",
                 reason: "The user cancelled the verification.",
+                cancelCode: "m.user",
                 cancelledByUs: false
             )
         ))

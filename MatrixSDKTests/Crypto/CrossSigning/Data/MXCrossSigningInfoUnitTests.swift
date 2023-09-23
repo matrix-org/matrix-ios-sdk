@@ -37,8 +37,8 @@ class MXCrossSigningInfoUnitTests: XCTestCase {
             userId: "Alice",
             trustsOurOwnDevice: false,
             masterKey: masterKeys.jsonString(),
-            selfSigningKey: selfSigningKeys.jsonString(),
-            userSigningKey: userSigningKeys.jsonString()
+            userSigningKey: userSigningKeys.jsonString(),
+            selfSigningKey: selfSigningKeys.jsonString()
         )
         let userIdentity = MXCryptoUserIdentityWrapper(
             identity: identity,

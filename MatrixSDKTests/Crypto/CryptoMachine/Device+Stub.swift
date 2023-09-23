@@ -40,7 +40,8 @@ extension Device {
             displayName: displayName,
             isBlocked: isBlocked,
             locallyTrusted: locallyTrusted,
-            crossSigningTrusted: crossSigningTrusted
+            crossSigningTrusted: crossSigningTrusted,
+            firstTimeSeenTs: 0
         )
     }
 }
