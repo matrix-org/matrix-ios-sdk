@@ -1020,7 +1020,7 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
         kMXMessageBodyKey: filename,
         @"url": fakeMediaURI,
         @"info": [@{
-            @"mimetype": (mimeType ?: @"application/octet-stream"),
+            @"mimetype": (mimetype ?: @"application/octet-stream"),
             @"w": @(imageSize.width),
             @"h": @(imageSize.height),
             @"size": @(imageData.length)
@@ -1347,7 +1347,7 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
             }
 
             // update metadata with result of converter output
-            msgContent[@"info"][@"mimetype"] = (mimeType ?: @"application/octet-stream");
+            msgContent[@"info"][@"mimetype"] = (mimetype ?: @"application/octet-stream");
             msgContent[@"info"][@"w"] = @(size.width);
             msgContent[@"info"][@"h"] = @(size.height);
             msgContent[@"info"][@"duration"] = @((int)floor(durationInMs));
@@ -1670,7 +1670,7 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
         kMXMessageBodyKey: filename,
         @"url": fakeMediaURI,
         @"info": @{
-                @"mimetype": (mimeType ?: @"application/octet-stream"),
+                @"mimetype": (mimetype ?: @"application/octet-stream"),
                 @"size": @(fileData.length)
         },
         kMXMessageContentKeyExtensibleTextMSC1767: filename,
@@ -1678,7 +1678,7 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
                 kMXMessageContentKeyExtensibleFileSize: @(fileData.length),
                 kMXMessageContentKeyExtensibleFileName: filename,
                 kMXMessageContentKeyExtensibleFileURL: fakeMediaURI,
-                kMXMessageContentKeyExtensibleFileMimeType: (mimeType ?: @"application/octet-stream")
+                kMXMessageContentKeyExtensibleFileMimeType: (mimetype ?: @"application/octet-stream")
         }.mutableCopy}.mutableCopy;
     
     if(additionalTypes.count)
