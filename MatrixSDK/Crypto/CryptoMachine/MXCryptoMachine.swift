@@ -613,6 +613,23 @@ extension MXCryptoMachine: MXCryptoCrossSigning {
             log.error("Failed importing cross signing keys", context: error)
         }
     }
+    
+    func queryMissingSecretsFromOtherSessions() async throws {
+        let has_missing = try machine.queryMissingSecretsFromOtherSessions()
+        
+        if (has_missing) {
+            // Out-of-sync check if there are any secret request to sent out as a result of
+            // the missing secret request
+            for request in try machine.outgoingRequests() {
+                if case .toDevice(_, let eventType, _) = request {
+                    if (eventType == kMXEventTypeStringSecretRequest) {
+                        try await handleRequest(request)
+                    }
+                }
+            }
+        }
+    }
+    
 }
 
 extension MXCryptoMachine: MXCryptoVerifying {

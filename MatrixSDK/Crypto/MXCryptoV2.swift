@@ -387,18 +387,39 @@ class MXCryptoV2: NSObject, MXCrypto {
         case .verified:
             // If we want to set verified status, we will manually verify the device,
             // including uploading relevant signatures
+            try? machine.setLocalTrust(userId: machine.userId, deviceId: deviceId, trust: .verified)
             
-            Task {
-                do {
-                    try await machine.verifyDevice(userId: userId, deviceId: deviceId)
-                    log.debug("Successfully marked device as verified")
-                    await MainActor.run {
-                        success?()
+            if (userId == machine.userId) {
+                if (machine.crossSigningStatus().hasSelfSigning) {
+                    // if we can cross sign, upload a new signature for that device
+                    Task {
+                        do {
+                            // This method will always fail if the device belongs to someone else.
+                            // XXX Should update API? and remove the userId?
+                            try await machine.verifyDevice(userId: userId, deviceId: deviceId)
+                            log.debug("Successfully marked device as verified")
+                            await MainActor.run {
+                                success?()
+                            }
+                        } catch {
+                            log.error("Failed marking device as verified", context: error)
+                            await MainActor.run {
+                                failure?(error)
+                            }
+                        }
                     }
-                } catch {
-                    log.error("Failed marking device as verified", context: error)
-                    await MainActor.run {
-                        failure?(error)
+                } else {
+                    // It's a good time to request secrets
+                    Task {
+                        do {
+                            try await machine.queryMissingSecretsFromOtherSessions()
+                            await MainActor.run {
+                                success?()
+                            }
+                        } catch {
+                            log.error("Failed to query missing secrets", context: error)
+                            failure?(error)
+                        }
                     }
                 }
             }
@@ -409,6 +430,7 @@ class MXCryptoV2: NSObject, MXCrypto {
             do {
                 try machine.setLocalTrust(userId: userId, deviceId: deviceId, trust: localTrust)
                 log.debug("Successfully set local trust to \(localTrust)")
+                // XXX: Why no MainActor.run here?
                 success?()
             } catch {
                 log.error("Failed setting local trust", context: error)
