@@ -615,10 +615,10 @@ extension MXCryptoMachine: MXCryptoCrossSigning {
     }
     
     func queryMissingSecretsFromOtherSessions() async throws {
-        let has_missing = try machine.queryMissingSecretsFromOtherSessions()
+        let isMissingSecrets = try machine.queryMissingSecretsFromOtherSessions()
         
-        if (has_missing) {
-            // Out-of-sync check if there are any secret request to sent out as a result of
+        if (isMissingSecrets) {
+            // Out-of-sync check if there are any secret request to send out as a result of
             // the missing secret request
             for request in try machine.outgoingRequests() {
                 if case .toDevice(_, let eventType, _) = request {

@@ -391,11 +391,9 @@ class MXCryptoV2: NSObject, MXCrypto {
             
             if (userId == machine.userId) {
                 if (machine.crossSigningStatus().hasSelfSigning) {
-                    // if we can cross sign, upload a new signature for that device
+                    // If we can cross sign, upload a new signature for that device
                     Task {
                         do {
-                            // This method will always fail if the device belongs to someone else.
-                            // XXX Should update API? and remove the userId?
                             try await machine.verifyDevice(userId: userId, deviceId: deviceId)
                             log.debug("Successfully marked device as verified")
                             await MainActor.run {
@@ -430,7 +428,6 @@ class MXCryptoV2: NSObject, MXCrypto {
             do {
                 try machine.setLocalTrust(userId: userId, deviceId: deviceId, trust: localTrust)
                 log.debug("Successfully set local trust to \(localTrust)")
-                // XXX: Why no MainActor.run here?
                 success?()
             } catch {
                 log.error("Failed setting local trust", context: error)
