@@ -1,3 +1,14 @@
+## Changes in 0.27.3 (2023-10-04)
+
+🐛 Bugfixes
+
+- Prevent crash when sending file with unrecognised file extension (no associated mime type) (mimetype)
+
+🧱 Build
+
+- Update Cocoapods to 1.13.0. ([#1820](https://github.com/matrix-org/matrix-ios-sdk/pull/1820))
+
+
 ## Changes in 0.27.2 (2023-09-12)
 
 🐛 Bugfixes
