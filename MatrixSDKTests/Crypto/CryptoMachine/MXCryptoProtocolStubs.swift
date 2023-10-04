@@ -163,6 +163,10 @@ class CryptoCrossSigningStub: CryptoIdentityStub, MXCryptoCrossSigning {
     func dehydratedDevices() -> DehydratedDevicesProtocol {
         fatalError()
     }
+    
+    func queryMissingSecretsFromOtherSessions() async throws {
+        
+    }
 }
 
 class CryptoVerificationStub: CryptoIdentityStub {
