@@ -15,7 +15,6 @@ abstract_target 'MatrixSDK' do
     #pod 'OLMKit', :path => '../olm/OLMKit.podspec'
     
     pod 'Realm', '10.27.0'
-    pod 'libbase58', '~> 0.1.4'
     pod 'MatrixSDKCrypto', "0.3.13", :inhibit_warnings => true
     
     target 'MatrixSDK-iOS' do

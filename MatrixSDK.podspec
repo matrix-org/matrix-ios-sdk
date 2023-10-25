@@ -44,7 +44,6 @@ Pod::Spec.new do |s|
       # Requirements for e2e encryption
       ss.dependency 'OLMKit', '~> 3.2.5'
       ss.dependency 'Realm', '10.27.0'
-      ss.dependency 'libbase58', '~> 0.1.4'
       ss.dependency 'MatrixSDKCrypto', '0.3.13', :configurations => ["DEBUG", "RELEASE"], :inhibit_warnings => true
   end
 
