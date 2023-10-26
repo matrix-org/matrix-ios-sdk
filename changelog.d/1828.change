@@ -1,0 +1,1 @@
+Keys backup: Replace libbase58 with native implementation to manage Base58 encoding-decoding. Contributed by Artem Rieznikov.
