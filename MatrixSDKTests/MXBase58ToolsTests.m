@@ -20,21 +20,97 @@
 
 @interface MXBase58ToolsTests : XCTestCase
 
-@property NSArray<NSDictionary *> *kDecodedStringsToBase58EncodedStrings;
-@property NSArray<NSString *> *kInvalidBase58EncodedStrings;
-@property NSArray<NSDictionary *> *kDecodedDataAsHexStringsToBase58EncodedStrings;
-
 @end
 
 @implementation MXBase58ToolsTests
 
-#pragma mark - SetUp (Constants definitions)
+#pragma mark - Tests
 
-- (void)setUp
+- (void)testDataFromBase58WithEncodedStrings
 {
-    [super setUp];
+    NSArray<NSDictionary *> *decodedStringsToBase58EncodedStrings = [self getDecodedStringsToBase58EncodedStrings];
+    for (NSDictionary *dict in decodedStringsToBase58EncodedStrings) {
+        for (NSString *expectedDecodedString in dict) {
+            NSString *sourceEncodedString = dict[expectedDecodedString];
 
-    _kDecodedStringsToBase58EncodedStrings = @[
+            NSData *actualResultDecodedData = [MXBase58Tools dataFromBase58:sourceEncodedString];
+            NSString *actualResultDecodedStrg = [[NSString alloc] initWithData:actualResultDecodedData encoding:NSUTF8StringEncoding];
+
+            XCTAssertEqualObjects(actualResultDecodedStrg, expectedDecodedString);
+        }
+    }
+}
+
+- (void)testDataFromBase58WithInvalidEncodedStrings
+{
+    NSArray<NSString *> *invalidBase58EncodedStrings = [self getInvalidBase58EncodedStrings];
+    for (NSString* invalidBase58EncodedString in invalidBase58EncodedStrings)
+    {
+        NSData *actualResultDecodedData = [MXBase58Tools dataFromBase58:invalidBase58EncodedString];
+        XCTAssertNil(actualResultDecodedData, @"Decoding should return nil for invalid Base64 string: %@", invalidBase58EncodedString);
+    }
+}
+
+- (void)testDataFromBase58WithHexStrings
+{
+    NSArray<NSDictionary *> *decodedDataAsHexStringsToBase58EncodedStrings = [self getDecodedDataAsHexStringsToBase58EncodedStrings];
+    for (NSDictionary *dict in decodedDataAsHexStringsToBase58EncodedStrings) {
+        for (NSString *expectedDecodedDataAsHexString in dict) {
+            NSString *sourceEncodedString = dict[expectedDecodedDataAsHexString];
+
+            NSData *actualResultDecodedData = [MXBase58Tools dataFromBase58:sourceEncodedString];
+            NSString *actualResultDecodedDataAsHexString = [self hexStringFromData:actualResultDecodedData];
+
+            XCTAssertEqualObjects(actualResultDecodedDataAsHexString, expectedDecodedDataAsHexString);
+        }
+    }
+}
+
+- (void)testBase58FromDataWithDecodedStrings
+{
+    NSArray<NSDictionary *> *decodedStringsToBase58EncodedStrings = [self getDecodedStringsToBase58EncodedStrings];
+    for (NSDictionary *dict in decodedStringsToBase58EncodedStrings) {
+        for (NSString *sourceDecodedString in dict) {
+            NSString *expectedEncodedString = dict[sourceDecodedString];
+
+            NSData *sourceDecodedData = [sourceDecodedString dataUsingEncoding:NSUTF8StringEncoding];
+            NSString *actualResultEncodedStrg = [MXBase58Tools base58FromData:sourceDecodedData];
+
+            XCTAssertEqualObjects(actualResultEncodedStrg, expectedEncodedString);
+        }
+    }
+}
+
+- (void)testBase58FromDataWithEmptyData
+{
+    NSData *emptyData = [[NSData alloc] init];
+    NSString *expectedEncodedString = @"";
+
+    NSString *actualResultEncodedStrg = [MXBase58Tools base58FromData:emptyData];
+
+    XCTAssertEqualObjects(actualResultEncodedStrg, expectedEncodedString);
+}
+
+- (void)testEncodeBase58WithHexStrings
+{
+    NSArray<NSDictionary *> *decodedDataAsHexStringsToBase58EncodedStrings = [self getDecodedDataAsHexStringsToBase58EncodedStrings];
+    for (NSDictionary *dict in decodedDataAsHexStringsToBase58EncodedStrings) {
+        for (NSString *sourceDecodedDataAsHexString in dict) {
+            NSString *expectedEncodedString = dict[sourceDecodedDataAsHexString];
+
+            NSData *sourceDecodedData = [self dataFromHexString:sourceDecodedDataAsHexString];
+            NSString *actualResultEncodedStrg = [MXBase58Tools base58FromData:sourceDecodedData];
+
+            XCTAssertEqualObjects(actualResultEncodedStrg, expectedEncodedString);
+        }
+    }
+}
+
+#pragma mark - Helpers with testing data definitions
+
+- (NSArray<NSDictionary *> *)getDecodedStringsToBase58EncodedStrings
+{
+    return @[
         @{@"": @""},
         @{@" ": @"Z"},
         @{@"-": @"n"},
@@ -109,8 +185,11 @@
         @{@"Test string": @"MvqLnZUGUgNbDx2"},
         @{@"Lorem ipsum": @"KxLQv2iZ3oVEumW"}
     ];
+}
 
-    _kInvalidBase58EncodedStrings = @[
+- (NSArray<NSString *> *)getInvalidBase58EncodedStrings
+{
+    return @[
         @"0",
         @"O",
         @"I",
@@ -122,8 +201,11 @@
         @"0OIl",
         @"!@#$%^&*()-_=+~`"
     ];
+}
 
-    _kDecodedDataAsHexStringsToBase58EncodedStrings = @[
+- (NSArray<NSDictionary *> *)getDecodedDataAsHexStringsToBase58EncodedStrings
+{
+    return @[
         @{@"00662ad25db00e7bb38bc04831ae48b4b446d1269817d515b6": @"1AKDDsfTh8uY4X3ppy1m7jw1fVMBSMkzjP"},
         @{@"61": @"2g"},
         @{@"626262": @"a3gV"},
@@ -140,88 +222,6 @@
         @{@"8b01c8e396a0dbfed5e8d647fc19f0a1b334791ffd63069727da0f2cb9e796212f732f": @"EsU2ev6p4pNz1NgfpbDFYpq9K5ygQEd5X1s28Bg5iTGMSRQJ"},
         @{@"8b0177076d0a7318a57d3c16c17251b26645df4c2f87ebc0992ab177fba51db92c2aef": @"EsTcLW2KPGiFwKEA3As5g5c4BXwkqeeJZJV8Q9fugUMNUE4e"}
     ];
-}
-
-- (void)tearDown
-{
-    [super tearDown];
-}
-
-#pragma mark - Tests
-
-- (void)testDataFromBase58WithEncodedStrings
-{
-    for (NSDictionary *dict in _kDecodedStringsToBase58EncodedStrings) {
-        for (NSString *expectedDecodedString in dict) {
-            NSString *sourceEncodedString = dict[expectedDecodedString];
-
-            NSData *actualResultDecodedData = [MXBase58Tools dataFromBase58:sourceEncodedString];
-            NSString *actualResultDecodedStrg = [[NSString alloc] initWithData:actualResultDecodedData encoding:NSUTF8StringEncoding];
-
-            XCTAssertEqualObjects(actualResultDecodedStrg, expectedDecodedString);
-        }
-    }
-}
-
-- (void)testDataFromBase58WithInvalidEncodedStrings
-{
-    for (NSString* invalidBase58EncodedString in _kInvalidBase58EncodedStrings)
-    {
-        NSData *actualResultDecodedData = [MXBase58Tools dataFromBase58:invalidBase58EncodedString];
-        XCTAssertNil(actualResultDecodedData, @"Decoding should return nil for invalid Base64 string: %@", invalidBase58EncodedString);
-    }
-}
-
-- (void)testDataFromBase58WithHexStrings
-{
-    for (NSDictionary *dict in _kDecodedDataAsHexStringsToBase58EncodedStrings) {
-        for (NSString *expectedDecodedDataAsHexString in dict) {
-            NSString *sourceEncodedString = dict[expectedDecodedDataAsHexString];
-
-            NSData *actualResultDecodedData = [MXBase58Tools dataFromBase58:sourceEncodedString];
-            NSString *actualResultDecodedDataAsHexString = [self hexStringFromData:actualResultDecodedData];
-
-            XCTAssertEqualObjects(actualResultDecodedDataAsHexString, expectedDecodedDataAsHexString);
-        }
-    }
-}
-
-- (void)testBase58FromDataWithDecodedStrings
-{
-    for (NSDictionary *dict in _kDecodedStringsToBase58EncodedStrings) {
-        for (NSString *sourceDecodedString in dict) {
-            NSString *expectedEncodedString = dict[sourceDecodedString];
-
-            NSData *sourceDecodedData = [sourceDecodedString dataUsingEncoding:NSUTF8StringEncoding];
-            NSString *actualResultEncodedStrg = [MXBase58Tools base58FromData:sourceDecodedData];
-
-            XCTAssertEqualObjects(actualResultEncodedStrg, expectedEncodedString);
-        }
-    }
-}
-
-- (void)testBase58FromDataWithEmptyData
-{
-    NSData *emptyData = [[NSData alloc] init];
-    NSString *expectedEncodedString = @"";
-
-    NSString *actualResultEncodedStrg = [MXBase58Tools base58FromData:emptyData];
-
-    XCTAssertEqualObjects(actualResultEncodedStrg, expectedEncodedString);
-}
-
-- (void)testEncodeBase58WithHexStrings
-{
-    for (NSDictionary *dict in _kDecodedDataAsHexStringsToBase58EncodedStrings) {
-        for (NSString *sourceDecodedDataAsHexString in dict) {
-            NSString *expectedEncodedString = dict[sourceDecodedDataAsHexString];
-
-            NSData *sourceDecodedData = [self dataFromHexString:sourceDecodedDataAsHexString];
-            NSString *actualResultEncodedStrg = [MXBase58Tools base58FromData:sourceDecodedData];
-
-            XCTAssertEqualObjects(actualResultEncodedStrg, expectedEncodedString);
-        }
-    }
 }
 
 #pragma mark - Helpers
