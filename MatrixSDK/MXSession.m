@@ -71,7 +71,7 @@ NSString *const kMXSessionDidUpdateGroupSummaryNotification = @"kMXSessionDidUpd
 NSString *const kMXSessionDidUpdateGroupRoomsNotification = @"kMXSessionDidUpdateGroupRoomsNotification";
 NSString *const kMXSessionDidUpdateGroupUsersNotification = @"kMXSessionDidUpdateGroupUsersNotification";
 NSString *const kMXSessionDidUpdatePublicisedGroupsForUsersNotification = @"kMXSessionDidUpdatePublicisedGroupsForUsersNotification";
-NSString *const kMXSessionInitialSyncDone = @"kMXSessionInitialSyncDone";
+NSString *const kMXSessionInitialSyncDoneNotification = @"kMXSessionInitialSyncDoneNotification";
 
 NSString *const kMXSessionNotificationRoomIdKey = @"roomId";
 NSString *const kMXSessionNotificationGroupKey = @"group";
@@ -1549,7 +1549,7 @@ typedef void (^MXOnResumeDone)(void);
             
             // Emit `InitialSyncDone` notification to allow client to perform auto-activation
             // of cross-signing as in Android client (see `observeInitialSync` calling `maybeVerifyOrBootstrapCrossSigning`)
-            [NSNotificationCenter.defaultCenter postNotificationName:kMXSessionInitialSyncDone object:nil];
+            [NSNotificationCenter.defaultCenter postNotificationName:kMXSessionInitialSyncDoneNotification object:nil];
         }
         
         // By default, the next sync will be a long polling (with the default server timeout value)
