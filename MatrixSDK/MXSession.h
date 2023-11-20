@@ -302,6 +302,15 @@ FOUNDATION_EXPORT NSString *const kMXSessionDidUpdateGroupUsersNotification;
  */
 FOUNDATION_EXPORT NSString *const kMXSessionDidUpdatePublicisedGroupsForUsersNotification;
 
+/**
+ Posted when MXSession has finished its initial sync.
+ No userInfo passed.
+ 
+`kMXSessionInitialSyncDone` notification will allow client to perform auto-activation
+of cross-signing as in Android client (see `observeInitialSync` calling `maybeVerifyOrBootstrapCrossSigning`)
+ */
+FOUNDATION_EXPORT NSString *const kMXSessionInitialSyncDone;
+
 #pragma mark - Notifications keys
 /**
  The key in notification userInfo dictionary representating the roomId.

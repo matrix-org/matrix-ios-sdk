@@ -1,0 +1,2 @@
+`kMXSessionInitialSyncDone` notification will allow client to perform auto-activation
+of cross-signing as in Android client
