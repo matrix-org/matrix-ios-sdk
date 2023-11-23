@@ -1,0 +1,1 @@
+Fix unhandled callback when the session is nil.
