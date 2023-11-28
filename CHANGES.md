@@ -1,3 +1,10 @@
+## Changes in 0.27.4 (2023-11-28)
+
+🐛 Bugfixes
+
+- Fix unhandled callback when the session is nil. ([#1833](https://github.com/matrix-org/matrix-ios-sdk/pull/1833))
+
+
 ## Changes in 0.27.3 (2023-10-04)
 
 🐛 Bugfixes
