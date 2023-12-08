@@ -2041,7 +2041,15 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
                         success:(void (^)(void))success
                         failure:(void (^)(NSError *error))failure
 {
-    return [mxSession.matrixRestClient redactEvent:eventId inRoom:self.roomId reason:reason success:success failure:failure];
+    BOOL isFeatureWithRelationsStable = mxSession.store.supportedMatrixVersions.supportsRedactionWithRelations;
+    return [mxSession.matrixRestClient redactEvent:eventId
+                                            inRoom:self.roomId
+                                            reason:reason
+                                             txnId:nil
+                                     withRelations:nil
+                             withRelationsIsStable:isFeatureWithRelationsStable
+                                           success:success
+                                           failure:failure];
 }
 
 - (MXHTTPOperation*)redactEvent:(NSString*)eventId
