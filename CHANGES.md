@@ -1,3 +1,14 @@
+## Changes in 0.27.5 (2024-01-09)
+
+🐛 Bugfixes
+
+- Update regex for email address to be aligned email format in RFC 5322 ([#1826](https://github.com/matrix-org/matrix-ios-sdk/pull/1826))
+
+🧱 Build
+
+- Update CocoaPods and other gems. ([#1835](https://github.com/matrix-org/matrix-ios-sdk/pull/1835))
+
+
 ## Changes in 0.27.4 (2023-11-28)
 
 🐛 Bugfixes
