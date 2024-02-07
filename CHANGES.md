@@ -1,3 +1,8 @@
+## Changes in 0.27.6 (2024-02-07)
+
+No significant changes.
+
+
 ## Changes in 0.27.5 (2024-01-09)
 
 🐛 Bugfixes
