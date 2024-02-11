@@ -534,13 +534,13 @@ FOUNDATION_EXPORT NSString *const kMXPresenceOffline;
 @end
 
 /**
- `MXLoginToken` represents the response of a /login/token creation request
+ `MXLoginToken` represents the response of a /login/get_token creation request
  */
 @interface MXLoginToken : MXJSONModel
 
 @property (nonatomic) NSString *token;
 
-@property (nonatomic) uint64_t expiresIn;
+@property (nonatomic) uint64_t expiresInMs;
 
 @end
 
