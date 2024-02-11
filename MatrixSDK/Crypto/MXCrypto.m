@@ -2804,6 +2804,8 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
             [self.deviceList startTrackingDeviceList:member.userId];
         });
     }
+    // We shouldn't track users of clear rooms
+    if (!roomState.isEncrypted) return;
 }
 
 /**
