@@ -313,8 +313,9 @@ NSString * const kMXCallKitAdapterAudioSessionDidActive = @"kMXCallKitAdapterAud
     
     // CallKit currently illegal in China
     // https://github.com/vector-im/riot-ios/issues/1941
+    // E2EE is illegal in China too, so it's pointless to check locale.
 
-    return ![NSLocale.currentLocale.countryCode isEqualToString:@"CN"];
+    return YES;
 }
 
 #pragma mark - CXProviderDelegate
