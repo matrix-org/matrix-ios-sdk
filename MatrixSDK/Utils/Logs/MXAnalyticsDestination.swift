@@ -6,7 +6,11 @@
 //
 
 import Foundation
+#if IS_TEST_RUN
 import SwiftyBeaver
+#else
+@_implementationOnly import SwiftyBeaver
+#endif
 
 /// SwiftyBeaver log destination that sends errors to analytics tracker
 class MXAnalyticsDestination: BaseDestination {

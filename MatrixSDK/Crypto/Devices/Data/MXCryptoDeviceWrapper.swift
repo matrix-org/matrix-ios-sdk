@@ -15,7 +15,7 @@
 //
 
 import Foundation
-import MatrixSDKCrypto
+@_implementationOnly import MatrixSDKCrypto
 
 /// Convenience wrapper around `MatrixSDKCrypto`'s `Device`
 /// which can be used to create `MatrixSDK`s `MXDeviceInfo`

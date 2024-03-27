@@ -16,7 +16,7 @@
 
 import Foundation
 @testable import MatrixSDK
-import MatrixSDKCrypto
+@_implementationOnly import MatrixSDKCrypto
 
 class MXCryptoRequestsUnitTests: XCTestCase {
     func test_canCreateToDeviceRequest() {
