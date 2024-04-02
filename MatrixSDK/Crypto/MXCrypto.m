@@ -1422,6 +1422,12 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 #endif
 }
 
+- (uint64_t)deviceCreationTs
+{
+    // Device creation timestamp is not support in legacy crypto
+    return 0;
+}
+
 
 #pragma mark - Gossipping
 
