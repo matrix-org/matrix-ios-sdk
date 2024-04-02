@@ -99,7 +99,7 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
 /**
 * The user device creation in local timestamp, milliseconds since epoch.
 */
-@property (nonatomic) UInt64 deviceCreationTs;
+@property (nonatomic, readonly) UInt64 deviceCreationTs;
 
 /**
  The key backup manager.
