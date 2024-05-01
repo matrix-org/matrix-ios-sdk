@@ -56,6 +56,11 @@ class MXCryptoV2: NSObject, MXCrypto {
         return machine.deviceEd25519Key
     }
     
+    var deviceCreationTs: UInt64 {
+        // own device always exists
+        return machine.device(userId: machine.userId, deviceId: machine.deviceId)!.firstTimeSeenTs
+    }
+    
     let backup: MXKeyBackup?
     let keyVerificationManager: MXKeyVerificationManager
     let crossSigning: MXCrossSigning
