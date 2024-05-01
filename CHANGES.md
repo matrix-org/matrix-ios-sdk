@@ -1,3 +1,8 @@
+## Changes in 0.27.7 (2024-05-01)
+
+No significant changes.
+
+
 ## Changes in 0.27.6 (2024-02-07)
 
 No significant changes.
