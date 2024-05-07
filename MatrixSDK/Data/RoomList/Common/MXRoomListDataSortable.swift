@@ -52,7 +52,7 @@ extension MXRoomListDataSortable {
 //        }
         
         if sortOptions.alphabetical {
-            result.append(NSSortDescriptor(key: "displayName", ascending: true, selector: #selector(NSString.localizedCaseInsensitiveCompare(_:))))
+            result.append(NSSortDescriptor(key: "displayName", ascending: true, selector: #selector(NSString.localizedStandardCompare(_:))))
         }
         
         if sortOptions.invitesFirst {
