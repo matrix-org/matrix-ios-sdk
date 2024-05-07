@@ -1,0 +1,1 @@
+Prevent crash when sending file with unrecognised file extension (no associated mime type)
