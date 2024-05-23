@@ -28,7 +28,7 @@ abstract_target 'MatrixSDK' do
     end
     
     target 'MatrixSDK-macOS' do
-        platform :osx, '10.10'
+        platform :osx, '10.15'
 
         target 'MatrixSDKTests-macOS' do
             inherit! :search_paths
