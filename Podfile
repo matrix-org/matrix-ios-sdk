@@ -16,10 +16,10 @@ abstract_target 'MatrixSDK' do
     
     pod 'Realm', '10.27.0'
     pod 'libbase58', '~> 0.1.4'
-    pod 'MatrixSDKCrypto', "0.3.13", :inhibit_warnings => true
+    pod 'MatrixSDKCrypto', '0.4.1', :inhibit_warnings => true
     
     target 'MatrixSDK-iOS' do
-        platform :ios, '11.0'
+        platform :ios, '13.0'
         
         target 'MatrixSDKTests-iOS' do
             inherit! :search_paths
