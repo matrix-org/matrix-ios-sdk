@@ -89,8 +89,9 @@ public class DehydrationService: NSObject {
             try await dehydrateDevice(pickleKeyData: pickleKeyData)
         } else { // Otherwise, generate a new dehydration pickle key, store it and dehydrate a device
             // Generate a new dehydration pickle key
-            var pickleKeyData = Data(count: 32)
-            _ = SecRandomCopyBytes(kSecRandomDefault, 32, &pickleKeyData)
+            var pickleKeyRaw = [UInt8](repeating: 0, count: 32)
+            _ = SecRandomCopyBytes(kSecRandomDefault, 32, &pickleKeyRaw)
+            let pickleKeyData = Data(bytes: pickleKeyRaw, count: 32)
             
             // Convert it to unpadded base 64
             let base64PickleKey = MXBase64Tools.unpaddedBase64(from: pickleKeyData)

@@ -116,6 +116,10 @@ class MXCryptoMachine {
         }
     }
     
+    func invalidateCache() async {
+        await machine.clearCryptoCache()
+    }
+    
     // MARK: - Private
     
     private static func createMachine(userId: String, deviceId: String, log: MXNamedLog) throws -> OlmMachine {
