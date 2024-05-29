@@ -141,8 +141,8 @@ class MXCryptoMigrationStoreUnitTests: XCTestCase {
         XCTAssertEqual(sessions[0].pickle, pickle)
         XCTAssertEqual(sessions[0].senderKey, "XYZ")
         XCTAssertFalse(sessions[0].createdUsingFallbackKey)
-        XCTAssertEqual(sessions[0].creationTime, "123")
-        XCTAssertEqual(sessions[0].lastUseTime, "123")
+        XCTAssertEqual(sessions[0].creationTime, 123)
+        XCTAssertEqual(sessions[0].lastUseTime, 123)
     }
     
     func test_extractsMultipleSessionsInBatches() throws {
@@ -235,7 +235,7 @@ class MXCryptoMigrationStoreUnitTests: XCTestCase {
     func test_extractsPickeKey() throws {
         let pickleKey = "some key".data(using: .ascii)!
         let key = try extractData(pickleKey: pickleKey).pickleKey
-        XCTAssertEqual(key, [UInt8](pickleKey))
+        XCTAssertEqual(key, pickleKey)
     }
     
     func test_extractsCrossSigning() throws {
