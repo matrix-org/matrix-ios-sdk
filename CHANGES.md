@@ -1,3 +1,11 @@
+## Changes in 0.27.8 (2024-05-29)
+
+🙌 Improvements
+
+- When sorting room list alphabetically, sort it case-insensitive. ([#1851](https://github.com/matrix-org/matrix-ios-sdk/pull/1851))
+- Crypto: Update crypto SDK to 0.4.1 ([#1853](https://github.com/matrix-org/matrix-ios-sdk/pull/1853))
+
+
 ## Changes in 0.27.7 (2024-05-01)
 
 No significant changes.

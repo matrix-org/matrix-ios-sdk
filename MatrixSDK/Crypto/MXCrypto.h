@@ -378,6 +378,8 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
  */
 - (void)setBlacklistUnverifiedDevicesInRoom:(NSString *)roomId blacklist:(BOOL)blacklist;
 
+- (void) invalidateCache:(void (^)(void))done;
+
 @end
 
 NS_ASSUME_NONNULL_END

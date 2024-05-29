@@ -1150,9 +1150,18 @@ typedef void (^MXOnResumeDone)(void);
 
 - (void)resume:(void (^)(void))resumeDone
 {
-    [self handleBackgroundSyncCacheIfRequiredWithCompletion:^{
-        [self _resume:resumeDone];
-    }];
+    // The app has resumed there might have been a NSE run that have invalidated the cache
+    if (self.crypto) {
+        [self.crypto invalidateCache:^{
+            [self handleBackgroundSyncCacheIfRequiredWithCompletion:^{
+                [self _resume:resumeDone];
+            }];
+        }];
+    } else {
+        [self handleBackgroundSyncCacheIfRequiredWithCompletion:^{
+            [self _resume:resumeDone];
+        }];
+    }
 }
 
 - (void)_resume:(void (^)(void))resumeDone

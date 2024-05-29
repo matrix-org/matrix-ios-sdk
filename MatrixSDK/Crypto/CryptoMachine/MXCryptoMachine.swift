@@ -116,6 +116,10 @@ class MXCryptoMachine {
         }
     }
     
+    func invalidateCache() async {
+        await machine.clearCryptoCache()
+    }
+    
     // MARK: - Private
     
     private static func createMachine(userId: String, deviceId: String, log: MXNamedLog) throws -> OlmMachine {
@@ -591,9 +595,14 @@ extension MXCryptoMachine: MXCryptoCrossSigning {
     
     func bootstrapCrossSigning(authParams: [AnyHashable: Any]) async throws {
         let result = try machine.bootstrapCrossSigning()
+        // If this is called before the device keys have been uploaded there will be a
+        // request to upload them, do that first.
+        if let optionalKeyRequest = result.uploadKeysRequest {
+            try await handleRequest(optionalKeyRequest)
+        }
         let _ = try await [
             requests.uploadSigningKeys(request: result.uploadSigningKeysRequest, authParams: authParams),
-            requests.uploadSignatures(request: result.signatureRequest)
+            requests.uploadSignatures(request: result.uploadSignatureRequest)
         ]
     }
     
@@ -833,7 +842,7 @@ extension MXCryptoMachine: MXCryptoBackup {
         guard let message = MXCryptoTools.canonicalJSONString(forJSON: object) else {
             throw Error.cannotSerialize
         }
-        return machine.sign(message: message)
+        return try machine.sign(message: message)
     }
     
     func backupRoomKeys() async throws {

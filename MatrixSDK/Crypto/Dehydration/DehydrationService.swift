@@ -68,7 +68,7 @@ public class DehydrationService: NSObject {
             // Convert it back to Data
             let pickleKeyData = MXBase64Tools.data(fromBase64: base64PickleKey)
             
-            let rehydrationResult = await rehydrateDevice(pickleKeyData: [UInt8](pickleKeyData))
+            let rehydrationResult = await rehydrateDevice(pickleKeyData: pickleKeyData)
             switch rehydrationResult {
             case .success((let deviceId, let rehydratedDevice)):
                 // Fetch and process the to device events available on the dehydrated device
@@ -86,14 +86,15 @@ public class DehydrationService: NSObject {
             }
             
             // Finally, create a new dehydrated device with the same pickle key
-            try await dehydrateDevice(pickleKeyData: [UInt8](pickleKeyData))
+            try await dehydrateDevice(pickleKeyData: pickleKeyData)
         } else { // Otherwise, generate a new dehydration pickle key, store it and dehydrate a device
             // Generate a new dehydration pickle key
-            var pickleKeyData = [UInt8](repeating: 0, count: 32)
-            _ = SecRandomCopyBytes(kSecRandomDefault, 32, &pickleKeyData)
+            var pickleKeyRaw = [UInt8](repeating: 0, count: 32)
+            _ = SecRandomCopyBytes(kSecRandomDefault, 32, &pickleKeyRaw)
+            let pickleKeyData = Data(bytes: pickleKeyRaw, count: 32)
             
             // Convert it to unpadded base 64
-            let base64PickleKey = MXBase64Tools.unpaddedBase64(from: Data(bytes: pickleKeyData, count: 32))
+            let base64PickleKey = MXBase64Tools.unpaddedBase64(from: pickleKeyData)
             
             // Store it on the backend
             try await storeSecret(base64PickleKey, secretId: secretId, secretStorageKeys: [secretStorageKeyId: privateKeyData])
@@ -131,10 +132,10 @@ public class DehydrationService: NSObject {
     
     // MARK: - Device dehydration
     
-    private func dehydrateDevice(pickleKeyData: [UInt8]) async throws {
-        let dehydratedDevice = dehydratedDevices.create()
+    private func dehydrateDevice(pickleKeyData: Data) async throws {
+        let dehydratedDevice = try dehydratedDevices.create()
 
-        let requestDetails = try dehydratedDevice.keysForUpload(deviceDisplayName: deviceDisplayName, pickleKey: [UInt8](pickleKeyData))
+        let requestDetails = try dehydratedDevice.keysForUpload(deviceDisplayName: deviceDisplayName, pickleKey: pickleKeyData)
         
         let parameters = MXDehydratedDeviceCreationParameters()
         parameters.body = requestDetails.body
@@ -150,7 +151,7 @@ public class DehydrationService: NSObject {
         }
     }
     
-    private func rehydrateDevice(pickleKeyData: [UInt8]) async -> Result<(deviceId: String, rehydratedDevice: RehydratedDeviceProtocol), DehydrationServiceError>  {
+    private func rehydrateDevice(pickleKeyData: Data) async -> Result<(deviceId: String, rehydratedDevice: RehydratedDeviceProtocol), DehydrationServiceError>  {
         await withCheckedContinuation { continuation in
             self.restClient.retrieveDehydratedDevice { [weak self] dehydratedDevice in
                 guard let self else { return }
@@ -163,7 +164,7 @@ public class DehydrationService: NSObject {
                 }
                 
                 do {
-                    let rehydratedDevice = try self.dehydratedDevices.rehydrate(pickleKey: [UInt8](pickleKeyData), deviceId: dehydratedDevice.deviceId, deviceData: deviceDataJSON)
+                    let rehydratedDevice = try self.dehydratedDevices.rehydrate(pickleKey: pickleKeyData, deviceId: dehydratedDevice.deviceId, deviceData: deviceDataJSON)
                     continuation.resume(returning: .success((dehydratedDevice.deviceId, rehydratedDevice)))
                 } catch {
                     continuation.resume(returning: .failure(DehydrationServiceError.failedRehydration(error)))

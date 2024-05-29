@@ -54,7 +54,7 @@ struct MXCryptoMigrationStore {
             account: try pickledAccount(pickleKey: pickleKey),
             sessions: [], // Sessions are extracted in batches separately
             inboundGroupSessions: [], // Group sessions are extracted in batches separately
-            pickleKey: [UInt8](pickleKey),
+            pickleKey: pickleKey,
             backupVersion: legacyStore.backupVersion,
             backupRecoveryKey: backupRecoveryKey(),
             crossSigning: crossSigning(),
@@ -194,7 +194,7 @@ private extension PickledAccount {
 private extension PickledSession {
     init(session: MXOlmSession, pickleKey: Data) throws {
         let pickle = try session.session.serializeData(withKey: pickleKey)
-        let time = "\(Int(session.lastReceivedMessageTs))"
+        let time = UInt64(session.lastReceivedMessageTs)
         
         self.init(
             pickle: pickle,

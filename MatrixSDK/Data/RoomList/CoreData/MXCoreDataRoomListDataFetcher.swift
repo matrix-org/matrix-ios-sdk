@@ -250,7 +250,7 @@ extension MXCoreDataRoomListDataFetcher: MXRoomListDataSortable {
         var result: [NSSortDescriptor] = []
         
         if sortOptions.alphabetical {
-            result.append(NSSortDescriptor(keyPath: \MXRoomSummaryMO.s_displayName, ascending: true))
+            result.append(NSSortDescriptor(key: "s_displayName", ascending: true, selector: #selector(NSString.localizedStandardCompare(_:))))
         }
         
         if sortOptions.invitesFirst {

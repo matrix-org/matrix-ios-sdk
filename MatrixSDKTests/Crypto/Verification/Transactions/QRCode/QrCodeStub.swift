@@ -18,7 +18,7 @@ import Foundation
 
 import MatrixSDKCrypto
 
-struct QrCodeStub: QrCodeProtocol {
+class QrCodeStub: QrCodeProtocol {
     private let _otherUserId: String
     private let _otherDeviceId: String
     private let _flowId: String

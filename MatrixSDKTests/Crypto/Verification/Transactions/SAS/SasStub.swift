@@ -18,7 +18,7 @@ import Foundation
 
 import MatrixSDKCrypto
 
-struct SasStub: SasProtocol {
+class SasStub: SasProtocol {
     
     private let _otherUserId: String
     private let _otherDeviceId: String
