@@ -21,13 +21,13 @@ import MatrixSDKCrypto
 /// to the native REST API client
 struct MXCryptoRequests {
     private let restClient: MXRestClient
-    private let queryScheduler: MXKeysQueryScheduler<MXKeysQueryResponse>
+    private let queryScheduler: MXKeysQueryScheduler<MXKeysQueryResponseRaw>
     
     init(restClient: MXRestClient) {
         self.restClient = restClient
         self.queryScheduler = .init { users in
             try await performCallbackRequest { completion in
-                _ = restClient.downloadKeysByChunk(
+                _ = restClient.downloadKeysByChunkRaw(
                     forUsers: users,
                     token: nil,
                     success: {
@@ -96,7 +96,7 @@ struct MXCryptoRequests {
         }
     }
     
-    func queryKeys(users: [String]) async throws -> MXKeysQueryResponse {
+    func queryKeys(users: [String]) async throws -> MXKeysQueryResponseRaw {
         try await queryScheduler.query(users: Set(users))
     }
     

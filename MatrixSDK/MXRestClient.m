@@ -4925,6 +4925,51 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
                                  }];
 }
 
+- (MXHTTPOperation*)downloadKeysRawForUsers:(NSArray<NSString*>*)userIds
+                                   token:(NSString *)token
+                                 success:(void (^)(MXKeysQueryResponseRaw *keysQueryResponse))success
+                                 failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"%@/keys/query", kMXAPIPrefixPathR0];
+
+    NSMutableDictionary *downloadQuery = [NSMutableDictionary dictionary];
+    for (NSString *userID in userIds)
+    {
+        downloadQuery[userID] = @[];
+    }
+
+    NSMutableDictionary *parameters = [NSMutableDictionary dictionaryWithDictionary:@{
+                                                                                      @"device_keys": downloadQuery
+                                                                                      }];
+
+    if (token)
+    {
+        parameters[@"token"] = token;
+    }
+
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"POST"
+                                    path: path
+                              parameters:parameters
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
+                                     if (success)
+                                     {
+                                         __block MXKeysQueryResponseRaw *keysQueryResponse;
+                                         [self dispatchProcessing:^{
+                                             MXJSONModelSetMXJSONModel(keysQueryResponse, MXKeysQueryResponseRaw, JSONResponse);
+                                         } andCompletion:^{
+                                             success(keysQueryResponse);
+                                         }];
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
 - (MXHTTPOperation *)claimOneTimeKeysForUsersDevices:(MXUsersDevicesMap<NSString *> *)usersDevicesKeyTypesMap success:(void (^)(MXKeysClaimResponse *))success failure:(void (^)(NSError *))failure
 {
     NSString *path = [NSString stringWithFormat:@"%@/keys/claim", kMXAPIPrefixPathR0];
