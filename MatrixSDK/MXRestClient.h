@@ -1583,6 +1583,21 @@ NS_REFINED_FOR_SWIFT;
                         success:(void (^)(void))success
                         failure:(void (^)(NSError *error))failure;
 
+/**
+ Report a room.
+
+ @param roomId the id of the room.
+ @param reason the redaction reason (optional).
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+-(MXHTTPOperation *)reportRoom:(NSString *)roomId
+                        reason:(NSString *)reason
+                       success:(void (^)(void))success
+                       failure:(void (^)(NSError *))failure;
 
 /**
  Report an event.
