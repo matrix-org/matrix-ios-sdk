@@ -3091,6 +3091,29 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
                                  }
                                  failure:^(NSError *error) {
                                      MXStrongifyAndReturnIfNil(self);
+        [self dispatchFailure:error inBlock:failure];
+    }];
+}
+
+-(MXHTTPOperation *)reportRoom:(NSString *)roomId
+                        reason:(NSString *)reason
+                       success:(void (^)(void))success
+                       failure:(void (^)(NSError *))failure
+{
+    NSString *path = [NSString stringWithFormat:@"%@/org.matrix.msc4151/rooms/%@/report", kMXAPIPrefixPathUnstable, roomId];
+
+    NSDictionary *parameters = @{ @"reason": reason.length > 0 ? reason : @"" };
+
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"POST"
+                                    path:path
+                              parameters:parameters
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchSuccess:success];
+                                 }
+                                 failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
