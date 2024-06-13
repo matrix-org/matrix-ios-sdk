@@ -1,3 +1,8 @@
+## Changes in 0.27.9 (2024-06-13)
+
+No significant changes.
+
+
 ## Changes in 0.27.8 (2024-05-29)
 
 🙌 Improvements
