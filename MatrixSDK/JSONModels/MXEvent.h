@@ -103,6 +103,7 @@ typedef NS_ENUM(NSInteger, MXEventType)
     MXEventTypeSpaceOrder,
     MXEventTypeBeaconInfo,
     MXEventTypeBeacon,
+    MXEventTypeRoomRetention,
 
     // The event is a custom event. Refer to its `MXEventTypeString` version
     MXEventTypeCustom = 1000
@@ -163,6 +164,7 @@ FOUNDATION_EXPORT NSString *const kMXEventTypeStringSpaceChild;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringSpaceOrder;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringSpaceOrderMSC3230;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringSpaceOrderKey;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomRetention;
 
 // Interactive key verification
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringKeyVerificationRequest;

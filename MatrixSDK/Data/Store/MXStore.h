@@ -427,6 +427,18 @@
 - (void)storeOutgoingMessageForRoom:(nonnull NSString*)roomId outgoingMessage:(nonnull MXEvent*)outgoingMessage;
 
 /**
+ Remove all the messages sent before a specific timestamp in a room.
+ The state events are not removed during this operation. We keep them in the timeline.
+ This operation doesn't change the pagination token, and the flag indicating that the SDK has reached the end of pagination.
+ 
+ @param limitTs the timestamp from which the messages are kept.
+ @param roomId the id of the room.
+ 
+ @return YES if at least one event has been removed.
+ */
+- (BOOL)removeAllMessagesSentBefore:(uint64_t)limitTs inRoom:(nonnull NSString *)roomId;
+
+/**
  Remove all outgoing messages from a room.
 
  @param roomId the id of the room.
@@ -592,6 +604,5 @@
 - (void)filterIdForFilter:(nonnull MXFilterJSONModel*)filter
                   success:(nonnull void (^)(NSString * _Nullable filterId))success
                   failure:(nullable void (^)(NSError * _Nullable error))failure;
-
 
 @end
