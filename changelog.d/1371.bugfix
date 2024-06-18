@@ -1,0 +1,1 @@
+🐛 Fix directRooms array argument is not an NSArray exception - This exception would occur when event.content has exactly one direct room and MXJSONModelSetDictionary converts it to an NSString and not an NSArray
