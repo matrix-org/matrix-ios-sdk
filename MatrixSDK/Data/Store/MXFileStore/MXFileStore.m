@@ -29,7 +29,7 @@
 #import "MatrixSDKSwiftHeader.h"
 #import "MXFileRoomSummaryStore.h"
 
-static NSUInteger const kMXFileVersion = 82;    // Check getUnreadRoomFromStore if you update this value. Delete this comment after
+static NSUInteger const kMXFileVersion = 83;    // Check getUnreadRoomFromStore if you update this value. Delete this comment after
 
 static NSString *const kMXFileStoreFolder = @"MXFileStore";
 static NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
