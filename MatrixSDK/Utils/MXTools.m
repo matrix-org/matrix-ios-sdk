@@ -140,7 +140,9 @@ NSCharacterSet *uriComponentCharset;
             @(MXEventTypePollResponse) : kMXEventTypeStringPollResponseMSC3381,
             @(MXEventTypePollEnd) : kMXEventTypeStringPollEndMSC3381,
             @(MXEventTypeBeaconInfo) : kMXEventTypeStringBeaconInfoMSC3672,
-            @(MXEventTypeBeacon) : kMXEventTypeStringBeaconMSC3672
+            @(MXEventTypeBeacon) : kMXEventTypeStringBeaconMSC3672,
+            
+            @(MXEventTypeRoomRetention): kMXEventTypeStringRoomRetention
         };
 
         eventTypeMapStringToEnum = @{
