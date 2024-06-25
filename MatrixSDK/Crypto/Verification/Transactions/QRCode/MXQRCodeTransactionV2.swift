@@ -15,7 +15,7 @@
 //
 
 import Foundation
-import MatrixSDKCrypto
+@_implementationOnly import MatrixSDKCrypto
 
 /// QR transaction originating from `MatrixSDKCrypto`
 class MXQRCodeTransactionV2: NSObject, MXQRCodeTransaction {

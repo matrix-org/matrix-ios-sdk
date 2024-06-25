@@ -15,7 +15,11 @@
 //
 
 import Foundation
+#if IS_TEST_RUN
 import SwiftyBeaver
+#else
+@_implementationOnly import SwiftyBeaver
+#endif
 
 /// Various MXLog configuration options. Used in conjunction with `MXLog.configure()`
 @objc public class MXLogConfiguration: NSObject {

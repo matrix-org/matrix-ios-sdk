@@ -15,8 +15,8 @@
 //
 
 import Foundation
-import OLMKit
-import MatrixSDKCrypto
+@_implementationOnly import OLMKit
+@_implementationOnly import MatrixSDKCrypto
 
 class MXCryptoMigrationV2: NSObject {
     enum Error: Swift.Error {

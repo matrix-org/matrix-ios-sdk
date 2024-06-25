@@ -16,7 +16,7 @@
 
 import Foundation
 @testable import MatrixSDK
-@testable import MatrixSDKCrypto
+@_implementationOnly @testable import MatrixSDKCrypto
 
 class CryptoIdentityStub: MXCryptoIdentity {
     var userId: String = "Alice"

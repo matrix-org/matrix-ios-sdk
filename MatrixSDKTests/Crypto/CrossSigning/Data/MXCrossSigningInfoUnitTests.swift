@@ -17,7 +17,7 @@
 import Foundation
 import XCTest
 @testable import MatrixSDK
-import MatrixSDKCrypto
+@_implementationOnly import MatrixSDKCrypto
 
 class MXCrossSigningInfoUnitTests: XCTestCase {
     func makeKey(type: String, user: String) -> MXCrossSigningKey {
