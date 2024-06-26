@@ -141,6 +141,7 @@ FOUNDATION_EXPORT NSString *MatrixSDKVersion;
 #import "MXThirdPartyUsersResponse.h"
 
 #import "MXLoginSSOFlow.h"
+#import "MXLoginTokenFlow.h"
 
 #import "MXKeyProvider.h"
 #import "MXAesKeyData.h"

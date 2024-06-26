@@ -44,6 +44,9 @@ class MXAuthenticationSessionUnitTests: XCTestCase {
                 ["type": "m.login.cas",
                  "stages": [],
                  "identity_providers": []
+                ],
+                ["type": "m.login.token",
+                 "get_login_token": true
                 ]
             ],
             "params": [
@@ -57,7 +60,7 @@ class MXAuthenticationSessionUnitTests: XCTestCase {
             return
         }
         
-        XCTAssertEqual(flows.count, 3)
+        XCTAssertEqual(flows.count, 4)
         
         if let ssoFlow = flows.first(where: { $0.type == kMXLoginFlowTypeSSO }) {
             
@@ -109,6 +112,16 @@ class MXAuthenticationSessionUnitTests: XCTestCase {
         } else {
             XCTFail("Fail to find password flow")
         }
-        
+
+        if let tokenFlow = flows.first(where: { $0.type == kMXLoginFlowTypeToken }) {
+            
+            if let loginTokenFlow = tokenFlow as? MXLoginTokenFlow {
+                XCTAssertEqual(loginTokenFlow.getLoginToken, true)
+            } else {
+                XCTFail("The token flow is not member of class MXLoginTokenFlow")
+            }
+        } else {
+            XCTFail("Fail to find login token flow")
+        }
     }
 }
