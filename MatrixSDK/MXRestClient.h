@@ -230,6 +230,12 @@ extern NSString *const kMXCredentialsNewRefreshTokenDataKey;
 @property (nonatomic) NSString *contentPathPrefix;
 
 /**
+ The Matrix content repository prefix to use for authenticated access.
+ By default, it is defined by the constant kMXContentPrefixPath.
+ */
+@property (nonatomic) NSString *authenticatedContentPathPrefix;
+
+/**
  The current trusted certificate (if any).
  */
 @property (nonatomic, readonly) NSData* allowedCertificate;

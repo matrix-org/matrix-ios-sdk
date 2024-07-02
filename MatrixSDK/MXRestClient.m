@@ -145,7 +145,7 @@ MXAuthAction;
 @end
 
 @implementation MXRestClient
-@synthesize credentials, apiPathPrefix, contentPathPrefix, completionQueue, antivirusServerPathPrefix;
+@synthesize credentials, apiPathPrefix, contentPathPrefix, authenticatedContentPathPrefix, completionQueue, antivirusServerPathPrefix;
 
 + (dispatch_queue_t)refreshQueue
 {
@@ -198,6 +198,7 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
         apiPathPrefix = kMXAPIPrefixPathR0;
         antivirusServerPathPrefix = kMXAntivirusAPIPrefixPathUnstable;
         contentPathPrefix = kMXContentPrefixPath;
+        authenticatedContentPathPrefix = kMXAuthenticatedContentPrefixPath;
         
         credentials = inCredentials;
         _identityServer = credentials.identityServer;
@@ -4500,26 +4501,51 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
     parameters[@"url"] = [url absoluteString];
     
     MXWeakify(self);
-    return [httpClient requestWithMethod:@"GET"
-                                    path:[NSString stringWithFormat:@"%@/preview_url", contentPathPrefix]
-                              parameters:parameters
-                                 success:^(NSDictionary *JSONResponse) {
-                                     MXStrongifyAndReturnIfNil(self);
-
-                                     if (success)
-                                     {
-                                         __block MXURLPreview *urlPreview;
-                                         [self dispatchProcessing:^{
-                                             MXJSONModelSetMXJSONModel(urlPreview, MXURLPreview, JSONResponse);
-                                         } andCompletion:^{
-                                             success(urlPreview);
-                                         }];
-                                     }
-                                 }
-                                 failure:^(NSError *error) {
-                                     MXStrongifyAndReturnIfNil(self);
-                                     [self dispatchFailure:error inBlock:failure];
-                                 }];
+    MXHTTPOperation* operation;
+    operation = [httpClient requestWithMethod:@"GET"
+                                         path:[NSString stringWithFormat:@"%@/preview_url", authenticatedContentPathPrefix]
+                                   parameters:parameters
+                          needsAuthentication:YES
+                                      success:^(NSDictionary *JSONResponse) {
+        MXStrongifyAndReturnIfNil(self);
+        
+        if (success)
+        {
+            __block MXURLPreview *urlPreview;
+            [self dispatchProcessing:^{
+                MXJSONModelSetMXJSONModel(urlPreview, MXURLPreview, JSONResponse);
+            } andCompletion:^{
+                success(urlPreview);
+            }];
+        }
+    }
+                                      failure:^(NSError *error) {
+        return;
+        MXStrongifyAndReturnIfNil(self);
+        MXWeakify(self);
+        MXHTTPOperation* fallbackOperation = [self->httpClient requestWithMethod:@"GET"
+                                                                            path:[NSString stringWithFormat:@"%@/preview_url", self->contentPathPrefix]
+                                                                parameters:parameters
+                                                                   success:^(NSDictionary *JSONResponse) {
+            MXStrongifyAndReturnIfNil(self);
+            
+            if (success)
+            {
+                __block MXURLPreview *urlPreview;
+                [self dispatchProcessing:^{
+                    MXJSONModelSetMXJSONModel(urlPreview, MXURLPreview, JSONResponse);
+                } andCompletion:^{
+                    success(urlPreview);
+                }];
+            }
+        }
+                                                                   failure:^(NSError *error) {
+            MXStrongifyAndReturnIfNil(self);
+            [self dispatchFailure:error inBlock:failure];
+        }];
+        [operation mutateTo: fallbackOperation];
+    }];
+    return operation;
 }
 
 #pragma mark - Antivirus server API
