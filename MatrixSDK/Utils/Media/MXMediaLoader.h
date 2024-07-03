@@ -130,6 +130,11 @@ extern NSString *const kMXMediaUploadIdPrefix;
 }
 
 /**
+ The access token.
+ */
+@property (nonatomic, readonly) NSString* accessToken;
+
+/**
  The current state of the loader.
  */
 @property (nonatomic, readonly) MXMediaLoaderState state;
@@ -176,6 +181,8 @@ extern NSString *const kMXMediaUploadIdPrefix;
 
 @property (readonly) CGFloat uploadInitialRange;
 @property (readonly) CGFloat uploadRange;
+
+- (id)initWithAccessToken:(NSString *) accessToken;
 
 /**
  Cancel the operation.

@@ -41,11 +41,12 @@ NSString *const kMXMediaUploadIdPrefix = @"upload-";
 
 @synthesize statisticsDict;
 
-- (id)init
+- (id)initWithAccessToken:(NSString *) accessToken
 {
     if (self = [super init])
     {
         _state = MXMediaLoaderStateIdle;
+        _accessToken = accessToken;
     }
     return self;
 }
@@ -144,6 +145,7 @@ NSString *const kMXMediaUploadIdPrefix = @"upload-";
         // Use an HTTP POST method to send this data as JSON object.
         request.HTTPMethod = @"POST";
         [request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
+        [request setValue: [NSString stringWithFormat:@"Bearer %@", _accessToken] forHTTPHeaderField: @"Authorization"];
         request.HTTPBody = [NSJSONSerialization dataWithJSONObject:data options:0 error:nil];
     }
     
@@ -378,7 +380,7 @@ NSString *const kMXMediaUploadIdPrefix = @"upload-";
     {
         // Create a unique upload Id
         _uploadId = [NSString stringWithFormat:@"%@%@", kMXMediaUploadIdPrefix, [[NSProcessInfo processInfo] globallyUniqueString]];
-        
+        _accessToken = matrixSession.matrixRestClient.credentials.accessToken;
         mxSession = matrixSession;
         _uploadInitialRange = initialRange;
         _uploadRange = range;

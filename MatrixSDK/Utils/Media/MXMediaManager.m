@@ -495,6 +495,7 @@ static MXLRUCache* imagesCacheLruCache = nil;
                                 withData:nil
                            andIdentifier:downloadId
                           saveAtFilePath:filePath
+                             accessToken: _restClient.credentials.accessToken
                              scanManager:_scanManager
                                  success:success
                                  failure:failure];
@@ -535,6 +536,7 @@ static MXLRUCache* imagesCacheLruCache = nil;
                                 withData:nil
                            andIdentifier:downloadId
                           saveAtFilePath:filePath
+                             accessToken: _restClient.credentials.accessToken
                              scanManager:_scanManager
                                  success:success
                                  failure:failure];
@@ -545,6 +547,7 @@ static MXLRUCache* imagesCacheLruCache = nil;
                        withData:(NSDictionary *)data
                   andIdentifier:(NSString *)downloadId
                  saveAtFilePath:(NSString *)filePath
+                    accessToken:(NSString *)accessToken
                     scanManager:(MXScanManager *)scanManager
                         success:(void (^)(NSString *outputFilePath))success
                         failure:(void (^)(NSError *error))failure
@@ -592,7 +595,7 @@ static MXLRUCache* imagesCacheLruCache = nil;
     else
     {
         // Create a media loader to download data
-        mediaLoader = [[MXMediaLoader alloc] init];
+        mediaLoader = [[MXMediaLoader alloc] initWithAccessToken:accessToken];
         // Report this loader
         if (!downloadTable)
         {
@@ -705,6 +708,7 @@ static MXLRUCache* imagesCacheLruCache = nil;
                                 withData:dataToPost
                            andIdentifier:downloadId
                           saveAtFilePath:filePath
+                             accessToken: _restClient.credentials.accessToken
                              scanManager:_scanManager
                                  success:success
                                  failure:failure];
