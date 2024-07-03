@@ -4520,7 +4520,6 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
         }
     }
                                       failure:^(NSError *error) {
-        return;
         MXStrongifyAndReturnIfNil(self);
         MXWeakify(self);
         MXHTTPOperation* fallbackOperation = [self->httpClient requestWithMethod:@"GET"
