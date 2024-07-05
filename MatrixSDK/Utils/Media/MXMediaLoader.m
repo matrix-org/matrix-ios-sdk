@@ -37,6 +37,13 @@ NSString *const kMXMediaLoaderErrorKey = @"kMXMediaLoaderErrorKey";
 
 NSString *const kMXMediaUploadIdPrefix = @"upload-";
 
+
+@interface MXMediaLoader()
+
+@property (nonatomic, readonly) NSString* accessToken;
+
+@end
+
 @implementation MXMediaLoader
 
 @synthesize statisticsDict;

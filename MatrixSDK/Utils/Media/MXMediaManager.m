@@ -377,7 +377,7 @@ static MXLRUCache* imagesCacheLruCache = nil;
         else
         {
             mxMediaPrefix = [NSString stringWithFormat:@"%@/%@/download/", _restClient.homeserver, kMXContentPrefixPath];
-            if (_restClient.supportedVersions && [_restClient.supportedVersions supportsAuthenticatedMedia])
+            if (_restClient.isUsingAuthenticatedMedia)
             {
                 mxMediaPrefix = [NSString stringWithFormat:@"%@/%@/download/", _restClient.homeserver, kMXAuthenticatedContentPrefixPath];
             }
@@ -420,7 +420,7 @@ static MXLRUCache* imagesCacheLruCache = nil;
         else
         {
             mxThumbnailPrefix = [NSString stringWithFormat:@"%@/%@/thumbnail/", _restClient.homeserver, kMXContentPrefixPath];
-            if (_restClient.supportedVersions && [_restClient.supportedVersions supportsAuthenticatedMedia])
+            if (_restClient.isUsingAuthenticatedMedia)
             {
                 mxThumbnailPrefix = [NSString stringWithFormat:@"%@/%@/thumbnail/", _restClient.homeserver, kMXAuthenticatedContentPrefixPath];
             }

@@ -130,11 +130,6 @@ extern NSString *const kMXMediaUploadIdPrefix;
 }
 
 /**
- The access token.
- */
-@property (nonatomic, readonly) NSString* accessToken;
-
-/**
  The current state of the loader.
  */
 @property (nonatomic, readonly) MXMediaLoaderState state;

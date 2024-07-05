@@ -231,7 +231,7 @@ extern NSString *const kMXCredentialsNewRefreshTokenDataKey;
 
 /**
  The Matrix content repository prefix to use for authenticated access.
- By default, it is defined by the constant kMXContentPrefixPath.
+ By default, it is defined by the constant kMXAuthenticatedContentPrefixPath.
  */
 @property (nonatomic) NSString *authenticatedContentPathPrefix;
 
@@ -254,7 +254,7 @@ extern NSString *const kMXCredentialsNewRefreshTokenDataKey;
 /**
  Supported server versions of the matrix server, only for internal use of the SDK, use the stored version on the app side.
  */
-@property (nonatomic, readonly, nullable) MXMatrixVersions *supportedVersions;
+@property (readonly) BOOL isUsingAuthenticatedMedia;
 
 /**
  Create an instance based on homeserver url.

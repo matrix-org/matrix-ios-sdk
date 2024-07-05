@@ -142,11 +142,11 @@ MXAuthAction;
      */
     dispatch_queue_t processingQueue;
 }
-@property(nonatomic, nullable, readwrite) MXMatrixVersions *supportedVersions;
+@property(readwrite) BOOL isUsingAuthenticatedMedia;
 @end
 
 @implementation MXRestClient
-@synthesize credentials, apiPathPrefix, contentPathPrefix, authenticatedContentPathPrefix, completionQueue, antivirusServerPathPrefix, supportedVersions;
+@synthesize credentials, apiPathPrefix, contentPathPrefix, authenticatedContentPathPrefix, completionQueue, antivirusServerPathPrefix, isUsingAuthenticatedMedia;
 
 + (dispatch_queue_t)refreshQueue
 {
@@ -531,7 +531,7 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
                                          [self dispatchProcessing:^{
                                              MXJSONModelSetMXJSONModel(matrixVersions, MXMatrixVersions, JSONResponse);
                                          } andCompletion:^{
-                                             self.supportedVersions = matrixVersions;
+                                             self->isUsingAuthenticatedMedia = matrixVersions.supportsAuthenticatedMedia;
                                              success(matrixVersions);
                                          }];
                                      }
@@ -4501,11 +4501,7 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
 {
     NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
     parameters[@"url"] = [url absoluteString];
-    NSString* path = contentPathPrefix;
-    if (supportedVersions && [supportedVersions supportsAuthenticatedMedia])
-    {
-        path = authenticatedContentPathPrefix;
-    }
+    NSString* path = isUsingAuthenticatedMedia ? authenticatedContentPathPrefix : contentPathPrefix;
     
     MXWeakify(self);
     
