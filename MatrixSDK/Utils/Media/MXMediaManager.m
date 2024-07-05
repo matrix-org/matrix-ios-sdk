@@ -455,6 +455,7 @@ static MXLRUCache* imagesCacheLruCache = nil;
 
 - (NSString *)urlOfIdenticon:(NSString *)identiconString
 {
+    // Deprecated API, not need to use authenticated for this.
     return [NSString stringWithFormat:@"%@/%@/identicon/%@", _restClient.homeserver, kMXContentPrefixPath, [identiconString stringByAddingPercentEncodingWithAllowedCharacters:[NSCharacterSet URLHostAllowedCharacterSet]]];
 }
 
