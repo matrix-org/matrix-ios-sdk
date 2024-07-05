@@ -140,12 +140,12 @@ NSString *const kMXMediaUploadIdPrefix = @"upload-";
         [request setValue:value forHTTPHeaderField:key];
     }];
     
+    [request setValue: [NSString stringWithFormat:@"Bearer %@", _accessToken] forHTTPHeaderField: @"Authorization"];
     if (data)
     {
         // Use an HTTP POST method to send this data as JSON object.
         request.HTTPMethod = @"POST";
         [request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
-        [request setValue: [NSString stringWithFormat:@"Bearer %@", _accessToken] forHTTPHeaderField: @"Authorization"];
         request.HTTPBody = [NSJSONSerialization dataWithJSONObject:data options:0 error:nil];
     }
     
