@@ -142,10 +142,11 @@ MXAuthAction;
      */
     dispatch_queue_t processingQueue;
 }
+@property(nonatomic, nullable, readwrite) MXMatrixVersions *supportedVersions;
 @end
 
 @implementation MXRestClient
-@synthesize credentials, apiPathPrefix, contentPathPrefix, authenticatedContentPathPrefix, completionQueue, antivirusServerPathPrefix;
+@synthesize credentials, apiPathPrefix, contentPathPrefix, authenticatedContentPathPrefix, completionQueue, antivirusServerPathPrefix, supportedVersions;
 
 + (dispatch_queue_t)refreshQueue
 {
@@ -530,6 +531,7 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
                                          [self dispatchProcessing:^{
                                              MXJSONModelSetMXJSONModel(matrixVersions, MXMatrixVersions, JSONResponse);
                                          } andCompletion:^{
+                                             self.supportedVersions = matrixVersions;
                                              success(matrixVersions);
                                          }];
                                      }
@@ -4499,14 +4501,18 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
 {
     NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
     parameters[@"url"] = [url absoluteString];
+    NSString* path = contentPathPrefix;
+    if (supportedVersions && [supportedVersions supportsAuthenticatedMedia])
+    {
+        path = authenticatedContentPathPrefix;
+    }
     
     MXWeakify(self);
-    MXHTTPOperation* operation;
-    operation = [httpClient requestWithMethod:@"GET"
-                                         path:[NSString stringWithFormat:@"%@/preview_url", authenticatedContentPathPrefix]
-                                   parameters:parameters
-                          needsAuthentication:YES
-                                      success:^(NSDictionary *JSONResponse) {
+    
+    return [httpClient requestWithMethod:@"GET"
+                                    path:[NSString stringWithFormat:@"%@/preview_url", path]
+                              parameters:parameters
+                                 success:^(NSDictionary *JSONResponse) {
         MXStrongifyAndReturnIfNil(self);
         
         if (success)
@@ -4519,32 +4525,10 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
             }];
         }
     }
-                                      failure:^(NSError *error) {
+                                 failure:^(NSError *error) {
         MXStrongifyAndReturnIfNil(self);
-        MXWeakify(self);
-        MXHTTPOperation* fallbackOperation = [self->httpClient requestWithMethod:@"GET"
-                                                                            path:[NSString stringWithFormat:@"%@/preview_url", self->contentPathPrefix]
-                                                                parameters:parameters
-                                                                   success:^(NSDictionary *JSONResponse) {
-            MXStrongifyAndReturnIfNil(self);
-            
-            if (success)
-            {
-                __block MXURLPreview *urlPreview;
-                [self dispatchProcessing:^{
-                    MXJSONModelSetMXJSONModel(urlPreview, MXURLPreview, JSONResponse);
-                } andCompletion:^{
-                    success(urlPreview);
-                }];
-            }
-        }
-                                                                   failure:^(NSError *error) {
-            MXStrongifyAndReturnIfNil(self);
-            [self dispatchFailure:error inBlock:failure];
-        }];
-        [operation mutateTo: fallbackOperation];
+        [self dispatchFailure:error inBlock:failure];
     }];
-    return operation;
 }
 
 #pragma mark - Antivirus server API

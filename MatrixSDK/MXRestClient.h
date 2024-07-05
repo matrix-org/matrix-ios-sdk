@@ -251,6 +251,10 @@ extern NSString *const kMXCredentialsNewRefreshTokenDataKey;
  */
 @property (nonatomic, copy) NSSet <NSString *> *acceptableContentTypes;
 
+/**
+ Supported server versions of the matrix server, only for internal use of the SDK, use the stored version on the app side.
+ */
+@property (nonatomic, readonly, nullable) MXMatrixVersions *supportedVersions;
 
 /**
  Create an instance based on homeserver url.

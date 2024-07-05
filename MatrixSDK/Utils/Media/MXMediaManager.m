@@ -377,6 +377,10 @@ static MXLRUCache* imagesCacheLruCache = nil;
         else
         {
             mxMediaPrefix = [NSString stringWithFormat:@"%@/%@/download/", _restClient.homeserver, kMXContentPrefixPath];
+            if (_restClient.supportedVersions && [_restClient.supportedVersions supportsAuthenticatedMedia])
+            {
+                mxMediaPrefix = [NSString stringWithFormat:@"%@/%@/download/", _restClient.homeserver, kMXAuthenticatedContentPrefixPath];
+            }
         }
         
         contentURL = [mxContentURI stringByReplacingOccurrencesOfString:kMXContentUriScheme withString:mxMediaPrefix];
@@ -416,6 +420,10 @@ static MXLRUCache* imagesCacheLruCache = nil;
         else
         {
             mxThumbnailPrefix = [NSString stringWithFormat:@"%@/%@/thumbnail/", _restClient.homeserver, kMXContentPrefixPath];
+            if (_restClient.supportedVersions && [_restClient.supportedVersions supportsAuthenticatedMedia])
+            {
+                mxThumbnailPrefix = [NSString stringWithFormat:@"%@/%@/thumbnail/", _restClient.homeserver, kMXAuthenticatedContentPrefixPath];
+            }
         }
         NSString *thumbnailURL = [mxContentURI stringByReplacingOccurrencesOfString:kMXContentUriScheme withString:mxThumbnailPrefix];
         
