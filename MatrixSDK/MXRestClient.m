@@ -142,10 +142,11 @@ MXAuthAction;
      */
     dispatch_queue_t processingQueue;
 }
+@property(readwrite) BOOL isUsingAuthenticatedMedia;
 @end
 
 @implementation MXRestClient
-@synthesize credentials, apiPathPrefix, contentPathPrefix, completionQueue, antivirusServerPathPrefix;
+@synthesize credentials, apiPathPrefix, contentPathPrefix, authenticatedContentPathPrefix, completionQueue, antivirusServerPathPrefix, isUsingAuthenticatedMedia;
 
 + (dispatch_queue_t)refreshQueue
 {
@@ -198,6 +199,7 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
         apiPathPrefix = kMXAPIPrefixPathR0;
         antivirusServerPathPrefix = kMXAntivirusAPIPrefixPathUnstable;
         contentPathPrefix = kMXContentPrefixPath;
+        authenticatedContentPathPrefix = kMXAuthenticatedContentPrefixPath;
         
         credentials = inCredentials;
         _identityServer = credentials.identityServer;
@@ -529,6 +531,7 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
                                          [self dispatchProcessing:^{
                                              MXJSONModelSetMXJSONModel(matrixVersions, MXMatrixVersions, JSONResponse);
                                          } andCompletion:^{
+                                             self->isUsingAuthenticatedMedia = matrixVersions.supportsAuthenticatedMedia;
                                              success(matrixVersions);
                                          }];
                                      }
@@ -4498,28 +4501,30 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
 {
     NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
     parameters[@"url"] = [url absoluteString];
+    NSString* path = isUsingAuthenticatedMedia ? authenticatedContentPathPrefix : contentPathPrefix;
     
     MXWeakify(self);
+    
     return [httpClient requestWithMethod:@"GET"
-                                    path:[NSString stringWithFormat:@"%@/preview_url", contentPathPrefix]
+                                    path:[NSString stringWithFormat:@"%@/preview_url", path]
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
-                                     MXStrongifyAndReturnIfNil(self);
-
-                                     if (success)
-                                     {
-                                         __block MXURLPreview *urlPreview;
-                                         [self dispatchProcessing:^{
-                                             MXJSONModelSetMXJSONModel(urlPreview, MXURLPreview, JSONResponse);
-                                         } andCompletion:^{
-                                             success(urlPreview);
-                                         }];
-                                     }
-                                 }
+        MXStrongifyAndReturnIfNil(self);
+        
+        if (success)
+        {
+            __block MXURLPreview *urlPreview;
+            [self dispatchProcessing:^{
+                MXJSONModelSetMXJSONModel(urlPreview, MXURLPreview, JSONResponse);
+            } andCompletion:^{
+                success(urlPreview);
+            }];
+        }
+    }
                                  failure:^(NSError *error) {
-                                     MXStrongifyAndReturnIfNil(self);
-                                     [self dispatchFailure:error inBlock:failure];
-                                 }];
+        MXStrongifyAndReturnIfNil(self);
+        [self dispatchFailure:error inBlock:failure];
+    }];
 }
 
 #pragma mark - Antivirus server API

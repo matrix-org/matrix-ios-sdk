@@ -231,7 +231,7 @@ typedef void (^MXOnResumeDone)(void);
     {
         matrixRestClient = mxRestClient;
         _threePidAddManager = [[MX3PidAddManager alloc] initWithMatrixSession:self];
-        mediaManager = [[MXMediaManager alloc] initWithHomeServer:matrixRestClient.homeserver];
+        mediaManager = [[MXMediaManager alloc] initWithRestClient:matrixRestClient];
         rooms = [NSMutableDictionary dictionary];
         roomSummaries = [NSMutableDictionary dictionary];
         _roomSummaryUpdateDelegate = [MXRoomSummaryUpdater roomSummaryUpdaterForSession:self];
