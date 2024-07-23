@@ -177,6 +177,8 @@ extern NSString *const kMXMediaUploadIdPrefix;
 @property (readonly) CGFloat uploadInitialRange;
 @property (readonly) CGFloat uploadRange;
 
+- (id)initWithAccessToken:(NSString *) accessToken;
+
 /**
  Cancel the operation.
  */

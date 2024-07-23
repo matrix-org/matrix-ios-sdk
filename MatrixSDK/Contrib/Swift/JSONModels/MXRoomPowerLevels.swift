@@ -25,7 +25,7 @@ extension MXRoomPowerLevels {
      - parameter eventType: the type of event.
      - returns: the required minimum power level.
      */
-    @nonobjc func minimumPowerLevelForSendingMessageEvent(_ eventType: MXEventType) -> Int {
+    @nonobjc public func minimumPowerLevelForSendingMessageEvent(_ eventType: MXEventType) -> Int {
         return __minimumPowerLevelForSendingEvent(asMessage: eventType.identifier)
     }
     
@@ -36,7 +36,7 @@ extension MXRoomPowerLevels {
      - parameter eventType: the type of event.
      - returns: the required minimum power level.
      */
-    @nonobjc func minimumPowerLevelForSendingStateEvent(_ eventType: MXEventType) -> Int {
+    @nonobjc public func minimumPowerLevelForSendingStateEvent(_ eventType: MXEventType) -> Int {
         return __minimumPowerLevelForSendingEvent(asStateEvent: eventType.identifier)
     }
     

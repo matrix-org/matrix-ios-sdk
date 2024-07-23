@@ -230,6 +230,12 @@ extern NSString *const kMXCredentialsNewRefreshTokenDataKey;
 @property (nonatomic) NSString *contentPathPrefix;
 
 /**
+ The Matrix content repository prefix to use for authenticated access.
+ By default, it is defined by the constant kMXAuthenticatedContentPrefixPath.
+ */
+@property (nonatomic) NSString *authenticatedContentPathPrefix;
+
+/**
  The current trusted certificate (if any).
  */
 @property (nonatomic, readonly) NSData* allowedCertificate;
@@ -245,6 +251,10 @@ extern NSString *const kMXCredentialsNewRefreshTokenDataKey;
  */
 @property (nonatomic, copy) NSSet <NSString *> *acceptableContentTypes;
 
+/**
+ Supported server versions of the matrix server, only for internal use of the SDK, use the stored version on the app side.
+ */
+@property (readonly) BOOL isUsingAuthenticatedMedia;
 
 /**
  Create an instance based on homeserver url.
@@ -2500,6 +2510,10 @@ Note: Clients should consider avoiding this endpoint for URLs posted in encrypte
                                  success:(void (^)(MXKeysQueryResponse *keysQueryResponse))success
                                  failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
+- (MXHTTPOperation*)downloadKeysRawForUsers:(NSArray<NSString*>*)userIds
+                                   token:(NSString*)token
+                                 success:(void (^)(MXKeysQueryResponseRaw *keysQueryResponse))success
+                                 failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 /**
  * Claim one-time keys.
 

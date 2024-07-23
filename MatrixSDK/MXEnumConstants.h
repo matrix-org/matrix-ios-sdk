@@ -34,6 +34,11 @@ FOUNDATION_EXPORT NSString *const kMXContentUriScheme;
 FOUNDATION_EXPORT NSString *const kMXContentPrefixPath;
 
 /**
+ A constant representing the default prefix of the Matrix authenticated content repository path.
+ */
+FOUNDATION_EXPORT NSString *const kMXAuthenticatedContentPrefixPath;
+
+/**
  A constant representing the URI path for as-yet unspecified of the AntiVirus Client-Server HTTP API.
  */
 FOUNDATION_EXPORT NSString *const kMXAntivirusAPIPrefixPathUnstable;
