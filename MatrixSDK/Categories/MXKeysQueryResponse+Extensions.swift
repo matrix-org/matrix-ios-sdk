@@ -39,3 +39,27 @@ extension MXKeysQueryResponse : MXSummable {
         return keysQueryResponse as! Self
     }
 }
+
+
+extension MXKeysQueryResponseRaw : MXSummable {
+    
+    public static func +(lhs: MXKeysQueryResponseRaw, rhs: MXKeysQueryResponseRaw) -> Self {
+        let keysQueryResponse = MXKeysQueryResponseRaw()
+        
+        // Casts to original objc NSDictionary are annoying
+        // but we want to reuse our implementation of NSDictionary.+
+        let deviceKeysMap = (lhs.deviceKeys as NSDictionary? ?? NSDictionary())
+        + (rhs.deviceKeys as NSDictionary? ?? NSDictionary())
+        keysQueryResponse.deviceKeys = deviceKeysMap as? [String : Any]
+        
+        let crossSigningKeys = (lhs.crossSigningKeys as NSDictionary? ?? NSDictionary())
+            + (rhs.crossSigningKeys as NSDictionary? ?? NSDictionary())
+        keysQueryResponse.crossSigningKeys = crossSigningKeys as? [String: MXCrossSigningInfo]
+        
+        let failures = (lhs.failures as NSDictionary? ?? NSDictionary())
+            + (rhs.failures as NSDictionary? ?? NSDictionary())
+        keysQueryResponse.failures = failures as? [AnyHashable : Any]
+        
+        return keysQueryResponse as! Self
+    }
+}
