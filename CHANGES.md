@@ -1,3 +1,14 @@
+## Changes in 0.27.12 (2024-07-23)
+
+🙌 Improvements
+
+- Expose MXRroomPowerLevels Swift wrappers to Element ([#1869](https://github.com/matrix-org/matrix-ios-sdk/pull/1869))
+
+🐛 Bugfixes
+
+- Fix CallKit audio session late init in VoIP call. ([#1866](https://github.com/matrix-org/matrix-ios-sdk/pull/1866))
+
+
 ## Changes in 0.27.11 (2024-06-18)
 
 No significant changes.
