@@ -15,7 +15,7 @@
 //
 
 import Foundation
-import MatrixSDKCrypto
+@_implementationOnly import MatrixSDKCrypto
 
 /// Object responsible for encrypting room events and ensuring that room keys are distributed to room members
 protocol MXRoomEventEncrypting {

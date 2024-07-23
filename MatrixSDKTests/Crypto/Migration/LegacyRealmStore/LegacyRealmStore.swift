@@ -15,7 +15,7 @@
 //
 
 import Foundation
-import Realm
+@_implementationOnly import Realm
 
 /// Class simulating legacy crypto store associated with the now-deprecated native crypto module
 ///

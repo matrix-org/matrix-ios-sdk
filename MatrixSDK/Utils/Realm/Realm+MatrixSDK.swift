@@ -14,7 +14,7 @@
 // limitations under the License.
 //
 
-import Realm
+@_implementationOnly import Realm
 
 extension RLMRealm {
     

@@ -15,7 +15,7 @@
 //
 
 import Foundation
-import MatrixSDKCrypto
+@_implementationOnly import MatrixSDKCrypto
 
 /// Object responsible for decrypting room events and dealing with undecryptable events
 protocol MXRoomEventDecrypting: Actor {
