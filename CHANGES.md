@@ -1,3 +1,14 @@
+## Changes in 0.27.13 (2024-08-20)
+
+🙌 Improvements
+
+- Add UTC timestamps to console log lines. ([#7472](https://github.com/vector-im/element-ios/issues/7472))
+
+📄 Documentation
+
+- Drop the requirement for "real" or "legally identifiable" name in order to contribute, in line with updated Foundation policy. ([#1875](https://github.com/matrix-org/matrix-ios-sdk/pull/1875))
+
+
 ## Changes in 0.27.12 (2024-07-23)
 
 🙌 Improvements
