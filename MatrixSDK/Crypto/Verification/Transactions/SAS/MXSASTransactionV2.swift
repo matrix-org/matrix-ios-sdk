@@ -172,6 +172,8 @@ extension MXSASTransactionV2: SasListener {
                 humanReadable: cancelInfo.reason
             )
             self.state = cancelInfo.cancelledByUs == true ? MXSASTransactionStateCancelledByMe : MXSASTransactionStateCancelled
+        case .created:
+            break
         }
     }
 }

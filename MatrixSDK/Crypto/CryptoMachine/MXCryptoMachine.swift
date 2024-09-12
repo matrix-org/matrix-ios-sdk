@@ -117,7 +117,8 @@ class MXCryptoMachine {
     }
     
     func invalidateCache() async {
-        await machine.clearCryptoCache()
+        // Not sure what is the new function for this
+//        await machine.clearCryptoCache()
     }
     
     // MARK: - Private
