@@ -334,7 +334,7 @@ static const char * const kProcessingQueueName = "org.MatrixSDK.MXScanManager";
         {
             
             NSString *message = [MXTools serialiseJSONObject:requestBody];
-            PKMessageWrapper *pkMessage = [PKEncryptionHelper getPKMessage:message using:publicKey];
+            PKMessageWrapper *pkMessage = [PKMessageWrapper encryptMessage:message usingKey:publicKey];
             if (pkMessage)
             {
                 completion([MXContentScanEncryptedBody modelFromPKMessage:pkMessage]);

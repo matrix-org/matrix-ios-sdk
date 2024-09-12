@@ -752,8 +752,8 @@
 		A780624F27B2CE74005780C0 /* FileManager+Backup.swift in Sources */ = {isa = PBXBuildFile; fileRef = A780624C27B2CE74005780C0 /* FileManager+Backup.swift */; };
 		A780625027B2CE74005780C0 /* FileManager+AppGroupContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A780624D27B2CE74005780C0 /* FileManager+AppGroupContainer.swift */; };
 		A780625127B2CE74005780C0 /* FileManager+AppGroupContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A780624D27B2CE74005780C0 /* FileManager+AppGroupContainer.swift */; };
-		A7BB11982C933677002F7FA5 /* PKEncryptionHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7BB11972C933677002F7FA5 /* PKEncryptionHelper.swift */; };
-		A7BB11992C933677002F7FA5 /* PKEncryptionHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7BB11972C933677002F7FA5 /* PKEncryptionHelper.swift */; };
+		A7BB11982C933677002F7FA5 /* PKMessageWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7BB11972C933677002F7FA5 /* PKMessageWrapper.swift */; };
+		A7BB11992C933677002F7FA5 /* PKMessageWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7BB11972C933677002F7FA5 /* PKMessageWrapper.swift */; };
 		A816247C25F60C7700A46F05 /* MXDeviceListOperationsPoolUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A816247B25F60C7700A46F05 /* MXDeviceListOperationsPoolUnitTests.swift */; };
 		A816248525F60D0300A46F05 /* MXDeviceListOperationsPoolUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A816247B25F60C7700A46F05 /* MXDeviceListOperationsPoolUnitTests.swift */; };
 		B105CD9D261E0B70006EB204 /* MXSpaceChildrenSummary.swift in Sources */ = {isa = PBXBuildFile; fileRef = B105CD9C261E0B70006EB204 /* MXSpaceChildrenSummary.swift */; };
@@ -2715,7 +2715,7 @@
 		A75CAD6B2A97970500F06072 /* MXWellKnownAuthentication.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXWellKnownAuthentication.h; sourceTree = "<group>"; };
 		A780624C27B2CE74005780C0 /* FileManager+Backup.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "FileManager+Backup.swift"; sourceTree = "<group>"; };
 		A780624D27B2CE74005780C0 /* FileManager+AppGroupContainer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "FileManager+AppGroupContainer.swift"; sourceTree = "<group>"; };
-		A7BB11972C933677002F7FA5 /* PKEncryptionHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PKEncryptionHelper.swift; sourceTree = "<group>"; };
+		A7BB11972C933677002F7FA5 /* PKMessageWrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PKMessageWrapper.swift; sourceTree = "<group>"; };
 		A816247B25F60C7700A46F05 /* MXDeviceListOperationsPoolUnitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXDeviceListOperationsPoolUnitTests.swift; sourceTree = "<group>"; };
 		B105CD9C261E0B70006EB204 /* MXSpaceChildrenSummary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXSpaceChildrenSummary.swift; sourceTree = "<group>"; };
 		B105CDD4261F54C8006EB204 /* MXSpaceChildContent.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXSpaceChildContent.h; sourceTree = "<group>"; };
@@ -3293,7 +3293,7 @@
 				02CAD435217DD12F0074700B /* Data */,
 				B146D50021A5C6D600D8C2C6 /* MXScanManager.h */,
 				B146D50121A5C6D600D8C2C6 /* MXScanManager.m */,
-				A7BB11972C933677002F7FA5 /* PKEncryptionHelper.swift */,
+				A7BB11972C933677002F7FA5 /* PKMessageWrapper.swift */,
 			);
 			path = ContentScan;
 			sourceTree = "<group>";
@@ -7296,7 +7296,7 @@
 				EC8A53AF25B1BC77004E0802 /* MXCallAnswerEventContent.m in Sources */,
 				B1432B51282AB29A00737CA6 /* MXBeaconInfoSummaryAllRoomListener.swift in Sources */,
 				32A30B191FB4813400C8309E /* MXIncomingRoomKeyRequestManager.m in Sources */,
-				A7BB11982C933677002F7FA5 /* PKEncryptionHelper.swift in Sources */,
+				A7BB11982C933677002F7FA5 /* PKMessageWrapper.swift in Sources */,
 				323F3F9320D3F0C700D26D6A /* MXRoomEventFilter.m in Sources */,
 				3275FD9921A6B53300B9C13D /* MXLoginPolicyData.m in Sources */,
 				EC1848C92686176D00865E16 /* MXiOSAudioOutputRouterDelegate.swift in Sources */,
@@ -7969,7 +7969,7 @@
 				B14EF25C2397E90400758AF0 /* MXRoomTombStoneContent.m in Sources */,
 				B1432B52282AB29A00737CA6 /* MXBeaconInfoSummaryAllRoomListener.swift in Sources */,
 				B14EF25D2397E90400758AF0 /* MXImage.swift in Sources */,
-				A7BB11992C933677002F7FA5 /* PKEncryptionHelper.swift in Sources */,
+				A7BB11992C933677002F7FA5 /* PKMessageWrapper.swift in Sources */,
 				B14EF25E2397E90400758AF0 /* (null) in Sources */,
 				32B090E3261F709B002924AA /* MXAsyncTaskQueue.swift in Sources */,
 				B14EF25F2397E90400758AF0 /* MXServerNoticeContent.m in Sources */,

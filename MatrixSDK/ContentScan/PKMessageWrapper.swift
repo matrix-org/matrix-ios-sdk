@@ -17,18 +17,6 @@
 import Foundation
 import MatrixSDKCrypto
 
-@objc public class PKEncryptionHelper: NSObject {
-    @objc public static func getPKMessage(_ message: String, using publicKey: String) -> PKMessageWrapper? {
-        do {
-            let pkEncryption = try PkEncryption.fromBase64(key: publicKey)
-            return PKMessageWrapper(pkMessage: pkEncryption.encrypt(plaintext: message))
-        } catch {
-            MXLog.error("[PKEncryptionHelper] failed to create pkEncryption", context: error)
-            return nil
-        }
-    }
-}
-
 @objc public class PKMessageWrapper: NSObject {
     private let pkMessage: PkMessage
     
@@ -43,8 +31,18 @@ import MatrixSDKCrypto
     @objc public var ephemeralKey: String {
         pkMessage.ephemeralKey
     }
+    
+    @objc public static func encryptMessage(_ message: String, usingKey key: String) -> PKMessageWrapper? {
+        do {
+            let pkEncryption = try PkEncryption.fromBase64(key: key)
+            return PKMessageWrapper(pkMessage: pkEncryption.encrypt(plaintext: message))
+        } catch {
+            MXLog.error("[PKMessageWrapper] failed to create pkEncryption", context: error)
+            return nil
+        }
+    }
         
-    fileprivate init(pkMessage: PkMessage) {
+    private init(pkMessage: PkMessage) {
         self.pkMessage = pkMessage
     }
 }
