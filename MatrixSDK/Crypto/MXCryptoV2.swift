@@ -724,8 +724,7 @@ class MXCryptoV2: NSObject, MXCrypto {
     
     func invalidateCache(_ done: @escaping () -> Void) {
         Task {
-            log.debug("Invalidating Olm Machine crypto store cache.")
-            await machine.invalidateCache()
+            // invalidating cache is not required for crypto v2 and is just here for conformance with the original crypto protocol
             await MainActor.run {
                 done()
             }

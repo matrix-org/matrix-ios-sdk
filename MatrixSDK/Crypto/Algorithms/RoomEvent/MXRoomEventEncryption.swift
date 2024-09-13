@@ -184,7 +184,8 @@ struct MXRoomEventEncryption: MXRoomEventEncrypting {
             rotationPeriodMsgs: UInt64(Self.keyRotationPeriodMsgs),
             // If not set, history visibility defaults to `joined` as the most restrictive setting
             historyVisibility: state.historyVisibility?.visibility ?? .joined,
-            onlyAllowTrustedDevices: onlyTrustedDevices(in: roomId)
+            onlyAllowTrustedDevices: onlyTrustedDevices(in: roomId),
+            errorOnVerifiedUserProblem: false
         )
     }
     

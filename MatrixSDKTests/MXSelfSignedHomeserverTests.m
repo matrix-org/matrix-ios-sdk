@@ -283,7 +283,7 @@
                     NSString *contentURL = event.content[@"url"];
                     XCTAssert(contentURL);
                     
-                    MXMediaManager *mediaManager = [[MXMediaManager alloc] initWithHomeServer:mxSession.matrixRestClient.homeserver];
+                    MXMediaManager *mediaManager = [[MXMediaManager alloc] initWithRestClient:mxSession.matrixRestClient];
                     XCTAssert(mediaManager);
                     
                     [mxSession close];

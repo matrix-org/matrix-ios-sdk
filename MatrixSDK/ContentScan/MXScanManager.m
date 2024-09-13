@@ -15,7 +15,6 @@
  */
 
 #import "MXScanManager.h"
-#import <OLMKit/OLMKit.h>
 
 #import "MXMediaScanStore.h"
 #import "MXRealmMediaScanStore.h"
@@ -28,6 +27,8 @@
 #import "MXRestClient.h"
 #import "MXTools.h"
 #import "MXScanRealmFileProvider.h"
+
+#import "MatrixSDKSwiftHeader.h"
 
 #pragma mark - Defines & Constants
 
@@ -331,11 +332,17 @@ static const char * const kProcessingQueueName = "org.MatrixSDK.MXScanManager";
     [self getAntivirusServerPublicKey:^(NSString * _Nullable publicKey) {
         if (publicKey.length)
         {
-            OLMPkEncryption *olmPkEncryption = [OLMPkEncryption new];
-            [olmPkEncryption setRecipientKey:publicKey];
+            
             NSString *message = [MXTools serialiseJSONObject:requestBody];
-            OLMPkMessage *olmPkMessage = [olmPkEncryption encryptMessage:message error:nil];
-            completion([MXContentScanEncryptedBody modelFromOLMPkMessage:olmPkMessage]);
+            PKMessageWrapper *pkMessage = [PKMessageWrapper encryptMessage:message usingKey:publicKey];
+            if (pkMessage)
+            {
+                completion([MXContentScanEncryptedBody modelFromPKMessage:pkMessage]);
+            }
+            else
+            {
+                completion(nil);
+            }
         }
         else
         {
