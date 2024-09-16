@@ -110,14 +110,6 @@
     }];
 }
 
-- (void)doE2ETestWithAliceAndBobInARoom:(XCTestCase*)testCase
-                             cryptedBob:(BOOL)cryptedBob
-                    warnOnUnknowDevices:(BOOL)warnOnUnknowDevices
-                            readyToTest:(void (^)(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation))readyToTest
-{
-    [self doE2ETestWithAliceAndBobInARoom:testCase cryptedBob:cryptedBob warnOnUnknowDevices:warnOnUnknowDevices aliceStore:[[MXNoStore alloc] init] bobStore:[[MXNoStore alloc] init] readyToTest:readyToTest];
-}
-
 - (void)doE2ETestWithAliceByInvitingBobInARoom:(XCTestCase*)testCase
                              cryptedBob:(BOOL)cryptedBob
                     warnOnUnknowDevices:(BOOL)warnOnUnknowDevices
