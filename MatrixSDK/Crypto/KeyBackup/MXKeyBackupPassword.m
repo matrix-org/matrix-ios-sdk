@@ -19,8 +19,6 @@
 #import "MXTools.h"
 #import "MXCryptoConstants.h"
 
-#import <OLMKit/OLMKit.h>
-
 #import <Security/Security.h>
 #import <CommonCrypto/CommonDigest.h>
 #import <CommonCrypto/CommonCryptor.h>
@@ -38,65 +36,12 @@ static NSUInteger const kDefaultIterations = 500000;
 {
     *salt = [[MXTools generateSecret] substringWithRange:NSMakeRange(0, kSaltLength)];
     *iterations = kDefaultIterations;
-
-    NSData *privateKey = [self deriveKey:password salt:*salt iterations:kDefaultIterations error:error];
-
-    return privateKey;
+    return nil;
 }
 
 + (NSData *)retrievePrivateKeyWithPassword:(NSString *)password salt:(NSString *)salt iterations:(NSUInteger)iterations error:(NSError *__autoreleasing  _Nullable *)error
 {
-    return [self deriveKey:password salt:salt iterations:iterations error:error];
-}
-
-
-#pragma mark - Private methods
-
-/**
- Compute a private key by deriving a password and a salt strings.
-
- @param password the password.
- @param salt the salt.
- @param iterations number of derivations.
- @param error the output error.
- @return a private key.
- */
-+ (nullable NSData *)deriveKey:(NSString*)password salt:(NSString*)salt iterations:(NSUInteger)iterations error:(NSError *__autoreleasing  _Nullable *)error
-{
-    NSDate *startDate = [NSDate date];
-
-    NSData *passwordData = [password dataUsingEncoding:NSUTF8StringEncoding];
-    NSData *saltData = [salt dataUsingEncoding:NSUTF8StringEncoding];
-
-    NSMutableData *derivedKey = [NSMutableData dataWithLength:[OLMPkDecryption privateKeyLength]];
-
-    int result =  CCKeyDerivationPBKDF(kCCPBKDF2,
-                                   passwordData.bytes,
-                                   passwordData.length,
-                                   saltData.bytes,
-                                   saltData.length,
-                                   kCCPRFHmacAlgSHA512,
-                                   (uint)iterations,
-                                   derivedKey.mutableBytes,
-                                   derivedKey.length);
-
-    MXLogDebug(@"[MXKeyBackupPassword] deriveKey: %tu iterations took %.0fms", iterations, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
-
-    if (result != kCCSuccess)
-    {
-        derivedKey = nil;
-
-        if (*error)
-        {
-            *error = [NSError errorWithDomain:MXKeyBackupErrorDomain
-                                                 code:MXKeyBackupErrorCannotDeriveKeyCode
-                                             userInfo:@{
-                                                        NSLocalizedDescriptionKey: [NSString stringWithFormat:@"CCKeyDerivationPBKDF fails: %@", @(result)]
-                                                        }];
-        }
-    }
-
-    return derivedKey;
+    return nil;
 }
 
 @end

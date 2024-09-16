@@ -52,11 +52,6 @@
 @property (nonatomic, readonly) MXOlmOutboundGroupSession *session;
 
 /**
- The id of the session
- */
-@property (nonatomic, readonly) NSString *sessionId;
-
-/**
  Number of times this session has been used
  */
 @property (nonatomic) NSUInteger useCount;

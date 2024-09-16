@@ -19,7 +19,6 @@
 #import "MatrixSDKTestsData.h"
 #import "MatrixSDKTestsE2EData.h"
 
-#import "MXCryptoStore.h"
 #import "MXMemoryStore.h"
 #import "MatrixSDKTestsSwiftHeader.h"
 

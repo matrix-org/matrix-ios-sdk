@@ -16,7 +16,6 @@
 
 #import "MXOlmOutboundGroupSession.h"
 
-#import <OLMKit/OLMKit.h>
 
 @implementation MXOlmOutboundGroupSession
 
@@ -32,29 +31,9 @@
     return self;
 }
 
-- (NSString *)sessionId
-{
-    return _session.sessionIdentifier;
-}
-
-- (NSString *)sessionKey
-{
-    return _session.sessionKey;
-}
-
-- (NSUInteger)messageIndex
-{
-    return _session.messageIndex;
-}
-
 - (NSDate *)creationDate
 {
     return [NSDate dateWithTimeIntervalSince1970:_creationTime];
-}
-
-- (NSString *)encryptMessage:(NSString *)message error:(NSError**)error
-{
-    return [_session encryptMessage:message error:error];
 }
 
 @end

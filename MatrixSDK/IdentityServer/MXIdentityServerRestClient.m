@@ -17,7 +17,6 @@
 #import "MXIdentityServerRestClient.h"
 
 #import <AFNetworking/AFNetworking.h>
-#import <OLMKit/OLMUtility.h>
 
 #import "MXHTTPClient.h"
 #import "MXError.h"
@@ -386,15 +385,6 @@ NSString *const MXIdentityServerRestClientErrorDomain = @"org.matrix.sdk.MXIdent
                     hashedTreePid = [NSString stringWithFormat:@"%@ %@", threepid, medium];
                     break;
                 case MXIdentityServerHashAlgorithmSHA256:
-                {
-                    NSString *threePidConcatenation = [NSString stringWithFormat:@"%@ %@ %@", threepid, medium, pepper];
-                    
-                    OLMUtility *olmUtility = [OLMUtility new];
-                    NSString *hashedSha256ThreePid = [olmUtility sha256:[threePidConcatenation dataUsingEncoding:NSUTF8StringEncoding]];
-                    hashedTreePid = [MXBase64Tools base64ToBase64Url:hashedSha256ThreePid];
-                    
-                    threePidArrayByThreePidConcatHash[hashedTreePid] = threepidArray;
-                }
                     break;
                 default:
                     break;

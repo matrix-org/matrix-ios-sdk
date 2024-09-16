@@ -17,7 +17,6 @@
 #import "MXKeyBackup.h"
 #import "MXKeyBackup_Private.h"
 
-#import <OLMKit/OLMKit.h>
 #import "MXRecoveryKey.h"
 #import "MXKeyBackupPassword.h"
 #import "MXSession.h"

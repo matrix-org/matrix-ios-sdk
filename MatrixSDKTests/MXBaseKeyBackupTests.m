@@ -16,7 +16,6 @@
 
 #import "MXBaseKeyBackupTests.h"
 
-#import "MXCryptoStore.h"
 #import "MXRecoveryKey.h"
 #import "MXKeybackupPassword.h"
 #import "MXOutboundSessionInfo.h"
@@ -281,60 +280,6 @@
     XCTAssertFalse([MXRecoveryKey isValidRecoveryKey:invalidRecoveryKey1]);
     XCTAssertFalse([MXRecoveryKey isValidRecoveryKey:invalidRecoveryKey2]);
     XCTAssertFalse([MXRecoveryKey isValidRecoveryKey:invalidRecoveryKey3]);
-}
-
-/**
- Check `MXKeyBackupPassword` utilities bijection.
- */
-- (void)testPassword
-{
-    NSString *password = @"password";
-    NSString *salt;
-    NSUInteger iterations;
-    NSError *error;
-
-    NSData *generatedPrivateKey = [MXKeyBackupPassword generatePrivateKeyWithPassword:password salt:&salt iterations:&iterations error:&error];
-
-    XCTAssertNil(error);
-    XCTAssertNotNil(salt);
-    XCTAssertEqual(salt.length, 32);        // kSaltLength
-    XCTAssertEqual(iterations, 500000);     // kDefaultIterations
-    XCTAssertNotNil(generatedPrivateKey);
-    XCTAssertEqual(generatedPrivateKey.length, [OLMPkDecryption privateKeyLength]);
-
-    NSData *retrievedPrivateKey = [MXKeyBackupPassword retrievePrivateKeyWithPassword:password salt:salt iterations:iterations error:&error];
-    XCTAssertNil(error);
-    XCTAssertNotNil(retrievedPrivateKey);
-    XCTAssertEqual(retrievedPrivateKey.length, [OLMPkDecryption privateKeyLength]);
-    XCTAssertEqualObjects(retrievedPrivateKey, generatedPrivateKey);
-}
-
-/**
- Check `[MXKeyBackupPassword retrievePrivateKeyWithPassword:]` with data coming from
- another platform.
- */
-- (void)testPasswordInteroperability
-{
-    // This data has been generated from riot-web
-    NSString *password = @"This is a passphrase!";
-    NSString *salt = @"TO0lxhQ9aYgGfMsclVWPIAublg8h9Nlu";
-    NSUInteger iterations = 500000;
-    UInt8 privateKeyBytes[] = {
-        116, 224, 229, 224, 9, 3, 178, 162,
-        120, 23, 108, 218, 22, 61, 241, 200,
-        235, 173, 236, 100, 115, 247, 33, 132,
-        195, 154, 64, 158, 184, 148, 20, 85
-    };
-    NSData *privateKey = [NSData dataWithBytes:privateKeyBytes length:sizeof(privateKeyBytes)];
-
-    NSError *error;
-    NSData *retrievedPrivateKey = [MXKeyBackupPassword retrievePrivateKeyWithPassword:password salt:salt iterations:iterations error:&error];
-    XCTAssertNil(error);
-
-    XCTAssertNotNil(retrievedPrivateKey);
-    XCTAssertEqual(retrievedPrivateKey.length, [OLMPkDecryption privateKeyLength]);
-
-    XCTAssertEqualObjects(retrievedPrivateKey, privateKey);
 }
 
 /**

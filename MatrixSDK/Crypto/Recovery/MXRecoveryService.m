@@ -555,26 +555,8 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
             
             NSString *secret = unpaddedBase64Secret;
             
-            // Validate the secret before storing it
-            if ([self checkSecret:secret withSecretId:secretId])
-            {
-                if (![secret isEqualToString:[self.dependencies.secretStore secretWithSecretId:secretId]])
-                {
-                    MXLogDebug(@"[MXRecoveryService] recoverSecrets: Recovered secret %@", secretId);
-                    
-                    [updatedSecrets addObject:secretId];
-                    [self.dependencies.secretStore storeSecret:secret withSecretId:secretId];
-                }
-                else
-                {
-                    MXLogDebug(@"[MXRecoveryService] recoverSecrets: Secret %@ was already known", secretId);
-                }
-            }
-            else
-            {
-                MXLogDebug(@"[MXRecoveryService] recoverSecrets: Secret %@ is invalid", secretId);
-                [invalidSecrets addObject:secretId];
-            }
+            MXLogDebug(@"[MXRecoveryService] recoverSecrets: Secret %@ is invalid", secretId);
+            [invalidSecrets addObject:secretId];
             
             dispatch_group_leave(dispatchGroup);
             
@@ -843,66 +825,6 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
 
 
 #pragma mark - Private methods -
-
-- (BOOL)checkSecret:(NSString*)secret withSecretId:(NSString*)secretId
-{
-    // Accept secrets by default
-    BOOL valid = YES;
-    MXCrossSigningTools *tools = [[MXCrossSigningTools alloc] init];
-    
-    if ([secretId isEqualToString:MXSecretId.keyBackup])
-    {
-        MXKeyBackupVersion *keyBackupVersion = self.dependencies.backup.keyBackupVersion;
-        if (keyBackupVersion)
-        {
-            valid = [self.dependencies.backup isSecretValid:secret forKeyBackupVersion:keyBackupVersion];
-        }
-        else
-        {
-            MXLogDebug(@"[MXRecoveryService] checkSecret: Backup is not enabled yet. Accept the secret by default");
-        }
-    }
-    else if ([secretId isEqualToString:MXSecretId.crossSigningMaster])
-    {
-        MXCrossSigningInfo *crossSigningInfo = self.dependencies.crossSigning.myUserCrossSigningKeys;
-        if (crossSigningInfo)
-        {
-            valid = [tools isSecretValid:secret forPublicKeys:crossSigningInfo.masterKeys.keys];
-        }
-        else
-        {
-            MXLogDebug(@"[MXRecoveryService] checkSecret: Cross-signing is not enabled yet. Accept the secret by default");
-        }
-    }
-    else if ([secretId isEqualToString:MXSecretId.crossSigningSelfSigning])
-    {
-        MXCrossSigningInfo *crossSigningInfo = self.dependencies.crossSigning.myUserCrossSigningKeys;
-        if (crossSigningInfo)
-        {
-            valid = [tools isSecretValid:secret forPublicKeys:crossSigningInfo.selfSignedKeys.keys];
-        }
-        else
-        {
-            MXLogDebug(@"[MXRecoveryService] checkSecret: Cross-signing is not enabled yet. Accept the secret by default");
-        }
-    }
-    else if ([secretId isEqualToString:MXSecretId.crossSigningUserSigning])
-    {
-        MXCrossSigningInfo *crossSigningInfo = self.dependencies.crossSigning.myUserCrossSigningKeys;
-        if (crossSigningInfo)
-        {
-            valid = [tools isSecretValid:secret forPublicKeys:crossSigningInfo.userSignedKeys.keys];
-        }
-        else
-        {
-            MXLogDebug(@"[MXRecoveryService] checkSecret: Cross-signing is not enabled yet. Accept the secret by default");
-        }
-    }
-    
-    MXLogDebug(@"[MXRecoveryService] checkSecret: Secret for %@ is %@", secretId, valid ? @"valid" :  @"invalid");
-
-    return valid;
-}
 
 // Try to convert an error from another module to meaningful error for this module
 - (NSError*)domainErrorFromError:(NSError*)error

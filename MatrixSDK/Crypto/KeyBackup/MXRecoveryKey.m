@@ -18,8 +18,6 @@
 
 #import "MXTools.h"
 
-#import <OLMKit/OLMKit.h>
-
 #import <libbase58/libbase58.h>
 
 
@@ -69,21 +67,6 @@ const UInt8 kOlmRecoveryKeyPrefix[] = {0x8B, 0x01};
                                  userInfo:@{
                                             NSLocalizedDescriptionKey: @"Cannot decode Base58 string",
                                             }];
-        return nil;
-    }
-
-    // Check length
-    if (result.length !=
-        sizeof(kOlmRecoveryKeyPrefix) + [OLMPkDecryption privateKeyLength] + 1)
-    {
-        if (error)
-        {
-            *error = [NSError errorWithDomain:MXRecoveryKeyErrorDomain
-                                         code:MXRecoveryKeyErrorLengthCode
-                                     userInfo:@{
-                                                NSLocalizedDescriptionKey: @"Incorrect length",
-                                                }];
-        }
         return nil;
     }
 

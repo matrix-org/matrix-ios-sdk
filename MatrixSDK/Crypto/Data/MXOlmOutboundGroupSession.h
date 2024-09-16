@@ -35,21 +35,6 @@
 @property (nonatomic, readonly) OLMOutboundGroupSession *session;
 
 /**
- the ID of the current session.
- */
-@property (nonatomic, readonly) NSString *sessionId;
-
-/**
- the key of the current session.
- */
-@property (nonatomic, readonly) NSString *sessionKey;
-
-/**
- the message index of the current session.
- */
-@property (nonatomic, readonly) NSUInteger messageIndex;
-
-/**
  The room in which this session is used.
  */
 @property (nonatomic, readonly) NSString *roomId;
@@ -63,15 +48,5 @@
  NSDate related to creationTime.
  */
 @property (nonatomic, readonly) NSDate *creationDate;
-
-/**
- Encrypt a given text message using the current session.
- 
- @param message text message to be encrypted
- @param error instance of an NSError if an error occured.
- 
- @return the encrypted message. Nil if error occured.
- */
-- (NSString *)encryptMessage:(NSString *)message error:(NSError**)error;
 
 @end

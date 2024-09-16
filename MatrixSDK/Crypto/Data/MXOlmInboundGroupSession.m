@@ -18,7 +18,6 @@
 
 #ifdef MX_CRYPTO
 
-#import <OLMKit/OLMKit.h>
 #import "MXCryptoConstants.h"
 
 @implementation MXOlmInboundGroupSession
@@ -28,7 +27,6 @@
     self = [self init];
     if (self)
     {
-        _session  = [[OLMInboundGroupSession alloc] initInboundGroupSessionWithSessionKey:sessionKey error:nil];
         if (!_session)
         {
             return nil;
@@ -44,7 +42,6 @@
     MXMegolmSessionData *sessionData;
 
     NSError *error;
-    NSString *sessionKey = [_session exportSessionAtMessageIndex:messageIndex error:&error];
 
     if (!error)
     {
@@ -54,23 +51,16 @@
         sessionData.forwardingCurve25519KeyChain = _forwardingCurve25519KeyChain;
         sessionData.senderClaimedKeys = _keysClaimed;
         sessionData.roomId = _roomId;
-        sessionData.sessionId = _session.sessionIdentifier;
-        sessionData.sessionKey = sessionKey;
         sessionData.algorithm = kMXCryptoMegolmAlgorithm;
         sessionData.sharedHistory = _sharedHistory;
         sessionData.untrusted = _untrusted;
     }
     else
     {
-        MXLogDebug(@"[MXOlmInboundGroupSession] exportSessionData: Cannot export session with id %@-%@. Error: %@", _session.sessionIdentifier, _senderKey, error);
+        
     }
 
     return sessionData;
-}
-
-- (MXMegolmSessionData *)exportSessionData
-{
-    return [self exportSessionDataAtMessageIndex:_session.firstKnownIndex];
 }
 
 - (instancetype)initWithImportedSessionKey:(NSString *)sessionKey
@@ -79,7 +69,6 @@
     if (self)
     {
         NSError *error;
-        _session  = [[OLMInboundGroupSession alloc] initInboundGroupSessionWithImportedSession:sessionKey error:&error];
         if (!_session)
         {
             MXLogDebug(@"[MXOlmInboundGroupSession] initWithImportedSessionKey failed. Error: %@", error);

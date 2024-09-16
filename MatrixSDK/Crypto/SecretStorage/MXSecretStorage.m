@@ -23,7 +23,6 @@
 #import "MXHkdfSha256.h"
 #import "MXAesHmacSha2.h"
 #import "MXBase64Tools.h"
-#import <OLMKit/OLMKit.h>
 #import "MXEncryptedSecretContent.h"
 
 
@@ -164,12 +163,6 @@ static NSString* const kSecretStorageZeroString = @"\0\0\0\0\0\0\0\0\0\0\0\0\0\0
                 passphraseInfo.salt = salt;
                 passphraseInfo.iterations = iterations;
             }
-        }
-        else
-        {
-            OLMPkDecryption *decryption = [OLMPkDecryption new];
-            [decryption generateKey:&error];
-            privateKey = decryption.privateKey;
         }
         
         if (error)

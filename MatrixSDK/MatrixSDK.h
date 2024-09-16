@@ -155,16 +155,12 @@ FOUNDATION_EXPORT NSString *MatrixSDKVersion;
 
 //  Bridging to Swift
 #import "MXCryptoConstants.h"
-#import "MXCryptoStore.h"
-#import "MXRealmCryptoStore.h"
-#import "MXOlmDevice.h"
 #import "MXEventDecryptionResult.h"
 #import "MXPushRuleEventMatchConditionChecker.h"
 #import "MXPushRuleDisplayNameCondtionChecker.h"
 #import "MXPushRuleRoomMemberCountConditionChecker.h"
 #import "MXPushRuleSenderNotificationPermissionConditionChecker.h"
 #import "MXCachedSyncResponse.h"
-#import "MXBackgroundCryptoStore.h"
 #import "MXSharedHistoryKeyService.h"
 #import "MXRoomKeyEventContent.h"
 #import "MXForwardedRoomKeyEventContent.h"
@@ -172,6 +168,8 @@ FOUNDATION_EXPORT NSString *MatrixSDKVersion;
 #import "MXCryptoTools.h"
 #import "MXRecoveryKey.h"
 #import "MXSecretShareSend.h"
+#import "MXCryptoSecretStore.h"
+#import "MXCryptoVersion.h"
 
 //  Sync response models
 #import "MXSyncResponse.h"

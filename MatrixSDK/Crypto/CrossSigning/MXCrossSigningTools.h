@@ -16,8 +16,6 @@
 
 #import <Foundation/Foundation.h>
 
-#import <OLMKit/OLMKit.h>
-
 #import "MXCrossSigningKey.h"
 
 NS_ASSUME_NONNULL_BEGIN
@@ -31,23 +29,5 @@ typedef NS_ENUM(NSInteger, MXCrossSigningToolsErrorCode)
 {
     MXCrossSigningToolsMissingSignatureErrorCode,
 };
-
-
-@interface MXCrossSigningTools : NSObject
-
-- (NSDictionary*)pkSignObject:(NSDictionary*)object withPkSigning:(OLMPkSigning*)pkSigning userId:(NSString*)userId publicKey:(NSString*)publicKey error:(NSError* _Nullable *)error;
-
-- (BOOL)pkVerifyObject:(NSDictionary*)object userId:(NSString*)userId publicKey:(NSString*)publicKey error:(NSError**)error;
-
-
-- (void)pkSignKey:(MXCrossSigningKey*)crossSigningKey withPkSigning:(OLMPkSigning*)pkSigning userId:(NSString*)userId publicKey:(NSString*)publicKey;
-
-- (BOOL)pkVerifyKey:(MXCrossSigningKey*)crossSigningKey userId:(NSString*)userId publicKey:(NSString*)publicKey error:(NSError**)error;
-
-- (BOOL)isSecretValid:(NSString*)secret forPublicKeys:(NSString*)keys;
-
-- (nullable OLMPkSigning*)pkSigningFromBase64PrivateKey:(NSString*)base64PrivateKey withExpectedPublicKey:(NSString*)expectedPublicKey;
-
-@end
 
 NS_ASSUME_NONNULL_END

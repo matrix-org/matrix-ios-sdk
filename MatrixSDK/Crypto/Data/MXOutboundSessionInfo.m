@@ -23,7 +23,6 @@
     self = [super init];
     if (self)
     {
-        _sessionId = session.sessionId;
         _session = session;
         creationTime = session.creationDate;
         _sharedWithDevices = [[MXUsersDevicesMap alloc] init];
