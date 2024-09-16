@@ -19,42 +19,6 @@
 
 #import "MXCrypto.h"
 
-#import "MXCrypto_Private.h"
-
-#import "MXSession.h"
-#import "MXTools.h"
-
-#import "MXOlmDevice.h"
-#import "MXUsersDevicesMap.h"
-#import "MXDeviceInfo.h"
-#import "MXKey.h"
-
-#import "MXRealmCryptoStore.h"
-#import "MXCryptoMigration.h"
-
-#import "MXMegolmSessionData.h"
-#import "MXMegolmExportEncryption.h"
-
-#import "MXOutgoingRoomKeyRequestManager.h"
-#import "MXIncomingRoomKeyRequestManager.h"
-
-#import "MXSecretStorage_Private.h"
-#import "MXSecretShareManager_Private.h"
-#import "MXRecoveryService_Private.h"
-
-#import "MXKeyVerificationManager_Private.h"
-#import "MXDeviceInfo_Private.h"
-#import "MXCrossSigningInfo_Private.h"
-#import "MXCrossSigning_Private.h"
-
-#import "NSArray+MatrixSDK.h"
-
-#import "MXDeviceListResponse.h"
-
-#import "MatrixSDKSwiftHeader.h"
-#import "MXSharedHistoryKeyService.h"
-#import "MXNativeKeyBackupEngine.h"
-
 #warning File has not been annotated with nullability, see MX_ASSUME_MISSING_NULLABILITY_BEGIN
 
 /**
