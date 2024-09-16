@@ -675,6 +675,8 @@
 		A0A2397A295202930001F722 /* MXAggregatedPollsUpdater.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0A23978295202930001F722 /* MXAggregatedPollsUpdater.swift */; };
 		A0B1217F295306F700E704C2 /* MXAggregatedPollsUpdaterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0B1217E295306F700E704C2 /* MXAggregatedPollsUpdaterTests.swift */; };
 		A0B12180295306F700E704C2 /* MXAggregatedPollsUpdaterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0B1217E295306F700E704C2 /* MXAggregatedPollsUpdaterTests.swift */; };
+		A759E23D2C98EE7D002429A8 /* MXCrypto.m in Sources */ = {isa = PBXBuildFile; fileRef = A759E23C2C98EE7D002429A8 /* MXCrypto.m */; };
+		A759E23E2C98EE7D002429A8 /* MXCrypto.m in Sources */ = {isa = PBXBuildFile; fileRef = A759E23C2C98EE7D002429A8 /* MXCrypto.m */; };
 		A75CAD692A9796DE00F06072 /* MXWellKnownAuthentication.m in Sources */ = {isa = PBXBuildFile; fileRef = A75CAD682A9796DE00F06072 /* MXWellKnownAuthentication.m */; };
 		A75CAD6A2A9796DE00F06072 /* MXWellKnownAuthentication.m in Sources */ = {isa = PBXBuildFile; fileRef = A75CAD682A9796DE00F06072 /* MXWellKnownAuthentication.m */; };
 		A75CAD6C2A979AC500F06072 /* MXWellKnownAuthentication.h in Headers */ = {isa = PBXBuildFile; fileRef = A75CAD6B2A97970500F06072 /* MXWellKnownAuthentication.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -2505,6 +2507,7 @@
 		9274AFE71EE580240009BEB6 /* MXCallKitAdapter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXCallKitAdapter.m; sourceTree = "<group>"; };
 		A0A23978295202930001F722 /* MXAggregatedPollsUpdater.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXAggregatedPollsUpdater.swift; sourceTree = "<group>"; };
 		A0B1217E295306F700E704C2 /* MXAggregatedPollsUpdaterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXAggregatedPollsUpdaterTests.swift; sourceTree = "<group>"; };
+		A759E23C2C98EE7D002429A8 /* MXCrypto.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXCrypto.m; sourceTree = "<group>"; };
 		A75CAD682A9796DE00F06072 /* MXWellKnownAuthentication.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXWellKnownAuthentication.m; sourceTree = "<group>"; };
 		A75CAD6B2A97970500F06072 /* MXWellKnownAuthentication.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXWellKnownAuthentication.h; sourceTree = "<group>"; };
 		A777E5742C98D6F100B39397 /* MXKeyVerificationManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXKeyVerificationManager.m; sourceTree = "<group>"; };
@@ -3328,6 +3331,7 @@
 				3252DCAB224BE59E0032264F /* Verification */,
 				ED2DD110286C450600F06731 /* CryptoMachine */,
 				322A51B41D9AB15900C8536D /* MXCrypto.h */,
+				A759E23C2C98EE7D002429A8 /* MXCrypto.m */,
 				ED47CB6C28523995004FD755 /* MXCryptoV2.swift */,
 				ED5EF151297AB33E00A5ADDA /* MXCryptoV2Factory.swift */,
 			);
@@ -6840,6 +6844,7 @@
 				3A59A52B25A7B1B000DDA1FC /* MXOutboundSessionInfo.m in Sources */,
 				32A1515C1DB525DA00400192 /* NSObject+sortedKeys.m in Sources */,
 				32792BD52295A86600F4FC9D /* MXAggregatedReactionsUpdater.m in Sources */,
+				A759E23D2C98EE7D002429A8 /* MXCrypto.m in Sources */,
 				32618E7C20EFA45B00E1D2EA /* MXRoomMembers.m in Sources */,
 				ED2DD118286C450600F06731 /* MXCryptoRequests.swift in Sources */,
 				EDAAC41928E2FCFE00DD89B5 /* MXCryptoSecretStoreV2.swift in Sources */,
@@ -7468,6 +7473,7 @@
 				EC1165C527107E330089FA56 /* MXRoomListDataFilterOptions.swift in Sources */,
 				3A858DE227528EEB006322C1 /* MXHomeserverCapabilitiesService.swift in Sources */,
 				ECDA764F27BA963D000C48CF /* MXBooleanCapability.m in Sources */,
+				A759E23E2C98EE7D002429A8 /* MXCrypto.m in Sources */,
 				B14EF24C2397E90400758AF0 /* MXCredentials.m in Sources */,
 				ED6F4EFD2987F0FC007D1191 /* MXEncryptedKeyBackup.swift in Sources */,
 				EC116590270F3ABF0089FA56 /* RLMRealm+MatrixSDK.m in Sources */,
