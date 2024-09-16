@@ -19,8 +19,6 @@
 #import "MatrixSDKTestsData.h"
 #import "MatrixSDKTestsE2EData.h"
 
-#import "MXCrypto_Private.h"
-#import "MXCrossSigning_Private.h"
 #import "MXCrossSigningInfo_Private.h"
 #import "MXCrossSigningTools.h"
 
@@ -464,78 +462,6 @@
     }];
 }
 
-//
-// Verify that a verified device gets cross-signing private keys so that it can cross-sign.
-//
-// - Bootstrap cross-signing on a 1st device
-// - Create a 2nd devices
-// - Make each device trust each other
-//   This simulates a self verification and trigger cross-signing behind the shell
-// - The 2nd device requests cross-signing keys from the 1st one
-// -> The 2nd device should be able to cross-sign now
-// -> The 2nd device must have all cross-signing private keys
-- (void)testPrivateKeysGossiping
-{
-    // - Create Alice
-    [matrixSDKTestsE2EData doE2ETestWithBobAndAlice:self readyToTest:^(MXSession *bobSession, MXSession *aliceSession, XCTestExpectation *expectation) {
-        
-        // - Bootstrap cross-signing on a 1st device
-        [aliceSession.crypto.crossSigning setupWithPassword:MXTESTS_ALICE_PWD success:^{
-            XCTAssertEqual(aliceSession.crypto.crossSigning.state, MXCrossSigningStateCanCrossSign);
-            
-            // - Create a 2nd device
-            [matrixSDKTestsE2EData loginUserOnANewDevice:self credentials:aliceSession.matrixRestClient.credentials withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *newAliceSession) {
-                
-                // - Make each device trust each other
-                //   This simulates a self verification and trigger cross-signing behind the shell
-                [newAliceSession.crypto setDeviceVerification:MXDeviceVerified forDevice:aliceSession.matrixRestClient.credentials.deviceId ofUser:aliceSession.matrixRestClient.credentials.userId success:^{
-                    
-                    [aliceSession.crypto setDeviceVerification:MXDeviceVerified forDevice:newAliceSession.matrixRestClient.credentials.deviceId ofUser:aliceSession.matrixRestClient.credentials.userId success:^{
-                        
-                            [newAliceSession.crypto.crossSigning refreshStateWithSuccess:^(BOOL stateUpdated) {
-
-                                XCTAssertEqual(newAliceSession.crypto.crossSigning.state, MXCrossSigningStateTrustCrossSigning);
-
-                                // - The 2nd device requests cross-signing keys from the 1st one
-                                [newAliceSession.legacyCrypto.legacyCrossSigning requestPrivateKeysToDeviceIds:nil success:^{
-                                } onPrivateKeysReceived:^{
-
-                                    // -> The 2nd device should be able to cross-sign now
-                                    XCTAssertEqual(newAliceSession.crypto.crossSigning.state, MXCrossSigningStateCanCrossSign);
-                                    
-                                    // -> The 2nd device must have all cross-signing private keys
-                                    XCTAssertTrue(newAliceSession.crypto.crossSigning.hasAllPrivateKeys);
-                                    [expectation fulfill];
-
-                                } failure:^(NSError * _Nonnull error) {
-                                    XCTFail(@"The operation should not fail - NSError: %@", error);
-                                    [expectation fulfill];
-                                }];
-
-                            } failure:^(NSError * _Nonnull error) {
-                                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
-                                [expectation fulfill];
-                            }];
-                        
-                        } failure:^(NSError * _Nonnull error) {
-                            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
-                            [expectation fulfill];
-                        }];
-                        
-                    } failure:^(NSError * _Nonnull error) {
-                        XCTFail(@"Cannot set up intial test conditions - error: %@", error);
-                        [expectation fulfill];
-                    }];
-
-            }];
-            
-        } failure:^(NSError *error) {
-            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
-            [expectation fulfill];
-        }];
-    }];
-}
-
 
 // Test /keys/query response parsing for cross signing data
 // - Set up the scenario with alice with cross-signing keys
@@ -619,43 +545,6 @@
             XCTFail(@"The operation should not fail - NSError: %@", error);
             [expectation fulfill];
         }];
-    }];
-}
-
-// Check MXCrossSigningInfo storage in the crypto store
-// - Create Alice's cross-signing keys
-// - Store their keys and retrieve them
-// - Update keys test
-- (void)testMXCrossSigningInfoStorage
-{
-    // - Set up the scenario with alice with cross-signing keys
-    [matrixSDKTestsE2EData doE2ETestWithBobAndAlice:self readyToTest:^(MXSession *bobSession, MXSession *aliceSession, XCTestExpectation *expectation) {
-
-        NSString *aliceUserId = aliceSession.matrixRestClient.credentials.userId;
-
-        // - Create Alice's cross-signing keys
-        NSDictionary<NSString*, NSData*> *privateKeys;
-        MXCrossSigningInfo *keys = [aliceSession.legacyCrypto.legacyCrossSigning createKeys:&privateKeys];
-
-        // - Store their keys and retrieve them
-        [aliceSession.legacyCrypto.store storeCrossSigningKeys:keys];
-        MXCrossSigningInfo *storedKeys = [aliceSession.legacyCrypto.store crossSigningKeysForUser:aliceUserId];
-        XCTAssertNotNil(storedKeys);
-
-        XCTAssertEqualObjects(storedKeys.userId, keys.userId);
-        XCTAssertFalse(storedKeys.trustLevel.isVerified);
-        XCTAssertEqual(storedKeys.keys.count, keys.keys.count);
-        XCTAssertEqualObjects(storedKeys.masterKeys.JSONDictionary, keys.masterKeys.JSONDictionary);
-        XCTAssertEqualObjects(storedKeys.selfSignedKeys.JSONDictionary, keys.selfSignedKeys.JSONDictionary);
-        XCTAssertEqualObjects(storedKeys.userSignedKeys.JSONDictionary, keys.userSignedKeys.JSONDictionary);
-
-        // - Update keys test
-        [keys updateTrustLevel:[MXUserTrustLevel trustLevelWithCrossSigningVerified:YES locallyVerified:NO]];
-        [aliceSession.legacyCrypto.store storeCrossSigningKeys:keys];
-        storedKeys = [aliceSession.legacyCrypto.store crossSigningKeysForUser:aliceUserId];
-        XCTAssertTrue(storedKeys.trustLevel.isVerified);
-
-        [expectation fulfill];
     }];
 }
 

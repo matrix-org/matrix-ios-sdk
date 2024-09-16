@@ -250,20 +250,6 @@ class MXCryptoMigrationStoreUnitTests: XCTestCase {
         XCTAssertEqual(crossSigning.selfSigningKey, "SELF")
     }
     
-    func test_extractsOnlyTrackedUsers() throws {
-        let users = [
-            "Alice": MXDeviceTrackingStatusNotTracked,
-            "Bob": MXDeviceTrackingStatusPendingDownload,
-            "Carol": MXDeviceTrackingStatusDownloadInProgress,
-            "Dave": MXDeviceTrackingStatusUpToDate,
-        ].mapValues { NSNumber(value: $0.rawValue) }
-        legacyStore.storeDeviceTrackingStatus(users)
-        
-        let trackedUsers = try extractData().trackedUsers
-        
-        XCTAssertEqual(Set(trackedUsers), ["Bob", "Carol", "Dave"])
-    }
-    
     func test_extractsRoomSettings() throws {
         legacyStore.storeAlgorithm(forRoom: "room1", algorithm: kMXCryptoOlmAlgorithm)
         legacyStore.storeBlacklistUnverifiedDevices(inRoom: "room1", blacklist: true)
