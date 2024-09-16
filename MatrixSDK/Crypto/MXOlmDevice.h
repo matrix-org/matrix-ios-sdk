@@ -21,7 +21,6 @@
 #ifdef MX_CRYPTO
 
 #import "MXCryptoStore.h"
-#import "MXDecrypting.h"
 
 /**
  An instance of MXOlmDevice manages the olm cryptography functions.
@@ -251,29 +250,6 @@ Determine if an incoming messages is a prekey message matching an existing sessi
  @return the imported keys.
  */
 - (NSArray<MXOlmInboundGroupSession *>*)importInboundGroupSessions:(NSArray<MXMegolmSessionData *>*)inboundGroupSessionsData;
-
-/**
- Decrypt a received message with an inbound group session.
- 
- @param body the base64-encoded body of the encrypted message.
- @param isEditEvent whether the event has an edit relationship to another event.
-                    This is used when detecting a replay attack as a way to
-                    distinguish an edit of a message from the original edited message.
- @param roomId the room in which the message was received.
- @param timeline the id of the timeline where the event is decrypted. It is used
-                 to prevent replay attack.
- @param sessionId the session identifier.
- @param senderKey the base64-encoded curve25519 key of the sender.
- @param error the result error if there is a problem decrypting the event.
-
- @return the decrypting result. Nil if the sessionId is unknown.
- */
-- (MXDecryptionResult*)decryptGroupMessage:(NSString*)body
-                               isEditEvent:(BOOL)isEditEvent
-                                    roomId:(NSString*)roomId
-                                inTimeline:(NSString*)timeline
-                                 sessionId:(NSString*)sessionId senderKey:(NSString*)senderKey
-                                     error:(NSError** )error;
 
 /**
  Reset replay attack data for the given timeline.

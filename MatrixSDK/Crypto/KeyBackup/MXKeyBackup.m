@@ -17,8 +17,6 @@
 #import "MXKeyBackup.h"
 #import "MXKeyBackup_Private.h"
 
-#import "MXCrypto_Private.h"
-
 #import <OLMKit/OLMKit.h>
 #import "MXRecoveryKey.h"
 #import "MXKeyBackupPassword.h"
@@ -28,7 +26,6 @@
 #import "MXError.h"
 #import "MXKeyProvider.h"
 #import "MXRawDataKey.h"
-#import "MXCrossSigning_Private.h"
 #import "MXSharedHistoryKeyService.h"
 #import "MXKeyBackupEngine.h"
 #import "MatrixSDKSwiftHeader.h"
@@ -56,7 +53,6 @@ NSUInteger const kMXKeyBackupWaitingTimeToSendKeyBackup = 10000;
 
 @property (nonatomic, strong) id<MXKeyBackupEngine> engine;
 @property (nonatomic, strong) MXRestClient *restClient;
-@property (nonatomic, strong) MXSecretShareManager *secretShareManager;
 
 @end
 
@@ -66,7 +62,6 @@ NSUInteger const kMXKeyBackupWaitingTimeToSendKeyBackup = 10000;
 
 - (instancetype)initWithEngine:(id<MXKeyBackupEngine>)engine
                     restClient:(MXRestClient *)restClient
-            secretShareManager:(MXSecretShareManager *)secretShareManager
                          queue:(dispatch_queue_t)queue
 {
     self = [self init];
@@ -75,7 +70,6 @@ NSUInteger const kMXKeyBackupWaitingTimeToSendKeyBackup = 10000;
         _state = MXKeyBackupStateUnknown;
         _engine = engine;
         _restClient = restClient;
-        _secretShareManager = secretShareManager;
         cryptoQueue = queue;
     }
     return self;
@@ -291,21 +285,6 @@ NSUInteger const kMXKeyBackupWaitingTimeToSendKeyBackup = 10000;
         {
             backupAllGroupSessionsFailure(error);
         }
-    }];
-}
-
-- (void)requestPrivateKeys:(void (^)(void))onComplete
-{
-    MXLogDebug(@"[MXKeyBackup] requestPrivateKeys");
-          
-    [self requestPrivateKeysToDeviceIds:nil success:^{
-    } onPrivateKeysReceived:^{
-        
-        [self restoreKeyBackupAutomaticallyWithPrivateKey:onComplete];
-        
-    } failure:^(NSError * _Nonnull error) {
-        MXLogErrorDetails(@"[MXKeyBackup] requestPrivateKeys. Error for requestPrivateKeys", error);
-        onComplete();
     }];
 }
 
@@ -1043,32 +1022,6 @@ NSUInteger const kMXKeyBackupWaitingTimeToSendKeyBackup = 10000;
 
 
 #pragma mark - Private keys sharing
-
-- (void)requestPrivateKeysToDeviceIds:(nullable NSArray<NSString*>*)deviceIds
-                              success:(void (^)(void))success
-                onPrivateKeysReceived:(void (^)(void))onPrivateKeysReceived
-                              failure:(void (^)(NSError *error))failure
-{
-    MXLogDebug(@"[MXKeyBackup] requestPrivateKeysToDeviceIds: %@", deviceIds);
-
-    MXWeakify(self);
-    [self.secretShareManager requestSecret:MXSecretId.keyBackup toDeviceIds:deviceIds success:^(NSString * _Nonnull requestId) {
-    } onSecretReceived:^BOOL(NSString * _Nonnull secret) {
-        MXStrongifyAndReturnValueIfNil(self, NO);
-        
-        BOOL isSecretValid = !self.keyBackupVersion     // Accept the secret if the backup is not known yet
-        || [self isSecretValid:secret forKeyBackupVersion:self.keyBackupVersion];
-        
-        MXLogDebug(@"[MXKeyBackup] requestPrivateKeysToDeviceIds: Got key. isSecretValid: %@", @(isSecretValid));
-        if (isSecretValid)
-        {
-            NSData *privateKey = [MXBase64Tools dataFromBase64:secret];
-            [self.engine savePrivateKey:privateKey version:self.keyBackupVersion.version];
-            onPrivateKeysReceived();
-        }
-        return isSecretValid;
-    } failure:failure];
-}
 
 - (BOOL)isSecretValid:(NSString*)secret forKeyBackupVersion:(MXKeyBackupVersion*)keyBackupVersion
 {

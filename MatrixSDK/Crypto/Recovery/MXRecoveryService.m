@@ -15,17 +15,15 @@
  */
 
 #import "MXRecoveryService_Private.h"
+#import "MXKeyBackup_Private.h"
 
-
-#import "MXCrypto_Private.h"
-#import "MXCrossSigning_Private.h"
 #import "MXKeyBackupPassword.h"
 #import "MXRecoveryKey.h"
 #import "MXAesHmacSha2.h"
 #import "MXTools.h"
 #import "NSArray+MatrixSDK.h"
 #import "MatrixSDKSwiftHeader.h"
-
+#import "MXCrossSigningTools.h"
 
 #pragma mark - Constants
 
