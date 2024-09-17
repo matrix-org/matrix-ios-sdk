@@ -60,7 +60,7 @@
 
  @return a MXHTTPOperation instance. May be nil if all required materials is already in place.
  */
-- (MXHTTPOperation*)ensureSessionForUsers:(NSArray<NSString*>*)users
+- (MXHTTPOperation*)ensureSessionForUsers:(NSArray<NSString*>*)users forceDistributeToUnverified: (BOOL) forceDistributeToUnverified
                                   success:(void (^)(NSObject *sessionInfo))success
                                   failure:(void (^)(NSError *error))failure;
 

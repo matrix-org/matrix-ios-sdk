@@ -94,7 +94,8 @@
     queuedEncryption.failure = failure;
     [pendingEncryptions addObject:queuedEncryption];
 
-    return [self ensureSessionForUsers:users success:^(NSObject *sessionInfo) {
+    BOOL forceDistributeToUnverified = [self isVerificationEvent:eventType eventContent:eventContent];
+    return [self ensureSessionForUsers:users forceDistributeToUnverified:forceDistributeToUnverified success:^(NSObject *sessionInfo) {
 
         MXOutboundSessionInfo *session = (MXOutboundSessionInfo*)sessionInfo;
         [self processPendingEncryptionsInSession:session withError:nil];
@@ -104,14 +105,37 @@
     }];
 }
 
-- (MXHTTPOperation*)ensureSessionForUsers:(NSArray<NSString*>*)users
+- (BOOL) isVerificationEvent:(MXEventTypeString) eventType eventContent:(NSDictionary*)eventContent
+{
+    switch ([MXTools eventType:eventType])
+    {
+        case MXEventTypeKeyVerificationKey:
+        case MXEventTypeKeyVerificationMac:
+        case MXEventTypeKeyVerificationDone:
+        case MXEventTypeKeyVerificationReady:
+        case MXEventTypeKeyVerificationStart:
+        case MXEventTypeKeyVerificationAccept:
+        case MXEventTypeKeyVerificationCancel: {
+            return YES;
+        }
+        case MXEventTypeRoomMessage: {
+            NSString *msgType = eventContent[kMXMessageTypeKey];
+            return [msgType isEqualToString:kMXMessageTypeKeyVerificationRequest];
+        }
+        default: {
+            return NO;
+        }
+    }
+}
+
+- (MXHTTPOperation*)ensureSessionForUsers:(NSArray<NSString*>*)users forceDistributeToUnverified: (BOOL) forceDistributeToUnverified
                                   success:(void (^)(NSObject *sessionInfo))success
                                   failure:(void (^)(NSError *error))failure
 {
     NSDate *startDate = [NSDate date];
 
     MXHTTPOperation *operation;
-    operation = [self getDevicesInRoom:users success:^(MXUsersDevicesMap<MXDeviceInfo *> *devicesInRoom) {
+    operation = [self getDevicesInRoom:users forceDistributeToUnverified:forceDistributeToUnverified success:^(MXUsersDevicesMap<MXDeviceInfo *> *devicesInRoom) {
 
         MXHTTPOperation *operation2 = [self ensureOutboundSession:devicesInRoom success:^(MXOutboundSessionInfo *session) {
 
@@ -167,6 +191,7 @@
  @param failure A block object called when the operation fails.
 */
 - (MXHTTPOperation *)getDevicesInRoom:(NSArray<NSString*>*)users
+          forceDistributeToUnverified: (BOOL) forceDistributeToUnverified
                               success:(void (^)(MXUsersDevicesMap<MXDeviceInfo *> *devicesInRoom))success
                               failure:(void (^)(NSError *))failure
 {
@@ -199,7 +224,7 @@
                 }
 
                 if (deviceInfo.trustLevel.localVerificationStatus == MXDeviceBlocked
-                    || (!deviceInfo.trustLevel.isVerified && encryptToVerifiedDevicesOnly))
+                    || (!deviceInfo.trustLevel.isVerified && encryptToVerifiedDevicesOnly && !forceDistributeToUnverified))
                 {
                     // Remove any blocked devices
                     MXLogDebug(@"[MXMegolmEncryption] getDevicesInRoom: blocked device: %@", deviceInfo);

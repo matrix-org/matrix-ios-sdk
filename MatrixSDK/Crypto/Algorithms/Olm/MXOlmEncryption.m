@@ -62,7 +62,7 @@
                                 failure:(void (^)(NSError *error))failure
 {
     MXWeakify(self);
-    return [self ensureSessionForUsers:users success:^(NSObject *sessionInfo) {
+    return [self ensureSessionForUsers:users forceDistributeToUnverified:NO success:^(NSObject *sessionInfo) {
         MXStrongifyAndReturnIfNil(self);
 
         NSMutableArray *participantDevices = [NSMutableArray array];
@@ -99,7 +99,7 @@
     } failure:failure];
 }
 
-- (MXHTTPOperation*)ensureSessionForUsers:(NSArray<NSString*>*)users
+- (MXHTTPOperation*)ensureSessionForUsers:(NSArray<NSString*>*)users forceDistributeToUnverified: (BOOL) forceDistributeToUnverified
                                   success:(void (^)(NSObject *sessionInfo))success
                                   failure:(void (^)(NSError *error))failure
 {
