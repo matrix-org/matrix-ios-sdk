@@ -1,0 +1,1 @@
+Support for discovery of availability of stable MSC3882 get_login_token.

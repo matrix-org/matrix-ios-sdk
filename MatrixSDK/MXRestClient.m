@@ -923,7 +923,7 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
 {
     MXWeakify(self);
     return [httpClient requestWithMethod:@"POST"
-                                    path:[NSString stringWithFormat:@"%@/org.matrix.msc3882/login/token", kMXAPIPrefixPathUnstable]
+                                    path:[NSString stringWithFormat:@"%@/login/get_token", kMXAPIPrefixPathV1]
                               parameters:@{}
                                  success:^(NSDictionary *JSONResponse) {
         MXStrongifyAndReturnIfNil(self);

@@ -2075,6 +2075,10 @@
 		EDDBA7F1293F353900AD1480 /* MXToDevicePayload.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDDBA7EF293F353900AD1480 /* MXToDevicePayload.swift */; };
 		EDDD90C82901611600B760E0 /* MXLegacyCrypto+LegacyCrossSigning.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDDD90C72901611600B760E0 /* MXLegacyCrypto+LegacyCrossSigning.swift */; };
 		EDDD90C92901611600B760E0 /* MXLegacyCrypto+LegacyCrossSigning.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDDD90C72901611600B760E0 /* MXLegacyCrypto+LegacyCrossSigning.swift */; };
+		EDDE8B812A272B8200EBEADB /* MXLoginTokenFlow.m in Sources */ = {isa = PBXBuildFile; fileRef = EDDE8B802A272B8200EBEADB /* MXLoginTokenFlow.m */; };
+		EDDE8B822A272B8200EBEADB /* MXLoginTokenFlow.m in Sources */ = {isa = PBXBuildFile; fileRef = EDDE8B802A272B8200EBEADB /* MXLoginTokenFlow.m */; };
+		EDDE8B832A2738AD00EBEADB /* MXLoginTokenFlow.h in Headers */ = {isa = PBXBuildFile; fileRef = EDDE8B7F2A272A0F00EBEADB /* MXLoginTokenFlow.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EDDE8B842A2738AE00EBEADB /* MXLoginTokenFlow.h in Headers */ = {isa = PBXBuildFile; fileRef = EDDE8B7F2A272A0F00EBEADB /* MXLoginTokenFlow.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		EDE1B13B28B7BEAB000DEEE8 /* MXCrossSigningV2UnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDE1B13A28B7BEAB000DEEE8 /* MXCrossSigningV2UnitTests.swift */; };
 		EDE1B13C28B7BEAB000DEEE8 /* MXCrossSigningV2UnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDE1B13A28B7BEAB000DEEE8 /* MXCrossSigningV2UnitTests.swift */; };
 		EDE70DC528DA1B7F00099736 /* MXCryptoTools.h in Headers */ = {isa = PBXBuildFile; fileRef = 3250E7C8220C913900736CB5 /* MXCryptoTools.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -3222,6 +3226,8 @@
 		EDDB07C9297EE0A7005249A6 /* MXCryptoV2FactoryUnitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXCryptoV2FactoryUnitTests.swift; sourceTree = "<group>"; };
 		EDDBA7EF293F353900AD1480 /* MXToDevicePayload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXToDevicePayload.swift; sourceTree = "<group>"; };
 		EDDD90C72901611600B760E0 /* MXLegacyCrypto+LegacyCrossSigning.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MXLegacyCrypto+LegacyCrossSigning.swift"; sourceTree = "<group>"; };
+		EDDE8B7F2A272A0F00EBEADB /* MXLoginTokenFlow.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXLoginTokenFlow.h; sourceTree = "<group>"; };
+		EDDE8B802A272B8200EBEADB /* MXLoginTokenFlow.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXLoginTokenFlow.m; sourceTree = "<group>"; };
 		EDE1B13A28B7BEAB000DEEE8 /* MXCrossSigningV2UnitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXCrossSigningV2UnitTests.swift; sourceTree = "<group>"; };
 		EDE70DC728DA22F800099736 /* MXKeyBackupEngine.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXKeyBackupEngine.h; sourceTree = "<group>"; };
 		EDF154E0296C203E004D7FFE /* MXCryptoMachineStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXCryptoMachineStore.swift; sourceTree = "<group>"; };
@@ -4869,6 +4875,8 @@
 				B14EECD62577DE7A00448735 /* MXLoginSSOIdentityProvider.m */,
 				B14EECE32577F76100448735 /* MXLoginSSOFlow.h */,
 				B14EECE42577F76100448735 /* MXLoginSSOFlow.m */,
+				EDDE8B7F2A272A0F00EBEADB /* MXLoginTokenFlow.h */,
+				EDDE8B802A272B8200EBEADB /* MXLoginTokenFlow.m */,
 			);
 			path = Login;
 			sourceTree = "<group>";
@@ -6058,6 +6066,7 @@
 				32133025228BFA800070BA9B /* MXReactionCountChangeListener.h in Headers */,
 				321CFDFB2254E728004D31DF /* MXTransactionCancelCode.h in Headers */,
 				32A9770421626E5C00919CC0 /* MXServerNotices.h in Headers */,
+				EDDE8B832A2738AD00EBEADB /* MXLoginTokenFlow.h in Headers */,
 				91CC0FCA26A033AE00C2A387 /* MXURLPreview.h in Headers */,
 				021AFBA42179E91900742B2C /* MXEncryptedContentFile.h in Headers */,
 				B146D4F021A5AF7F00D8C2C6 /* MXRealmEventScanMapper.h in Headers */,
@@ -6552,6 +6561,7 @@
 				B14EF3242397E90400758AF0 /* MXBugReportRestClient.h in Headers */,
 				323F877C25546170009E9E67 /* MXBaseProfiler.h in Headers */,
 				B14EF3252397E90400758AF0 /* MXRoomPowerLevels.h in Headers */,
+				EDDE8B842A2738AE00EBEADB /* MXLoginTokenFlow.h in Headers */,
 				B19A309F240424BD00FB6F35 /* MXQRCodeTransaction_Private.h in Headers */,
 				3AC13803264482A100EE1E74 /* MXExportedOlmDevice.h in Headers */,
 				B14EF3262397E90400758AF0 /* MXEventScanStoreDelegate.h in Headers */,
@@ -7380,6 +7390,7 @@
 				32F9FA7E1DBA0CF0009D98A6 /* MXDecryptionResult.m in Sources */,
 				321CFDF92254E721004D31DF /* MXTransactionCancelCode.m in Sources */,
 				B19A30C22404268600FB6F35 /* MXVerifyingAnotherUserQRCodeData.m in Sources */,
+				EDDE8B822A272B8200EBEADB /* MXLoginTokenFlow.m in Sources */,
 				EC8A53BD25B1BC77004E0802 /* MXCallRejectEventContent.m in Sources */,
 				EC6D007B28E1F15400152144 /* MXDevice.m in Sources */,
 				EDCB65E22912AB0C00F55D4D /* MXRoomEventDecryption.swift in Sources */,
@@ -8053,6 +8064,7 @@
 				B14EF2802397E90400758AF0 /* MXServiceTerms.m in Sources */,
 				3229535425A5F7220012FCF0 /* MXBackgroundCryptoStore.m in Sources */,
 				B14EF2812397E90400758AF0 /* MXNotificationCenter.m in Sources */,
+				EDDE8B812A272B8200EBEADB /* MXLoginTokenFlow.m in Sources */,
 				EC60ED60265CFC2C00B39A4E /* MXSyncResponse.m in Sources */,
 				EC6D007C28E1F15400152144 /* MXDevice.m in Sources */,
 				EDCB65E32912AB0C00F55D4D /* MXRoomEventDecryption.swift in Sources */,
