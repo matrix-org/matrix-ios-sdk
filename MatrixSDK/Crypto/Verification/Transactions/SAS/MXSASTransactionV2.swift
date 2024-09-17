@@ -150,7 +150,7 @@ extension MXSASTransactionV2: SasListener {
         
         switch state {
         case .started:
-            self.state = isIncoming ? MXSASTransactionStateIncomingShowAccept : MXSASTransactionStateOutgoingWaitForPartnerToAccept
+            self.state = MXSASTransactionStateIncomingShowAccept
         case .accepted:
             self.state = MXSASTransactionStateWaitForPartnerKey
         case .keysExchanged(let emojis, let decimals):
@@ -172,6 +172,8 @@ extension MXSASTransactionV2: SasListener {
                 humanReadable: cancelInfo.reason
             )
             self.state = cancelInfo.cancelledByUs == true ? MXSASTransactionStateCancelledByMe : MXSASTransactionStateCancelled
+        case .created:
+            self.state = MXSASTransactionStateOutgoingWaitForPartnerToAccept
         }
     }
 }

@@ -70,17 +70,17 @@ jobs:
         run: bundle exec fastlane test testplan:AllWorkingTests
 
       # Store artifacts
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: report.html
           path: build/test/report.html
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: report.junit
           path: build/test/report.junit
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: MatrixSDK-macOS.xcresult
