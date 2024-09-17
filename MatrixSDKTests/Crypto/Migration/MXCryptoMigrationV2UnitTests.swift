@@ -15,7 +15,7 @@
 //
 
 import Foundation
-import MatrixSDKCrypto
+@_implementationOnly import MatrixSDKCrypto
 @testable import MatrixSDK
 
 class MXCryptoMigrationV2UnitTests: XCTestCase {

@@ -15,7 +15,7 @@
 //
 
 import Foundation
-import MatrixSDKCrypto
+@_implementationOnly import MatrixSDKCrypto
 
 /// SAS transaction originating from `MatrixSDKCrypto`
 class MXSASTransactionV2: NSObject, MXSASTransaction {

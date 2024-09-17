@@ -1,0 +1,1 @@
+Build: Makes distributing the SDK as a binary Swift package possible again. Contributed by Christopher Kobusch (@Topheee).

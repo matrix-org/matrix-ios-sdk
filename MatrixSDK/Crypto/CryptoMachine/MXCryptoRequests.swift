@@ -15,7 +15,7 @@
 //
 
 import Foundation
-import MatrixSDKCrypto
+@_implementationOnly import MatrixSDKCrypto
 
 /// Convenience class to delegate network requests originating in Rust crypto module
 /// to the native REST API client

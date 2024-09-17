@@ -15,7 +15,7 @@
 //
 
 import Foundation
-import MatrixSDKCrypto
+@_implementationOnly import MatrixSDKCrypto
 
 /// Redirects logs originating in `MatrixSDKCrypto` into `MXLog`
 class MXCryptoSDKLogger: Logger {

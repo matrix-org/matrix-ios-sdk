@@ -15,7 +15,7 @@
 //
 
 import Foundation
-import MatrixSDKCrypto
+@_implementationOnly import MatrixSDKCrypto
 
 /// Verification request originating from `MatrixSDKCrypto`
 class MXKeyVerificationRequestV2: NSObject, MXKeyVerificationRequest { 

@@ -15,7 +15,7 @@
 //
 
 import Foundation
-import Realm
+@_implementationOnly import Realm
 
 class MXRealmBeaconInfo: RLMObject {
     
