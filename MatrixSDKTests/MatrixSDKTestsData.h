@@ -31,10 +31,10 @@ FOUNDATION_EXPORT NSString * const kMXTestsAliceDisplayName;
 FOUNDATION_EXPORT NSString * const kMXTestsAliceAvatarURL;
 
 #define MXTESTS_BOB @"mxBob"
-#define MXTESTS_BOB_PWD @"bobbob"
+#define MXTESTS_BOB_PWD @"bobbob123!"
 
 #define MXTESTS_ALICE @"mxAlice"
-#define MXTESTS_ALICE_PWD @"alicealice"
+#define MXTESTS_ALICE_PWD @"alicealice123!"
 
 
 @interface MatrixSDKTestsData : NSObject
