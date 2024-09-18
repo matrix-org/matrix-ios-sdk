@@ -27,7 +27,6 @@
 #import "MXSDKOptions.h"
 #import "MXTools.h"
 #import "MXSendReplyEventDefaultStringLocalizer.h"
-#import "MXOutboundSessionInfo.h"
 #import "MXLRUCache.h"
 #import "MatrixSDKTestsSwiftHeader.h"
 

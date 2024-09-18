@@ -18,7 +18,6 @@
 
 #import "MXRecoveryKey.h"
 #import "MXKeybackupPassword.h"
-#import "MXOutboundSessionInfo.h"
 #import "MXAes256BackupAuthData.h"
 #import "MatrixSDKTestsSwiftHeader.h"
 
