@@ -16,8 +16,6 @@
 
 #import <Foundation/Foundation.h>
 
-#import "MXCrossSigningKey.h"
-
 NS_ASSUME_NONNULL_BEGIN
 
 

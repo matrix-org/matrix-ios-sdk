@@ -16,11 +16,6 @@
 
 #import "MXCrossSigningTools.h"
 
-#import "MXCryptoTools.h"
-#import "MXKey.h"
-#import "MXCryptoConstants.h"
-#import "MXBase64Tools.h"
-
 #pragma mark - Constants
 
 NSString *const MXCrossSigningToolsErrorDomain = @"org.matrix.sdk.crosssigning.tools";

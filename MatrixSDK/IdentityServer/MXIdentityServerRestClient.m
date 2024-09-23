@@ -17,6 +17,7 @@
 #import "MXIdentityServerRestClient.h"
 
 #import <AFNetworking/AFNetworking.h>
+#import <CommonCrypto/CommonDigest.h>
 
 #import "MXHTTPClient.h"
 #import "MXError.h"
@@ -385,6 +386,17 @@ NSString *const MXIdentityServerRestClientErrorDomain = @"org.matrix.sdk.MXIdent
                     hashedTreePid = [NSString stringWithFormat:@"%@ %@", threepid, medium];
                     break;
                 case MXIdentityServerHashAlgorithmSHA256:
+                {
+                    NSString *threePidConcatenation = [NSString stringWithFormat:@"%@ %@ %@", threepid, medium, pepper];
+
+                    // Hash the concatenated string using the helper method
+                    NSString *hashedSha256ThreePid = sha256(threePidConcatenation);
+
+                    // Convert hashed SHA-256 string to base64 URL
+                    hashedTreePid = [MXBase64Tools base64ToBase64Url:hashedSha256ThreePid];
+                    
+                    threePidArrayByThreePidConcatHash[hashedTreePid] = threepidArray;
+                }
                     break;
                 default:
                     break;
@@ -471,6 +483,20 @@ NSString *const MXIdentityServerRestClientErrorDomain = @"org.matrix.sdk.MXIdent
                                           [self dispatchFailure:error inBlock:failure];
                                       }];
     
+}
+
+// Helper method to perform SHA256 hashing
+NSString *sha256(NSString *input) {
+    const char *str = [input UTF8String];
+    unsigned char result[CC_SHA256_DIGEST_LENGTH];
+    CC_SHA256(str, (CC_LONG)strlen(str), result);
+    
+    NSMutableString *hash = [NSMutableString stringWithCapacity:CC_SHA256_DIGEST_LENGTH * 2];
+    for (int i = 0; i < CC_SHA256_DIGEST_LENGTH; i++) {
+        [hash appendFormat:@"%02x", result[i]];
+    }
+    
+    return hash;
 }
 
 #pragma mark Establishing associations
