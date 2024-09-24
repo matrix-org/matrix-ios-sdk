@@ -71,7 +71,7 @@ const UInt8 kOlmRecoveryKeyPrefix[] = {0x8B, 0x01};
     }
     
     if (result.length !=
-        sizeof(kOlmRecoveryKeyPrefix) + [OLMPkDecryption privateKeyLength] + 1)
+        sizeof(kOlmRecoveryKeyPrefix) + 33)
     {
         if (error)
         {
