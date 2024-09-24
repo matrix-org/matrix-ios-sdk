@@ -222,21 +222,6 @@ typedef NS_ENUM(NSInteger, MXRecoveryServiceErrorCode)
  */
 - (nullable NSData*)privateKeyFromRecoveryKey:(NSString*)recoveryKey error:(NSError**)error;
 
-/**
- Convert a passphrase into the private key.
- 
- This method is supposed to take time to avoid brut force attacks.
- 
- @param passphrase the passphrase
- 
- @param success A block object called when the operation succeeds.
- @param failure A block object called when the operation fails.
- */
-- (void)privateKeyFromPassphrase:(NSString*)passphrase
-                         success:(void (^)(NSData *privateKey))success
-                         failure:(void (^)(NSError *error))failure;
-
-
 @end
 
 NS_ASSUME_NONNULL_END

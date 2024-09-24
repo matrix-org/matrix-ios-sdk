@@ -39,9 +39,4 @@ static NSUInteger const kDefaultIterations = 500000;
     return nil;
 }
 
-+ (NSData *)retrievePrivateKeyWithPassword:(NSString *)password salt:(NSString *)salt iterations:(NSUInteger)iterations error:(NSError *__autoreleasing  _Nullable *)error
-{
-    return nil;
-}
-
 @end

@@ -69,6 +69,20 @@ const UInt8 kOlmRecoveryKeyPrefix[] = {0x8B, 0x01};
                                             }];
         return nil;
     }
+    
+    if (result.length !=
+        sizeof(kOlmRecoveryKeyPrefix) + [OLMPkDecryption privateKeyLength] + 1)
+    {
+        if (error)
+        {
+            *error = [NSError errorWithDomain:MXRecoveryKeyErrorDomain
+                                         code:MXRecoveryKeyErrorLengthCode
+                                     userInfo:@{
+                NSLocalizedDescriptionKey: @"Incorrect length",
+            }];
+        }
+        return nil;
+    }
 
     // Check the checksum
     UInt8 parity = 0;

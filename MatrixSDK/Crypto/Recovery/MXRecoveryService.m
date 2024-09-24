@@ -769,60 +769,6 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
     return privateKey;
 }
 
-- (void)privateKeyFromPassphrase:(NSString*)passphrase
-                         success:(void (^)(NSData *privateKey))success
-                         failure:(void (^)(NSError *error))failure
-{
-    NSString *recoveryId = self.recoveryId;
-    if (!recoveryId)
-    {
-        // No SSSS
-        NSError *error = [NSError errorWithDomain:MXRecoveryServiceErrorDomain
-                                             code:MXRecoveryServiceNoSSSSErrorCode
-                                         userInfo:@{
-                                                    NSLocalizedDescriptionKey: @"MXRecoveryService: The account has no secret storage",
-                                                    }];
-        failure(error);
-        return;
-    }
-    
-    MXSecretStorageKeyContent *keyContent = [self.dependencies.secretStorage keyWithKeyId:self.recoveryId];
-    if (!keyContent.passphrase)
-    {
-        // No passphrase
-        NSError *error = [NSError errorWithDomain:MXRecoveryServiceErrorDomain
-                                             code:MXRecoveryServiceNotProtectedByPassphraseErrorCode
-                                         userInfo:@{
-                                                    NSLocalizedDescriptionKey: @"MXRecoveryService: Secret storage not protected by a passphrase",
-                                                    }];
-        failure(error);
-        return;
-    }
-    
-    
-    // Go to a queue for derivating the passphrase into a recovery key
-    dispatch_async(self.dependencies.cryptoQueue, ^{
-        
-        NSError *error;
-        NSData *privateKey = [MXKeyBackupPassword retrievePrivateKeyWithPassword:passphrase
-                                                                            salt:keyContent.passphrase.salt
-                                                                      iterations:keyContent.passphrase.iterations
-                                                                           error:&error];
-        
-        
-        dispatch_async(dispatch_get_main_queue(), ^{
-            if (privateKey)
-            {
-                success(privateKey);
-            }
-            else
-            {
-                failure(error);
-            }
-        });
-    });
-}
-
 
 #pragma mark - Private methods -
 
