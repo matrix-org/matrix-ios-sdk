@@ -18,7 +18,6 @@
 #import "MXKeyBackup_Private.h"
 
 #import "MXRecoveryKey.h"
-#import "MXKeyBackupPassword.h"
 #import "MXSession.h"
 #import "MXTools.h"
 #import "MXBase64Tools.h"

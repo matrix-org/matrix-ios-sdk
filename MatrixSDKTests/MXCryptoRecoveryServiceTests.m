@@ -138,30 +138,4 @@
     }];
 }
 
-// Test createRecoveryForSecrets when there is already a key backup with the private key stored locally
-//
-// - Have Alice with cross-signing and key backup bootstrapped
-// - Create a recovery with createServicesBackup:YES
-// -> The operation must succeed
-// -> The key backup should be the same
-- (void)testCreateRecoveryWithKeyBackupExists
-{
-    // - Have Alice with cross-signing and key backup bootstrapped
-    [self doTestWithAliceWithCrossSigningAndKeyBackup:self readyToTest:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
-        
-        NSString *keyBackupVersion = aliceSession.crypto.backup.keyBackupVersion.version;
-        
-        // - Create a recovery with createServicesBackup:YES
-        [aliceSession.crypto.recoveryService createRecoveryForSecrets:nil withPassphrase:nil createServicesBackups:YES success:^(MXSecretStorageKeyCreationInfo * _Nonnull keyCreationInfo) {
-            
-            XCTAssertEqualObjects(keyBackupVersion, aliceSession.crypto.backup.keyBackupVersion.version);
-            [expectation fulfill];
-            
-        } failure:^(NSError *error) {
-            XCTFail(@"The operation should not fail - NSError: %@", error);
-            [expectation fulfill];
-        }];
-    }];
-}
-
 @end

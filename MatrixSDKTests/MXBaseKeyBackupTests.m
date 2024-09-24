@@ -17,7 +17,6 @@
 #import "MXBaseKeyBackupTests.h"
 
 #import "MXRecoveryKey.h"
-#import "MXKeybackupPassword.h"
 #import "MXAes256BackupAuthData.h"
 #import "MatrixSDKTestsSwiftHeader.h"
 

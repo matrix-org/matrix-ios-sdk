@@ -174,8 +174,6 @@
 		324095221AFA432F00D81C97 /* MXCallStackCall.h in Headers */ = {isa = PBXBuildFile; fileRef = 3240951E1AFA432F00D81C97 /* MXCallStackCall.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		3240969D1F9F751600DBA607 /* MXPushRuleSenderNotificationPermissionConditionChecker.h in Headers */ = {isa = PBXBuildFile; fileRef = 3240969B1F9F751600DBA607 /* MXPushRuleSenderNotificationPermissionConditionChecker.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		3240969E1F9F751600DBA607 /* MXPushRuleSenderNotificationPermissionConditionChecker.m in Sources */ = {isa = PBXBuildFile; fileRef = 3240969C1F9F751600DBA607 /* MXPushRuleSenderNotificationPermissionConditionChecker.m */; };
-		32442FB121EDD21300D2411B /* MXKeyBackupPassword.h in Headers */ = {isa = PBXBuildFile; fileRef = 32442FAF21EDD21300D2411B /* MXKeyBackupPassword.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		32442FB221EDD21300D2411B /* MXKeyBackupPassword.m in Sources */ = {isa = PBXBuildFile; fileRef = 32442FB021EDD21300D2411B /* MXKeyBackupPassword.m */; };
 		3245A7501AF7B2930001D8A7 /* MXCall.h in Headers */ = {isa = PBXBuildFile; fileRef = 3245A74C1AF7B2930001D8A7 /* MXCall.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		3245A7511AF7B2930001D8A7 /* MXCall.m in Sources */ = {isa = PBXBuildFile; fileRef = 3245A74D1AF7B2930001D8A7 /* MXCall.m */; };
 		3245A7521AF7B2930001D8A7 /* MXCallManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 3245A74E1AF7B2930001D8A7 /* MXCallManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -952,7 +950,6 @@
 		B14EF2852397E90400758AF0 /* (null) in Sources */ = {isa = PBXBuildFile; };
 		B14EF2862397E90400758AF0 /* MXRealmMediaScanStore.m in Sources */ = {isa = PBXBuildFile; fileRef = B146D4F521A5BB9F00D8C2C6 /* MXRealmMediaScanStore.m */; };
 		B14EF2872397E90400758AF0 /* MXPusherData.m in Sources */ = {isa = PBXBuildFile; fileRef = 32999DE222DCD1AD004FF987 /* MXPusherData.m */; };
-		B14EF2892397E90400758AF0 /* MXKeyBackupPassword.m in Sources */ = {isa = PBXBuildFile; fileRef = 32442FB021EDD21300D2411B /* MXKeyBackupPassword.m */; };
 		B14EF28A2397E90400758AF0 /* MXTools.m in Sources */ = {isa = PBXBuildFile; fileRef = 329FB1781A0A74B100A5E88E /* MXTools.m */; };
 		B14EF28B2397E90400758AF0 /* MXRoomSummaryUpdater.m in Sources */ = {isa = PBXBuildFile; fileRef = 329D3E611E251027002E2F1E /* MXRoomSummaryUpdater.m */; };
 		B14EF28C2397E90400758AF0 /* MXScanRealmInMemoryProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = B146D4C721A5A44E00D8C2C6 /* MXScanRealmInMemoryProvider.m */; };
@@ -1076,7 +1073,6 @@
 		B14EF31C2397E90400758AF0 /* MXEventEditsListener.h in Headers */ = {isa = PBXBuildFile; fileRef = B10AFB4522AA8A8D0092E6AF /* MXEventEditsListener.h */; };
 		B14EF31D2397E90400758AF0 /* MXEventDecryptionResult.h in Headers */ = {isa = PBXBuildFile; fileRef = 32F634A91FC5E3470054EF49 /* MXEventDecryptionResult.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B14EF31F2397E90400758AF0 /* MXPusherData.h in Headers */ = {isa = PBXBuildFile; fileRef = 32999DE122DCD1AD004FF987 /* MXPusherData.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		B14EF3202397E90400758AF0 /* MXKeyBackupPassword.h in Headers */ = {isa = PBXBuildFile; fileRef = 32442FAF21EDD21300D2411B /* MXKeyBackupPassword.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B14EF3212397E90400758AF0 /* MXRestClient.h in Headers */ = {isa = PBXBuildFile; fileRef = 320DFDD419DD99B60068622A /* MXRestClient.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B14EF3222397E90400758AF0 /* MXKeyVerificationManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 3252DCAC224BE5D40032264F /* MXKeyVerificationManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B14EF3232397E90400758AF0 /* MXRoomState.h in Headers */ = {isa = PBXBuildFile; fileRef = 3265CB361A14C43E00E24B2F /* MXRoomState.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -2114,8 +2110,6 @@
 		3240951E1AFA432F00D81C97 /* MXCallStackCall.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXCallStackCall.h; sourceTree = "<group>"; };
 		3240969B1F9F751600DBA607 /* MXPushRuleSenderNotificationPermissionConditionChecker.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXPushRuleSenderNotificationPermissionConditionChecker.h; sourceTree = "<group>"; };
 		3240969C1F9F751600DBA607 /* MXPushRuleSenderNotificationPermissionConditionChecker.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXPushRuleSenderNotificationPermissionConditionChecker.m; sourceTree = "<group>"; };
-		32442FAF21EDD21300D2411B /* MXKeyBackupPassword.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXKeyBackupPassword.h; sourceTree = "<group>"; };
-		32442FB021EDD21300D2411B /* MXKeyBackupPassword.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXKeyBackupPassword.m; sourceTree = "<group>"; };
 		3245A74C1AF7B2930001D8A7 /* MXCall.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXCall.h; sourceTree = "<group>"; };
 		3245A74D1AF7B2930001D8A7 /* MXCall.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXCall.m; sourceTree = "<group>"; };
 		3245A74E1AF7B2930001D8A7 /* MXCallManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXCallManager.h; sourceTree = "<group>"; };
@@ -3954,8 +3948,6 @@
 				32FFB4ED217DC0E900C96002 /* MXKeyBackup_Private.h */,
 				32FFB4EE217E146A00C96002 /* MXRecoveryKey.h */,
 				32FFB4EF217E146A00C96002 /* MXRecoveryKey.m */,
-				32442FAF21EDD21300D2411B /* MXKeyBackupPassword.h */,
-				32442FB021EDD21300D2411B /* MXKeyBackupPassword.m */,
 			);
 			path = KeyBackup;
 			sourceTree = "<group>";
@@ -5784,7 +5776,6 @@
 				32F634AB1FC5E3480054EF49 /* MXEventDecryptionResult.h in Headers */,
 				32999DE322DCD1AD004FF987 /* MXPusherData.h in Headers */,
 				A75CAD6C2A979AC500F06072 /* MXWellKnownAuthentication.h in Headers */,
-				32442FB121EDD21300D2411B /* MXKeyBackupPassword.h in Headers */,
 				320DFDE419DD99B60068622A /* MXRestClient.h in Headers */,
 				3252DCAE224BE5D40032264F /* MXKeyVerificationManager.h in Headers */,
 				3265CB381A14C43E00E24B2F /* MXRoomState.h in Headers */,
@@ -6119,7 +6110,6 @@
 				B14EF31C2397E90400758AF0 /* MXEventEditsListener.h in Headers */,
 				B14EF31D2397E90400758AF0 /* MXEventDecryptionResult.h in Headers */,
 				B14EF31F2397E90400758AF0 /* MXPusherData.h in Headers */,
-				B14EF3202397E90400758AF0 /* MXKeyBackupPassword.h in Headers */,
 				B14EF3212397E90400758AF0 /* MXRestClient.h in Headers */,
 				324DD2B2246BDC6800377005 /* MXSecretStorage_Private.h in Headers */,
 				ED01915928C64E0400ED3A69 /* MXForwardedRoomKeyEventContent.h in Headers */,
@@ -6965,7 +6955,6 @@
 				EC60ED5F265CFC2C00B39A4E /* MXSyncResponse.m in Sources */,
 				EC383BA2253DE4B1002FBBE6 /* MXBackgroundSyncService.swift in Sources */,
 				18121F7D273E835D00B68ADF /* PollModels.swift in Sources */,
-				32442FB221EDD21300D2411B /* MXKeyBackupPassword.m in Sources */,
 				3A108A9A25810F62005EEBE9 /* MXAesKeyData.m in Sources */,
 				329FB17A1A0A74B100A5E88E /* MXTools.m in Sources */,
 				B1EE98D9280723BE00AB63F0 /* MXBeaconInfoSummary.swift in Sources */,
@@ -7580,7 +7569,6 @@
 				EC8A53B625B1BC77004E0802 /* MXCallHangupEventContent.m in Sources */,
 				ED5EF14C297AB29F00A5ADDA /* MXDeviceVerification+LocalTrust.swift in Sources */,
 				B14766BA23D9D9420091F721 /* MXUsersTrustLevelSummary.m in Sources */,
-				B14EF2892397E90400758AF0 /* MXKeyBackupPassword.m in Sources */,
 				180F858727A2AF3000F4E5A5 /* MXWellKnownTileServerConfig.m in Sources */,
 				3A108A9B25810F62005EEBE9 /* MXAesKeyData.m in Sources */,
 				A777E5792C98D79D00B39397 /* MXQRCodeTransaction.m in Sources */,

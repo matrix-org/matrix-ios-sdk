@@ -17,7 +17,6 @@
 #import "MXRecoveryService_Private.h"
 #import "MXKeyBackup_Private.h"
 
-#import "MXKeyBackupPassword.h"
 #import "MXRecoveryKey.h"
 #import "MXAesHmacSha2.h"
 #import "MXTools.h"
@@ -239,39 +238,6 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
 #pragma mark - Backup to recovery
 
 - (void)createRecoveryForSecrets:(nullable NSArray<NSString*>*)secrets
-                  withPrivateKey:(NSData*)privateKey
-           createServicesBackups:(BOOL)createServicesBackups
-                         success:(void (^)(MXSecretStorageKeyCreationInfo *keyCreationInfo))success
-                         failure:(void (^)(NSError *error))failure
-{
-    MXLogDebug(@"[MXRecoveryService] createRecovery: secrets: %@. createServicesBackups: %@", secrets, @(createServicesBackups));
-    
-    if (self.hasRecovery)
-    {
-        MXLogDebug(@"[MXRecoveryService] createRecovery: Error: A recovery already exists.");
-        NSError *error = [NSError errorWithDomain:MXRecoveryServiceErrorDomain
-                                             code:MXRecoveryServiceSSSSAlreadyExistsErrorCode
-                                         userInfo:@{
-                                                    NSLocalizedDescriptionKey: @"MXRecoveryService: A secret storage already exists",
-                                                    }];
-        failure(error);
-        return;
-    }
-    
-    if (createServicesBackups
-        && (!secrets || [secrets containsObject:MXSecretId.keyBackup]))
-    {
-        [self createKeyBackupWithSuccess:^{
-            [self createRecoveryForSecrets:secrets withPrivateKey:privateKey success:success failure:failure];
-        } failure:failure];
-    }
-    else
-    {
-        [self createRecoveryForSecrets:secrets withPrivateKey:privateKey success:success failure:failure];
-    }
-}
-
-- (void)createRecoveryForSecrets:(nullable NSArray<NSString*>*)secrets
                   withPassphrase:(nullable NSString*)passphrase
         createServicesBackups:(BOOL)createServicesBackups
                          success:(void (^)(MXSecretStorageKeyCreationInfo *keyCreationInfo))success
@@ -302,30 +268,6 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
     {
         [self createRecoveryForSecrets:secrets withPassphrase:passphrase success:success failure:failure];
     }
-}
-
-- (void)createRecoveryForSecrets:(nullable NSArray<NSString*>*)secrets
-                  withPrivateKey:(NSData*)privateKey
-                         success:(void (^)(MXSecretStorageKeyCreationInfo *keyCreationInfo))success
-                         failure:(void (^)(NSError *error))failure
-{
-    MXWeakify(self);
-    [self.dependencies.secretStorage createKeyWithKeyId:nil keyName:nil privateKey:privateKey success:^(MXSecretStorageKeyCreationInfo * _Nonnull keyCreationInfo) {
-        
-        // Set this recovery as the default SSSS key id
-        [self.dependencies.secretStorage setAsDefaultKeyWithKeyId:keyCreationInfo.keyId success:^{
-            MXStrongifyAndReturnIfNil(self);
-            
-            [self updateRecoveryForSecrets:secrets withPrivateKey:keyCreationInfo.privateKey success:^{
-                success(keyCreationInfo);
-            } failure:failure];
-            
-        } failure:failure];
-        
-    } failure:^(NSError * _Nonnull error) {
-        MXLogDebug(@"[MXRecoveryService] createRecovery: Failed to create SSSS. Error: %@", error);
-        failure(error);
-    }];
 }
 
 - (void)createRecoveryForSecrets:(nullable NSArray<NSString*>*)secrets
