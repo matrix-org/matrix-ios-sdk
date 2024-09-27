@@ -121,6 +121,44 @@ typedef NS_ENUM(NSInteger, MXRecoveryServiceErrorCode)
 #pragma mark - Backup to recovery
 
 /**
+ Create a recovery and store secrets there.
+ 
+ It will send keys from the local storage to the recovery on the homeserver.
+ Those keys are sent encrypted thanks to SSSS that implements this recovery.
+ 
+ @param secrets secrets ids to store in the recovery. Nil for all self.supportedSecrets.
+ @param privateKey a private key used to generate the recovery key to encrypt keys.
+ @param createServicesBackups YES to create backups for associated services. Only keyBackup is supported.
+ 
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (void)createRecoveryForSecrets:(nullable NSArray<NSString*>*)secrets
+                  withPrivateKey:(NSData*)privateKey
+           createServicesBackups:(BOOL)createServicesBackups
+                         success:(void (^)(MXSecretStorageKeyCreationInfo *keyCreationInfo))success
+                         failure:(void (^)(NSError *error))failure;
+
+/**
+ Create a recovery and store secrets there.
+ 
+ It will send keys from the local storage to the recovery on the homeserver.
+ Those keys are sent encrypted thanks to SSSS that implements this recovery.
+ 
+ @param secrets secrets ids to store in the recovery. Nil for all self.supportedSecrets.
+ @param passphrase a passphrase used to generate the recovery key to encrypt keys. Nil will generate it.
+ @param createServicesBackups YES to create backups for associated services. Only keyBackup is supported.
+ 
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (void)createRecoveryForSecrets:(nullable NSArray<NSString*>*)secrets
+                  withPassphrase:(nullable NSString*)passphrase
+           createServicesBackups:(BOOL)createServicesBackups
+                         success:(void (^)(MXSecretStorageKeyCreationInfo *keyCreationInfo))success
+                         failure:(void (^)(NSError *error))failure;
+
+/**
  Update secrets to the existing recovery.
  
  @param secrets secrets ids to store in the recovery. Nil for all self.supportedSecrets.
@@ -183,6 +221,21 @@ typedef NS_ENUM(NSInteger, MXRecoveryServiceErrorCode)
  @return the private key;
  */
 - (nullable NSData*)privateKeyFromRecoveryKey:(NSString*)recoveryKey error:(NSError**)error;
+
+/**
+ Convert a passphrase into the private key.
+ 
+ This method is supposed to take time to avoid brut force attacks.
+ 
+ @param passphrase the passphrase
+ 
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (void)privateKeyFromPassphrase:(NSString*)passphrase
+                         success:(void (^)(NSData *privateKey))success
+                         failure:(void (^)(NSError *error))failure;
+
 
 @end
 
