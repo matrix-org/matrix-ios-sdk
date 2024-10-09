@@ -103,30 +103,4 @@ typedef NS_ENUM(NSInteger, MXKeyVerificationTransport) {
 
 @end
 
-/**
- Default implementation of verification transaction used by the SDK
- */
-@interface MXLegacyKeyVerificationTransaction: NSObject <MXKeyVerificationTransaction>
-
-/**
- The creation date.
- */
-@property (nonatomic, strong) NSDate *creationDate;
-
-@property (nonatomic) BOOL isIncoming;
-
-/**
- The other user device.
- */
-@property (nonatomic, readonly) MXDeviceInfo *otherDevice;
-
-@property (nonatomic, nullable) MXTransactionCancelCode *reasonCancelCode;
-
-/**
- The occured error (like network error), if any.
- */
-@property (nonatomic, nullable) NSError *error;
-
-@end
-
 NS_ASSUME_NONNULL_END

@@ -59,8 +59,4 @@ typedef NS_ENUM(NSInteger, MXQRCodeTransactionState) {
 
 @end
 
-@interface MXLegacyQRCodeTransaction : MXLegacyKeyVerificationTransaction <MXQRCodeTransaction>
-
-@end
-
 NS_ASSUME_NONNULL_END

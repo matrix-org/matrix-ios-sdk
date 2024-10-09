@@ -31,7 +31,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param secret the secret.
  @param secretId the id of the secret.
  */
-- (void)storeSecret:(NSString *)secret withSecretId:(NSString *)secretId;
+- (void)storeSecret:(NSString *)secret withSecretId:(NSString *)secretId errorHandler:(void (^)(NSError *error))errorHandler;
 
 /**
  Check if a given secret is stored

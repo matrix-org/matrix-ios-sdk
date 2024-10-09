@@ -115,7 +115,6 @@ class MXCryptoV2: NSObject, MXCrypto {
             backup = MXKeyBackup(
                 engine: engine,
                 restClient: restClient,
-                secretShareManager: MXSecretShareManager(),
                 queue: legacyQueue
             )
         } else {

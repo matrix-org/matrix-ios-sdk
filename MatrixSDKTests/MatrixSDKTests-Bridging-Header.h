@@ -19,17 +19,12 @@
 
 #import "MatrixSDKTestsData.h"
 #import "MatrixSDKTestsE2EData.h"
-#import "MXDeviceListOperationsPool.h"
 #import "MXBackgroundTask.h"
 #import "MXUIKitBackgroundModeHandler.h"
 #import "MXApplicationProtocol.h"
-#import "MXCrypto_Private.h"
 #import "MXRestClientStub.h"
-#import "MXCurve25519KeyBackupAlgorithm.h"
-#import "MXAes256KeyBackupAlgorithm.h"
 #import "MXCurve25519BackupAuthData.h"
 #import "MXAes256BackupAuthData.h"
-#import "MXKeyBackupPassword.h"
 #import "MXSecretStorage_Private.h"
 #import "MXEncryptedSecretContent.h"
 

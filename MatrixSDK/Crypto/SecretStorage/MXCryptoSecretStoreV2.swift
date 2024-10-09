@@ -15,11 +15,17 @@
 //
 
 import Foundation
+import MatrixSDKCrypto
+
+enum MXCryptoError: Error {
+    case secretDoesNotMatch
+}
 
 /// Secret store compatible with Rust-based Crypto V2, where
 /// backup secrets are stored internally in the Crypto machine
 /// and others have to be managed manually.
 class MXCryptoSecretStoreV2: NSObject, MXCryptoSecretStore {
+
     private let backup: MXKeyBackup?
     private let backupEngine: MXKeyBackupEngine?
     private let crossSigning: MXCryptoCrossSigning
@@ -31,44 +37,55 @@ class MXCryptoSecretStoreV2: NSObject, MXCryptoSecretStore {
         self.crossSigning = crossSigning
     }
     
-    func storeSecret(_ secret: String, withSecretId secretId: String) {
+    func storeSecret(_ secret: String, withSecretId secretId: String, errorHandler: @escaping (Error) -> Void) {
         log.debug("Storing new secret \(secretId)")
-        
-        switch secretId as NSString {
-        case MXSecretId.crossSigningMaster.takeUnretainedValue():
-            crossSigning.importCrossSigningKeys(
-                export: .init(
-                    masterKey: secret,
-                    selfSigningKey: nil,
-                    userSigningKey: nil
+        do {
+            switch secretId as NSString {
+            case MXSecretId.crossSigningMaster.takeUnretainedValue():
+                try crossSigning.importCrossSigningKeys(
+                    export: .init(
+                        masterKey: secret,
+                        selfSigningKey: nil,
+                        userSigningKey: nil
+                    )
                 )
-            )
-        case MXSecretId.crossSigningSelfSigning.takeUnretainedValue():
-            crossSigning.importCrossSigningKeys(
-                export: .init(
-                    masterKey: nil,
-                    selfSigningKey: secret,
-                    userSigningKey: nil
+            case MXSecretId.crossSigningSelfSigning.takeUnretainedValue():
+                try crossSigning.importCrossSigningKeys(
+                    export: .init(
+                        masterKey: nil,
+                        selfSigningKey: secret,
+                        userSigningKey: nil
+                    )
                 )
-            )
-        case MXSecretId.crossSigningUserSigning.takeUnretainedValue():
-            crossSigning.importCrossSigningKeys(
-                export: .init(
-                    masterKey: nil,
-                    selfSigningKey: nil,
-                    userSigningKey: secret
+            case MXSecretId.crossSigningUserSigning.takeUnretainedValue():
+                try crossSigning.importCrossSigningKeys(
+                    export: .init(
+                        masterKey: nil,
+                        selfSigningKey: nil,
+                        userSigningKey: secret
+                    )
                 )
-            )
-        case MXSecretId.keyBackup.takeUnretainedValue():
-            guard let version = backup?.keyBackupVersion?.version else {
-                log.error("No key backup version available")
-                return
+            case MXSecretId.keyBackup.takeUnretainedValue():
+                guard let version = backup?.keyBackupVersion?.version else {
+                    log.error("No key backup version available")
+                    return
+                }
+                
+                let expectedPublicKey = try BackupRecoveryKey.fromBase64(key: secret).megolmV1PublicKey().publicKey
+                
+                guard let authData = backup?.keyBackupVersion?.authData,
+                      MXCurve25519BackupAuthData(fromJSON: authData).publicKey == expectedPublicKey else {
+                    errorHandler(MXCryptoError.secretDoesNotMatch)
+                    return
+                }
+                
+                let privateKey = MXBase64Tools.data(fromBase64: secret)
+                backupEngine?.savePrivateKey(privateKey, version: version)
+            default:
+                log.error("Unsupported type of secret", context: secretId)
             }
-            
-            let privateKey = MXBase64Tools.data(fromBase64: secret)
-            backupEngine?.savePrivateKey(privateKey, version: version)
-        default:
-            log.error("Unsupported type of secret", context: secretId)
+        } catch {
+            errorHandler(error)
         }
     }
     

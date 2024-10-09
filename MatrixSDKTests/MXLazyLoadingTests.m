@@ -1180,59 +1180,6 @@ Common initial conditions:
 }
 
 
-// Check encryption from a lazy loaded room state
-// - Alice sends a message from its lazy loaded room state where there is no Charlie
-// - Charlie must be able to decrypt it
-- (void)checkEncryptedMessageWithLazyLoading:(BOOL)lazyLoading
-{
-    [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
-    [self createScenarioWithLazyLoading:lazyLoading readyToTest:^(MXSession *aliceSession, MXSession *bobSession, MXSession *charlieSession, NSString *roomId, XCTestExpectation *expectation) {
-        [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
-
-        MXRoom *room = [aliceSession roomWithRoomId:roomId];
-        [room listenToEventsOfTypes:@[kMXEventTypeStringRoomEncryption] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
-
-            aliceSession.legacyCrypto.warnOnUnknowDevices = NO;
-
-            NSString *messageFromAlice = @"An encrypted message";
-
-            [charlieSession listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
-
-                XCTAssertTrue(event.isEncrypted);
-                XCTAssert(event.clearEvent);
-                XCTAssertEqualObjects(event.content[kMXMessageBodyKey], messageFromAlice);
-
-                [expectation fulfill];
-            }];
-
-            MXRoomSummary *summary = [aliceSession roomSummaryWithRoomId:roomId];
-            XCTAssertTrue(summary.isEncrypted);
-
-            [room sendTextMessage:messageFromAlice threadId:nil success:nil failure:^(NSError *error) {
-                XCTFail(@"The operation should not fail - NSError: %@", error);
-                [expectation fulfill];
-            }];
-        }];
-
-        MXRoom *roomFromBobPOV = [bobSession roomWithRoomId:roomId];
-        [roomFromBobPOV enableEncryptionWithAlgorithm:kMXCryptoMegolmAlgorithm success:nil failure:^(NSError *error) {
-            XCTFail(@"The operation should not fail - NSError: %@", error);
-            [expectation fulfill];
-        }];
-    }];
-}
-
-- (void)testEncryptedMessage
-{
-    [self checkEncryptedMessageWithLazyLoading:YES];
-}
-
-- (void)testEncryptedMessageWithLazyLoadingOFF
-{
-    [self checkEncryptedMessageWithLazyLoading:NO];
-}
-
-
 // After the test scenario, create a temporary timeline on the last event.
 // The timeline state should be lazy loaded and partial.
 // There should be only Alice and state.members.count = 1

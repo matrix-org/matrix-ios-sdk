@@ -76,14 +76,6 @@ import Foundation
             guard let self = self else { return }
             
             do {
-                try self.deprecateLegacyStoreIfNecessary(credentials: credentials) {
-                    migrationProgress?($0)
-                }
-            } catch {
-                self.log.error("Failed to migrate / deprecate legacy store", context: error)
-            }
-            
-            do {
                 let crypto = try await MXCryptoV2(
                     userId: userId,
                     deviceId: deviceId,
@@ -99,57 +91,6 @@ import Foundation
                     failure(error)
                 }
             }
-        }
-    }
-    
-    private func deprecateLegacyStoreIfNecessary(
-        credentials: MXCredentials,
-        updateProgress: @escaping ((Double) -> Void)
-    ) throws {
-        guard
-            MXRealmCryptoStore.hasData(for: credentials),
-            let legacyStore = MXRealmCryptoStore(credentials: credentials)
-        else {
-            log.debug("Legacy crypto store does not exist")
-            return
-        }
-        
-        log.debug("Legacy crypto store exists")
-        try migrateIfNecessary(legacyStore: legacyStore, updateProgress: updateProgress)
-        
-        log.debug("Removing legacy crypto store entirely")
-        MXRealmCryptoStore.delete(with: credentials)
-    }
-    
-    private func migrateIfNecessary(
-        legacyStore: MXCryptoStore,
-        updateProgress: @escaping (Double) -> Void
-    ) throws {
-        let legacyVersion = legacyStore.cryptoVersion.rawValue
-        guard legacyVersion < lastDeprecatedVersion.rawValue else {
-            log.debug("Legacy crypto has already been deprecated, no need to migrate")
-            return
-        }
-
-        log.debug("Requires migration from legacy crypto version \(legacyVersion) to version \(lastDeprecatedVersion.rawValue)")
-        let migration = MXCryptoMigrationV2(legacyStore: legacyStore)
-        
-        // Full vs partial/room migration are mutually exclusive, only one should be run
-        if legacyVersion < MXCryptoVersion.deprecated1.rawValue {
-            log.debug("Full migration of crypto data")
-            try migration.migrateAllData(updateProgress: updateProgress)
-            
-        } else if legacyVersion < MXCryptoVersion.deprecated2.rawValue {
-            log.debug("Partial migration of room and global settings")
-            try migration.migrateRoomAndGlobalSettingsOnly(updateProgress: updateProgress)
-        }
-        
-        if legacyVersion < MXCryptoVersion.deprecated3.rawValue {
-            // The following flag will result in displaying a different UX when verifying current session,
-            // unless the rust-based crypto already considers the current session to be verified given
-            // the migration data
-            log.debug("Needs verification upgrade")
-            MXSDKOptions.sharedInstance().cryptoMigrationDelegate?.needsVerificationUpgrade = true
         }
     }
 }

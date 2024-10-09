@@ -611,11 +611,12 @@ extension MXCryptoMachine: MXCryptoCrossSigning {
         }
     }
     
-    func importCrossSigningKeys(export: CrossSigningKeyExport) {
+    func importCrossSigningKeys(export: CrossSigningKeyExport) throws {
         do {
             try machine.importCrossSigningKeys(export: export)
         } catch {
             log.error("Failed importing cross signing keys", context: error)
+            throw error
         }
     }
     

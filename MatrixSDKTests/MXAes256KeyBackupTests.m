@@ -17,7 +17,6 @@
 #import "MXBaseKeyBackupTests.h"
 
 #import "MXAes256BackupAuthData.h"
-#import "MXAes256KeyBackupAlgorithm.h"
 
 // Do not bother with retain cycles warnings in tests
 #pragma clang diagnostic push
@@ -42,11 +41,6 @@
 - (NSString *)algorithm
 {
     return kMXCryptoAes256KeyBackupAlgorithm;
-}
-
-- (BOOL)isUntrusted
-{
-    return MXAes256KeyBackupAlgorithm.isUntrusted;
 }
 
 - (MXKeyBackupVersion*)fakeKeyBackupVersion

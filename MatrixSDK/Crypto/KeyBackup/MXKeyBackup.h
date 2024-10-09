@@ -124,7 +124,6 @@ FOUNDATION_EXPORT NSString *const kMXKeyBackupDidStateChangeNotification;
  */
 - (instancetype)initWithEngine:(id<MXKeyBackupEngine>)engine
                     restClient:(MXRestClient *)restClient
-            secretShareManager:(MXSecretShareManager *)secretShareManager
                          queue:(dispatch_queue_t)queue;
 
 #pragma mark - Backup management
@@ -371,22 +370,6 @@ FOUNDATION_EXPORT NSString *const kMXKeyBackupDidStateChangeNotification;
                                   success:(void (^)(void))success
                                   failure:(nullable void (^)(NSError *error))failure;
 
-
-#pragma mark - Private keys sharing
-
-/**
- Request backup private keys from other devices.
- 
- @param deviceIds ids of device to make requests to. Nil to request all.
- 
- @param success A block object called when the operation succeeds.
- @param onPrivateKeysReceived A block called when the secret has been received from another device.
- @param failure A block object called when the operation fails.
- */
-- (void)requestPrivateKeysToDeviceIds:(nullable NSArray<NSString*>*)deviceIds
-                              success:(void (^)(void))success
-                onPrivateKeysReceived:(void (^)(void))onPrivateKeysReceived
-                              failure:(void (^)(NSError *error))failure;
 
 #pragma mark - Backup state
 
