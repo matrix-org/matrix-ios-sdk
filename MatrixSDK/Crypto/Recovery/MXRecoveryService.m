@@ -554,9 +554,17 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
         [self.dependencies.secretStorage secretWithSecretId:secretId withSecretStorageKeyId:secretStorageKeyId privateKey:privateKey success:^(NSString * _Nonnull unpaddedBase64Secret) {
             
             NSString *secret = unpaddedBase64Secret;
-            
-            MXLogDebug(@"[MXRecoveryService] recoverSecrets: Secret %@ is invalid", secretId);
-            [invalidSecrets addObject:secretId];
+            // Validate the secret before storing it
+            if (![secret isEqualToString:[self.dependencies.secretStore secretWithSecretId:secretId]])
+            {
+                MXLogDebug(@"[MXRecoveryService] recoverSecrets: Recovered secret %@", secretId);
+                
+                [updatedSecrets addObject:secretId];
+                [self.dependencies.secretStore storeSecret:secret withSecretId:secretId errorHandler:^(NSError * _Nonnull anError) {
+                    MXLogDebug(@"[MXRecoveryService] recoverSecrets: Secret %@ is invalid", secretId);
+                    [invalidSecrets addObject:secretId];
+                }];
+            }
             
             dispatch_group_leave(dispatchGroup);
             
