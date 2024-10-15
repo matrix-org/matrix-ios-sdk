@@ -22,8 +22,6 @@
 #import "MXKeyVerification.h"
 
 #import "MXSASTransaction.h"
-#import "MXIncomingSASTransaction.h"
-#import "MXOutgoingSASTransaction.h"
 
 #import "MXQRCodeTransaction.h"
 
@@ -173,16 +171,6 @@ FOUNDATION_EXPORT NSString *const MXKeyVerificationManagerNotificationTransactio
  @param transactionId The transaction id of the associated verification request event.
  */
 - (void)removeQRCodeTransactionWithTransactionId:(NSString*)transactionId;
-
-@end
-
-@interface MXLegacyKeyVerificationManager : NSObject <MXKeyVerificationManager>
-
-- (void)notifyOthersOfAcceptanceWithTransactionId:(NSString*)transactionId
-                               acceptedUserId:(NSString*)acceptedUserId
-                             acceptedDeviceId:(NSString*)acceptedDeviceId
-                                      success:(void(^)(void))success
-                                      failure:(void(^)(NSError *error))failure;
 
 @end
 

@@ -36,7 +36,6 @@ class MXCoreDataRoomListDataManagerUnitTests: XCTestCase {
     override class func setUp() {
         super.setUp()
         MXSDKOptions.sharedInstance().roomListDataManagerClass = MXCoreDataRoomListDataManager.self
-        MXRealmCryptoStore.deleteAllStores()
     }
     
     override class func tearDown() {

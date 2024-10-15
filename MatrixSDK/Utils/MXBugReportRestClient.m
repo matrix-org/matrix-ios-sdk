@@ -31,7 +31,6 @@
 #endif
 
 #ifdef MX_CRYPTO
-#import <OLMKit/OLMKit.h>
 #endif
 
 #if __has_include(<MatrixKit/MatrixKit.h>)
