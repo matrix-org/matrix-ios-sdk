@@ -485,14 +485,6 @@ public enum MXBackgroundSyncServiceError: Error {
             }
         }
         
-        if syncResponseStoreManager.syncResponseStore.syncResponseIds.count == 0, let crypto = crypto as? MXLegacyBackgroundCrypto {
-            // To avoid dead lock between processes, we write to the cryptoStore only from only one process.
-            // If there is no cached sync responses, it means they have been consumed by MXSession. Now is the
-            // right time to clean the cryptoStore.
-            MXLog.debug("[MXBackgroundSyncService] updateBackgroundServiceStoresIfNeeded: Reset MXBackgroundCryptoStore")
-            crypto.reset()
-        }
-        
         syncPushRuleManagerWithAccountData()
     }
     
