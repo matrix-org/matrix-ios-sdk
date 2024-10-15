@@ -89,7 +89,7 @@ protocol MXCryptoCrossSigning: MXCryptoUserIdentitySource, MXCryptoDevicesSource
     func crossSigningStatus() -> CrossSigningStatus
     func bootstrapCrossSigning(authParams: [AnyHashable: Any]) async throws
     func exportCrossSigningKeys() -> CrossSigningKeyExport?
-    func importCrossSigningKeys(export: CrossSigningKeyExport)
+    func importCrossSigningKeys(export: CrossSigningKeyExport) throws
     
     func queryMissingSecretsFromOtherSessions() async throws
 }

@@ -18,12 +18,10 @@
 
 #import "MXSession.h"
 #import "MXTools.h"
-#import "MXKeyBackupPassword.h"
 #import "MXRecoveryKey.h"
 #import "MXHkdfSha256.h"
 #import "MXAesHmacSha2.h"
 #import "MXBase64Tools.h"
-#import <OLMKit/OLMKit.h>
 #import "MXEncryptedSecretContent.h"
 
 
@@ -98,104 +96,6 @@ static NSString* const kSecretStorageZeroString = @"\0\0\0\0\0\0\0\0\0\0\0\0\0\0
         MXSecretStorageKeyContent *ssssKeyContent = [MXSecretStorageKeyContent new];
         ssssKeyContent.name = keyName;
         ssssKeyContent.algorithm = MXSecretStorageKeyAlgorithm.aesHmacSha2;
-        ssssKeyContent.iv = encryptedZeroString.iv;
-        ssssKeyContent.mac = encryptedZeroString.mac;
-        
-        NSString *accountDataId = [self storageKeyIdForKey:keyId];
-        MXHTTPOperation *operation2 = [self setAccountData:ssssKeyContent.JSONDictionary forType:accountDataId success:^{
-            
-            MXSecretStorageKeyCreationInfo *keyCreationInfo = [MXSecretStorageKeyCreationInfo new];
-            keyCreationInfo.keyId = keyId;
-            keyCreationInfo.content = ssssKeyContent;
-            keyCreationInfo.privateKey = privateKey;
-            keyCreationInfo.recoveryKey = [MXRecoveryKey encode:privateKey];
-            
-            dispatch_async(dispatch_get_main_queue(), ^{
-                MXLogDebug(@"[MXSecretStorage] createKeyWithKeyId: Successfully created a new key");
-                success(keyCreationInfo);
-            });
-            
-        } failure:^(NSError *error) {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                MXLogDebug(@"[MXSecretStorage] createKeyWithKeyId: Failed to create a new key - %@", error);
-                failure(error);
-            });
-        }];
-        
-        [operation mutateTo:operation2];
-    });
-    
-    return operation;
-}
-
-- (MXHTTPOperation*)createKeyWithKeyId:(nullable NSString*)keyId
-                               keyName:(nullable NSString*)keyName
-                            passphrase:(nullable NSString*)passphrase
-                               success:(void (^)(MXSecretStorageKeyCreationInfo *keyCreationInfo))success
-                               failure:(void (^)(NSError *error))failure
-{
-    MXLogDebug(@"[MXSecretStorage] createKeyWithKeyId: Creating new key with passphrase");
-    keyId = keyId ?: [[NSUUID UUID] UUIDString];
-    
-    MXHTTPOperation *operation = [MXHTTPOperation new];
-    
-    MXWeakify(self);
-    dispatch_async(processingQueue, ^{
-        MXStrongifyAndReturnIfNil(self);
-        
-        NSError *error;
-        
-        NSData *privateKey;
-        MXSecretStoragePassphrase *passphraseInfo;
-        
-        if (passphrase)
-        {
-            // Generate a private key from the passphrase
-            NSString *salt;
-            NSUInteger iterations;
-            privateKey = [MXKeyBackupPassword generatePrivateKeyWithPassword:passphrase
-                                                                        salt:&salt
-                                                                  iterations:&iterations
-                                                                       error:&error];
-            if (!error)
-            {
-                passphraseInfo = [MXSecretStoragePassphrase new];
-                passphraseInfo.algorithm = @"m.pbkdf2";
-                passphraseInfo.salt = salt;
-                passphraseInfo.iterations = iterations;
-            }
-        }
-        else
-        {
-            OLMPkDecryption *decryption = [OLMPkDecryption new];
-            [decryption generateKey:&error];
-            privateKey = decryption.privateKey;
-        }
-        
-        if (error)
-        {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                MXLogDebug(@"[MXSecretStorage] createKeyWithKeyId: Failed to create a new key - %@", error);
-                failure(error);
-            });
-            return;
-        }
-        
-        // Build iv and mac
-        MXEncryptedSecretContent *encryptedZeroString = [self encryptedZeroStringWithPrivateKey:privateKey iv:nil error:&error];
-        if (error)
-        {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                MXLogDebug(@"[MXSecretStorage] createKeyWithKeyId: Failed to create a new key - %@", error);
-                failure(error);
-            });
-            return;
-        }
-        
-        MXSecretStorageKeyContent *ssssKeyContent = [MXSecretStorageKeyContent new];
-        ssssKeyContent.name = keyName;
-        ssssKeyContent.algorithm = MXSecretStorageKeyAlgorithm.aesHmacSha2;
-        ssssKeyContent.passphrase = passphraseInfo;
         ssssKeyContent.iv = encryptedZeroString.iv;
         ssssKeyContent.mac = encryptedZeroString.mac;
         
