@@ -122,6 +122,8 @@ NSCharacterSet *uriComponentCharset;
             @(MXEventTypeCallRejectReplacement) : kMXEventTypeStringCallRejectReplacement,
             @(MXEventTypeCallAssertedIdentity) : kMXEventTypeStringCallAssertedIdentity,
             @(MXEventTypeCallAssertedIdentityUnstable) : kMXEventTypeStringCallAssertedIdentityUnstable,
+            // MatrixRTC call events
+            @(MXEventTypeCallNotify) : kMXEventTypeStringCallNotifyUnstable,
             
             @(MXEventTypeKeyVerificationRequest) : kMXEventTypeStringKeyVerificationRequest,
             @(MXEventTypeKeyVerificationReady) : kMXEventTypeStringKeyVerificationReady,
@@ -194,6 +196,9 @@ NSCharacterSet *uriComponentCharset;
             kMXEventTypeStringCallRejectReplacement : @(MXEventTypeCallRejectReplacement),
             kMXEventTypeStringCallAssertedIdentity : @(MXEventTypeCallAssertedIdentity),
             kMXEventTypeStringCallAssertedIdentityUnstable : @(MXEventTypeCallAssertedIdentityUnstable),
+            // MatrixRTC call events
+            kMXEventTypeStringCallNotify : @(MXEventTypeCallNotify),
+            kMXEventTypeStringCallNotifyUnstable : @(MXEventTypeCallNotify),
             
             kMXEventTypeStringKeyVerificationRequest : @(MXEventTypeKeyVerificationRequest),
             kMXEventTypeStringKeyVerificationReady : @(MXEventTypeKeyVerificationReady),
