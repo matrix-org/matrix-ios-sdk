@@ -169,10 +169,13 @@ static NSString* const kSecretStorageZeroString = @"\0\0\0\0\0\0\0\0\0\0\0\0\0\0
         {
             uint8_t randomBytes[32];
             OSStatus status = SecRandomCopyBytes(kSecRandomDefault, sizeof(randomBytes), randomBytes);
-
-            if (status == errSecSuccess) {
+            
+            if (status == errSecSuccess)
+            {
                 privateKey = [NSData dataWithBytes:randomBytes length:sizeof(randomBytes)];
-            } else {
+            }
+            else
+            {
                 MXLogDebug(@"Failed to generate random bytes with error: %d", (int)status);
             }
         }
