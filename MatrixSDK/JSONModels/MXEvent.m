@@ -212,6 +212,11 @@ NSString *const kMXJoinRulesContentKeyRoomId = @"room_id";
 NSString *const kMXEventTimelineMain = @"main";
 NSString *const kMXEventUnthreaded = @"unthreaded";
 
+// Matrix RTC support
+
+NSString *const kMXEventTypeStringCallNotify = @"m.call.notify";
+NSString *const kMXEventTypeStringCallNotifyUnstable = @"org.matrix.msc4075.call.notify";
+
 #pragma mark - MXEvent
 @interface MXEvent ()
 {
