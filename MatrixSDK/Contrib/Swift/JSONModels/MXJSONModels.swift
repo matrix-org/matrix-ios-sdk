@@ -21,6 +21,7 @@ import Foundation
 public enum MXLoginFlowType: Equatable, Hashable {
     case password
     case recaptcha
+    case registrationToken
     case OAuth2
     case emailIdentity
     case msisdn
@@ -33,6 +34,7 @@ public enum MXLoginFlowType: Equatable, Hashable {
         switch self {
         case .password: return kMXLoginFlowTypePassword
         case .recaptcha: return kMXLoginFlowTypeRecaptcha
+        case .registrationToken: return kMXLoginFlowTypeRegistrationToken
         case .OAuth2: return kMXLoginFlowTypeOAuth2
         case .emailIdentity: return kMXLoginFlowTypeEmailIdentity
         case .msisdn: return kMXLoginFlowTypeMSISDN
@@ -44,7 +46,7 @@ public enum MXLoginFlowType: Equatable, Hashable {
     }
 
     public init(identifier: String) {
-        let flowTypes: [MXLoginFlowType] = [.password, .recaptcha, .OAuth2, .emailIdentity, .msisdn, .token, .dummy, .emailCode]
+        let flowTypes: [MXLoginFlowType] = [.password, .recaptcha, .registrationToken, .OAuth2, .emailIdentity, .msisdn, .token, .dummy, .emailCode]
         self = flowTypes.first(where: { $0.identifier == identifier }) ?? .other(identifier)
     }
 }
