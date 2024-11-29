@@ -3103,7 +3103,7 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
                        success:(void (^)(void))success
                        failure:(void (^)(NSError *))failure
 {
-    NSString *path = [NSString stringWithFormat:@"%@/org.matrix.msc4151/rooms/%@/report", kMXAPIPrefixPathUnstable, roomId];
+    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/report", kMXAPIPrefixPathV3, roomId];
 
     NSDictionary *parameters = @{ @"reason": reason.length > 0 ? reason : @"" };
 
