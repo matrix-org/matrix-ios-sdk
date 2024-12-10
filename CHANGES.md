@@ -1,3 +1,8 @@
+## Changes in 0.27.17 (2024-12-10)
+
+No significant changes.
+
+
 ## Changes in 0.27.16 (2024-11-12)
 
 No significant changes.
