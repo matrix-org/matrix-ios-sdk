@@ -832,6 +832,15 @@ typedef void (^MXOnResumeDone)(void);
 
 - (void)setIdentityServer:(NSString *)identityServer andAccessToken:(NSString *)accessToken
 {
+    // Old Account data can have a trailing slash at the end of their Identity Server.
+    // This can lead to unrecognized URL on the backend (like on 'invite to room') because the URL is then constructed
+    // with a double slash in its path.
+    // This leads to error 500 for these calls.
+    // So, fix this trailing slash as soon as we receive it.
+    if ([identityServer hasSuffix:@"/"]) {
+        identityServer = [identityServer substringToIndex:identityServer.length-1];
+    }
+    
     MXLogDebug(@"[MXSession] setIdentityServer: %@", identityServer);
     
     matrixRestClient.identityServer = identityServer;
