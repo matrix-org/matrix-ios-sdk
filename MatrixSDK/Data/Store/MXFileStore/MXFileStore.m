@@ -2220,7 +2220,7 @@ static NSUInteger preloadOptions;
                 [self checkFolderExistenceForRoom:roomId forBackup:NO];
                 
                 NSError *error = nil;
-                NSData *result = [NSKeyedArchiver archivedDataWithRootObject:receiptsStore requiringSecureCoding:false error:&error];
+                NSData *result = [NSKeyedArchiver archivedDataWithRootObject:snapshot requiringSecureCoding:false error:&error];
                 
                 if (error != nil)
                 {
