@@ -2192,41 +2192,48 @@ static NSUInteger preloadOptions;
             // Save rooms where there was changes
             for (NSString *roomId in roomsToCommit)
             {
-                RoomThreadedReceiptsStore *receiptsStore =  self->roomThreadedReceiptsStores[roomId];
-                if (receiptsStore)
+                RoomThreadedReceiptsStore *store = self->roomThreadedReceiptsStores[roomId];
+                if (!store) continue;
+                
+                NSDictionary<NSString*, RoomReceiptsStore*> *snapshot;
+                @synchronized (store) {
+                  NSMutableDictionary *outer = [NSMutableDictionary dictionaryWithCapacity:store.count];
+                  for (NSString *timelineId in store) {
+                    RoomReceiptsStore *inner = store[timelineId];
+                    // inner is itself an NSMutableDictionary, so copy it
+                    outer[timelineId] = [inner copy];
+                  }
+                  snapshot = [outer copy];
+                }
+              
+                NSString *file = [self threadedReadReceiptsFileForRoom:roomId forBackup:NO];
+                NSString *backupFile = [self threadedReadReceiptsFileForRoom:roomId forBackup:YES];
+                
+                // Backup the file
+                if (backupFile && [[NSFileManager defaultManager] fileExistsAtPath:file])
                 {
-                    @synchronized (receiptsStore)
-                    {
-                        NSString *file = [self threadedReadReceiptsFileForRoom:roomId forBackup:NO];
-                        NSString *backupFile = [self threadedReadReceiptsFileForRoom:roomId forBackup:YES];
-
-                        // Backup the file
-                        if (backupFile && [[NSFileManager defaultManager] fileExistsAtPath:file])
-                        {
-                            [self checkFolderExistenceForRoom:roomId forBackup:YES];
-                            [[NSFileManager defaultManager] moveItemAtPath:file toPath:backupFile error:nil];
-                        }
-
-                        // Store new data
-                        [self checkFolderExistenceForRoom:roomId forBackup:NO];
-                        
-                        NSError *error = nil;
-                        NSData *result = [NSKeyedArchiver archivedDataWithRootObject:receiptsStore requiringSecureCoding:false error:&error];
-                        
-                        if (error != nil)
-                        {
-                            MXLogErrorDetails(@"Failed archiving receipts store", error);
-                            continue;
-                        }
-                        
-                        [result writeToURL:[NSURL fileURLWithPath:file] options: NSDataWritingAtomic error: &error];
-                        
-                        if (error != nil)
-                        {
-                            MXLogErrorDetails(@"Failed writing receipts store to file", error);
-                            continue;
-                        }
-                    }
+                  [self checkFolderExistenceForRoom:roomId forBackup:YES];
+                  [[NSFileManager defaultManager] moveItemAtPath:file toPath:backupFile error:nil];
+                }
+                
+                // Store new data
+                [self checkFolderExistenceForRoom:roomId forBackup:NO];
+                
+                NSError *error = nil;
+                NSData *result = [NSKeyedArchiver archivedDataWithRootObject:receiptsStore requiringSecureCoding:false error:&error];
+                
+                if (error != nil)
+                {
+                  MXLogErrorDetails(@"Failed archiving receipts store", error);
+                  continue;
+                }
+                
+                [result writeToURL:[NSURL fileURLWithPath:file] options: NSDataWritingAtomic error: &error];
+                
+                if (error != nil)
+                {
+                  MXLogErrorDetails(@"Failed writing receipts store to file", error);
+                  continue;
                 }
             }
             
