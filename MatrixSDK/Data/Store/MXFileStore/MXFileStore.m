@@ -2195,6 +2195,7 @@ static NSUInteger preloadOptions;
                 RoomThreadedReceiptsStore *store = self->roomThreadedReceiptsStores[roomId];
                 if (!store) continue;
                 
+                // Create a copy of the store at this point so other mutations can be done on it while we're saving it
                 NSDictionary<NSString*, RoomReceiptsStore*> *snapshot;
                 @synchronized (store) {
                   NSMutableDictionary *outer = [NSMutableDictionary dictionaryWithCapacity:store.count];
