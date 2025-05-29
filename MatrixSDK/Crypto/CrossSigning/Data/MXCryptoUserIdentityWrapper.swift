@@ -31,13 +31,13 @@ import MatrixSDKCrypto
     
     internal init(identity: UserIdentity, isVerified: Bool) {
         switch identity {
-        case .own(let userId, _, let masterKey, let userSigningKey, let selfSigningKey):
+        case .own(let userId, _, let masterKey, let userSigningKey, let selfSigningKey, _):
             self.userId = userId
             // Note: `trustsOurOwnDevice` is not currently used, instead using second `isVerified` parameter
             self.masterKeys = .init(jsonString: masterKey)
             self.selfSignedKeys = .init(jsonString: selfSigningKey)
             self.userSignedKeys = .init(jsonString: userSigningKey)
-        case .other(let userId, let masterKey, let selfSigningKey):
+        case .other(let userId, let masterKey, let selfSigningKey, _):
             self.userId = userId
             self.masterKeys = .init(jsonString: masterKey)
             self.selfSignedKeys = .init(jsonString: selfSigningKey)

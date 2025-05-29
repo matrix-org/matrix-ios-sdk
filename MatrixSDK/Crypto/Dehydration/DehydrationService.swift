@@ -135,7 +135,8 @@ public class DehydrationService: NSObject {
     private func dehydrateDevice(pickleKeyData: Data) async throws {
         let dehydratedDevice = try dehydratedDevices.create()
 
-        let requestDetails = try dehydratedDevice.keysForUpload(deviceDisplayName: deviceDisplayName, pickleKey: pickleKeyData)
+        let requestDetails = try dehydratedDevice.keysForUpload(deviceDisplayName: deviceDisplayName,
+                                                                pickleKey: .init(inner: pickleKeyData))
         
         let parameters = MXDehydratedDeviceCreationParameters()
         parameters.body = requestDetails.body
@@ -164,7 +165,9 @@ public class DehydrationService: NSObject {
                 }
                 
                 do {
-                    let rehydratedDevice = try self.dehydratedDevices.rehydrate(pickleKey: pickleKeyData, deviceId: dehydratedDevice.deviceId, deviceData: deviceDataJSON)
+                    let rehydratedDevice = try self.dehydratedDevices.rehydrate(pickleKey: .init(inner: pickleKeyData),
+                                                                                deviceId: dehydratedDevice.deviceId,
+                                                                                deviceData: deviceDataJSON)
                     continuation.resume(returning: .success((dehydratedDevice.deviceId, rehydratedDevice)))
                 } catch {
                     continuation.resume(returning: .failure(DehydrationServiceError.failedRehydration(error)))

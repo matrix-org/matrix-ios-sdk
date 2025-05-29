@@ -33,7 +33,8 @@ class MXKeysQueryResponseUnitTests: XCTestCase {
                         userId: userId,
                         usage: ["self_signing"],
                         keys: "\(userId)-SSK"
-                    ).jsonString()
+                    ).jsonString(),
+                    hasVerificationViolation: false
                 ),
                 isVerified: true
             )
@@ -60,7 +61,8 @@ class MXKeysQueryResponseUnitTests: XCTestCase {
                         userId: userId,
                         usage: ["self_signing"],
                         keys: "\(userId)-SSK"
-                    ).jsonString()
+                    ).jsonString(),
+                    hasVerificationViolation: false
                 ),
                 isVerified: true
             )

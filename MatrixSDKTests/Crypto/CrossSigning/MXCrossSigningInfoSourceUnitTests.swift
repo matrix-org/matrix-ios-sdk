@@ -40,7 +40,8 @@ class MXCrossSigningInfoSourceUnitTests: XCTestCase {
                 trustsOurOwnDevice: true,
                 masterKey: "master",
                 userSigningKey: "user",
-                selfSigningKey: "self"
+                selfSigningKey: "self",
+                hasVerificationViolation: false
             )
         ]
         cryptoSource.verification = [
