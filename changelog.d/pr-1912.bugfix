@@ -1,0 +1,2 @@
+- Lazy member loading flag was not applied in timeline filter due to init order (setStore before start).
+- Support for additional timeline filters.
