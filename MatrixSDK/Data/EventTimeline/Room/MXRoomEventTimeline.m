@@ -124,13 +124,6 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         }
 
         _state = [[MXRoomState alloc] initWithRoomId:room.roomId andMatrixSession:room.mxSession andDirection:YES];
-
-        // If the event stream runs with lazy loading, the timeline must do the same
-        if (room.mxSession.syncWithLazyLoadOfRoomMembers)
-        {
-            _roomEventFilter = [MXRoomEventFilter new];
-            _roomEventFilter.lazyLoadMembers = YES;
-        }
     }
     return self;
 }
