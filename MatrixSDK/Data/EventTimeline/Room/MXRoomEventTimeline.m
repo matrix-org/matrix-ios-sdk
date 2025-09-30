@@ -124,6 +124,26 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         }
 
         _state = [[MXRoomState alloc] initWithRoomId:room.roomId andMatrixSession:room.mxSession andDirection:YES];
+
+        // During startup, if a cached filterId exists, this code will execute to fetch and create a filter.
+        // However, if a filter is explicitly provided to start(), that filter will overwrite the one allocated here.
+        // Additionally, this code runs when loadRoom() is called after start() to ensure the filter is always initialized.
+        if (!_roomEventFilter && room.mxSession.syncFilterId)
+        {
+            [room.mxSession filterWithFilterId:room.mxSession.syncFilterId success:^(MXFilterJSONModel *filter) {
+                _roomEventFilter = filter.room.timeline;
+
+                // If the event stream runs with lazy loading, the timeline must do the same
+                if (filter.room.state.lazyLoadMembers)
+                {
+                    if (!_roomEventFilter)
+                    {
+                        _roomEventFilter = [MXRoomEventFilter new];
+                    }
+                    _roomEventFilter.lazyLoadMembers = YES;
+                }
+            } failure:nil];
+        }
     }
     return self;
 }
