@@ -253,6 +253,10 @@ class MXBackgroundStore: NSObject, MXStore {
     func storeHomeserverCapabilities(_ homeserverCapabilities: MXCapabilities) {
     }
 
+    var authMetadata: MXAuthMetadata?
+    func store(_ authMetadata: MXAuthMetadata) {
+    }
+
     var supportedMatrixVersions: MXMatrixVersions?
     func storeSupportedMatrixVersions(_ supportedMatrixVersions: MXMatrixVersions) {
     }

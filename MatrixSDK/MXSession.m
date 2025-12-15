@@ -5196,4 +5196,66 @@ typedef void (^MXOnResumeDone)(void);
     return [MXTools presenceString:self.preferredSyncPresence];
 }
 
+#pragma mark - Homeserver OAuth 2.0 metadata
+
+- (bool)hasOAuth2APIEnabled
+{
+    return self.store.authMetadata != nil || self.store.homeserverWellknown.authentication != nil;
+}
+
+- (NSString *)accountManagementUri
+{
+    if (self.store.authMetadata)
+    {
+        return self.store.authMetadata.accountManagementUri;
+    }
+    
+    if (self.store.homeserverWellknown.authentication)
+    {
+        return self.store.homeserverWellknown.authentication.account;
+    }
+    
+    return nil;
+}
+
+-(NSURL * _Nullable) getLogoutDeviceURLFromID: (NSString * ) deviceID
+{
+    if (self.store.authMetadata)
+    {
+        return [self.store.authMetadata getLogoutDeviceURLFromID:deviceID];
+    }
+    
+    if (self.store.homeserverWellknown.authentication)
+    {
+        return [self.store.homeserverWellknown.authentication getLogoutDeviceURLFromID:deviceID];
+    }
+}
+
+
+- (MXAuthMetadata *)authMetadata
+{
+    return self.store.authMetadata;
+}
+
+- (MXHTTPOperation *)refreshAuthMetadata:(void (^)(MXAuthMetadata *))success
+                                            failure:(void (^)(NSError *))failure
+{
+    MXLogDebug(@"[MXSession] refreshAuthMetadata");
+
+    MXWeakify(self);
+    return [self.matrixRestClient authMetadata:^(MXAuthMetadata *authMetadata) {
+        MXStrongifyAndReturnIfNil(self);
+
+        if (authMetadata)
+        {
+            [self.store storeAuthMetadata:authMetadata];
+        }
+
+        if (success)
+        {
+            success(authMetadata);
+        }
+    } failure:failure];
+}
+
 @end

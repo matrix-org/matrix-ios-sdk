@@ -601,6 +601,34 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
     return operation;
 }
 
+- (MXHTTPOperation*)authMetadata:(void (^)(MXAuthMetadata *authMetadata))success
+                        failure:(void (^)(NSError *error))failure
+{
+    NSString *path = @"_matrix/client/v1/auth_metadata";
+
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"GET"
+                                    path:path
+                              parameters:nil
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
+                                     if (success)
+                                     {
+                                         __block MXAuthMetadata *authMetadata;
+                                         [self dispatchProcessing:^{
+                                             MXJSONModelSetMXJSONModel(authMetadata, MXAuthMetadata, JSONResponse);
+                                         } andCompletion:^{
+                                             success(authMetadata);
+                                         }];
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
 #pragma mark - Registration operations
 - (MXHTTPOperation *)testUserRegistration:(NSString *)username callback:(void (^)(MXError *mxError))callback
 {
