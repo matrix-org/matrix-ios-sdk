@@ -18,6 +18,7 @@
 
 NSString *const MXLoginSSOFlowIdentityProvidersKey = @"identity_providers";
 NSString *const MXLoginSSOFlowDelegatedOIDCCompatibilityKey = @"org.matrix.msc3824.delegated_oidc_compatibility";
+NSString *const MXLoginSSOFlowOAuthAwarePreferredKey = @"oauth_aware_preferred";
 
 @interface MXLoginSSOFlow()
 
@@ -52,7 +53,14 @@ NSString *const MXLoginSSOFlowDelegatedOIDCCompatibilityKey = @"org.matrix.msc38
         
         loginFlow.identityProviders = identityProviders;
         
-        MXJSONModelSetBoolean(loginFlow.delegatedOIDCCompatibility, JSONDictionary[MXLoginSSOFlowDelegatedOIDCCompatibilityKey]);
+        if ([JSONDictionary objectForKey:MXLoginSSOFlowOAuthAwarePreferredKey])
+        {
+            MXJSONModelSetBoolean(loginFlow.delegatedOIDCCompatibility, JSONDictionary[MXLoginSSOFlowOAuthAwarePreferredKey]);
+        }
+        else if ([JSONDictionary objectForKey: MXLoginSSOFlowDelegatedOIDCCompatibilityKey])
+        {
+            MXJSONModelSetBoolean(loginFlow.delegatedOIDCCompatibility, JSONDictionary[MXLoginSSOFlowDelegatedOIDCCompatibilityKey]);
+        }
     }
     
     return loginFlow;
