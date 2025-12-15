@@ -5229,6 +5229,8 @@ typedef void (^MXOnResumeDone)(void);
     {
         return [self.store.homeserverWellknown.authentication getLogoutDeviceURLFromID:deviceID];
     }
+    
+    return nil;
 }
 
 
