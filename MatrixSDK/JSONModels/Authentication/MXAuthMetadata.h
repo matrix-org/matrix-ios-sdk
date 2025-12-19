@@ -32,7 +32,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface MXAuthMetadata : MXJSONModel<NSCoding>
 
 @property (nonatomic, readonly) NSString *issuer;
-@property (nonatomic, readonly, nullable) NSString *accountManagementUri;
+@property (nonatomic, readonly, nullable) NSString *accountManagementURI;
 @property (nonatomic, readonly, nullable) NSArray<NSString*> *accountManagementActionsSupported;
 
 -(NSURL * _Nullable) getLogoutDeviceURLFromID: (NSString * ) deviceID;

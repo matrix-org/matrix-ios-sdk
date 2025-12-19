@@ -15,6 +15,7 @@
  */
 
 #import "MXWellKnown.h"
+#import "MXWellKnown_Private.h"
 
 static NSString *const kMXHomeServerKey = @"m.homeserver";
 static NSString *const kMXIdentityServerKey = @"m.identity_server";
@@ -87,7 +88,6 @@ static NSString *const kMXAuthenticationKey = @"org.matrix.msc2965.authenticatio
         _identityServer = [aDecoder decodeObjectForKey:kMXIdentityServerKey];
         _integrations = [aDecoder decodeObjectForKey:kMXIntegrationsKey];
         _tileServer = [aDecoder decodeObjectForKey:kMXTileServerKey];
-        _authentication = [aDecoder decodeObjectForKey:kMXAuthenticationKey];
         JSONDictionary = [aDecoder decodeObjectForKey:@"JSONDictionary"];
     }
     return self;
@@ -99,7 +99,6 @@ static NSString *const kMXAuthenticationKey = @"org.matrix.msc2965.authenticatio
     [aCoder encodeObject:_identityServer forKey:kMXIdentityServerKey];
     [aCoder encodeObject:_integrations forKey:kMXIntegrationsKey];
     [aCoder encodeObject:_tileServer forKey:kMXTileServerKey];
-    [aCoder encodeObject:_authentication forKey:kMXAuthenticationKey];
     [aCoder encodeObject:JSONDictionary forKey:@"JSONDictionary"];
 }
 

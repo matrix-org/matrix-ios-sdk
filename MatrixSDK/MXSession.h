@@ -1686,10 +1686,10 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 /**
  The homeserver OAuth 2.0 account management URI, if any.
  */
-@property (nonatomic, readonly, nullable) NSString *accountManagementUri;
+@property (nonatomic, readonly, nullable) NSString *accountManagementURI;
 
 /**
- The URL for logging out a device, if any
+ The URL for logging out a device using OAuth 2.0 account management URI, if any.
  */
 -(NSURL * _Nullable) getLogoutDeviceURLFromID: (NSString * ) deviceID;
 
@@ -1707,6 +1707,6 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)refreshAuthMetadata:(void (^)(MXAuthMetadata *authMetadata))success
-                                       failure:(void (^)(NSError *error))failure;
+                                failure:(void (^)(NSError *error))failure;
 
 @end

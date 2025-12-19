@@ -16,14 +16,14 @@
 
 #import "MXAuthMetadata.h"
 
-static NSString *const kMXIssuer = @"issuer";
-static NSString *const kMXAccountManagementUri = @"account_management_uri";
-static NSString *const kMXAccountManagementActionsSupported = @"account_management_actions_supported";
+static NSString *const kMXIssuerJSONKey = @"issuer";
+static NSString *const kMXAccountManagementUriJSONKey = @"account_management_uri";
+static NSString *const kMXAccountManagementActionsSupportedJSONKey = @"account_management_actions_supported";
 
 @interface MXAuthMetadata ()
 
 @property (nonatomic, readwrite) NSString *issuer;
-@property (nonatomic, readwrite, nullable) NSString *accountManagementUri;
+@property (nonatomic, readwrite, nullable) NSString *accountManagementURI;
 @property (nonatomic, readwrite, nullable) NSArray<NSString*> *accountManagementActionsSupported;
 
 @end
@@ -35,14 +35,14 @@ static NSString *const kMXAccountManagementActionsSupported = @"account_manageme
     MXAuthMetadata *oauthMetadata;
 
     NSString *issuer;
-    MXJSONModelSetString(issuer, JSONDictionary[kMXIssuer]);
+    MXJSONModelSetString(issuer, JSONDictionary[kMXIssuerJSONKey]);
     
     if (issuer)
     {
         oauthMetadata = [[MXAuthMetadata alloc] init];
         oauthMetadata.issuer = issuer;
-        MXJSONModelSetString(oauthMetadata.accountManagementUri, JSONDictionary[kMXAccountManagementUri])
-        MXJSONModelSetArray(oauthMetadata.accountManagementActionsSupported, JSONDictionary[kMXAccountManagementActionsSupported])
+        MXJSONModelSetString(oauthMetadata.accountManagementURI, JSONDictionary[kMXAccountManagementUriJSONKey])
+        MXJSONModelSetArray(oauthMetadata.accountManagementActionsSupported, JSONDictionary[kMXAccountManagementActionsSupportedJSONKey])
     }
 
     return oauthMetadata;
@@ -50,11 +50,11 @@ static NSString *const kMXAccountManagementActionsSupported = @"account_manageme
 
 -(NSURL * _Nullable) getLogoutDeviceURLFromID: (NSString * ) deviceID
 {
-    if (!_accountManagementUri)
+    if (!_accountManagementURI)
     {
         return nil;
     }
-    NSURLComponents *components = [NSURLComponents componentsWithString:_accountManagementUri];
+    NSURLComponents *components = [NSURLComponents componentsWithString:_accountManagementURI];
     // default to the stable value
     NSString *actionParam = @"org.matrix.device_delete";
     if ([_accountManagementActionsSupported containsObject: @"org.matrix.delete_device"])
@@ -87,18 +87,18 @@ static NSString *const kMXAccountManagementActionsSupported = @"account_manageme
     self = [super init];
     if (self)
     {
-        _issuer = [aDecoder decodeObjectForKey:kMXIssuer];
-        _accountManagementUri = [aDecoder decodeObjectForKey: kMXAccountManagementUri];
-        _accountManagementActionsSupported = [aDecoder decodeObjectForKey: kMXAccountManagementActionsSupported];
+        _issuer = [aDecoder decodeObjectForKey:kMXIssuerJSONKey];
+        _accountManagementURI = [aDecoder decodeObjectForKey: kMXAccountManagementUriJSONKey];
+        _accountManagementActionsSupported = [aDecoder decodeObjectForKey: kMXAccountManagementActionsSupportedJSONKey];
     }
     return self;
 }
 
 - (void)encodeWithCoder:(NSCoder *)aCoder
 {
-    [aCoder encodeObject:_issuer forKey:kMXIssuer];
-    [aCoder encodeObject:_accountManagementUri forKey:kMXAccountManagementUri];
-    [aCoder encodeObject:_accountManagementActionsSupported forKey:kMXAccountManagementActionsSupported];
+    [aCoder encodeObject:_issuer forKey:kMXIssuerJSONKey];
+    [aCoder encodeObject:_accountManagementURI forKey:kMXAccountManagementUriJSONKey];
+    [aCoder encodeObject:_accountManagementActionsSupported forKey:kMXAccountManagementActionsSupportedJSONKey];
 }
 
 @end

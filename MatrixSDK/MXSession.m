@@ -48,6 +48,8 @@
 #import "MatrixSDKSwiftHeader.h"
 #import "MXRoomSummaryProtocol.h"
 
+#import "MXWellKnown_Private.h"
+
 #pragma mark - Constants definitions
 NSString *const kMXSessionStateDidChangeNotification = @"kMXSessionStateDidChangeNotification";
 NSString *const kMXSessionNewRoomNotification = @"kMXSessionNewRoomNotification";
@@ -1050,6 +1052,10 @@ typedef void (^MXOnResumeDone)(void);
     } failure:^(NSError *error) {
         MXLogError(@"[MXSession] Failed to get maximum upload size.");
     }];
+    
+    // Refresh OAuth 2.0 metadatas
+    [self refreshAuthMetadata:nil failure:nil];
+    }
 }
 
 - (NSString *)syncFilterId
@@ -5203,11 +5209,11 @@ typedef void (^MXOnResumeDone)(void);
     return self.store.authMetadata != nil || self.store.homeserverWellknown.authentication != nil;
 }
 
-- (NSString *)accountManagementUri
+- (NSString *)accountManagementURI
 {
     if (self.store.authMetadata)
     {
-        return self.store.authMetadata.accountManagementUri;
+        return self.store.authMetadata.accountManagementURI;
     }
     
     if (self.store.homeserverWellknown.authentication)
@@ -5234,13 +5240,8 @@ typedef void (^MXOnResumeDone)(void);
 }
 
 
-- (MXAuthMetadata *)authMetadata
-{
-    return self.store.authMetadata;
-}
-
 - (MXHTTPOperation *)refreshAuthMetadata:(void (^)(MXAuthMetadata *))success
-                                            failure:(void (^)(NSError *))failure
+                                 failure:(void (^)(NSError *))failure
 {
     MXLogDebug(@"[MXSession] refreshAuthMetadata");
 

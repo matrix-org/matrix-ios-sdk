@@ -63,6 +63,8 @@
 		1E6C553C2EF071B4001C9EF5 /* MXAuthMetadata.m in Sources */ = {isa = PBXBuildFile; fileRef = 1E6C553A2EF071B4001C9EF5 /* MXAuthMetadata.m */; };
 		1E6C553D2EF071B4001C9EF5 /* MXAuthMetadata.m in Sources */ = {isa = PBXBuildFile; fileRef = 1E6C553A2EF071B4001C9EF5 /* MXAuthMetadata.m */; };
 		1E6C553E2EF071B4001C9EF5 /* MXAuthMetadata.h in Headers */ = {isa = PBXBuildFile; fileRef = 1E6C55392EF071B4001C9EF5 /* MXAuthMetadata.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		1E6C55402EF5C105001C9EF5 /* MXWellKnown_Private.h in Headers */ = {isa = PBXBuildFile; fileRef = 1E6C553F2EF5C0FA001C9EF5 /* MXWellKnown_Private.h */; };
+		1E6C55412EF5C105001C9EF5 /* MXWellKnown_Private.h in Headers */ = {isa = PBXBuildFile; fileRef = 1E6C553F2EF5C0FA001C9EF5 /* MXWellKnown_Private.h */; };
 		3209683126396385005D64ED /* AllTestsWithSanitizers.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = 3209682F26396385005D64ED /* AllTestsWithSanitizers.xctestplan */; };
 		3209683226396385005D64ED /* AllTestsWithSanitizers.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = 3209682F26396385005D64ED /* AllTestsWithSanitizers.xctestplan */; };
 		3209683326396385005D64ED /* UnitTestsWithSanitizers.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = 3209683026396385005D64ED /* UnitTestsWithSanitizers.xctestplan */; };
@@ -2030,6 +2032,7 @@
 		1D18B4F281A93ADB785B4800 /* Pods-MatrixSDKTests-iOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MatrixSDKTests-iOS.release.xcconfig"; path = "Target Support Files/Pods-MatrixSDKTests-iOS/Pods-MatrixSDKTests-iOS.release.xcconfig"; sourceTree = "<group>"; };
 		1E6C55392EF071B4001C9EF5 /* MXAuthMetadata.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXAuthMetadata.h; sourceTree = "<group>"; };
 		1E6C553A2EF071B4001C9EF5 /* MXAuthMetadata.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXAuthMetadata.m; sourceTree = "<group>"; };
+		1E6C553F2EF5C0FA001C9EF5 /* MXWellKnown_Private.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXWellKnown_Private.h; sourceTree = "<group>"; };
 		2D8EE909E54EE5334E1FD271 /* Pods-MatrixSDKTests-macOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MatrixSDKTests-macOS.release.xcconfig"; path = "Target Support Files/Pods-MatrixSDKTests-macOS/Pods-MatrixSDKTests-macOS.release.xcconfig"; sourceTree = "<group>"; };
 		3209682F26396385005D64ED /* AllTestsWithSanitizers.xctestplan */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = AllTestsWithSanitizers.xctestplan; sourceTree = "<group>"; };
 		3209683026396385005D64ED /* UnitTestsWithSanitizers.xctestplan */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = UnitTestsWithSanitizers.xctestplan; sourceTree = "<group>"; };
@@ -3370,6 +3373,7 @@
 		323547D12226D3F500F15F94 /* AutoDiscovery */ = {
 			isa = PBXGroup;
 			children = (
+				1E6C553F2EF5C0FA001C9EF5 /* MXWellKnown_Private.h */,
 				323547D32226D3F500F15F94 /* MXWellKnown.h */,
 				323547D22226D3F500F15F94 /* MXWellKnown.m */,
 				323547D62226D5D600F15F94 /* MXWellKnownBaseConfig.h */,
@@ -5623,6 +5627,7 @@
 				B14EECE52577F76100448735 /* MXLoginSSOFlow.h in Headers */,
 				EC8A53E025B1BCC6004E0802 /* MXThirdPartyProtocolInstance.h in Headers */,
 				91F0685D2767CA420079F8FA /* MXTaskProfileName.h in Headers */,
+				1E6C55402EF5C105001C9EF5 /* MXWellKnown_Private.h in Headers */,
 				B1798D0624091A0100308A8F /* MXBase64Tools.h in Headers */,
 				32133015228AF4EF0070BA9B /* MXRealmAggregationsStore.h in Headers */,
 				ED1AE92A2881AC7500D3432A /* MXWarnings.h in Headers */,
@@ -6186,6 +6191,7 @@
 				B14EF32F2397E90400758AF0 /* MXAccountData.h in Headers */,
 				EDE70DC928DA22F800099736 /* MXKeyBackupEngine.h in Headers */,
 				B135066C27EA1F5E00BD3276 /* MXEventAssetType.h in Headers */,
+				1E6C55412EF5C105001C9EF5 /* MXWellKnown_Private.h in Headers */,
 				B14EF3302397E90400758AF0 /* MXEnumConstants.h in Headers */,
 				ECBF658626DE3DF800AA3A99 /* MXFileRoomOutgoingMessagesStore.h in Headers */,
 				ECD289BA26FCD25600F268CF /* MXPushGatewayRestClient.h in Headers */,
