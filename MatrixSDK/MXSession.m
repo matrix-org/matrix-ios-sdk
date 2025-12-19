@@ -1055,7 +1055,6 @@ typedef void (^MXOnResumeDone)(void);
     
     // Refresh OAuth 2.0 metadatas
     [self refreshAuthMetadata:nil failure:nil];
-    }
 }
 
 - (NSString *)syncFilterId
