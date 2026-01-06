@@ -48,6 +48,8 @@
 #import "MatrixSDKSwiftHeader.h"
 #import "MXRoomSummaryProtocol.h"
 
+#import "MXWellKnown_Private.h"
+
 #pragma mark - Constants definitions
 NSString *const kMXSessionStateDidChangeNotification = @"kMXSessionStateDidChangeNotification";
 NSString *const kMXSessionNewRoomNotification = @"kMXSessionNewRoomNotification";
@@ -1050,6 +1052,9 @@ typedef void (^MXOnResumeDone)(void);
     } failure:^(NSError *error) {
         MXLogError(@"[MXSession] Failed to get maximum upload size.");
     }];
+    
+    // Refresh OAuth 2.0 metadatas
+    [self refreshAuthMetadata:nil failure:nil];
 }
 
 - (NSString *)syncFilterId
@@ -5194,6 +5199,65 @@ typedef void (^MXOnResumeDone)(void);
 - (NSString *)preferredSyncPresenceString
 {
     return [MXTools presenceString:self.preferredSyncPresence];
+}
+
+#pragma mark - Homeserver OAuth 2.0 metadata
+
+- (bool)hasOAuth2APIEnabled
+{
+    return self.store.authMetadata != nil || self.store.homeserverWellknown.authentication != nil;
+}
+
+- (NSString *)accountManagementURI
+{
+    if (self.store.authMetadata)
+    {
+        return self.store.authMetadata.accountManagementURI;
+    }
+    
+    if (self.store.homeserverWellknown.authentication)
+    {
+        return self.store.homeserverWellknown.authentication.account;
+    }
+    
+    return nil;
+}
+
+-(NSURL * _Nullable) getLogoutDeviceURLFromID: (NSString * ) deviceID
+{
+    if (self.store.authMetadata)
+    {
+        return [self.store.authMetadata getLogoutDeviceURLFromID:deviceID];
+    }
+    
+    if (self.store.homeserverWellknown.authentication)
+    {
+        return [self.store.homeserverWellknown.authentication getLogoutDeviceURLFromID:deviceID];
+    }
+    
+    return nil;
+}
+
+
+- (MXHTTPOperation *)refreshAuthMetadata:(void (^)(MXAuthMetadata *))success
+                                 failure:(void (^)(NSError *))failure
+{
+    MXLogDebug(@"[MXSession] refreshAuthMetadata");
+
+    MXWeakify(self);
+    return [self.matrixRestClient authMetadata:^(MXAuthMetadata *authMetadata) {
+        MXStrongifyAndReturnIfNil(self);
+
+        if (authMetadata)
+        {
+            [self.store storeAuthMetadata:authMetadata];
+        }
+
+        if (success)
+        {
+            success(authMetadata);
+        }
+    } failure:failure];
 }
 
 @end

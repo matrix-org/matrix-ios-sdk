@@ -493,6 +493,20 @@ static NSUInteger preloadOptions;
     }
 }
 
+- (MXAuthMetadata *)authMetadata
+{
+    return metaData.authMetadata;
+}
+
+- (void)storeAuthMetadata:(MXAuthMetadata *)authMetadata
+{
+    if (metaData)
+    {
+        metaData.authMetadata = authMetadata;
+        metaDataHasChanged = YES;
+    }
+}
+
 - (MXMatrixVersions *)supportedMatrixVersions
 {
     return metaData.supportedMatrixVersions;
