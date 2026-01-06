@@ -28,9 +28,11 @@ static NSString *const kMXAuthenticationKey = @"org.matrix.msc2965.authenticatio
 
 @interface MXWellKnown()
 {
-    // The original dictionary to store extented data
+    // The original dictionary to store extended data
     NSDictionary *JSONDictionary;
 }
+
+@property (nonatomic, nullable) MXWellKnownAuthentication *authentication;
 
 @end
 
@@ -88,6 +90,7 @@ static NSString *const kMXAuthenticationKey = @"org.matrix.msc2965.authenticatio
         _identityServer = [aDecoder decodeObjectForKey:kMXIdentityServerKey];
         _integrations = [aDecoder decodeObjectForKey:kMXIntegrationsKey];
         _tileServer = [aDecoder decodeObjectForKey:kMXTileServerKey];
+        _authentication = [aDecoder decodeObjectForKey:kMXAuthenticationKey];
         JSONDictionary = [aDecoder decodeObjectForKey:@"JSONDictionary"];
     }
     return self;
@@ -99,6 +102,7 @@ static NSString *const kMXAuthenticationKey = @"org.matrix.msc2965.authenticatio
     [aCoder encodeObject:_identityServer forKey:kMXIdentityServerKey];
     [aCoder encodeObject:_integrations forKey:kMXIntegrationsKey];
     [aCoder encodeObject:_tileServer forKey:kMXTileServerKey];
+    [aCoder encodeObject:_authentication forKey:kMXAuthenticationKey];
     [aCoder encodeObject:JSONDictionary forKey:@"JSONDictionary"];
 }
 
