@@ -346,7 +346,7 @@ class MXLocationServiceTests: XCTestCase {
                         
                         _ = liveTimeline.listenToEvents([.roomPowerLevels], { event, direction, state in
                             
-                            XCTAssertEqual(liveTimeline.state?.powerLevels.powerLevelOfUser(withUserID: aliceSession.myUserId), expectedPowerLevel);
+                            XCTAssertEqual(liveTimeline.state?.powerLevelOfUser(withUserID: aliceSession.myUserId), expectedPowerLevel);
                             
                             let aliceLocationService: MXLocationService = aliceSession.locationService
                             

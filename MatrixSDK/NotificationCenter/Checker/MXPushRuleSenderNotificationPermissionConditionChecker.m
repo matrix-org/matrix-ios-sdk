@@ -53,7 +53,7 @@
     {
         MXRoomPowerLevels *roomPowerLevels = roomState.powerLevels;
         NSInteger notifLevel = [roomPowerLevels minimumPowerLevelForNotifications:notifLevelKey defaultPower:50];
-        NSInteger senderPowerLevel = [roomPowerLevels powerLevelOfUserWithUserID:event.sender];
+        NSInteger senderPowerLevel = [roomState powerLevelOfUserWithUserID:event.sender];
 
         isSatisfied = (senderPowerLevel >= notifLevel);
     }

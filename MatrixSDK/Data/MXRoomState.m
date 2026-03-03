@@ -328,21 +328,53 @@
     return avatar;
 }
 
+- (NSString *)roomVersion
+{
+    NSString *roomVersion;
+    
+    // Check it from the state events
+    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomCreate].lastObject;
+    NSDictionary<NSString *, id> *eventContent = [self contentOfEvent:event];
+    
+    if (event && eventContent)
+    {
+        MXJSONModelSetString(roomVersion, eventContent[@"room_version"]);
+        roomVersion = [roomVersion copy];
+
+    }
+    return roomVersion;
+}
+
 - (NSString *)creatorUserId
 {
     NSString *creatorUserId;
     
     // Check it from the state events
     MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomCreate].lastObject;
+    NSString* sender = [event sender];
     
+    if (event && sender)
+    {
+        creatorUserId = [sender copy];
+    }
+    return creatorUserId;
+}
+
+- (NSArray<NSString*> *)additionalCreators
+{
+    NSArray<NSString*> *additionalCreators = @[];
+    
+    // Check it from the state events
+    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomCreate].lastObject;
     NSDictionary<NSString *, id> *eventContent = [self contentOfEvent:event];
     
     if (event && eventContent)
     {
-        MXJSONModelSetString(creatorUserId, eventContent[@"creator"]);
-        creatorUserId = [creatorUserId copy];
+        MXJSONModelSetArray(additionalCreators, eventContent[@"additional_creators"]);
+        additionalCreators = [additionalCreators copy];
+
     }
-    return creatorUserId;
+    return additionalCreators;
 }
 
 - (MXRoomHistoryVisibility)historyVisibility
@@ -601,11 +633,50 @@
     // Ignore banned and left (kicked) members
     if (member.membership != MXMembershipLeave && member.membership != MXMembershipBan)
     {
-        float userPowerLevelFloat = [powerLevels powerLevelOfUserWithUserID:userId];
-        powerLevel = maxPowerLevel ? userPowerLevelFloat / maxPowerLevel : 1;
+        float userPowerLevelFloat = [self powerLevelOfUserWithUserID:userId];
+        if (maxPowerLevel && userPowerLevelFloat >= maxPowerLevel)
+        {
+            powerLevel = 1;
+        }
+        else
+        {
+            powerLevel = maxPowerLevel ? userPowerLevelFloat / maxPowerLevel : 1;
+        }
     }
     
     return powerLevel;
+}
+
+- (NSInteger)powerLevelOfUserWithUserID:(NSString *)userId
+{
+    if ([self isMSC4289Supported])
+    {
+        if ([userId isEqualToString: [self creatorUserId]] || [[self additionalCreators] containsObject: userId])
+        {
+            return NSIntegerMax;
+        }
+    }
+    
+    // By default, use usersDefault
+    NSInteger userPowerLevel = powerLevels.usersDefault;
+
+    NSNumber *powerLevel;
+    MXJSONModelSetNumber(powerLevel, powerLevels.users[userId]);
+    if (powerLevel)
+    {
+        userPowerLevel = [powerLevel integerValue];
+    }
+
+    return userPowerLevel;
+}
+
+- (BOOL)isMSC4289Supported {
+    NSArray<NSString*> *supportedRoomVersions = @[@"org.matrix.hydra.11",@"12"];
+    if ([self roomVersion])
+    {
+        return [supportedRoomVersions containsObject:[self roomVersion]];
+    }
+    return NO;
 }
 
 # pragma mark - Conference call

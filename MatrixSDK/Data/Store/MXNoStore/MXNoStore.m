@@ -480,6 +480,14 @@
 {
 }
 
+- (MXAuthMetadata *)authMetadata
+{
+    return nil;
+}
+- (void)storeAuthMetadata:(MXAuthMetadata *)authMetadata
+{
+}
+
 - (MXMatrixVersions *)supportedMatrixVersions
 {
     return nil;

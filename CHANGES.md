@@ -1,3 +1,13 @@
+## Changes in 0.27.18 (2026-03-03)
+
+⚠️ API Changes
+
+- Update OAuth-awareness to support the stable version of MSC3824. ([#7925](https://github.com/vector-im/element-ios/issues/7925))
+
+🧱 Build
+
+- Build with Xcode 26 ([#1920](https://github.com/matrix-org/matrix-ios-sdk/pull/1920))
+
 ## Changes in 0.27.17 (2024-12-10)
 
 No significant changes.

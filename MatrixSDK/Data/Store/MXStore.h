@@ -34,6 +34,7 @@
 @class MXStoreService;
 @class MXCapabilities;
 @class MXMatrixVersions;
+@class MXAuthMetadata;
 
 /**
  The `MXStore` protocol defines an interface that must be implemented in order to store
@@ -406,6 +407,18 @@
  @param supportedMatrixVersions the supported Matrix versions to store.
  */
 - (void)storeSupportedMatrixVersions:(nonnull MXMatrixVersions*)supportedMatrixVersions;
+
+/**
+ The homeserver OAuth 2.0 server metadata.
+ */
+@property (nonatomic, readonly) MXAuthMetadata * _Nullable authMetadata;
+
+/**
+ Store the homeserver OAuth 2.0 server metadata.
+
+ @param authMetadata the homeserver OAuth 2.0 server metadata to store.
+ */
+- (void)storeAuthMetadata:(nonnull MXAuthMetadata*)authMetadata;
 
 #pragma mark - Room Messages
 

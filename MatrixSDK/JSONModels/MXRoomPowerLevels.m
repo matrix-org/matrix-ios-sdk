@@ -117,21 +117,6 @@ NSInteger const kMXRoomPowerLevelNotificationsRoomDefault = 50;
     return self;
 }
 
-- (NSInteger)powerLevelOfUserWithUserID:(NSString *)userId
-{
-    // By default, use usersDefault
-    NSInteger userPowerLevel = _usersDefault;
-
-    NSNumber *powerLevel;
-    MXJSONModelSetNumber(powerLevel, _users[userId]);
-    if (powerLevel)
-    {
-        userPowerLevel = [powerLevel integerValue];
-    }
-
-    return userPowerLevel;
-}
-
 - (NSInteger)minimumPowerLevelForSendingEventAsMessage:(MXEventTypeString)eventTypeString
 {
     NSInteger minimumPowerLevel;

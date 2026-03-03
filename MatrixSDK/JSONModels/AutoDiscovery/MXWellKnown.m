@@ -15,6 +15,7 @@
  */
 
 #import "MXWellKnown.h"
+#import "MXWellKnown_Private.h"
 
 static NSString *const kMXHomeServerKey = @"m.homeserver";
 static NSString *const kMXIdentityServerKey = @"m.identity_server";
@@ -27,9 +28,11 @@ static NSString *const kMXAuthenticationKey = @"org.matrix.msc2965.authenticatio
 
 @interface MXWellKnown()
 {
-    // The original dictionary to store extented data
+    // The original dictionary to store extended data
     NSDictionary *JSONDictionary;
 }
+
+@property (nonatomic, nullable) MXWellKnownAuthentication *authentication;
 
 @end
 

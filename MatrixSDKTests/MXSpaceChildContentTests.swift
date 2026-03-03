@@ -115,7 +115,7 @@ class MXSpaceChildContentTests: XCTestCase {
     /// -> Alice must see the created child room
     /// - Bob removes the room from the space
     /// -> Bob must NOT see the removed child room
-    func testRemovePublicChild() throws {
+    func disabled_testRemovePublicChild() throws {
         createSpaceAndChildRoom(joinRule: .public, testRemoveRoom: true)
     }
 

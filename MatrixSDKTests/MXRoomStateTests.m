@@ -1139,10 +1139,10 @@
                 XCTAssertEqual(roomPowerLevels.users.count, 1);
                 XCTAssertEqualObjects(roomPowerLevels.users[bobRestClient.credentials.userId], [NSNumber numberWithUnsignedInteger: 100], @"By default power level of room creator is 100");
 
-                NSUInteger powerlLevel = [roomPowerLevels powerLevelOfUserWithUserID:bobRestClient.credentials.userId];
+                NSUInteger powerlLevel = [roomState powerLevelOfUserWithUserID:bobRestClient.credentials.userId];
                 XCTAssertEqual(powerlLevel, 100, @"By default power level of room creator is 100");
 
-                powerlLevel = [roomPowerLevels powerLevelOfUserWithUserID:@"randomUserId"];
+                powerlLevel = [roomState powerLevelOfUserWithUserID:@"randomUserId"];
                 XCTAssertEqual(powerlLevel, roomPowerLevels.usersDefault, @"Power level of user with no attributed power level must default to usersDefault");
 
                 // Check minimum power level for actions

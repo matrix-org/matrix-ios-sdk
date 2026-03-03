@@ -1675,4 +1675,38 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  */
 @property (nonatomic) MXPresence preferredSyncPresence;
 
+#pragma mark - Homeserver OAuth 2.0 metadata
+
+/**
+ True if the homeserver has the OAuth 2.0 API enabled.
+ */
+@property (nonatomic, readonly) bool hasOAuth2APIEnabled;
+
+
+/**
+ The homeserver OAuth 2.0 account management URI, if any.
+ */
+@property (nonatomic, readonly, nullable) NSString *accountManagementURI;
+
+/**
+ The URL for logging out a device using OAuth 2.0 account management URI, if any.
+ */
+-(NSURL * _Nullable) getLogoutDeviceURLFromID: (NSString * ) deviceID;
+
+/**
+ The homeserver OAuth 2.0 server metadata, if any.
+ */
+@property (nonatomic, readonly, nullable) MXAuthMetadata *authMetadata;
+
+/**
+ Refresh self.authMetadata.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)refreshAuthMetadata:(void (^)(MXAuthMetadata *authMetadata))success
+                                failure:(void (^)(NSError *error))failure;
+
 @end

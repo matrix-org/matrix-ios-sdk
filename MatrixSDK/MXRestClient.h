@@ -45,6 +45,7 @@
 #import "MXTaggedEvents.h"
 #import "MXCredentials.h"
 #import "MXRoomAliasResolution.h"
+#import "MXAuthMetadata.h"
 
 @class MXThirdpartyProtocolsResponse;
 @class MXThirdPartyUsersResponse;
@@ -3106,6 +3107,20 @@ Note: Clients should consider avoiding this endpoint for URLs posted in encrypte
 /// @return a MXHTTPOperation instance.
 - (MXHTTPOperation*)homeServerCapabilitiesWithSuccess:(void (^)(MXHomeserverCapabilities *capabilities))success
                                               failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
+#pragma mark - Homeserver OAuth 2.0 server metadata
+
+/**
+ Get the homeserver OAuth 2.0 server metadata.
+
+ @param success A block object called when the operation succeeds. It provides
+                the metadata.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)authMetadata:(void (^)(MXAuthMetadata *authMetadata))success
+                         failure:(void (^)(NSError *error))failure;
 
 @end
 

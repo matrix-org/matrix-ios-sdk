@@ -877,8 +877,8 @@
                             MXRoomPowerLevels *roomPowerLevels = roomState.powerLevels;
 
                             XCTAssertNotNil(roomPowerLevels);
-                            NSUInteger powerlLevel1 = [roomPowerLevels powerLevelOfUserWithUserID:mxSession.myUserId];
-                            NSUInteger powerlLevel2 = [roomPowerLevels powerLevelOfUserWithUserID:matrixSDKTestsData.aliceCredentials.userId];
+                            NSUInteger powerlLevel1 = [roomState powerLevelOfUserWithUserID:mxSession.myUserId];
+                            NSUInteger powerlLevel2 = [roomState powerLevelOfUserWithUserID:matrixSDKTestsData.aliceCredentials.userId];
                             XCTAssertEqual(powerlLevel1, powerlLevel2, @"The members must have the same power level");
 
                             [expectation fulfill];

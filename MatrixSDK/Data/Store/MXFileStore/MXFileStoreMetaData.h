@@ -19,6 +19,7 @@
 #import "MXWellKnown.h"
 #import "MXCapabilities.h"
 #import "MXMatrixVersions.h"
+#import "MXAuthMetadata.h"
 
 @interface MXFileStoreMetaData : NSObject <NSCoding, NSCopying>
 
@@ -77,5 +78,10 @@
  The maximum size an upload can be in bytes.
  */
 @property (nonatomic) NSInteger maxUploadSize;
+
+/**
+ OAuth 2.0 server metadata.
+ */
+@property (nonatomic) MXAuthMetadata *authMetadata;
 
 @end

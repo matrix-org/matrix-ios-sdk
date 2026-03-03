@@ -26,7 +26,7 @@ static NSString* const kRoomPredecessorTombstoneEventIdJSONKey = @"event_id";
 @interface MXRoomPredecessorInfo()
 
 @property (nonatomic, copy, readwrite, nonnull) NSString *roomId;
-@property (nonatomic, copy, readwrite, nonnull) NSString *tombStoneEventId;
+@property (nonatomic, copy, readwrite, nullable) NSString *tombStoneEventId;
 
 @end
 
@@ -44,11 +44,14 @@ static NSString* const kRoomPredecessorTombstoneEventIdJSONKey = @"event_id";
     MXJSONModelSetString(roomId, jsonDictionary[kRoomPredecessorRoomIdJSONKey]);
     MXJSONModelSetString(tombStoneEventId, jsonDictionary[kRoomPredecessorTombstoneEventIdJSONKey]);
     
-    if (roomId && tombStoneEventId)
+    if (roomId)
     {
         tombStoneContent = [MXRoomPredecessorInfo new];
         tombStoneContent.roomId = roomId;
-        tombStoneContent.tombStoneEventId = tombStoneEventId;
+        if (tombStoneEventId)
+        {
+            tombStoneContent.tombStoneEventId = tombStoneEventId;
+        }
     }
     
     return tombStoneContent;
