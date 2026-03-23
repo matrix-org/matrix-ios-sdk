@@ -53,36 +53,8 @@
                             error:nil];
     }
     
-    double sampleRate;
-    double ioBufferDuration;
-    
-    // Set the session's sample rate or the hardware sample rate.
-    // It is essential that we use the same sample rate as stream format
-    // to ensure that the I/O unit does not have to do sample rate conversion.
-    // Set the preferred audio I/O buffer duration, in seconds.
-    NSUInteger processorCount = [NSProcessInfo processInfo].processorCount;
-    
-    struct utsname systemInfo;
-    uname(&systemInfo);
-    NSString *machineName = [NSString stringWithCString:systemInfo.machine
-                                               encoding:NSUTF8StringEncoding];
-    BOOL isIphone4S = [machineName isEqualToString:@"iPhone4,1"];
-    
-    // Use best sample rate and buffer duration if the CPU has more than one
-    // core.
-    if (processorCount > 1 && !isIphone4S)
-    {
-        sampleRate = kRTCAudioSessionHighPerformanceSampleRate;
-        ioBufferDuration = kRTCAudioSessionHighPerformanceIOBufferDuration;
-    }
-    else
-    {
-        sampleRate = kRTCAudioSessionLowComplexitySampleRate;
-        ioBufferDuration = kRTCAudioSessionLowComplexityIOBufferDuration;
-    }
-    
-    [audioSession setPreferredSampleRate:sampleRate error:nil];
-    [audioSession setPreferredIOBufferDuration:ioBufferDuration error:nil];
+    [audioSession setPreferredSampleRate:kRTCAudioSessionHighPerformanceSampleRate error:nil];
+    [audioSession setPreferredIOBufferDuration:kRTCAudioSessionHighPerformanceIOBufferDuration error:nil];
     
     // Initialize audio manually, activate audio only when needed
     RTCAudioSession.sharedInstance.useManualAudio = YES;

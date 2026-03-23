@@ -558,7 +558,7 @@ typedef void (^HandleOfferBlock)(dispatch_block_t);
         dispatch_async(dispatch_get_main_queue(), ^{
             MXStrongifyAndReturnIfNil(self);
 
-            // Use self.remoteVideoView as a container of a RTCEAGLVideoView
+            // Use self.remoteVideoView as a container of a RTCMTLVideoView
             self->remoteJingleVideoView = [[MXJingleVideoView alloc] initWithContainerView:self.remoteVideoView];
             [self->remoteVideoTrack addRenderer:self->remoteJingleVideoView];
         });
@@ -781,7 +781,7 @@ didRemoveIceCandidates:(NSArray<RTCIceCandidate *> *)candidates;
             [peerConnection addTrack:localVideoTrack streamIds:@[kMXJingleCallWebRTCMainStreamID]];
             
             // Display the self view
-            // Use selfVideoView as a container of a RTCEAGLVideoView
+            // Use selfVideoView as a container of a RTCMTLVideoView
             MXJingleVideoView *renderView = [[MXJingleVideoView alloc] initWithContainerView:self.selfVideoView];
             [self startVideoCaptureWithRenderer:renderView];
         }

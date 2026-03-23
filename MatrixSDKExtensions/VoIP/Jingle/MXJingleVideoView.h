@@ -16,18 +16,18 @@
 #import <Foundation/Foundation.h>
 
 #if __has_include(<WebRTC/WebRTC.h>)
-#import <WebRTC/RTCEAGLVideoView.h>
+#import <WebRTC/RTCMTLVideoView.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
 /**
- `MXJingleVideoView` is responsible for rendering RTCEAGLVideoView into
+ `MXJingleVideoView` is responsible for rendering RTCMTLVideoView into
  a UIView container by keeping the aspect ratio of the video.
 
  @see https://developers.google.com/talk/libjingle/developer_guide
  */
 NS_EXTENSION_UNAVAILABLE_IOS("Rendering not available in app extensions.")
-@interface MXJingleVideoView : RTCEAGLVideoView <RTCVideoViewDelegate>
+@interface MXJingleVideoView : RTCMTLVideoView <RTCVideoViewDelegate>
 
 - (instancetype)initWithContainerView:(UIView *)containerView NS_DESIGNATED_INITIALIZER;
 
