@@ -431,7 +431,7 @@ FOUNDATION_EXPORT NSUInteger const MXRoomSummaryPaginationChunkSize;
  @param session the session the room belongs to.
  @param summary the room summary.
  @param event the candidate event for the room last message event.
- @param eventState the room state when the event occured.
+ @param eventState the room state when the event occurred.
  @param roomState the current state of the room.
  @return YES if the delegate accepted the event as last message.
          Returning NO can lead to a new call of this method with another candidate event.
