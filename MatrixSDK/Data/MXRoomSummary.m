@@ -684,7 +684,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     }
     
     // TODO: To improve
-    // This delay allows to gather multiple changes that occured in a room
+    // This delay allows to gather multiple changes that occurred in a room
     // and make only computation and request
     MXWeakify(self);
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, kMXRoomSummaryTrustComputationDelayMs * NSEC_PER_MSEC), dispatch_get_main_queue(), ^{
@@ -867,7 +867,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
         {
             if (event.isState)
             {
-                // Need to go backward in the state to provide it as it was when the event occured
+                // Need to go backward in the state to provide it as it was when the event occurred
                 if (state.isLive)
                 {
                     state = [state copy];
