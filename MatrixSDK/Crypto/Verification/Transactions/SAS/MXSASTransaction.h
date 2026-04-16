@@ -42,7 +42,7 @@ typedef enum : NSUInteger
     MXSASTransactionStateVerified,
     MXSASTransactionStateCancelled,                         // Check self.reasonCancelCode for the reason
     MXSASTransactionStateCancelledByMe,                     // Check self.reasonCancelCode for the reason
-    MXSASTransactionStateError                              // An error occured. Check self.error. The transaction can be only cancelled
+    MXSASTransactionStateError                              // An error occurred. Check self.error. The transaction can be only cancelled
 } MXSASTransactionState;
 
 /**
