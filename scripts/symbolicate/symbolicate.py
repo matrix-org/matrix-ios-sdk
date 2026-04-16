@@ -112,7 +112,7 @@ def symbolicate(crashLogData):
         if not "handleSignal" in crashLogData:
             crashLogData = crashLogData + "\n* Warning: This symbolication seems invalid!\n"
     else:
-        # In the case of a NS Exception, if the crash occured on the main thread, we must find the start and the main function at the call stack root.
+        # In the case of a NS Exception, if the crash occurred on the main thread, we must find the start and the main function at the call stack root.
         # If it is from another thread (ie its stack starts with start_wqthread), we can't validate the result
         if not "start_wqthread" in crashLogData:
             if not ("main" in crashLogData and "start" in crashLogData):
