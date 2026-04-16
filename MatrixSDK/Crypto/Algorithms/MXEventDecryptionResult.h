@@ -53,7 +53,7 @@
 @property (nonatomic, strong) MXEventDecryptionDecoration *decoration;
 
 /**
- If any, the error that occured during decryption.
+ If any, the error that occurred during decryption.
  */
 @property (nonatomic) NSError *error;
 
