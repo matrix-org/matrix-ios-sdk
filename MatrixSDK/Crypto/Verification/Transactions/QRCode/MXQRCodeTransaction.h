@@ -34,7 +34,7 @@ typedef NS_ENUM(NSInteger, MXQRCodeTransactionState) {
     MXQRCodeTransactionStateVerified,
     MXQRCodeTransactionStateCancelled,              // Check self.reasonCancelCode for the reason
     MXQRCodeTransactionStateCancelledByMe,          // Check self.reasonCancelCode for the reason
-    MXQRCodeTransactionStateError                   // An error occured. Check self.error. The transaction can be only cancelled
+    MXQRCodeTransactionStateError                   // An error occurred. Check self.error. The transaction can be only cancelled
 };
 
 /**
