@@ -162,7 +162,7 @@ FOUNDATION_EXPORT NSString * _Nonnull const MXErrorContentScannerReasonValueBadD
  
  @param requestBody the data to encrypt.
  @param completion A block object to be executed when the encrypted body is available. The returned instance is
- null if the server doesn't have a public key, or if an error occured during the encryption.
+ null if the server doesn't have a public key, or if an error occurred during the encryption.
  */
 - (void)encryptRequestBody:(nonnull NSDictionary *)requestBody completion:(void (^ _Nonnull)(MXContentScanEncryptedBody* _Nullable encryptedBody))completion;
 
