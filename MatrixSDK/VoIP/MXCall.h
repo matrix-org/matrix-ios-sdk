@@ -427,7 +427,7 @@ extern NSString *const kMXCallSupportsTransferringStatusDidChange;
 - (void)callAvailableAudioOutputsDidChange:(MXCall *)call;
 
 /**
- Tells the delegate an error occured.
+ Tells the delegate an error occurred.
  The call cannot be established.
 
  @param call the instance that changes.
