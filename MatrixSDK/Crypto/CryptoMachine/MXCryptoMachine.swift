@@ -562,7 +562,9 @@ extension MXCryptoMachine: MXCryptoRoomEventDecrypting {
             handleVerificationEvents: false,
             // The app does not use strict shields by default, in the future this will become configurable
             // per room.
-            strictShields: false
+            strictShields: false,
+            // Keep existing legacy behaviour
+            decryptionSettings: .init(senderDeviceTrustRequirement: .untrusted)
         )
     }
     
@@ -591,9 +593,14 @@ extension MXCryptoMachine: MXCryptoCrossSigning {
     
     func bootstrapCrossSigning(authParams: [AnyHashable: Any]) async throws {
         let result = try machine.bootstrapCrossSigning()
+        // If this is called before the device keys have been uploaded there will be a
+        // request to upload them, do that first.
+        if let optionalKeyRequest = result.uploadKeysRequest {
+            try await handleRequest(optionalKeyRequest)
+        }
         let _ = try await [
             requests.uploadSigningKeys(request: result.uploadSigningKeysRequest, authParams: authParams),
-            requests.uploadSignatures(request: result.signatureRequest)
+            requests.uploadSignatures(request: result.uploadSignatureRequest)
         ]
     }
     
@@ -606,11 +613,12 @@ extension MXCryptoMachine: MXCryptoCrossSigning {
         }
     }
     
-    func importCrossSigningKeys(export: CrossSigningKeyExport) {
+    func importCrossSigningKeys(export: CrossSigningKeyExport) throws {
         do {
             try machine.importCrossSigningKeys(export: export)
         } catch {
             log.error("Failed importing cross signing keys", context: error)
+            throw error
         }
     }
     
@@ -833,7 +841,7 @@ extension MXCryptoMachine: MXCryptoBackup {
         guard let message = MXCryptoTools.canonicalJSONString(forJSON: object) else {
             throw Error.cannotSerialize
         }
-        return machine.sign(message: message)
+        return try machine.sign(message: message)
     }
     
     func backupRoomKeys() async throws {

@@ -71,13 +71,13 @@ class MXSASTransactionV2UnitTests: XCTestCase {
     
     // MARK: - Test State
     
-    func test_startedState() {
+    func test_startedAndCreatedState() {
         let incoming = makeTransaction(isIncoming: true)
         incoming.onChange(state: .started)
         XCTAssertEqual(incoming.state, MXSASTransactionStateIncomingShowAccept)
         
         let outgoing = makeTransaction(isIncoming: false)
-        outgoing.onChange(state: .started)
+        outgoing.onChange(state: .created)
         XCTAssertEqual(outgoing.state, MXSASTransactionStateOutgoingWaitForPartnerToAccept)
     }
     

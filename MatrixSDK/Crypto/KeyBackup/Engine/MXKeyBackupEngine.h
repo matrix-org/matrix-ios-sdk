@@ -20,7 +20,6 @@
 #import "MXMegolmSessionData.h"
 #import "MXMegolmBackupCreationInfo.h"
 #import "MXKeyBackupVersionTrust.h"
-#import "MXKeyBackupAlgorithm.h"
 #import "MXKeyBackupData.h"
 
 NS_ASSUME_NONNULL_BEGIN

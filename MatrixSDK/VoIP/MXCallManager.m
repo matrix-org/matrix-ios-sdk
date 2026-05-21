@@ -1325,7 +1325,7 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
     else
     {
         MXRoomPowerLevels *powerLevels = roomState.powerLevels;
-        NSInteger oneSelfPowerLevel = [powerLevels powerLevelOfUserWithUserID:room.mxSession.myUserId];
+        NSInteger oneSelfPowerLevel = [roomState powerLevelOfUserWithUserID:room.mxSession.myUserId];
 
         // Only member with invite power level can create a conference call
         if (oneSelfPowerLevel >= powerLevels.invite)

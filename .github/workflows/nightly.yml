@@ -10,19 +10,19 @@ jobs:
 
   unit-tests:
     name: Unit Tests with sanitizer checks
-    runs-on: macos-13
+    runs-on: macos-26
 
     steps:
       - uses: actions/checkout@v2
 
       # Cache for Xcode env
-      - uses: actions/cache@v2
+      - uses: actions/cache@v4
         with:
           path: Pods
           key: ${{ runner.os }}-pods-${{ hashFiles('**/Podfile.lock') }}
           restore-keys: |
             ${{ runner.os }}-pods-
-      - uses: actions/cache@v2
+      - uses: actions/cache@v4
         with:
           path: vendor/bundle
           key: ${{ runner.os }}-gems-${{ hashFiles('**/Gemfile.lock') }}
@@ -55,7 +55,7 @@ jobs:
 
   integration-tests:
     name: Integration Tests (Synapse) with sanitizer checks
-    runs-on: macos-11
+    runs-on: macos-26
 
     steps:
       - uses: actions/checkout@v2

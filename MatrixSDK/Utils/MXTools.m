@@ -122,6 +122,8 @@ NSCharacterSet *uriComponentCharset;
             @(MXEventTypeCallRejectReplacement) : kMXEventTypeStringCallRejectReplacement,
             @(MXEventTypeCallAssertedIdentity) : kMXEventTypeStringCallAssertedIdentity,
             @(MXEventTypeCallAssertedIdentityUnstable) : kMXEventTypeStringCallAssertedIdentityUnstable,
+            // MatrixRTC call events
+            @(MXEventTypeCallNotify) : kMXEventTypeStringCallNotifyUnstable,
             
             @(MXEventTypeKeyVerificationRequest) : kMXEventTypeStringKeyVerificationRequest,
             @(MXEventTypeKeyVerificationReady) : kMXEventTypeStringKeyVerificationReady,
@@ -140,7 +142,9 @@ NSCharacterSet *uriComponentCharset;
             @(MXEventTypePollResponse) : kMXEventTypeStringPollResponseMSC3381,
             @(MXEventTypePollEnd) : kMXEventTypeStringPollEndMSC3381,
             @(MXEventTypeBeaconInfo) : kMXEventTypeStringBeaconInfoMSC3672,
-            @(MXEventTypeBeacon) : kMXEventTypeStringBeaconMSC3672
+            @(MXEventTypeBeacon) : kMXEventTypeStringBeaconMSC3672,
+            
+            @(MXEventTypeRoomRetention): kMXEventTypeStringRoomRetention
         };
 
         eventTypeMapStringToEnum = @{
@@ -192,6 +196,9 @@ NSCharacterSet *uriComponentCharset;
             kMXEventTypeStringCallRejectReplacement : @(MXEventTypeCallRejectReplacement),
             kMXEventTypeStringCallAssertedIdentity : @(MXEventTypeCallAssertedIdentity),
             kMXEventTypeStringCallAssertedIdentityUnstable : @(MXEventTypeCallAssertedIdentityUnstable),
+            // MatrixRTC call events
+            kMXEventTypeStringCallNotify : @(MXEventTypeCallNotify),
+            kMXEventTypeStringCallNotifyUnstable : @(MXEventTypeCallNotify),
             
             kMXEventTypeStringKeyVerificationRequest : @(MXEventTypeKeyVerificationRequest),
             kMXEventTypeStringKeyVerificationReady : @(MXEventTypeKeyVerificationReady),
@@ -215,7 +222,8 @@ NSCharacterSet *uriComponentCharset;
             kMXEventTypeStringBeaconInfoMSC3672 : @(MXEventTypeBeaconInfo),
             kMXEventTypeStringBeaconInfo : @(MXEventTypeBeaconInfo),
             kMXEventTypeStringBeaconMSC3672 : @(MXEventTypeBeacon),
-            kMXEventTypeStringBeacon : @(MXEventTypeBeacon)
+            kMXEventTypeStringBeacon : @(MXEventTypeBeacon),
+            kMXEventTypeStringRoomRetention: @(MXEventTypeRoomRetention),
         };
 
         isEmailAddressRegex =  [NSRegularExpression regularExpressionWithPattern:[NSString stringWithFormat:@"^%@$", kMXToolsRegexStringForEmailAddress]

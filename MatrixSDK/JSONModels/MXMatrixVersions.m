@@ -27,7 +27,9 @@ const struct MXMatrixClientServerAPIVersionStruct MXMatrixClientServerAPIVersion
     .r0_6_1 = @"r0.6.1",
     .v1_1   = @"v1.1",
     .v1_2   = @"v1.2",
-    .v1_3   = @"v1.3"
+    .v1_3   = @"v1.3",
+    // missing versions not considered
+    .v1_11  = @"v1.11"
 };
 
 const struct MXMatrixVersionsFeatureStruct MXMatrixVersionsFeature = {
@@ -143,6 +145,11 @@ static NSString* const kJSONKeyMSC3912 = @"org.matrix.msc3912.stable";
 - (BOOL)supportsRedactionWithRelationsUnstable
 {
     return [self serverSupportsFeature:kJSONKeyMSC3912Unstable];
+}
+
+- (BOOL)supportsAuthenticatedMedia
+{
+    return [self serverSupportsVersion:MXMatrixClientServerAPIVersion.v1_11];
 }
 
 #pragma mark - Private

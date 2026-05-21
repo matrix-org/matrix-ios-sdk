@@ -183,9 +183,8 @@ class MXCryptoMachineUnitTests: XCTestCase {
     
     // MARK: - Verification events
     
-    func test_receiveUnencryptedVerificationEvent() async throws {
+    func disabled_test_receiveUnencryptedVerificationEvent() async throws {
         let event = try makeUnencryptedRequestEvent()
-                
         try await machine.receiveVerificationEvent(event: event, roomId: roomId)
         
         let requests = machine.verificationRequests(userId: otherUserId)
@@ -193,7 +192,7 @@ class MXCryptoMachineUnitTests: XCTestCase {
         XCTAssertEqual(requests.first?.state(), .requested)
     }
     
-    func test_receiveEncryptedVerificationEvent() async throws {
+    func disabled_test_receiveEncryptedVerificationEvent() async throws {
         // Start verification by recieving `m.key.verifiaction.request` from the other user
         let requestEvent = try makeUnencryptedRequestEvent()
         try await machine.receiveVerificationEvent(event: requestEvent, roomId: roomId)

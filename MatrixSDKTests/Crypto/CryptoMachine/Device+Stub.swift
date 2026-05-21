@@ -41,7 +41,8 @@ extension Device {
             isBlocked: isBlocked,
             locallyTrusted: locallyTrusted,
             crossSigningTrusted: crossSigningTrusted,
-            firstTimeSeenTs: 0
+            firstTimeSeenTs: 0,
+            dehydrated: false
         )
     }
 }

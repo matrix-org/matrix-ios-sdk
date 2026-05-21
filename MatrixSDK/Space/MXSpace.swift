@@ -327,12 +327,13 @@ public class MXSpace: NSObject {
         }
         
         room.state { roomState in
-            guard let powerLevels = roomState?.powerLevels else {
+            guard let roomState,
+                let powerLevels = roomState.powerLevels else {
                 MXLog.warning("[MXSpace] canAddRoom: space power levels not found")
                 completion(false)
                 return
             }
-            let userPowerLevel = powerLevels.powerLevelOfUser(withUserID: userId)
+            let userPowerLevel = roomState.powerLevelOfUser(withUserID: userId)
             let minimumPowerLevel = self.minimumPowerLevelForAddingRoom(with: powerLevels)
             let canAddRoom = userPowerLevel >= minimumPowerLevel
             

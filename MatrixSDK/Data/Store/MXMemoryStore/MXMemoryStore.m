@@ -41,6 +41,7 @@
 @synthesize storeService, eventStreamToken, userAccountData, syncFilterId, homeserverWellknown, areAllIdentityServerTermsAgreed;
 @synthesize homeserverCapabilities;
 @synthesize supportedMatrixVersions;
+@synthesize authMetadata;
 
 - (instancetype)init
 {
@@ -81,6 +82,12 @@
 {
     MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
     [roomStore replaceEvent:event];
+}
+
+- (BOOL)removeAllMessagesSentBefore:(uint64_t)limitTs inRoom:(nonnull NSString *)roomId
+{
+    MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
+    return [roomStore removeAllMessagesSentBefore:limitTs];
 }
 
 - (BOOL)eventExistsWithEventId:(NSString *)eventId inRoom:(NSString *)roomId
@@ -402,6 +409,11 @@
 - (void)storeSupportedMatrixVersions:(MXMatrixVersions *)supportedMatrixVersions
 {
     supportedMatrixVersions = supportedMatrixVersions;
+}
+
+- (void)storeAuthMetadata:(MXAuthMetadata *)authMetadata
+{
+    authMetadata = authMetadata;
 }
 
 - (NSInteger)maxUploadSize

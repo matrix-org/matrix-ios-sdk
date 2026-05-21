@@ -1,3 +1,5 @@
+source 'https://cdn.cocoapods.org/'
+
 # Uncomment this line to define a global platform for your project
 
 # Expose Objective-C frameworks to Swift
@@ -11,15 +13,12 @@ abstract_target 'MatrixSDK' do
 
     pod 'SwiftyBeaver', '1.9.5'
     
-    pod 'OLMKit', '~> 3.2.5', :inhibit_warnings => true
-    #pod 'OLMKit', :path => '../olm/OLMKit.podspec'
-    
     pod 'Realm', '10.27.0'
     pod 'libbase58', '~> 0.1.4'
-    pod 'MatrixSDKCrypto', "0.3.13", :inhibit_warnings => true
+    pod 'MatrixSDKCrypto', '0.11.1', :inhibit_warnings => true
     
     target 'MatrixSDK-iOS' do
-        platform :ios, '11.0'
+        platform :ios, '13.0'
         
         target 'MatrixSDKTests-iOS' do
             inherit! :search_paths
@@ -28,7 +27,7 @@ abstract_target 'MatrixSDK' do
     end
     
     target 'MatrixSDK-macOS' do
-        platform :osx, '10.10'
+        platform :osx, '10.15'
 
         target 'MatrixSDKTests-macOS' do
             inherit! :search_paths
@@ -40,7 +39,7 @@ end
 post_install do |installer|
   installer.pods_project.targets.each do |target|
     target.build_configurations.each do |config|
-      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '11.0'
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.0'
     end
   end
 end

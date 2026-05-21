@@ -1,3 +1,83 @@
+## Changes in 0.27.18 (2026-03-03)
+
+⚠️ API Changes
+
+- Update OAuth-awareness to support the stable version of MSC3824. ([#7925](https://github.com/vector-im/element-ios/issues/7925))
+
+🧱 Build
+
+- Build with Xcode 26 ([#1920](https://github.com/matrix-org/matrix-ios-sdk/pull/1920))
+
+## Changes in 0.27.17 (2024-12-10)
+
+No significant changes.
+
+
+## Changes in 0.27.16 (2024-11-12)
+
+No significant changes.
+
+
+## Changes in 0.27.15 (2024-10-15)
+
+No significant changes.
+
+
+## Changes in 0.27.14 (2024-09-17)
+
+No significant changes.
+
+
+## Changes in 0.27.13 (2024-08-20)
+
+🙌 Improvements
+
+- Add UTC timestamps to console log lines. ([#7472](https://github.com/vector-im/element-ios/issues/7472))
+
+📄 Documentation
+
+- Drop the requirement for "real" or "legally identifiable" name in order to contribute, in line with updated Foundation policy. ([#1875](https://github.com/matrix-org/matrix-ios-sdk/pull/1875))
+
+
+## Changes in 0.27.12 (2024-07-23)
+
+🙌 Improvements
+
+- Expose MXRroomPowerLevels Swift wrappers to Element ([#1869](https://github.com/matrix-org/matrix-ios-sdk/pull/1869))
+
+🐛 Bugfixes
+
+- Fix CallKit audio session late init in VoIP call. ([#1866](https://github.com/matrix-org/matrix-ios-sdk/pull/1866))
+
+
+## Changes in 0.27.11 (2024-06-18)
+
+No significant changes.
+
+
+## Changes in 0.27.10 (2024-06-17)
+
+No significant changes.
+
+
+## Changes in 0.27.9 (2024-06-13)
+
+No significant changes.
+
+
+## Changes in 0.27.8 (2024-05-29)
+
+🙌 Improvements
+
+- When sorting room list alphabetically, sort it case-insensitive. ([#1851](https://github.com/matrix-org/matrix-ios-sdk/pull/1851))
+- Crypto: Update crypto SDK to 0.4.1 ([#1853](https://github.com/matrix-org/matrix-ios-sdk/pull/1853))
+
+
+## Changes in 0.27.7 (2024-05-01)
+
+No significant changes.
+
+
 ## Changes in 0.27.6 (2024-02-07)
 
 No significant changes.

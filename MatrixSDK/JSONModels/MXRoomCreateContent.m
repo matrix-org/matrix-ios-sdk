@@ -25,6 +25,7 @@ NSString* const MXRoomCreateContentRoomTypeJSONKey = @"type";
 // Private
 
 static NSString* const kRoomCreateContentUserIdJSONKey = @"creator";
+static NSString* const kRoomCreateContentAdditionalCreatorsJSONKey = @"additional_creators";
 static NSString* const kRoomCreateContentPredecessorInfoJSONKey = @"predecessor";
 static NSString* const kRoomCreateContentRoomVersionJSONKey = @"room_version";
 static NSString* const kRoomCreateContentFederateJSONKey = @"m.federate";
@@ -34,6 +35,7 @@ static NSString* const kRoomCreateContentFederateJSONKey = @"m.federate";
 @interface MXRoomCreateContent()
 
 @property (nonatomic, copy, readwrite, nullable) NSString *creatorUserId;
+@property (nonatomic, copy, readwrite, nullable) NSArray<NSString*> *additionalCreators;
 @property (nonatomic, strong, readwrite, nullable) MXRoomPredecessorInfo *roomPredecessorInfo;
 @property (nonatomic, copy, readwrite, nullable) NSString *roomVersion;
 @property (nonatomic, readwrite) BOOL isFederated;
@@ -53,6 +55,7 @@ static NSString* const kRoomCreateContentFederateJSONKey = @"m.federate";
         roomCreateContent.isFederated = YES;
         
         MXJSONModelSetString(roomCreateContent.creatorUserId, jsonDictionary[kRoomCreateContentUserIdJSONKey]);
+        MXJSONModelSetArray(roomCreateContent.additionalCreators, jsonDictionary[kRoomCreateContentAdditionalCreatorsJSONKey]);
         MXJSONModelSetMXJSONModel(roomCreateContent.roomPredecessorInfo, MXRoomPredecessorInfo, jsonDictionary[kRoomCreateContentPredecessorInfoJSONKey]);
         MXJSONModelSetString(roomCreateContent.roomVersion, jsonDictionary[kRoomCreateContentRoomVersionJSONKey]);
         MXJSONModelSetBoolean(roomCreateContent.isFederated, jsonDictionary[kRoomCreateContentFederateJSONKey]);
@@ -92,6 +95,11 @@ static NSString* const kRoomCreateContentFederateJSONKey = @"m.federate";
     if (self.roomType)
     {
         jsonDictionary[MXRoomCreateContentRoomTypeJSONKey] = self.roomType;
+    }
+    
+    if (self.additionalCreators)
+    {
+        jsonDictionary[kRoomCreateContentAdditionalCreatorsJSONKey] = self.additionalCreators;
     }
     
     return jsonDictionary;

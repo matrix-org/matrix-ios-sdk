@@ -33,6 +33,11 @@ extern NSString* _Nonnull const MXRoomCreateContentRoomTypeJSONKey;
 @property (nonatomic, copy, readonly, nullable) NSString *creatorUserId;
 
 /**
+ The array of `user_id` of the additional room creators.
+ */
+@property (nonatomic, copy, readonly, nullable) NSArray<NSString*> *additionalCreators;
+
+/**
  Room predecessor information if the current room is a new version of an old room (that has a state event `m.room.tombstone`).
  */
 @property (nonatomic, strong, readonly, nullable) MXRoomPredecessorInfo *roomPredecessorInfo;

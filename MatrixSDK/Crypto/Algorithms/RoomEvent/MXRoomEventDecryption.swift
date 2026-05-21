@@ -227,12 +227,13 @@ actor MXRoomEventDecryption: MXRoomEventDecrypting {
             ])
             return trackedDecryptionResult(for: event, error: error)
             
-        case .MissingRoomKey(let message):
+        case .MissingRoomKey(let message, let withheldCode):
             if undecryptedEvents[sessionId] == nil {
                 log.error("Failed to decrypt event(s) due to missing room keys", context: [
                     "session_id": sessionId,
                     "message": message,
                     "error": error,
+                    "withheldCode": withheldCode ?? "N/A",
                     "details": "further errors for the same key will be supressed",
                 ])
             }

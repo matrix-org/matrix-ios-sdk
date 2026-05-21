@@ -28,6 +28,7 @@ extension DecryptedEvent {
             forwardingCurve25519Chain: [],
             shieldState: .init(
                 color: .none,
+                code: nil,
                 message: nil
             )
         )

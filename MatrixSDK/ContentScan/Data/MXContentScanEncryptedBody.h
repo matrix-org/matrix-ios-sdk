@@ -16,7 +16,7 @@
 
 #import "MXJSONModel.h"
 
-@class OLMPkMessage;
+@class PKMessageWrapper;
 
 /**
  `MXContentScanEncryptedBody` contains the encrypted body use to scan an encrypted content.
@@ -39,11 +39,11 @@
 @property (nonatomic) NSString *ephemeral;
 
 /**
- Create a model instance from a OLMPkMessage instance.
+ Create a model instance from a PKMessageWrapper instance.
  
- @param OLMPkMessage the encrypted message.
+ @param PKMessageWrapper the encrypted message.
  @return the newly created instance.
  */
-+ (id)modelFromOLMPkMessage:(OLMPkMessage *)OLMPkMessage;
++ (id)modelFromPKMessage:(PKMessageWrapper *)pkMessage;
 
 @end

@@ -32,8 +32,6 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void)resetKeyBackupData;
 
-- (void)requestPrivateKeys:(void (^)(void))onComplete;
-
 - (BOOL)isSecretValid:(NSString*)secret forKeyBackupVersion:(MXKeyBackupVersion*)keyBackupVersion;
 
 @end

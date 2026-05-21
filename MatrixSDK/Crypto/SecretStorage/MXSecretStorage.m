@@ -23,9 +23,9 @@
 #import "MXHkdfSha256.h"
 #import "MXAesHmacSha2.h"
 #import "MXBase64Tools.h"
-#import <OLMKit/OLMKit.h>
 #import "MXEncryptedSecretContent.h"
 
+#import <Security/Security.h>
 
 #pragma mark - Constants
 
@@ -167,9 +167,17 @@ static NSString* const kSecretStorageZeroString = @"\0\0\0\0\0\0\0\0\0\0\0\0\0\0
         }
         else
         {
-            OLMPkDecryption *decryption = [OLMPkDecryption new];
-            [decryption generateKey:&error];
-            privateKey = decryption.privateKey;
+            uint8_t randomBytes[32];
+            OSStatus status = SecRandomCopyBytes(kSecRandomDefault, sizeof(randomBytes), randomBytes);
+            
+            if (status == errSecSuccess)
+            {
+                privateKey = [NSData dataWithBytes:randomBytes length:sizeof(randomBytes)];
+            }
+            else
+            {
+                MXLogDebug(@"Failed to generate random bytes with error: %d", (int)status);
+            }
         }
         
         if (error)

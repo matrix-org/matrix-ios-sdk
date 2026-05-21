@@ -9,6 +9,7 @@
 .. image:: https://img.shields.io/badge/License-Apache%202.0-yellowgreen.svg?style=flat-square
    :target: https://opensource.org/licenses/Apache-2.0
 
+==============
 Matrix iOS SDK
 ==============
 
@@ -20,6 +21,18 @@ This SDK implements an interface to communicate with the Matrix Client/Server
 API which is defined at http://matrix.org/docs/api/client-server/.
 
 
+Pod Deprecation
+===============
+
+The SDK is no longer published directly to Cocopods following recent linting issues
+with Xcode 14.3 and greater: `CocoaPods/CocoaPods#11839 <https://github.com/CocoaPods/CocoaPods/issues/11839>`_.
+This deprecation *only* covers the published pod, the SDK is still being maintained.
+
+It is however worth noting that we're now primarily focussed on the `Matrix Rust SDK <https://github.com/matrix-org/matrix-rust-sdk>`_ 
+and its respective FFI bindings which are available as a `Swift package <https://github.com/matrix-org/matrix-rust-components-swift/>`_.
+This would likely be a more sensible choice for anyone starting a new project using Matrix on Apple platforms.
+
+
 Use the SDK in your app
 =======================
 
@@ -29,15 +42,10 @@ In order to set this up::
     sudo gem install cocoapods
     pod setup
 
-The best way to add the last release of the Matrix SDK to your application
-project is to add the MatrixSDK dependency to your Podfile::
+The best way to add the Matrix SDK to your application is to add the MatrixSDK repo to your Podfile::
 
-    pod 'MatrixSDK'
+    pod 'MatrixSDK', :git => 'https://github.com/matrix-org/matrix-ios-sdk.git', :tag => 'vX.Y.Z'
 
-If you want to use the develop version of the SDK, use instead:
-
-    pod 'MatrixSDK', :git => 'https://github.com/matrix-org/matrix-ios-sdk.git',
-    :branch => 'develop'
 
 Options
 =======

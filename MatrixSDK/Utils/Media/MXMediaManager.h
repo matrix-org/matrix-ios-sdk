@@ -19,6 +19,7 @@
 #import <AVFoundation/AVFoundation.h>
 #import "MXMediaLoader.h"
 #import "MXEnumConstants.h"
+#import "MXRestClient.h"
 
 #if TARGET_OS_IPHONE
 #import <UIKit/UIKit.h>
@@ -49,15 +50,15 @@ extern NSString *const kMXMediaManagerDefaultCacheFolder;
  Create an instance based on a homeserver url. This homeserver URL is required to resolve
  the Matrix Content URI (in the form of "mxc://...").
  
- @param homeserverURL the homeserver URL.
+ @param restClient the REST client.
  @return a MXMediaManager instance.
  */
-- (id)initWithHomeServer:(NSString *)homeserverURL;
+- (id)initWithRestClient:(MXRestClient *)restClient;
 
 /**
- The homeserver URL.
+ The rest client..
  */
-@property (nonatomic, readonly) NSString *homeserverURL;
+@property (nonatomic, readonly) MXRestClient *restClient;
 
 /**
  Antivirus scanner used to scan medias.

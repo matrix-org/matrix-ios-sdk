@@ -78,14 +78,9 @@ typedef enum : NSUInteger
 /**
  Default implementation of SAS transaction used by the SDK
  */
-@interface MXLegacySASTransaction : MXLegacyKeyVerificationTransaction <MXSASTransaction>
+@interface MXLegacySASTransaction: NSObject
 
 + (NSArray<MXEmojiRepresentation*> *)allEmojiRepresentations;
-
-/**
- The Short Authentication Code bytes data.
- */
-@property (nonatomic, nullable) NSData *sasBytes;
 
 @end
 

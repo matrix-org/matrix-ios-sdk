@@ -124,6 +124,17 @@
     return NO;
 }
 
+- (BOOL)removeAllMessagesSentBefore:(uint64_t)limitTs inRoom:(nonnull NSString *)roomId
+{
+    // Only the last message is stored
+    MXEvent *lastMessage = lastMessages[roomId];
+    if (!lastMessage.isState && lastMessage.originServerTs < limitTs) {
+        lastMessages[roomId] = nil;
+        return YES;
+    }
+    return NO;
+}
+
 - (MXEvent *)eventWithEventId:(NSString *)eventId inRoom:(NSString *)roomId
 {
     // Events are not stored. So, we cannot find it.
@@ -466,6 +477,14 @@
     return nil;
 }
 - (void)storeHomeserverCapabilities:(MXCapabilities *)homeserverCapabilities
+{
+}
+
+- (MXAuthMetadata *)authMetadata
+{
+    return nil;
+}
+- (void)storeAuthMetadata:(MXAuthMetadata *)authMetadata
 {
 }
 

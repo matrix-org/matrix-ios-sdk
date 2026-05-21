@@ -1848,6 +1848,10 @@ public extension MXRestClient {
         return __downloadKeys(forUsers: userIds, token: token, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
+    @nonobjc @discardableResult func downloadKeysRaw(forUsers userIds: [String], token: String? = nil, completion: @escaping (_ response: MXResponse<MXKeysQueryResponseRaw>) -> Void) -> MXHTTPOperation {
+        return __downloadKeysRaw(forUsers: userIds, token: token, success: currySuccess(completion), failure: curryFailure(completion))
+    }
+    
     
     /**
      Claim one-time keys.

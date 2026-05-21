@@ -1125,6 +1125,25 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringGlobal;
 
 @end
 
+@interface MXKeysQueryResponseRaw : MXJSONModel
+
+    /**
+     The device keys per devices per users.
+     */
+    @property (nonatomic) NSDictionary<NSString *, id> *deviceKeys;
+
+    /**
+     Cross-signing keys per users.
+     */
+    @property (nonatomic) NSDictionary<NSString*, MXCrossSigningInfo*> *crossSigningKeys;
+
+    /**
+     The failures sorted by homeservers.
+    */
+    @property (nonatomic) NSDictionary *failures;
+
+@end
+
 /**
  `MXKeysClaimResponse` represents the response to /keys/claim request made by
  [MXRestClient claimOneTimeKeysForUsersDevices].

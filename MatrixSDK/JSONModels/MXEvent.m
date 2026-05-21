@@ -115,6 +115,7 @@ NSString *const kMXMessageTypeVideo                  = @"m.video";
 NSString *const kMXMessageTypeLocation               = @"m.location";
 NSString *const kMXMessageTypeFile                   = @"m.file";
 NSString *const kMXMessageTypeServerNotice           = @"m.server_notice";
+NSString *const kMXEventTypeStringRoomRetention      = @"m.room.retention";
 NSString *const kMXMessageTypeKeyVerificationRequest = @"m.key.verification.request";
 
 NSString *const kMXMessageBodyKey                    = @"body";
@@ -210,6 +211,11 @@ NSString *const kMXJoinRulesContentKeyRoomId = @"room_id";
 
 NSString *const kMXEventTimelineMain = @"main";
 NSString *const kMXEventUnthreaded = @"unthreaded";
+
+// Matrix RTC support
+
+NSString *const kMXEventTypeStringCallNotify = @"m.call.notify";
+NSString *const kMXEventTypeStringCallNotifyUnstable = @"org.matrix.msc4075.call.notify";
 
 #pragma mark - MXEvent
 @interface MXEvent ()

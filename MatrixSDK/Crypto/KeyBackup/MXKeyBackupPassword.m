@@ -19,8 +19,6 @@
 #import "MXTools.h"
 #import "MXCryptoConstants.h"
 
-#import <OLMKit/OLMKit.h>
-
 #import <Security/Security.h>
 #import <CommonCrypto/CommonDigest.h>
 #import <CommonCrypto/CommonCryptor.h>
@@ -68,7 +66,7 @@ static NSUInteger const kDefaultIterations = 500000;
     NSData *passwordData = [password dataUsingEncoding:NSUTF8StringEncoding];
     NSData *saltData = [salt dataUsingEncoding:NSUTF8StringEncoding];
 
-    NSMutableData *derivedKey = [NSMutableData dataWithLength:[OLMPkDecryption privateKeyLength]];
+    NSMutableData *derivedKey = [NSMutableData dataWithLength: 32];
 
     int result =  CCKeyDerivationPBKDF(kCCPBKDF2,
                                    passwordData.bytes,

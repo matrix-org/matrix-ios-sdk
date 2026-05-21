@@ -15,7 +15,8 @@
  */
 
 #import "MXContentScanEncryptedBody.h"
-#import <OLMKit/OLMKit.h>
+
+#import "MatrixSDKSwiftHeader.h"
 
 @implementation MXContentScanEncryptedBody
 
@@ -31,14 +32,14 @@
     return contentScanEncryptedBody;
 }
 
-+ (id)modelFromOLMPkMessage:(OLMPkMessage *)OLMPkMessage
++ (id)modelFromPKMessage:(PKMessageWrapper *)pkMessage
 {
     MXContentScanEncryptedBody *contentScanEncryptedBody = [[MXContentScanEncryptedBody alloc] init];
     if (contentScanEncryptedBody)
     {
-        contentScanEncryptedBody.ciphertext = OLMPkMessage.ciphertext;
-        contentScanEncryptedBody.mac = OLMPkMessage.mac;
-        contentScanEncryptedBody.ephemeral = OLMPkMessage.ephemeralKey;
+        contentScanEncryptedBody.ciphertext = pkMessage.ciphertext;
+        contentScanEncryptedBody.mac = pkMessage.mac;
+        contentScanEncryptedBody.ephemeral = pkMessage.ephemeralKey;
     }
     return contentScanEncryptedBody;
 }

@@ -1,5 +1,5 @@
-//
-// Copyright 2021 The Matrix.org Foundation C.I.C
+// 
+// Copyright 2024 The Matrix.org Foundation C.I.C
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,18 +14,25 @@
 // limitations under the License.
 //
 
-import XCTest
+#import <MatrixSDK/MatrixSDK.h>
 
-import MatrixSDK
+NS_ASSUME_NONNULL_BEGIN
 
-class MXDeviceListOperationsPoolUnitTests: XCTestCase {
+/**
+ Describes whether an event mentions other users or the room
+ */
+@interface MXMentions : MXJSONModel
 
-    func testDeallocate() {
-        var pool: MXDeviceListOperationsPool? = MXDeviceListOperationsPool(crypto: nil)
-        weak var weakPool = pool
-        MXDeviceListOperation(userIds: ["foo"], success: nil, failure: nil).add(to: pool)
-        pool = nil
-        XCTAssertNil(weakPool)
-    }
+/**
+ The user IDs of room members who should be notified about this event.
+ */
+@property (nonatomic, nullable) NSArray *userIDs;
 
-}
+/**
+ Whether or not this event contains an @room mention.
+ */
+@property (nonatomic) BOOL room;
+
+@end
+
+NS_ASSUME_NONNULL_END

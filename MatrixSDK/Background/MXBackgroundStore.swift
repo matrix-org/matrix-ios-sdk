@@ -253,6 +253,10 @@ class MXBackgroundStore: NSObject, MXStore {
     func storeHomeserverCapabilities(_ homeserverCapabilities: MXCapabilities) {
     }
 
+    var authMetadata: MXAuthMetadata?
+    func store(_ authMetadata: MXAuthMetadata) {
+    }
+
     var supportedMatrixVersions: MXMatrixVersions?
     func storeSupportedMatrixVersions(_ supportedMatrixVersions: MXMatrixVersions) {
     }
@@ -298,6 +302,11 @@ class MXBackgroundStore: NSObject, MXStore {
     func isRoomMarked(asUnread roomId: String) -> Bool {
         return false
     }
+    
+    func removeAllMessagesSent(before limitTs: UInt64, inRoom roomId: String) -> Bool {
+        // Not sure if this needs to be implemented
+        false
+    }
 }
 
 //  MARK: - MXRoomSummaryStore
@@ -334,5 +343,4 @@ extension MXBackgroundStore: MXRoomSummaryStore {
             completion([])
         }
     }
-    
 }

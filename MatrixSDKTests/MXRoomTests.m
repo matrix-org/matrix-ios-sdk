@@ -303,7 +303,7 @@
             [room liveTimeline:^(id<MXEventTimeline> liveTimeline) {
                 [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomPowerLevels] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-                    XCTAssertEqual([liveTimeline.state.powerLevels powerLevelOfUserWithUserID:aliceRestClient.credentials.userId], 36);
+                    XCTAssertEqual([liveTimeline.state powerLevelOfUserWithUserID:aliceRestClient.credentials.userId], 36);
 
                     [expectation fulfill];
                 }];

@@ -283,6 +283,16 @@ Use MXRoomSummary.displayname to get a computed room display name.
  */
 - (float)memberNormalizedPowerLevel:(NSString*)userId;
 
+/**
+ Returns the power level for a given user identifier, this checks also for the creator and additional creators
+ */
+- (NSInteger)powerLevelOfUserWithUserID:(NSString *)userId;
+
+/**
+ Returns if MSC4289 iz supported in this room
+ */
+- (BOOL)isMSC4289Supported;
+
 
 # pragma mark - Conference call
 /**

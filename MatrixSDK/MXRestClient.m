@@ -142,10 +142,11 @@ MXAuthAction;
      */
     dispatch_queue_t processingQueue;
 }
+@property(readwrite) BOOL isUsingAuthenticatedMedia;
 @end
 
 @implementation MXRestClient
-@synthesize credentials, apiPathPrefix, contentPathPrefix, completionQueue, antivirusServerPathPrefix;
+@synthesize credentials, apiPathPrefix, contentPathPrefix, authenticatedContentPathPrefix, completionQueue, antivirusServerPathPrefix, isUsingAuthenticatedMedia;
 
 + (dispatch_queue_t)refreshQueue
 {
@@ -198,6 +199,7 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
         apiPathPrefix = kMXAPIPrefixPathR0;
         antivirusServerPathPrefix = kMXAntivirusAPIPrefixPathUnstable;
         contentPathPrefix = kMXContentPrefixPath;
+        authenticatedContentPathPrefix = kMXAuthenticatedContentPrefixPath;
         
         credentials = inCredentials;
         _identityServer = credentials.identityServer;
@@ -529,6 +531,7 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
                                          [self dispatchProcessing:^{
                                              MXJSONModelSetMXJSONModel(matrixVersions, MXMatrixVersions, JSONResponse);
                                          } andCompletion:^{
+                                             self->isUsingAuthenticatedMedia = matrixVersions.supportsAuthenticatedMedia;
                                              success(matrixVersions);
                                          }];
                                      }
@@ -596,6 +599,34 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
                                                            [self dispatchFailure:error inBlock:failure];
                                                        }];
     return operation;
+}
+
+- (MXHTTPOperation*)authMetadata:(void (^)(MXAuthMetadata *authMetadata))success
+                        failure:(void (^)(NSError *error))failure
+{
+    NSString *path = @"_matrix/client/v1/auth_metadata";
+
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"GET"
+                                    path:path
+                              parameters:nil
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
+                                     if (success)
+                                     {
+                                         __block MXAuthMetadata *authMetadata;
+                                         [self dispatchProcessing:^{
+                                             MXJSONModelSetMXJSONModel(authMetadata, MXAuthMetadata, JSONResponse);
+                                         } andCompletion:^{
+                                             success(authMetadata);
+                                         }];
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
 }
 
 #pragma mark - Registration operations
@@ -3091,6 +3122,29 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
                                  }
                                  failure:^(NSError *error) {
                                      MXStrongifyAndReturnIfNil(self);
+        [self dispatchFailure:error inBlock:failure];
+    }];
+}
+
+-(MXHTTPOperation *)reportRoom:(NSString *)roomId
+                        reason:(NSString *)reason
+                       success:(void (^)(void))success
+                       failure:(void (^)(NSError *))failure
+{
+    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/report", kMXAPIPrefixPathV3, roomId];
+
+    NSDictionary *parameters = @{ @"reason": reason.length > 0 ? reason : @"" };
+
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"POST"
+                                    path:path
+                              parameters:parameters
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchSuccess:success];
+                                 }
+                                 failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -4475,28 +4529,30 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
 {
     NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
     parameters[@"url"] = [url absoluteString];
+    NSString* path = isUsingAuthenticatedMedia ? authenticatedContentPathPrefix : contentPathPrefix;
     
     MXWeakify(self);
+    
     return [httpClient requestWithMethod:@"GET"
-                                    path:[NSString stringWithFormat:@"%@/preview_url", contentPathPrefix]
+                                    path:[NSString stringWithFormat:@"%@/preview_url", path]
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
-                                     MXStrongifyAndReturnIfNil(self);
-
-                                     if (success)
-                                     {
-                                         __block MXURLPreview *urlPreview;
-                                         [self dispatchProcessing:^{
-                                             MXJSONModelSetMXJSONModel(urlPreview, MXURLPreview, JSONResponse);
-                                         } andCompletion:^{
-                                             success(urlPreview);
-                                         }];
-                                     }
-                                 }
+        MXStrongifyAndReturnIfNil(self);
+        
+        if (success)
+        {
+            __block MXURLPreview *urlPreview;
+            [self dispatchProcessing:^{
+                MXJSONModelSetMXJSONModel(urlPreview, MXURLPreview, JSONResponse);
+            } andCompletion:^{
+                success(urlPreview);
+            }];
+        }
+    }
                                  failure:^(NSError *error) {
-                                     MXStrongifyAndReturnIfNil(self);
-                                     [self dispatchFailure:error inBlock:failure];
-                                 }];
+        MXStrongifyAndReturnIfNil(self);
+        [self dispatchFailure:error inBlock:failure];
+    }];
 }
 
 #pragma mark - Antivirus server API
@@ -4914,6 +4970,51 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
                                          __block MXKeysQueryResponse *keysQueryResponse;
                                          [self dispatchProcessing:^{
                                              MXJSONModelSetMXJSONModel(keysQueryResponse, MXKeysQueryResponse, JSONResponse);
+                                         } andCompletion:^{
+                                             success(keysQueryResponse);
+                                         }];
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
+- (MXHTTPOperation*)downloadKeysRawForUsers:(NSArray<NSString*>*)userIds
+                                   token:(NSString *)token
+                                 success:(void (^)(MXKeysQueryResponseRaw *keysQueryResponse))success
+                                 failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"%@/keys/query", kMXAPIPrefixPathR0];
+
+    NSMutableDictionary *downloadQuery = [NSMutableDictionary dictionary];
+    for (NSString *userID in userIds)
+    {
+        downloadQuery[userID] = @[];
+    }
+
+    NSMutableDictionary *parameters = [NSMutableDictionary dictionaryWithDictionary:@{
+                                                                                      @"device_keys": downloadQuery
+                                                                                      }];
+
+    if (token)
+    {
+        parameters[@"token"] = token;
+    }
+
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"POST"
+                                    path: path
+                              parameters:parameters
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
+                                     if (success)
+                                     {
+                                         __block MXKeysQueryResponseRaw *keysQueryResponse;
+                                         [self dispatchProcessing:^{
+                                             MXJSONModelSetMXJSONModel(keysQueryResponse, MXKeysQueryResponseRaw, JSONResponse);
                                          } andCompletion:^{
                                              success(keysQueryResponse);
                                          }];

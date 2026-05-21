@@ -197,4 +197,31 @@
     return [NSString stringWithFormat:@"%tu messages - paginationToken: %@ - hasReachedHomeServerPaginationEnd: %@ - hasLoadedAllRoomMembersForRoom: %@", messages.count, _paginationToken, @(_hasReachedHomeServerPaginationEnd), @(_hasLoadedAllRoomMembersForRoom)];
 }
 
+- (BOOL)removeAllMessagesSentBefore:(uint64_t)limitTs
+{
+    NSUInteger index = 0;
+    BOOL didChange = NO;
+    while (index < messages.count)
+    {
+        MXEvent *anEvent = [messages objectAtIndex:index];
+        if (anEvent.isState)
+        {
+            // Keep state event
+            index ++;
+        }
+        else if (anEvent.originServerTs < limitTs)
+        {
+            [messages removeObjectAtIndex:index];
+            [messagesByEventIds removeObjectForKey:anEvent.eventId];
+            didChange = YES;
+        }
+        else
+        {
+            // Break the loop, we've reached the first non-state event in the timeline which is not expired
+            break;
+        }
+    }
+    return didChange;
+}
+
 @end

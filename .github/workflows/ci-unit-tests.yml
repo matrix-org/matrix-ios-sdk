@@ -12,7 +12,7 @@ on:
 jobs:
   unit-tests:
     name: Unit Tests
-    runs-on: macos-13
+    runs-on: macos-26
 
     concurrency:
       # When running on develop, use the sha to allow all runs of this workflow to run concurrently.
@@ -25,13 +25,13 @@ jobs:
 
       # Common cache
       # Note: GH actions do not support yaml anchor yet. We need to duplicate this for every job
-      - uses: actions/cache@v2
+      - uses: actions/cache@v4
         with:
           path: Pods
           key: ${{ runner.os }}-pods-${{ hashFiles('**/Podfile.lock') }}
           restore-keys: |
             ${{ runner.os }}-pods-
-      - uses: actions/cache@v2
+      - uses: actions/cache@v4
         with:
           path: vendor/bundle
           key: ${{ runner.os }}-gems-${{ hashFiles('**/Gemfile.lock') }}
@@ -50,18 +50,20 @@ jobs:
         run: bundle exec fastlane test testplan:UnitTests
 
       # Store artifacts
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           name: report.html
           path: build/test/report.html
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           name: report.junit
           path: build/test/report.junit
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           name: MatrixSDK-macOS.xcresult
           path: build/test/MatrixSDK-macOS.xcresult/
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}

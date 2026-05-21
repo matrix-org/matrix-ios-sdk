@@ -98,22 +98,4 @@ Accept an incoming key verification request.
 
 @end
 
-/**
- Default implementation of verification request used by the SDK
- */
-@interface MXLegacyKeyVerificationRequest : NSObject <MXKeyVerificationRequest>
-
-// Original data for this request
-@property (nonatomic, readonly) MXEvent *event;
-
-// Shortcuts to the accepted event
-@property (nonatomic, readonly) NSString *fromDevice;
-@property (nonatomic, readonly) uint64_t timestamp;
-
-// Original data from the accepted (aka m.verification.ready) event
-@property (nonatomic, readonly, nullable) MXKeyVerificationReady *acceptedData;
-@property (nonatomic, readonly, nullable) NSArray<NSString*> *acceptedMethods;
-
-@end
-
 NS_ASSUME_NONNULL_END

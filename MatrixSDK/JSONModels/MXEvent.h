@@ -103,6 +103,8 @@ typedef NS_ENUM(NSInteger, MXEventType)
     MXEventTypeSpaceOrder,
     MXEventTypeBeaconInfo,
     MXEventTypeBeacon,
+    MXEventTypeRoomRetention,
+    MXEventTypeCallNotify,
 
     // The event is a custom event. Refer to its `MXEventTypeString` version
     MXEventTypeCustom = 1000
@@ -163,6 +165,7 @@ FOUNDATION_EXPORT NSString *const kMXEventTypeStringSpaceChild;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringSpaceOrder;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringSpaceOrderMSC3230;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringSpaceOrderKey;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomRetention;
 
 // Interactive key verification
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringKeyVerificationRequest;
@@ -314,6 +317,11 @@ FOUNDATION_EXPORT NSString *const kMXJoinRulesContentKeyRoomId;
 
 FOUNDATION_EXPORT NSString *const kMXEventTimelineMain;
 FOUNDATION_EXPORT NSString *const kMXEventUnthreaded;
+
+// MatrixRTC support
+
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringCallNotify;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringCallNotifyUnstable;
 
 /**
  The internal event state used to handle the different steps of the event sending.
