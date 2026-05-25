@@ -15,7 +15,7 @@
 //
 
 import Foundation
-import Realm
+@_implementationOnly import Realm
 
 @objcMembers
 public class MXBeaconInfoSummaryRealmStore: NSObject {
@@ -155,10 +155,11 @@ public class MXBeaconInfoSummaryRealmStore: NSObject {
     private func beaconInfoSummaries(from realmBeaconInfoSummaryResults: RLMResults<MXRealmBeaconInfoSummary>) -> [MXBeaconInfoSummary] {
         
         var summaries: [MXBeaconInfoSummary] = []
-        
-        for realmSummary in realmBeaconInfoSummaryResults {
+
+        var iterator = NSFastEnumerationIterator(realmBeaconInfoSummaryResults)
+        while let realmSummary = iterator.next() as? MXRealmBeaconInfoSummary {
             
-            if let realmBeaconInfoSummary = realmSummary as? MXRealmBeaconInfoSummary, let summary = self.mapper.beaconInfoSummary(from: realmBeaconInfoSummary) {
+            if let summary = self.mapper.beaconInfoSummary(from: realmSummary) {
                 summaries.append(summary)
             }
         }

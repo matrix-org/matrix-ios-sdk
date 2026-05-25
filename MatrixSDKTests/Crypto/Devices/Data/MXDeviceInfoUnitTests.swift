@@ -17,7 +17,7 @@
 import Foundation
 import XCTest
 @testable import MatrixSDK
-import MatrixSDKCrypto
+@_implementationOnly import MatrixSDKCrypto
 
 class MXDeviceInfoUnitTests: XCTestCase {
     func test_canCreateInfo_withDevice() {

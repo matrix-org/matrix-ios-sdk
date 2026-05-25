@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import MatrixSDKCrypto
+@_implementationOnly import MatrixSDKCrypto
 
 class MXKeyVerificationManagerV2: NSObject, MXKeyVerificationManager {
     enum Error: Swift.Error {
