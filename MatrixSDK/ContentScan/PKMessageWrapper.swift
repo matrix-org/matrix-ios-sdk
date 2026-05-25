@@ -15,7 +15,7 @@
 //
 
 import Foundation
-import MatrixSDKCrypto
+@_implementationOnly import MatrixSDKCrypto
 
 @objc public class PKMessageWrapper: NSObject {
     private let pkMessage: PkMessage
