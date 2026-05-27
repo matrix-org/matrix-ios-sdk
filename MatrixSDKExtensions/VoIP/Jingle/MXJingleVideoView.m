@@ -44,7 +44,7 @@
         
         videoSize = containerView.frame.size;
         
-        // Use 'containerView' as the container of a RTCEAGLVideoView
+        // Use 'containerView' as the container of a RTCMTLVideoView
         [containerView addSubview:self];
     }
 
@@ -60,8 +60,8 @@
     [super layoutSubviews];
 }
 
-#pragma mark - RTCEAGLVideoViewDelegate
-- (void)videoView:(RTCEAGLVideoView *)videoView didChangeVideoSize:(CGSize)size
+#pragma mark - RTCMTLVideoViewDelegate
+- (void)videoView:(RTCMTLVideoView *)videoView didChangeVideoSize:(CGSize)size
 {
     videoSize = size;
     

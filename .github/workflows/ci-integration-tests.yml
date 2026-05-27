@@ -9,6 +9,8 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
+permissions: {}
+
 jobs:
   integration-tests:
     name: Integration Tests
@@ -21,17 +23,19 @@ jobs:
       cancel-in-progress: true
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
 
       # Common cache
       # Note: GH actions do not support yaml anchor yet. We need to duplicate this for every job
-      - uses: actions/cache@v4
+      - uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
         with:
           path: Pods
           key: ${{ runner.os }}-pods-${{ hashFiles('**/Podfile.lock') }}
           restore-keys: |
             ${{ runner.os }}-pods-
-      - uses: actions/cache@v4
+      - uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
         with:
           path: vendor/bundle
           key: ${{ runner.os }}-gems-${{ hashFiles('**/Gemfile.lock') }}
@@ -39,11 +43,11 @@ jobs:
             ${{ runner.os }}-gems-
       # Cache for python env for Synapse
       - name: Set up Python 3.13
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: 3.13
       - name: Cache pip
-        uses: actions/cache@v4
+        uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip
@@ -53,7 +57,7 @@ jobs:
 
       # Set up a Synapse server
       - name: Start synapse server
-        uses: michaelkaye/setup-matrix-synapse@v1.0.5
+        uses: michaelkaye/setup-matrix-synapse@e080023c56271cab986b83db75edba570fafb88b # v1.0.6
         with:
           uploadLogs: true
           httpPort: 8080
@@ -70,17 +74,17 @@ jobs:
         run: bundle exec fastlane test testplan:AllWorkingTests
 
       # Store artifacts
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         if: always()
         with:
           name: report.html
           path: build/test/report.html
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         if: always()
         with:
           name: report.junit
           path: build/test/report.junit
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         if: always()
         with:
           name: MatrixSDK-macOS.xcresult
@@ -88,6 +92,6 @@ jobs:
 
       # Upload coverage
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5.5.2
         with:
           token: ${{ secrets.CODECOV_TOKEN }}

@@ -35,7 +35,11 @@ import MatrixSDKCrypto
     @objc public static func encryptMessage(_ message: String, usingKey key: String) -> PKMessageWrapper? {
         do {
             let pkEncryption = try PkEncryption.fromBase64(key: key)
-            return PKMessageWrapper(pkMessage: pkEncryption.encrypt(plaintext: message))
+            guard let pkMessage = pkEncryption.encrypt(plaintext: message) else {
+                MXLog.error("[PKMessageWrapper] message didn't encrypt")
+                return nil
+            }
+            return PKMessageWrapper(pkMessage: pkMessage)
         } catch {
             MXLog.error("[PKMessageWrapper] failed to create pkEncryption", context: error)
             return nil

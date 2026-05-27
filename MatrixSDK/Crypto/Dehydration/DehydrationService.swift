@@ -203,7 +203,8 @@ public class DehydrationService: NSObject {
         
         repeat {
             let response = try await retrieveToDeviceEvents(deviceId: deviceId, nextBatch: dehydratedDeviceEventsResponse?.nextBatch)
-            try rehydratedDevice.receiveEvents(events: MXTools.serialiseJSONObject(response.events))
+            try rehydratedDevice.receiveEvents(events: MXTools.serialiseJSONObject(response.events),
+                                               decryptionSettings: .init(senderDeviceTrustRequirement: .untrusted))
             dehydratedDeviceEventsResponse = response
             
         } while !(dehydratedDeviceEventsResponse?.events.isEmpty ?? true)
