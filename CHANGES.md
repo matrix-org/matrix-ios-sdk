@@ -1,3 +1,13 @@
+## Changes in 0.27.19 (2026-05-27)
+
+🙌 Improvements
+
+- Update JitsiMeetSDKLite dependency. ([#1924](https://github.com/matrix-org/matrix-ios-sdk/pull/1924))
+
+🧱 Build
+
+- Add zizmor checks on CI. ([#1923](https://github.com/matrix-org/matrix-ios-sdk/pull/1923))
+
 ## Changes in 0.27.18 (2026-03-03)
 
 ⚠️ API Changes
