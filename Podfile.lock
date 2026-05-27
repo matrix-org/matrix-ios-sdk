@@ -46,11 +46,10 @@ DEPENDENCIES:
 
 SPEC REPOS:
   https://github.com/CocoaPods/Specs.git:
-    - MatrixSDKCrypto
-  trunk:
     - AFNetworking
     - GZIP
     - libbase58
+    - MatrixSDKCrypto
     - OHHTTPStubs
     - Realm
     - SwiftyBeaver
@@ -58,7 +57,7 @@ SPEC REPOS:
 SPEC CHECKSUMS:
   AFNetworking: 3bd23d814e976cd148d7d44c3ab78017b744cd58
   GZIP: 3c0abf794bfce8c7cb34ea05a1837752416c8868
-  libbase58: 7c040313537b8c44b6e2d15586af8e21f7354efd
+  libbase58: 8abc2a53ac38cd37720c0acbc53ef3660e9016c2
   MatrixSDKCrypto: aa38e272e573c7798aa3cd761b2b61ec5c7731b8
   OHHTTPStubs: 90eac6d8f2c18317baeca36698523dc67c513831
   Realm: 9ca328bd7e700cc19703799785e37f77d1a130f2
