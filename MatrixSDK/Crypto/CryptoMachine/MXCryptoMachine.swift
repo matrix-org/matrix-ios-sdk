@@ -202,7 +202,8 @@ extension MXCryptoMachine: MXCryptoSyncing {
             deviceChanges: deviceChanges,
             keyCounts: keyCounts,
             unusedFallbackKeys: unusedFallbackKeys,
-            nextBatchToken: nextBatchToken
+            nextBatchToken: nextBatchToken,
+            decryptionSettings: .init(senderDeviceTrustRequirement: .untrusted)
         )
         
         var deserialisedToDeviceEvents = [Any]()
