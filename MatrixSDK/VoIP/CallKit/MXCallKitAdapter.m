@@ -14,6 +14,7 @@
  limitations under the License.
  */
 
+#import "TargetConditionals.h"
 #if TARGET_OS_IPHONE
 
 #import "MXCallKitAdapter.h"
