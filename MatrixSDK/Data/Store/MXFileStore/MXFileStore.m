@@ -2192,14 +2192,14 @@ static NSUInteger preloadOptions;
     {
         NSArray *roomsToCommit = [[NSArray alloc] initWithArray:roomsToCommitForReceipts copyItems:YES];
         [roomsToCommitForReceipts removeAllObjects];
-
+        
 #if DEBUG
         MXLogDebug(@"[MXFileStore commit] queuing saveReceipts for %tu rooms", roomsToCommit.count);
 #endif
         MXWeakify(self);
         dispatch_async(dispatchQueue, ^(void){
             MXStrongifyAndReturnIfNil(self);
-
+            
 #if DEBUG
             NSDate *startDate = [NSDate date];
 #endif
@@ -2213,31 +2213,37 @@ static NSUInteger preloadOptions;
                     {
                         NSString *file = [self threadedReadReceiptsFileForRoom:roomId forBackup:NO];
                         NSString *backupFile = [self threadedReadReceiptsFileForRoom:roomId forBackup:YES];
-
+                        
                         // Backup the file
                         if (backupFile && [[NSFileManager defaultManager] fileExistsAtPath:file])
                         {
                             [self checkFolderExistenceForRoom:roomId forBackup:YES];
                             [[NSFileManager defaultManager] moveItemAtPath:file toPath:backupFile error:nil];
                         }
-
+                        
                         // Store new data
                         [self checkFolderExistenceForRoom:roomId forBackup:NO];
                         
-                        NSError *error = nil;
-                        NSData *result = [NSKeyedArchiver archivedDataWithRootObject:receiptsStore requiringSecureCoding:false error:&error];
+                        __block NSData *result = nil;
+                        __block NSError *archiveError = nil;
                         
-                        if (error != nil)
-                        {
-                            MXLogErrorDetails(@"Failed archiving receipts store", error);
+                        dispatch_sync(dispatch_get_main_queue(), ^{
+                            result = [NSKeyedArchiver
+                                      archivedDataWithRootObject:receiptsStore
+                                      requiringSecureCoding:NO
+                                      error:&archiveError];
+                        });
+                        
+                        if (archiveError) {
+                            MXLogErrorDetails(@"Failed archiving receipts store", archiveError);
                             continue;
                         }
                         
-                        [result writeToURL:[NSURL fileURLWithPath:file] options: NSDataWritingAtomic error: &error];
+                        [result writeToURL:[NSURL fileURLWithPath:file] options: NSDataWritingAtomic error: &archiveError];
                         
-                        if (error != nil)
+                        if (archiveError != nil)
                         {
-                            MXLogErrorDetails(@"Failed writing receipts store to file", error);
+                            MXLogErrorDetails(@"Failed writing receipts store to file", archiveError);
                             continue;
                         }
                     }
