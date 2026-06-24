@@ -948,6 +948,18 @@ typedef void (^MXOnResumeDone)(void);
                 MXLogDebug(@"[MXSession] Set syncWithLazyLoadOfRoomMembers to YES");
                 self->_syncWithLazyLoadOfRoomMembers = YES;
             }
+
+            for (MXRoom *room in self.rooms) {
+                [room liveTimeline:^(id<MXEventTimeline> liveTimeline) {
+                    liveTimeline.roomEventFilter = filter.room.timeline;
+
+                    // If the event stream runs with lazy loading, the timeline must do the same
+                    if (self->_syncWithLazyLoadOfRoomMembers)
+                    {
+                        liveTimeline.roomEventFilter.lazyLoadMembers = YES;
+                    }
+                }];
+            }
         } failure:nil];
     }
     
