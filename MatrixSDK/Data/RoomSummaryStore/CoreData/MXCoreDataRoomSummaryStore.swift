@@ -302,9 +302,23 @@ extension MXCoreDataRoomSummaryStore: MXRoomSummaryStore {
     }
     
     public func summary(ofRoom roomId: String) -> MXRoomSummaryProtocol? {
-        return fetchSummary(forRoomId: roomId, in: mainMoc)
+        return fetchSummary(forRoomId: roomId, in: persistentMoc)
     }
-    
+
+    public func allSummariesSync() -> [MXRoomSummaryProtocol] {
+        let moc = backgroundMoc
+        var result: [MXRoomSummaryProtocol] = []
+        moc.performAndWait {
+            let request = MXRoomSummaryMO.typedFetchRequest()
+            do {
+                result = try moc.fetch(request).compactMap { MXRoomSummary(summaryModel: $0) }
+            } catch {
+                MXLog.error("[MXCoreDataRoomSummaryStore] allSummariesSync failed", context: error)
+            }
+        }
+        return result
+    }
+
     public func removeSummary(ofRoom roomId: String) {
         deleteSummary(forRoomId: roomId)
     }

@@ -38,6 +38,11 @@
     return nil;
 }
 
+- (NSArray<id<MXRoomSummaryProtocol>>*)allSummariesSync
+{
+    return @[];
+}
+
 - (void)removeSummaryOfRoom:(NSString *)roomId
 {
     

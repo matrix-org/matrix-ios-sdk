@@ -486,6 +486,17 @@ typedef void (^MXOnResumeDone)(void);
 
                     MXLogDebug(@"[MXSession] Read %lu room ids in %.0fms", (unsigned long)roomIds.count, [[NSDate date] timeIntervalSinceDate:startDate2] * 1000);
 
+                    // Pre-warm roomSummaries cache to avoid N per-room store fetches in the loadRoom: loop
+                    for (id<MXRoomSummaryProtocol> summary in [self.store.roomSummaryStore allSummariesSync])
+                    {
+                        if (roomSummaries[summary.roomId] == nil)
+                        {
+                            MXRoomSummary *roomSummary = [[MXRoomSummary alloc] initWithSummaryModel:summary];
+                            [roomSummary setMatrixSession:self];
+                            roomSummaries[summary.roomId] = roomSummary;
+                        }
+                    }
+
                     // Create MXRooms from their states stored in the store
                     NSDate *startDate3 = [NSDate date];
                     for (NSString *roomId in roomIds)

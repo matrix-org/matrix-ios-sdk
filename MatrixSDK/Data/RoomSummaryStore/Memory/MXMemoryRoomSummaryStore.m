@@ -55,6 +55,11 @@
     return self.cache[roomId];
 }
 
+- (NSArray<id<MXRoomSummaryProtocol>>*)allSummariesSync
+{
+    return self.cache.allValues;
+}
+
 - (void)removeSummaryOfRoom:(NSString *)roomId
 {
     [self.cache removeObjectForKey:roomId];

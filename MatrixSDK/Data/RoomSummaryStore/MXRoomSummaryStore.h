@@ -51,6 +51,13 @@ NS_ASSUME_NONNULL_BEGIN
 - (id<MXRoomSummaryProtocol> _Nullable)summaryOfRoom:(NSString*)roomId;
 
 /**
+ Fetch all room summaries synchronously.
+ 
+ @return all stored room summaries. Implementations should perform the fetch off the main thread where possible.
+ */
+- (NSArray<id<MXRoomSummaryProtocol>>*)allSummariesSync;
+
+/**
  Remove the summary of a room.
  
  @param roomId the id of the room.

@@ -329,7 +329,11 @@ extension MXBackgroundStore: MXRoomSummaryStore {
     func summary(ofRoom roomId: String) -> MXRoomSummaryProtocol? {
         return fileStore.roomSummaryStore.summary(ofRoom: roomId)
     }
-    
+
+    func allSummariesSync() -> [MXRoomSummaryProtocol] {
+        return fileStore.roomSummaryStore.allSummariesSync()
+    }
+
     func removeSummary(ofRoom roomId: String) {
         
     }
