@@ -135,6 +135,17 @@
     return NO;
 }
 
+- (void)removeExpiredMessagesWithRoomMinimumTimestamps:(NSDictionary<NSString *,NSNumber *> *)roomMinimumTimestamps
+                                            completion:(void (^)(NSUInteger, NSUInteger, BOOL))completion
+{
+    dispatch_async(dispatch_get_main_queue(), ^{
+        if (completion)
+        {
+            completion(0, 0, NO);
+        }
+    });
+}
+
 - (MXEvent *)eventWithEventId:(NSString *)eventId inRoom:(NSString *)roomId
 {
     // Events are not stored. So, we cannot find it.

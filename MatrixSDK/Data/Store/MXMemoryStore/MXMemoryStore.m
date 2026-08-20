@@ -90,6 +90,26 @@
     return [roomStore removeAllMessagesSentBefore:limitTs];
 }
 
+- (void)removeExpiredMessagesWithRoomMinimumTimestamps:(NSDictionary<NSString *,NSNumber *> *)roomMinimumTimestamps
+                                            completion:(void (^)(NSUInteger, NSUInteger, BOOL))completion
+{
+    dispatch_async(executionQueue, ^{
+        __block NSUInteger cleanedRoomCount = 0;
+        [roomMinimumTimestamps enumerateKeysAndObjectsUsingBlock:^(NSString *roomId, NSNumber *minimumTimestamp, BOOL *stop) {
+            if ([self removeAllMessagesSentBefore:minimumTimestamp.unsignedLongLongValue inRoom:roomId])
+            {
+                cleanedRoomCount++;
+            }
+        }];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if (completion)
+            {
+                completion(cleanedRoomCount, 0, NO);
+            }
+        });
+    });
+}
+
 - (BOOL)eventExistsWithEventId:(NSString *)eventId inRoom:(NSString *)roomId
 {
     return (nil != [self eventWithEventId:eventId inRoom:roomId]);

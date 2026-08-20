@@ -452,6 +452,21 @@
 - (BOOL)removeAllMessagesSentBefore:(uint64_t)limitTs inRoom:(nonnull NSString *)roomId;
 
 /**
+ Remove expired messages from a batch of rooms asynchronously.
+
+ The dictionary maps room identifiers to the minimum timestamp to retain. File-backed
+ stores use this API to clean unloaded room files without mounting them in memory.
+ Implementations must invoke completion on the main thread.
+
+ @param roomMinimumTimestamps room id to minimum retained timestamp (milliseconds).
+ @param completion result counts and whether the operation stopped before all rooms were examined.
+ */
+- (void)removeExpiredMessagesWithRoomMinimumTimestamps:(nonnull NSDictionary<NSString *, NSNumber *> *)roomMinimumTimestamps
+                                            completion:(nullable void (^)(NSUInteger cleanedRoomCount,
+                                                                          NSUInteger failedRoomCount,
+                                                                          BOOL cancelled))completion;
+
+/**
  Remove all outgoing messages from a room.
 
  @param roomId the id of the room.

@@ -122,6 +122,10 @@ static NSUInteger preloadOptions;
 // The commit to file store background task
 @property (nonatomic, strong) id<MXBackgroundTask> commitBackgroundTask;
 
+// A separate task is used so a retention expiration never interferes with a commit.
+@property (atomic) BOOL retentionCleanupCancelled;
+@property (nonatomic, strong) id<MXBackgroundTask> retentionCleanupBackgroundTask;
+
 @end
 
 @implementation MXFileStore
@@ -359,6 +363,151 @@ static NSUInteger preloadOptions;
     {
         [roomsToCommitForMessages addObject:roomId];
     }
+}
+
+- (void)removeExpiredMessagesWithRoomMinimumTimestamps:(NSDictionary<NSString *,NSNumber *> *)roomMinimumTimestamps
+                                            completion:(void (^)(NSUInteger, NSUInteger, BOOL))completion
+{
+    if (roomMinimumTimestamps.count == 0)
+    {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if (completion)
+            {
+                completion(0, 0, NO);
+            }
+        });
+        return;
+    }
+
+    self.retentionCleanupCancelled = NO;
+    MXWeakify(self);
+    id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
+    self.retentionCleanupBackgroundTask = [handler startBackgroundTaskWithName:@"[MXFileStore] retention cleanup"
+                                                              expirationHandler:^{
+        MXStrongifyAndReturnIfNil(self);
+        self.retentionCleanupCancelled = YES;
+    }];
+
+    dispatch_block_t cleanupBlock = dispatch_block_create_with_qos_class(0, QOS_CLASS_UTILITY, 0, ^{
+        MXStrongifyAndReturnIfNil(self);
+        NSUInteger cleanedRoomCount = 0;
+        NSUInteger failedRoomCount = 0;
+        BOOL cancelled = NO;
+
+        for (NSString *roomId in roomMinimumTimestamps)
+        {
+            if (self.retentionCleanupCancelled)
+            {
+                cancelled = YES;
+                break;
+            }
+
+            // Loaded rooms are owned by the live RoomDataSource retention path.
+            // In particular, do not turn this batch into a preload of every room.
+            @synchronized (self->roomStores)
+            {
+                if (self->roomStores[roomId])
+                {
+                    continue;
+                }
+            }
+
+            NSString *roomFile = [self messagesFileForRoom:roomId forBackup:NO];
+            if (![[NSFileManager defaultManager] fileExistsAtPath:roomFile])
+            {
+                continue;
+            }
+
+            @autoreleasepool
+            {
+                MXFileRoomStore *roomStore = nil;
+                @try
+                {
+                    roomStore = [NSKeyedUnarchiver unarchiveObjectWithFile:roomFile];
+                }
+                @catch (NSException *exception)
+                {
+                    MXLogWarning(@"[MXFileStore] Retention skipped corrupted room file %@: %@", roomId, exception.reason);
+                }
+
+                if (!roomStore)
+                {
+                    failedRoomCount++;
+                    continue;
+                }
+
+                uint64_t minimumTimestamp = roomMinimumTimestamps[roomId].unsignedLongLongValue;
+                if (![roomStore removeAllMessagesSentBefore:minimumTimestamp])
+                {
+                    continue;
+                }
+
+                NSError *archiveError = nil;
+                NSData *data = [NSKeyedArchiver archivedDataWithRootObject:roomStore
+                                                     requiringSecureCoding:NO
+                                                                     error:&archiveError];
+                if (!data)
+                {
+                    failedRoomCount++;
+                    MXLogFailureDetails(@"[MXFileStore] Failed archiving retention-cleaned room", archiveError);
+                    continue;
+                }
+
+                // Loading a room and producing this archive happen at different
+                // moments. Keep the second check and the atomic replacement under
+                // the same lock used by getOrCreateRoomStore: so this stale snapshot
+                // can never overwrite events committed by a newly mounted room.
+                BOOL roomBecameLoaded = NO;
+                BOOL writeSucceeded = NO;
+                NSError *writeError = nil;
+                @synchronized (self->roomStores)
+                {
+                    if (self->roomStores[roomId])
+                    {
+                        roomBecameLoaded = YES;
+                    }
+                    else if (self.retentionCleanupCancelled)
+                    {
+                        cancelled = YES;
+                    }
+                    else
+                    {
+                        writeSucceeded = [data writeToFile:roomFile
+                                                   options:NSDataWritingAtomic
+                                                     error:&writeError];
+                    }
+                }
+
+                if (roomBecameLoaded)
+                {
+                    continue;
+                }
+                if (cancelled)
+                {
+                    break;
+                }
+                if (writeSucceeded)
+                {
+                    cleanedRoomCount++;
+                }
+                else
+                {
+                    failedRoomCount++;
+                    MXLogFailureDetails(@"[MXFileStore] Failed atomically saving retention-cleaned room", writeError);
+                }
+            }
+        }
+
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self.retentionCleanupBackgroundTask stop];
+            self.retentionCleanupBackgroundTask = nil;
+            if (completion)
+            {
+                completion(cleanedRoomCount, failedRoomCount, cancelled);
+            }
+        });
+    });
+    dispatch_async(dispatchQueue, cleanupBlock);
 }
 
 - (void)deleteAllMessagesInRoom:(NSString *)roomId

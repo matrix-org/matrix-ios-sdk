@@ -20,6 +20,53 @@
 #import "MXFileStore.h"
 #import "MXStoreTests.h"
 
+@interface MXFileStore (RetentionTesting)
+- (NSString *)messagesFileForRoom:(NSString *)roomId forBackup:(BOOL)backup;
+@end
+
+@interface MXRetentionTestFileStore : MXFileStore
+@property (nonatomic, copy) void (^nextMessagesFileAccessHook)(NSString *roomId);
+- (void)unloadRoomForTesting:(NSString *)roomId;
+- (BOOL)isRoomLoadedForTesting:(NSString *)roomId;
+- (NSString *)messagesFileForRoomForTesting:(NSString *)roomId;
+@end
+
+@implementation MXRetentionTestFileStore
+- (NSString *)messagesFileForRoom:(NSString *)roomId forBackup:(BOOL)backup
+{
+    NSString *path = [super messagesFileForRoom:roomId forBackup:backup];
+    void (^hook)(NSString *) = self.nextMessagesFileAccessHook;
+    if (!backup && hook)
+    {
+        self.nextMessagesFileAccessHook = nil;
+        hook(roomId);
+    }
+    return path;
+}
+
+- (void)unloadRoomForTesting:(NSString *)roomId
+{
+    @synchronized (roomStores)
+    {
+        [roomStores removeObjectForKey:roomId];
+    }
+}
+
+- (BOOL)isRoomLoadedForTesting:(NSString *)roomId
+{
+    @synchronized (roomStores)
+    {
+        return roomStores[roomId] != nil;
+    }
+}
+
+- (NSString *)messagesFileForRoomForTesting:(NSString *)roomId
+{
+    NSString *roomsPath = [self valueForKey:@"storeRoomsPath"];
+    return [[roomsPath stringByAppendingPathComponent:roomId] stringByAppendingPathComponent:@"messages"];
+}
+@end
+
 // Do not bother with retain cycles warnings in tests
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Warc-retain-cycles"
@@ -182,6 +229,128 @@
 
 
 #pragma mark - MXFileStore specific tests
+- (void)testRetentionCleanupProcessesUnloadedFilesAtomicallyAndSkipsCorruption
+{
+    XCTestExpectation *done = [self expectationWithDescription:@"retention cleanup"];
+    NSString *suffix = NSUUID.UUID.UUIDString;
+    MXCredentials *credentials = [[MXCredentials alloc] initWithHomeServer:@"https://example.org"
+                                                                    userId:[@"@retention-" stringByAppendingString:suffix]
+                                                               accessToken:@"token"];
+    MXRetentionTestFileStore *store = [[MXRetentionTestFileStore alloc] init];
+
+    [store openWithCredentials:credentials onComplete:^{
+        NSString *validRoomId = [@"valid-" stringByAppendingString:suffix];
+        NSString *corruptRoomId = [@"corrupt-" stringByAppendingString:suffix];
+        MXEvent *oldEvent = [MXEvent modelFromJSON:@{
+            @"event_id": @"old", @"room_id": validRoomId,
+            @"sender": @"@alice:example.org", @"type": kMXEventTypeStringRoomMessage,
+            @"origin_server_ts": @100, @"content": @{@"msgtype": @"m.text", @"body": @"old"}
+        }];
+        MXEvent *newEvent = [MXEvent modelFromJSON:@{
+            @"event_id": @"new", @"room_id": validRoomId,
+            @"sender": @"@alice:example.org", @"type": kMXEventTypeStringRoomMessage,
+            @"origin_server_ts": @300, @"content": @{@"msgtype": @"m.text", @"body": @"new"}
+        }];
+        [store storeEventForRoom:validRoomId event:oldEvent direction:MXTimelineDirectionForwards];
+        [store storeEventForRoom:validRoomId event:newEvent direction:MXTimelineDirectionForwards];
+
+        [store commitWithCompletion:^{
+            [store unloadRoomForTesting:validRoomId];
+            NSString *validFile = [store messagesFileForRoomForTesting:validRoomId];
+            NSNumber *oldFileNumber = [[NSFileManager.defaultManager attributesOfItemAtPath:validFile error:nil]
+                                       objectForKey:NSFileSystemFileNumber];
+
+            NSString *corruptFile = [store messagesFileForRoomForTesting:corruptRoomId];
+            [NSFileManager.defaultManager createDirectoryAtPath:corruptFile.stringByDeletingLastPathComponent
+                                    withIntermediateDirectories:YES attributes:nil error:nil];
+            NSData *corruptBytes = [@"not an archive" dataUsingEncoding:NSUTF8StringEncoding];
+            [corruptBytes writeToFile:corruptFile options:NSDataWritingAtomic error:nil];
+
+            [store removeExpiredMessagesWithRoomMinimumTimestamps:@{
+                validRoomId: @200,
+                corruptRoomId: @200
+            } completion:^(NSUInteger cleanedRoomCount, NSUInteger failedRoomCount, BOOL cancelled) {
+                XCTAssertTrue(NSThread.isMainThread);
+                XCTAssertEqual(cleanedRoomCount, 1u);
+                XCTAssertEqual(failedRoomCount, 1u);
+                XCTAssertFalse(cancelled);
+                XCTAssertFalse([store isRoomLoadedForTesting:validRoomId]);
+                XCTAssertFalse([store isRoomLoadedForTesting:corruptRoomId]);
+                XCTAssertEqualObjects([NSData dataWithContentsOfFile:corruptFile], corruptBytes);
+
+                NSNumber *newFileNumber = [[NSFileManager.defaultManager attributesOfItemAtPath:validFile error:nil]
+                                           objectForKey:NSFileSystemFileNumber];
+                XCTAssertNotEqualObjects(oldFileNumber, newFileNumber, @"NSDataWritingAtomic must replace the file");
+                XCTAssertNil([store eventWithEventId:@"old" inRoom:validRoomId]);
+                XCTAssertNotNil([store eventWithEventId:@"new" inRoom:validRoomId]);
+                [store deleteAllData];
+                [done fulfill];
+            }];
+        }];
+    } failure:^(NSError *error) {
+        XCTFail(@"Cannot open retention test store: %@", error);
+        [done fulfill];
+    }];
+
+    [self waitForExpectationsWithTimeout:10 handler:nil];
+}
+
+- (void)testRetentionCleanupDoesNotOverwriteRoomLoadedAfterInitialCheck
+{
+    XCTestExpectation *done = [self expectationWithDescription:@"retention cleanup room load race"];
+    NSString *suffix = NSUUID.UUID.UUIDString;
+    NSString *roomId = [@"race-" stringByAppendingString:suffix];
+    MXCredentials *credentials = [[MXCredentials alloc] initWithHomeServer:@"https://example.org"
+                                                                    userId:[@"@retention-race-" stringByAppendingString:suffix]
+                                                               accessToken:@"token"];
+    MXRetentionTestFileStore *store = [[MXRetentionTestFileStore alloc] init];
+
+    [store openWithCredentials:credentials onComplete:^{
+        MXEvent *oldEvent = [MXEvent modelFromJSON:@{
+            @"event_id": @"old", @"room_id": roomId,
+            @"sender": @"@alice:example.org", @"type": kMXEventTypeStringRoomMessage,
+            @"origin_server_ts": @100, @"content": @{@"msgtype": @"m.text", @"body": @"old"}
+        }];
+        MXEvent *newEvent = [MXEvent modelFromJSON:@{
+            @"event_id": @"new", @"room_id": roomId,
+            @"sender": @"@alice:example.org", @"type": kMXEventTypeStringRoomMessage,
+            @"origin_server_ts": @300, @"content": @{@"msgtype": @"m.text", @"body": @"new"}
+        }];
+        [store storeEventForRoom:roomId event:oldEvent direction:MXTimelineDirectionForwards];
+
+        [store commitWithCompletion:^{
+            [store unloadRoomForTesting:roomId];
+            store.nextMessagesFileAccessHook = ^(NSString *accessedRoomId) {
+                XCTAssertEqualObjects(accessedRoomId, roomId);
+                [store storeEventForRoom:roomId event:newEvent direction:MXTimelineDirectionForwards];
+            };
+
+            [store removeExpiredMessagesWithRoomMinimumTimestamps:@{roomId: @200}
+                                                       completion:^(NSUInteger cleanedRoomCount,
+                                                                    NSUInteger failedRoomCount,
+                                                                    BOOL cancelled) {
+                XCTAssertEqual(cleanedRoomCount, 0u);
+                XCTAssertEqual(failedRoomCount, 0u);
+                XCTAssertFalse(cancelled);
+                XCTAssertTrue([store isRoomLoadedForTesting:roomId]);
+
+                [store commitWithCompletion:^{
+                    [store unloadRoomForTesting:roomId];
+                    XCTAssertNotNil([store eventWithEventId:@"new" inRoom:roomId],
+                                    @"Retention must not overwrite events from a room mounted during cleanup");
+                    [store deleteAllData];
+                    [done fulfill];
+                }];
+            }];
+        }];
+    } failure:^(NSError *error) {
+        XCTFail(@"Cannot open retention race test store: %@", error);
+        [done fulfill];
+    }];
+
+    [self waitForExpectationsWithTimeout:10 handler:nil];
+}
+
 - (void)testDiskUsage
 {
     [self doTestWithMXFileStore:^(MXRoom *room) {
