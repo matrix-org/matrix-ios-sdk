@@ -189,15 +189,16 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     _favoriteTagOrder = self.room.accountData.tags[kMXRoomTagFavourite].order;
     _storedHash = self.hash;
     
+    // Broadcast the change on main first (in-memory state is current; UI reads from `self`)
+    [[NSNotificationCenter defaultCenter] postNotificationName:kMXRoomSummaryDidChangeNotification object:self userInfo:nil];
+    
+    // Persist asynchronously to avoid blocking the main thread (storeSummary: uses backgroundMoc.perform)
     [store.roomSummaryStore storeSummary:self];
     
     if (commit && [store respondsToSelector:@selector(commit)])
     {
         [store commit];
     }
-
-    // Broadcast the change
-    [[NSNotificationCenter defaultCenter] postNotificationName:kMXRoomSummaryDidChangeNotification object:self userInfo:nil];
 }
 
 - (MXRoom *)room
