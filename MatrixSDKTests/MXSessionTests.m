@@ -22,11 +22,67 @@
 #import "MXSession.h"
 
 #import "MXMemoryStore.h"
+#import "MXMemoryRoomSummaryStore.h"
 #import "MXFileStore.h"
 #import "MatrixSDKSwiftHeader.h"
 #import "MXSyncResponse.h"
 
 #import <OHHTTPStubs/HTTPStubs.h>
+
+@interface MXAsyncSummaryTestStore : MXMemoryRoomSummaryStore
+@property (nonatomic) BOOL fetchCalled;
+@property (nonatomic) NSUInteger synchronousFetchCount;
+@property (nonatomic, copy) void (^pendingCompletion)(NSArray<id<MXRoomSummaryProtocol>> *);
+@property (nonatomic, copy) dispatch_block_t onFetch;
+@end
+
+@implementation MXAsyncSummaryTestStore
+- (NSArray<id<MXRoomSummaryProtocol>> *)allSummariesSync
+{
+    self.synchronousFetchCount += 1;
+    return [super allSummariesSync];
+}
+
+- (void)fetchAllSummaries:(void (^)(NSArray<id<MXRoomSummaryProtocol>> *))completion
+{
+    self.fetchCalled = YES;
+    self.pendingCompletion = completion;
+    if (self.onFetch)
+    {
+        self.onFetch();
+    }
+}
+@end
+
+@interface MXAsyncSummaryMemoryStore : MXMemoryStore
+@property (nonatomic, strong) MXAsyncSummaryTestStore *testRoomSummaryStore;
+@end
+
+
+@implementation MXAsyncSummaryMemoryStore
+- (instancetype)init
+{
+    if (self = [super init])
+    {
+        _testRoomSummaryStore = [[MXAsyncSummaryTestStore alloc] init];
+    }
+    return self;
+}
+
+- (id<MXRoomSummaryStore>)roomSummaryStore
+{
+    return self.testRoomSummaryStore;
+}
+
+- (BOOL)isPermanent
+{
+    return YES;
+}
+
+- (void)storeStateForRoom:(NSString *)roomId stateEvents:(NSArray<MXEvent *> *)stateEvents
+{
+}
+@end
 
 // Do not bother with retain cycles warnings in tests
 #pragma clang diagnostic push
@@ -41,6 +97,49 @@
 @end
 
 @implementation MXSessionTests
+
+- (void)testStoreDataReadyWaitsForAsynchronousRoomSummaryFetch
+{
+    XCTestExpectation *done = [self expectationWithDescription:@"store data ready"];
+    MXCredentials *credentials = [[MXCredentials alloc] initWithHomeServer:@"https://example.org"
+                                                                    userId:@"@async-summary:example.org"
+                                                               accessToken:@"token"];
+    MXRestClient *restClient = [[MXRestClient alloc] initWithCredentials:credentials
+                                      andOnUnrecognizedCertificateBlock:nil];
+    MXSession *session = [[MXSession alloc] initWithMatrixRestClient:restClient];
+    MXAsyncSummaryMemoryStore *store = [[MXAsyncSummaryMemoryStore alloc] init];
+    store.eventStreamToken = @"initial-token";
+    [store storeUser:[[MXMyUser alloc] initWithUserId:credentials.userId
+                                      andDisplayname:nil
+                                        andAvatarUrl:nil]];
+    __block BOOL storeDataReady = NO;
+    XCTestExpectation *fetchStarted = [[XCTestExpectation alloc] initWithDescription:@"summary fetch started"];
+    store.testRoomSummaryStore.onFetch = ^{
+        [fetchStarted fulfill];
+    };
+
+    [session setStore:store success:^{
+        storeDataReady = YES;
+        XCTAssertTrue(NSThread.isMainThread);
+        XCTAssertEqual(store.testRoomSummaryStore.synchronousFetchCount, 0u);
+        [done fulfill];
+    } failure:^(NSError *error) {
+        XCTFail(@"Cannot set test store: %@", error);
+        [done fulfill];
+    }];
+
+    XCTWaiter *waiter = [[XCTWaiter alloc] init];
+    XCTAssertEqual([waiter waitForExpectations:@[fetchStarted] timeout:5 enforceOrder:NO], XCTWaiterResultCompleted);
+    XCTAssertTrue(store.testRoomSummaryStore.fetchCalled);
+    XCTAssertFalse(storeDataReady, @"StoreDataReady must wait for detached summaries");
+    XCTAssertEqual(store.testRoomSummaryStore.synchronousFetchCount, 0u);
+    void (^completion)(NSArray<id<MXRoomSummaryProtocol>> *) = store.testRoomSummaryStore.pendingCompletion;
+    XCTAssertNotNil(completion);
+    completion(@[]);
+
+    [self waitForExpectationsWithTimeout:5 handler:nil];
+    [session close];
+}
 
 - (void)setUp
 {

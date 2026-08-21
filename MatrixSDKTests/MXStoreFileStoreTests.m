@@ -24,11 +24,29 @@
 - (NSString *)messagesFileForRoom:(NSString *)roomId forBackup:(BOOL)backup;
 @end
 
+@interface MXFileStore (AccountDataTesting)
+- (MXRoomAccountData *)loadAccountDataFromFileForRoom:(NSString *)roomId;
+@end
+
 @interface MXRetentionTestFileStore : MXFileStore
 @property (nonatomic, copy) void (^nextMessagesFileAccessHook)(NSString *roomId);
 - (void)unloadRoomForTesting:(NSString *)roomId;
 - (BOOL)isRoomLoadedForTesting:(NSString *)roomId;
 - (NSString *)messagesFileForRoomForTesting:(NSString *)roomId;
+@end
+
+@interface MXAccountDataTestFileStore : MXFileStore
+@property (atomic) NSUInteger accountDataFileLoadCount;
+@property (atomic) BOOL loadedAccountDataOnMainThread;
+@end
+
+@implementation MXAccountDataTestFileStore
+- (MXRoomAccountData *)loadAccountDataFromFileForRoom:(NSString *)roomId
+{
+    self.accountDataFileLoadCount += 1;
+    self.loadedAccountDataOnMainThread |= NSThread.isMainThread;
+    return [super loadAccountDataFromFileForRoom:roomId];
+}
 @end
 
 @implementation MXRetentionTestFileStore
@@ -229,6 +247,71 @@
 
 
 #pragma mark - MXFileStore specific tests
+- (void)testRoomAccountDataPreloadCachesExistingMissingAndCorruptFiles
+{
+    XCTestExpectation *done = [self expectationWithDescription:@"account data preload"];
+    NSString *suffix = NSUUID.UUID.UUIDString;
+    MXCredentials *credentials = [[MXCredentials alloc] initWithHomeServer:@"https://example.org"
+                                                                    userId:[@"@account-data-" stringByAppendingString:suffix]
+                                                               accessToken:@"token"];
+    MXFileStore *initialStore = [[MXFileStore alloc] init];
+
+    [initialStore openWithCredentials:credentials onComplete:^{
+        initialStore.eventStreamToken = @"initial-token";
+        NSString *existingRoomId = [@"existing-" stringByAppendingString:suffix];
+        NSString *missingRoomId = [@"missing-" stringByAppendingString:suffix];
+        NSString *corruptRoomId = [@"corrupt-" stringByAppendingString:suffix];
+        MXRoomAccountData *existingAccountData = [[MXRoomAccountData alloc] init];
+        [initialStore storeAccountDataForRoom:existingRoomId userData:existingAccountData];
+
+        [initialStore commitWithCompletion:^{
+            NSString *roomsPath = [initialStore valueForKey:@"storeRoomsPath"];
+            NSString *missingRoomPath = [roomsPath stringByAppendingPathComponent:missingRoomId];
+            NSString *corruptRoomPath = [roomsPath stringByAppendingPathComponent:corruptRoomId];
+            [NSFileManager.defaultManager createDirectoryAtPath:missingRoomPath
+                                    withIntermediateDirectories:YES attributes:nil error:nil];
+            [NSFileManager.defaultManager createDirectoryAtPath:corruptRoomPath
+                                    withIntermediateDirectories:YES attributes:nil error:nil];
+            [[@"not an archive" dataUsingEncoding:NSUTF8StringEncoding]
+             writeToFile:[corruptRoomPath stringByAppendingPathComponent:@"accountData"]
+             options:NSDataWritingAtomic
+             error:nil];
+
+            MXAccountDataTestFileStore *reopenedStore = [[MXAccountDataTestFileStore alloc] init];
+            [reopenedStore openWithCredentials:credentials onComplete:^{
+                XCTAssertTrue(NSThread.isMainThread);
+                XCTAssertEqual(reopenedStore.accountDataFileLoadCount, 3u);
+                XCTAssertFalse(reopenedStore.loadedAccountDataOnMainThread);
+
+                XCTAssertNotNil([reopenedStore accountDataOfRoom:existingRoomId]);
+                XCTAssertNil([reopenedStore accountDataOfRoom:missingRoomId]);
+                XCTAssertNil([reopenedStore accountDataOfRoom:corruptRoomId]);
+                XCTAssertNotNil([reopenedStore accountDataOfRoom:existingRoomId]);
+                XCTAssertNil([reopenedStore accountDataOfRoom:missingRoomId]);
+                XCTAssertNil([reopenedStore accountDataOfRoom:corruptRoomId]);
+                XCTAssertEqual(reopenedStore.accountDataFileLoadCount, 3u,
+                               @"Main-thread reads must use positive and negative preload cache entries");
+
+                MXRoomAccountData *replacement = [[MXRoomAccountData alloc] init];
+                [reopenedStore storeAccountDataForRoom:missingRoomId userData:replacement];
+                XCTAssertEqual([reopenedStore accountDataOfRoom:missingRoomId], replacement);
+                XCTAssertEqual(reopenedStore.accountDataFileLoadCount, 3u);
+
+                [reopenedStore deleteAllData];
+                [done fulfill];
+            } failure:^(NSError *error) {
+                XCTFail(@"Cannot reopen account data test store: %@", error);
+                [done fulfill];
+            }];
+        }];
+    } failure:^(NSError *error) {
+        XCTFail(@"Cannot open account data test store: %@", error);
+        [done fulfill];
+    }];
+
+    [self waitForExpectationsWithTimeout:10 handler:nil];
+}
+
 - (void)testRetentionCleanupProcessesUnloadedFilesAtomicallyAndSkipsCorruption
 {
     XCTestExpectation *done = [self expectationWithDescription:@"retention cleanup"];

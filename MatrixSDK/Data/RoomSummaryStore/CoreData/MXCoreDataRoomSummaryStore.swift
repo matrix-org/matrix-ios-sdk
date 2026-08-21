@@ -253,7 +253,10 @@ public class MXCoreDataRoomSummaryStore: NSObject {
                     completion(mapped)
                 }
             } catch {
-                MXLog.error("[MXCoreDataRoomSummaryStore] fetchRoomIds failed", context: error)
+                MXLog.error("[MXCoreDataRoomSummaryStore] fetchAllSummaries failed", context: error)
+                DispatchQueue.main.async {
+                    completion([])
+                }
             }
         }
     }

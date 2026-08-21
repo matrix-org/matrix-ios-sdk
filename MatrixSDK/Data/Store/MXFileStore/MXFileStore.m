@@ -101,8 +101,10 @@ static NSUInteger preloadOptions;
     // when it will read rooms states.
     NSMutableDictionary<NSString*, NSArray*> *preloadedRoomsStates;
 
-    // Same kind of cache for room account data.
-    NSMutableDictionary<NSString*, MXRoomAccountData*> *preloadedRoomAccountData;
+    // Persistent cache for room account data. NSNull represents a room whose
+    // account data file was missing or could not be decoded. Access is guarded
+    // with @synchronized because reads may come from the main and store queues.
+    NSMutableDictionary<NSString*, id> *preloadedRoomAccountData;
 
     // File reading and writing operations are dispatched to a separated thread.
     // The queue invokes blocks serially in FIFO order.
@@ -534,6 +536,10 @@ static NSUInteger preloadOptions;
     [roomsToCommitForState removeObjectForKey:roomId];
     [roomSummaryStore removeSummaryOfRoom:roomId];
     [roomsToCommitForAccountData removeObjectForKey:roomId];
+    @synchronized (preloadedRoomAccountData)
+    {
+        [preloadedRoomAccountData removeObjectForKey:roomId];
+    }
     [roomsToCommitForReceipts removeObject:roomId];
 }
 
@@ -568,6 +574,10 @@ static NSUInteger preloadOptions;
     // Reset data
     metaData = nil;
     [roomStores removeAllObjects];
+    @synchronized (preloadedRoomAccountData)
+    {
+        [preloadedRoomAccountData removeAllObjects];
+    }
     self.eventStreamToken = nil;
 }
 
@@ -749,31 +759,55 @@ static NSUInteger preloadOptions;
 - (void)storeAccountDataForRoom:(NSString *)roomId userData:(MXRoomAccountData *)accountData
 {
     roomsToCommitForAccountData[roomId] = accountData;
+    @synchronized (preloadedRoomAccountData)
+    {
+        preloadedRoomAccountData[roomId] = accountData;
+    }
+}
+
+- (MXRoomAccountData *)loadAccountDataFromFileForRoom:(NSString *)roomId
+{
+    if (NSThread.isMainThread)
+    {
+        MXLogWarning(@"[MXFileStore] Loading account data for room %@ on the main thread", roomId);
+    }
+
+    MXRoomAccountData *roomUserData;
+    @try
+    {
+        roomUserData = [NSKeyedUnarchiver unarchiveObjectWithFile:[self accountDataFileForRoom:roomId forBackup:NO]];
+    }
+    @catch (NSException *exception)
+    {
+        NSDictionary *details = @{
+            @"room_id": roomId ?: @"unknown",
+            @"exception": exception ?: @"unknown"
+        };
+        MXLogErrorDetails(@"[MXFileStore] Failed to decode room account data", details);
+    }
+    return roomUserData;
 }
 
 - (MXRoomAccountData *)accountDataOfRoom:(NSString *)roomId
 {
-    // First, try to get the data from the cache
-    MXRoomAccountData *roomUserdData = preloadedRoomAccountData[roomId];
-
-    if (!roomUserdData)
+    id cachedAccountData;
+    @synchronized (preloadedRoomAccountData)
     {
-        roomUserdData =[NSKeyedUnarchiver unarchiveObjectWithFile:[self accountDataFileForRoom:roomId forBackup:NO]];
-
-        if (NO == [NSThread isMainThread])
-        {
-            // If this method is called from the `dispatchQueue` thread, it means MXFileStore is preloading
-            // data. So, fill the cache.
-            preloadedRoomAccountData[roomId] = roomUserdData;
-        }
-    }
-    else
-    {
-        // The cache information is valid only once
-        [preloadedRoomAccountData removeObjectForKey:roomId];
+        cachedAccountData = preloadedRoomAccountData[roomId];
     }
 
-    return roomUserdData;
+    if (cachedAccountData)
+    {
+        return cachedAccountData == NSNull.null ? nil : cachedAccountData;
+    }
+
+    MXRoomAccountData *roomUserData = [self loadAccountDataFromFileForRoom:roomId];
+    @synchronized (preloadedRoomAccountData)
+    {
+        preloadedRoomAccountData[roomId] = roomUserData ?: NSNull.null;
+    }
+
+    return roomUserData;
 }
 
 - (void)storeUser:(MXUser *)user
@@ -1710,7 +1744,7 @@ static NSUInteger preloadOptions;
 
     for (NSString *roomId in roomIDs)
     {
-        preloadedRoomAccountData[roomId] = [self accountDataOfRoom:roomId];
+        [self accountDataOfRoom:roomId];
     }
 
     MXLogDebug(@"[MXFileStore] Loaded rooms account data of %tu rooms in %.0fms", roomIDs.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);

@@ -53,6 +53,53 @@ class MXCoreDataRoomListDataManagerUnitTests: XCTestCase {
     }
     
     //  MARK - Tests
+
+    func testFetchAllSummariesMaterializesEncryptedLastMessageOffMainThread() {
+        let credentials = MXCredentials(homeServer: "localhost",
+                                        userId: "@last-message-\(UUID().uuidString):example.org",
+                                        accessToken: "token")
+        let store = MXCoreDataRoomSummaryStore(withCredentials: credentials)
+        let keyProvider = BackgroundRecordingKeyProvider()
+        MXKeyProvider.sharedInstance().delegate = keyProvider
+        defer {
+            MXKeyProvider.sharedInstance().delegate = nil
+            store.removeAllSummaries()
+        }
+
+        let summary = MockRoomSummary.generate()
+        guard let event = MXEvent(fromJSON: [
+            "event_id": "$encrypted-last-message",
+            "room_id": summary.roomId,
+            "sender": "@alice:example.org",
+            "type": kMXEventTypeStringRoomEncrypted,
+            "origin_server_ts": 1234,
+            "content": ["algorithm": "m.megolm.v1.aes-sha2"]
+        ]) else {
+            XCTFail("Failed to create encrypted event")
+            return
+        }
+        let lastMessage = MXRoomLastMessage(event: event)
+        lastMessage.text = "decrypted preview"
+        lastMessage.others = ["kind": "media" as NSString]
+        summary.lastMessage = lastMessage
+        store.storeSummary(summary)
+
+        let done = expectation(description: "encrypted summaries fetched")
+        // The first asynchronous fetch runs after the queued save. Reset the recorder there,
+        // then use a second fetch to measure only materialisation of persisted summaries.
+        store.fetchAllSummaries { _ in
+            keyProvider.reset()
+            store.fetchAllSummaries { summaries in
+                XCTAssertTrue(Thread.isMainThread)
+                XCTAssertTrue(keyProvider.wasRequestedOffMainThread)
+                XCTAssertFalse(keyProvider.wasRequestedOnMainThread)
+                XCTAssertEqual(summaries.first?.lastMessage?.text, "decrypted preview")
+                XCTAssertEqual(summaries.first?.lastMessage?.others?["kind"] as? String, "media")
+                done.fulfill()
+            }
+        }
+        wait(for: [done], timeout: 5)
+    }
     
     func testPaginationOptionsInit() {
         let options1 = MXRoomListDataPaginationOptions.none
@@ -238,6 +285,53 @@ class MXCoreDataRoomListDataManagerUnitTests: XCTestCase {
         waiter.wait(for: [expectation], timeout: timeout)
     }
     
+}
+
+private final class BackgroundRecordingKeyProvider: NSObject, MXKeyProviderDelegate {
+    private let lock = NSLock()
+    private var requestedOnMain = false
+    private var requestedOffMain = false
+
+    var wasRequestedOnMainThread: Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        return requestedOnMain
+    }
+
+    var wasRequestedOffMainThread: Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        return requestedOffMain
+    }
+
+    func reset() {
+        lock.lock()
+        requestedOnMain = false
+        requestedOffMain = false
+        lock.unlock()
+    }
+
+    func isEncryptionAvailableForData(ofType dataType: String) -> Bool {
+        dataType == MXRoomLastMessageDataType
+    }
+
+    func hasKeyForData(ofType dataType: String) -> Bool {
+        dataType == MXRoomLastMessageDataType
+    }
+
+    func keyDataForData(ofType dataType: String) -> MXKeyData? {
+        lock.lock()
+        if Thread.isMainThread {
+            requestedOnMain = true
+        } else {
+            requestedOffMain = true
+        }
+        lock.unlock()
+
+        let iv = "baB6pgMP9erqSaKF".data(using: .utf8)!
+        let key = "6fXK17pQFUrFqOnxt3wrqz8RHkQUT9vQ".data(using: .utf8)!
+        return MXAesKeyData(iv: iv, key: key)
+    }
 }
 
 fileprivate extension MXRoomSummaryDataTypes {
