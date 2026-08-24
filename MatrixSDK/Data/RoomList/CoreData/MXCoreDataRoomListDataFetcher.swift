@@ -53,6 +53,7 @@ internal class MXCoreDataRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
         }
     }
     private let store: MXRoomSummaryCoreDataContextableStore
+    private weak var session: MXSession?
     
     private lazy var fetchedResultsController: NSFetchedResultsController<MXRoomSummaryMO> = {
         let request = MXRoomSummaryMO.typedFetchRequest()
@@ -111,9 +112,11 @@ internal class MXCoreDataRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
     }
     
     internal init(fetchOptions: MXRoomListDataFetchOptions,
-                  store: MXRoomSummaryCoreDataContextableStore) {
+                  store: MXRoomSummaryCoreDataContextableStore,
+                  session: MXSession? = nil) {
         self.fetchOptions = fetchOptions
         self.store = store
+        self.session = session
         super.init()
         self.fetchOptions.fetcher = self
         self.fetchedResultsController.delegate = self
@@ -224,9 +227,9 @@ internal class MXCoreDataRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
         
         if fetchLimit > 0 && summaries.count > fetchLimit {
             data = nil
-            mapped = summaries[0..<fetchLimit].compactMap { MXRoomSummary(summaryModel: $0) }
+            mapped = mapSummaries(summaries[0..<fetchLimit])
         } else {
-            mapped = summaries.compactMap { MXRoomSummary(summaryModel: $0) }
+            mapped = mapSummaries(summaries)
         }
         let counts = MXStoreRoomListDataCounts(withRooms: mapped,
                                                total: totalCounts)
@@ -234,6 +237,27 @@ internal class MXCoreDataRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
                               counts: counts,
                               paginationOptions: fetchOptions.paginationOptions)
         fetchedResultsController.delegate = self
+    }
+
+    /// The session cache is pre-warmed before room-list fetchers are created.
+    /// Reusing it avoids decrypting and unarchiving every persisted last message
+    /// again whenever the FRC emits an update. A fresh detached snapshot keeps
+    /// MXRoomListData's existing value/equality semantics.
+    private func mapSummaries<S: Sequence>(_ summaries: S) -> [MXRoomSummary] where S.Element == MXRoomSummaryMO {
+        var cacheMissCount = 0
+        let mapped = summaries.compactMap { model -> MXRoomSummary? in
+            if let cached = session?.cachedRoomSummary(withRoomId: model.s_identifier) {
+                return MXRoomSummary(summaryModel: cached)
+            }
+
+            cacheMissCount += 1
+            return MXRoomSummary(summaryModel: model)
+        }
+
+        if session != nil && cacheMissCount > 0 {
+            MXLog.warning("[MXCoreDataRoomListDataFetcher] \(cacheMissCount) summaries were missing from the session cache")
+        }
+        return mapped
     }
     
 }

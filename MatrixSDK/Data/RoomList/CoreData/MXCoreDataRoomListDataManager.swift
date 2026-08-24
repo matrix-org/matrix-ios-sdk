@@ -50,6 +50,7 @@ public class MXCoreDataRoomListDataManager: NSObject, MXRoomListDataManager {
                "[MXCoreDataRoomListDataManager] Managed object context must have mainQueueConcurrencyType")
         
         return MXCoreDataRoomListDataFetcher(fetchOptions: options,
-                                             store: coreDataStore)
+                                             store: coreDataStore,
+                                             session: session)
     }
 }
