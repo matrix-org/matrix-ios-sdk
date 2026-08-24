@@ -307,15 +307,6 @@ class MXBackgroundStore: NSObject, MXStore {
         // Not sure if this needs to be implemented
         false
     }
-
-    func removeExpiredMessages(
-        withRoomMinimumTimestamps minimumTimestamps: [String: NSNumber],
-        completion: @escaping (UInt, UInt, Bool) -> Void
-    ) {
-        // The background store exists to serve one push, on a store the app
-        // process may have open at the same time. Retention is the app's job.
-        completion(0, 0, false)
-    }
 }
 
 //  MARK: - MXRoomSummaryStore

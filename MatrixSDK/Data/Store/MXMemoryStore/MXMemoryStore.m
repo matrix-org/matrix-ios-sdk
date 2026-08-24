@@ -90,26 +90,6 @@
     return [roomStore removeAllMessagesSentBefore:limitTs];
 }
 
-- (void)removeExpiredMessagesWithRoomMinimumTimestamps:(NSDictionary<NSString *, NSNumber *> *)minimumTimestamps
-                                            completion:(void (^)(NSUInteger, NSUInteger, BOOL))completion
-{
-    // Everything is already in memory here, so there is nothing to move off the
-    // caller's thread and nothing that can make a batch worth interrupting.
-    NSUInteger cleanedRoomCount = 0;
-    for (NSString *roomId in minimumTimestamps)
-    {
-        if ([self removeAllMessagesSentBefore:minimumTimestamps[roomId].unsignedLongLongValue inRoom:roomId])
-        {
-            cleanedRoomCount++;
-        }
-    }
-
-    if (completion)
-    {
-        completion(cleanedRoomCount, 0, NO);
-    }
-}
-
 - (BOOL)eventExistsWithEventId:(NSString *)eventId inRoom:(NSString *)roomId
 {
     return (nil != [self eventWithEventId:eventId inRoom:roomId]);

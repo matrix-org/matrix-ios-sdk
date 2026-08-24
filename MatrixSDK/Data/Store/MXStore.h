@@ -452,25 +452,6 @@
 - (BOOL)removeAllMessagesSentBefore:(uint64_t)limitTs inRoom:(nonnull NSString *)roomId;
 
 /**
- Apply the retention limit to several rooms in one batch, off the caller's thread.
-
- Exists because the per-room variant above has to mount a room's message file
- before it can trim it, which on a store backed by disk is expensive enough to
- be visible when done for every room from the main thread.
-
- Implementations are free to process only the rooms they can handle cheaply and
- report `cancelled` so the caller retries the rest later; a run must always make
- progress so that retrying terminates.
-
- @param minimumTimestamps the timestamp below which messages are dropped, per room id.
- @param completion called on the main thread. `cleanedRoomCount` counts rooms
-        where at least one event was removed, `failedRoomCount` rooms that could
-        not be processed, and `cancelled` says the batch stopped early.
- */
-- (void)removeExpiredMessagesWithRoomMinimumTimestamps:(nonnull NSDictionary<NSString *, NSNumber *> *)minimumTimestamps
-                                            completion:(nonnull void (^)(NSUInteger cleanedRoomCount, NSUInteger failedRoomCount, BOOL cancelled))completion;
-
-/**
  Remove all outgoing messages from a room.
 
  @param roomId the id of the room.

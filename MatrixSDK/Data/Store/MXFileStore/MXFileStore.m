@@ -51,13 +51,6 @@ static NSString *const kMXFileStoreRoomThreadedReadReceiptsFile = @"threadedRead
 
 static NSUInteger preloadOptions;
 
-/**
- How long one retention batch may run before it yields and asks to be resumed.
- Sized to stay well inside a launch-time idle window on a store with many rooms;
- the remainder is picked up on the next activation.
- */
-static NSTimeInterval const kMXFileStoreRetentionBatchDuration = 0.5;
-
 @interface MXFileStore ()
 {
     // Meta data about the store. It is defined only if the passed MXCredentials contains all information.
@@ -2467,105 +2460,6 @@ static NSTimeInterval const kMXFileStoreRetentionBatchDuration = 0.5;
 }
 
 #pragma mark - Room Messages
-
-- (void)removeExpiredMessagesWithRoomMinimumTimestamps:(NSDictionary<NSString *, NSNumber *> *)minimumTimestamps
-                                            completion:(void (^)(NSUInteger, NSUInteger, BOOL))completion
-{
-    MXWeakify(self);
-    dispatch_async(dispatchQueue, ^(void){
-        MXStrongifyAndReturnIfNil(self);
-
-        NSDate *startDate = [NSDate date];
-        NSUInteger cleanedRoomCount = 0;
-        NSUInteger failedRoomCount = 0;
-        BOOL cancelled = NO;
-
-        for (NSString *roomId in minimumTimestamps)
-        {
-            // A room already mounted in memory has a live MXRoom/RoomDataSource
-            // driving it from the main thread, and that path applies retention
-            // on its own. Trimming it from here would mutate the same store
-            // object across two threads.
-            if (self->roomStores[roomId])
-            {
-                continue;
-            }
-
-            // The retry the caller performs on `cancelled` only terminates
-            // because every run drains rooms it did process, so the budget must
-            // bound the run, never the work.
-            if ([[NSDate date] timeIntervalSinceDate:startDate] > kMXFileStoreRetentionBatchDuration)
-            {
-                cancelled = YES;
-                break;
-            }
-
-            uint64_t limitTs = minimumTimestamps[roomId].unsignedLongLongValue;
-            BOOL roomChanged = NO;
-
-            @try
-            {
-                roomChanged = [self removeAllMessagesSentBefore:limitTs inRoom:roomId];
-            }
-            @catch (NSException *exception)
-            {
-                MXLogWarning(@"[MXFileStore] removeExpiredMessages: failed for room %@: %@", roomId, exception);
-                failedRoomCount++;
-            }
-
-            if (roomChanged)
-            {
-                cleanedRoomCount++;
-                [self saveRoomMessagesFile:roomId];
-            }
-
-            // Mounting the room was a means to trim it, not a decision to keep
-            // it: without this a single pass would pull every room's history
-            // into memory and leave it there.
-            @synchronized (self->roomStores)
-            {
-                [self->roomStores removeObjectForKey:roomId];
-            }
-        }
-
-        MXLogDebug(@"[MXFileStore] removeExpiredMessages: cleaned %tu, failed %tu, cancelled %@ in %.0fms",
-                   cleanedRoomCount, failedRoomCount, cancelled ? @"YES" : @"NO",
-                   [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
-
-        if (completion)
-        {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                completion(cleanedRoomCount, failedRoomCount, cancelled);
-            });
-        }
-    });
-}
-
-/**
- Writes one room's message file, keeping the same backup-then-replace order the
- batched commit uses. Called from `dispatchQueue` only: the batch above cannot
- go through `roomsToCommitForMessages`, which the main thread mutates.
- */
-- (void)saveRoomMessagesFile:(NSString *)roomId
-{
-    MXFileRoomStore *roomStore = (MXFileRoomStore *)roomStores[roomId];
-    if (!roomStore)
-    {
-        return;
-    }
-
-    NSString *file = [self messagesFileForRoom:roomId forBackup:NO];
-    NSString *backupFile = [self messagesFileForRoom:roomId forBackup:YES];
-
-    if (backupFile && [[NSFileManager defaultManager] fileExistsAtPath:file])
-    {
-        [self checkFolderExistenceForRoom:roomId forBackup:YES];
-        [[NSFileManager defaultManager] moveItemAtPath:file toPath:backupFile error:nil];
-    }
-
-    [self checkFolderExistenceForRoom:roomId forBackup:NO];
-    [NSKeyedArchiver archiveRootObject:roomStore toFile:file];
-}
 
 - (void)loadRoomMessagesForRoom:(NSString *)roomId completion:(void (^)(void))completion
 {
