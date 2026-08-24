@@ -24,6 +24,9 @@ import SwiftyBeaver
     
     /// whether logs should be written directly to files. `false` by default.
     @objc public var redirectLogsToFiles = false
+
+    /// whether console logs should be delivered asynchronously. `false` by default.
+    @objc public var logToConsoleAsynchronously = false
     
     /// the maximum total space to use for log files in bytes. `100MB` by default.
     @objc public var logFilesSizeLimit: UInt = 100 * 1024 * 1024 // 100MB
@@ -191,7 +194,7 @@ private var logger: SwiftyBeaver.Type = {
         
         let consoleDestination = ConsoleDestination()
         consoleDestination.useNSLog = true
-        consoleDestination.asynchronously = false
+        consoleDestination.asynchronously = configuration.logToConsoleAsynchronously
         consoleDestination.format = "$DHH:mm:ss.SSS$d$Z $C$M $X$c" // Format is `Time Color Message Context`, see https://docs.swiftybeaver.com/article/20-custom-format
         consoleDestination.levelColor.verbose = ""
         consoleDestination.levelColor.debug = ""
