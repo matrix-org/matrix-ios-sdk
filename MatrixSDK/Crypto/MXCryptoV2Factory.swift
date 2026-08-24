@@ -86,9 +86,33 @@ import Foundation
                     success(crypto)
                 }
             } catch {
-                self.log.failure("Cannot create crypto", context: error)
-                await MainActor.run {
-                    failure(error)
+                // TRSC self-heal: an orphaned or unreadable crypto store used to
+                // hard-fail here (fatalError in debug). Typical trigger: the app was
+                // reinstalled — the App Group store file survived the uninstall but
+                // its pickle key in the keychain did not, so the rust store cannot
+                // be opened ("OpenStore: Failed to open the store"). Delete the
+                // broken store and retry ONCE from scratch: the device gets fresh
+                // crypto identity and room keys are recovered from the server-side
+                // key backup (TrscKeyBackupBootstrap) afterwards.
+                self.log.error("Cannot create crypto — deleting store and retrying once", context: error)
+                do {
+                    if let storeURL = try? MXCryptoMachineStore.storeURL(for: userId) {
+                        try? FileManager.default.removeItem(at: storeURL)
+                    }
+                    let crypto = try await MXCryptoV2(
+                        userId: userId,
+                        deviceId: deviceId,
+                        session: session,
+                        restClient: restClient
+                    )
+                    await MainActor.run {
+                        success(crypto)
+                    }
+                } catch {
+                    self.log.failure("Cannot create crypto", context: error)
+                    await MainActor.run {
+                        failure(error)
+                    }
                 }
             }
         }
