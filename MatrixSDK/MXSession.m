@@ -3231,33 +3231,33 @@ typedef void (^MXOnResumeDone)(void);
 
 
 #pragma mark - Rooms summaries
+- (nullable MXRoomSummary *)cachedRoomSummaryWithRoomId:(NSString*)roomId
+{
+    return roomId ? roomSummaries[roomId] : nil;
+}
+
 - (nullable MXRoomSummary *)roomSummaryWithRoomId:(NSString*)roomId
 {
-    MXRoomSummary *roomSummary;
+    MXRoomSummary *roomSummary = [self cachedRoomSummaryWithRoomId:roomId];
 
-    if (roomId)
+    if (roomId && roomSummary == nil)
     {
-        roomSummary = roomSummaries[roomId];
-        
-        if (roomSummary == nil)
+        //  summary not in the cache, try to load it from the store
+        id<MXRoomSummaryProtocol> roomSummaryProtocol = [self.store.roomSummaryStore summaryOfRoom:roomId];
+        if (roomSummaryProtocol)
         {
-            //  summary not in the cache, try to load it from the store
-            id<MXRoomSummaryProtocol> roomSummaryProtocol = [self.store.roomSummaryStore summaryOfRoom:roomId];
-            if (roomSummaryProtocol)
+            roomSummary = [[MXRoomSummary alloc] initWithSummaryModel:roomSummaryProtocol];
+            [roomSummary setMatrixSession:self];
+
+            if (roomSummary.lastMessage.hasDecryptionError)
             {
-                roomSummary = [[MXRoomSummary alloc] initWithSummaryModel:roomSummaryProtocol];
-                [roomSummary setMatrixSession:self];
-                
-                if (roomSummary.lastMessage.hasDecryptionError)
-                {
-                    // Try to decrypt it again.
-                    // It will also trigger the mechanism to automatically retry and refresh the last message if we
-                    // receive the key later
-                    [self eventWithEventId:roomSummary.lastMessage.eventId inRoom:roomSummary.roomId success:nil failure:nil];
-                }
-                
-                roomSummaries[roomId] = roomSummary;
+                // Try to decrypt it again.
+                // It will also trigger the mechanism to automatically retry and refresh the last message if we
+                // receive the key later
+                [self eventWithEventId:roomSummary.lastMessage.eventId inRoom:roomSummary.roomId success:nil failure:nil];
             }
+
+            roomSummaries[roomId] = roomSummary;
         }
     }
 

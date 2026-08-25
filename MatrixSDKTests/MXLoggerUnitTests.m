@@ -28,6 +28,15 @@
 
 @implementation MXLoggerUnitTests
 
+- (void)testConsoleLoggingIsSynchronousByDefaultAndCanBeConfiguredAsynchronous
+{
+    MXLogConfiguration *configuration = [[MXLogConfiguration alloc] init];
+    XCTAssertFalse(configuration.logToConsoleAsynchronously);
+
+    configuration.logToConsoleAsynchronously = YES;
+    XCTAssertTrue(configuration.logToConsoleAsynchronously);
+}
+
 - (void)testMXLogger
 {
     MXLogConfiguration *configuration = [[MXLogConfiguration alloc] init];

@@ -1090,6 +1090,18 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 - (nullable MXRoomSummary *)roomSummaryWithRoomId:(NSString*)roomId;
 
 /**
+ Return the in-memory MXRoomSummary instance without consulting the store.
+
+ This is intended for callers that already have a store-backed room id and must
+ avoid synchronous persistence work (for example room-list snapshot creation).
+
+ @param roomId The room id to the room.
+
+ @return The cached MXRoomSummary instance, or nil when the cache is not warm.
+ */
+- (nullable MXRoomSummary *)cachedRoomSummaryWithRoomId:(NSString*)roomId;
+
+/**
  Recompute all room summaries last message.
 
  This may lead to pagination requests to the homeserver. Updated room summaries will be

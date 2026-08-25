@@ -122,6 +122,10 @@
         storeDataReady = YES;
         XCTAssertTrue(NSThread.isMainThread);
         XCTAssertEqual(store.testRoomSummaryStore.synchronousFetchCount, 0u);
+        MXRoomSummary *cachedSummary = [session cachedRoomSummaryWithRoomId:@"!cached:example.org"];
+        XCTAssertEqualObjects(cachedSummary.roomId, @"!cached:example.org");
+        XCTAssertEqual(store.testRoomSummaryStore.synchronousFetchCount, 0u,
+                       @"Cache-only lookup must never fall back to synchronous persistence");
         [done fulfill];
     } failure:^(NSError *error) {
         XCTFail(@"Cannot set test store: %@", error);
@@ -135,7 +139,9 @@
     XCTAssertEqual(store.testRoomSummaryStore.synchronousFetchCount, 0u);
     void (^completion)(NSArray<id<MXRoomSummaryProtocol>> *) = store.testRoomSummaryStore.pendingCompletion;
     XCTAssertNotNil(completion);
-    completion(@[]);
+    MXRoomSummary *summary = [[MXRoomSummary alloc] initWithRoomId:@"!cached:example.org"
+                                                  andMatrixSession:nil];
+    completion(@[summary]);
 
     [self waitForExpectationsWithTimeout:5 handler:nil];
     [session close];
