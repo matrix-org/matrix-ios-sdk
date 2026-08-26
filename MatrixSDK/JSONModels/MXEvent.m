@@ -17,6 +17,17 @@
 
 #import "MXEvent.h"
 
+// TRSC: рантайм-мост к Swift-классу MXTrscClearEventStorage (Contrib/Swift).
+// ObjC-часть пода не импортирует сгенерированный Swift-заголовок, поэтому
+// класс ищется по имени; отсутствие класса (например, урезанная сборка)
+// просто выключает кеш расшифровки.
+@protocol MXTrscClearEventStorageBridge <NSObject>
++ (id<MXTrscClearEventStorageBridge>)shared;
+- (NSData * _Nullable)protect:(NSDictionary *)json;
+- (NSDictionary * _Nullable)unprotect:(NSData *)sealed;
+@end
+
+
 #import "MXTools.h"
 #import "MXEventDecryptionResult.h"
 #import "MXEncryptedContentFile.h"
@@ -1297,6 +1308,20 @@ NSString *const kMXEventTypeStringCallNotifyUnstable = @"org.matrix.msc4075.call
         _inviteRoomState = [aDecoder decodeObjectForKey:@"inviteRoomState"];
         _sentError = [aDecoder decodeObjectForKey:@"sentError"];
 
+        // TRSC: restore the sealed decryption result, if one was persisted.
+        // Failure to open (missing key, other process's key, tampering) just
+        // means "decrypt again" — never an error.
+        NSData *trscSealedClear = [aDecoder decodeObjectForKey:@"trscClearData"];
+        if (trscSealedClear)
+        {
+            id<MXTrscClearEventStorageBridge> storage = [NSClassFromString(@"MXTrscClearEventStorage") shared];
+            NSDictionary *clearJSON = [storage unprotect:trscSealedClear];
+            if (clearJSON)
+            {
+                _clearEvent = [MXEvent modelFromJSON:clearJSON];
+            }
+        }
+
         _wireEventType = (MXEventType)[aDecoder decodeIntegerForKey:@"eventType"];
         if (_wireEventType == MXEventTypeCustom)
         {
@@ -1328,6 +1353,20 @@ NSString *const kMXEventTypeStringCallNotifyUnstable = @"org.matrix.msc4075.call
     [aCoder encodeObject:_redactedBecause forKey:@"redactedBecause"];
     [aCoder encodeObject:_inviteRoomState forKey:@"inviteRoomState"];
     [aCoder encodeObject:_sentError forKey:@"sentError"];
+
+    // TRSC: persist the decryption result so a cold start reads history
+    // without re-decrypting — the parity of Android's decryptionResultJson,
+    // but SEALED (AES-GCM, key in the keychain): MXFileStore files are not
+    // encrypted, and the clear payload must never hit disk in the open.
+    if (self.isEncrypted && self.clearEvent)
+    {
+        id<MXTrscClearEventStorageBridge> storage = [NSClassFromString(@"MXTrscClearEventStorage") shared];
+        NSData *trscSealedClear = [storage protect:self.clearEvent.JSONDictionary];
+        if (trscSealedClear)
+        {
+            [aCoder encodeObject:trscSealedClear forKey:@"trscClearData"];
+        }
+    }
 
     [aCoder encodeInteger:(NSInteger)_wireEventType forKey:@"eventType"];
     if (_wireEventType == MXEventTypeCustom)
