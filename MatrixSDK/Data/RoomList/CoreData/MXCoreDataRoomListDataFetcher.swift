@@ -120,6 +120,10 @@ internal class MXCoreDataRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
         super.init()
         self.fetchOptions.fetcher = self
         self.fetchedResultsController.delegate = self
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(slidingSyncOrderUpdated(_:)),
+                                               name: Notification.Name(rawValue: "MXSessionSlidingSyncRoomOrderDidChangeNotification"),
+                                               object: session)
     }
     
     //  MARK: - Delegate
@@ -181,6 +185,7 @@ internal class MXCoreDataRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
     }
     
     deinit {
+        NotificationCenter.default.removeObserver(self)
         stop()
     }
     
@@ -223,7 +228,7 @@ internal class MXCoreDataRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
         }
         
         let fetchLimit = fetchedResultsController.fetchRequest.fetchLimit
-        let mapped: [MXRoomSummary]
+        var mapped: [MXRoomSummary]
         
         if fetchLimit > 0 && summaries.count > fetchLimit {
             data = nil
@@ -231,12 +236,30 @@ internal class MXCoreDataRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
         } else {
             mapped = mapSummaries(summaries)
         }
+        let serverOrder = session?.slidingSyncRoomOrder ?? []
+        if !serverOrder.isEmpty {
+            let rank = Dictionary(uniqueKeysWithValues: serverOrder.enumerated().map { ($1, $0) })
+            mapped.sort {
+                let lhs = rank[$0.roomId] ?? Int.max
+                let rhs = rank[$1.roomId] ?? Int.max
+                if lhs != rhs { return lhs < rhs }
+                return ($0.lastMessage?.originServerTs ?? 0) > ($1.lastMessage?.originServerTs ?? 0)
+            }
+        }
         let counts = MXStoreRoomListDataCounts(withRooms: mapped,
                                                total: totalCounts)
         data = MXRoomListData(rooms: mapped,
                               counts: counts,
                               paginationOptions: fetchOptions.paginationOptions)
         fetchedResultsController.delegate = self
+    }
+
+    @objc
+    private func slidingSyncOrderUpdated(_ notification: Notification) {
+        // Sliding Sync fetches only hydrated summaries, so an unrestricted FRC is cheap for
+        // the initial window and is required to preserve server order across section filters.
+        fetchedResultsController.fetchRequest.fetchLimit = 0
+        performFetch()
     }
 
     /// The session cache is pre-warmed before room-list fetchers are created.

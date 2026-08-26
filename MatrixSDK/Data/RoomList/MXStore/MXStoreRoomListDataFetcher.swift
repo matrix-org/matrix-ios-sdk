@@ -38,15 +38,18 @@ internal class MXStoreRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
     }
     internal let fetchOptions: MXRoomListDataFetchOptions
     private let store: MXRoomSummaryStore
+    private weak var session: MXSession?
     
     private let multicastDelegate: MXMulticastDelegate<MXRoomListDataFetcherDelegate> = MXMulticastDelegate()
     private var roomSummaries: [String: MXRoomSummaryProtocol] = [:]
     private let executionQueue: DispatchQueue = DispatchQueue(label: "MXStoreRoomListDataFetcherQueue-" + MXTools.generateSecret())
     
     internal init(fetchOptions: MXRoomListDataFetchOptions,
-                  store: MXRoomSummaryStore) {
+                  store: MXRoomSummaryStore,
+                  session: MXSession? = nil) {
         self.fetchOptions = fetchOptions
         self.store = store
+        self.session = session
         super.init()
         self.fetchOptions.fetcher = self
         addDataObservers()
@@ -154,7 +157,19 @@ internal class MXStoreRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
     private func computeData(upto numberOfItems: Int) -> MXRoomListData {
         var rooms = Array(roomSummaries.values)
         rooms = filterRooms(rooms)
-        rooms = sortRooms(rooms)
+        let serverOrder = session?.slidingSyncRoomOrder ?? []
+        if serverOrder.isEmpty {
+            rooms = sortRooms(rooms)
+        } else {
+            let rank = Dictionary(uniqueKeysWithValues: serverOrder.enumerated().map { ($1, $0) })
+            // Section filters still apply, but never destroy the authoritative server order.
+            rooms.sort {
+                let lhs = rank[$0.roomId] ?? Int.max
+                let rhs = rank[$1.roomId] ?? Int.max
+                if lhs != rhs { return lhs < rhs }
+                return ($0.lastMessage?.originServerTs ?? 0) > ($1.lastMessage?.originServerTs ?? 0)
+            }
+        }
         
         var total: MXRoomListDataCounts?
         
@@ -193,6 +208,10 @@ internal class MXStoreRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
                                                selector: #selector(directRoomsUpdated(_:)),
                                                name: .mxSessionDirectRoomsDidChange,
                                                object: nil)
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(slidingSyncOrderUpdated(_:)),
+                                               name: Notification.Name(rawValue: "MXSessionSlidingSyncRoomOrderDidChangeNotification"),
+                                               object: session)
     }
     
     private func removeDataObservers() {
@@ -208,6 +227,9 @@ internal class MXStoreRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
         NotificationCenter.default.removeObserver(self,
                                                   name: .mxSessionDirectRoomsDidChange,
                                                   object: nil)
+        NotificationCenter.default.removeObserver(self,
+                                                  name: Notification.Name(rawValue: "MXSessionSlidingSyncRoomOrderDidChangeNotification"),
+                                                  object: session)
     }
     
     @objc
@@ -272,6 +294,14 @@ internal class MXStoreRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
                 //  ignore this change if we never computed data yet
                 return
             }
+            self.recomputeData(using: data)
+        }
+    }
+
+    @objc
+    private func slidingSyncOrderUpdated(_ notification: Notification) {
+        executionQueue.async { [weak self] in
+            guard let self = self, let data = self.data else { return }
             self.recomputeData(using: data)
         }
     }

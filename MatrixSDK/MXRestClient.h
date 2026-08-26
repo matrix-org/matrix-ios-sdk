@@ -50,6 +50,7 @@
 @class MXThirdpartyProtocolsResponse;
 @class MXThirdPartyUsersResponse;
 @class MXSyncResponse;
+@class MXSlidingSyncResponse;
 @class MXDeviceListResponse;
 @class MXSpaceChildrenRequestParameters;
 @class MXCapabilities;
@@ -2148,6 +2149,11 @@ NS_REFINED_FOR_SWIFT;
                             filter:(NSString*)filterId
                            success:(void (^)(MXSyncResponse *syncResponse))success
                            failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
+/** POST a Simplified Sliding Sync (MSC4186) request. */
+- (MXHTTPOperation *)slidingSyncWithRequest:(NSDictionary<NSString *, id> *)request
+                                    success:(void (^)(MXSlidingSyncResponse *syncResponse))success
+                                    failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 
 #pragma mark - Directory operations

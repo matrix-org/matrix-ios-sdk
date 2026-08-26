@@ -352,6 +352,8 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
 @class MXEventStreamService;
 @class MXLocationService;
 @class MXSessionStartupProgress;
+@class MXSlidingSyncConfiguration;
+@class MXSlidingSyncRoomListState;
 
 #pragma mark - MXSession
 /**
@@ -412,6 +414,18 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
  The flag indicating whether the initial sync has been done.
  */
 @property (nonatomic, readonly) BOOL isEventStreamInitialised;
+
+/** YES once the first usable room-list snapshot has been produced. */
+@property (nonatomic, readonly) BOOL roomListReady;
+
+/** Sliding Sync room-list hydration progress. Nil while using legacy /sync. */
+@property (nonatomic, readonly, nullable) MXSlidingSyncRoomListState *roomListState;
+
+/** Loaded room ids in server order. Empty while Sliding Sync is disabled. */
+@property (atomic, copy, readonly) NSArray<NSString *> *slidingSyncRoomOrder;
+
+/** YES while aggregate unread totals cover only the hydrated rooms. */
+@property (nonatomic, readonly) BOOL roomListTotalsArePartial;
 
 /**
  The flag indicating that we are trying to establish the event streams (/sync)
@@ -563,6 +577,17 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
  */
 - (void)start:(void (^)(void))onServerSyncDone
       failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
+/** Start using Tuwunel Simplified Sliding Sync, with automatic /sync fallback. */
+- (void)startWithSlidingSyncConfiguration:(MXSlidingSyncConfiguration *)configuration
+                            roomListReady:(nullable void (^)(void))roomListReady
+                         onServerSyncDone:(nullable void (^)(void))onServerSyncDone
+                                  failure:(nullable void (^)(NSError *error))failure;
+
+/** Subscribe and load a room that may be outside the current list window. */
+- (void)loadOrSubscribeRoomWithRoomId:(NSString *)roomId
+                              success:(nullable void (^)(MXRoom *room))success
+                              failure:(nullable void (^)(NSError *error))failure;
 
 /**
  Start the session like `[MXSession start]` but with using a filter in /sync requests.
