@@ -311,6 +311,21 @@ NS_REFINED_FOR_SWIFT;
                                     failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
+ Applies an already-known `/versions` answer to this client.
+
+ `isUsingAuthenticatedMedia` is otherwise assigned in exactly one place — the
+ success block of the request above. `MXSession.supportedMatrixVersions`
+ answers from its store on every launch after the first and never reaches this
+ client, so the flag stayed NO and `MXMediaManager` built every mxc URL on the
+ legacy `/_matrix/media/r0` path. Homeservers that have dropped those routes
+ (Tuwunel) answer 404, which is why avatars loaded once on a fresh install and
+ disappeared on every launch after it.
+
+ @param matrixVersions the versions the server reported, from any source.
+ */
+- (void)applySupportedMatrixVersions:(MXMatrixVersions *)matrixVersions;
+
+/**
  Get the wellknwon data of the homeserver.
 
  @param success A block object called when the operation succeeds. It provides

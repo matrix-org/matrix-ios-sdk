@@ -4776,6 +4776,15 @@ typedef void (^MXOnResumeDone)(void);
     MXMatrixVersions *supportedVersionsInStore = self.store.supportedMatrixVersions;
     if (supportedVersionsInStore)
     {
+        // The stored answer is the server's answer, so it must configure the
+        // client exactly as a fresh request would. Without this the REST
+        // client's isUsingAuthenticatedMedia stayed NO on every launch after
+        // the first — the request that assigns it is the one we just skipped —
+        // and every mxc resolved to the legacy media path, which our
+        // homeserver answers 404. Avatars therefore worked on a fresh install
+        // and vanished on the next launch.
+        [matrixRestClient applySupportedMatrixVersions:supportedVersionsInStore];
+
         if (success)
         {
             dispatch_async(dispatch_get_main_queue(), ^{

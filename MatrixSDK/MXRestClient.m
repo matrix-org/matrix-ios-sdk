@@ -512,6 +512,11 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
 
 #pragma mark - Server administration
 
+- (void)applySupportedMatrixVersions:(MXMatrixVersions *)matrixVersions
+{
+    isUsingAuthenticatedMedia = matrixVersions.supportsAuthenticatedMedia;
+}
+
 - (MXHTTPOperation*)supportedMatrixVersions:(void (^)(MXMatrixVersions *matrixVersions))success
                         failure:(void (^)(NSError *error))failure
 {
