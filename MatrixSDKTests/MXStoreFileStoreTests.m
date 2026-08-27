@@ -28,6 +28,10 @@
 - (MXRoomAccountData *)loadAccountDataFromFileForRoom:(NSString *)roomId;
 @end
 
+@interface MXFileStore (CommitTesting)
+- (void)saveDataToFiles;
+@end
+
 @interface MXRetentionTestFileStore : MXFileStore
 @property (nonatomic, copy) void (^nextMessagesFileAccessHook)(NSString *roomId);
 - (void)unloadRoomForTesting:(NSString *)roomId;
@@ -38,6 +42,18 @@
 @interface MXAccountDataTestFileStore : MXFileStore
 @property (atomic) NSUInteger accountDataFileLoadCount;
 @property (atomic) BOOL loadedAccountDataOnMainThread;
+@end
+
+@interface MXCommitCompletionTestFileStore : MXFileStore
+@property (atomic) NSUInteger completedSavePassCount;
+@end
+
+@implementation MXCommitCompletionTestFileStore
+- (void)saveDataToFiles
+{
+    [super saveDataToFiles];
+    self.completedSavePassCount += 1;
+}
 @end
 
 @implementation MXAccountDataTestFileStore
@@ -247,6 +263,54 @@
 
 
 #pragma mark - MXFileStore specific tests
+- (void)testRapidCommitsCompleteEveryCallerOnceOnMainQueue
+{
+    XCTestExpectation *first = [self expectationWithDescription:@"first commit completion"];
+    XCTestExpectation *second = [self expectationWithDescription:@"second commit completion"];
+    XCTestExpectation *third = [self expectationWithDescription:@"merged commit completion"];
+    NSString *suffix = NSUUID.UUID.UUIDString;
+    MXCredentials *credentials = [[MXCredentials alloc] initWithHomeServer:@"https://example.org"
+                                                                    userId:[@"@commit-" stringByAppendingString:suffix]
+                                                               accessToken:@"token"];
+    MXCommitCompletionTestFileStore *store = [MXCommitCompletionTestFileStore new];
+    __block NSUInteger completionCount = 0;
+
+    [store openWithCredentials:credentials onComplete:^{
+        store.eventStreamToken = @"first";
+        [store commitWithCompletion:^{
+            XCTAssertTrue(NSThread.isMainThread);
+            XCTAssertGreaterThanOrEqual(store.completedSavePassCount, 1u);
+            completionCount += 1;
+            [first fulfill];
+        }];
+
+        store.eventStreamToken = @"second";
+        [store commitWithCompletion:^{
+            XCTAssertTrue(NSThread.isMainThread);
+            XCTAssertGreaterThanOrEqual(store.completedSavePassCount, 2u);
+            completionCount += 1;
+            [second fulfill];
+        }];
+
+        store.eventStreamToken = @"third";
+        [store commitWithCompletion:^{
+            XCTAssertTrue(NSThread.isMainThread);
+            XCTAssertGreaterThanOrEqual(store.completedSavePassCount, 2u);
+            completionCount += 1;
+            [third fulfill];
+        }];
+    } failure:^(NSError *error) {
+        XCTFail(@"Cannot open commit test store: %@", error);
+        [first fulfill];
+        [second fulfill];
+        [third fulfill];
+    }];
+
+    [self waitForExpectationsWithTimeout:10 handler:nil];
+    XCTAssertEqual(completionCount, 3u);
+    [store deleteAllData];
+}
+
 - (void)testRoomAccountDataPreloadCachesExistingMissingAndCorruptFiles
 {
     XCTestExpectation *done = [self expectationWithDescription:@"account data preload"];
