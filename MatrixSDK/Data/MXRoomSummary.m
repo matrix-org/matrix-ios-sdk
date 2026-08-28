@@ -392,7 +392,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     }
     
     // Make sure we can still paginate
-    if (![timeline canPaginate:MXTimelineDirectionBackwards])
+    if (![timeline canPaginate:MXTimelineDirectionBackwards] && maxServerPaginationCount == 0)
     {
         onComplete();
         return operation;
@@ -437,6 +437,11 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     }
     else if (maxServerPaginationCount)
     {
+        // A room restored from a short Sliding Sync timeline may carry an end
+        // marker even though this explicit repair pass has never verified the
+        // server history. Permit this one bounded request. An empty response
+        // restores the marker in MXRoomEventTimeline.
+        [self.mxSession.store storeHasReachedHomeServerPaginationEndForRoom:self.roomId andValue:NO];
         // If requested, get messages from the homeserver
         // Fetch them by batch of 50 messages
         NSUInteger paginationCount = MIN(maxServerPaginationCount, MXRoomSummaryPaginationChunkSize);

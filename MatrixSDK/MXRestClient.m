@@ -25,6 +25,7 @@
 #import "MXTools.h"
 #import "MXError.h"
 #import "MXEvent.h"
+#import "SlidingSync/MXSlidingSync.h"
 
 #import "MXAllowedCertificates.h"
 
@@ -2894,7 +2895,7 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
 }
 
 - (MXHTTPOperation*)messagesForRoom:(NSString*)roomId
-                               from:(NSString*)from
+                               from:(NSString * _Nullable)from
                           direction:(MXTimelineDirection)direction
                               limit:(NSInteger)limit
                              filter:(MXRoomEventFilter*)roomEventFilter
@@ -2906,7 +2907,10 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
     // All query parameters are optional. Fill the request parameters on demand
     NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
 
-    parameters[@"from"] = from;
+    if (from)
+    {
+        parameters[@"from"] = from;
+    }
 
     if (direction == MXTimelineDirectionForwards)
     {
@@ -4129,6 +4133,42 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
 
 
 #pragma mark - Sync
+
+- (MXHTTPOperation *)slidingSyncWithRequest:(NSDictionary<NSString *,id> *)request
+                                    success:(void (^)(MXSlidingSyncResponse *))success
+                                    failure:(void (^)(NSError *))failure
+{
+    NSMutableDictionary *body = request.mutableCopy;
+    NSMutableArray<NSString *> *query = [NSMutableArray array];
+    NSString *position = body[@"pos"];
+    NSNumber *timeout = body[@"timeout"];
+    NSString *presence = body[@"set_presence"];
+    [body removeObjectsForKeys:@[@"pos", @"timeout", @"set_presence"]];
+    if (position.length) [query addObject:[NSString stringWithFormat:@"pos=%@", [MXTools encodeURIComponent:position]]];
+    if (timeout) [query addObject:[NSString stringWithFormat:@"timeout=%@", timeout]];
+    if (presence.length) [query addObject:[NSString stringWithFormat:@"set_presence=%@", [MXTools encodeURIComponent:presence]]];
+    NSString *path = @"_matrix/client/unstable/org.matrix.simplified_msc3575/sync";
+    if (query.count) path = [path stringByAppendingFormat:@"?%@", [query componentsJoinedByString:@"&"]];
+
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"POST"
+                                    path:path
+                              parameters:body
+                                 success:^(NSDictionary *JSONResponse) {
+        MXStrongifyAndReturnIfNil(self);
+        if (!success) return;
+        __block MXSlidingSyncResponse *response;
+        [self dispatchProcessing:^{
+            response = [MXSlidingSyncResponse modelFromJSON:JSONResponse];
+        } andCompletion:^{
+            success(response);
+        }];
+    } failure:^(NSError *error) {
+        MXStrongifyAndReturnIfNil(self);
+        [self dispatchFailure:error inBlock:failure];
+    }];
+}
+
 - (MXHTTPOperation *)syncFromToken:(NSString*)token
                      serverTimeout:(NSUInteger)serverTimeout
                      clientTimeout:(NSUInteger)clientTimeout

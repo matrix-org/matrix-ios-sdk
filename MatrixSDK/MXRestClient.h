@@ -50,6 +50,7 @@
 @class MXThirdpartyProtocolsResponse;
 @class MXThirdPartyUsersResponse;
 @class MXSyncResponse;
+@class MXSlidingSyncResponse;
 @class MXDeviceListResponse;
 @class MXSpaceChildrenRequestParameters;
 @class MXCapabilities;
@@ -1478,7 +1479,7 @@ NS_REFINED_FOR_SWIFT;
  Get a list of messages for this room.
 
  @param roomId the id of the room.
- @param from the token to start getting results from.
+ @param from the token to start getting results from. Nil starts from the current end.
  @param direction `MXTimelineDirectionForwards` or `MXTimelineDirectionBackwards`
  @param limit (optional, use -1 to not defined this value) the maximum number of messages to return.
  @param roomEventFilter the filter to pass in the request. Can be nil.
@@ -1489,7 +1490,7 @@ NS_REFINED_FOR_SWIFT;
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)messagesForRoom:(NSString*)roomId
-                               from:(NSString*)from
+                               from:(nullable NSString*)from
                           direction:(MXTimelineDirection)direction
                               limit:(NSInteger)limit
                              filter:(MXRoomEventFilter*)roomEventFilter
@@ -2148,6 +2149,11 @@ NS_REFINED_FOR_SWIFT;
                             filter:(NSString*)filterId
                            success:(void (^)(MXSyncResponse *syncResponse))success
                            failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
+/** POST a Simplified Sliding Sync (MSC4186) request. */
+- (MXHTTPOperation *)slidingSyncWithRequest:(NSDictionary<NSString *, id> *)request
+                                    success:(void (^)(MXSlidingSyncResponse *syncResponse))success
+                                    failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 
 #pragma mark - Directory operations

@@ -254,7 +254,7 @@
 - (id<MXEventsEnumerator>)messagesEnumeratorForRoom:(NSString *)roomId
 {
     // As the back pagination is based on the HS back pagination API, reset data about it
-    [self storePaginationTokenOfRoom:roomId andToken:@"END"];
+    [paginationTokens removeObjectForKey:roomId];
     [self storeHasReachedHomeServerPaginationEndForRoom:roomId andValue:NO];
 
     // [MXStore messagesEnumeratorForRoom:] is used for pagination but the goal

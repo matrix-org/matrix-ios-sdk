@@ -298,7 +298,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
             
             remainingNumItems -= eventsFromStoreCount;
                 
-            if (onlyFromStore && eventsFromStoreCount)
+            if (onlyFromStore)
             {
                 dispatch_async(dispatch_get_main_queue(), ^{
                     MXLogDebug(@"[MXRoomEventTimeline] paginate : is done from the store");
@@ -339,10 +339,6 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         if (direction == MXTimelineDirectionBackwards)
         {
             paginationToken = [self->store paginationTokenOfRoom:self.state.roomId];
-            if (nil == paginationToken)
-            {
-                paginationToken = @"END";
-            }
         }
         else
         {

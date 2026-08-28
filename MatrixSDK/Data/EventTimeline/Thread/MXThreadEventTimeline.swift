@@ -230,7 +230,7 @@ public class MXThreadEventTimeline: NSObject, MXEventTimeline {
                 
                 remainingNumItems -= eventsFromStoreCount
                 
-                if onlyFromStore && eventsFromStoreCount > 0 {
+                if onlyFromStore {
                     DispatchQueue.main.async {
                         // Nothing more to do
                         MXLog.debug("[MXThreadEventTimeline][\(self.timelineId)] paginate: is done from the store")

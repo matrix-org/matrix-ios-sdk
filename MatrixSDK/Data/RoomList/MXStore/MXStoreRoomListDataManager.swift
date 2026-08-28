@@ -41,6 +41,7 @@ public class MXStoreRoomListDataManager: NSObject, MXRoomListDataManager {
             fatalError("[MXStoreRoomListDataManager] Session has no store")
         }
         return MXStoreRoomListDataFetcher(fetchOptions: options,
-                                          store: store.roomSummaryStore)
+                                          store: store.roomSummaryStore,
+                                          session: session)
     }
 }

@@ -21,6 +21,7 @@
 #import "MatrixSDK.h"
 
 #import <AFNetworking/AFNetworking.h>
+#import <os/signpost.h>
 
 #import "MXSessionEventListener.h"
 
@@ -221,6 +222,23 @@ typedef void (^MXOnResumeDone)(void);
 
 @property (nonatomic, strong) MXSessionStartupProgress *startupProgress;
 
+@property (nonatomic, readwrite) BOOL roomListReady;
+@property (nonatomic, strong, readwrite) MXSlidingSyncRoomListState *roomListState;
+@property (atomic, copy, readwrite) NSArray<NSString *> *slidingSyncRoomOrder;
+@property (nonatomic, strong) MXSlidingSyncConfiguration *slidingSyncConfiguration;
+@property (nonatomic, copy) NSString *slidingSyncPosition;
+@property (nonatomic, copy) NSString *slidingSyncConnectionId;
+@property (nonatomic, copy) NSString *slidingSyncToDevicePosition;
+@property (nonatomic) NSUInteger slidingSyncRangeEnd;
+@property (nonatomic) NSUInteger slidingSyncTotalRoomCount;
+@property (nonatomic, strong) NSMutableArray *slidingSyncOrderedSlots;
+@property (nonatomic, strong) NSMutableDictionary<NSString *, NSNumber *> *slidingSyncBumpStamps;
+@property (nonatomic, strong) NSMutableSet<NSString *> *slidingSyncSubscriptions;
+@property (nonatomic, strong) NSMutableDictionary<NSString *, void (^)(MXRoom *)> *slidingSyncSubscriptionSuccesses;
+@property (nonatomic, strong) NSMutableDictionary<NSString *, void (^)(NSError *)> *slidingSyncSubscriptionFailures;
+@property (nonatomic, copy) void (^slidingSyncRoomListReadyCallback)(void);
+@property (nonatomic) BOOL slidingSyncDidFallback;
+
 @end
 
 @implementation MXSession
@@ -266,6 +284,12 @@ typedef void (^MXOnResumeDone)(void);
         [self setIdentityServer:mxRestClient.identityServer andAccessToken:mxRestClient.credentials.identityServerAccessToken];
         
         firstSyncDone = NO;
+        _slidingSyncRoomOrder = @[];
+        _slidingSyncOrderedSlots = [NSMutableArray array];
+        _slidingSyncBumpStamps = [NSMutableDictionary dictionary];
+        _slidingSyncSubscriptions = [NSMutableSet set];
+        _slidingSyncSubscriptionSuccesses = [NSMutableDictionary dictionary];
+        _slidingSyncSubscriptionFailures = [NSMutableDictionary dictionary];
 
         _acknowledgableEventTypes = @[kMXEventTypeStringRoomName,
                                       kMXEventTypeStringRoomTopic,
@@ -603,6 +627,7 @@ typedef void (^MXOnResumeDone)(void);
                   progress:(void (^)(CGFloat))progress
                 completion:(void (^)(void))completion
            storeCompletion:(void (^)(void))storeCompletion
+    updateEventStreamToken:(BOOL)updateEventStreamToken
 {
     MXLogDebug(@"[MXSession] handleSyncResponse: Received %tu joined rooms, %tu invited rooms, %tu left rooms, %tu toDevice events.", syncResponse.rooms.join.count, syncResponse.rooms.invite.count, syncResponse.rooms.leave.count, syncResponse.toDevice.events.count);
     
@@ -651,7 +676,10 @@ typedef void (^MXOnResumeDone)(void);
                         // Make sure the last message has been decrypted
                         // In case of an initial sync, we save decryptions to save time. Only unread messages are decrypted.
                         // We need to decrypt already read last message.
-                        if (isInitialSync && room.summary.lastMessage.isEncrypted)
+                        // Sliding Sync must not block the first room-list snapshot on
+                        // a network fetch/decryption for every encrypted preview. The
+                        // visible row and the opened room repair it on demand instead.
+                        if (isInitialSync && !self.slidingSyncConfiguration && room.summary.lastMessage.isEncrypted)
                         {
                             [self eventWithEventId:room.summary.lastMessage.eventId
                                             inRoom:room.roomId
@@ -815,8 +843,16 @@ typedef void (^MXOnResumeDone)(void);
         dispatch_group_notify(dispatchGroup, dispatch_get_main_queue(), ^{
 
             // Update live event stream token
-            MXLogDebug(@"[MXSession] Next sync token: %@", syncResponse.nextBatch);
-            self.store.eventStreamToken = syncResponse.nextBatch;
+            if (updateEventStreamToken)
+            {
+                MXLogDebug(@"[MXSession] Next sync token: %@", syncResponse.nextBatch);
+                self.store.eventStreamToken = syncResponse.nextBatch;
+                if (!self.roomListReady)
+                {
+                    self.roomListReady = YES;
+                    [[NSNotificationCenter defaultCenter] postNotificationName:MXSessionRoomListStateDidChangeNotification object:self];
+                }
+            }
             
             // Propagate sync response to the associated space service
             [self.spaceService handleSyncResponse:syncResponse];
@@ -842,6 +878,10 @@ typedef void (^MXOnResumeDone)(void);
             if ([self.store respondsToSelector:@selector(commitWithCompletion:)])
             {
                 [self.store commitWithCompletion:storeCompletion];
+            }
+            else if (storeCompletion)
+            {
+                storeCompletion();
             }
         });
     }];
@@ -880,6 +920,113 @@ typedef void (^MXOnResumeDone)(void);
       failure:(void (^)(NSError *error))failure
 {
     [self startWithSyncFilter:nil onServerSyncDone:onServerSyncDone failure:failure];
+}
+
+- (NSString *)slidingSyncPersistenceKey
+{
+    NSString *identity = [NSString stringWithFormat:@"%@|%@|%@",
+                          self.credentials.homeServer ?: @"",
+                          self.credentials.userId ?: @"",
+                          self.credentials.deviceId ?: @""];
+    return [@"MXSlidingSync." stringByAppendingString:identity];
+}
+
+- (void)persistSlidingSyncState
+{
+    if (!self.slidingSyncPosition.length) return;
+    NSDictionary *state = @{
+        @"position": self.slidingSyncPosition,
+        @"connectionId": self.slidingSyncConnectionId ?: @"",
+        @"toDevicePosition": self.slidingSyncToDevicePosition ?: @"",
+        @"roomOrder": self.slidingSyncRoomOrder ?: @[],
+        @"bumpStamps": self.slidingSyncBumpStamps ?: @{},
+        @"total": @(self.slidingSyncTotalRoomCount)
+    };
+    [NSUserDefaults.standardUserDefaults setObject:state forKey:self.slidingSyncPersistenceKey];
+}
+
+- (NSString *)newSlidingSyncConnectionId
+{
+    NSString *compactUUID = [NSUUID.UUID.UUIDString stringByReplacingOccurrencesOfString:@"-" withString:@""];
+    return [compactUUID substringToIndex:MIN((NSUInteger)16, compactUUID.length)];
+}
+
+- (void)startWithSlidingSyncConfiguration:(MXSlidingSyncConfiguration *)configuration
+                            roomListReady:(void (^)(void))roomListReady
+                         onServerSyncDone:(void (^)(void))onServerSyncDone
+                                  failure:(void (^)(NSError *))failure
+{
+    NSParameterAssert(configuration);
+    self.slidingSyncConfiguration = configuration.copy;
+    self.slidingSyncRoomListReadyCallback = roomListReady;
+    self.slidingSyncDidFallback = NO;
+    self->_syncWithLazyLoadOfRoomMembers = configuration.lazyLoadMembers;
+
+    NSDictionary *persisted = [NSUserDefaults.standardUserDefaults dictionaryForKey:self.slidingSyncPersistenceKey];
+    if (persisted && self.store.roomSummaryStore.countOfRooms == 0)
+    {
+        // A cache clear must not resurrect a stale server position/order from
+        // the independent Sliding Sync metadata store.
+        [NSUserDefaults.standardUserDefaults removeObjectForKey:self.slidingSyncPersistenceKey];
+        persisted = nil;
+    }
+    self.slidingSyncPosition = persisted[@"position"];
+    self.slidingSyncConnectionId = persisted[@"connectionId"];
+    self.slidingSyncToDevicePosition = persisted[@"toDevicePosition"];
+    if (self.slidingSyncToDevicePosition.length)
+    {
+        NSMutableDictionary *extensions = self.slidingSyncConfiguration.extensions.mutableCopy;
+        NSMutableDictionary *toDevice = [extensions[@"to_device"] mutableCopy] ?: [NSMutableDictionary dictionary];
+        toDevice[@"since"] = self.slidingSyncToDevicePosition;
+        extensions[@"to_device"] = toDevice;
+        self.slidingSyncConfiguration.extensions = extensions;
+    }
+    if (!self.slidingSyncConnectionId.length) self.slidingSyncConnectionId = [self newSlidingSyncConnectionId];
+    NSArray *persistedOrder = persisted[@"roomOrder"];
+    if ([persistedOrder isKindOfClass:NSArray.class])
+    {
+        self.slidingSyncRoomOrder = persistedOrder;
+        self.slidingSyncOrderedSlots = persistedOrder.mutableCopy;
+    }
+    self.slidingSyncTotalRoomCount = [persisted[@"total"] unsignedIntegerValue];
+    NSDictionary *persistedBumpStamps = persisted[@"bumpStamps"];
+    if ([persistedBumpStamps isKindOfClass:NSDictionary.class]) self.slidingSyncBumpStamps = persistedBumpStamps.mutableCopy;
+    NSUInteger initialSize = MAX(configuration.initialWindowSize, 1);
+    self.slidingSyncRangeEnd = MAX(initialSize, self.slidingSyncRoomOrder.count) - 1;
+    self.roomListReady = self.slidingSyncRoomOrder.count > 0;
+    MXSlidingSyncRoomListPhase phase = self.roomListReady ? MXSlidingSyncRoomListPhaseReady : MXSlidingSyncRoomListPhaseLoadingInitialWindow;
+    self.roomListState = [MXSlidingSyncRoomListState stateWithPhase:phase
+                                                            loaded:self.slidingSyncRoomOrder.count
+                                                             total:self.slidingSyncTotalRoomCount];
+    os_log_t log = os_log_create("org.matrix.sdk", "SlidingSyncStartup");
+    os_signpost_event_emit(log, OS_SIGNPOST_ID_EXCLUSIVE, "authorization_success");
+    [self startWithSyncFilterId:nil
+               onServerSyncDone:onServerSyncDone ?: ^{}
+                        failure:failure ?: ^(NSError *error) {}];
+}
+
+- (void)loadOrSubscribeRoomWithRoomId:(NSString *)roomId
+                              success:(void (^)(MXRoom *))success
+                              failure:(void (^)(NSError *))failure
+{
+    MXRoom *room = [self roomWithRoomId:roomId];
+    if (room && [self.slidingSyncRoomOrder containsObject:roomId])
+    {
+        if (success) success(room);
+        return;
+    }
+    if (!self.slidingSyncConfiguration)
+    {
+        room = [self getOrCreateRoom:roomId notify:YES];
+        if (success) success(room);
+        return;
+    }
+    [self.slidingSyncSubscriptions addObject:roomId];
+    if (success) self.slidingSyncSubscriptionSuccesses[roomId] = [success copy];
+    if (failure) self.slidingSyncSubscriptionFailures[roomId] = [failure copy];
+    [eventStreamRequest cancel];
+    eventStreamRequest = nil;
+    [self serverSyncWithServerTimeout:0 success:nil failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:self.preferredSyncPresenceString];
 }
 
 - (void)startWithSyncFilter:(MXFilterJSONModel*)syncFilter
@@ -1414,7 +1561,12 @@ typedef void (^MXOnResumeDone)(void);
 
 - (BOOL)isEventStreamInitialised
 {
-    return (self.store.eventStreamToken != nil);
+    return (self.store.eventStreamToken != nil || self.slidingSyncPosition.length > 0);
+}
+
+- (BOOL)roomListTotalsArePartial
+{
+    return self.roomListState != nil && self.roomListState.phase != MXSlidingSyncRoomListPhaseComplete;
 }
 
 #pragma mark - MXSession pause prevention
@@ -1474,12 +1626,251 @@ typedef void (^MXOnResumeDone)(void);
 
 #pragma mark - Server sync
 
+- (void)applySlidingSyncList:(MXSlidingSyncList *)list rooms:(NSDictionary<NSString *, NSDictionary *> *)responseRooms
+{
+    self.slidingSyncTotalRoomCount = list.count;
+    while (self.slidingSyncOrderedSlots.count < list.count) [self.slidingSyncOrderedSlots addObject:NSNull.null];
+    if (self.slidingSyncOrderedSlots.count > list.count)
+        [self.slidingSyncOrderedSlots removeObjectsInRange:NSMakeRange(list.count, self.slidingSyncOrderedSlots.count - list.count)];
+
+    for (MXSlidingSyncListOperation *operation in list.operations)
+    {
+        NSString *op = operation.operation.uppercaseString;
+        if ([op isEqualToString:@"SYNC"] && operation.range.count == 2)
+        {
+            NSUInteger start = operation.range[0].unsignedIntegerValue;
+            [operation.roomIds enumerateObjectsUsingBlock:^(NSString *roomId, NSUInteger index, BOOL *stop) {
+                NSUInteger target = start + index;
+                if (target < self.slidingSyncOrderedSlots.count) self.slidingSyncOrderedSlots[target] = roomId;
+            }];
+        }
+        else if ([op isEqualToString:@"INSERT"] && operation.index)
+        {
+            NSUInteger index = MIN(operation.index.unsignedIntegerValue, self.slidingSyncOrderedSlots.count);
+            if (operation.roomId) [self.slidingSyncOrderedSlots insertObject:operation.roomId atIndex:index];
+            if (self.slidingSyncOrderedSlots.count > list.count) [self.slidingSyncOrderedSlots removeLastObject];
+        }
+        else if ([op isEqualToString:@"DELETE"] && operation.index)
+        {
+            NSUInteger index = operation.index.unsignedIntegerValue;
+            if (index < self.slidingSyncOrderedSlots.count) [self.slidingSyncOrderedSlots removeObjectAtIndex:index];
+            if (self.slidingSyncOrderedSlots.count < list.count) [self.slidingSyncOrderedSlots addObject:NSNull.null];
+        }
+        else if ([op isEqualToString:@"MOVE"] && operation.fromIndex && operation.toIndex)
+        {
+            NSUInteger from = operation.fromIndex.unsignedIntegerValue;
+            NSUInteger to = operation.toIndex.unsignedIntegerValue;
+            if (from < self.slidingSyncOrderedSlots.count && to < self.slidingSyncOrderedSlots.count)
+            {
+                id roomId = self.slidingSyncOrderedSlots[from];
+                [self.slidingSyncOrderedSlots removeObjectAtIndex:from];
+                [self.slidingSyncOrderedSlots insertObject:roomId atIndex:to];
+            }
+        }
+        else if ([op isEqualToString:@"INVALIDATE"] && operation.range.count == 2)
+        {
+            NSUInteger start = operation.range[0].unsignedIntegerValue;
+            NSUInteger end = MIN(operation.range[1].unsignedIntegerValue, self.slidingSyncOrderedSlots.count ? self.slidingSyncOrderedSlots.count - 1 : 0);
+            if (start < self.slidingSyncOrderedSlots.count && start <= end)
+                for (NSUInteger index = start; index <= end; index++) self.slidingSyncOrderedSlots[index] = NSNull.null;
+        }
+    }
+
+    // Simplified Sliding Sync replaces classic list ops with per-room bump stamps.
+    // They are monotonic and therefore preserve the same authoritative recency ordering.
+    if (list.operations.count == 0)
+    {
+        [responseRooms enumerateKeysAndObjectsUsingBlock:^(NSString *roomId, NSDictionary *room, BOOL *stop) {
+            NSNumber *stamp = room[@"bump_stamp"];
+            if (stamp) self.slidingSyncBumpStamps[roomId] = stamp;
+        }];
+        NSArray<NSString *> *ranked = [self.slidingSyncBumpStamps keysSortedByValueUsingComparator:^NSComparisonResult(NSNumber *lhs, NSNumber *rhs) {
+            return [rhs compare:lhs];
+        }];
+        self.slidingSyncOrderedSlots = ranked.mutableCopy;
+        while (self.slidingSyncOrderedSlots.count < list.count) [self.slidingSyncOrderedSlots addObject:NSNull.null];
+    }
+
+    NSMutableArray<NSString *> *order = [NSMutableArray array];
+    for (id value in self.slidingSyncOrderedSlots)
+        if ([value isKindOfClass:NSString.class] && ![order containsObject:value]) [order addObject:value];
+    self.slidingSyncRoomOrder = order;
+    [[NSNotificationCenter defaultCenter] postNotificationName:MXSessionSlidingSyncRoomOrderDidChangeNotification object:self];
+}
+
+- (void)updateSlidingSyncRoomListProgress
+{
+    NSUInteger loaded = self.slidingSyncRoomOrder.count;
+    BOOL initialReady = loaded >= MIN(self.slidingSyncConfiguration.initialWindowSize, self.slidingSyncTotalRoomCount);
+    if (!self.roomListReady && initialReady)
+    {
+        self.roomListReady = YES;
+        self.roomListState = [MXSlidingSyncRoomListState stateWithPhase:MXSlidingSyncRoomListPhaseReady loaded:loaded total:self.slidingSyncTotalRoomCount];
+        os_signpost_event_emit(os_log_create("org.matrix.sdk", "SlidingSyncStartup"), OS_SIGNPOST_ID_EXCLUSIVE, "first_room_list_snapshot");
+        void (^callback)(void) = self.slidingSyncRoomListReadyCallback;
+        self.slidingSyncRoomListReadyCallback = nil;
+        if (callback) callback();
+    }
+
+    MXSlidingSyncRoomListPhase phase;
+    if (loaded >= self.slidingSyncTotalRoomCount)
+        phase = MXSlidingSyncRoomListPhaseComplete;
+    else if (self.roomListReady)
+        phase = MXSlidingSyncRoomListPhaseHydrating;
+    else
+        phase = MXSlidingSyncRoomListPhaseLoadingInitialWindow;
+    self.roomListState = [MXSlidingSyncRoomListState stateWithPhase:phase loaded:loaded total:self.slidingSyncTotalRoomCount];
+    [[NSNotificationCenter defaultCenter] postNotificationName:MXSessionRoomListStateDidChangeNotification object:self];
+    if (phase == MXSlidingSyncRoomListPhaseComplete)
+        os_signpost_event_emit(os_log_create("org.matrix.sdk", "SlidingSyncStartup"), OS_SIGNPOST_ID_EXCLUSIVE, "background_hydration_complete");
+}
+
+- (BOOL)shouldFallbackFromSlidingSyncError:(NSError *)error
+{
+    MXError *matrixError = [[MXError alloc] initWithNSError:error];
+    if ([matrixError.errcode isEqualToString:@"M_UNKNOWN_POS"] || [matrixError.errcode isEqualToString:@"UnknownPos"]) return NO;
+    NSInteger status = matrixError.httpResponse.statusCode;
+    return status == 400 || status == 404 || status == 405 || status == 501
+        || [matrixError.errcode isEqualToString:@"M_UNRECOGNIZED"];
+}
+
+- (BOOL)isSlidingSyncUnknownPositionError:(NSError *)error
+{
+    MXError *matrixError = [[MXError alloc] initWithNSError:error];
+    return [matrixError.errcode isEqualToString:@"M_UNKNOWN_POS"] || [matrixError.errcode isEqualToString:@"UnknownPos"];
+}
+
+- (void)serverSlidingSyncWithServerTimeout:(NSUInteger)serverTimeout
+                                   success:(void (^)(void))success
+                                   failure:(void (^)(NSError *error))failure
+                               setPresence:(NSString *)setPresence
+{
+    NSArray *ranges = @[@[@0, @(self.slidingSyncRangeEnd)]];
+    NSDictionary *request = [self.slidingSyncConfiguration requestDictionaryWithPosition:self.slidingSyncPosition
+                                                                             connectionId:self.slidingSyncConnectionId
+                                                                                   ranges:ranges
+                                                                        roomSubscriptions:self.slidingSyncSubscriptions.allObjects
+                                                                                  timeout:serverTimeout
+                                                                              setPresence:setPresence];
+    NSDate *startedAt = NSDate.date;
+    MXWeakify(self);
+    eventStreamRequest = [matrixRestClient slidingSyncWithRequest:request success:^(MXSlidingSyncResponse *response) {
+        MXStrongifyAndReturnIfNil(self);
+        if (!self->eventStreamRequest) return;
+        os_log_t log = os_log_create("org.matrix.sdk", "SlidingSyncStartup");
+        os_signpost_event_emit(log, OS_SIGNPOST_ID_EXCLUSIVE, "first_response_received");
+        MXLogDebug(@"[MXSession][SlidingSync] response received in %.0fms at pos %@", [NSDate.date timeIntervalSinceDate:startedAt] * 1000, response.position);
+
+        MXSlidingSyncList *list = response.lists[self.slidingSyncConfiguration.listName];
+        MXSyncResponse *legacyResponse = [response legacySyncResponseForUserId:self.myUserId];
+        [self handleSyncResponse:legacyResponse progress:nil completion:^{
+            if (list) [self applySlidingSyncList:list rooms:response.rooms];
+            [self updateSlidingSyncRoomListProgress];
+            os_signpost_event_emit(log, OS_SIGNPOST_ID_EXCLUSIVE, "initial_rooms_processed");
+            for (NSString *roomId in response.rooms)
+            {
+                void (^subscriptionSuccess)(MXRoom *) = self.slidingSyncSubscriptionSuccesses[roomId];
+                if (subscriptionSuccess)
+                {
+                    MXRoom *room = [self roomWithRoomId:roomId];
+                    if (room) subscriptionSuccess(room);
+                    [self.slidingSyncSubscriptionSuccesses removeObjectForKey:roomId];
+                    [self.slidingSyncSubscriptionFailures removeObjectForKey:roomId];
+                }
+            }
+        } storeCompletion:^{
+            // The position is durable only after the room/timeline store commit succeeded.
+            self.slidingSyncPosition = response.position;
+            NSString *toDevicePosition = response.extensions[@"to_device"][@"next_batch"];
+            if (toDevicePosition.length)
+            {
+                self.slidingSyncToDevicePosition = toDevicePosition;
+                NSMutableDictionary *extensions = self.slidingSyncConfiguration.extensions.mutableCopy;
+                NSMutableDictionary *toDevice = [extensions[@"to_device"] mutableCopy] ?: [NSMutableDictionary dictionary];
+                toDevice[@"since"] = toDevicePosition;
+                extensions[@"to_device"] = toDevice;
+                self.slidingSyncConfiguration.extensions = extensions;
+            }
+            [self persistSlidingSyncState];
+
+            NSUInteger total = self.slidingSyncTotalRoomCount;
+            if (self.slidingSyncConfiguration.backgroundHydrationEnabled && self.roomListReady && self.slidingSyncRangeEnd + 1 < total)
+            {
+                NSUInteger expandedEnd = MAX(self.slidingSyncConfiguration.expandedWindowSize, 1) - 1;
+                if (self.slidingSyncRangeEnd < expandedEnd) self.slidingSyncRangeEnd = MIN(expandedEnd, total - 1);
+                else self.slidingSyncRangeEnd = MIN(self.slidingSyncRangeEnd + MAX(self.slidingSyncConfiguration.backgroundBatchSize, 1), total - 1);
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 100 * NSEC_PER_MSEC),
+                               dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), ^{
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        if (self->eventStreamRequest && self.state != MXSessionStatePaused)
+                            [self serverSlidingSyncWithServerTimeout:0 success:success failure:failure setPresence:setPresence];
+                    });
+                });
+                return;
+            }
+
+            if (self.state != MXSessionStatePauseRequested && self.state != MXSessionStatePaused)
+            {
+                [self setState:MXSessionStateRunning];
+                os_signpost_event_emit(log, OS_SIGNPOST_ID_EXCLUSIVE, "running");
+                [self serverSlidingSyncWithServerTimeout:SERVER_TIMEOUT_MS success:nil failure:nil setPresence:self.preferredSyncPresenceString];
+            }
+            if (success) success();
+        } updateEventStreamToken:NO];
+    } failure:^(NSError *error) {
+        MXStrongifyAndReturnIfNil(self);
+        if ([self isSlidingSyncUnknownPositionError:error])
+        {
+            MXLogWarning(@"[MXSession][SlidingSync] UnknownPos; starting a new connection without deleting summaries");
+            self.slidingSyncPosition = nil;
+            self.slidingSyncConnectionId = [self newSlidingSyncConnectionId];
+            [NSUserDefaults.standardUserDefaults removeObjectForKey:self.slidingSyncPersistenceKey];
+            [self serverSlidingSyncWithServerTimeout:0 success:success failure:failure setPresence:setPresence];
+        }
+        else if (!self.slidingSyncDidFallback && [self shouldFallbackFromSlidingSyncError:error])
+        {
+            self.slidingSyncDidFallback = YES;
+            MXLogWarning(@"[MXSession][SlidingSync] endpoint unavailable (%@); falling back to /sync", error);
+            MXFilterJSONModel *fallbackFilter = self.slidingSyncConfiguration.legacyFallbackSyncFilter;
+            self.slidingSyncConfiguration = nil;
+            self.roomListState = nil;
+            self.roomListReady = self.isEventStreamInitialised;
+            void (^startLegacySync)(void) = ^{
+                [self serverSyncWithServerTimeout:0 success:success failure:failure clientTimeout:CLIENT_TIMEOUT_MS setPresence:setPresence];
+            };
+            if (fallbackFilter)
+            {
+                [self setFilter:fallbackFilter success:^(NSString *filterId) {
+                    self.store.syncFilterId = filterId;
+                    startLegacySync();
+                } failure:^(NSError *filterError) {
+                    MXLogWarning(@"[MXSession][SlidingSync] fallback filter creation failed (%@); using unfiltered /sync", filterError);
+                    startLegacySync();
+                }];
+            }
+            else
+            {
+                startLegacySync();
+            }
+        }
+        else
+        {
+            [self handleServerSyncError:error forRequestWithServerTimeout:serverTimeout success:success failure:failure];
+        }
+    }];
+}
+
 - (void)serverSyncWithServerTimeout:(NSUInteger)serverTimeout
                             success:(void (^)(void))success
                             failure:(void (^)(NSError *error))failure
                       clientTimeout:(NSUInteger)clientTimeout
                         setPresence:(NSString*)setPresence
 {
+    if (self.slidingSyncConfiguration)
+    {
+        [self serverSlidingSyncWithServerTimeout:serverTimeout success:success failure:failure setPresence:setPresence];
+        return;
+    }
     // We only want to report sync progress when doing initial sync
     BOOL shoulReportStartupProgress = !self.isEventStreamInitialised;
     if (shoulReportStartupProgress)
@@ -1717,7 +2108,7 @@ typedef void (^MXOnResumeDone)(void);
         } storeCompletion:^{
             //  clear initial sync cache after handling sync response
             [self.initialSyncResponseCache deleteData];
-        }];
+        } updateEventStreamToken:YES];
     });
 }
 
@@ -2158,7 +2549,7 @@ typedef void (^MXOnResumeDone)(void);
                                 progress:nil
                               completion:^{
                     taskCompleted();
-                } storeCompletion:nil];
+                } storeCompletion:nil updateEventStreamToken:YES];
             }
             else
             {

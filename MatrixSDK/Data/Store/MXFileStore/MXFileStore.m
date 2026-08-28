@@ -114,6 +114,11 @@ static NSUInteger preloadOptions;
 
     // The number of commits being done
     NSUInteger pendingCommits;
+
+    // Completion blocks grouped by the commit pass that makes their data
+    // durable. Calls merged into the second pending pass append to its group
+    // instead of losing their completion.
+    NSMutableArray<NSMutableArray<void (^)(void)> *> *pendingCommitCompletions;
     
     NSDate *backgroundTaskStartDate;
 
@@ -956,15 +961,30 @@ static NSUInteger preloadOptions;
     // Save data only if metaData exists
     if (metaData)
     {
+        if (!pendingCommitCompletions)
+        {
+            pendingCommitCompletions = [NSMutableArray array];
+        }
+
         // If there are already 2 pending commits, if the data is not stored during the 1st commit operation,
         // we are sure that it will be done on the second pass.
         if (pendingCommits >= 2)
         {
             MXLogDebug(@"[MXFileStore commit] Ignore it. There are already pending commits");
+            if (completion)
+            {
+                [pendingCommitCompletions.lastObject addObject:[completion copy]];
+            }
             return;
         }
 
         pendingCommits++;
+        NSMutableArray<void (^)(void)> *completions = [NSMutableArray array];
+        if (completion)
+        {
+            [completions addObject:[completion copy]];
+        }
+        [pendingCommitCompletions addObject:completions];
 
         MXWeakify(self);
 
@@ -1007,6 +1027,11 @@ static NSUInteger preloadOptions;
                 MXLogDebug(@"[MXFileStore commit] lasted %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 
                 self->pendingCommits--;
+                NSArray<void (^)(void)> *completions = self->pendingCommitCompletions.firstObject.copy;
+                if (self->pendingCommitCompletions.count)
+                {
+                    [self->pendingCommitCompletions removeObjectAtIndex:0];
+                }
                 
                 if (self.commitBackgroundTask.isRunning && self->pendingCommits == 0)
                 {
@@ -1018,12 +1043,16 @@ static NSUInteger preloadOptions;
                     MXLogDebug(@"[MXFileStore commit] Background task %@ is kept - running since %.0fms", self.commitBackgroundTask, [[NSDate date] timeIntervalSinceDate:self->backgroundTaskStartDate] * 1000);
                 }
                 
-                if (completion)
+                for (void (^completion)(void) in completions)
                 {
                     completion();
                 }
             });
         });
+    }
+    else if (completion)
+    {
+        dispatch_async(dispatch_get_main_queue(), completion);
     }
 }
 
