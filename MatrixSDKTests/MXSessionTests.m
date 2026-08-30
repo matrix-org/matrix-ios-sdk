@@ -32,6 +32,7 @@
 @interface MXAsyncSummaryTestStore : MXMemoryRoomSummaryStore
 @property (nonatomic) BOOL fetchCalled;
 @property (nonatomic) NSUInteger synchronousFetchCount;
+@property (nonatomic) NSUInteger perRoomFetchCount;
 @property (nonatomic, copy) void (^pendingCompletion)(NSArray<id<MXRoomSummaryProtocol>> *);
 @property (nonatomic, copy) dispatch_block_t onFetch;
 @end
@@ -43,6 +44,12 @@
     return [super allSummariesSync];
 }
 
+- (id<MXRoomSummaryProtocol>)summaryOfRoom:(NSString *)roomId
+{
+    self.perRoomFetchCount += 1;
+    return [super summaryOfRoom:roomId];
+}
+
 - (void)fetchAllSummaries:(void (^)(NSArray<id<MXRoomSummaryProtocol>> *))completion
 {
     self.fetchCalled = YES;
@@ -52,6 +59,10 @@
         self.onFetch();
     }
 }
+@end
+
+@interface MXSession (SummaryTesting)
+- (MXRoomSummary *)getOrCreateRoomSummary:(NSString *)roomId;
 @end
 
 @interface MXAsyncSummaryMemoryStore : MXMemoryStore
@@ -126,6 +137,14 @@
         XCTAssertEqualObjects(cachedSummary.roomId, @"!cached:example.org");
         XCTAssertEqual(store.testRoomSummaryStore.synchronousFetchCount, 0u,
                        @"Cache-only lookup must never fall back to synchronous persistence");
+
+        MXRoomSummary *existingSummary = [session getOrCreateRoomSummary:@"!cached:example.org"];
+        XCTAssertEqual(existingSummary, cachedSummary);
+        MXRoomSummary *newSummary = [session getOrCreateRoomSummary:@"!new:example.org"];
+        XCTAssertEqualObjects(newSummary.roomId, @"!new:example.org");
+        XCTAssertEqual([session getOrCreateRoomSummary:@"!new:example.org"], newSummary);
+        XCTAssertEqual(store.testRoomSummaryStore.perRoomFetchCount, 0u,
+                       @"Room creation must not synchronously consult persistence");
         [done fulfill];
     } failure:^(NSError *error) {
         XCTFail(@"Cannot set test store: %@", error);

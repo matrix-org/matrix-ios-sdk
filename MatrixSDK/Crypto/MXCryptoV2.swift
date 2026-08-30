@@ -70,23 +70,17 @@ class MXCryptoV2: NSObject, MXCrypto {
     
     @MainActor
     init(
-        userId: String,
-        deviceId: String,
+        machine: MXCryptoMachine,
         session: MXSession,
         restClient: MXRestClient
-    ) throws {
+    ) {
         self.session = session
         
         let getRoomAction: (String) -> MXRoom? = { [weak session] in
             session?.room(withRoomId: $0)
         }
         
-        machine = try MXCryptoMachine(
-            userId: userId,
-            deviceId: deviceId,
-            restClient: restClient,
-            getRoomAction: getRoomAction
-        )
+        self.machine = machine
         
         encryptor = MXRoomEventEncryption(
             handler: machine,

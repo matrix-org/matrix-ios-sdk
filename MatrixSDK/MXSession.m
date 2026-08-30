@@ -3414,7 +3414,10 @@ typedef void (^MXOnResumeDone)(void);
 - (MXRoomSummary *)getOrCreateRoomSummary:(NSString *)roomId
 {
     // Create the room summary if does not exist yet
-    MXRoomSummary *summary = [self roomSummaryWithRoomId:roomId];
+    // Store-backed summaries are pre-warmed before room creation. A cache miss here
+    // means this is a new room, so avoid a synchronous Core Data lookup on the
+    // caller (normally main) thread and create the summary directly.
+    MXRoomSummary *summary = [self cachedRoomSummaryWithRoomId:roomId];
     if (!summary)
     {
         summary = [self createRoomSummary:roomId];
