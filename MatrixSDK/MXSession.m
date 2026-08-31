@@ -658,9 +658,10 @@ typedef void (^MXOnResumeDone)(void);
             }
         };
         
-        // Handle first joined rooms
-        for (NSString *roomId in syncResponse.rooms.join)
-        {
+        // Handle joined rooms. Classic /sync keeps its existing single-pass
+        // behavior. Sliding Sync can deliver hundreds of newly hydrated rooms
+        // at once, so only start a bounded number per main-run-loop pass.
+        void (^handleJoinedRoom)(NSString *) = ^(NSString *roomId) {
             MXRoomSync *roomSync = syncResponse.rooms.join[roomId];
             
             @autoreleasepool {
@@ -726,6 +727,54 @@ typedef void (^MXOnResumeDone)(void);
                 }
 
                 [self.threadingService handleJoinedRoomSync:roomSync forRoom:roomId];
+            }
+        };
+
+        // Snapshot the dictionary using the same fast-enumeration order as the
+        // previous single-pass implementation, then retain that order across
+        // deferred batches.
+        NSMutableArray<NSString *> *joinedRoomIds = [NSMutableArray arrayWithCapacity:syncResponse.rooms.join.count];
+        for (NSString *roomId in syncResponse.rooms.join)
+        {
+            [joinedRoomIds addObject:roomId];
+        }
+        const NSUInteger slidingSyncJoinedRoomBatchSize = 20;
+        if (self.slidingSyncConfiguration && joinedRoomIds.count > slidingSyncJoinedRoomBatchSize)
+        {
+            // Keep the group non-empty until every room has been registered;
+            // otherwise an early async room completion could trigger notify
+            // before a later batch has entered the group.
+            dispatch_group_enter(dispatchGroup);
+            __block NSUInteger nextJoinedRoomIndex = 0;
+            __block void (^processNextJoinedRoomBatch)(void);
+            processNextJoinedRoomBatch = ^{
+                NSUInteger end = MIN(
+                    nextJoinedRoomIndex + slidingSyncJoinedRoomBatchSize,
+                    joinedRoomIds.count
+                );
+                while (nextJoinedRoomIndex < end)
+                {
+                    handleJoinedRoom(joinedRoomIds[nextJoinedRoomIndex]);
+                    nextJoinedRoomIndex += 1;
+                }
+
+                if (nextJoinedRoomIndex < joinedRoomIds.count)
+                {
+                    dispatch_async(dispatch_get_main_queue(), processNextJoinedRoomBatch);
+                }
+                else
+                {
+                    dispatch_group_leave(dispatchGroup);
+                    processNextJoinedRoomBatch = nil;
+                }
+            };
+            processNextJoinedRoomBatch();
+        }
+        else
+        {
+            for (NSString *roomId in joinedRoomIds)
+            {
+                handleJoinedRoom(roomId);
             }
         }
         
@@ -1762,86 +1811,97 @@ typedef void (^MXOnResumeDone)(void);
         MXLogDebug(@"[MXSession][SlidingSync] response received in %.0fms at pos %@", [NSDate.date timeIntervalSinceDate:startedAt] * 1000, response.position);
 
         MXSlidingSyncList *list = response.lists[self.slidingSyncConfiguration.listName];
-        // Keep the pure JSON/model conversion on the REST callback queue. The
-        // continuation below returns to main only for ordered session mutation.
-        MXSyncResponse *legacyResponse = [response legacySyncResponseForUserId:self.myUserId];
-        void (^processResponse)(void) = ^{
-            if (!self->eventStreamRequest) return;
-            [self handleSyncResponse:legacyResponse progress:nil completion:^{
-                if (list) [self applySlidingSyncList:list rooms:response.rooms];
-                [self updateSlidingSyncRoomListProgress];
-                os_signpost_event_emit(log, OS_SIGNPOST_ID_EXCLUSIVE, "initial_rooms_processed");
-                for (NSString *roomId in response.rooms)
-                {
-                    void (^subscriptionSuccess)(MXRoom *) = self.slidingSyncSubscriptionSuccesses[roomId];
-                    if (subscriptionSuccess)
+        void (^processLegacyResponse)(MXSyncResponse *) = ^(MXSyncResponse *legacyResponse) {
+            void (^processResponse)(void) = ^{
+                if (!self->eventStreamRequest) return;
+                [self handleSyncResponse:legacyResponse progress:nil completion:^{
+                    if (list) [self applySlidingSyncList:list rooms:response.rooms];
+                    [self updateSlidingSyncRoomListProgress];
+                    os_signpost_event_emit(log, OS_SIGNPOST_ID_EXCLUSIVE, "initial_rooms_processed");
+                    for (NSString *roomId in response.rooms)
                     {
-                        MXRoom *room = [self roomWithRoomId:roomId];
-                        if (room) subscriptionSuccess(room);
-                        [self.slidingSyncSubscriptionSuccesses removeObjectForKey:roomId];
-                        [self.slidingSyncSubscriptionFailures removeObjectForKey:roomId];
+                        void (^subscriptionSuccess)(MXRoom *) = self.slidingSyncSubscriptionSuccesses[roomId];
+                        if (subscriptionSuccess)
+                        {
+                            MXRoom *room = [self roomWithRoomId:roomId];
+                            if (room) subscriptionSuccess(room);
+                            [self.slidingSyncSubscriptionSuccesses removeObjectForKey:roomId];
+                            [self.slidingSyncSubscriptionFailures removeObjectForKey:roomId];
+                        }
                     }
-                }
-            } storeCompletion:^{
-                // The position is durable only after the room/timeline store commit succeeded.
-                self.slidingSyncPosition = response.position;
-                NSString *toDevicePosition = response.extensions[@"to_device"][@"next_batch"];
-                if (toDevicePosition.length)
-                {
-                    self.slidingSyncToDevicePosition = toDevicePosition;
-                    NSMutableDictionary *extensions = [self.slidingSyncConfiguration.extensions mutableCopy];
-                    NSMutableDictionary *toDevice = [extensions[@"to_device"] mutableCopy] ?: [NSMutableDictionary dictionary];
-                    toDevice[@"since"] = toDevicePosition;
-                    extensions[@"to_device"] = toDevice;
-                    self.slidingSyncConfiguration.extensions = extensions;
-                }
-                [self persistSlidingSyncState];
+                } storeCompletion:^{
+                    // The position is durable only after the room/timeline store commit succeeded.
+                    self.slidingSyncPosition = response.position;
+                    NSString *toDevicePosition = response.extensions[@"to_device"][@"next_batch"];
+                    if (toDevicePosition.length)
+                    {
+                        self.slidingSyncToDevicePosition = toDevicePosition;
+                        NSMutableDictionary *extensions = [self.slidingSyncConfiguration.extensions mutableCopy];
+                        NSMutableDictionary *toDevice = [extensions[@"to_device"] mutableCopy] ?: [NSMutableDictionary dictionary];
+                        toDevice[@"since"] = toDevicePosition;
+                        extensions[@"to_device"] = toDevice;
+                        self.slidingSyncConfiguration.extensions = extensions;
+                    }
+                    [self persistSlidingSyncState];
 
-                NSUInteger total = self.slidingSyncTotalRoomCount;
-                if (self.slidingSyncConfiguration.backgroundHydrationEnabled && self.roomListReady && self.slidingSyncRangeEnd + 1 < total)
-                {
-                    NSUInteger expandedEnd = MAX(self.slidingSyncConfiguration.expandedWindowSize, 1) - 1;
-                    if (self.slidingSyncRangeEnd < expandedEnd) self.slidingSyncRangeEnd = MIN(expandedEnd, total - 1);
-                    else self.slidingSyncRangeEnd = MIN(self.slidingSyncRangeEnd + MAX(self.slidingSyncConfiguration.backgroundBatchSize, 1), total - 1);
-                    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 100 * NSEC_PER_MSEC),
-                                   dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), ^{
-                        dispatch_async(dispatch_get_main_queue(), ^{
-                            if (self->eventStreamRequest && self.state != MXSessionStatePaused)
-                                [self serverSlidingSyncWithServerTimeout:0 success:success failure:failure setPresence:setPresence];
+                    NSUInteger total = self.slidingSyncTotalRoomCount;
+                    if (self.slidingSyncConfiguration.backgroundHydrationEnabled && self.roomListReady && self.slidingSyncRangeEnd + 1 < total)
+                    {
+                        NSUInteger expandedEnd = MAX(self.slidingSyncConfiguration.expandedWindowSize, 1) - 1;
+                        if (self.slidingSyncRangeEnd < expandedEnd) self.slidingSyncRangeEnd = MIN(expandedEnd, total - 1);
+                        else self.slidingSyncRangeEnd = MIN(self.slidingSyncRangeEnd + MAX(self.slidingSyncConfiguration.backgroundBatchSize, 1), total - 1);
+                        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 100 * NSEC_PER_MSEC),
+                                       dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), ^{
+                            dispatch_async(dispatch_get_main_queue(), ^{
+                                if (self->eventStreamRequest && self.state != MXSessionStatePaused)
+                                    [self serverSlidingSyncWithServerTimeout:0 success:success failure:failure setPresence:setPresence];
+                            });
                         });
-                    });
-                    return;
-                }
+                        return;
+                    }
 
-                if (self.state != MXSessionStatePauseRequested && self.state != MXSessionStatePaused)
-                {
-                    [self setState:MXSessionStateRunning];
-                    os_signpost_event_emit(log, OS_SIGNPOST_ID_EXCLUSIVE, "running");
-                    [self serverSlidingSyncWithServerTimeout:SERVER_TIMEOUT_MS success:nil failure:nil setPresence:self.preferredSyncPresenceString];
-                }
-                if (success) success();
-            } updateEventStreamToken:NO];
+                    if (self.state != MXSessionStatePauseRequested && self.state != MXSessionStatePaused)
+                    {
+                        [self setState:MXSessionStateRunning];
+                        os_signpost_event_emit(log, OS_SIGNPOST_ID_EXCLUSIVE, "running");
+                        [self serverSlidingSyncWithServerTimeout:SERVER_TIMEOUT_MS success:nil failure:nil setPresence:self.preferredSyncPresenceString];
+                    }
+                    if (success) success();
+                } updateEventStreamToken:NO];
+            };
+
+            // Receipt files are intentionally not part of the global store preload.
+            // Loading them lazily from handleJoinedRoomSync blocks the main thread
+            // once per room (109 ms in a 250-room hydration batch). Warm only the
+            // rooms in this response on the store queue before applying the sync.
+            if (![self.store isKindOfClass:MXFileStore.class])
+            {
+                processResponse();
+                return;
+            }
+
+            dispatch_group_t receiptsGroup = dispatch_group_create();
+            for (NSString *roomId in response.rooms)
+            {
+                dispatch_group_enter(receiptsGroup);
+                [self.store loadReceiptsForRoom:roomId completion:^{
+                    dispatch_group_leave(receiptsGroup);
+                }];
+            }
+            dispatch_group_notify(receiptsGroup, dispatch_get_main_queue(), processResponse);
         };
 
-        // Receipt files are intentionally not part of the global store preload.
-        // Loading them lazily from handleJoinedRoomSync blocks the main thread
-        // once per room (109 ms in a 250-room hydration batch). Warm only the
-        // rooms in this response on the store queue before applying the sync.
-        if (![self.store isKindOfClass:MXFileStore.class])
-        {
-            dispatch_async(dispatch_get_main_queue(), processResponse);
-            return;
-        }
-
-        dispatch_group_t receiptsGroup = dispatch_group_create();
-        for (NSString *roomId in response.rooms)
-        {
-            dispatch_group_enter(receiptsGroup);
-            [self.store loadReceiptsForRoom:roomId completion:^{
-                dispatch_group_leave(receiptsGroup);
-            }];
-        }
-        dispatch_group_notify(receiptsGroup, dispatch_get_main_queue(), processResponse);
+        // MXRestClient invokes completion blocks on main by default. Keep the
+        // response alive while performing the pure JSON/model conversion on a
+        // utility queue, then return to main for ordered session mutation.
+        NSString *userId = [self.myUserId copy];
+        dispatch_async(dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), ^{
+            MXSyncResponse *legacyResponse = [response legacySyncResponseForUserId:userId];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if (!self->eventStreamRequest) return;
+                processLegacyResponse(legacyResponse);
+            });
+        });
     } failure:^(NSError *error) {
         MXStrongifyAndReturnIfNil(self);
         if ([self isSlidingSyncUnknownPositionError:error])
