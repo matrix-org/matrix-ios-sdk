@@ -1228,10 +1228,15 @@ static NSUInteger preloadOptions;
 
 -(void)saveUnreadRooms
 {
-    
+    // Snapshot mutable state on the caller queue, then serialize the expensive
+    // archive and file write with the rest of the commit operations. The final
+    // commit cleanup is enqueued after saveDataToFiles returns, so completion
+    // ordering remains unchanged.
     NSArray<NSString*>* rooms = [roomUnreaded allObjects];
     NSString *roomsFile = [self unreadRoomsFile];
-    [self saveObject:rooms toFile:roomsFile];
+    dispatch_async(dispatchQueue, ^(void){
+        [self saveObject:rooms toFile:roomsFile];
+    });
 }
 
 -(void)loadUnreadRooms

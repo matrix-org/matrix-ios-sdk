@@ -30,9 +30,9 @@ internal class MXCoreDataRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
     private let multicastDelegate: MXMulticastDelegate<MXRoomListDataFetcherDelegate> = MXMulticastDelegate()
     
     internal let fetchOptions: MXRoomListDataFetchOptions
-    private lazy var dataUpdateThrottler: MXThrottler = {
-        return MXThrottler(minimumDelay: 0.1, queue: .main)
-    }()
+    private let dataUpdateDebounceInterval: TimeInterval
+    private var pendingDataUpdate: DispatchWorkItem?
+    private var dataUpdateGeneration: UInt = 0
     
     internal private(set) var data: MXRoomListData? {
         didSet {
@@ -113,10 +113,12 @@ internal class MXCoreDataRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
     
     internal init(fetchOptions: MXRoomListDataFetchOptions,
                   store: MXRoomSummaryCoreDataContextableStore,
-                  session: MXSession? = nil) {
+                  session: MXSession? = nil,
+                  dataUpdateDebounceInterval: TimeInterval = 0.2) {
         self.fetchOptions = fetchOptions
         self.store = store
         self.session = session
+        self.dataUpdateDebounceInterval = dataUpdateDebounceInterval
         super.init()
         self.fetchOptions.fetcher = self
         self.fetchedResultsController.delegate = self
@@ -180,6 +182,7 @@ internal class MXCoreDataRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
     }
     
     func stop() {
+        cancelPendingDataUpdate()
         fetchedResultsController.delegate = nil
         removeCacheIfRequired()
     }
@@ -209,6 +212,29 @@ internal class MXCoreDataRoomListDataFetcher: NSObject, MXRoomListDataFetcher {
     private func notifyDataChange(totalCountsChanged: Bool) {
         multicastDelegate.invoke({ $0.fetcherDidChangeData(self,
                                                            totalCountsChanged: totalCountsChanged) })
+    }
+
+    private func scheduleDataUpdate() {
+        pendingDataUpdate?.cancel()
+        dataUpdateGeneration &+= 1
+        let generation = dataUpdateGeneration
+        let workItem = DispatchWorkItem { [weak self] in
+            guard let self = self,
+                  self.dataUpdateGeneration == generation else {
+                return
+            }
+            self.pendingDataUpdate = nil
+            self.computeData()
+        }
+        pendingDataUpdate = workItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + dataUpdateDebounceInterval,
+                                      execute: workItem)
+    }
+
+    private func cancelPendingDataUpdate() {
+        pendingDataUpdate?.cancel()
+        pendingDataUpdate = nil
+        dataUpdateGeneration &+= 1
     }
     
     /// Recompute data with the same number of rooms of the given `data`
@@ -437,8 +463,6 @@ extension MXCoreDataRoomListDataFetcher: MXRoomListDataFilterable {
 
 extension MXCoreDataRoomListDataFetcher: NSFetchedResultsControllerDelegate {
     func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
-        dataUpdateThrottler.throttle {
-            self.computeData()
-        }
+        scheduleDataUpdate()
     }
 }

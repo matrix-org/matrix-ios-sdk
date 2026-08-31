@@ -268,3 +268,64 @@ class MXCryptoMachineUnitTests: XCTestCase {
         return decrypted
     }
 }
+
+final class MXCryptoV2FactoryUnitTests: XCTestCase {
+    func test_buildCrypto_opensMachineOffMainThreadAndReportsSuccessOnMainThread() throws {
+        let builderCalled = expectation(description: "machine builder called")
+        let successReported = expectation(description: "success reported")
+        let keyProvider = MXCryptoMachineUnitTests.KeyProvider()
+        MXKeyProvider.sharedInstance().delegate = keyProvider
+        defer {
+            MXKeyProvider.sharedInstance().delegate = nil
+        }
+
+        let factory = MXCryptoV2Factory { userId, deviceId, restClient, getRoomAction in
+            XCTAssertFalse(Thread.isMainThread)
+            builderCalled.fulfill()
+            return try MXCryptoMachine(userId: userId,
+                                       deviceId: deviceId,
+                                       restClient: restClient,
+                                       getRoomAction: getRoomAction)
+        }
+
+        let userId = "@crypto-factory-\(UUID().uuidString):example.org"
+        let credentials = MXCredentials(homeServer: "https://example.org",
+                                        userId: userId,
+                                        accessToken: "token")
+        credentials.deviceId = "DEVICE"
+        let restClient = MXRestClient(credentials: credentials,
+                                      unrecognizedCertificateHandler: nil)
+        guard let session = MXSession(matrixRestClient: restClient) else {
+            XCTFail("Failed to create session")
+            return
+        }
+        defer {
+            session.close()
+            if let storeURL = try? MXCryptoMachineStore.storeURL(for: userId) {
+                try? FileManager.default.removeItem(at: storeURL)
+            }
+        }
+
+        let storeReady = expectation(description: "session store ready")
+        session.setStore(MXMemoryStore()) { response in
+            if case .failure(let error) = response {
+                XCTFail("Failed to prepare session store: \(error)")
+            }
+            storeReady.fulfill()
+        }
+        wait(for: [storeReady], timeout: 5)
+
+        factory.buildCrypto(session: session,
+                            migrationProgress: nil,
+                            success: { crypto in
+                                XCTAssertTrue(Thread.isMainThread)
+                                XCTAssertNotNil(crypto)
+                                successReported.fulfill()
+                            },
+                            failure: { error in
+                                XCTFail("Unexpected crypto construction failure: \(error)")
+                            })
+
+        wait(for: [builderCalled, successReported], timeout: 10)
+    }
+}

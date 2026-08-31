@@ -100,6 +100,73 @@ class MXCoreDataRoomListDataManagerUnitTests: XCTestCase {
         }
         wait(for: [done], timeout: 5)
     }
+
+    func testCoreDataChangesAreDebouncedIntoSingleDataUpdate() {
+        let credentials = MXCredentials(homeServer: "localhost",
+                                        userId: "@room-list-debounce-\(UUID().uuidString):example.org",
+                                        accessToken: "token")
+        let store = MXCoreDataRoomSummaryStore(withCredentials: credentials)
+        let initialSummary = MockRoomSummary.generate()
+        store.storeSummary(initialSummary)
+
+        let storeReady = expectation(description: "initial summary stored")
+        store.fetchAllSummaries { _ in
+            storeReady.fulfill()
+        }
+        wait(for: [storeReady], timeout: 5)
+
+        let fetcher = MXCoreDataRoomListDataFetcher(fetchOptions: basicFetchOptions,
+                                                    store: store,
+                                                    dataUpdateDebounceInterval: 0.2)
+        defer {
+            fetcher.stop()
+            store.removeAllSummaries()
+        }
+
+        let initialUpdate = expectation(description: "initial room list")
+        let burstUpdate = expectation(description: "debounced room list")
+        let extraUpdate = expectation(description: "no extra room list update")
+        extraUpdate.isInverted = true
+        var initialLoadCompleted = false
+        var isMeasuringBurst = false
+        var burstUpdateCount = 0
+        let delegate = MockRoomListDataFetcherDelegate {
+            if !initialLoadCompleted {
+                initialLoadCompleted = true
+                initialUpdate.fulfill()
+                return
+            }
+
+            guard isMeasuringBurst else {
+                return
+            }
+
+            burstUpdateCount += 1
+            if burstUpdateCount == 1 {
+                burstUpdate.fulfill()
+            } else {
+                extraUpdate.fulfill()
+            }
+        }
+        fetcher.addDelegate(delegate)
+        fetcher.paginate()
+        wait(for: [initialUpdate], timeout: 5)
+
+        let baselineSettled = expectation(description: "initial Core Data updates settled")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+            isMeasuringBurst = true
+            baselineSettled.fulfill()
+        }
+        wait(for: [baselineSettled], timeout: 1)
+
+        for _ in 0..<3 {
+            store.storeSummary(MockRoomSummary.generate())
+        }
+
+        wait(for: [burstUpdate, extraUpdate], timeout: 1)
+        XCTAssertEqual(burstUpdateCount, 1)
+        XCTAssertEqual(fetcher.data?.rooms.count, 4)
+    }
     
     func testPaginationOptionsInit() {
         let options1 = MXRoomListDataPaginationOptions.none

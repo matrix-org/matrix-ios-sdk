@@ -30,6 +30,7 @@
 
 @interface MXFileStore (CommitTesting)
 - (void)saveDataToFiles;
+- (void)saveObject:(id)object toFile:(NSString *)file;
 @end
 
 @interface MXRetentionTestFileStore : MXFileStore
@@ -46,6 +47,8 @@
 
 @interface MXCommitCompletionTestFileStore : MXFileStore
 @property (atomic) NSUInteger completedSavePassCount;
+@property (atomic) NSUInteger savedObjectCount;
+@property (atomic) BOOL savedObjectOnMainThread;
 @end
 
 @implementation MXCommitCompletionTestFileStore
@@ -53,6 +56,13 @@
 {
     [super saveDataToFiles];
     self.completedSavePassCount += 1;
+}
+
+- (void)saveObject:(id)object toFile:(NSString *)file
+{
+    self.savedObjectCount += 1;
+    self.savedObjectOnMainThread |= NSThread.isMainThread;
+    [super saveObject:object toFile:file];
 }
 @end
 
@@ -308,6 +318,9 @@
 
     [self waitForExpectationsWithTimeout:10 handler:nil];
     XCTAssertEqual(completionCount, 3u);
+    XCTAssertGreaterThan(store.savedObjectCount, 0u);
+    XCTAssertFalse(store.savedObjectOnMainThread,
+                   @"Commit archiving and file writes must stay off the main thread");
     [store deleteAllData];
 }
 
