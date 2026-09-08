@@ -4,6 +4,13 @@
 #import <XCTest/XCTest.h>
 #import <MatrixSDK/MatrixSDK.h>
 
+@interface MXSession (SlidingSyncPersistenceTests)
+- (NSString *)slidingSyncPersistenceKey;
+- (void)persistSlidingSyncState;
+- (void)restoreSlidingSyncStateWithConfiguration:(MXSlidingSyncConfiguration *)configuration;
+- (void)resetSlidingSyncStateForUnknownPosition;
+@end
+
 @interface MXSlidingSyncTests : XCTestCase
 @end
 
@@ -80,6 +87,113 @@
     XCTAssertEqualObjects(list.operations[3].fromIndex, @3);
     XCTAssertEqualObjects(list.operations[3].toIndex, @0);
     XCTAssertEqualObjects(list.operations[4].range, (@[@2, @3]));
+}
+
+- (void)testNewSessionRestoresCommittedSlidingSyncStateAndExpandedRange
+{
+    MXCredentials *credentials = [[MXCredentials alloc] initWithHomeServer:@"https://example.org"
+                                                                    userId:@"@restore:example.org"
+                                                               accessToken:@"token"];
+    MXRestClient *firstRestClient = [[MXRestClient alloc] initWithCredentials:credentials
+                                          andOnUnrecognizedCertificateBlock:nil];
+    MXSession *first = [[MXSession alloc] initWithMatrixRestClient:firstRestClient];
+    NSString *persistenceKey = first.slidingSyncPersistenceKey;
+    [NSUserDefaults.standardUserDefaults removeObjectForKey:persistenceKey];
+    [first setValue:@"pos-7" forKey:@"slidingSyncPosition"];
+    [first setValue:@"conn-7" forKey:@"slidingSyncConnectionId"];
+    [first setValue:@"device-7" forKey:@"slidingSyncToDevicePosition"];
+    [first setValue:@[@"!a:example.org", @"!b:example.org", @"!c:example.org"] forKey:@"slidingSyncRoomOrder"];
+    [first setValue:[@{@"!a:example.org": @30, @"!b:example.org": @20} mutableCopy] forKey:@"slidingSyncBumpStamps"];
+    [first setValue:@120 forKey:@"slidingSyncTotalRoomCount"];
+    [first persistSlidingSyncState];
+
+    MXRestClient *restoredRestClient = [[MXRestClient alloc] initWithCredentials:credentials
+                                             andOnUnrecognizedCertificateBlock:nil];
+    MXSession *restored = [[MXSession alloc] initWithMatrixRestClient:restoredRestClient];
+    MXMemoryStore *store = [MXMemoryStore new];
+    MXRoomSummary *summary = [[MXRoomSummary alloc] initWithRoomId:@"!a:example.org" andMatrixSession:nil];
+    [store.roomSummaryStore storeSummary:summary];
+    XCTestExpectation *ready = [self expectationWithDescription:@"memory store ready"];
+    [restored setStore:store success:^{
+        MXSlidingSyncConfiguration *configuration = MXSlidingSyncConfiguration.defaultConfiguration;
+        configuration.initialWindowSize = 2;
+        [restored setValue:configuration forKey:@"slidingSyncConfiguration"];
+        [restored restoreSlidingSyncStateWithConfiguration:configuration];
+
+        XCTAssertEqualObjects([restored valueForKey:@"slidingSyncPosition"], @"pos-7");
+        XCTAssertEqualObjects([restored valueForKey:@"slidingSyncConnectionId"], @"conn-7");
+        XCTAssertEqualObjects([restored valueForKey:@"slidingSyncToDevicePosition"], @"device-7");
+        XCTAssertEqualObjects(restored.slidingSyncRoomOrder, (@[@"!a:example.org", @"!b:example.org", @"!c:example.org"]));
+        XCTAssertEqualObjects([restored valueForKey:@"slidingSyncBumpStamps"], (@{@"!a:example.org": @30, @"!b:example.org": @20}));
+        XCTAssertEqualObjects([restored valueForKey:@"slidingSyncTotalRoomCount"], @120);
+        XCTAssertEqualObjects([restored valueForKey:@"slidingSyncRangeEnd"], @2,
+                              @"The next request must cover at least the previously loaded order");
+        XCTAssertEqualObjects(configuration.extensions[@"to_device"][@"since"], @"device-7");
+        XCTAssertEqual(restored.roomListState.loaded, 3u);
+        XCTAssertEqual(restored.roomListState.total, 120u);
+        [ready fulfill];
+    } failure:^(NSError *error) {
+        XCTFail(@"Cannot open memory store: %@", error);
+        [ready fulfill];
+    }];
+
+    [self waitForExpectationsWithTimeout:2 handler:nil];
+    [NSUserDefaults.standardUserDefaults removeObjectForKey:persistenceKey];
+}
+
+- (void)testCacheClearAndUnknownPositionDiscardIncompatibleMetadata
+{
+    MXCredentials *credentials = [[MXCredentials alloc] initWithHomeServer:@"https://example.org"
+                                                                    userId:@"@unknown:example.org"
+                                                               accessToken:@"token"];
+    MXRestClient *restClient = [[MXRestClient alloc] initWithCredentials:credentials
+                                      andOnUnrecognizedCertificateBlock:nil];
+    MXSession *session = [[MXSession alloc] initWithMatrixRestClient:restClient];
+    NSString *persistenceKey = session.slidingSyncPersistenceKey;
+    NSDictionary *persisted = @{
+        @"position": @"stale-pos",
+        @"connectionId": @"stale-conn",
+        @"toDevicePosition": @"stale-device",
+        @"roomOrder": @[@"!stale:example.org"],
+        @"bumpStamps": @{@"!stale:example.org": @1},
+        @"total": @1
+    };
+    [NSUserDefaults.standardUserDefaults setObject:persisted forKey:persistenceKey];
+
+    XCTestExpectation *ready = [self expectationWithDescription:@"empty store ready"];
+    [session setStore:[MXMemoryStore new] success:^{
+        MXSlidingSyncConfiguration *configuration = MXSlidingSyncConfiguration.defaultConfiguration;
+        [session setValue:configuration forKey:@"slidingSyncConfiguration"];
+        [session restoreSlidingSyncStateWithConfiguration:configuration];
+        XCTAssertNil([NSUserDefaults.standardUserDefaults objectForKey:persistenceKey]);
+        XCTAssertNil([session valueForKey:@"slidingSyncPosition"]);
+        XCTAssertTrue(session.slidingSyncRoomOrder.count == 0);
+
+        [session setValue:@"accepted-pos" forKey:@"slidingSyncPosition"];
+        [session setValue:@"accepted-conn" forKey:@"slidingSyncConnectionId"];
+        [session setValue:@"accepted-device" forKey:@"slidingSyncToDevicePosition"];
+        NSMutableDictionary *extensions = configuration.extensions.mutableCopy;
+        NSMutableDictionary *toDevice = [extensions[@"to_device"] mutableCopy];
+        toDevice[@"since"] = @"accepted-device";
+        extensions[@"to_device"] = toDevice;
+        configuration.extensions = extensions;
+        [session persistSlidingSyncState];
+        XCTAssertNotNil([NSUserDefaults.standardUserDefaults objectForKey:persistenceKey]);
+
+        NSString *oldConnectionId = [session valueForKey:@"slidingSyncConnectionId"];
+        [session resetSlidingSyncStateForUnknownPosition];
+        XCTAssertNil([session valueForKey:@"slidingSyncPosition"]);
+        XCTAssertNil([session valueForKey:@"slidingSyncToDevicePosition"]);
+        XCTAssertNotEqualObjects([session valueForKey:@"slidingSyncConnectionId"], oldConnectionId);
+        XCTAssertNil(configuration.extensions[@"to_device"][@"since"]);
+        XCTAssertNil([NSUserDefaults.standardUserDefaults objectForKey:persistenceKey]);
+        [ready fulfill];
+    } failure:^(NSError *error) {
+        XCTFail(@"Cannot open memory store: %@", error);
+        [ready fulfill];
+    }];
+
+    [self waitForExpectationsWithTimeout:2 handler:nil];
 }
 
 @end

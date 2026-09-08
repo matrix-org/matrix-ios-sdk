@@ -994,23 +994,8 @@ typedef void (^MXOnResumeDone)(void);
     [NSUserDefaults.standardUserDefaults setObject:state forKey:self.slidingSyncPersistenceKey];
 }
 
-- (NSString *)newSlidingSyncConnectionId
+- (void)restoreSlidingSyncStateWithConfiguration:(MXSlidingSyncConfiguration *)configuration
 {
-    NSString *compactUUID = [NSUUID.UUID.UUIDString stringByReplacingOccurrencesOfString:@"-" withString:@""];
-    return [compactUUID substringToIndex:MIN((NSUInteger)16, compactUUID.length)];
-}
-
-- (void)startWithSlidingSyncConfiguration:(MXSlidingSyncConfiguration *)configuration
-                            roomListReady:(void (^)(void))roomListReady
-                         onServerSyncDone:(void (^)(void))onServerSyncDone
-                                  failure:(void (^)(NSError *))failure
-{
-    NSParameterAssert(configuration);
-    self.slidingSyncConfiguration = configuration.copy;
-    self.slidingSyncRoomListReadyCallback = roomListReady;
-    self.slidingSyncDidFallback = NO;
-    self->_syncWithLazyLoadOfRoomMembers = configuration.lazyLoadMembers;
-
     NSDictionary *persisted = [NSUserDefaults.standardUserDefaults dictionaryForKey:self.slidingSyncPersistenceKey];
     if (persisted && self.store.roomSummaryStore.countOfRooms == 0)
     {
@@ -1047,6 +1032,42 @@ typedef void (^MXOnResumeDone)(void);
     self.roomListState = [MXSlidingSyncRoomListState stateWithPhase:phase
                                                             loaded:self.slidingSyncRoomOrder.count
                                                              total:self.slidingSyncTotalRoomCount];
+    MXLogDebug(@"[MXSession][SlidingSync] restored order rows=%tu total=%tu position=%@",
+               self.slidingSyncRoomOrder.count,
+               self.slidingSyncTotalRoomCount,
+               self.slidingSyncPosition.length ? @"present" : @"missing");
+}
+
+- (void)resetSlidingSyncStateForUnknownPosition
+{
+    self.slidingSyncPosition = nil;
+    self.slidingSyncConnectionId = [self newSlidingSyncConnectionId];
+    self.slidingSyncToDevicePosition = nil;
+    NSMutableDictionary *extensions = self.slidingSyncConfiguration.extensions.mutableCopy;
+    NSMutableDictionary *toDevice = [extensions[@"to_device"] mutableCopy] ?: [NSMutableDictionary dictionary];
+    [toDevice removeObjectForKey:@"since"];
+    extensions[@"to_device"] = toDevice;
+    self.slidingSyncConfiguration.extensions = extensions;
+    [NSUserDefaults.standardUserDefaults removeObjectForKey:self.slidingSyncPersistenceKey];
+}
+
+- (NSString *)newSlidingSyncConnectionId
+{
+    NSString *compactUUID = [NSUUID.UUID.UUIDString stringByReplacingOccurrencesOfString:@"-" withString:@""];
+    return [compactUUID substringToIndex:MIN((NSUInteger)16, compactUUID.length)];
+}
+
+- (void)startWithSlidingSyncConfiguration:(MXSlidingSyncConfiguration *)configuration
+                            roomListReady:(void (^)(void))roomListReady
+                         onServerSyncDone:(void (^)(void))onServerSyncDone
+                                  failure:(void (^)(NSError *))failure
+{
+    NSParameterAssert(configuration);
+    self.slidingSyncConfiguration = configuration.copy;
+    self.slidingSyncRoomListReadyCallback = roomListReady;
+    self.slidingSyncDidFallback = NO;
+    self->_syncWithLazyLoadOfRoomMembers = configuration.lazyLoadMembers;
+    [self restoreSlidingSyncStateWithConfiguration:configuration];
     os_log_t log = os_log_create("org.matrix.sdk", "SlidingSyncStartup");
     os_signpost_event_emit(log, OS_SIGNPOST_ID_EXCLUSIVE, "authorization_success");
     [self startWithSyncFilterId:nil
@@ -1907,9 +1928,7 @@ typedef void (^MXOnResumeDone)(void);
         if ([self isSlidingSyncUnknownPositionError:error])
         {
             MXLogWarning(@"[MXSession][SlidingSync] UnknownPos; starting a new connection without deleting summaries");
-            self.slidingSyncPosition = nil;
-            self.slidingSyncConnectionId = [self newSlidingSyncConnectionId];
-            [NSUserDefaults.standardUserDefaults removeObjectForKey:self.slidingSyncPersistenceKey];
+            [self resetSlidingSyncStateForUnknownPosition];
             [self serverSlidingSyncWithServerTimeout:0 success:success failure:failure setPresence:setPresence];
         }
         else if (!self.slidingSyncDidFallback && [self shouldFallbackFromSlidingSyncError:error])
